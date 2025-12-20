@@ -35,74 +35,72 @@ const AnimatedPipeline = () => {
   const cycleDuration = totalStages * 1.5 + 2;
 
   return (
-    <div className="overflow-x-auto">
+    <div className="space-y-6">
       <style>{`
-        @keyframes hopRight {
-          0% { left: 50%; transform: translateX(-50%); opacity: 0; }
-          2% { opacity: 1; }
-          20% { left: 50%; transform: translateX(-50%); opacity: 1; }
-          40% { left: 50%; transform: translateX(-50%); opacity: 1; }
-          60% { left: 50%; transform: translateX(-50%); opacity: 1; }
-          80% { left: 50%; transform: translateX(-50%); opacity: 1; }
-          95% { left: 50%; transform: translateX(-50%); opacity: 0; }
-          100% { left: 50%; transform: translateX(-50%); opacity: 0; }
+        @keyframes slideRight {
+          0% { left: 1rem; opacity: 1; }
+          ${(1.5 / cycleDuration) * 100}% { left: calc(20% + 0.5rem); opacity: 1; }
+          ${(1.5 * 2 / cycleDuration) * 100}% { left: calc(40% + 0.5rem); opacity: 1; }
+          ${(1.5 * 3 / cycleDuration) * 100}% { left: calc(60% + 0.5rem); opacity: 1; }
+          ${(1.5 * 4 / cycleDuration) * 100}% { left: calc(80% + 0.5rem); opacity: 1; }
+          ${(1.5 * 4.5 / cycleDuration) * 100}% { left: calc(100% + 2rem); opacity: 0; }
+          100% { left: 1rem; opacity: 1; }
         }
       `}</style>
       
-      <div className="flex gap-6 min-w-max pb-6">
-        {stages.map((stage, idx) => (
-          <div key={idx} className="flex flex-col w-40">
-            {/* Stage Header */}
-            <div className="text-sm font-semibold text-muted-foreground mb-4 h-12 flex items-center">
-              {stage}
-            </div>
+      {stages.map((stage, idx) => (
+        <div key={idx} className="flex items-center gap-4">
+          <div className="w-32 text-sm font-semibold text-muted-foreground">{stage}</div>
+          <div className="flex-1 h-16 bg-muted/30 rounded-lg border border-dashed border-border relative">
+            {/* For "Not Engaged" stage, show all leads that are still there */}
+            {idx === 0 && (
+              <div className="flex items-center gap-3 px-4 h-full">
+                {leads.map((lead, leadIdx) => (
+                  <motion.div
+                    key={lead}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: leadIdx * 0.1 }}
+                    className="bg-white p-2 rounded-lg shadow-sm border border-border text-xs font-medium w-28 text-center"
+                  >
+                    {lead}
+                  </motion.div>
+                ))}
+              </div>
+            )}
             
-            {/* Column Container */}
-            <div className="flex-1 min-h-80 bg-muted/30 rounded-lg border border-dashed border-border relative p-4">
-              {/* For "Not Engaged" stage, show all leads stacked vertically */}
-              {idx === 0 && (
-                <div className="flex flex-col gap-3">
-                  {leads.map((lead, leadIdx) => (
-                    <motion.div
-                      key={lead}
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: leadIdx * 0.1 }}
-                      className="bg-white p-3 rounded-lg shadow-sm border border-border text-xs font-medium text-center w-full"
-                    >
-                      {lead}
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-              
-              {/* For other stages, show cards hopping in */}
-              {idx > 0 && (
-                <div className="relative w-full h-full">
-                  {leads.map((lead, leadIdx) => {
-                    const arrivalStage = leadIdx + 1;
-                    if (idx >= arrivalStage) {
-                      return (
-                        <motion.div
-                          key={lead}
-                          className="absolute bg-white p-3 rounded-lg shadow-md border border-border text-xs font-medium text-center w-32 top-1/2"
-                          style={{
-                            animation: `hopRight 8.5s infinite`,
-                            animationDelay: `-${(leadIdx * 1.7 + (idx - 1) * 1.7)}s`
-                          }}
-                        >
-                          {lead}
-                        </motion.div>
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
-              )}
-            </div>
+            {/* For other stages, show the animated card moving through */}
+            {idx > 0 && (
+              <div className="relative w-full h-full">
+                {leads.map((lead, leadIdx) => {
+                  // Check if this lead should be visible at this stage
+                  // Lead arrives at stage 1 after 1.5s, stage 2 after 3s, etc.
+                  const arrivalStage = leadIdx + 1;
+                  if (idx >= arrivalStage) {
+                    return (
+                      <motion.div
+                        key={lead}
+                        className="absolute bg-white p-3 rounded-lg shadow-md border border-border text-sm font-medium w-32 text-center top-4"
+                        initial={{ x: 0, opacity: 1 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                        style={{
+                          left: '1rem',
+                          animation: `slideRight ${cycleDuration}s infinite`,
+                          animationDelay: `-${(leadIdx + idx * 1.5)}s`
+                        }}
+                      >
+                        {lead}
+                      </motion.div>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+            )}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 };
