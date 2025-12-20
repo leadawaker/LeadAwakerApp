@@ -37,16 +37,16 @@ const AnimatedPipeline = () => {
   return (
     <div className="overflow-x-auto">
       <style>{`
-        @keyframes slideRight {
-          0% { left: 0; opacity: 0; }
+        @keyframes hopRight {
+          0% { left: 50%; transform: translateX(-50%); opacity: 0; }
           1% { opacity: 1; }
-          ${(1.5 / cycleDuration) * 100}% { left: 0; opacity: 1; }
-          ${(1.5 * 2 / cycleDuration) * 100}% { left: calc(20% + 1rem); opacity: 1; }
-          ${(1.5 * 3 / cycleDuration) * 100}% { left: calc(40% + 2rem); opacity: 1; }
-          ${(1.5 * 4 / cycleDuration) * 100}% { left: calc(60% + 3rem); opacity: 1; }
-          ${(1.5 * 4.5 / cycleDuration) * 100}% { left: calc(80% + 4rem); opacity: 1; }
-          ${(1.5 * 4.7 / cycleDuration) * 100}% { left: calc(100% + 5rem); opacity: 0; }
-          100% { left: 0; opacity: 0; }
+          ${(1.5 / cycleDuration) * 100}% { left: 50%; transform: translateX(-50%); opacity: 1; }
+          ${(3 / cycleDuration) * 100}% { left: 50%; transform: translateX(-50%); opacity: 1; }
+          ${(4.5 / cycleDuration) * 100}% { left: 50%; transform: translateX(-50%); opacity: 1; }
+          ${(6 / cycleDuration) * 100}% { left: 50%; transform: translateX(-50%); opacity: 1; }
+          ${(7.5 / cycleDuration) * 100}% { left: 50%; transform: translateX(-50%); opacity: 1; }
+          ${(8 / cycleDuration) * 100}% { left: 50%; transform: translateX(-50%); opacity: 0; }
+          100% { left: 50%; transform: translateX(-50%); opacity: 0; }
         }
       `}</style>
       
@@ -77,7 +77,7 @@ const AnimatedPipeline = () => {
                 </div>
               )}
               
-              {/* For other stages, show cards animating in */}
+              {/* For other stages, show cards hopping in */}
               {idx > 0 && (
                 <div className="relative w-full h-full">
                   {leads.map((lead, leadIdx) => {
@@ -86,10 +86,10 @@ const AnimatedPipeline = () => {
                       return (
                         <motion.div
                           key={lead}
-                          className="absolute bg-white p-3 rounded-lg shadow-md border border-border text-xs font-medium text-center w-32 top-4 left-0"
+                          className="absolute bg-white p-3 rounded-lg shadow-md border border-border text-xs font-medium text-center w-32 top-1/2 whitespace-nowrap"
                           style={{
-                            animation: `slideRight ${cycleDuration}s infinite`,
-                            animationDelay: `-${(leadIdx * 1.5 + idx * 1.5)}s`
+                            animation: `hopRight ${cycleDuration}s infinite`,
+                            animationDelay: `-${(leadIdx * 1.5 + (idx - 1) * 1.5)}s`
                           }}
                         >
                           {lead}
