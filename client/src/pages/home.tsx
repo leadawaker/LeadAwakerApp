@@ -39,13 +39,12 @@ const AnimatedPipeline = () => {
       <style>{`
         @keyframes hopRight {
           0% { left: 50%; transform: translateX(-50%); opacity: 0; }
-          1% { opacity: 1; }
-          ${(1.5 / cycleDuration) * 100}% { left: 50%; transform: translateX(-50%); opacity: 1; }
-          ${(3 / cycleDuration) * 100}% { left: 50%; transform: translateX(-50%); opacity: 1; }
-          ${(4.5 / cycleDuration) * 100}% { left: 50%; transform: translateX(-50%); opacity: 1; }
-          ${(6 / cycleDuration) * 100}% { left: 50%; transform: translateX(-50%); opacity: 1; }
-          ${(7.5 / cycleDuration) * 100}% { left: 50%; transform: translateX(-50%); opacity: 1; }
-          ${(8 / cycleDuration) * 100}% { left: 50%; transform: translateX(-50%); opacity: 0; }
+          2% { opacity: 1; }
+          20% { left: 50%; transform: translateX(-50%); opacity: 1; }
+          40% { left: 50%; transform: translateX(-50%); opacity: 1; }
+          60% { left: 50%; transform: translateX(-50%); opacity: 1; }
+          80% { left: 50%; transform: translateX(-50%); opacity: 1; }
+          95% { left: 50%; transform: translateX(-50%); opacity: 0; }
           100% { left: 50%; transform: translateX(-50%); opacity: 0; }
         }
       `}</style>
@@ -86,10 +85,10 @@ const AnimatedPipeline = () => {
                       return (
                         <motion.div
                           key={lead}
-                          className="absolute bg-white p-3 rounded-lg shadow-md border border-border text-xs font-medium text-center w-32 top-1/2 whitespace-nowrap"
+                          className="absolute bg-white p-3 rounded-lg shadow-md border border-border text-xs font-medium text-center w-32 top-1/2"
                           style={{
-                            animation: `hopRight ${cycleDuration}s infinite`,
-                            animationDelay: `-${(leadIdx * 1.5 + (idx - 1) * 1.5)}s`
+                            animation: `hopRight 8.5s infinite`,
+                            animationDelay: `-${(leadIdx * 1.7 + (idx - 1) * 1.7)}s`
                           }}
                         >
                           {lead}
