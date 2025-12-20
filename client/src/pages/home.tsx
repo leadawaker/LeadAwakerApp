@@ -1,9 +1,45 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Bot, Database, Zap, MessageSquare, RefreshCcw } from "lucide-react";
+import { ArrowRight, Zap, Database, MessageSquare, Calendar, BarChart, CheckCircle, ChevronDown, Menu } from "lucide-react";
 import { Link } from "wouter";
+import { useState } from "react";
+import leadLogo from "@assets/Untitled_design_1766218788499.jpg";
+
+const KanbanCard = ({ title, delay }: { title: string; delay: number }) => (
+  <motion.div
+    initial={{ x: -100, opacity: 0 }}
+    animate={{ x: 0, opacity: 1 }}
+    transition={{ delay, duration: 0.5, repeat: Infinity, repeatDelay: 4 }}
+    className="bg-white p-3 rounded-lg shadow-md border border-border text-sm font-medium w-32 text-center"
+  >
+    {title}
+  </motion.div>
+);
+
+const AnimatedPipeline = () => {
+  const stages = ["Not Engaged", "Contacted", "Replied", "Qualified", "Sent to Client"];
+  
+  return (
+    <div className="space-y-6">
+      {stages.map((stage, idx) => (
+        <div key={idx} className="flex items-center gap-4">
+          <div className="w-32 text-sm font-semibold text-muted-foreground">{stage}</div>
+          <div className="flex-1 h-16 bg-muted/30 rounded-lg border border-dashed border-border flex items-center px-4 overflow-hidden relative">
+            {idx === 0 && <KanbanCard title="Lead #1234" delay={0} />}
+            {idx === 1 && <KanbanCard title="Lead #5678" delay={0.3} />}
+            {idx === 2 && <KanbanCard title="Lead #9012" delay={0.6} />}
+            {idx === 3 && <KanbanCard title="Lead #3456" delay={0.9} />}
+            {idx === 4 && <KanbanCard title="Lead #7890" delay={1.2} />}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default function Home() {
+  const [openFAQ, setOpenFAQ] = useState<number | null>(0);
+
   return (
     <div className="min-h-screen pt-24">
       {/* Hero Section */}
@@ -11,35 +47,28 @@ export default function Home() {
         <div className="absolute top-0 right-0 -z-10 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent blur-3xl opacity-50" />
         
         <div className="container mx-auto px-4 md:px-6">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent font-medium text-sm mb-6 border border-accent/20">
-                <Zap className="w-4 h-4" />
-                <span>AI Automation Agency</span>
-              </div>
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] mb-6 text-foreground">
-                Wake Up Your <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
-                  Dormant Leads
-                </span>
+                Turn cold leads into <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">booked calls</span>—automatically.
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed">
-                Pull fresh sales from leads you’ve already paid for and haven’t bought, using conversational AI.
+                AI + workflow automation for outbound, inbound, and CRM follow-up.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/book-demo">
                   <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 text-white">
-                    Start Reactivation
+                    Book a Call
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
-                <Link href="/services">
+                <Link href="#how-it-works">
                   <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2">
-                    Explore Services
+                    See the System
                   </Button>
                 </Link>
               </div>
@@ -49,116 +78,409 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative"
+              className="relative bg-card p-8 rounded-2xl border border-border shadow-2xl"
             >
-              <div className="relative aspect-square md:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl bg-white border border-border p-6 md:p-8 flex flex-col justify-center">
-                {/* Mock Chat Interface */}
-                <div className="flex flex-col gap-4 max-w-sm mx-auto w-full">
-                  <div className="flex gap-3 items-end">
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
-                      <Bot size={16} />
-                    </div>
-                    <div className="bg-muted p-4 rounded-2xl rounded-bl-none text-sm text-foreground shadow-sm">
-                      Hi John! I noticed you were interested in our services last month but we never connected. Are you still looking for help with automation?
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-3 items-end flex-row-reverse">
-                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 shrink-0">
-                      <span className="text-xs font-bold">JD</span>
-                    </div>
-                    <div className="bg-primary p-4 rounded-2xl rounded-br-none text-sm text-white shadow-md">
-                      Hey! Yes actually, I've just been super busy. Can we chat?
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 items-end">
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
-                      <Bot size={16} />
-                    </div>
-                    <div className="bg-muted p-4 rounded-2xl rounded-bl-none text-sm text-foreground shadow-sm animate-pulse">
-                      typing...
-                    </div>
-                  </div>
-                </div>
-
-                {/* Decorative Elements */}
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-accent/20 rounded-full blur-3xl" />
-                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl" />
-              </div>
+              <h3 className="text-sm font-semibold text-muted-foreground mb-6 uppercase tracking-wide">Conversion Pipeline</h3>
+              <AnimatedPipeline />
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-accent/20 rounded-full blur-3xl" />
+              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl" />
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Services Section Preview */}
-      <section className="py-20 bg-muted/30">
+      {/* Trust Bar */}
+      <section className="py-12 border-y border-border bg-muted/20">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Database Reactivation</h2>
-            <p className="text-muted-foreground text-lg">
-              Stop burning money on new ads. Your next best customer is already sitting in your database.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
+          <p className="text-center text-sm font-semibold text-muted-foreground mb-6 uppercase tracking-wide">
+            Built with tools you already use
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-8 items-center justify-center">
             {[
-              {
-                icon: <Database className="w-8 h-8 text-primary" />,
-                title: "Data Audit",
-                desc: "We analyze your existing lead database to identify dormant opportunities."
-              },
-              {
-                icon: <MessageSquare className="w-8 h-8 text-accent" />,
-                title: "Conversational AI",
-                desc: "Our AI initiates natural, personalized conversations to re-engage old leads."
-              },
-              {
-                icon: <RefreshCcw className="w-8 h-8 text-primary" />,
-                title: "Instant Reactivation",
-                desc: "Turn 'dead' leads into booked appointments and fresh sales automatically."
-              }
-            ].map((feature, i) => (
+              { name: "CRM", icon: "📊" },
+              { name: "WhatsApp/SMS", icon: "💬" },
+              { name: "Email", icon: "✉️" },
+              { name: "Calendars", icon: "📅" },
+              { name: "Webhooks", icon: "🔗" },
+              { name: "Databases", icon: "🗄️" },
+            ].map((tool, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-card p-8 rounded-2xl border border-border hover:shadow-lg transition-shadow"
+                transition={{ delay: i * 0.05 }}
+                className="flex flex-col items-center gap-2 text-center"
               >
-                <div className="mb-6 p-4 rounded-2xl bg-background w-fit border border-border/50 shadow-sm">
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.desc}</p>
+                <div className="text-3xl">{tool.icon}</div>
+                <p className="text-sm font-medium text-foreground">{tool.name}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Demo Teaser Section */}
-      <section className="py-24 relative overflow-hidden bg-primary text-primary-foreground">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay"></div>
-        <div className="container mx-auto px-4 md:px-6 relative z-10 text-center">
-          <h2 className="text-3xl md:text-5xl font-bold mb-8">Ready to awake your leads?</h2>
-          <p className="text-xl opacity-90 mb-10 max-w-2xl mx-auto">
-            Book a demo to see how our AI can add 20-30% more revenue to your bottom line this month.
-          </p>
-          
-          <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl max-w-3xl mx-auto border border-white/20">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="text-left">
-                <h3 className="text-xl font-bold mb-2">Interactive Demo</h3>
-                <p className="opacity-80">Do you already have a booking link?</p>
+      {/* Services Section */}
+      <section className="py-24">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="max-w-2xl mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">What We Do</h2>
+            <p className="text-lg text-muted-foreground">
+              Comprehensive automation for every stage of your sales process.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                icon: <MessageSquare className="w-8 h-8" />,
+                title: "Lead Follow-up Automation",
+                desc: "Instantly respond to new leads with AI-driven personalized sequences."
+              },
+              {
+                icon: <Database className="w-8 h-8" />,
+                title: "CRM Pipeline + Segmentation",
+                desc: "Automatically organize and segment leads based on behavior and interest."
+              },
+              {
+                icon: <CheckCircle className="w-8 h-8" />,
+                title: "AI Qualification & Routing",
+                desc: "AI qualifies leads and routes them to the right team member instantly."
+              },
+              {
+                icon: <Calendar className="w-8 h-8" />,
+                title: "Appointment Booking Flows",
+                desc: "One-click scheduling integrated with your calendar and CRM."
+              },
+              {
+                icon: <BarChart className="w-8 h-8" />,
+                title: "Reporting Dashboards",
+                desc: "Real-time visibility into response rates, conversions, and revenue impact."
+              },
+              {
+                icon: <Zap className="w-8 h-8" />,
+                title: "Integrations & Maintenance",
+                desc: "Seamless setup with your existing stack, ongoing optimization."
+              }
+            ].map((service, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+                className="bg-card p-8 rounded-2xl border border-border hover:shadow-lg transition-shadow group"
+              >
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
+                  {service.icon}
+                </div>
+                <h3 className="text-xl font-bold mb-3">{service.title}</h3>
+                <p className="text-muted-foreground">{service.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section id="how-it-works" className="py-24 bg-muted/30">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="max-w-2xl mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
+            <p className="text-lg text-muted-foreground">
+              Three simple steps to automate your entire sales workflow.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 relative">
+            {/* Connector lines (hidden on mobile) */}
+            <div className="absolute top-1/4 left-0 right-0 h-1 bg-gradient-to-r from-primary/20 via-primary/50 to-primary/20 hidden md:block z-0" />
+
+            {[
+              {
+                num: "01",
+                title: "Map the Process",
+                desc: "We analyze your current sales workflow and identify bottlenecks.",
+                icon: <Database className="w-8 h-8" />
+              },
+              {
+                num: "02",
+                title: "Build the Automations",
+                desc: "Set up AI agents, workflows, and integrations in minutes.",
+                icon: <Zap className="w-8 h-8" />
+              },
+              {
+                num: "03",
+                title: "Optimize Weekly",
+                desc: "Monitor performance and continuously improve conversion rates.",
+                icon: <BarChart className="w-8 h-8" />
+              }
+            ].map((step, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="relative z-10"
+              >
+                <div className="text-center">
+                  <div className="flex justify-center mb-6">
+                    <div className="w-20 h-20 bg-primary text-white rounded-full flex items-center justify-center text-3xl font-bold shadow-lg">
+                      {step.num}
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">{step.title}</h3>
+                  <p className="text-muted-foreground">{step.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Use Cases */}
+      <section className="py-24">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="max-w-2xl mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Real-World Use Cases</h2>
+            <p className="text-lg text-muted-foreground">
+              See how businesses are using Lead Awaker to scale their sales.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {[
+              {
+                title: "Inbound Lead Response in Under 60 Seconds",
+                desc: "AI responds to form submissions instantly, answer questions, and qualify before humans take over."
+              },
+              {
+                title: "No-Show Reduction",
+                desc: "Automated reminders and rescheduling cut no-shows by up to 60%."
+              },
+              {
+                title: "Reactivation Campaigns",
+                desc: "Turn dormant leads from 6+ months ago into fresh conversations and closed deals."
+              },
+              {
+                title: "Multi-Language Follow-up",
+                desc: "AI automatically responds in the lead's preferred language for global sales teams."
+              }
+            ].map((useCase, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: i % 2 === 0 ? -20 : 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="flex gap-6 items-start bg-card p-8 rounded-2xl border border-border hover:shadow-lg transition-shadow"
+              >
+                <div className="w-2 h-2 mt-2 rounded-full bg-primary flex-shrink-0" />
+                <div>
+                  <h3 className="text-lg font-bold mb-2">{useCase.title}</h3>
+                  <p className="text-muted-foreground">{useCase.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-24 bg-muted/30">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="max-w-2xl mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Trusted by Sales Leaders</h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                quote: "We cut response time from hours to seconds. Qualified leads are on our sales team's calendar before they even realize they're qualified.",
+                author: "Sarah Chen",
+                title: "VP Sales, SaaS Company"
+              },
+              {
+                quote: "The reactivation campaign alone brought in 15+ deals we thought were dead. We're recovering revenue without any additional ad spend.",
+                author: "Marcus Rodriguez",
+                title: "Founder, E-commerce Marketplace"
+              },
+              {
+                quote: "No more manual follow-ups, no more leads falling through the cracks. Everything moves predictably through the pipeline.",
+                author: "Jessica Kim",
+                title: "Sales Director, B2B Services"
+              }
+            ].map((testimonial, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-card p-8 rounded-2xl border border-border"
+              >
+                <p className="text-muted-foreground mb-6 italic">"{testimonial.quote}"</p>
+                <div>
+                  <p className="font-bold">{testimonial.author}</p>
+                  <p className="text-sm text-muted-foreground">{testimonial.title}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-24">
+        <div className="container mx-auto px-4 md:px-6 max-w-3xl">
+          <div className="mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
+            <p className="text-lg text-muted-foreground">
+              Everything you need to know about getting started.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {[
+              {
+                q: "What's the setup time?",
+                a: "Most setups take 2-5 days depending on your CRM and integrations. We handle everything; you just provide access."
+              },
+              {
+                q: "Do you support our CRM?",
+                a: "We integrate with Salesforce, HubSpot, Pipedrive, Close, and custom APIs. If it has an API, we can connect to it."
+              },
+              {
+                q: "How much does it cost?",
+                a: "Pricing starts at [custom quote]. We work on performance-based or flat-fee models depending on your preference. No upfront setup fees."
+              },
+              {
+                q: "Who has access to our lead data?",
+                a: "Only you and your team. Data stays in your CRM. We never store or sell lead information. GDPR and SOC2 compliant."
+              },
+              {
+                q: "What if something breaks?",
+                a: "We provide 24/7 monitoring and support. If a workflow fails, we fix it immediately and notify you with a detailed report."
+              },
+              {
+                q: "Can we pause or cancel anytime?",
+                a: "Yes. No long-term contracts. You can pause or cancel monthly plans with 30 days notice."
+              },
+              {
+                q: "Do you provide training?",
+                a: "Yes. We include onboarding training for your team and ongoing support to optimize performance."
+              },
+              {
+                q: "What about compliance (GDPR, CCPA)?",
+                a: "All workflows respect opt-out preferences, unsubscribe links, and data residency requirements. We're fully compliant."
+              }
+            ].map((faq, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                className="border border-border rounded-lg overflow-hidden"
+              >
+                <button
+                  onClick={() => setOpenFAQ(openFAQ === i ? null : i)}
+                  className="w-full flex items-center justify-between p-6 hover:bg-muted/50 transition-colors"
+                >
+                  <h3 className="text-lg font-bold text-left">{faq.q}</h3>
+                  <ChevronDown
+                    className={`w-5 h-5 text-primary transition-transform ${
+                      openFAQ === i ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {openFAQ === i && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="px-6 pb-6 text-muted-foreground border-t border-border"
+                  >
+                    {faq.a}
+                  </motion.div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section className="py-24 bg-primary text-primary-foreground relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 mix-blend-overlay" style={{backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')"}} />
+        <div className="container mx-auto px-4 md:px-6 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-3xl md:text-5xl font-bold mb-6">
+                Ready to automate your sales?
+              </h2>
+              <p className="text-xl opacity-90 mb-8 leading-relaxed">
+                Book a call with our team. We'll audit your process and show you exactly what's possible.
+              </p>
+              <div className="space-y-4">
+                <p className="text-sm opacity-75">Average setup: 2-5 days | No long-term contracts</p>
               </div>
-              <Link href="/book-demo">
-                <Button size="lg" variant="secondary" className="whitespace-nowrap font-bold text-primary">
-                  Let's find out <ArrowRight className="ml-2 w-4 h-4" />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20"
+            >
+              <form className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Full Name</label>
+                  <input
+                    type="text"
+                    placeholder="Your name"
+                    className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50"
+                    data-testid="input-name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Email</label>
+                  <input
+                    type="email"
+                    placeholder="you@company.com"
+                    className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50"
+                    data-testid="input-email"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Company</label>
+                  <input
+                    type="text"
+                    placeholder="Your company"
+                    className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50"
+                    data-testid="input-company"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Message</label>
+                  <textarea
+                    placeholder="Tell us about your sales process..."
+                    rows={4}
+                    className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 resize-none"
+                    data-testid="textarea-message"
+                  />
+                </div>
+                <Button className="w-full bg-white text-primary hover:bg-white/90 font-bold h-12 rounded-lg" data-testid="button-submit">
+                  Schedule a Demo
                 </Button>
-              </Link>
-            </div>
+                <p className="text-xs opacity-75 text-center">
+                  This is a demo form. In production, we'll use your booking link.
+                </p>
+              </form>
+            </motion.div>
           </div>
         </div>
       </section>
