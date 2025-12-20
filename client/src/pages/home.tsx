@@ -37,29 +37,30 @@ const AnimatedPipeline = () => {
   return (
     <div className="space-y-6">
       <style>{`
-        @keyframes slideRight {
-          0% { left: 1rem; opacity: 1; }
-          ${(1.5 / cycleDuration) * 100}% { left: calc(20% + 0.5rem); opacity: 1; }
-          ${(1.5 * 2 / cycleDuration) * 100}% { left: calc(40% + 0.5rem); opacity: 1; }
-          ${(1.5 * 3 / cycleDuration) * 100}% { left: calc(60% + 0.5rem); opacity: 1; }
-          ${(1.5 * 4 / cycleDuration) * 100}% { left: calc(80% + 0.5rem); opacity: 1; }
-          ${(1.5 * 4.5 / cycleDuration) * 100}% { left: calc(100% + 2rem); opacity: 0; }
-          100% { left: 1rem; opacity: 1; }
+        @keyframes slideDown {
+          0% { top: -3rem; opacity: 0; }
+          1% { opacity: 1; }
+          ${(1.5 / cycleDuration) * 100}% { top: 1rem; opacity: 1; }
+          ${(1.5 * 2 / cycleDuration) * 100}% { top: 1rem; opacity: 1; }
+          ${(1.5 * 3 / cycleDuration) * 100}% { top: 1rem; opacity: 1; }
+          ${(1.5 * 4 / cycleDuration) * 100}% { top: 1rem; opacity: 1; }
+          ${(1.5 * 4.5 / cycleDuration) * 100}% { top: 5rem; opacity: 0; }
+          100% { top: -3rem; opacity: 0; }
         }
       `}</style>
       
       {stages.map((stage, idx) => (
         <div key={idx} className="flex items-center gap-4">
           <div className="w-32 text-sm font-semibold text-muted-foreground">{stage}</div>
-          <div className="flex-1 h-16 bg-muted/30 rounded-lg border border-dashed border-border relative">
-            {/* For "Not Engaged" stage, show all leads that are still there */}
+          <div className="flex-1 min-h-24 bg-muted/30 rounded-lg border border-dashed border-border relative">
+            {/* For "Not Engaged" stage, show all leads stacked vertically */}
             {idx === 0 && (
-              <div className="flex items-center gap-3 px-4 h-full">
+              <div className="flex flex-col items-start gap-3 p-4 h-full">
                 {leads.map((lead, leadIdx) => (
                   <motion.div
                     key={lead}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: leadIdx * 0.1 }}
                     className="bg-white p-2 rounded-lg shadow-sm border border-border text-xs font-medium w-28 text-center"
                   >
@@ -69,24 +70,18 @@ const AnimatedPipeline = () => {
               </div>
             )}
             
-            {/* For other stages, show the animated card moving through */}
+            {/* For other stages, show cards moving downward */}
             {idx > 0 && (
-              <div className="relative w-full h-full">
+              <div className="relative w-full h-24">
                 {leads.map((lead, leadIdx) => {
-                  // Check if this lead should be visible at this stage
-                  // Lead arrives at stage 1 after 1.5s, stage 2 after 3s, etc.
                   const arrivalStage = leadIdx + 1;
                   if (idx >= arrivalStage) {
                     return (
                       <motion.div
                         key={lead}
-                        className="absolute bg-white p-3 rounded-lg shadow-md border border-border text-sm font-medium w-32 text-center top-4"
-                        initial={{ x: 0, opacity: 1 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ duration: 0.3 }}
+                        className="absolute bg-white p-2 rounded-lg shadow-md border border-border text-xs font-medium w-28 text-center left-4"
                         style={{
-                          left: '1rem',
-                          animation: `slideRight ${cycleDuration}s infinite`,
+                          animation: `slideDown ${cycleDuration}s infinite`,
                           animationDelay: `-${(leadIdx + idx * 1.5)}s`
                         }}
                       >
