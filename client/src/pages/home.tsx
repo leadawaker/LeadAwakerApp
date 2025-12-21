@@ -93,48 +93,84 @@ export default function Home() {
               {/* Chat Messages */}
               <div className="p-4 space-y-4 h-[500px] overflow-y-auto">
                 {/* Sophie Message 1 */}
-                <div className="flex justify-start">
+                <motion.div 
+                  className="flex justify-start"
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+                  transition={{ duration: 0.4 }}
+                >
                   <div className="bg-white text-gray-800 p-3 rounded-2xl rounded-bl-none max-w-xs text-sm shadow-sm border border-gray-200">
                     <p>Hey this is Sophie from XYZ, is this the same John that got a product quote from us a couple of months ago?</p>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* John Message 1 */}
-                <div className="flex justify-end">
+                <motion.div 
+                  className="flex justify-end"
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                >
                   <div className="bg-green-600 text-white p-3 rounded-2xl rounded-br-none max-w-xs text-sm shadow-md">
                     <p>Hey yes, I remember that.</p>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Sophie Message 2 */}
-                <div className="flex justify-start">
+                <motion.div 
+                  className="flex justify-start"
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                >
                   <div className="bg-white text-gray-800 p-3 rounded-2xl rounded-bl-none max-w-xs text-sm shadow-sm border border-gray-200">
                     <p>Great! My calendar booked me to call you but I didn't want to disturb you. Are you still interested?</p>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* John Message 2 */}
-                <div className="flex justify-end">
+                <motion.div 
+                  className="flex justify-end"
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+                  transition={{ duration: 0.4, delay: 0.3 }}
+                >
                   <div className="bg-green-600 text-white p-3 rounded-2xl rounded-br-none max-w-xs text-sm shadow-md">
                     <p>Maybe, I haven't thought about that for a while</p>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Sophie Message 3 */}
-                <div className="flex justify-start">
+                <motion.div 
+                  className="flex justify-start"
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+                  transition={{ duration: 0.4, delay: 0.4 }}
+                >
                   <div className="bg-white text-gray-800 p-3 rounded-2xl rounded-bl-none max-w-xs text-sm shadow-sm border border-gray-200">
                     <p>Let me ask you, what fitness goals are you aiming to achieve?</p>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Typing indicator */}
-                <div className="flex justify-end">
+                <motion.div 
+                  className="flex justify-end"
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+                  transition={{ duration: 0.4, delay: 0.5 }}
+                >
                   <div className="bg-gray-200 text-gray-600 p-3 rounded-2xl rounded-br-none flex items-center gap-1">
                     <span className="w-2 h-2 bg-gray-600 rounded-full animate-bounce"></span>
                     <span className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></span>
                     <span className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></span>
                   </div>
-                </div>
+                </motion.div>
               </div>
 
               <div className="absolute -top-10 -right-10 w-40 h-40 bg-accent/20 rounded-full blur-3xl" />
