@@ -78,12 +78,66 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative bg-card p-8 rounded-2xl border border-border shadow-2xl"
+              className="relative bg-gradient-to-b from-green-50 to-white p-0 rounded-3xl border border-gray-200 shadow-2xl overflow-hidden"
+              style={{ backgroundImage: 'linear-gradient(135deg, #e5f5f1 0%, #f0f9f7 100%)' }}
             >
-              <h3 className="text-sm font-semibold text-muted-foreground mb-6 uppercase tracking-wide">Conversion Pipeline</h3>
-              <AnimatedPipeline />
+              {/* WhatsApp Header */}
+              <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold">S</div>
+                <div className="flex-1">
+                  <p className="font-semibold text-sm">Sophie from XYZ</p>
+                  <p className="text-xs opacity-75">Online</p>
+                </div>
+              </div>
+
+              {/* Chat Messages */}
+              <div className="p-4 space-y-4 h-[500px] overflow-y-auto">
+                {/* Sophie Message 1 */}
+                <div className="flex justify-start">
+                  <div className="bg-white text-gray-800 p-3 rounded-2xl rounded-bl-none max-w-xs text-sm shadow-sm border border-gray-200">
+                    <p>Hey this is Sophie from XYZ, is this the same John that got a product quote from us a couple of months ago?</p>
+                  </div>
+                </div>
+
+                {/* John Message 1 */}
+                <div className="flex justify-end">
+                  <div className="bg-green-600 text-white p-3 rounded-2xl rounded-br-none max-w-xs text-sm shadow-md">
+                    <p>Hey yes, I remember that.</p>
+                  </div>
+                </div>
+
+                {/* Sophie Message 2 */}
+                <div className="flex justify-start">
+                  <div className="bg-white text-gray-800 p-3 rounded-2xl rounded-bl-none max-w-xs text-sm shadow-sm border border-gray-200">
+                    <p>Great! My calendar booked me to call you but I didn't want to disturb you. Are you still interested?</p>
+                  </div>
+                </div>
+
+                {/* John Message 2 */}
+                <div className="flex justify-end">
+                  <div className="bg-green-600 text-white p-3 rounded-2xl rounded-br-none max-w-xs text-sm shadow-md">
+                    <p>Maybe, I haven't thought about that for a while</p>
+                  </div>
+                </div>
+
+                {/* Sophie Message 3 */}
+                <div className="flex justify-start">
+                  <div className="bg-white text-gray-800 p-3 rounded-2xl rounded-bl-none max-w-xs text-sm shadow-sm border border-gray-200">
+                    <p>Let me ask you, what fitness goals are you aiming to achieve?</p>
+                  </div>
+                </div>
+
+                {/* Typing indicator */}
+                <div className="flex justify-end">
+                  <div className="bg-gray-200 text-gray-600 p-3 rounded-2xl rounded-br-none flex items-center gap-1">
+                    <span className="w-2 h-2 bg-gray-600 rounded-full animate-bounce"></span>
+                    <span className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></span>
+                    <span className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></span>
+                  </div>
+                </div>
+              </div>
+
               <div className="absolute -top-10 -right-10 w-40 h-40 bg-accent/20 rounded-full blur-3xl" />
-              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl" />
             </motion.div>
           </div>
         </div>
