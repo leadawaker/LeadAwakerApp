@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import { CheckCircle2, Users, Rocket, Target } from "lucide-react";
+import profilePhoto from "@assets/Screenshot_20251219_160952_ChatGPT_1766322249853.jpg";
+import mainLogo from "@assets/Project_(20251219120952)_1766322389784.jpg";
 
 export default function About() {
   return (
@@ -25,8 +27,8 @@ export default function About() {
              transition={{ delay: 0.2 }}
           >
             <img 
-              src="/attached_assets/Untitled_design_1766218788499.jpg" 
-              alt="Lead Awaker Team" 
+              src={profilePhoto} 
+              alt="Lead Awaker Founder" 
               className="rounded-2xl shadow-2xl border border-border w-full"
             />
           </motion.div>
@@ -93,6 +95,21 @@ export default function About() {
             </motion.div>
           ))}
         </div>
+
+        {/* Logo Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mt-24 pt-24 border-t border-border text-center"
+        >
+          <h3 className="text-sm font-semibold text-muted-foreground mb-8 uppercase tracking-wide">Powered by Lead Awaker</h3>
+          <img 
+            src={mainLogo} 
+            alt="Lead Awaker Logo" 
+            className="w-64 mx-auto drop-shadow-lg"
+          />
+        </motion.div>
       </div>
     </div>
   );
