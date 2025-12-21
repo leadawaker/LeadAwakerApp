@@ -32,28 +32,26 @@ export function Navbar() {
       }`}
     >
       <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
-        <Link href="/">
-          <a className="flex items-center gap-2 group">
-            <div className="relative w-10 h-10 overflow-hidden rounded-lg bg-primary/10 flex items-center justify-center">
-             <img src={logoIcon} alt="Lead Awaker Logo" className="w-8 h-8 object-contain" />
-            </div>
-            <span className="font-heading font-bold text-xl tracking-tight text-foreground">
-              LEAD<span className="text-primary">Awaker</span>
-            </span>
-          </a>
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="relative w-10 h-10 overflow-hidden rounded-lg bg-primary/10 flex items-center justify-center">
+           <img src={logoIcon} alt="Lead Awaker Logo" className="w-8 h-8 object-contain" />
+          </div>
+          <span className="font-heading font-bold text-xl tracking-tight text-foreground">
+            LEAD<span className="text-primary">Awaker</span>
+          </span>
         </Link>
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
-            <Link key={link.href} href={link.href}>
-              <a
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  location === link.href ? "text-primary" : "text-muted-foreground"
-                }`}
-              >
-                {link.label}
-              </a>
+            <Link 
+              key={link.href} 
+              href={link.href}
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                location === link.href ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              {link.label}
             </Link>
           ))}
           <Link href="/book-demo">
@@ -76,13 +74,13 @@ export function Navbar() {
       {isOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-background border-b border-border p-4 flex flex-col gap-4 shadow-xl">
           {navLinks.map((link) => (
-            <Link key={link.href} href={link.href}>
-              <a
-                className="text-lg font-medium p-2 hover:bg-muted rounded-md"
-                onClick={() => setIsOpen(false)}
-              >
-                {link.label}
-              </a>
+            <Link 
+              key={link.href} 
+              href={link.href}
+              className="text-lg font-medium p-2 hover:bg-muted rounded-md"
+              onClick={() => setIsOpen(false)}
+            >
+              {link.label}
             </Link>
           ))}
           <Link href="/book-demo">

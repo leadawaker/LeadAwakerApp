@@ -8,12 +8,10 @@ export function Footer() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           <div className="md:col-span-2">
-            <Link href="/">
-              <a className="flex items-center gap-2 mb-6">
-                <span className="font-heading font-bold text-2xl tracking-tight text-foreground">
-                  LEAD<span className="text-primary">Awaker</span>
-                </span>
-              </a>
+            <Link href="/" className="flex items-center gap-2 mb-6">
+              <span className="font-heading font-bold text-2xl tracking-tight text-foreground">
+                LEAD<span className="text-primary">Awaker</span>
+              </span>
             </Link>
             <p className="text-muted-foreground max-w-sm mb-6">
               Pull fresh sales from leads you’ve already paid for and haven’t bought, using conversational AI.
@@ -23,16 +21,16 @@ export function Footer() {
           <div>
             <h4 className="font-heading font-bold mb-4">Company</h4>
             <ul className="space-y-3">
-              <li><Link href="/"><a className="text-muted-foreground hover:text-primary transition-colors">Home</a></Link></li>
-              <li><Link href="/about"><a className="text-muted-foreground hover:text-primary transition-colors">About</a></Link></li>
-              <li><Link href="/services"><a className="text-muted-foreground hover:text-primary transition-colors">Services</a></Link></li>
+              <li><Link href="/" className="text-muted-foreground hover:text-primary transition-colors">Home</Link></li>
+              <li><Link href="/about" className="text-muted-foreground hover:text-primary transition-colors">About</Link></li>
+              <li><Link href="/services" className="text-muted-foreground hover:text-primary transition-colors">Services</Link></li>
             </ul>
           </div>
           
           <div>
             <h4 className="font-heading font-bold mb-4">Contact</h4>
             <ul className="space-y-3">
-              <li><Link href="/book-demo"><a className="text-muted-foreground hover:text-primary transition-colors">Book a Demo</a></Link></li>
+              <li><Link href="/book-demo" className="text-muted-foreground hover:text-primary transition-colors">Book a Demo</Link></li>
               <li className="text-muted-foreground">hello@leadawaker.com</li>
             </ul>
           </div>
