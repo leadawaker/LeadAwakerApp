@@ -64,37 +64,18 @@ export default function BookDemo() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="h-[600px] bg-white rounded-2xl shadow-xl overflow-hidden border border-border"
+            className="relative rounded-2xl shadow-xl overflow-hidden border border-border"
           >
-            {/* Embed Google Calendar */}
-            <iframe 
-              src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ0T-wS_qQ_qQ_qQ?gv=true" 
-              style={{border: 0}} 
-              width="100%" 
-              height="100%" 
-              frameBorder="0"
-            ></iframe>
-            {/* Note: I am using the user provided link in a slightly different way or generic way if the embed doesn't work directly, 
-                but typically calendar links need specific embed codes. 
-                Since the user gave: https://calendar.app.google/uvWx5JWm7SLZSCqz7 
-                I will use an iframe to that URL directly, or a button if it forbids embedding.
-                Google Appointment slots often forbid direct iframe embedding if not configured.
-                I'll put a fallback button overlay just in case.
-            */}
-             <div className="absolute inset-0 flex items-center justify-center bg-background z-10 p-8 text-center flex-col">
-                <h3 className="text-2xl font-bold mb-4">Book Your Strategy Session</h3>
-                <p className="text-muted-foreground mb-8">Select a time that works best for you.</p>
-                <a 
-                   href="https://calendar.app.google/uvWx5JWm7SLZSCqz7" 
-                   target="_blank" 
-                   rel="noopener noreferrer"
-                >
-                  <Button size="lg" className="h-14 px-8 text-lg">
-                    Open Calendar
-                    <Calendar className="ml-2 w-5 h-5" />
-                  </Button>
-                </a>
-             </div>
+            <div className="relative w-full h-[600px] bg-white rounded-2xl overflow-hidden">
+              <iframe 
+                src="https://calendar.app.google/uvWx5JWm7SLZSCqz7" 
+                style={{border: 0}} 
+                width="100%" 
+                height="100%" 
+                frameBorder="0"
+                allow="calendar"
+              ></iframe>
+            </div>
           </motion.div>
         </div>
       </div>
