@@ -54,7 +54,7 @@ export default function Home() {
               transition={{ duration: 0.6 }}
             >
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] mb-6 text-foreground">
-                Turn cold leads into <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">booked calls</span>—automatically.
+                Turn cold leads into <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">booked calls</span> automatically.
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed">
                 From first contact to CRM follow-up, our AI automations handle it all—so you can focus on closing deals, not chasing them.
@@ -66,9 +66,9 @@ export default function Home() {
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
-                <Link href="#how-it-works">
+                <Link href="#demo">
                   <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2">
-                    How It Works
+                    See Demo
                   </Button>
                 </Link>
               </div>
@@ -85,7 +85,7 @@ export default function Home() {
               <div className="bg-gradient-to-r from-primary to-primary/90 text-white p-4 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold">S</div>
                 <div className="flex-1">
-                  <p className="font-semibold text-sm">Sophie from XYZ</p>
+                  <p className="font-semibold text-sm">Sophie from TrainPlus Fitness</p>
                   <p className="text-xs opacity-75">Online</p>
                 </div>
               </div>
@@ -101,7 +101,7 @@ export default function Home() {
                   transition={{ duration: 0.4 }}
                 >
                   <div className="bg-primary text-white p-3 rounded-2xl rounded-br-none max-w-xs text-sm shadow-md">
-                    <p>Hey this is Sophie from XYZ, is this the same John that got a product quote from us a couple of months ago?</p>
+                    <p>Hey this is Sophie from TrainPlus Fitness, is this the same John that got a product quote from us a couple of months ago?</p>
                   </div>
                 </motion.div>
 
@@ -179,38 +179,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Trust Bar - Seamless Integration */}
-      <section className="py-16 border-y border-border bg-muted/20">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="max-w-3xl mx-auto">
-            <h3 className="text-2xl md:text-3xl font-bold mb-4 text-center">Seamless Integration, No Learning Curve</h3>
-            <p className="text-center text-muted-foreground mb-10 text-lg">Your existing stack becomes an automation powerhouse.</p>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-              {[
-                { name: "CRM Systems", icon: "📊" },
-                { name: "WhatsApp, SMS & Chat", icon: "💬" },
-                { name: "Email Platforms", icon: "✉️" },
-                { name: "Calendar Apps", icon: "📅" },
-                { name: "Webhook Endpoints", icon: "🔗" },
-                { name: "Databases", icon: "🗄️" },
-              ].map((tool, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
-                  className="flex flex-col items-center gap-3 text-center"
-                >
-                  <div className="text-4xl">{tool.icon}</div>
-                  <p className="text-sm font-medium text-foreground">{tool.name}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Pain Points Section */}
       <section className="py-24">
@@ -219,21 +187,19 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center max-w-3xl mx-auto mb-16"
+            className="text-center max-w-3xl mx-auto mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Manual Reactivation Is Broken</h2>
-            <p className="text-lg text-muted-foreground">
-              B2B sales teams are drowning in dead lead databases while burning resources.
-            </p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Manual Reactivation Is Broken.</h2>
+            <p className="text-lg text-muted-foreground mb-8">Sales teams drown in dead leads while burning cash.</p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
             {[
-              { icon: "📋", title: "Messy spreadsheets or bloated CRMs filled with thousands of dead leads" },
-              { icon: "⏰", title: "Sales reps spend 20-40 hours weekly on repetitive, soul-crushing outreach" },
-              { icon: "❌", title: "5-10% response rates with zero ROI on cold leads" },
-              { icon: "👥", title: "Generic mass blasts that get ignored or marked as spam" },
-              { icon: "🔄", title: "Team burnout, morale tanks, turnover increases" }
+              { icon: "📊", title: "Bloated CRMs with 1000s of \"dead\" contacts you already paid for" },
+              { icon: "⏰", title: "Reps waste 20-40 hrs/week on soul-crushing copy-paste outreach" },
+              { icon: "📉", title: "5-10% reply rates → zero ROI" },
+              { icon: "🚫", title: "Generic blasts → ignored or straight to spam folder" },
+              { icon: "😩", title: "Team burnout → turnover" }
             ].map((pain, i) => (
               <motion.div
                 key={i}
@@ -253,9 +219,9 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-blue-50 border border-blue-200 p-6 rounded-xl text-center max-w-2xl mx-auto"
+            className="bg-red-100 border border-red-300 p-8 rounded-2xl text-center max-w-2xl mx-auto"
           >
-            <p className="text-sm"><span className="font-bold text-blue-700">Bottom Line:</span> <span className="text-gray-700">Companies have invested thousands in acquiring these leads, but they're leaving money on the table because reactivation is too painful and ineffective.</span></p>
+            <p className="text-base font-semibold text-red-900">Companies have invested thousands in acquiring these leads, but they're leaving millions on the table because reactivation is too painful and ineffective.</p>
           </motion.div>
         </div>
       </section>
@@ -269,28 +235,26 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center max-w-3xl mx-auto mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Your AI Sales Android</h2>
-            <p className="text-lg text-muted-foreground">
-              Our simple 3-step process turns your dormant leads into fresh revenue.
-            </p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Your Expert Sales Rep in 3 Steps.</h2>
+            <p className="text-xl text-primary font-semibold">Dead leads → revenue.</p>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
                 num: "1",
-                title: "Upload Your Database",
-                desc: "Plug in your CRM export and the AI starts working immediately. We analyze it to identify dormant leads with sales potential."
+                title: "Upload database",
+                desc: "AI instantly IDs high-potential dormant leads"
               },
               {
                 num: "2",
-                title: "AI Conversations Begin",
-                desc: "GPT-4o generates natural, contextual messages tailored to each lead—not robotic templates. Human-like two-way dialogue."
+                title: "Chat GPT-5.2 conversations",
+                desc: "Natural, contextual SMS (not robot templates)"
               },
               {
                 num: "3",
-                title: "Watch Sales Roll In",
-                desc: "Qualified leads are warmed up and meetings booked directly on your calendar. 24/7 autonomous operation."
+                title: "Revenue rolls in",
+                desc: "Auto-books meetings 24/7"
               }
             ].map((step, i) => (
               <motion.div
@@ -317,8 +281,44 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How It Works */}
-      <section id="how-it-works" className="py-24 bg-muted/30">
+      {/* Demo Section */}
+      <section id="demo" className="py-24">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="max-w-3xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">Let us show you how it's done</h2>
+              <p className="text-lg text-muted-foreground leading-relaxed mb-8">
+                If a picture is worth a thousand words, a demo is worth a thousand pictures. That's why before you do anything, I want you to see AI in action. This demo gives a taster of how AI engages with customers in a natural way and bears the brunt of repetitive tasks, so you and your team don't have to.
+              </p>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                With AI freeing up valuable man-power and doing the work you'd "never get around to doing", you can unlock new levels of ROI whilst focusing on the things you enjoy.
+              </p>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center"
+            >
+              <Link href="/book-demo">
+                <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 text-white">
+                  Check Out The Demo
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Conversion Pipeline */}
+      <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-2xl mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
@@ -380,12 +380,12 @@ export default function Home() {
             className="mt-20 bg-card rounded-2xl border border-border p-8 md:p-10 overflow-hidden"
           >
             <h4 className="text-lg font-bold mb-8 text-center">Your Conversion Pipeline in Action</h4>
-            <div className="space-y-4">
+            <div className="space-y-6">
               {[
-                { stage: "New Leads", leads: [{ name: "John Smith", phone: "+1 (555) 123-4567", time: "Just now" }, { name: "Sarah Johnson", phone: "+1 (555) 234-5678", time: "2 min ago" }] },
-                { stage: "Contacted", leads: [{ name: "Mike Chen", phone: "+1 (555) 345-6789", time: "5 min ago" }] },
-                { stage: "Qualified", leads: [{ name: "Emma Davis", phone: "+1 (555) 456-7890", time: "12 min ago" }] },
-                { stage: "Booked", leads: [{ name: "Alex Taylor", phone: "+1 (555) 567-8901", time: "2 hours ago" }] }
+                { emoji: "📫", stage: "Leads Engaged", color: "from-teal-600 to-teal-500", leads: [{ name: "John Smith", phone: "+1 (555) 123-4567", time: "Just now" }, { name: "Sarah Johnson", phone: "+1 (555) 234-5678", time: "2 min ago" }, { name: "Mike Wilson", phone: "+1 (555) 321-0987", time: "5 min ago" }] },
+                { emoji: "📩", stage: "Lead Replied", color: "from-cyan-500 to-blue-500", leads: [{ name: "Emma Davis", phone: "+1 (555) 456-7890", time: "12 min ago" }, { name: "Alex Turner", phone: "+1 (555) 654-3210", time: "18 min ago" }, { name: "Lisa Anderson", phone: "+1 (555) 789-1234", time: "25 min ago" }] },
+                { emoji: "✅", stage: "Lead Qualified", color: "from-blue-500 to-indigo-500", leads: [{ name: "Robert Chen", phone: "+1 (555) 345-6789", time: "45 min ago" }, { name: "Jennifer Lee", phone: "+1 (555) 876-5432", time: "1 hour ago" }, { name: "David Martinez", phone: "+1 (555) 432-1098", time: "1.5 hours ago" }] },
+                { emoji: "👍", stage: "Lead Booked", color: "from-orange-500 to-yellow-500", leads: [{ name: "Susan Brown", phone: "+1 (555) 210-9876", time: "2 hours ago" }, { name: "James Wilson", phone: "+1 (555) 567-8901", time: "3 hours ago" }, { name: "Patricia Garcia", phone: "+1 (555) 098-7654", time: "4 hours ago" }] }
               ].map((column, colIdx) => (
                 <motion.div
                   key={colIdx}
@@ -393,26 +393,26 @@ export default function Home() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: colIdx * 0.1 }}
-                  className="flex items-start gap-4"
                 >
-                  <div className="w-32 text-sm font-semibold text-accent flex-shrink-0 pt-1">{column.stage}</div>
-                  <div className="flex-1 space-y-3">
-                    <div className="flex flex-wrap gap-3">
-                      {column.leads.map((lead, idx) => (
-                        <motion.div
-                          key={idx}
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          whileInView={{ opacity: 1, scale: 1 }}
-                          viewport={{ once: true }}
-                          transition={{ delay: colIdx * 0.1 + idx * 0.05 }}
-                          className="bg-muted/50 p-3 rounded-lg border border-border/50 text-sm flex-1 min-w-[180px]"
-                        >
-                          <p className="font-medium text-foreground">{lead.name}</p>
-                          <p className="text-muted-foreground text-xs mt-1">{lead.phone}</p>
-                          <p className="text-muted-foreground text-xs mt-1">Last replied: {lead.time}</p>
-                        </motion.div>
-                      ))}
-                    </div>
+                  <div className={`bg-gradient-to-r ${column.color} text-white px-4 py-2 rounded-lg mb-4 flex items-center gap-2 w-fit`}>
+                    <span className="text-2xl">{column.emoji}</span>
+                    <span className="font-bold text-sm">{column.stage}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {column.leads.map((lead, idx) => (
+                      <motion.div
+                        key={idx}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: colIdx * 0.1 + idx * 0.05 }}
+                        className="bg-muted/50 p-3 rounded-lg border border-border/50 text-sm flex-1 min-w-[200px]"
+                      >
+                        <p className="font-medium text-foreground">{lead.name}</p>
+                        <p className="text-muted-foreground text-xs mt-1">{lead.phone}</p>
+                        <p className="text-muted-foreground text-xs mt-1">Last replied: {lead.time}</p>
+                      </motion.div>
+                    ))}
                   </div>
                 </motion.div>
               ))}
@@ -485,6 +485,106 @@ export default function Home() {
               Sales teams shift from grind to strategy while Lead Awaker generates pipeline automatically.
             </p>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Results Section */}
+      <section className="py-24">
+        <div className="container mx-auto px-4 md:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center max-w-3xl mx-auto mb-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Within 30 Days</h2>
+            <p className="text-lg text-muted-foreground">
+              Real results from real sales teams using Lead Awaker.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+            {[
+              {
+                metric: "40-60%",
+                label: "Reply Rates",
+                subtext: "vs industry 5-10%"
+              },
+              {
+                metric: "15-25%",
+                label: "Leads Reactivated",
+                subtext: "into opportunities"
+              },
+              {
+                metric: "40+",
+                label: "Hours Saved",
+                subtext: "per rep/month"
+              },
+              {
+                metric: "$0",
+                label: "Upfront Cost",
+                subtext: "performance pricing"
+              }
+            ].map((result, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-card p-8 rounded-2xl border border-border text-center"
+              >
+                <div className="text-4xl md:text-5xl font-bold text-primary mb-2">{result.metric}</div>
+                <h3 className="text-lg font-bold mb-1">{result.label}</h3>
+                <p className="text-sm text-muted-foreground">{result.subtext}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 p-8 rounded-2xl text-center max-w-2xl mx-auto"
+          >
+            <h3 className="text-2xl font-bold mb-3">From Chaos to Passive Revenue</h3>
+            <p className="text-muted-foreground text-lg">
+              Sales teams shift from grind to strategy while Lead Awaker generates pipeline automatically.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Seamless Integration - Moved after Results */}
+      <section className="py-16 border-t border-border bg-muted/20">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="max-w-3xl mx-auto">
+            <h3 className="text-2xl md:text-3xl font-bold mb-4 text-center">Seamless Integration, No Learning Curve</h3>
+            <p className="text-center text-muted-foreground mb-10 text-lg">Your existing stack becomes an automation powerhouse.</p>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              {[
+                { name: "CRM Systems", icon: "📊" },
+                { name: "WhatsApp, SMS & Chat", icon: "💬" },
+                { name: "Email Platforms", icon: "✉️" },
+                { name: "Calendar Apps", icon: "📅" },
+                { name: "Webhook Endpoints", icon: "🔗" },
+                { name: "Databases", icon: "🗄️" },
+              ].map((tool, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.05 }}
+                  className="flex flex-col items-center gap-3 text-center"
+                >
+                  <div className="text-4xl">{tool.icon}</div>
+                  <p className="text-sm font-medium text-foreground">{tool.name}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 

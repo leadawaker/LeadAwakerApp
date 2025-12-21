@@ -7,31 +7,24 @@ export default function About() {
   return (
     <div className="min-h-screen pt-24 pb-20">
       <div className="container mx-auto px-4 md:px-6">
-        {/* Meet the Founder */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-3xl mx-auto mb-20"
-        >
-          <h1 className="text-4xl md:text-5xl font-bold mb-2">Meet the Founder</h1>
-          <p className="text-xl text-accent font-semibold mb-12">Gabriel Fronza</p>
-          
+        {/* Meet the Founder - Split Layout */}
+        <div className="grid md:grid-cols-3 gap-12 items-start mb-24">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="mb-16"
+            className="md:col-span-1 text-center"
           >
             <img 
               src={profilePhoto} 
               alt="Gabriel Fronza, Founder" 
-              className="rounded-2xl shadow-2xl border border-border w-72 h-72 object-cover mx-auto"
+              className="rounded-2xl shadow-2xl border border-border w-full h-auto object-cover mb-6"
             />
+            <h2 className="text-2xl font-bold">Gabriel Fronza</h2>
           </motion.div>
-        </motion.div>
 
-        {/* Background Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-24">
+          {/* Background Grid - Condensed */}
+          <div className="md:col-span-2 grid grid-cols-2 gap-4">
           {[
             {
               icon: <Code2 className="w-6 h-6 text-primary" />,
@@ -71,10 +64,8 @@ export default function About() {
               icon: <Rocket className="w-6 h-6 text-accent" />,
               title: "Current Focus",
               items: [
-                "Founded TA Monks (4 years) with wife Denisse",
+                "Founded TA Monks (4 years) with wife Danique",
                 "Transitioned to building Lead Awaker",
-                "Inspired by proven frameworks: $100M",
-                "Offers and Instant AI Agency",
                 "Goal: Scale to $100M ARR"
               ]
             }
@@ -85,20 +76,21 @@ export default function About() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="bg-card p-6 rounded-2xl border border-border"
+              className="bg-card p-4 rounded-xl border border-border"
             >
-              <div className="mb-4">{section.icon}</div>
-              <h3 className="text-lg font-bold mb-4">{section.title}</h3>
-              <ul className="space-y-2">
+              <div className="mb-3">{section.icon}</div>
+              <h3 className="text-base font-bold mb-3">{section.title}</h3>
+              <ul className="space-y-1">
                 {section.items.map((item, idx) => (
-                  <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
-                    <span className="text-primary mt-1">•</span>
+                  <li key={idx} className="text-xs text-muted-foreground flex items-start gap-2">
+                    <span className="text-primary mt-0.5">•</span>
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
             </motion.div>
           ))}
+          </div>
         </div>
 
         {/* Mission Section */}
