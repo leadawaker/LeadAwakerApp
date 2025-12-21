@@ -57,7 +57,7 @@ export default function Home() {
                 Turn cold leads into <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">booked calls</span>—automatically.
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed">
-                AI + workflow automation for outbound, inbound, and CRM follow-up.
+                From first contact to CRM follow-up, our AI automations handle it all—so you can focus on closing deals, not chasing them.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/book-demo">
@@ -78,11 +78,11 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative bg-gradient-to-b from-green-50 to-white p-0 rounded-3xl border border-gray-200 shadow-2xl overflow-hidden"
-              style={{ backgroundImage: 'linear-gradient(135deg, #e5f5f1 0%, #f0f9f7 100%)' }}
+              className="relative bg-gradient-to-b from-blue-50 to-white p-0 rounded-3xl border border-gray-200 shadow-2xl overflow-hidden"
+              style={{ backgroundImage: 'linear-gradient(135deg, #e0f2f7 0%, #f0f9fb 100%)' }}
             >
               {/* WhatsApp Header */}
-              <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 flex items-center gap-3">
+              <div className="bg-gradient-to-r from-primary to-primary/90 text-white p-4 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold">S</div>
                 <div className="flex-1">
                   <p className="font-semibold text-sm">Sophie from XYZ</p>
@@ -92,80 +92,80 @@ export default function Home() {
 
               {/* Chat Messages */}
               <div className="p-4 space-y-4 h-[500px] overflow-y-auto">
-                {/* Sophie Message 1 */}
+                {/* Sophie Message 1 (You/User - Right side, teal) */}
                 <motion.div 
-                  className="flex justify-start"
-                  initial={{ opacity: 0, x: -20 }}
+                  className="flex justify-end"
+                  initial={{ opacity: 0, x: 20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: "0px 0px -100px 0px" }}
                   transition={{ duration: 0.4 }}
                 >
-                  <div className="bg-white text-gray-800 p-3 rounded-2xl rounded-bl-none max-w-xs text-sm shadow-sm border border-gray-200">
+                  <div className="bg-primary text-white p-3 rounded-2xl rounded-br-none max-w-xs text-sm shadow-md">
                     <p>Hey this is Sophie from XYZ, is this the same John that got a product quote from us a couple of months ago?</p>
                   </div>
                 </motion.div>
 
-                {/* John Message 1 */}
+                {/* John Message 1 (Recipient - Left side, light gray) */}
                 <motion.div 
-                  className="flex justify-end"
-                  initial={{ opacity: 0, x: 20 }}
+                  className="flex justify-start"
+                  initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: "0px 0px -100px 0px" }}
                   transition={{ duration: 0.4, delay: 0.1 }}
                 >
-                  <div className="bg-green-600 text-white p-3 rounded-2xl rounded-br-none max-w-xs text-sm shadow-md">
+                  <div className="bg-gray-200 text-gray-800 p-3 rounded-2xl rounded-bl-none max-w-xs text-sm shadow-sm">
                     <p>Hey yes, I remember that.</p>
                   </div>
                 </motion.div>
 
-                {/* Sophie Message 2 */}
+                {/* Sophie Message 2 (You/User - Right side, teal) */}
                 <motion.div 
-                  className="flex justify-start"
-                  initial={{ opacity: 0, x: -20 }}
+                  className="flex justify-end"
+                  initial={{ opacity: 0, x: 20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: "0px 0px -100px 0px" }}
                   transition={{ duration: 0.4, delay: 0.2 }}
                 >
-                  <div className="bg-white text-gray-800 p-3 rounded-2xl rounded-bl-none max-w-xs text-sm shadow-sm border border-gray-200">
+                  <div className="bg-primary text-white p-3 rounded-2xl rounded-br-none max-w-xs text-sm shadow-md">
                     <p>Great! My calendar booked me to call you but I didn't want to disturb you. Are you still interested?</p>
                   </div>
                 </motion.div>
 
-                {/* John Message 2 */}
-                <motion.div 
-                  className="flex justify-end"
-                  initial={{ opacity: 0, x: 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-                  transition={{ duration: 0.4, delay: 0.3 }}
-                >
-                  <div className="bg-green-600 text-white p-3 rounded-2xl rounded-br-none max-w-xs text-sm shadow-md">
-                    <p>Maybe, I haven't thought about that for a while</p>
-                  </div>
-                </motion.div>
-
-                {/* Sophie Message 3 */}
+                {/* John Message 2 (Recipient - Left side, light gray) */}
                 <motion.div 
                   className="flex justify-start"
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-                  transition={{ duration: 0.4, delay: 0.4 }}
+                  transition={{ duration: 0.4, delay: 0.3 }}
                 >
-                  <div className="bg-white text-gray-800 p-3 rounded-2xl rounded-bl-none max-w-xs text-sm shadow-sm border border-gray-200">
-                    <p>Let me ask you, what fitness goals are you aiming to achieve?</p>
+                  <div className="bg-gray-200 text-gray-800 p-3 rounded-2xl rounded-bl-none max-w-xs text-sm shadow-sm">
+                    <p>Maybe, I haven't thought about that for a while</p>
                   </div>
                 </motion.div>
 
-                {/* Typing indicator */}
+                {/* Sophie Message 3 (You/User - Right side, teal) */}
                 <motion.div 
                   className="flex justify-end"
                   initial={{ opacity: 0, x: 20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+                  transition={{ duration: 0.4, delay: 0.4 }}
+                >
+                  <div className="bg-primary text-white p-3 rounded-2xl rounded-br-none max-w-xs text-sm shadow-md">
+                    <p>Let me ask you, what fitness goals are you aiming to achieve?</p>
+                  </div>
+                </motion.div>
+
+                {/* Typing indicator (Recipient typing) */}
+                <motion.div 
+                  className="flex justify-start"
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "0px 0px -100px 0px" }}
                   transition={{ duration: 0.4, delay: 0.5 }}
                 >
-                  <div className="bg-gray-200 text-gray-600 p-3 rounded-2xl rounded-br-none flex items-center gap-1">
+                  <div className="bg-gray-200 text-gray-600 p-3 rounded-2xl rounded-bl-none flex items-center gap-1">
                     <span className="w-2 h-2 bg-gray-600 rounded-full animate-bounce"></span>
                     <span className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></span>
                     <span className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></span>
@@ -179,33 +179,35 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Trust Bar */}
-      <section className="py-12 border-y border-border bg-muted/20">
+      {/* Trust Bar - Seamless Integration */}
+      <section className="py-16 border-y border-border bg-muted/20">
         <div className="container mx-auto px-4 md:px-6">
-          <p className="text-center text-sm font-semibold text-muted-foreground mb-6 uppercase tracking-wide">
-            Built with tools you already use
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-8 items-center justify-center">
-            {[
-              { name: "CRM", icon: "📊" },
-              { name: "WhatsApp/SMS", icon: "💬" },
-              { name: "Email", icon: "✉️" },
-              { name: "Calendars", icon: "📅" },
-              { name: "Webhooks", icon: "🔗" },
-              { name: "Databases", icon: "🗄️" },
-            ].map((tool, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="flex flex-col items-center gap-2 text-center"
-              >
-                <div className="text-3xl">{tool.icon}</div>
-                <p className="text-sm font-medium text-foreground">{tool.name}</p>
-              </motion.div>
-            ))}
+          <div className="max-w-3xl mx-auto">
+            <h3 className="text-2xl md:text-3xl font-bold mb-4 text-center">Seamless Integration, No Learning Curve</h3>
+            <p className="text-center text-muted-foreground mb-10 text-lg">Your existing stack becomes an automation powerhouse.</p>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              {[
+                { name: "CRM Systems", icon: "📊" },
+                { name: "WhatsApp, SMS & Chat", icon: "💬" },
+                { name: "Email Platforms", icon: "✉️" },
+                { name: "Calendar Apps", icon: "📅" },
+                { name: "Webhook Endpoints", icon: "🔗" },
+                { name: "Databases", icon: "🗄️" },
+              ].map((tool, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.05 }}
+                  className="flex flex-col items-center gap-3 text-center"
+                >
+                  <div className="text-4xl">{tool.icon}</div>
+                  <p className="text-sm font-medium text-foreground">{tool.name}</p>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -326,6 +328,51 @@ export default function Home() {
               </motion.div>
             ))}
           </div>
+
+          {/* CRM Pipeline Visual */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-20 bg-card rounded-2xl border border-border p-8 md:p-10 overflow-hidden"
+          >
+            <h4 className="text-lg font-bold mb-8 text-center">Your Conversion Pipeline in Action</h4>
+            <div className="space-y-4">
+              {[
+                { stage: "New Leads", leads: [{ name: "John Smith", phone: "+1 (555) 123-4567", time: "Just now" }, { name: "Sarah Johnson", phone: "+1 (555) 234-5678", time: "2 min ago" }] },
+                { stage: "Contacted", leads: [{ name: "Mike Chen", phone: "+1 (555) 345-6789", time: "5 min ago" }] },
+                { stage: "Qualified", leads: [{ name: "Emma Davis", phone: "+1 (555) 456-7890", time: "12 min ago" }] },
+                { stage: "Booked", leads: [{ name: "Alex Taylor", phone: "+1 (555) 567-8901", time: "2 hours ago" }] }
+              ].map((column, colIdx) => (
+                <motion.div
+                  key={colIdx}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: colIdx * 0.1 }}
+                  className="flex items-start gap-4"
+                >
+                  <div className="w-32 text-sm font-semibold text-primary flex-shrink-0 pt-1">{column.stage}</div>
+                  <div className="flex-1 space-y-3">
+                    {column.leads.map((lead, idx) => (
+                      <motion.div
+                        key={idx}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: colIdx * 0.1 + idx * 0.05 }}
+                        className="bg-muted/50 p-3 rounded-lg border border-border/50 text-sm"
+                      >
+                        <p className="font-medium text-foreground">{lead.name}</p>
+                        <p className="text-muted-foreground text-xs mt-1">{lead.phone}</p>
+                        <p className="text-muted-foreground text-xs mt-1">Last replied: {lead.time}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </section>
 

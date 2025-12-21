@@ -29,7 +29,7 @@ export default function About() {
             <img 
               src={profilePhoto} 
               alt="Lead Awaker Founder" 
-              className="rounded-2xl shadow-2xl border border-border w-full"
+              className="rounded-2xl shadow-2xl border border-border w-full object-cover aspect-square"
             />
           </motion.div>
           
