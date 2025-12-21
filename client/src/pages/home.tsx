@@ -68,7 +68,7 @@ export default function Home() {
                 </Link>
                 <Link href="#how-it-works">
                   <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2">
-                    See the System
+                    How It Works
                   </Button>
                 </Link>
               </div>
@@ -212,62 +212,105 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Services Section */}
+      {/* Pain Points Section */}
       <section className="py-24">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="max-w-2xl mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">What We Do</h2>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center max-w-3xl mx-auto mb-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Manual Reactivation Is Broken</h2>
             <p className="text-lg text-muted-foreground">
-              Comprehensive automation for every stage of your sales process.
+              B2B sales teams are drowning in dead lead databases while burning resources.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
             {[
-              {
-                icon: <MessageSquare className="w-8 h-8" />,
-                title: "Lead Follow-up Automation",
-                desc: "Instantly respond to new leads with AI-driven personalized sequences."
-              },
-              {
-                icon: <Database className="w-8 h-8" />,
-                title: "CRM Pipeline + Segmentation",
-                desc: "Automatically organize and segment leads based on behavior and interest."
-              },
-              {
-                icon: <CheckCircle className="w-8 h-8" />,
-                title: "AI Qualification & Routing",
-                desc: "AI qualifies leads and routes them to the right team member instantly."
-              },
-              {
-                icon: <Calendar className="w-8 h-8" />,
-                title: "Appointment Booking Flows",
-                desc: "One-click scheduling integrated with your calendar and CRM."
-              },
-              {
-                icon: <BarChart className="w-8 h-8" />,
-                title: "Reporting Dashboards",
-                desc: "Real-time visibility into response rates, conversions, and revenue impact."
-              },
-              {
-                icon: <Zap className="w-8 h-8" />,
-                title: "Integrations & Maintenance",
-                desc: "Seamless setup with your existing stack, ongoing optimization."
-              }
-            ].map((service, i) => (
+              { icon: "📋", title: "Messy spreadsheets or bloated CRMs filled with thousands of dead leads" },
+              { icon: "⏰", title: "Sales reps spend 20-40 hours weekly on repetitive, soul-crushing outreach" },
+              { icon: "❌", title: "5-10% response rates with zero ROI on cold leads" },
+              { icon: "👥", title: "Generic mass blasts that get ignored or marked as spam" },
+              { icon: "🔄", title: "Team burnout, morale tanks, turnover increases" }
+            ].map((pain, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className="bg-card p-8 rounded-2xl border border-border hover:shadow-lg transition-shadow group"
+                transition={{ delay: i * 0.05 }}
+                className="bg-red-50 border border-red-200 p-6 rounded-xl text-center"
               >
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
-                  {service.icon}
+                <div className="text-3xl mb-3">{pain.icon}</div>
+                <p className="text-sm font-medium text-gray-700">{pain.title}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-blue-50 border border-blue-200 p-6 rounded-xl text-center max-w-2xl mx-auto"
+          >
+            <p className="text-sm"><span className="font-bold text-blue-700">Bottom Line:</span> <span className="text-gray-700">Companies have invested thousands in acquiring these leads, but they're leaving money on the table because reactivation is too painful and ineffective.</span></p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Solution Section */}
+      <section className="py-24 bg-muted/30">
+        <div className="container mx-auto px-4 md:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center max-w-3xl mx-auto mb-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Your AI Sales Android</h2>
+            <p className="text-lg text-muted-foreground">
+              Our simple 3-step process turns your dormant leads into fresh revenue.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                num: "1",
+                title: "Upload Your Database",
+                desc: "Plug in your CRM export and the AI starts working immediately. We analyze it to identify dormant leads with sales potential."
+              },
+              {
+                num: "2",
+                title: "AI Conversations Begin",
+                desc: "GPT-4o generates natural, contextual messages tailored to each lead—not robotic templates. Human-like two-way dialogue."
+              },
+              {
+                num: "3",
+                title: "Watch Sales Roll In",
+                desc: "Qualified leads are warmed up and meetings booked directly on your calendar. 24/7 autonomous operation."
+              }
+            ].map((step, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-card p-8 rounded-2xl border border-border relative"
+              >
+                <div className="absolute -top-6 -right-6 w-12 h-12 bg-accent text-white rounded-full flex items-center justify-center text-lg font-bold shadow-lg">
+                  {step.num}
                 </div>
-                <h3 className="text-xl font-bold mb-3">{service.title}</h3>
-                <p className="text-muted-foreground">{service.desc}</p>
+                <div className="text-3xl mb-4">
+                  {i === 0 && "📊"}
+                  {i === 1 && "💬"}
+                  {i === 2 && "📈"}
+                </div>
+                <h3 className="text-xl font-bold mb-3">{step.title}</h3>
+                <p className="text-muted-foreground">{step.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -352,22 +395,24 @@ export default function Home() {
                   transition={{ delay: colIdx * 0.1 }}
                   className="flex items-start gap-4"
                 >
-                  <div className="w-32 text-sm font-semibold text-primary flex-shrink-0 pt-1">{column.stage}</div>
+                  <div className="w-32 text-sm font-semibold text-accent flex-shrink-0 pt-1">{column.stage}</div>
                   <div className="flex-1 space-y-3">
-                    {column.leads.map((lead, idx) => (
-                      <motion.div
-                        key={idx}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: colIdx * 0.1 + idx * 0.05 }}
-                        className="bg-muted/50 p-3 rounded-lg border border-border/50 text-sm"
-                      >
-                        <p className="font-medium text-foreground">{lead.name}</p>
-                        <p className="text-muted-foreground text-xs mt-1">{lead.phone}</p>
-                        <p className="text-muted-foreground text-xs mt-1">Last replied: {lead.time}</p>
-                      </motion.div>
-                    ))}
+                    <div className="flex flex-wrap gap-3">
+                      {column.leads.map((lead, idx) => (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          whileInView={{ opacity: 1, scale: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: colIdx * 0.1 + idx * 0.05 }}
+                          className="bg-muted/50 p-3 rounded-lg border border-border/50 text-sm flex-1 min-w-[180px]"
+                        >
+                          <p className="font-medium text-foreground">{lead.name}</p>
+                          <p className="text-muted-foreground text-xs mt-1">{lead.phone}</p>
+                          <p className="text-muted-foreground text-xs mt-1">Last replied: {lead.time}</p>
+                        </motion.div>
+                      ))}
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -376,50 +421,87 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Use Cases */}
+      {/* Results Section */}
       <section className="py-24">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="max-w-2xl mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Real-World Use Cases</h2>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center max-w-3xl mx-auto mb-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Within 30 Days</h2>
             <p className="text-lg text-muted-foreground">
-              See how businesses are using Lead Awaker to scale their sales.
+              Real results from real sales teams using Lead Awaker.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             {[
               {
-                title: "Inbound Lead Response in Under 60 Seconds",
-                desc: "AI responds to form submissions instantly, answer questions, and qualify before humans take over."
+                metric: "40-60%",
+                label: "Reply Rates",
+                subtext: "vs industry 5-10%"
               },
               {
-                title: "No-Show Reduction",
-                desc: "Automated reminders and rescheduling cut no-shows by up to 60%."
+                metric: "15-25%",
+                label: "Leads Reactivated",
+                subtext: "into opportunities"
               },
               {
-                title: "Reactivation Campaigns",
-                desc: "Turn dormant leads from 6+ months ago into fresh conversations and closed deals."
+                metric: "40+",
+                label: "Hours Saved",
+                subtext: "per rep/month"
               },
               {
-                title: "Multi-Language Follow-up",
-                desc: "AI automatically responds in the lead's preferred language for global sales teams."
+                metric: "$0",
+                label: "Upfront Cost",
+                subtext: "performance pricing"
               }
-            ].map((useCase, i) => (
+            ].map((result, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, x: i % 2 === 0 ? -20 : 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="flex gap-6 items-start bg-card p-8 rounded-2xl border border-border hover:shadow-lg transition-shadow"
+                transition={{ delay: i * 0.1 }}
+                className="bg-card p-8 rounded-2xl border border-border text-center"
               >
-                <div className="w-2 h-2 mt-2 rounded-full bg-primary flex-shrink-0" />
-                <div>
-                  <h3 className="text-lg font-bold mb-2">{useCase.title}</h3>
-                  <p className="text-muted-foreground">{useCase.desc}</p>
-                </div>
+                <div className="text-4xl md:text-5xl font-bold text-primary mb-2">{result.metric}</div>
+                <h3 className="text-lg font-bold mb-1">{result.label}</h3>
+                <p className="text-sm text-muted-foreground">{result.subtext}</p>
               </motion.div>
             ))}
           </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 p-8 rounded-2xl text-center max-w-2xl mx-auto"
+          >
+            <h3 className="text-2xl font-bold mb-3">From Chaos to Passive Revenue</h3>
+            <p className="text-muted-foreground text-lg">
+              Sales teams shift from grind to strategy while Lead Awaker generates pipeline automatically.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Logo Section */}
+      <section className="py-16 border-t border-border">
+        <div className="container mx-auto px-4 md:px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <img 
+              src={leadLogo} 
+              alt="Lead Awaker Logo" 
+              className="w-48 mx-auto drop-shadow-lg"
+            />
+          </motion.div>
         </div>
       </section>
 

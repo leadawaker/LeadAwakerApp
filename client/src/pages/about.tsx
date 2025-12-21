@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { CheckCircle2, Users, Rocket, Target } from "lucide-react";
+import { Users, Rocket, Target, Code2, TrendingUp, Briefcase } from "lucide-react";
 import profilePhoto from "@assets/Screenshot_20251219_160952_ChatGPT_1766322249853.jpg";
 import mainLogo from "@assets/Project_(20251219120952)_1766322389784.jpg";
 
@@ -7,94 +7,117 @@ export default function About() {
   return (
     <div className="min-h-screen pt-24 pb-20">
       <div className="container mx-auto px-4 md:px-6">
-        <div className="max-w-3xl mx-auto text-center mb-16">
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-5xl font-bold mb-6"
-          >
-            About Lead Awaker
-          </motion.h1>
-          <p className="text-xl text-muted-foreground">
-            We are an AI automation agency dedicated to unlocking hidden revenue in your business.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-12 items-center mb-24">
+        {/* Meet the Founder */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center max-w-3xl mx-auto mb-20"
+        >
+          <h1 className="text-4xl md:text-5xl font-bold mb-2">Meet the Founder</h1>
+          <p className="text-xl text-accent font-semibold mb-12">Gabriel Fronza</p>
+          
           <motion.div
-             initial={{ opacity: 0, x: -20 }}
-             animate={{ opacity: 1, x: 0 }}
-             transition={{ delay: 0.2 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="mb-16"
           >
             <img 
               src={profilePhoto} 
-              alt="Lead Awaker Founder" 
-              className="rounded-2xl shadow-2xl border border-border w-full object-cover aspect-square"
+              alt="Gabriel Fronza, Founder" 
+              className="rounded-2xl shadow-2xl border border-border w-72 h-72 object-cover mx-auto"
             />
           </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
-            <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-              Most businesses sit on a goldmine of unconverted leads. You paid for them, they showed interest, but life got in the way.
-            </p>
-            <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-              At Lead Awaker, we believe you shouldn't have to keep spending more on ads to get new sales. Our mission is to reactivate your existing database using intelligent, human-like AI conversations that convert at scale.
-            </p>
-            
-            <div className="space-y-4">
-              {[
-                "Data-Driven Approach",
-                "Advanced AI Technology",
-                "Results-Oriented Strategy",
-                "Seamless Integration"
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <CheckCircle2 className="text-primary w-5 h-5" />
-                  <span className="font-medium">{item}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
+        </motion.div>
 
-        {/* Values Grid */}
-        <div className="grid md:grid-cols-3 gap-8">
+        {/* Background Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-24">
           {[
             {
-              icon: <Users className="w-10 h-10 text-accent" />,
-              title: "Customer First",
-              desc: "We prioritize your customer's experience, ensuring every AI interaction feels personal and helpful."
+              icon: <Code2 className="w-6 h-6 text-primary" />,
+              title: "Software Development",
+              items: [
+                "10 years software development experience",
+                "Worked at Framestore, Sega, New World Interactive",
+                "Shipped 5 video games and 1 major motion picture",
+                "Tom & Jerry movie $316M gross revenue",
+                "Insurgency: Sandstorm: $52M revenue"
+              ]
             },
             {
-              icon: <Target className="w-10 h-10 text-primary" />,
-              title: "Precision Targeting",
-              desc: "We don't just blast messages. We target specific segments of your list with relevant offers."
+              icon: <TrendingUp className="w-6 h-6 text-primary" />,
+              title: "Data Analysis & Trading",
+              items: [
+                "5 years data analysis & trading mastery",
+                "Built custom AI tools for trading performance",
+                "Live coaching and feedback systems",
+                "Automated weekly/monthly performance reports",
+                "Custom TradingView code for data automation",
+                "Created Telegram trading bot for personal use"
+              ]
             },
             {
-              icon: <Rocket className="w-10 h-10 text-accent" />,
-              title: "Rapid Growth",
-              desc: "Our goal is to add significant revenue to your bottom line within the first 30 days."
+              icon: <Briefcase className="w-6 h-6 text-primary" />,
+              title: "AI Automation",
+              items: [
+                "Built complete AI agency infrastructure",
+                "Lead enrichment systems for HubSpot clients",
+                "Developed scraping tools and business automation",
+                "Self-taught no-code/low-code AI development",
+                "Combined automation with data analysis expertise"
+              ]
+            },
+            {
+              icon: <Rocket className="w-6 h-6 text-accent" />,
+              title: "Current Focus",
+              items: [
+                "Founded TA Monks (4 years) with wife Denisse",
+                "Transitioned to building Lead Awaker",
+                "Inspired by proven frameworks: $100M",
+                "Offers and Instant AI Agency",
+                "Goal: Scale to $100M ARR"
+              ]
             }
-          ].map((val, i) => (
+          ].map((section, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.4 + (i * 0.1) }}
-              className="bg-muted/30 p-8 rounded-2xl border border-border"
+              transition={{ delay: i * 0.1 }}
+              className="bg-card p-6 rounded-2xl border border-border"
             >
-              <div className="mb-6">{val.icon}</div>
-              <h3 className="text-xl font-bold mb-3">{val.title}</h3>
-              <p className="text-muted-foreground">{val.desc}</p>
+              <div className="mb-4">{section.icon}</div>
+              <h3 className="text-lg font-bold mb-4">{section.title}</h3>
+              <ul className="space-y-2">
+                {section.items.map((item, idx) => (
+                  <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
             </motion.div>
           ))}
         </div>
+
+        {/* Mission Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="max-w-3xl mx-auto mb-24"
+        >
+          <h2 className="text-3xl font-bold mb-8 text-center">Our Mission</h2>
+          <div className="space-y-6 text-lg text-muted-foreground">
+            <p>
+              Most businesses sit on a goldmine of unconverted leads. You paid for them, they showed interest, but life got in the way.
+            </p>
+            <p>
+              At Lead Awaker, we believe you shouldn't have to keep spending more on ads to get new sales. Our mission is to reactivate your existing database using intelligent, human-like AI conversations that convert at scale.
+            </p>
+          </div>
+        </motion.div>
 
         {/* Logo Section */}
         <motion.div
