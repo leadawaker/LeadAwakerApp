@@ -421,74 +421,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Results Section */}
-      <section className="py-24">
-        <div className="container mx-auto px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center max-w-3xl mx-auto mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Within 30 Days</h2>
-            <p className="text-lg text-muted-foreground">
-              Real results from real sales teams using Lead Awaker.
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-            {[
-              {
-                metric: "40-60%",
-                label: "Reply Rates",
-                subtext: "vs industry 5-10%"
-              },
-              {
-                metric: "15-25%",
-                label: "Leads Reactivated",
-                subtext: "into opportunities"
-              },
-              {
-                metric: "40+",
-                label: "Hours Saved",
-                subtext: "per rep/month"
-              },
-              {
-                metric: "$0",
-                label: "Upfront Cost",
-                subtext: "performance pricing"
-              }
-            ].map((result, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-card p-8 rounded-2xl border border-border text-center"
-              >
-                <div className="text-4xl md:text-5xl font-bold text-primary mb-2">{result.metric}</div>
-                <h3 className="text-lg font-bold mb-1">{result.label}</h3>
-                <p className="text-sm text-muted-foreground">{result.subtext}</p>
-              </motion.div>
-            ))}
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 p-8 rounded-2xl text-center max-w-2xl mx-auto"
-          >
-            <h3 className="text-2xl font-bold mb-3">From Chaos to Passive Revenue</h3>
-            <p className="text-muted-foreground text-lg">
-              Sales teams shift from grind to strategy while Lead Awaker generates pipeline automatically.
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Results Section */}
+      {/* Results/Metrics Section */}
       <section className="py-24">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
@@ -605,61 +538,62 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-24 bg-muted/30">
+      {/* Security & AI Guardrails Section */}
+      <section className="py-24">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="max-w-2xl mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Trusted by Sales Leaders</h2>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center max-w-3xl mx-auto mb-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Security, Compliance, and Reputation Built In</h2>
+            <p className="text-lg text-muted-foreground">Your brand and data stay protected every step of the way.</p>
+          </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-4 gap-8">
             {[
               {
-                quote: "We cut response time from hours to seconds. Qualified leads are on our sales team's calendar before they even realize they're qualified.",
-                author: "Sarah Chen",
-                title: "VP Sales, SaaS Company"
+                title: "Data Protection",
+                desc: "Encrypted data handling and restricted access"
               },
               {
-                quote: "The reactivation campaign alone brought in 15+ deals we thought were dead. We're recovering revenue without any additional ad spend.",
-                author: "Marcus Rodriguez",
-                title: "Founder, E-commerce Marketplace"
+                title: "Compliance",
+                desc: "GDPR/CCPA-friendly practices built in"
               },
               {
-                quote: "No more manual follow-ups, no more leads falling through the cracks. Everything moves predictably through the pipeline.",
-                author: "Jessica Kim",
-                title: "Sales Director, B2B Services"
+                title: "AI Guardrails",
+                desc: "Safety filters on every interaction"
+              },
+              {
+                title: "Sender Reputation",
+                desc: "Protects your brand from spammy outreach"
               }
-            ].map((testimonial, i) => (
+            ].map((item, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-card p-8 rounded-2xl border border-border"
+                className="bg-card p-6 rounded-xl border border-border text-center"
               >
-                <p className="text-muted-foreground mb-6 italic">"{testimonial.quote}"</p>
-                <div>
-                  <p className="font-bold">{testimonial.author}</p>
-                  <p className="text-sm text-muted-foreground">{testimonial.title}</p>
-                </div>
+                <h3 className="text-lg font-bold mb-3">{item.title}</h3>
+                <p className="text-sm text-muted-foreground">{item.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-24">
+      {/* FAQ Teaser */}
+      <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6 max-w-3xl">
           <div className="mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
-            <p className="text-lg text-muted-foreground">
-              Everything you need to know about getting started.
-            </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 mb-12">
             {[
               {
                 q: "What's the setup time?",
@@ -672,22 +606,6 @@ export default function Home() {
               {
                 q: "How much does it cost?",
                 a: "Pricing starts at [custom quote]. We work on performance-based or flat-fee models depending on your preference. No upfront setup fees."
-              },
-              {
-                q: "Who has access to our lead data?",
-                a: "Only you and your team. Data stays in your CRM. We never store or sell lead information. GDPR and SOC2 compliant."
-              },
-              {
-                q: "What if something breaks?",
-                a: "We provide 24/7 monitoring and support. If a workflow fails, we fix it immediately and notify you with a detailed report."
-              },
-              {
-                q: "Can we pause or cancel anytime?",
-                a: "Yes. No long-term contracts. You can pause or cancel monthly plans with 30 days notice."
-              },
-              {
-                q: "Do you provide training?",
-                a: "Yes. We include onboarding training for your team and ongoing support to optimize performance."
               },
               {
                 q: "What about compliance (GDPR, CCPA)?",
@@ -725,82 +643,48 @@ export default function Home() {
               </motion.div>
             ))}
           </div>
+
+          <div className="text-center">
+            <Link href="/faq">
+              <Button variant="outline" className="border-2">
+                View All FAQs
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* Contact Section */}
+      {/* Bottom Demo CTA */}
       <section className="py-24 bg-primary text-primary-foreground relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 mix-blend-overlay" style={{backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')"}} />
         <div className="container mx-auto px-4 md:px-6 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-3xl md:text-5xl font-bold mb-6">
-                Ready to automate your sales?
-              </h2>
-              <p className="text-xl opacity-90 mb-8 leading-relaxed">
-                Book a call with our team. We'll audit your process and show you exactly what's possible.
-              </p>
-              <div className="space-y-4">
-                <p className="text-sm opacity-75">Average setup: 2-5 days | No long-term contracts</p>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20"
-            >
-              <form className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Full Name</label>
-                  <input
-                    type="text"
-                    placeholder="Your name"
-                    className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50"
-                    data-testid="input-name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Email</label>
-                  <input
-                    type="email"
-                    placeholder="you@company.com"
-                    className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50"
-                    data-testid="input-email"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Company</label>
-                  <input
-                    type="text"
-                    placeholder="Your company"
-                    className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50"
-                    data-testid="input-company"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Message</label>
-                  <textarea
-                    placeholder="Tell us about your sales process..."
-                    rows={4}
-                    className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 resize-none"
-                    data-testid="textarea-message"
-                  />
-                </div>
-                <Button className="w-full bg-white text-primary hover:bg-white/90 font-bold h-12 rounded-lg" data-testid="button-submit">
-                  Schedule a Demo
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center max-w-2xl mx-auto"
+          >
+            <h2 className="text-3xl md:text-5xl font-bold mb-6">
+              Ready to convert dead leads into booked sales?
+            </h2>
+            <p className="text-lg opacity-90 mb-8 leading-relaxed">
+              See how we've helped 50+ B2B companies reactivate their dormant databases and generate thousands in new revenue.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/book-demo">
+                <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-white text-primary hover:bg-white/90 font-bold">
+                  Book a Demo
+                  <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
-                <p className="text-xs opacity-75 text-center">
-                  This is a demo form. In production, we'll use your booking link.
-                </p>
-              </form>
-            </motion.div>
-          </div>
+              </Link>
+              <Link href="#demo">
+                <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 border-white text-white hover:bg-white/10">
+                  See How It Works
+                </Button>
+              </Link>
+            </div>
+            <p className="text-sm opacity-75 mt-8">Average setup: 2-5 days | Performance-based pricing</p>
+          </motion.div>
         </div>
       </section>
     </div>
