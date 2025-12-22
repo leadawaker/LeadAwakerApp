@@ -293,11 +293,11 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center max-w-3xl mx-auto mb-16"
+            className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 p-8 rounded-2xl text-center max-w-3xl mx-auto mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Within 30 Days</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">From chaos to certainty - passive revenue within 30 days</h2>
             <p className="text-lg text-muted-foreground">
-              Real results from real sales teams using Lead Awaker.
+              Sales teams shift from grind to strategy while Lead Awaker generates pipeline automatically.
             </p>
           </motion.div>
 
@@ -338,18 +338,6 @@ export default function Home() {
               </motion.div>
             ))}
           </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 p-8 rounded-2xl text-center max-w-2xl mx-auto"
-          >
-            <h3 className="text-2xl font-bold mb-3">From Chaos to Passive Revenue</h3>
-            <p className="text-muted-foreground text-lg">
-              Sales teams shift from grind to strategy while Lead Awaker generates pipeline automatically.
-            </p>
-          </motion.div>
         </div>
       </section>
 
