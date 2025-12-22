@@ -259,7 +259,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 p-8 rounded-2xl text-center max-w-3xl mx-auto mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">From chaos to certainty - passive revenue within 30 days</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">From chaos to certainty in 30 days</h2>
             <p className="text-lg text-muted-foreground">
               Sales teams shift from grind to strategy while Lead Awaker generates pipeline automatically.
             </p>
@@ -275,7 +275,7 @@ export default function Home() {
               {
                 metric: "15-25%",
                 label: "Leads Reactivated",
-                subtext: "into opportunities"
+                subtext: "into live opportunities"
               },
               {
                 metric: "40+",
@@ -285,7 +285,7 @@ export default function Home() {
               {
                 metric: "$0",
                 label: "Upfront Cost",
-                subtext: "performance pricing"
+                subtext: "performance‑based pricing"
               }
             ].map((result, i) => (
               <motion.div
