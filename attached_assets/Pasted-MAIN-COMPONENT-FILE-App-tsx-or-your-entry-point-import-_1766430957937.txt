@@ -1,0 +1,339 @@
+MAIN COMPONENT FILE (App.tsx or your entry point)
+import { PipelineChart } from "@/components/PipelineChart";
+export default function Dashboard() {
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8 grid place-items-center">
+      <PipelineChart />
+    </div>
+  );
+}
+MAIN FEATURE COMPONENT (PipelineChart.tsx)
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { User, MessageSquare, CheckCircle, CalendarCheck, MoreHorizontal } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+type StageId = "engaged" | "replied" | "qualified" | "booked";
+interface Lead {
+  id: string;
+  name: string;
+  lastContacted: number;
+  phone: string;
+}
+interface Stage {
+  id: StageId;
+  title: string;
+  icon: React.ReactNode;
+  colorClass: string;
+  headerClass: string;
+  textColorClass: string;
+  customStyle?: React.CSSProperties;
+  customTextStyle?: React.CSSProperties;
+}
+const STAGES: Stage[] = [
+  {
+    id: "engaged",
+    title: "Lead Engaged",
+    icon: <User className="w-5 h-5" />,
+    colorClass: "border-slate-300 text-slate-50",
+    headerClass: "text-slate-100",
+    textColorClass: "text-slate-100",
+    customStyle: { backgroundColor: "#00473E" },
+    customTextStyle: { color: "#00473E" },
+  },
+  {
+    id: "replied",
+    title: "Lead Replied",
+    icon: <MessageSquare className="w-5 h-5" />,
+    colorClass: "border-slate-300 text-slate-50",
+    headerClass: "text-slate-100",
+    textColorClass: "text-slate-100",
+    customStyle: { backgroundColor: "#007A6A" },
+    customTextStyle: { color: "#007A6A" },
+  },
+  {
+    id: "qualified",
+    title: "Lead Qualified",
+    icon: <CheckCircle className="w-5 h-5" />,
+    colorClass: "border-slate-300 text-slate-50",
+    headerClass: "text-black",
+    textColorClass: "text-slate-100",
+    customStyle: { backgroundColor: "#00B595" },
+    customTextStyle: { color: "#00B595" },
+  },
+  {
+    id: "booked",
+    title: "Lead Booked",
+    icon: <CalendarCheck className="w-5 h-5" />,
+    colorClass: "bg-yellow-400 border-yellow-300 text-yellow-900",
+    headerClass: "bg-yellow-500/40 text-yellow-800 dark:text-yellow-200",
+    textColorClass: "text-yellow-600 dark:text-yellow-500",
+  },
+];
+const INITIAL_LEADS: Record<StageId, Lead[]> = {
+  engaged: [
+    { id: "l1", name: "Alice Chen", lastContacted: Date.now() - 300000, phone: "+1 123-4567" },
+    { id: "l2", name: "Bob Smith", lastContacted: Date.now() - 600000, phone: "+1 234-5678" },
+    { id: "l3", name: "Carol Wu", lastContacted: Date.now() - 900000, phone: "+1 345-6789" },
+  ],
+  replied: [
+    { id: "l4", name: "David Miller", lastContacted: Date.now() - 1200000, phone: "+1 456-7890" },
+  ],
+  qualified: [
+    { id: "l5", name: "Eva Green", lastContacted: Date.now() - 1500000, phone: "+1 567-8901" },
+  ],
+  booked: [
+    { id: "l6", name: "Frank Wright", lastContacted: Date.now() - 1800000, phone: "+1 678-9012" },
+  ],
+};
+export function PipelineChart() {
+  const [leads, setLeads] = useState(INITIAL_LEADS);
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      moveRandomLead();
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [leads]);
+  useEffect(() => {
+    const ticker = setInterval(() => {
+      setTick(t => t + 1);
+    }, 100);
+    return () => clearInterval(ticker);
+  }, []);
+  const formatTimeAgo = (timestamp: number) => {
+    const elapsedMs = (Date.now() - timestamp) * 1200;
+    const elapsedSeconds = Math.floor(elapsedMs / 1000);
+    const hours = Math.floor(elapsedSeconds / 3600);
+    
+    if (hours > 3) return "3h ago";
+    if (hours === 0) return "0h ago";
+    return `${hours}h ago`;
+  };
+  const moveRandomLead = () => {
+    const moves: { from: StageId; to: StageId }[] = [
+      { from: "qualified", to: "booked" },
+      { from: "replied", to: "qualified" },
+      { from: "engaged", to: "replied" },
+    ];
+    const possibleMoves = moves.filter(m => leads[m.from].length > 0);
+    
+    if (possibleMoves.length === 0) return;
+    const move = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+    
+    setLeads(prev => {
+      const fromLeads = [...prev[move.from]];
+      const leadToMove = fromLeads.shift();
+      
+      if (!leadToMove) return prev;
+      return {
+        ...prev,
+        [move.from]: fromLeads,
+        [move.to]: [...prev[move.to], { ...leadToMove, lastContacted: Date.now() }]
+      };
+    });
+  };
+  return (
+    <div className="w-full p-6 space-y-8">
+      <div className="text-center space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Your Conversion Pipeline in Action
+        </h2>
+        <p className="text-slate-500 dark:text-slate-400">
+          Real-time view of leads becoming customers
+        </p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
+        {STAGES.map((stage) => (
+          <div key={stage.id} className="flex flex-col">
+            <div className="flex flex-col bg-slate-50/50 dark:bg-slate-900/50 rounded-xl p-2 border border-slate-200 dark:border-slate-800 w-full">
+            {/* Header */}
+            <div 
+              className={`sticky top-2 p-3 rounded-lg mb-3 flex items-center justify-between shadow-sm backdrop-blur-sm ${stage.colorClass} z-10`}
+              style={stage.customStyle ? { ...stage.customStyle, backgroundColor: stage.customStyle.backgroundColor } : undefined}
+            >
+              <div className="flex items-center gap-2 font-medium">
+                {stage.icon}
+                <span className="text-sm">{stage.title}</span>
+              </div>
+              <Badge variant="secondary" className="bg-white/40 text-current hover:bg-white/50 border-0">
+                {leads[stage.id].length}
+              </Badge>
+            </div>
+            {/* Drop Zone / List */}
+            <div className="space-y-2">
+              <AnimatePresence mode="popLayout">
+                {leads[stage.id].map((lead) => (
+                  <motion.div
+                    key={lead.id}
+                    layoutId={lead.id}
+                    initial={{ opacity: 0, scale: 0.8, y: -20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                    transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                  >
+                    <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                      <CardContent className="p-3 space-y-2">
+                        <div className="flex justify-between items-start">
+                          <div 
+                            className={`font-semibold text-sm ${stage.textColorClass}`}
+                            style={stage.customTextStyle}
+                          >
+                            {lead.name}
+                          </div>
+                          <MoreHorizontal className="w-4 h-4 text-slate-400" />
+                        </div>
+                        <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
+                          <span>{formatTimeAgo(lead.lastContacted)}</span>
+                          <span className="font-mono font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded text-[0.65rem]">
+                            {lead.phone}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              
+              {leads[stage.id].length === 0 && (
+                <div className="flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-slate-400 text-xs italic bg-slate-50 dark:bg-slate-900 p-3">
+                  No leads in this stage
+                </div>
+              )}
+            </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+UI COMPONENTS NEEDED
+Card.tsx
+import * as React from "react"
+import { cn } from "@/lib/utils"
+const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn("rounded-xl border bg-card text-card-foreground shadow", className)}
+      {...props}
+    />
+  )
+)
+Card.displayName = "Card"
+const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+  )
+)
+CardContent.displayName = "CardContent"
+export { Card, CardContent }
+Badge.tsx
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "@/lib/utils"
+const badgeVariants = cva(
+  "whitespace-nowrap inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors",
+  {
+    variants: {
+      variant: {
+        default: "border-transparent bg-primary text-primary-foreground",
+        secondary: "border-transparent bg-secondary text-secondary-foreground",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof badgeVariants> {}
+function Badge({ className, variant, ...props }: BadgeProps) {
+  return (
+    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+  )
+}
+export { Badge, badgeVariants }
+utils.ts (Utility function needed by components)
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+CUSTOM CSS (index.css)
+@import "tailwindcss";
+@import "tw-animate-css";
+@custom-variant dark (&:is(.dark *));
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  
+  /* Modern Clean Palette */
+  --color-background: 210 20% 98%;
+  --color-foreground: 222 47% 11%;
+  --color-card: 0 0% 100%;
+  --color-card-foreground: 222 47% 11%;
+  
+  --color-popover: 0 0% 100%;
+  --color-popover-foreground: 222 47% 11%;
+  
+  --color-primary: 175 84% 32%; /* Teal 700 */
+  --color-primary-foreground: 210 40% 98%;
+  
+  --color-secondary: 210 40% 96.1%;
+  --color-secondary-foreground: 222 47% 11.2%;
+  
+  --color-muted: 210 40% 96.1%;
+  --color-muted-foreground: 215.4 16.3% 46.9%;
+  
+  --color-accent: 210 40% 96.1%;
+  --color-accent-foreground: 222 47% 11.2%;
+  
+  --color-destructive: 0 84.2% 60.2%;
+  --color-destructive-foreground: 210 40% 98%;
+  --color-border: 214.3 31.8% 91.4%;
+  --color-input: 214.3 31.8% 91.4%;
+  --color-ring: 175 84% 32%;
+  --radius: 0.75rem;
+  
+  --font-sans: 'Inter', sans-serif;
+}
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+DEPENDENCIES (Install these)
+npm install react react-dom
+npm install framer-motion
+npm install lucide-react
+npm install class-variance-authority
+npm install clsx
+npm install tailwind-merge
+npm install tailwindcss
+npm install tw-animate-css
+FONTS (Add to your HTML <head>)
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+HTML SETUP
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conversion Pipeline</title>
+  <!-- Font link above -->
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>

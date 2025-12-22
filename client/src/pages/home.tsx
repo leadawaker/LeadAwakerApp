@@ -5,6 +5,7 @@ import { Link } from "wouter";
 import { useState } from "react";
 import leadLogo from "@assets/Untitled_design_1766218788499.jpg";
 import Chat3D from "@/components/Chat3D";
+import { PipelineChart } from "@/components/PipelineChart";
 
 const KanbanCard = ({ title, delay }: { title: string; delay: number }) => (
   <motion.div
@@ -273,51 +274,14 @@ export default function Home() {
             ))}
           </div>
 
-          {/* CRM Pipeline Visual */}
+          {/* New Pipeline Component */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-20 bg-card rounded-2xl border border-border p-8 md:p-10 overflow-hidden"
+            className="mt-20"
           >
-            <h4 className="text-lg font-bold mb-8 text-center">Your Conversion Pipeline in Action</h4>
-            <div className="space-y-6">
-              {[
-                { emoji: "📫", stage: "Leads Engaged", color: "from-slate-700 to-slate-600", leads: [{ name: "John Smith", phone: "+1 (555) 123-4567", time: "Just now" }, { name: "Sarah Johnson", phone: "+1 (555) 234-5678", time: "2 min ago" }, { name: "Mike Wilson", phone: "+1 (555) 321-0987", time: "5 min ago" }] },
-                { emoji: "📩", stage: "Lead Replied", color: "from-teal-600 to-teal-500", leads: [{ name: "Emma Davis", phone: "+1 (555) 456-7890", time: "12 min ago" }, { name: "Alex Turner", phone: "+1 (555) 654-3210", time: "18 min ago" }, { name: "Lisa Anderson", phone: "+1 (555) 789-1234", time: "25 min ago" }] },
-                { emoji: "✅", stage: "Lead Qualified", color: "from-cyan-500 to-blue-500", leads: [{ name: "Robert Chen", phone: "+1 (555) 345-6789", time: "45 min ago" }, { name: "Jennifer Lee", phone: "+1 (555) 876-5432", time: "1 hour ago" }, { name: "David Martinez", phone: "+1 (555) 432-1098", time: "1.5 hours ago" }] },
-                { emoji: "👍", stage: "Lead Booked", color: "from-orange-500 to-orange-400", leads: [{ name: "Susan Brown", phone: "+1 (555) 210-9876", time: "2 hours ago" }, { name: "James Wilson", phone: "+1 (555) 567-8901", time: "3 hours ago" }, { name: "Patricia Garcia", phone: "+1 (555) 098-7654", time: "4 hours ago" }] }
-              ].map((column, colIdx) => (
-                <motion.div
-                  key={colIdx}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: colIdx * 0.1 }}
-                >
-                  <div className={`bg-gradient-to-r ${column.color} text-white px-4 py-2 rounded-lg mb-4 flex items-center gap-2 w-fit`}>
-                    <span className="text-2xl">{column.emoji}</span>
-                    <span className="font-bold text-sm">{column.stage}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-3">
-                    {column.leads.map((lead, idx) => (
-                      <motion.div
-                        key={idx}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: colIdx * 0.1 + idx * 0.05 }}
-                        className="bg-muted/50 p-3 rounded-lg border border-border/50 text-sm flex-1 min-w-[200px]"
-                      >
-                        <p className="font-medium text-foreground">{lead.name}</p>
-                        <p className="text-muted-foreground text-xs mt-1">{lead.phone}</p>
-                        <p className="text-muted-foreground text-xs mt-1">Last replied: {lead.time}</p>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+            <PipelineChart />
           </motion.div>
         </div>
       </section>
