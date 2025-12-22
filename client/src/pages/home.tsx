@@ -75,22 +75,20 @@ export default function Home() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 60 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "0px 0px -50px 0px" }}
               transition={{ duration: 0.7 }}
-              className="relative bg-gradient-to-b from-blue-50 to-white p-0 rounded-3xl border border-gray-200 overflow-hidden"
+              className="relative bg-gradient-to-b from-blue-50 to-white p-0 rounded-3xl border border-gray-200 overflow-visible"
               style={{ 
                 backgroundImage: 'linear-gradient(135deg, #e0f2f7 0%, #f0f9fb 100%)',
-                perspective: '1000px',
-                boxShadow: '0 20px 50px rgba(0, 127, 130, 0.15), 0 10px 30px rgba(0, 0, 0, 0.1)'
+                perspective: '1200px',
+                transformStyle: 'preserve-3d',
+                transform: 'rotateX(6deg) rotateY(-8deg)',
+                boxShadow: '0 30px 60px rgba(0, 127, 130, 0.2), 0 15px 35px rgba(0, 0, 0, 0.12)'
               }}
             >
-              <div style={{
-                transform: 'rotateX(5deg) rotateY(-8deg)',
-                transformStyle: 'preserve-3d',
-                transformOrigin: 'center center'
-              }}>
+              <div>
               {/* WhatsApp Header */}
               <div className="bg-gradient-to-r from-primary to-primary/90 text-white p-4 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold">S</div>
