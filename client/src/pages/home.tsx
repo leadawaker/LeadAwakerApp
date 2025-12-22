@@ -6,6 +6,7 @@ import { useState } from "react";
 import leadLogo from "@assets/Untitled_design_1766218788499.jpg";
 import Chat3D from "@/components/Chat3D";
 import { PipelineChart } from "@/components/PipelineChart";
+import { SalesRepSteps } from "@/components/SalesRepSteps";
 
 const KanbanCard = ({ title, delay }: { title: string; delay: number }) => (
   <motion.div
@@ -128,122 +129,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Solution Section */}
-      <section className="py-24 bg-muted/30">
-        <div className="container mx-auto px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center max-w-3xl mx-auto mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Your Expert Sales Rep in 3 Steps.</h2>
-            <p className="text-xl text-primary font-semibold">Dead leads → revenue.</p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                num: "1",
-                title: "Upload database",
-                desc: "AI instantly IDs high-potential dormant leads"
-              },
-              {
-                num: "2",
-                title: "Chat GPT-5.2 conversations",
-                desc: "Natural, contextual SMS (not robot templates)"
-              },
-              {
-                num: "3",
-                title: "Revenue rolls in",
-                desc: "Auto-books meetings 24/7"
-              }
-            ].map((step, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-card p-8 rounded-2xl border border-border relative"
-              >
-                <div className="absolute -top-6 -right-6 w-12 h-12 bg-accent text-white rounded-full flex items-center justify-center text-lg font-bold shadow-lg">
-                  {step.num}
-                </div>
-                <div className="text-3xl mb-4">
-                  {i === 0 && "📊"}
-                  {i === 1 && "💬"}
-                  {i === 2 && "📈"}
-                </div>
-                <h3 className="text-xl font-bold mb-3">{step.title}</h3>
-                <p className="text-muted-foreground">{step.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Sales Rep Steps Section */}
+      <SalesRepSteps 
+        step1Image="@assets/generated_images/data_visualization_for_database_upload.png"
+        step2Image="@assets/generated_images/woman_answering_phone_in_office.png"
+        step3Image="@assets/generated_images/daily_leads_closed_chart_dashboard.png"
+      />
 
       {/* Conversion Pipeline */}
       <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6">
-          <div className="max-w-2xl mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
-            <p className="text-lg text-muted-foreground">
-              Three simple steps to automate your entire sales workflow.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 relative">
-            {/* Connector lines (hidden on mobile) */}
-            <div className="absolute top-1/4 left-0 right-0 h-1 bg-gradient-to-r from-primary/20 via-primary/50 to-primary/20 hidden md:block z-0" />
-
-            {[
-              {
-                num: "01",
-                title: "Map the Process",
-                desc: "We analyze your current sales workflow and identify bottlenecks.",
-                icon: <Database className="w-8 h-8" />
-              },
-              {
-                num: "02",
-                title: "Build the Automations",
-                desc: "Set up AI agents, workflows, and integrations in minutes.",
-                icon: <Zap className="w-8 h-8" />
-              },
-              {
-                num: "03",
-                title: "Optimize Weekly",
-                desc: "Monitor performance and continuously improve conversion rates.",
-                icon: <BarChart className="w-8 h-8" />
-              }
-            ].map((step, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="relative z-10"
-              >
-                <div className="text-center">
-                  <div className="flex justify-center mb-6">
-                    <div className="w-20 h-20 bg-primary text-white rounded-full flex items-center justify-center text-3xl font-bold shadow-lg">
-                      {step.num}
-                    </div>
-                  </div>
-                  <h3 className="text-xl font-bold mb-3">{step.title}</h3>
-                  <p className="text-muted-foreground">{step.desc}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
           {/* New Pipeline Component */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-40"
+            className="mt-0"
           >
             <PipelineChart />
           </motion.div>
