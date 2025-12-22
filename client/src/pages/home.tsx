@@ -47,17 +47,17 @@ export default function Home() {
         <div className="absolute top-0 right-0 -z-10 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent blur-3xl opacity-50" />
         
         <div className="container mx-auto px-4 md:px-6">
-          <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center mb-20">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] mb-6 text-foreground">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] mb-6 text-foreground">
                 Turn cold leads into <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">booked calls</span> automatically.
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed">
-                From first contact to CRM follow-up, our AI automations handle it all—so you can focus on closing deals, not chasing them.
+                From first contact to CRM follow-up, our AI automations handle it all so you can focus on closing deals, not chasing them.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/book-demo">
@@ -75,12 +75,22 @@ export default function Home() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative bg-gradient-to-b from-blue-50 to-white p-0 rounded-3xl border border-gray-200 shadow-2xl overflow-hidden"
-              style={{ backgroundImage: 'linear-gradient(135deg, #e0f2f7 0%, #f0f9fb 100%)' }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "0px 0px -50px 0px" }}
+              transition={{ duration: 0.7 }}
+              className="relative bg-gradient-to-b from-blue-50 to-white p-0 rounded-3xl border border-gray-200 overflow-hidden"
+              style={{ 
+                backgroundImage: 'linear-gradient(135deg, #e0f2f7 0%, #f0f9fb 100%)',
+                perspective: '1000px',
+                boxShadow: '0 20px 50px rgba(0, 127, 130, 0.15), 0 10px 30px rgba(0, 0, 0, 0.1)'
+              }}
             >
+              <div style={{
+                transform: 'rotateX(5deg) rotateY(-8deg)',
+                transformStyle: 'preserve-3d',
+                transformOrigin: 'center center'
+              }}>
               {/* WhatsApp Header */}
               <div className="bg-gradient-to-r from-primary to-primary/90 text-white p-4 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold">S</div>
@@ -174,6 +184,7 @@ export default function Home() {
               </div>
 
               <div className="absolute -top-10 -right-10 w-40 h-40 bg-accent/20 rounded-full blur-3xl" />
+              </div>
             </motion.div>
           </div>
         </div>
@@ -382,10 +393,10 @@ export default function Home() {
             <h4 className="text-lg font-bold mb-8 text-center">Your Conversion Pipeline in Action</h4>
             <div className="space-y-6">
               {[
-                { emoji: "📫", stage: "Leads Engaged", color: "from-teal-600 to-teal-500", leads: [{ name: "John Smith", phone: "+1 (555) 123-4567", time: "Just now" }, { name: "Sarah Johnson", phone: "+1 (555) 234-5678", time: "2 min ago" }, { name: "Mike Wilson", phone: "+1 (555) 321-0987", time: "5 min ago" }] },
-                { emoji: "📩", stage: "Lead Replied", color: "from-cyan-500 to-blue-500", leads: [{ name: "Emma Davis", phone: "+1 (555) 456-7890", time: "12 min ago" }, { name: "Alex Turner", phone: "+1 (555) 654-3210", time: "18 min ago" }, { name: "Lisa Anderson", phone: "+1 (555) 789-1234", time: "25 min ago" }] },
-                { emoji: "✅", stage: "Lead Qualified", color: "from-blue-500 to-indigo-500", leads: [{ name: "Robert Chen", phone: "+1 (555) 345-6789", time: "45 min ago" }, { name: "Jennifer Lee", phone: "+1 (555) 876-5432", time: "1 hour ago" }, { name: "David Martinez", phone: "+1 (555) 432-1098", time: "1.5 hours ago" }] },
-                { emoji: "👍", stage: "Lead Booked", color: "from-orange-500 to-yellow-500", leads: [{ name: "Susan Brown", phone: "+1 (555) 210-9876", time: "2 hours ago" }, { name: "James Wilson", phone: "+1 (555) 567-8901", time: "3 hours ago" }, { name: "Patricia Garcia", phone: "+1 (555) 098-7654", time: "4 hours ago" }] }
+                { emoji: "📫", stage: "Leads Engaged", color: "from-slate-700 to-slate-600", leads: [{ name: "John Smith", phone: "+1 (555) 123-4567", time: "Just now" }, { name: "Sarah Johnson", phone: "+1 (555) 234-5678", time: "2 min ago" }, { name: "Mike Wilson", phone: "+1 (555) 321-0987", time: "5 min ago" }] },
+                { emoji: "📩", stage: "Lead Replied", color: "from-teal-600 to-teal-500", leads: [{ name: "Emma Davis", phone: "+1 (555) 456-7890", time: "12 min ago" }, { name: "Alex Turner", phone: "+1 (555) 654-3210", time: "18 min ago" }, { name: "Lisa Anderson", phone: "+1 (555) 789-1234", time: "25 min ago" }] },
+                { emoji: "✅", stage: "Lead Qualified", color: "from-cyan-500 to-blue-500", leads: [{ name: "Robert Chen", phone: "+1 (555) 345-6789", time: "45 min ago" }, { name: "Jennifer Lee", phone: "+1 (555) 876-5432", time: "1 hour ago" }, { name: "David Martinez", phone: "+1 (555) 432-1098", time: "1.5 hours ago" }] },
+                { emoji: "👍", stage: "Lead Booked", color: "from-orange-500 to-orange-400", leads: [{ name: "Susan Brown", phone: "+1 (555) 210-9876", time: "2 hours ago" }, { name: "James Wilson", phone: "+1 (555) 567-8901", time: "3 hours ago" }, { name: "Patricia Garcia", phone: "+1 (555) 098-7654", time: "4 hours ago" }] }
               ].map((column, colIdx) => (
                 <motion.div
                   key={colIdx}
