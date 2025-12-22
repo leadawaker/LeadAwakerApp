@@ -4,6 +4,7 @@ import { ArrowRight, Zap, Database, MessageSquare, Calendar, BarChart, CheckCirc
 import { Link } from "wouter";
 import { useState } from "react";
 import leadLogo from "@assets/Untitled_design_1766218788499.jpg";
+import Chat3D from "@/components/Chat3D";
 
 const KanbanCard = ({ title, delay }: { title: string; delay: number }) => (
   <motion.div
@@ -74,116 +75,7 @@ export default function Home() {
               </div>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 60 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "0px 0px -50px 0px" }}
-              transition={{ duration: 0.7 }}
-              className="relative bg-gradient-to-b from-blue-50 to-white p-0 rounded-3xl border border-gray-200 overflow-visible"
-              style={{ 
-                backgroundImage: 'linear-gradient(135deg, #e0f2f7 0%, #f0f9fb 100%)',
-                perspective: '1200px',
-                transformStyle: 'preserve-3d',
-                transform: 'rotateX(6deg) rotateY(-8deg)',
-                boxShadow: '0 30px 60px rgba(0, 127, 130, 0.2), 0 15px 35px rgba(0, 0, 0, 0.12)'
-              }}
-            >
-              <div>
-              {/* WhatsApp Header */}
-              <div className="bg-gradient-to-r from-primary to-primary/90 text-white p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold">S</div>
-                <div className="flex-1">
-                  <p className="font-semibold text-sm">Sophie from TrainPlus Fitness</p>
-                  <p className="text-xs opacity-75">Online</p>
-                </div>
-              </div>
-
-              {/* Chat Messages */}
-              <div className="p-4 space-y-4 h-[500px] overflow-y-auto">
-                {/* Sophie Message 1 (You/User - Right side, teal) */}
-                <motion.div 
-                  className="flex justify-end"
-                  initial={{ opacity: 0, x: 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <div className="bg-primary text-white p-3 rounded-2xl rounded-br-none max-w-xs text-sm shadow-md">
-                    <p>Hey this is Sophie from TrainPlus Fitness, is this the same John that got a product quote from us a couple of months ago?</p>
-                  </div>
-                </motion.div>
-
-                {/* John Message 1 (Recipient - Left side, light gray) */}
-                <motion.div 
-                  className="flex justify-start"
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-                  transition={{ duration: 0.4, delay: 0.1 }}
-                >
-                  <div className="bg-gray-200 text-gray-800 p-3 rounded-2xl rounded-bl-none max-w-xs text-sm shadow-sm">
-                    <p>Hey yes, I remember that.</p>
-                  </div>
-                </motion.div>
-
-                {/* Sophie Message 2 (You/User - Right side, teal) */}
-                <motion.div 
-                  className="flex justify-end"
-                  initial={{ opacity: 0, x: 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-                  transition={{ duration: 0.4, delay: 0.2 }}
-                >
-                  <div className="bg-primary text-white p-3 rounded-2xl rounded-br-none max-w-xs text-sm shadow-md">
-                    <p>Great! My calendar booked me to call you but I didn't want to disturb you. Are you still interested?</p>
-                  </div>
-                </motion.div>
-
-                {/* John Message 2 (Recipient - Left side, light gray) */}
-                <motion.div 
-                  className="flex justify-start"
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-                  transition={{ duration: 0.4, delay: 0.3 }}
-                >
-                  <div className="bg-gray-200 text-gray-800 p-3 rounded-2xl rounded-bl-none max-w-xs text-sm shadow-sm">
-                    <p>Maybe, I haven't thought about that for a while</p>
-                  </div>
-                </motion.div>
-
-                {/* Sophie Message 3 (You/User - Right side, teal) */}
-                <motion.div 
-                  className="flex justify-end"
-                  initial={{ opacity: 0, x: 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-                  transition={{ duration: 0.4, delay: 0.4 }}
-                >
-                  <div className="bg-primary text-white p-3 rounded-2xl rounded-br-none max-w-xs text-sm shadow-md">
-                    <p>Let me ask you, what fitness goals are you aiming to achieve?</p>
-                  </div>
-                </motion.div>
-
-                {/* Typing indicator (Recipient typing) */}
-                <motion.div 
-                  className="flex justify-start"
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-                  transition={{ duration: 0.4, delay: 0.5 }}
-                >
-                  <div className="bg-gray-200 text-gray-600 p-3 rounded-2xl rounded-bl-none flex items-center gap-1">
-                    <span className="w-2 h-2 bg-gray-600 rounded-full animate-bounce"></span>
-                    <span className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></span>
-                    <span className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></span>
-                  </div>
-                </motion.div>
-              </div>
-
-              <div className="absolute -top-10 -right-10 w-40 h-40 bg-accent/20 rounded-full blur-3xl" />
-              </div>
-            </motion.div>
+            <Chat3D />
           </div>
         </div>
       </section>
