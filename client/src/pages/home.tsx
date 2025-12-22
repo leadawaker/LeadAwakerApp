@@ -183,42 +183,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Demo Section */}
-      <section id="demo" className="py-24">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="max-w-3xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center mb-12"
-            >
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">Let us show you how it's done</h2>
-              <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-                If a picture is worth a thousand words, a demo is worth a thousand pictures. That's why before you do anything, I want you to see AI in action. This demo gives a taster of how AI engages with customers in a natural way and bears the brunt of repetitive tasks, so you and your team don't have to.
-              </p>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                With AI freeing up valuable man-power and doing the work you'd "never get around to doing", you can unlock new levels of ROI whilst focusing on the things you enjoy.
-              </p>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center"
-            >
-              <Link href="/book-demo">
-                <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 text-white">
-                  Check Out The Demo
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
       {/* Conversion Pipeline */}
       <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6">
@@ -374,22 +338,54 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Logo Section */}
-      <section className="py-16 border-t border-border">
-        <div className="container mx-auto px-4 md:px-6 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <img 
-              src={leadLogo} 
-              alt="Lead Awaker Logo" 
-              className="w-48 mx-auto drop-shadow-lg"
-            />
-          </motion.div>
+      {/* Demo Section with Logo */}
+      <section id="demo" className="py-24 border-t border-border">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="space-y-6"
+            >
+              <h2 className="text-3xl md:text-4xl font-bold">Let us show you how it's done</h2>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                If a picture is worth a thousand words, a demo is worth a thousand pictures. That's why before you do anything, I want you to see AI in action. This demo gives a taster of how AI engages with customers in a natural way and bears the brunt of repetitive tasks, so you and your team don't have to.
+              </p>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                With AI freeing up valuable man-power and doing the work you'd "never get around to doing", you can unlock new levels of ROI whilst focusing on the things you enjoy.
+              </p>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+              >
+                <Link href="/book-demo">
+                  <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 text-white">
+                    Check Out The Demo
+                    <ArrowRight className="ml-2 w-5 h-5" />
+                  </Button>
+                </Link>
+              </motion.div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex justify-center"
+            >
+              <img 
+                src={leadLogo} 
+                alt="Lead Awaker Logo" 
+                className="w-64 drop-shadow-lg"
+                data-testid="lead-logo"
+              />
+            </motion.div>
+          </div>
         </div>
       </section>
+
 
       {/* Security & AI Guardrails Section */}
       <section className="py-24">
