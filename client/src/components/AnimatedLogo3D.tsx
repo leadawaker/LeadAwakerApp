@@ -4,7 +4,7 @@ import { useRef, CSSProperties } from "react";
 
 export function AnimatedLogo3D() {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true });
+  const isInView = useInView(ref, { once: true, amount: 0.6 });
 
   const containerStyle: CSSProperties = {
     perspective: "1200px",
