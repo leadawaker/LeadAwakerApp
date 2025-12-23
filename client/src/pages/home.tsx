@@ -91,13 +91,34 @@ export default function Home() {
                     animate={{ 
                       color: '#facc15',
                       textShadow: [
-                        '0 10px 10px rgba(250, 204, 21, 0.15), -50px 0px 20px rgba(250, 204, 21, 0), 0px -2px 8px rgba(255, 255, 255, 0)',
-                        '0 10px 20px rgba(250, 204, 21, 0.25), 0px 0px 20px rgba(250, 204, 21, 0.2), 0px -2px 8px rgba(255, 255, 255, 0.6)',
-                        '0 10px 10px rgba(250, 204, 21, 0.15), 50px 0px 20px rgba(250, 204, 21, 0), 0px -2px 8px rgba(255, 255, 255, 0)'
+                        '0 10px 10px rgba(250, 204, 21, 0.06), -50px 0px 20px rgba(250, 204, 21, 0)',
+                        '0 10px 20px rgba(250, 204, 21, 0.1), 0px 0px 20px rgba(250, 204, 21, 0.08)',
+                        '0 10px 10px rgba(250, 204, 21, 0.06), 50px 0px 20px rgba(250, 204, 21, 0)'
                       ]
                     }}
                     transition={{ delay: 1, duration: 0.3, ease: "easeOut", textShadow: { delay: 1.3, duration: 5, repeat: Infinity, ease: "easeInOut" } }}
+                    style={{
+                      position: 'relative',
+                      overflow: 'visible'
+                    }}
                   >
+                    <motion.span
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                        height: '100%',
+                        width: '100%',
+                        mixBlendMode: 'screen'
+                      }}
+                      initial={{ opacity: 0, x: '-100%' }}
+                      animate={{ opacity: [0, 1, 0], x: ['100%', '-100%'] }}
+                      transition={{ delay: 1.5, duration: 1.5, repeat: Infinity, repeatDelay: 3.5 }}
+                    >
+                      booked calls
+                    </motion.span>
                     booked calls
                   </motion.span>
                 </motion.span>
