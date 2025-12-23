@@ -83,31 +83,18 @@ export default function Home() {
                     booked calls
                   </motion.span>
                 </motion.span>
-                <motion.span 
-                  className="relative block w-full"
-                  initial="hidden"
-                  animate="visible"
-                  variants={{
-                    hidden: { opacity: 1 },
-                    visible: { opacity: 1 }
-                  }}
-                >
+                <span className="relative block w-full">
                   <motion.span 
-                    className="absolute top-0 bottom-0 bg-gradient-to-r from-primary to-white -z-10" 
-                    style={{ right: 'calc(-100vw + 100%)', left: 0, originX: 0 }}
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ delay: 1.5, duration: 0.5, ease: "easeOut" }}
-                  />
-                  <motion.span 
-                    className="relative inline-block font-bold py-3 z-10"
-                    initial={{ color: '#000' }}
-                    animate={{ color: '#facc15' }}
+                    className="absolute top-0 bottom-0 bg-gradient-to-r from-primary to-white" 
+                    style={{ left: 0, originX: 0 }}
+                    initial={{ width: 0 }}
+                    animate={{ width: 'auto' }}
                     transition={{ delay: 1.5, duration: 0.5, ease: "easeOut" }}
                   >
-                    automatically.
+                    <span className="inline-block font-bold py-3 px-0 opacity-0">automatically.</span>
                   </motion.span>
-                </motion.span>
+                  <span className="relative inline-block font-bold py-3 z-10 text-foreground">automatically.</span>
+                </span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed">
                 From first contact to CRM follow-up, our AI automations handle it all so you can focus on closing deals, not chasing them.
