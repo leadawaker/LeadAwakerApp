@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import faviconIcon from "@assets/Favicon.svg";
 
 export function Footer() {
   return (
@@ -9,6 +10,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           <div className="md:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-6">
+              <img src={faviconIcon} alt="Lead Awaker Favicon" className="w-6 h-6" />
               <span className="font-heading font-bold text-2xl tracking-tight text-foreground">
                 LEAD<span className="text-primary">Awaker</span>
               </span>
