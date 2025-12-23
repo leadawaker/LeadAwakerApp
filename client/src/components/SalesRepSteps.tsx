@@ -4,8 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Database, MessageSquare, TrendingUp, Server, MessageCircle, Mail, Calendar } from "lucide-react";
 import databaseIntegrationImg from "@assets/generated_images/database_upload_and_crm_integration.png";
-import aiConversationsImg from "@assets/generated_images/ai-powered_conversations_and_chat_interface.png";
-import revenueDashboardImg from "@assets/generated_images/revenue_dashboard_and_sales_metrics.png";
+import womanPhoneImg from "@assets/woman_answering_phone_in_living_room_1766483592249.png";
+import dailyLeadsImg from "@assets/generated_images/daily_leads_closed_chart_dashboard.png";
 
 interface StepProps {
   number: string;
@@ -211,7 +211,7 @@ export const SalesRepSteps = () => {
           cardDescription="Natural, contextual SMS (not robot templates)."
           overlayTitle="Build the Automations"
           overlayDescription="Set up AI agents, workflows, and integrations in minutes."
-          image={aiConversationsImg}
+          image={womanPhoneImg}
           icon={<MessageSquare className="w-8 h-8" />}
           align="right"
         />
@@ -224,7 +224,7 @@ export const SalesRepSteps = () => {
         cardDescription="Auto-books meetings 24/7."
         overlayTitle="Optimize Weekly"
         overlayDescription="Monitor performance and continuously improve conversion rates."
-        image={revenueDashboardImg}
+        image={dailyLeadsImg}
         icon={<TrendingUp className="w-8 h-8" />}
         align="left"
       />
