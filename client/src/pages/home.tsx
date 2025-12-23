@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap, Database, MessageSquare, Calendar, BarChart, CheckCircle, ChevronDown, Menu, Box, Copy, TrendingDown, Mail } from "lucide-react";
+import { ArrowRight, Zap, Database, MessageSquare, Calendar, BarChart, CheckCircle, ChevronDown, Menu } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 import leadLogo from "@assets/Untitled_design_1766218788499.jpg";
@@ -131,69 +131,6 @@ export default function Home() {
 
             <Chat3D />
           </div>
-        </div>
-      </section>
-
-
-      {/* Pain Points Section */}
-      <section className="py-32 md:py-40 bg-slate-950 relative overflow-hidden">
-        <div className="container mx-auto px-4 md:px-6 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center max-w-3xl mx-auto mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg">Manual Reactivation Is Broken.</h2>
-          </motion.div>
-
-          <motion.div 
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={{
-              visible: {
-                transition: {
-                  staggerChildren: 0.08,
-                  delayChildren: 0.1,
-                }
-              }
-            }}
-            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
-          >
-            {[
-              { icon: <Box className="w-8 h-8" strokeWidth={1.5} />, title: "Bloated CRMs with 1000s of \"dead\" contacts you already paid for" },
-              { icon: <Copy className="w-8 h-8" strokeWidth={1.5} />, title: "Reps waste 20-40 hrs/week on soul-crushing copy-paste outreach" },
-              { icon: <TrendingDown className="w-8 h-8" strokeWidth={1.5} />, title: "5-10% reply rates → zero ROI" },
-              { icon: <Mail className="w-8 h-8" strokeWidth={1.5} />, title: "Generic blasts → ignored or straight to spam folder" }
-            ].map((pain, i) => (
-              <motion.div
-                key={i}
-                variants={{
-                  hidden: { opacity: 0, y: 30, scale: 0.95 },
-                  visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 100, damping: 15 } }
-                }}
-                className="group relative bg-gradient-to-br from-slate-800/80 to-slate-800/60 border border-primary/40 backdrop-blur-sm p-8 rounded-2xl text-center hover:border-primary/60 transition-all duration-400 cursor-default overflow-hidden shadow-md hover:shadow-lg"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:to-primary/10 transition-all duration-400" />
-                <div className="relative z-10">
-                  <div className="text-primary mb-4 transform group-hover:scale-125 transition-transform duration-400 inline-flex items-center justify-center">{pain.icon}</div>
-                  <p className="text-sm font-semibold text-white leading-relaxed">{pain.title}</p>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="bg-slate-800/80 border border-primary/40 backdrop-blur-sm p-8 rounded-2xl text-center max-w-2xl mx-auto shadow-lg shadow-primary/20"
-          >
-            <p className="text-base font-semibold text-white leading-relaxed">Companies have invested thousands in acquiring these leads, but they're leaving millions on the table because reactivation is too painful and ineffective.</p>
-          </motion.div>
         </div>
       </section>
 
