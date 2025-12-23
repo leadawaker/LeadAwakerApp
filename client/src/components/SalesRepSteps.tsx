@@ -137,17 +137,7 @@ export const SalesRepSteps = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent via-[55%] to-cyan-600/30 mix-blend-multiply" />
       <div className="relative z-10">
       {/* Pain Points Section */}
-      <section className="py-32 md:py-40 relative overflow-hidden">
-        <motion.div
-          className="fixed top-32 w-24 h-24 rounded-full pointer-events-none z-20"
-          style={{
-            background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.7) 30%, rgba(255,240,245,0.4) 100%)',
-            boxShadow: '0 0 60px rgba(255,255,255,0.8), 0 0 100px rgba(255,255,255,0.5), inset -20px -20px 40px rgba(0,0,0,0.2)'
-          }}
-          initial={{ x: '-150vw' }}
-          animate={{ x: '150vw' }}
-          transition={{ duration: 20, ease: 'easeInOut' }}
-        />
+      <section className="py-32 md:py-40">
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
