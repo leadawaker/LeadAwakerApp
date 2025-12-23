@@ -36,6 +36,17 @@ export function AnimatedLogo3D() {
       style={containerStyle}
     >
       <div style={wrapperStyle}>
+        {/* Top Logo SVG - Grows from behind */}
+        <motion.img
+          src="/top logo.svg"
+          alt="Top Logo"
+          initial={{ opacity: 0, scale: 0.1 }}
+          animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.1 }}
+          transition={{ delay: 1.7, duration: 1.2, type: "spring", stiffness: 80, damping: 20 }}
+          style={logoStyle}
+          data-testid="animated-logo-top"
+        />
+
         {/* LEAD SVG - Appears First */}
         <motion.img
           src="/LEAD.svg"
@@ -56,17 +67,6 @@ export function AnimatedLogo3D() {
           transition={{ delay: 1, duration: 0.8, type: "spring", stiffness: 100, damping: 15 }}
           style={logoStyle}
           data-testid="animated-logo-awaker"
-        />
-
-        {/* Top Logo SVG - Appears Last */}
-        <motion.img
-          src="/top logo.svg"
-          alt="Top Logo"
-          initial={{ opacity: 0, scale: 0, rotationY: 90 }}
-          animate={isInView ? { opacity: 1, scale: 1, rotationY: 0 } : { opacity: 0, scale: 0, rotationY: 90 }}
-          transition={{ delay: 1.7, duration: 0.8, type: "spring", stiffness: 100, damping: 15 }}
-          style={logoStyle}
-          data-testid="animated-logo-top"
         />
       </div>
     </motion.div>
