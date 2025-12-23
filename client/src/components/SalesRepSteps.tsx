@@ -3,6 +3,9 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Database, MessageSquare, TrendingUp, Server, MessageCircle, Mail, Calendar } from "lucide-react";
+import databaseIntegrationImg from "@assets/generated_images/database_upload_and_crm_integration.png";
+import aiConversationsImg from "@assets/generated_images/ai-powered_conversations_and_chat_interface.png";
+import revenueDashboardImg from "@assets/generated_images/revenue_dashboard_and_sales_metrics.png";
 
 interface StepProps {
   number: string;
@@ -94,13 +97,7 @@ const FullscreenStep = ({
   );
 };
 
-interface SalesRepStepsProps {
-  step1Image: string;
-  step2Image: string;
-  step3Image: string;
-}
-
-export const SalesRepSteps = ({ step1Image, step2Image, step3Image }: SalesRepStepsProps) => {
+export const SalesRepSteps = () => {
   const scrollRef = useRef(null);
 
   return (
@@ -160,7 +157,7 @@ export const SalesRepSteps = ({ step1Image, step2Image, step3Image }: SalesRepSt
             data-testid="step-image-1"
           >
             <img 
-              src={step1Image} 
+              src={databaseIntegrationImg} 
               alt="Upload database" 
               className="w-full h-full object-cover"
             />
@@ -214,7 +211,7 @@ export const SalesRepSteps = ({ step1Image, step2Image, step3Image }: SalesRepSt
           cardDescription="Natural, contextual SMS (not robot templates)."
           overlayTitle="Build the Automations"
           overlayDescription="Set up AI agents, workflows, and integrations in minutes."
-          image="@assets/generated_images/ai-powered_conversations_and_chat_interface.png"
+          image={aiConversationsImg}
           icon={<MessageSquare className="w-8 h-8" />}
           align="right"
         />
@@ -227,7 +224,7 @@ export const SalesRepSteps = ({ step1Image, step2Image, step3Image }: SalesRepSt
         cardDescription="Auto-books meetings 24/7."
         overlayTitle="Optimize Weekly"
         overlayDescription="Monitor performance and continuously improve conversion rates."
-        image={step3Image}
+        image={revenueDashboardImg}
         icon={<TrendingUp className="w-8 h-8" />}
         align="left"
       />

@@ -128,11 +128,7 @@ export default function Home() {
       </section>
 
       {/* Sales Rep Steps Section */}
-      <SalesRepSteps 
-        step1Image="@assets/generated_images/database_upload_and_crm_integration.png"
-        step2Image="@assets/generated_images/ai-powered_conversations_and_chat_interface.png"
-        step3Image="@assets/generated_images/revenue_dashboard_and_sales_metrics.png"
-      />
+      <SalesRepSteps />
 
       {/* Conversion Pipeline */}
       <section className="py-24 bg-muted/30">
