@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap, Database, MessageSquare, Calendar, BarChart, CheckCircle, ChevronDown, Menu } from "lucide-react";
+import { ArrowRight, Zap, Database, MessageSquare, Calendar, BarChart, CheckCircle, ChevronDown, Menu, Box, Copy, TrendingDown, Mail } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 import leadLogo from "@assets/Untitled_design_1766218788499.jpg";
@@ -112,10 +112,10 @@ export default function Home() {
             className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
           >
             {[
-              { icon: "📦", title: "Bloated CRMs with 1000s of \"dead\" contacts you already paid for" },
-              { icon: "⌨️", title: "Reps waste 20-40 hrs/week on soul-crushing copy-paste outreach" },
-              { icon: "📉", title: "5-10% reply rates → zero ROI" },
-              { icon: "💬", title: "Generic blasts → ignored or straight to spam folder" }
+              { icon: <Box className="w-8 h-8" strokeWidth={1.5} />, title: "Bloated CRMs with 1000s of \"dead\" contacts you already paid for" },
+              { icon: <Copy className="w-8 h-8" strokeWidth={1.5} />, title: "Reps waste 20-40 hrs/week on soul-crushing copy-paste outreach" },
+              { icon: <TrendingDown className="w-8 h-8" strokeWidth={1.5} />, title: "5-10% reply rates → zero ROI" },
+              { icon: <Mail className="w-8 h-8" strokeWidth={1.5} />, title: "Generic blasts → ignored or straight to spam folder" }
             ].map((pain, i) => (
               <motion.div
                 key={i}
@@ -127,7 +127,7 @@ export default function Home() {
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-red-500/0 to-red-500/0 group-hover:from-red-500/5 group-hover:to-red-500/10 transition-all duration-400" />
                 <div className="relative z-10">
-                  <div className="text-5xl mb-4 transform group-hover:scale-125 transition-transform duration-400 inline-block">{pain.icon}</div>
+                  <div className="text-red-700 mb-4 transform group-hover:scale-125 transition-transform duration-400 inline-flex items-center justify-center">{pain.icon}</div>
                   <p className="text-sm font-semibold text-gray-800 leading-relaxed">{pain.title}</p>
                 </div>
               </motion.div>
