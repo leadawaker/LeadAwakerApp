@@ -182,12 +182,26 @@ export const SalesRepSteps = () => {
       </section>
 
       {/* Intro Section */}
-      <section className="h-[50vh] flex items-center justify-center">
+      <section className="h-[50vh] flex items-center justify-center relative overflow-hidden">
+        {/* Meteor */}
+        <motion.div
+          className="absolute top-20 -left-20 w-2 h-2 bg-yellow-300 rounded-full"
+          initial={{ x: -100, y: -100, opacity: 1 }}
+          animate={{ x: 500, y: 300, opacity: 0 }}
+          transition={{ duration: 2, ease: "easeIn", repeat: Infinity, repeatDelay: 4 }}
+        >
+          <div className="absolute inset-0 w-full h-full bg-yellow-300 rounded-full blur-sm"></div>
+          <motion.div
+            className="absolute top-0 left-full w-32 h-0.5 bg-gradient-to-r from-yellow-300 to-transparent blur-sm"
+            style={{ originX: 0 }}
+          />
+        </motion.div>
+
         <motion.div 
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
-          className="text-center"
+          className="text-center relative z-10"
           data-testid="sales-rep-intro"
         >
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 text-white drop-shadow-lg">
