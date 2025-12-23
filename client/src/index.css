@@ -49,27 +49,27 @@
 
 /* LIGHT MODE - Brand Colors derived from Lead Awaker */
 :root {
-  /* Teal/Green Base */
-  --background: 170 30% 98%; /* Very light teal tint */
-  --foreground: 170 60% 10%; /* Very dark teal/black */
+  /* Blue Base - from logo #5170ff */
+  --background: 230 30% 98%; /* Very light blue tint */
+  --foreground: 230 60% 10%; /* Very dark blue/black */
 
   --card: 0 0% 100%;
-  --card-foreground: 170 60% 10%;
+  --card-foreground: 230 60% 10%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 170 60% 10%;
+  --popover-foreground: 230 60% 10%;
 
-  /* Primary Brand Color: Vibrant Teal */
-  --primary: 170 80% 35%;
+  /* Primary Brand Color: Vibrant Blue from Logo */
+  --primary: 230 100% 66%;
   --primary-foreground: 0 0% 100%;
 
-  /* Secondary: Softer Teal */
-  --secondary: 170 30% 90%;
-  --secondary-foreground: 170 80% 30%;
+  /* Secondary: Softer Blue */
+  --secondary: 230 30% 90%;
+  --secondary-foreground: 230 100% 40%;
 
   /* Muted */
-  --muted: 170 20% 94%;
-  --muted-foreground: 170 20% 40%;
+  --muted: 230 20% 94%;
+  --muted-foreground: 230 20% 40%;
 
   /* Accent: Orange/Gold from the "rays" in the logo */
   --accent: 35 95% 55%;
@@ -78,31 +78,31 @@
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
 
-  --border: 170 20% 90%;
-  --input: 170 20% 90%;
-  --ring: 170 80% 35%;
+  --border: 230 20% 90%;
+  --input: 230 20% 90%;
+  --ring: 230 100% 66%;
 
   --radius: 0.75rem;
 }
 
 .dark {
-  --background: 170 50% 5%;
-  --foreground: 170 20% 95%;
+  --background: 230 50% 5%;
+  --foreground: 230 20% 95%;
 
-  --card: 170 50% 8%;
-  --card-foreground: 170 20% 95%;
+  --card: 230 50% 8%;
+  --card-foreground: 230 20% 95%;
 
-  --popover: 170 50% 8%;
-  --popover-foreground: 170 20% 95%;
+  --popover: 230 50% 8%;
+  --popover-foreground: 230 20% 95%;
 
-  --primary: 170 70% 45%;
+  --primary: 230 100% 60%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 170 30% 15%;
-  --secondary-foreground: 170 20% 95%;
+  --secondary: 230 30% 15%;
+  --secondary-foreground: 230 20% 95%;
 
-  --muted: 170 30% 15%;
-  --muted-foreground: 170 20% 65%;
+  --muted: 230 30% 15%;
+  --muted-foreground: 230 20% 65%;
 
   --accent: 35 95% 55%;
   --accent-foreground: 0 0% 100%;
@@ -110,9 +110,9 @@
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 0 0% 98%;
 
-  --border: 170 30% 15%;
-  --input: 170 30% 15%;
-  --ring: 170 70% 45%;
+  --border: 230 30% 15%;
+  --input: 230 30% 15%;
+  --ring: 230 100% 60%;
 }
 
 @layer base {
