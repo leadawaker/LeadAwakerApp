@@ -84,15 +84,15 @@ export default function Home() {
 
 
       {/* Pain Points Section */}
-      <section className="py-24">
+      <section className="py-32 md:py-40">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center max-w-3xl mx-auto mb-12"
+            className="text-center max-w-3xl mx-auto mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Manual Reactivation Is Broken.</h2>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">Manual Reactivation Is Broken.</h2>
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
@@ -108,7 +108,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
-                className="bg-red-50 border border-red-200 p-6 rounded-xl text-center hover:shadow-lg hover:border-red-300 transition-all duration-300 group cursor-default"
+                className="bg-red-50 border border-red-200 p-6 rounded-xl text-center hover:shadow-2xl hover:shadow-red-300/50 hover:border-red-400 transition-all duration-300 group cursor-default"
               >
                 <div className="text-4xl mb-3 transform group-hover:scale-110 transition-transform duration-300">{pain.icon}</div>
                 <p className="text-sm font-medium text-gray-700">{pain.title}</p>
