@@ -79,7 +79,7 @@ export default function Home() {
                     style={{ 
                       left: '-100vw', 
                       width: 'calc(100vw + 2%)',
-                      background: 'linear-gradient(to right, rgb(0, 94, 255), rgb(255, 255, 255))',
+                      background: 'linear-gradient(to right, rgb(255, 255, 255), rgb(0, 94, 255))',
                       originX: 0 
                     }}
                     initial={{ scaleX: 0 }}
