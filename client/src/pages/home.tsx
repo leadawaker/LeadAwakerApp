@@ -134,23 +134,11 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Sales Rep Steps Section */}
+      <SalesRepSteps />
 
       {/* Pain Points Section */}
-      <section className="py-32 md:py-40 bg-gradient-to-b from-slate-950 to-slate-900 relative overflow-hidden">
-        <div 
-          className="absolute inset-0 opacity-40" 
-          style={{
-            backgroundImage: `radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0.2)),
-                              radial-gradient(2px 2px at 60px 70px, #fff, rgba(0,0,0,0.3)),
-                              radial-gradient(1px 1px at 50px 50px, #fff, rgba(0,0,0,0.2)),
-                              radial-gradient(1px 1px at 130px 80px, #fff, rgba(0,0,0,0.2)),
-                              radial-gradient(2px 2px at 90px 10px, #fff, rgba(0,0,0,0.2))`,
-            backgroundRepeat: 'repeat',
-            backgroundSize: '200px 200px'
-          }}
-        />
-        <div className="absolute inset-0 opacity-20 mix-blend-overlay" style={{backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')"}} />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 mix-blend-screen" />
+      <section className="py-32 md:py-40 relative overflow-hidden">
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -210,9 +198,6 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
-
-      {/* Sales Rep Steps Section */}
-      <SalesRepSteps />
 
       {/* Conversion Pipeline */}
       <section className="py-24 bg-muted/30">
