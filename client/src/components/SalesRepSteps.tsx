@@ -106,22 +106,22 @@ export const SalesRepSteps = () => {
       className="min-h-screen bg-gradient-to-b from-slate-950 via-orange-400 to-sky-300 text-foreground overflow-x-hidden selection:bg-primary/30 relative"
     >
       <div 
-        className="absolute inset-0 opacity-75" 
+        className="absolute inset-0" 
         style={{
-          backgroundImage: `radial-gradient(1.5px 1.5px at 15% 25%, #fff, rgba(255,255,255,0.5)),
-                            radial-gradient(2px 2px at 28% 45%, #e0e0e0, rgba(200,200,200,0.4)),
-                            radial-gradient(1px 1px at 42% 12%, #fff, rgba(255,255,255,0.6)),
-                            radial-gradient(1.5px 1.5px at 65% 70%, #fff, rgba(255,255,255,0.5)),
-                            radial-gradient(2px 2px at 78% 38%, #e0e0e0, rgba(200,200,200,0.45)),
-                            radial-gradient(1px 1px at 52% 85%, #fff, rgba(255,255,255,0.5)),
-                            radial-gradient(1.5px 1.5px at 88% 15%, #fff, rgba(255,255,255,0.6)),
-                            radial-gradient(1px 1px at 22% 62%, #e0e0e0, rgba(200,200,200,0.4)),
-                            radial-gradient(1.5px 1.5px at 35% 35%, #fff, rgba(255,255,255,0.5)),
-                            radial-gradient(2px 2px at 72% 92%, #fff, rgba(255,255,255,0.5)),
-                            radial-gradient(1px 1px at 8% 78%, #e0e0e0, rgba(200,200,200,0.45)),
-                            radial-gradient(1.5px 1.5px at 95% 55%, #fff, rgba(255,255,255,0.6))`,
+          backgroundImage: `radial-gradient(circle at 15% 25%, white 2px, transparent 2px),
+                            radial-gradient(circle at 28% 45%, #e8e8e8 2.5px, transparent 2.5px),
+                            radial-gradient(circle at 42% 12%, white 1.5px, transparent 1.5px),
+                            radial-gradient(circle at 65% 70%, white 2px, transparent 2px),
+                            radial-gradient(circle at 78% 38%, #f0f0f0 2.5px, transparent 2.5px),
+                            radial-gradient(circle at 52% 85%, white 1.5px, transparent 1.5px),
+                            radial-gradient(circle at 88% 15%, white 2px, transparent 2px),
+                            radial-gradient(circle at 22% 62%, #e8e8e8 2.5px, transparent 2.5px),
+                            radial-gradient(circle at 35% 35%, white 2px, transparent 2px),
+                            radial-gradient(circle at 72% 92%, white 1.5px, transparent 1.5px),
+                            radial-gradient(circle at 8% 78%, #f0f0f0 2.5px, transparent 2.5px),
+                            radial-gradient(circle at 95% 55%, white 2px, transparent 2px)`,
           backgroundRepeat: 'repeat',
-          backgroundSize: '380px 340px'
+          backgroundSize: '400px 350px'
         }}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent to-sky-300/20 mix-blend-multiply" />
