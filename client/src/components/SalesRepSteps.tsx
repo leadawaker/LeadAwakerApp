@@ -36,9 +36,9 @@ const FullscreenStep = ({
 
   const overlayOpacity = useTransform(scrollYProgress, [0.3, 0.7], [0, 1]);
   const overlayTextY = useTransform(scrollYProgress, [0.3, 0.7], [20, 0]);
-  const cardOpacity = useTransform(scrollYProgress, [0, 0.2], [0, 1]);
-  const cardY = useTransform(scrollYProgress, [0, 0.2], [50, 0]);
-  const imageOpacity = useTransform(scrollYProgress, [0, 0.15], [0, 1]);
+  const cardOpacity = useTransform(scrollYProgress, [-0.2, 0.4], [0, 1]);
+  const cardY = useTransform(scrollYProgress, [-0.2, 0.4], [50, 0]);
+  const imageOpacity = useTransform(scrollYProgress, [-0.2, 0.4], [0, 1]);
 
   const isLeft = align === "left";
 
@@ -156,7 +156,7 @@ export const SalesRepSteps = () => {
                 key={i}
                 variants={{
                   hidden: { opacity: 0, y: 30, scale: 0.95 },
-                  visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 100, damping: 15 } }
+                  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, type: "spring", stiffness: 100, damping: 15 } }
                 }}
                 className="group relative bg-gradient-to-br from-slate-800/80 to-slate-800/60 border border-primary/40 backdrop-blur-sm p-8 rounded-2xl text-center hover:border-primary/60 transition-all duration-400 cursor-default overflow-hidden shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/40"
               >
