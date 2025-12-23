@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Zap, Database, MessageSquare, Calendar, BarChart, CheckCircle, ChevronDown, Menu } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
-import leadLogo from "@assets/Untitled_design_1766218788499.jpg";
+import leadLogo from "@assets/generated_images/lead_awaker_logo_ultramarine_and_gold.png";
 import Chat3D from "@/components/Chat3D";
 import { PipelineChart } from "@/components/PipelineChart";
 import { SalesRepSteps } from "@/components/SalesRepSteps";
