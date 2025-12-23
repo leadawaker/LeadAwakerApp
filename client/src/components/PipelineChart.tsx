@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 import { User, MessageSquare, CheckCircle, CalendarCheck, MoreHorizontal } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -86,20 +86,23 @@ export function PipelineChart() {
   const [leads, setLeads] = useState(INITIAL_LEADS);
   const [, setTick] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef, { once: false, amount: 0.3 });
 
   useEffect(() => {
+    if (!isInView) return;
     const interval = setInterval(() => {
       moveRandomLead();
     }, 3000);
     return () => clearInterval(interval);
-  }, [leads]);
+  }, [leads, isInView]);
 
   useEffect(() => {
+    if (!isInView) return;
     const ticker = setInterval(() => {
       setTick(t => t + 1);
     }, 100);
     return () => clearInterval(ticker);
-  }, []);
+  }, [isInView]);
 
   const formatTimeAgo = (timestamp: number) => {
     const elapsedMs = (Date.now() - timestamp) * 1200;

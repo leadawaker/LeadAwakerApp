@@ -2,16 +2,17 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Zap, Database, MessageSquare, Calendar, BarChart, CheckCircle, ChevronDown, Menu } from "lucide-react";
 import { Link } from "wouter";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useInView } from "framer-motion";
 import leadLogo from "@assets/Untitled_design_1766218788499.jpg";
 import Chat3D from "@/components/Chat3D";
 import { PipelineChart } from "@/components/PipelineChart";
 import { SalesRepSteps } from "@/components/SalesRepSteps";
 
-const KanbanCard = ({ title, delay }: { title: string; delay: number }) => (
+const KanbanCard = ({ title, delay, isInView }: { title: string; delay: number; isInView: boolean }) => (
   <motion.div
     initial={{ x: -100, opacity: 0 }}
-    animate={{ x: 0, opacity: 1 }}
+    animate={isInView ? { x: 0, opacity: 1 } : { x: -100, opacity: 0 }}
     transition={{ delay, duration: 0.5, repeat: Infinity, repeatDelay: 4 }}
     className="bg-white p-3 rounded-lg shadow-md border border-border text-sm font-medium w-32 text-center"
   >
@@ -19,7 +20,7 @@ const KanbanCard = ({ title, delay }: { title: string; delay: number }) => (
   </motion.div>
 );
 
-const AnimatedPipeline = () => {
+const AnimatedPipeline = ({ isInView }: { isInView: boolean }) => {
   const stages = ["Not Engaged", "Contacted", "Replied", "Qualified", "Sent to Client"];
   
   return (
@@ -28,11 +29,11 @@ const AnimatedPipeline = () => {
         <div key={idx} className="flex items-center gap-4">
           <div className="w-32 text-sm font-semibold text-muted-foreground">{stage}</div>
           <div className="flex-1 h-16 bg-muted/30 rounded-lg border border-dashed border-border flex items-center px-4 overflow-hidden relative">
-            {idx === 0 && <KanbanCard title="Lead #1234" delay={0} />}
-            {idx === 1 && <KanbanCard title="Lead #5678" delay={0.3} />}
-            {idx === 2 && <KanbanCard title="Lead #9012" delay={0.6} />}
-            {idx === 3 && <KanbanCard title="Lead #3456" delay={0.9} />}
-            {idx === 4 && <KanbanCard title="Lead #7890" delay={1.2} />}
+            {idx === 0 && <KanbanCard title="Lead #1234" delay={0} isInView={isInView} />}
+            {idx === 1 && <KanbanCard title="Lead #5678" delay={0.3} isInView={isInView} />}
+            {idx === 2 && <KanbanCard title="Lead #9012" delay={0.6} isInView={isInView} />}
+            {idx === 3 && <KanbanCard title="Lead #3456" delay={0.9} isInView={isInView} />}
+            {idx === 4 && <KanbanCard title="Lead #7890" delay={1.2} isInView={isInView} />}
           </div>
         </div>
       ))}
