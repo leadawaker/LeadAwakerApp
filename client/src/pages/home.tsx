@@ -204,7 +204,7 @@ export default function Home() {
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="flex justify-center py-24"
+        className="flex justify-center py-6 -mb-12 relative z-20"
       >
         <img 
           src={leadLogo} 
