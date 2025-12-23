@@ -108,29 +108,29 @@ export const SalesRepSteps = () => {
       <div 
         className="absolute inset-0" 
         style={{
-          backgroundImage: `radial-gradient(circle at 11% 19%, white 2px, transparent 2px),
-                            radial-gradient(circle at 34% 8%, #e8e8e8 2.5px, transparent 2.5px),
-                            radial-gradient(circle at 51% 31%, white 1.5px, transparent 1.5px),
-                            radial-gradient(circle at 73% 14%, white 2px, transparent 2px),
-                            radial-gradient(circle at 89% 42%, #f0f0f0 2.5px, transparent 2.5px),
-                            radial-gradient(circle at 19% 48%, white 1.5px, transparent 1.5px),
-                            radial-gradient(circle at 62% 55%, white 2px, transparent 2px),
-                            radial-gradient(circle at 8% 71%, #e8e8e8 2.5px, transparent 2.5px),
-                            radial-gradient(circle at 44% 67%, white 2px, transparent 2px),
-                            radial-gradient(circle at 81% 78%, white 1.5px, transparent 1.5px),
-                            radial-gradient(circle at 29% 91%, #f0f0f0 2.5px, transparent 2.5px),
-                            radial-gradient(circle at 97% 25%, white 2px, transparent 2px),
-                            radial-gradient(circle at 56% 9%, white 1.5px, transparent 1.5px),
-                            radial-gradient(circle at 21% 38%, #e8e8e8 2.5px, transparent 2.5px),
-                            radial-gradient(circle at 74% 63%, white 2px, transparent 2px),
-                            radial-gradient(circle at 14% 84%, #f0f0f0 2.5px, transparent 2.5px),
-                            radial-gradient(circle at 38% 51%, white 1.5px, transparent 1.5px)`,
+          backgroundImage: `radial-gradient(circle at 11% 19%, white 1px, transparent 1px),
+                            radial-gradient(circle at 34% 8%, #e8e8e8 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 51% 31%, white 0.75px, transparent 0.75px),
+                            radial-gradient(circle at 73% 14%, white 1px, transparent 1px),
+                            radial-gradient(circle at 89% 42%, #f0f0f0 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 19% 48%, white 0.75px, transparent 0.75px),
+                            radial-gradient(circle at 62% 55%, white 1px, transparent 1px),
+                            radial-gradient(circle at 8% 71%, #e8e8e8 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 44% 67%, white 1px, transparent 1px),
+                            radial-gradient(circle at 81% 78%, white 0.75px, transparent 0.75px),
+                            radial-gradient(circle at 29% 91%, #f0f0f0 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 97% 25%, white 1px, transparent 1px),
+                            radial-gradient(circle at 56% 9%, white 0.75px, transparent 0.75px),
+                            radial-gradient(circle at 21% 38%, #e8e8e8 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 74% 63%, white 1px, transparent 1px),
+                            radial-gradient(circle at 14% 84%, #f0f0f0 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 38% 51%, white 0.75px, transparent 0.75px)`,
           backgroundRepeat: 'repeat',
           backgroundSize: '450px 380px',
           filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.6)) drop-shadow(0 0 3px rgba(255,255,255,0.4))'
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-orange-400/30" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-400/70 via-[60%] to-orange-400" />
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent to-sky-300/20 mix-blend-multiply" />
       <div className="relative z-10">
       {/* Pain Points Section */}
