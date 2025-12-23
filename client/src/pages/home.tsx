@@ -75,7 +75,7 @@ export default function Home() {
                     transition={{ delay: 1, duration: 0.3, ease: "easeOut" }}
                   />
                   <span 
-                    className="relative inline-block font-bold py-3 z-10 text-yellow-400"
+                    className="relative inline-block font-bold py-3 z-10 text-black"
                   >
                     booked calls
                   </span>
