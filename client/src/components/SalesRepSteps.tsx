@@ -84,9 +84,9 @@ const FullscreenStep = ({
 
   const overlayOpacity = useTransform(scrollYProgress, [0.3, 0.7], [0, 1]);
   const overlayTextY = useTransform(scrollYProgress, [0.3, 0.7], [20, 0]);
-  const cardOpacity = useTransform(scrollYProgress, [-0.2, 0.4], [0, 1]);
+  const cardOpacity = useTransform(scrollYProgress, [-0.2, 0.4, 0.8, 1.2], [0, 1, 1, 0]);
   const cardY = useTransform(scrollYProgress, [-0.2, 0.4], [50, 0]);
-  const imageOpacity = useTransform(scrollYProgress, [-0.2, 0.4], [0, 1]);
+  const imageOpacity = useTransform(scrollYProgress, [-0.2, 0.4, 0.8, 1.2], [0, 1, 1, 0]);
 
   const isLeft = align === "left";
 
@@ -300,7 +300,7 @@ export const SalesRepSteps = () => {
       />
 
       {/* Step 2 */}
-      <div style={{ marginTop: "-10%" }}>
+      <div style={{ marginTop: "-25%" }}>
         <FullscreenStep 
           number="2"
           cardTitle="Chat GPT-5.2 conversations"
@@ -314,7 +314,7 @@ export const SalesRepSteps = () => {
       </div>
 
       {/* Step 3 */}
-      <div style={{ marginTop: "-10%" }}>
+      <div style={{ marginTop: "-25%" }}>
         <FullscreenStep 
           number="3"
           cardTitle="Revenue rolls in"
