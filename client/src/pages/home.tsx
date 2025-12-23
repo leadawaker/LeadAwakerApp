@@ -58,10 +58,10 @@ export default function Home() {
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] mb-6 text-foreground relative">
                 Turn cold leads into<br />
-                <span className="relative inline-block">
-                  <span className="absolute left-0 top-0 bottom-0 right-0 bg-gradient-to-r from-primary to-yellow-400 -z-10" style={{ right: 'calc(-100vw + 100%)' }} />
+                <span className="relative block w-full">
+                  <span className="absolute left-0 top-0 bottom-0 right-0 bg-gradient-to-r from-primary to-white -z-10" style={{ right: 'calc(-100vw + 100%)' }} />
                   <span className="relative inline-block text-white font-bold py-3 px-4 z-10">booked calls</span>
-                </span><br />
+                </span>
                 automatically.
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed">
