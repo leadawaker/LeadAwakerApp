@@ -103,10 +103,10 @@ export const SalesRepSteps = () => {
   return (
     <div 
       ref={scrollRef} 
-      className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-orange-950 text-foreground overflow-x-hidden selection:bg-primary/30 relative"
+      className="min-h-screen bg-gradient-to-b from-orange-600 via-orange-500 to-orange-300 text-foreground overflow-x-hidden selection:bg-primary/30 relative"
     >
       <div 
-        className="absolute inset-0 opacity-30" 
+        className="absolute inset-0 opacity-15" 
         style={{
           backgroundImage: `radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0.2)),
                             radial-gradient(2px 2px at 60px 70px, #fff, rgba(0,0,0,0.3)),
@@ -117,7 +117,7 @@ export const SalesRepSteps = () => {
           backgroundSize: '200px 200px'
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-900/80 to-orange-950/70 mix-blend-multiply" />
+      <div className="absolute inset-0 bg-gradient-to-b from-orange-600/20 via-orange-500/10 to-orange-300/0 mix-blend-multiply" />
       <div className="relative z-10">
       {/* Intro Section */}
       <section className="h-[80vh] flex items-center justify-center">
