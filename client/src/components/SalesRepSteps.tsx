@@ -6,6 +6,7 @@ import { Database, MessageSquare, TrendingUp, Server, MessageCircle, Mail, Calen
 import databaseIntegrationImg from "@assets/generated_images/database_upload_and_crm_integration.png";
 import womanPhoneImg from "@assets/woman_answering_phone_in_living_room_1766483592249.png";
 import dailyLeadsImg from "@assets/generated_images/daily_leads_closed_chart_dashboard.png";
+import { MeteorContainer } from "./Meteor";
 
 interface StepProps {
   number: string;
@@ -201,6 +202,7 @@ export const SalesRepSteps = () => {
 
       {/* Intro Section */}
       <section className="flex items-center justify-center relative overflow-hidden mt-24" style={{ height: '15vh' }}>
+        <MeteorContainer />
         <motion.div 
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
