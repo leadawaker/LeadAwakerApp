@@ -57,7 +57,7 @@ export default function Home() {
               transition={{ duration: 0.6 }}
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] mb-6 text-foreground relative">
-                Turn cold leads into<br />
+                Awake dormant leads into<br />
                 <motion.span 
                   className="relative block w-full"
                   initial="hidden"
@@ -75,7 +75,7 @@ export default function Home() {
                     transition={{ delay: 1, duration: 0.3, ease: "easeOut" }}
                   />
                   <span 
-                    className="relative inline-block font-bold py-3 px-4 z-10 text-yellow-400"
+                    className="relative inline-block font-bold py-3 z-10 text-yellow-400"
                   >
                     booked calls
                   </span>
