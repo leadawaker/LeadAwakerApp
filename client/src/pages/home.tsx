@@ -10,7 +10,7 @@ import { PipelineChart } from "@/components/PipelineChart";
 import { SalesRepSteps } from "@/components/SalesRepSteps";
 import { AnimatedLogo3D } from "@/components/AnimatedLogo3D";
 
-const AnimatedCounter = ({ end, duration = 3, format = (v: number) => Math.round(v).toString() }: { end: number | string; duration?: number; format?: (v: number) => string }) => {
+const AnimatedCounter = ({ end, duration = 3, format = (v: number) => Math.round(v).toString(), suffix = "" }: { end: number | string; duration?: number; format?: (v: number) => string; suffix?: string }) => {
   const [value, setValue] = useState(0);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
@@ -38,7 +38,43 @@ const AnimatedCounter = ({ end, duration = 3, format = (v: number) => Math.round
   
   return (
     <div ref={ref}>
-      {typeof end === 'string' ? end : format(value)}
+      {typeof end === 'string' ? end : format(value)}{suffix}
+    </div>
+  );
+};
+
+const AnimatedRangeCounter = ({ start: startNum, end: endNum, duration = 3, format = (v: number) => Math.round(v).toString(), suffix = "" }: { start: number; end: number; duration?: number; format?: (v: number) => string; suffix?: string }) => {
+  const [startValue, setStartValue] = useState(0);
+  const [endValue, setEndValue] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+  
+  useEffect(() => {
+    if (!isInView) return;
+    
+    const startHalf = startNum / 2;
+    const endHalf = endNum / 2;
+    const startTime = Date.now();
+    
+    const animate = () => {
+      const elapsed = (Date.now() - startTime) / 1000;
+      const progress = Math.min(elapsed / duration, 1);
+      const currentStart = startHalf + (startNum - startHalf) * progress;
+      const currentEnd = endHalf + (endNum - endHalf) * progress;
+      setStartValue(currentStart);
+      setEndValue(currentEnd);
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    
+    requestAnimationFrame(animate);
+  }, [isInView, startNum, endNum, duration]);
+  
+  return (
+    <div ref={ref}>
+      {format(startValue)}-{format(endValue)}{suffix}
     </div>
   );
 };
@@ -208,7 +244,9 @@ export default function Home() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             {[
               {
-                metric: 60,
+                isRange: true,
+                start: 40,
+                end: 60,
                 suffix: "%",
                 label: "Reply Rates",
                 subtext: "vs industry 5-10%"
@@ -242,25 +280,31 @@ export default function Home() {
                 className="bg-card p-8 rounded-2xl border border-border text-center"
               >
                 <div className="text-4xl md:text-5xl font-bold text-primary mb-2">
-                  {result.isCost ? (
-                    <AnimatedCounter 
-                      end={result.metric} 
+                  {(result as any).isRange ? (
+                    <AnimatedRangeCounter 
+                      start={(result as any).start}
+                      end={(result as any).end}
                       duration={3}
-                      format={(v) => `$${Math.round(result.metric - v).toString()}`}
+                      format={(v) => Math.round(v).toString()}
+                      suffix={(result as any).suffix}
+                    />
+                  ) : (result as any).isCost ? (
+                    <AnimatedCounter 
+                      end={(result as any).metric} 
+                      duration={3}
+                      format={(v) => `$${Math.round((result as any).metric - v).toString()}`}
                     />
                   ) : (
-                    <>
-                      <AnimatedCounter 
-                        end={result.metric} 
-                        duration={3}
-                        format={(v) => Math.round(v).toString()}
-                      />
-                      {result.suffix}
-                    </>
+                    <AnimatedCounter 
+                      end={(result as any).metric} 
+                      duration={3}
+                      format={(v) => Math.round(v).toString()}
+                      suffix={(result as any).suffix}
+                    />
                   )}
                 </div>
-                <h3 className="text-lg font-bold mb-1">{result.label}</h3>
-                <p className="text-sm text-muted-foreground">{result.subtext}</p>
+                <h3 className="text-lg font-bold mb-1">{(result as any).label}</h3>
+                <p className="text-sm text-muted-foreground">{(result as any).subtext}</p>
               </motion.div>
             ))}
           </div>
