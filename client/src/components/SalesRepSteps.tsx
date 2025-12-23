@@ -134,8 +134,10 @@ export const SalesRepSteps = () => {
       <div className="absolute inset-0" style={{
         backgroundImage: `radial-gradient(ellipse 150% 40% at 50% 55%, rgba(249, 115, 22, 1) 0%, rgba(249, 115, 22, 0.6) 60%, transparent 100%)`
       }} />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-violet-400/60 via-[80%] to-cyan-600" />
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent via-[80%] to-cyan-600/20 mix-blend-multiply" />
+      <div className="absolute inset-0" style={{
+        backgroundImage: `radial-gradient(ellipse 150% 30% at 50% 88%, rgba(167, 139, 250, 0.35) 0%, rgba(167, 139, 250, 0.1) 60%, transparent 100%)`
+      }} />
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent via-[85%] to-cyan-600/20 mix-blend-multiply" />
       <div className="relative z-10">
       {/* Pain Points Section */}
       <section className="py-32 md:py-40">
