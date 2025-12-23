@@ -2,7 +2,6 @@ import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import logoIcon from "@assets/LOGO.svg";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,7 +33,7 @@ export function Navbar() {
       <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 group">
           <div className="relative w-10 h-10 overflow-hidden rounded-lg bg-primary/10 flex items-center justify-center">
-           <img src={logoIcon} alt="Lead Awaker Logo" className="w-8 h-8 object-contain" />
+           <img src="/LOGO.svg" alt="Lead Awaker Logo" className="w-8 h-8 object-contain" />
           </div>
           <span className="font-heading font-bold text-xl tracking-tight text-foreground">
             LEAD<span className="text-primary">Awaker</span>
