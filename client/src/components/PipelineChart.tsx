@@ -32,8 +32,8 @@ const STAGES: Stage[] = [
     colorClass: "border-slate-300 text-slate-50",
     headerClass: "text-slate-100",
     textColorClass: "text-slate-100",
-    customStyle: { backgroundColor: "#0F1E3A" },
-    customTextStyle: { color: "#0F1E3A" },
+    customStyle: { backgroundColor: "#1a3a6f" },
+    customTextStyle: { color: "#1a3a6f" },
   },
   {
     id: "replied",
@@ -42,8 +42,8 @@ const STAGES: Stage[] = [
     colorClass: "border-slate-300 text-slate-50",
     headerClass: "text-slate-100",
     textColorClass: "text-slate-100",
-    customStyle: { backgroundColor: "#1A4A9A" },
-    customTextStyle: { color: "#1A4A9A" },
+    customStyle: { backgroundColor: "#2d5aa8" },
+    customTextStyle: { color: "#2d5aa8" },
   },
   {
     id: "qualified",
