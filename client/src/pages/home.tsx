@@ -84,18 +84,33 @@ export default function Home() {
 
 
       {/* Pain Points Section */}
-      <section className="py-32 md:py-40 bg-muted/30">
-        <div className="container mx-auto px-4 md:px-6">
+      <section className="py-32 md:py-40 bg-muted/30 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-5 mix-blend-overlay" style={{backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')"}} />
+        <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
             className="text-center max-w-3xl mx-auto mb-16"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">Manual Reactivation Is Broken.</h2>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-red-900 to-red-700 bg-clip-text text-transparent">Manual Reactivation Is Broken.</h2>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={{
+              visible: {
+                transition: {
+                  staggerChildren: 0.08,
+                  delayChildren: 0.1,
+                }
+              }
+            }}
+            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
+          >
             {[
               { icon: "📦", title: "Bloated CRMs with 1000s of \"dead\" contacts you already paid for" },
               { icon: "⌨️", title: "Reps waste 20-40 hrs/week on soul-crushing copy-paste outreach" },
@@ -104,25 +119,29 @@ export default function Home() {
             ].map((pain, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="bg-red-50 border border-red-200 p-6 rounded-xl text-center hover:shadow-2xl hover:shadow-red-300/50 hover:border-red-400 transition-all duration-300 group cursor-default"
+                variants={{
+                  hidden: { opacity: 0, y: 30, scale: 0.95 },
+                  visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 100, damping: 15 } }
+                }}
+                className="group relative bg-gradient-to-br from-red-50 to-red-50/50 border border-red-200/60 backdrop-blur-sm p-8 rounded-2xl text-center hover:border-red-400/80 transition-all duration-400 cursor-default overflow-hidden"
               >
-                <div className="text-4xl mb-3 transform group-hover:scale-110 transition-transform duration-300">{pain.icon}</div>
-                <p className="text-sm font-medium text-gray-700">{pain.title}</p>
+                <div className="absolute inset-0 bg-gradient-to-br from-red-500/0 to-red-500/0 group-hover:from-red-500/5 group-hover:to-red-500/10 transition-all duration-400" />
+                <div className="relative z-10">
+                  <div className="text-5xl mb-4 transform group-hover:scale-125 transition-transform duration-400 inline-block">{pain.icon}</div>
+                  <p className="text-sm font-semibold text-gray-800 leading-relaxed">{pain.title}</p>
+                </div>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-red-100 border border-red-300 p-8 rounded-2xl text-center max-w-2xl mx-auto"
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-300/40 backdrop-blur-sm p-8 rounded-2xl text-center max-w-2xl mx-auto shadow-lg shadow-red-200/20"
           >
-            <p className="text-base font-semibold text-red-900">Companies have invested thousands in acquiring these leads, but they're leaving millions on the table because reactivation is too painful and ineffective.</p>
+            <p className="text-base font-semibold text-red-950 leading-relaxed">Companies have invested thousands in acquiring these leads, but they're leaving millions on the table because reactivation is too painful and ineffective.</p>
           </motion.div>
         </div>
       </section>
