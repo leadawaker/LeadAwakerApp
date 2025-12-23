@@ -130,7 +130,7 @@ export const SalesRepSteps = () => {
           filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.6)) drop-shadow(0 0 3px rgba(255,255,255,0.4))'
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-400/70 via-[60%] to-orange-400" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-400/70 via-[50%] to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent to-sky-300/20 mix-blend-multiply" />
       <div className="relative z-10">
       {/* Pain Points Section */}
