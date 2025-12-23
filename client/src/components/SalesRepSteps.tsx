@@ -144,11 +144,7 @@ export const SalesRepSteps = () => {
         zIndex: 2
       }} />
       <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: `radial-gradient(ellipse 130% 35% at 50% 82%, rgba(200, 130, 255, 0.7) 0%, rgba(200, 130, 255, 0.4) 40%, transparent 80%)`,
-        zIndex: 2
-      }} />
-      <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: `radial-gradient(ellipse 150% 30% at 50% 88%, rgba(100, 180, 220, 0.45) 0%, rgba(100, 180, 220, 0.15) 60%, transparent 100%)`,
+        backgroundImage: `radial-gradient(ellipse 150% 30% at 50% 88%, rgba(167, 139, 250, 0.45) 0%, rgba(167, 139, 250, 0.15) 60%, transparent 100%)`,
         zIndex: 2
       }} />
       <div className="absolute inset-0 pointer-events-none" style={{
