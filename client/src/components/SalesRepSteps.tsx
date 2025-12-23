@@ -187,8 +187,7 @@ export const SalesRepSteps = () => {
         <motion.div
           className="absolute top-20 -left-20 w-2 h-2 bg-yellow-300 rounded-full"
           initial={{ x: -100, y: -100, opacity: 1 }}
-          whileInView={{ x: 500, y: 300, opacity: 0 }}
-          viewport={{ once: true }}
+          animate={{ x: 500, y: 300, opacity: 0 }}
           transition={{ duration: 2, ease: "easeIn" }}
         >
           <div className="absolute inset-0 w-full h-full bg-yellow-300 rounded-full blur-sm"></div>
