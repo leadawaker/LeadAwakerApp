@@ -226,47 +226,7 @@ export const SalesRepSteps = () => {
       />
 
       {/* Step 2 */}
-      <div style={{ marginTop: "-10%", position: "relative", overflow: "hidden" }}>
-        {/* Clouds with orange glow */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.7 }} viewBox="0 0 1200 600" preserveAspectRatio="none">
-          <defs>
-            <filter id="cloud-glow">
-              <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-              <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-          </defs>
-          
-          {/* Cloud 1 - left side */}
-          <g filter="url(#cloud-glow)" style={{ opacity: 0.6 }}>
-            <ellipse cx="150" cy="100" rx="80" ry="50" fill="url(#cloudGradient1)"/>
-            <ellipse cx="220" cy="90" rx="100" ry="60" fill="url(#cloudGradient1)"/>
-            <ellipse cx="80" cy="110" rx="70" ry="45" fill="url(#cloudGradient1)"/>
-          </g>
-          
-          {/* Cloud 2 - right side */}
-          <g filter="url(#cloud-glow)" style={{ opacity: 0.5 }}>
-            <ellipse cx="1050" cy="120" rx="90" ry="55" fill="url(#cloudGradient2)"/>
-            <ellipse cx="1140" cy="105" rx="110" ry="65" fill="url(#cloudGradient2)"/>
-            <ellipse cx="960" cy="135" rx="75" ry="50" fill="url(#cloudGradient2)"/>
-          </g>
-          
-          {/* Gradients for clouds with orange glow from below */}
-          <linearGradient id="cloudGradient1" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style={{ stopColor: "#ffffff", stopOpacity: 0.8 }} />
-            <stop offset="70%" style={{ stopColor: "#ffffff", stopOpacity: 0.6 }} />
-            <stop offset="100%" style={{ stopColor: "#f97316", stopOpacity: 0.4 }} />
-          </linearGradient>
-          
-          <linearGradient id="cloudGradient2" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style={{ stopColor: "#ffffff", stopOpacity: 0.75 }} />
-            <stop offset="70%" style={{ stopColor: "#ffffff", stopOpacity: 0.55 }} />
-            <stop offset="100%" style={{ stopColor: "#f97316", stopOpacity: 0.35 }} />
-          </linearGradient>
-        </svg>
-        
+      <div style={{ marginTop: "-10%" }}>
         <FullscreenStep 
           number="2"
           cardTitle="Chat GPT-5.2 conversations"
