@@ -77,7 +77,7 @@ export default function Home() {
                     }}
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
-                    transition={{ delay: 1.5, duration: 0.5, ease: "easeOut" }}
+                    transition={{ delay: 1.5, duration: 0.25, ease: "easeOut" }}
                   />
                   <motion.span 
                     className="absolute top-0 bottom-0 -z-10"
@@ -89,7 +89,7 @@ export default function Home() {
                     }}
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
-                    transition={{ delay: 2, duration: 0.5, ease: "easeOut" }}
+                    transition={{ delay: 2, duration: 0.25, ease: "easeOut" }}
                   />
                   <motion.span 
                     className="relative inline-block font-bold py-3 z-10"
