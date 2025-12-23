@@ -74,11 +74,14 @@ export default function Home() {
                     animate={{ scaleX: 1 }}
                     transition={{ delay: 1, duration: 0.3, ease: "easeOut" }}
                   />
-                  <span 
-                    className="relative inline-block font-bold py-3 z-10 text-black"
+                  <motion.span 
+                    className="relative inline-block font-bold py-3 z-10"
+                    initial={{ color: '#000' }}
+                    animate={{ color: '#facc15' }}
+                    transition={{ delay: 1, duration: 0.3, ease: "easeOut" }}
                   >
                     booked calls
-                  </span>
+                  </motion.span>
                 </motion.span>
                 automatically.
               </h1>
