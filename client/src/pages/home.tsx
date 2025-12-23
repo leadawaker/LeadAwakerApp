@@ -83,17 +83,16 @@ export default function Home() {
                     booked calls
                   </motion.span>
                 </motion.span>
-                <div className="flex items-center">
-                  <motion.div 
-                    className="h-full bg-gradient-to-r from-primary to-white"
-                    initial={{ width: 0 }}
-                    animate={{ width: 'auto' }}
+                <span className="relative block w-full">
+                  <motion.span 
+                    className="absolute top-0 bottom-0 bg-gradient-to-r from-primary to-white -z-10"
+                    style={{ left: 'calc(-100vw + 100%)', originX: 0 }}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
                     transition={{ delay: 1.5, duration: 0.5, ease: "easeOut" }}
-                  >
-                    <span className="inline-block font-bold py-3 opacity-0 pointer-events-none">automatically.</span>
-                  </motion.div>
-                  <span className="font-bold py-3 text-foreground">automatically.</span>
-                </div>
+                  />
+                  <span className="relative inline-block font-bold py-3 z-10 text-foreground">automatically.</span>
+                </span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed">
                 From first contact to CRM follow-up, our AI automations handle it all so you can focus on closing deals, not chasing them.
