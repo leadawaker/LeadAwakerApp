@@ -56,9 +56,12 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] mb-6 text-foreground">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] mb-6 text-foreground relative">
                 Turn cold leads into<br />
-                <span className="inline-block bg-gradient-to-r from-primary to-yellow-400 text-white font-bold py-3 px-4 mr-4">booked calls</span><br />
+                <span className="relative inline-block">
+                  <span className="absolute left-0 top-0 bottom-0 right-0 bg-gradient-to-r from-primary to-yellow-400 -z-10" style={{ right: 'calc(-100vw + 100%)' }} />
+                  <span className="relative inline-block text-white font-bold py-3 px-4 z-10">booked calls</span>
+                </span><br />
                 automatically.
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed">
@@ -79,10 +82,7 @@ export default function Home() {
               </div>
             </motion.div>
 
-            <div className="relative z-0">
-              <div className="absolute -inset-8 bg-gradient-to-r from-primary to-yellow-400 top-1/3" />
-              <Chat3D />
-            </div>
+            <Chat3D />
           </div>
         </div>
       </section>
