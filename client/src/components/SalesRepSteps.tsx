@@ -212,7 +212,7 @@ export const SalesRepSteps = () => {
       />
 
       {/* Step 2 */}
-      <div style={{ marginTop: "6%" }}>
+      <div style={{ marginTop: "-10%" }}>
         <FullscreenStep 
           number="2"
           cardTitle="Chat GPT-5.2 conversations"
