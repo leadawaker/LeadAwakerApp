@@ -84,7 +84,7 @@ export default function Home() {
 
 
       {/* Pain Points Section */}
-      <section className="py-32 md:py-40">
+      <section className="py-32 md:py-40 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
