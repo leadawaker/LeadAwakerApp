@@ -127,9 +127,9 @@ export const SalesRepSteps = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center max-w-3xl mx-auto mb-16 bg-slate-800/80 border border-primary/40 backdrop-blur-sm p-8 rounded-2xl shadow-lg shadow-primary/20"
+            className="text-center max-w-3xl mx-auto mb-16"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg whitespace-nowrap">Manual reactivation is broken.</h2>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg whitespace-nowrap" style={{ filter: 'drop-shadow(0 0 30px rgba(59, 130, 246, 0.6))' }}>Manual reactivation is broken.</h2>
           </motion.div>
 
           <motion.div 
@@ -158,7 +158,7 @@ export const SalesRepSteps = () => {
                   hidden: { opacity: 0, y: 30, scale: 0.95 },
                   visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 100, damping: 15 } }
                 }}
-                className="group relative bg-gradient-to-br from-slate-800/80 to-slate-800/60 border border-primary/40 backdrop-blur-sm p-8 rounded-2xl text-center hover:border-primary/60 transition-all duration-400 cursor-default overflow-hidden shadow-md hover:shadow-lg"
+                className="group relative bg-gradient-to-br from-slate-800/80 to-slate-800/60 border border-primary/40 backdrop-blur-sm p-8 rounded-2xl text-center hover:border-primary/60 transition-all duration-400 cursor-default overflow-hidden shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/40"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:to-primary/10 transition-all duration-400" />
                 <div className="relative z-10">
