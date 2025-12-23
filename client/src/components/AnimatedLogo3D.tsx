@@ -15,6 +15,7 @@ export function AnimatedLogo3D() {
     height: "600px",
     position: "relative",
     transformStyle: "preserve-3d" as any,
+    filter: "drop-shadow(0 0 30px rgba(59, 130, 246, 0.4)) drop-shadow(0 0 60px rgba(59, 130, 246, 0.2))",
   };
 
   const logoStyle: CSSProperties = {
@@ -40,9 +41,9 @@ export function AnimatedLogo3D() {
         <motion.img
           src="/top logo.svg"
           alt="Top Logo"
-          initial={{ opacity: 0, scale: 0.1 }}
-          animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.1 }}
-          transition={{ delay: 0.2, duration: 0.2, type: "spring", stiffness: 80, damping: 20 }}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
+          transition={{ delay: 1.2, duration: 0.1, type: "spring", stiffness: 200, damping: 15 }}
           style={logoStyle}
           data-testid="animated-logo-top"
         />
