@@ -287,7 +287,7 @@ export const SalesRepSteps = () => {
                 }
               }
             }}
-            className="grid md:grid-cols-2 gap-6 mb-12"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-12 max-w-2xl mx-auto"
           >
             {[
               { icon: <Box className="w-8 h-8" strokeWidth={1.5} />, title: "Bloated CRMs with 1000s of \"dead\" contacts you already paid for" },
