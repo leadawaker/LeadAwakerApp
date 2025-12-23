@@ -58,7 +58,7 @@ export default function Home() {
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] mb-6 text-foreground">
                 Turn cold leads into<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">booked calls</span><br />
+                <span className="inline-block px-8 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-orange-500 text-white font-bold">booked calls</span><br />
                 automatically.
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed">
