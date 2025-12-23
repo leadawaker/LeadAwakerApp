@@ -136,7 +136,7 @@ export default function Home() {
 
 
       {/* Pain Points Section */}
-      <section className="py-32 md:py-40 bg-slate-950 relative overflow-hidden">
+      <section className="py-32 md:py-40 bg-gradient-to-b from-slate-950 via-orange-400 to-sky-300 relative overflow-hidden">
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
