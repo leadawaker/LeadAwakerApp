@@ -91,9 +91,9 @@ export default function Home() {
                     animate={{ 
                       color: '#facc15',
                       textShadow: [
-                        '0 10px 10px rgba(250, 204, 21, 0.15), -50px 0px 20px rgba(250, 204, 21, 0)',
-                        '0 10px 20px rgba(250, 204, 21, 0.25), 0px 0px 20px rgba(250, 204, 21, 0.2)',
-                        '0 10px 10px rgba(250, 204, 21, 0.15), 50px 0px 20px rgba(250, 204, 21, 0)'
+                        '0 10px 10px rgba(250, 204, 21, 0.15), -50px 0px 20px rgba(250, 204, 21, 0), 0px -2px 8px rgba(255, 255, 255, 0)',
+                        '0 10px 20px rgba(250, 204, 21, 0.25), 0px 0px 20px rgba(250, 204, 21, 0.2), 0px -2px 8px rgba(255, 255, 255, 0.6)',
+                        '0 10px 10px rgba(250, 204, 21, 0.15), 50px 0px 20px rgba(250, 204, 21, 0), 0px -2px 8px rgba(255, 255, 255, 0)'
                       ]
                     }}
                     transition={{ delay: 1, duration: 0.3, ease: "easeOut", textShadow: { delay: 1.3, duration: 5, repeat: Infinity, ease: "easeInOut" } }}
