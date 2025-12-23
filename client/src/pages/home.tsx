@@ -84,7 +84,7 @@ export default function Home() {
 
 
       {/* Pain Points Section */}
-      <section className="py-24">
+      <section className="py-32 lg:py-40">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -129,23 +129,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Conversion Pipeline */}
-      <section className="py-24 bg-muted/30">
-        <div className="container mx-auto px-4 md:px-6">
-          {/* New Pipeline Component */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mt-0"
-          >
-            <PipelineChart />
-          </motion.div>
-        </div>
-      </section>
-
       {/* Results/Metrics Section */}
-      <section className="py-24">
+      <section className="py-32 lg:py-40">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -204,7 +189,7 @@ export default function Home() {
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="flex justify-center py-6 -mb-12 relative z-20"
+        className="flex justify-center py-8 -mb-12 relative z-20"
       >
         <img 
           src={leadLogo} 
@@ -221,8 +206,23 @@ export default function Home() {
         step3Image="@assets/generated_images/daily_leads_closed_chart_dashboard.png"
       />
 
+      {/* Conversion Pipeline */}
+      <section className="py-32 lg:py-40 bg-muted/30 border-t border-border">
+        <div className="container mx-auto px-4 md:px-6">
+          {/* New Pipeline Component */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-0"
+          >
+            <PipelineChart />
+          </motion.div>
+        </div>
+      </section>
+
       {/* Demo Section with Logo */}
-      <section id="demo" className="py-24 border-t border-border">
+      <section id="demo" className="py-32 lg:py-40 border-t border-border">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -271,7 +271,7 @@ export default function Home() {
 
 
       {/* Security & AI Guardrails Section */}
-      <section className="py-24">
+      <section className="py-32 lg:py-40 border-t border-border">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
