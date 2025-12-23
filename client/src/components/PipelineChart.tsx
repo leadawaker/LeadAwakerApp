@@ -52,8 +52,8 @@ const STAGES: Stage[] = [
     colorClass: "border-slate-300 text-slate-50",
     headerClass: "text-black",
     textColorClass: "text-slate-100",
-    customStyle: { backgroundColor: "#00D4FF" },
-    customTextStyle: { color: "#00D4FF" },
+    customStyle: { backgroundColor: "#1E90FF" },
+    customTextStyle: { color: "#1E90FF" },
   },
   {
     id: "booked",
