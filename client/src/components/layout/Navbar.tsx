@@ -31,11 +31,11 @@ export function Navbar() {
       }`}
     >
       <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
+        <Link href="/" className="flex items-end gap-2 group">
           <div className="relative w-14 h-14 overflow-hidden rounded-lg bg-primary/10 flex items-center justify-center">
            <img src="/favicon.svg" alt="Lead Awaker Logo" className="w-12 h-12 object-contain" />
           </div>
-          <span className="font-heading font-bold text-xl tracking-tight text-foreground">
+          <span className="font-heading font-bold text-2xl tracking-tight text-foreground">
             LEAD<span className="text-primary">Awaker</span>
           </span>
         </Link>
