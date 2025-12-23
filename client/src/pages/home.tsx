@@ -57,9 +57,7 @@ export default function Home() {
               transition={{ duration: 0.6 }}
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] mb-6 text-foreground">
-                Turn cold leads into<br />
-                <span className="block w-full bg-gradient-to-r from-primary to-yellow-400 text-white font-bold py-4 px-8">booked calls</span><br />
-                automatically.
+                Turn cold leads into <span className="inline-block w-32 bg-gradient-to-r from-primary to-yellow-400 text-white font-bold py-2 px-4 align-middle">booked calls</span> automatically.
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed">
                 From first contact to CRM follow-up, our AI automations handle it all so you can focus on closing deals, not chasing them.
