@@ -50,19 +50,21 @@ export default function Home() {
         <div className="absolute top-0 right-0 -z-10 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent blur-3xl opacity-50" />
         
         <div className="container mx-auto px-4 md:px-6">
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center mb-20">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center mb-20 relative">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] mb-6 text-foreground">
-                Turn cold leads into <span className="inline-block w-32 bg-gradient-to-r from-primary to-yellow-400 text-white font-bold py-2 px-4 align-middle">booked calls</span> automatically.
+                Turn cold leads into<br />
+                <span className="inline-block bg-gradient-to-r from-primary to-yellow-400 text-white font-bold py-3 px-4 mr-4">booked calls</span><br />
+                automatically.
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed">
                 From first contact to CRM follow-up, our AI automations handle it all so you can focus on closing deals, not chasing them.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 relative z-10">
                 <Link href="/book-demo">
                   <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 text-white">
                     Book a Call
@@ -77,7 +79,10 @@ export default function Home() {
               </div>
             </motion.div>
 
-            <Chat3D />
+            <div className="relative z-0">
+              <div className="absolute -inset-8 bg-gradient-to-r from-primary to-yellow-400 top-1/3" />
+              <Chat3D />
+            </div>
           </div>
         </div>
       </section>
