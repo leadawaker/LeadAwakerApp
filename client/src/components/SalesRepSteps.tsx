@@ -180,7 +180,61 @@ export const SalesRepSteps = () => {
           willChange: 'transform',
           backfaceVisibility: 'hidden',
           perspective: '1000px',
-          animation: 'twinkle-slow 4s ease-in-out infinite'
+          animation: 'twinkle-fast 2s ease-in-out infinite'
+        }}
+      />
+      <div 
+        className="absolute inset-0" 
+        style={{
+          backgroundImage: `radial-gradient(circle at 11% 19%, white 1px, transparent 1px),
+                            radial-gradient(circle at 34% 8%, #e8e8e8 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 51% 31%, white 0.75px, transparent 0.75px),
+                            radial-gradient(circle at 73% 14%, white 1px, transparent 1px),
+                            radial-gradient(circle at 89% 42%, #f0f0f0 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 19% 48%, white 0.75px, transparent 0.75px),
+                            radial-gradient(circle at 62% 55%, white 1px, transparent 1px),
+                            radial-gradient(circle at 8% 71%, #e8e8e8 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 44% 67%, white 1px, transparent 1px),
+                            radial-gradient(circle at 81% 78%, white 0.75px, transparent 0.75px),
+                            radial-gradient(circle at 29% 91%, #f0f0f0 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 97% 25%, white 1px, transparent 1px),
+                            radial-gradient(circle at 56% 9%, white 0.75px, transparent 0.75px),
+                            radial-gradient(circle at 21% 38%, #e8e8e8 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 74% 63%, white 1px, transparent 1px),
+                            radial-gradient(circle at 14% 84%, #f0f0f0 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 38% 51%, white 0.75px, transparent 0.75px)`,
+          backgroundRepeat: 'repeat',
+          backgroundSize: '450px 380px',
+          filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
+          animation: 'twinkle-fast-offset-1 2.5s ease-in-out infinite',
+          opacity: 0.7
+        }}
+      />
+      <div 
+        className="absolute inset-0" 
+        style={{
+          backgroundImage: `radial-gradient(circle at 11% 19%, white 1px, transparent 1px),
+                            radial-gradient(circle at 34% 8%, #e8e8e8 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 51% 31%, white 0.75px, transparent 0.75px),
+                            radial-gradient(circle at 73% 14%, white 1px, transparent 1px),
+                            radial-gradient(circle at 89% 42%, #f0f0f0 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 19% 48%, white 0.75px, transparent 0.75px),
+                            radial-gradient(circle at 62% 55%, white 1px, transparent 1px),
+                            radial-gradient(circle at 8% 71%, #e8e8e8 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 44% 67%, white 1px, transparent 1px),
+                            radial-gradient(circle at 81% 78%, white 0.75px, transparent 0.75px),
+                            radial-gradient(circle at 29% 91%, #f0f0f0 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 97% 25%, white 1px, transparent 1px),
+                            radial-gradient(circle at 56% 9%, white 0.75px, transparent 0.75px),
+                            radial-gradient(circle at 21% 38%, #e8e8e8 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 74% 63%, white 1px, transparent 1px),
+                            radial-gradient(circle at 14% 84%, #f0f0f0 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 38% 51%, white 0.75px, transparent 0.75px)`,
+          backgroundRepeat: 'repeat',
+          backgroundSize: '450px 380px',
+          filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
+          animation: 'twinkle-fast-offset-2 2.2s ease-in-out infinite',
+          opacity: 0.6
         }}
       />
       <div className="absolute inset-0 pointer-events-none" style={{
