@@ -199,88 +199,17 @@ export const SalesRepSteps = () => {
         </motion.div>
       </section>
 
-      {/* Step 1 with Integration Icons */}
-      <div className="h-[16vh] w-full flex items-center justify-center px-4 md:px-12 relative z-10">
-        <div className="container mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
-          <motion.div 
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="order-2 md:order-1"
-          >
-            <div className="relative">
-              <div className="absolute top-1/2 -translate-y-1/2 w-16 h-[2px] bg-primary/30 hidden md:block -right-16" />
-              <div className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-primary hidden md:block -right-18 translate-x-2" />
-              <Badge className="mb-4 bg-orange-600 text-white hover:bg-orange-700 text-lg px-3 py-1 rounded-full w-10 h-10 flex items-center justify-center" data-testid="step-badge-1">
-                1
-              </Badge>
-              
-              <Card className="bg-card/50 backdrop-blur-sm border-white/10 overflow-hidden group hover:border-primary/50 transition-colors duration-500">
-                <CardContent className="p-8">
-                  <div className="mb-6 p-3 bg-primary/10 w-fit rounded-xl text-primary" data-testid="step-icon-1">
-                    <Database className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-black" data-testid="step-title-1">Upload database</h3>
-                  <p className="text-muted-foreground text-lg leading-relaxed" data-testid="step-description-1">
-                    AI instantly IDs high-potential dormant leads.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className="order-1 md:order-2 relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border border-white/5"
-            data-testid="step-image-1"
-          >
-            <img 
-              src={databaseIntegrationImg} 
-              alt="Upload database" 
-              className="w-full h-full object-cover"
-            />
-            <motion.div 
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="absolute inset-0 bg-blue-950/60 backdrop-blur-sm flex flex-col items-center justify-center p-8"
-            >
-              <span className="text-primary font-mono text-sm uppercase tracking-wider mb-4 block">Step 1 Details</span>
-              <p className="text-white text-center mb-8 font-bold text-lg max-w-xs">
-                Your existing stack becomes an automation powerhouse.
-              </p>
-              
-              <div className="grid grid-cols-2 gap-6">
-                <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 border-2 border-white rounded-lg flex items-center justify-center mb-3">
-                    <Server className="w-6 h-6 text-white" strokeWidth={1.5} />
-                  </div>
-                  <span className="text-xs font-medium text-white text-center">CRM / Databases</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 border-2 border-white rounded-lg flex items-center justify-center mb-3">
-                    <MessageCircle className="w-6 h-6 text-white" strokeWidth={1.5} />
-                  </div>
-                  <span className="text-xs font-medium text-white text-center">WhatsApp, SMS & Chat</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 border-2 border-white rounded-lg flex items-center justify-center mb-3">
-                    <Mail className="w-6 h-6 text-white" strokeWidth={1.5} />
-                  </div>
-                  <span className="text-xs font-medium text-white text-center">Email Platforms</span>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 border-2 border-white rounded-lg flex items-center justify-center mb-3">
-                    <Calendar className="w-6 h-6 text-white" strokeWidth={1.5} />
-                  </div>
-                  <span className="text-xs font-medium text-white text-center">Calendar Apps</span>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </div>
+      {/* Step 1 */}
+      <FullscreenStep 
+        number="1"
+        cardTitle="Upload database"
+        cardDescription="AI instantly IDs high-potential dormant leads."
+        overlayTitle="Your existing stack becomes an automation powerhouse."
+        overlayDescription="CRM / Databases, WhatsApp, SMS & Chat, Email Platforms, Calendar Apps"
+        image={databaseIntegrationImg}
+        icon={<Database className="w-8 h-8" />}
+        align="left"
+      />
 
       {/* Step 2 */}
       <div style={{ marginTop: "6%" }}>
