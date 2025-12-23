@@ -186,7 +186,7 @@ export const SalesRepSteps = () => {
       <section className="flex items-center justify-center relative overflow-hidden mt-24" style={{ height: '25vh' }}>
         {/* Meteor */}
         <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-yellow-300 rounded-full"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-yellow-300 rounded-full z-20"
           initial={{ x: -100, y: -100, opacity: 1 }}
           animate={{ x: 100, y: 100, opacity: 0 }}
           transition={{ duration: 2, ease: "easeIn", repeat: Infinity, repeatDelay: 4 }}
