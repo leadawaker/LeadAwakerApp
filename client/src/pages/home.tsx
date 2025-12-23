@@ -68,14 +68,14 @@ export default function Home() {
                   }}
                 >
                   <motion.span 
-                    className="absolute top-0 bottom-0 bg-gradient-to-r from-primary to-white -z-10" 
+                    className="absolute top-0 bottom-0 bg-gradient-to-r from-accent to-white -z-10" 
                     style={{ right: 'calc(-100vw + 100%)', left: 0, originX: 0 }}
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
                     transition={{ delay: 1, duration: 0.5, ease: "easeOut" }}
                   />
                   <motion.span 
-                    className="absolute top-0 bottom-0 bg-gradient-to-r from-white to-primary -z-10"
+                    className="absolute top-0 bottom-0 bg-gradient-to-r from-white to-accent -z-10"
                     style={{ 
                       left: '-100vw', 
                       width: 'calc(100vw + 2%)',
@@ -89,11 +89,11 @@ export default function Home() {
                     className="relative inline-block font-bold py-3 z-10"
                     initial={{ color: '#000', textShadow: 'none' }}
                     animate={{ 
-                      color: '#facc15',
+                      color: '#5170ff',
                       textShadow: [
-                        '0 10px 10px rgba(250, 204, 21, 0.06), -50px 0px 20px rgba(250, 204, 21, 0)',
-                        '0 10px 20px rgba(250, 204, 21, 0.1), 0px 0px 20px rgba(250, 204, 21, 0.08)',
-                        '0 10px 10px rgba(250, 204, 21, 0.06), 50px 0px 20px rgba(250, 204, 21, 0)'
+                        '0 10px 10px rgba(81, 112, 255, 0.06), -50px 0px 20px rgba(81, 112, 255, 0)',
+                        '0 10px 20px rgba(81, 112, 255, 0.1), 0px 0px 20px rgba(81, 112, 255, 0.08)',
+                        '0 10px 10px rgba(81, 112, 255, 0.06), 50px 0px 20px rgba(81, 112, 255, 0)'
                       ]
                     }}
                     transition={{ delay: 1, duration: 0.3, ease: "easeOut", textShadow: { delay: 1.3, duration: 5, repeat: Infinity, ease: "easeInOut" } }}
