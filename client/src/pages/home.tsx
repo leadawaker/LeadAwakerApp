@@ -112,7 +112,10 @@ export default function Home() {
                 </span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed">
-                From first contact to CRM follow-up, our AI automations handle it all so you can focus on closing deals, not chasing them.
+                From first contact to CRM follow-up,<br />
+                our AI automations handle it all<br />
+                so you can focus on closing deals,<br />
+                not chasing them.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 relative z-10">
                 <Link href="/book-demo">
