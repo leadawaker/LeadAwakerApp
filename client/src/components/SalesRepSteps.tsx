@@ -86,7 +86,7 @@ const FullscreenStep = ({
   const overlayTextY = useTransform(scrollYProgress, [0.3, 0.7], [20, 0]);
   const cardOpacity = useTransform(scrollYProgress, [-0.2, 0.4, 2], [0, 1, 1]);
   const cardY = useTransform(scrollYProgress, [-0.2, 0.4], [50, 0]);
-  const imageOpacity = useTransform(scrollYProgress, [-0.2, 0.4, 0.8, 1.2], [0, 1, 1, 0]);
+  const imageOpacity = useTransform(scrollYProgress, [-0.2, 0.4], [0, 1]);
 
   const isLeft = align === "left";
 
@@ -132,7 +132,7 @@ const FullscreenStep = ({
             className="absolute inset-0 bg-blue-950/80 backdrop-blur-[2px] flex flex-col items-center justify-center p-8 text-center"
           >
             <motion.div style={{ y: overlayTextY }}>
-              <span className="text-primary font-mono text-sm uppercase tracking-wider mb-2 block">Step {number} Details</span>
+              <span className="text-accent font-mono text-sm uppercase tracking-wider mb-2 block">Step {number} Details</span>
               <h4 className="text-3xl font-bold text-white mb-4">{overlayTitle}</h4>
               <p className="text-gray-200 text-lg max-w-md mx-auto leading-relaxed">
                 {overlayDescription}

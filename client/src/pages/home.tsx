@@ -4,10 +4,44 @@ import { ArrowRight, Zap, Database, MessageSquare, Calendar, BarChart, CheckCirc
 import { Link } from "wouter";
 import { useState, useRef } from "react";
 import { useInView } from "framer-motion";
+import { useEffect } from "react";
 import Chat3D from "@/components/Chat3D";
 import { PipelineChart } from "@/components/PipelineChart";
 import { SalesRepSteps } from "@/components/SalesRepSteps";
 import { AnimatedLogo3D } from "@/components/AnimatedLogo3D";
+
+const AnimatedCounter = ({ end, duration = 3, format = (v: number) => Math.round(v).toString() }: { end: number | string; duration?: number; format?: (v: number) => string }) => {
+  const [value, setValue] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+  
+  useEffect(() => {
+    if (!isInView) return;
+    
+    const numEnd = typeof end === 'string' ? 0 : end;
+    const start = numEnd / 2;
+    const startTime = Date.now();
+    
+    const animate = () => {
+      const elapsed = (Date.now() - startTime) / 1000;
+      const progress = Math.min(elapsed / duration, 1);
+      const current = start + (numEnd - start) * progress;
+      setValue(current);
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    
+    requestAnimationFrame(animate);
+  }, [isInView, end, duration]);
+  
+  return (
+    <div ref={ref}>
+      {typeof end === 'string' ? end : format(value)}
+    </div>
+  );
+};
 
 const KanbanCard = ({ title, delay, isInView }: { title: string; delay: number; isInView: boolean }) => (
   <motion.div
@@ -174,22 +208,27 @@ export default function Home() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             {[
               {
-                metric: "40-60%",
+                metric: 60,
+                suffix: "%",
                 label: "Reply Rates",
                 subtext: "vs industry 5-10%"
               },
               {
-                metric: "15-25%",
+                metric: 25,
+                suffix: "%",
                 label: "Leads Reactivated",
                 subtext: "into live opportunities"
               },
               {
-                metric: "40+",
+                metric: 40,
+                suffix: "+",
                 label: "Hours Saved",
                 subtext: "per rep/month"
               },
               {
-                metric: "$0",
+                metric: 5000,
+                suffix: "",
+                isCost: true,
                 label: "Upfront Cost",
                 subtext: "performance‑based pricing"
               }
@@ -202,7 +241,24 @@ export default function Home() {
                 transition={{ delay: i * 0.1 }}
                 className="bg-card p-8 rounded-2xl border border-border text-center"
               >
-                <div className="text-4xl md:text-5xl font-bold text-primary mb-2">{result.metric}</div>
+                <div className="text-4xl md:text-5xl font-bold text-primary mb-2">
+                  {result.isCost ? (
+                    <AnimatedCounter 
+                      end={result.metric} 
+                      duration={3}
+                      format={(v) => `$${Math.round(result.metric - v).toString()}`}
+                    />
+                  ) : (
+                    <>
+                      <AnimatedCounter 
+                        end={result.metric} 
+                        duration={3}
+                        format={(v) => Math.round(v).toString()}
+                      />
+                      {result.suffix}
+                    </>
+                  )}
+                </div>
                 <h3 className="text-lg font-bold mb-1">{result.label}</h3>
                 <p className="text-sm text-muted-foreground">{result.subtext}</p>
               </motion.div>
