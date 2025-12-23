@@ -86,7 +86,7 @@ export default function Home() {
                     transition={{ delay: 1.5, duration: 0.5, ease: "easeOut" }}
                   />
                   <motion.span 
-                    className="relative inline-block font-bold py-3 z-10"
+                    className="relative inline-block font-bold py-3 z-10 overflow-hidden"
                     initial={{ color: '#000', textShadow: 'none' }}
                     animate={{ 
                       color: '#facc15',
@@ -97,10 +97,6 @@ export default function Home() {
                       ]
                     }}
                     transition={{ delay: 1, duration: 0.3, ease: "easeOut", textShadow: { delay: 1.3, duration: 5, repeat: Infinity, ease: "easeInOut" } }}
-                    style={{
-                      position: 'relative',
-                      overflow: 'visible'
-                    }}
                   >
                     <motion.div
                       className="absolute inset-0 pointer-events-none"
