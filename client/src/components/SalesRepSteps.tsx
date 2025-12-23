@@ -301,7 +301,7 @@ export const SalesRepSteps = () => {
                   hidden: { opacity: 0, y: 30, scale: 0.95 },
                   visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, type: "spring", stiffness: 100, damping: 15 } }
                 }}
-                className="group relative bg-gradient-to-br from-slate-800/80 to-slate-800/60 border border-primary/40 backdrop-blur-sm p-8 rounded-2xl text-center hover:border-primary/60 transition-all duration-400 cursor-default overflow-hidden shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/40"
+                className={`group relative bg-gradient-to-br from-slate-800/80 to-slate-800/60 border border-primary/40 backdrop-blur-sm p-8 rounded-2xl text-center hover:border-primary/60 transition-all duration-400 cursor-default overflow-hidden shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/40 ${i === 3 ? 'md:col-span-2' : ''}`}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:to-primary/10 transition-all duration-400" />
                 <div className="relative z-10">
