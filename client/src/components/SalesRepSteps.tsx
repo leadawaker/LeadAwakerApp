@@ -103,7 +103,7 @@ export const SalesRepSteps = () => {
   return (
     <div 
       ref={scrollRef} 
-      className="min-h-screen bg-gradient-to-b from-slate-950 via-orange-400 to-blue-600 text-foreground overflow-x-hidden selection:bg-primary/30 relative"
+      className="min-h-screen bg-gradient-to-b from-slate-950 via-orange-400 via-[70%] to-slate-600 text-foreground overflow-x-hidden selection:bg-primary/30 relative"
     >
       <div 
         className="absolute inset-0" 
@@ -130,8 +130,8 @@ export const SalesRepSteps = () => {
           filter: 'drop-shadow(0 0 12px rgba(255,255,255,1)) drop-shadow(0 0 6px rgba(255,255,255,0.8))'
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-400/70 via-[50%] to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent via-[65%] to-blue-600/50" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-400/70 via-[60%] to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent via-[75%] to-slate-600/30" />
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent to-sky-300/20 mix-blend-multiply" />
       <div className="relative z-10">
       {/* Pain Points Section */}
