@@ -135,8 +135,9 @@ export const SalesRepSteps = () => {
           <motion.div 
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.1 }}
             variants={{
+              hidden: { opacity: 1 },
               visible: {
                 transition: {
                   staggerChildren: 0.08,
@@ -176,7 +177,7 @@ export const SalesRepSteps = () => {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="bg-slate-800/80 border border-primary/40 backdrop-blur-sm p-8 rounded-2xl text-center max-w-2xl mx-auto shadow-lg shadow-primary/20"
           >
-            <p className="text-base font-semibold text-white leading-relaxed">Companies have invested Thousands in acquiring these leads, but they're leaving Millions on the table because reactivation is too painful and ineffective.</p>
+            <p className="text-base font-semibold text-white leading-relaxed">Companies have invested <span className="font-bold">THOUSANDS</span> in acquiring these leads, but they're leaving <span className="font-bold">MILLIONS</span> on the table because reactivation is too painful and ineffective.</p>
           </motion.div>
         </div>
       </section>
