@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import logoIcon from "@assets/Project_(20251212055145)_1766218819431.png";
+import logoIcon from "@assets/Logo.svg";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
