@@ -104,7 +104,8 @@ export const SalesRepSteps = () => {
   return (
     <div 
       ref={scrollRef} 
-      className="min-h-screen bg-gradient-to-b from-slate-950 to-cyan-600 text-foreground overflow-x-hidden selection:bg-primary/30 relative"
+      className="bg-slate-950 text-foreground overflow-hidden selection:bg-primary/30 relative"
+      style={{ minHeight: '100%' }}
     >
       <div 
         className="absolute inset-0" 
@@ -146,7 +147,10 @@ export const SalesRepSteps = () => {
         backgroundImage: `radial-gradient(ellipse 150% 30% at 50% 88%, rgba(167, 139, 250, 0.45) 0%, rgba(167, 139, 250, 0.15) 60%, transparent 100%)`,
         zIndex: 2
       }} />
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-slate-950/80 via-transparent via-[85%] to-slate-950/90 mix-blend-multiply" style={{zIndex: 3}} />
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, transparent 30%, transparent 70%, rgba(15, 23, 42, 0.95) 100%)',
+        zIndex: 3
+      }} />
       <div className="relative z-10">
       {/* Pain Points Section */}
       <section className="py-32 md:py-40">
