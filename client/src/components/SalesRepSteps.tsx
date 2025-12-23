@@ -103,7 +103,7 @@ export const SalesRepSteps = () => {
   return (
     <div 
       ref={scrollRef} 
-      className="min-h-screen bg-gradient-to-b from-slate-950 via-orange-400 via-[70%] to-slate-600 text-foreground overflow-x-hidden selection:bg-primary/30 relative"
+      className="min-h-screen bg-gradient-to-b from-slate-950 to-cyan-600 text-foreground overflow-x-hidden selection:bg-primary/30 relative"
     >
       <div 
         className="absolute inset-0" 
@@ -130,9 +130,11 @@ export const SalesRepSteps = () => {
           filter: 'drop-shadow(0 0 12px rgba(255,255,255,1)) drop-shadow(0 0 6px rgba(255,255,255,0.8))'
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-400/70 via-[60%] to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent via-[70%] to-slate-400" />
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent via-[70%] to-slate-400/50 mix-blend-multiply" />
+      <div className="absolute inset-0" style={{
+        backgroundImage: `radial-gradient(ellipse 150% 40% at 50% 40%, rgba(249, 115, 22, 0.7) 0%, rgba(249, 115, 22, 0.3) 60%, transparent 100%)`
+      }} />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent via-[70%] to-cyan-600" />
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent via-[70%] to-cyan-600/30 mix-blend-multiply" />
       <div className="relative z-10">
       {/* Pain Points Section */}
       <section className="py-32 md:py-40">
