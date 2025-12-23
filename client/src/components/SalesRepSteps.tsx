@@ -200,9 +200,13 @@ export const SalesRepSteps = () => {
         </div>
       </section>
 
-      {/* Intro Section */}
-      <section className="flex items-center justify-center relative overflow-hidden mt-24" style={{ height: '15vh' }}>
+      {/* Meteor Section */}
+      <section className="relative overflow-hidden" style={{ height: '8vh' }}>
         <MeteorContainer />
+      </section>
+
+      {/* Intro Section */}
+      <section className="flex items-center justify-center relative overflow-hidden" style={{ height: '15vh' }}>
         <motion.div 
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
