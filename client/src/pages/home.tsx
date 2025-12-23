@@ -68,15 +68,21 @@ export default function Home() {
                   }}
                 >
                   <motion.span 
-                    className="absolute top-0 bottom-0 bg-gradient-to-r from-accent to-white -z-10" 
-                    style={{ right: 'calc(-100vw + 100%)', left: 0, originX: 0 }}
+                    className="absolute top-0 bottom-0 -z-10" 
+                    style={{ 
+                      background: 'linear-gradient(to right, #facc15, white)',
+                      right: 'calc(-100vw + 100%)', 
+                      left: 0, 
+                      originX: 0 
+                    }}
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
                     transition={{ delay: 1, duration: 0.5, ease: "easeOut" }}
                   />
                   <motion.span 
-                    className="absolute top-0 bottom-0 bg-gradient-to-r from-white to-accent -z-10"
+                    className="absolute top-0 bottom-0 -z-10"
                     style={{ 
+                      background: 'linear-gradient(to right, white, #facc15)',
                       left: '-100vw', 
                       width: 'calc(100vw + 2%)',
                       originX: 0 
