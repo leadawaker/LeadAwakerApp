@@ -138,6 +138,8 @@ export default function Home() {
       {/* Pain Points Section */}
       <section className="py-32 md:py-40 bg-muted/30 relative overflow-hidden">
         <div className="absolute inset-0 opacity-5 mix-blend-overlay" style={{backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')"}} />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 mix-blend-multiply" />
+        <div className="absolute inset-0 backdrop-blur-3xl opacity-20" />
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
