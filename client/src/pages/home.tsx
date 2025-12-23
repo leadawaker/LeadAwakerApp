@@ -98,11 +98,11 @@ export default function Home() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
             {[
-              { icon: "📊", title: "Bloated CRMs with 1000s of \"dead\" contacts you already paid for" },
-              { icon: "⏰", title: "Reps waste 20-40 hrs/week on soul-crushing copy-paste outreach" },
-              { icon: "📉", title: "5-10% reply rates → zero ROI" },
-              { icon: "🚫", title: "Generic blasts → ignored or straight to spam folder" },
-              { icon: "😩", title: "Team burnout → turnover" }
+              { icon: "∼", title: "Bloated CRMs with 1000s of \"dead\" contacts you already paid for" },
+              { icon: "⟿", title: "Reps waste 20-40 hrs/week on soul-crushing copy-paste outreach" },
+              { icon: "↘", title: "5-10% reply rates → zero ROI" },
+              { icon: "✕", title: "Generic blasts → ignored or straight to spam folder" },
+              { icon: "⊗", title: "Team burnout → turnover" }
             ].map((pain, i) => (
               <motion.div
                 key={i}
@@ -202,39 +202,6 @@ export default function Home() {
                 <p className="text-sm text-muted-foreground">{result.subtext}</p>
               </motion.div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Seamless Integration - Moved after Results */}
-      <section className="py-16 border-t border-border bg-muted/20">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="max-w-3xl mx-auto">
-            <h3 className="text-2xl md:text-3xl font-bold mb-4 text-center">Seamless Integration, No Learning Curve</h3>
-            <p className="text-center text-muted-foreground mb-10 text-lg">Your existing stack becomes an automation powerhouse.</p>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-              {[
-                { name: "CRM Systems", icon: "📊" },
-                { name: "WhatsApp, SMS & Chat", icon: "💬" },
-                { name: "Email Platforms", icon: "✉️" },
-                { name: "Calendar Apps", icon: "📅" },
-                { name: "Webhook Endpoints", icon: "🔗" },
-                { name: "Databases", icon: "🗄️" },
-              ].map((tool, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
-                  className="flex flex-col items-center gap-3 text-center"
-                >
-                  <div className="text-4xl">{tool.icon}</div>
-                  <p className="text-sm font-medium text-foreground">{tool.name}</p>
-                </motion.div>
-              ))}
-            </div>
           </div>
         </div>
       </section>
