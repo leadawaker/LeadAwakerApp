@@ -106,20 +106,20 @@ export const SalesRepSteps = () => {
       className="min-h-screen bg-gradient-to-b from-slate-950 via-orange-400 to-sky-300 text-foreground overflow-x-hidden selection:bg-primary/30 relative"
     >
       <div 
-        className="absolute inset-0 opacity-40" 
+        className="absolute inset-0 opacity-75" 
         style={{
-          backgroundImage: `radial-gradient(1.5px 1.5px at 15% 25%, #fff, rgba(255,255,255,0.3)),
-                            radial-gradient(2px 2px at 28% 45%, #eee, rgba(0,0,0,0.2)),
-                            radial-gradient(1px 1px at 42% 12%, #fff, rgba(255,255,255,0.4)),
-                            radial-gradient(1.5px 1.5px at 65% 70%, #fff, rgba(255,255,255,0.35)),
-                            radial-gradient(2px 2px at 78% 38%, #eee, rgba(0,0,0,0.25)),
-                            radial-gradient(1px 1px at 52% 85%, #fff, rgba(255,255,255,0.3)),
-                            radial-gradient(1.5px 1.5px at 88% 15%, #fff, rgba(255,255,255,0.4)),
-                            radial-gradient(1px 1px at 22% 62%, #eee, rgba(0,0,0,0.2)),
-                            radial-gradient(1.5px 1.5px at 35% 35%, #fff, rgba(255,255,255,0.35)),
-                            radial-gradient(2px 2px at 72% 92%, #fff, rgba(255,255,255,0.3)),
-                            radial-gradient(1px 1px at 8% 78%, #eee, rgba(0,0,0,0.25)),
-                            radial-gradient(1.5px 1.5px at 95% 55%, #fff, rgba(255,255,255,0.4))`,
+          backgroundImage: `radial-gradient(1.5px 1.5px at 15% 25%, #fff, rgba(255,255,255,0.5)),
+                            radial-gradient(2px 2px at 28% 45%, #e0e0e0, rgba(200,200,200,0.4)),
+                            radial-gradient(1px 1px at 42% 12%, #fff, rgba(255,255,255,0.6)),
+                            radial-gradient(1.5px 1.5px at 65% 70%, #fff, rgba(255,255,255,0.5)),
+                            radial-gradient(2px 2px at 78% 38%, #e0e0e0, rgba(200,200,200,0.45)),
+                            radial-gradient(1px 1px at 52% 85%, #fff, rgba(255,255,255,0.5)),
+                            radial-gradient(1.5px 1.5px at 88% 15%, #fff, rgba(255,255,255,0.6)),
+                            radial-gradient(1px 1px at 22% 62%, #e0e0e0, rgba(200,200,200,0.4)),
+                            radial-gradient(1.5px 1.5px at 35% 35%, #fff, rgba(255,255,255,0.5)),
+                            radial-gradient(2px 2px at 72% 92%, #fff, rgba(255,255,255,0.5)),
+                            radial-gradient(1px 1px at 8% 78%, #e0e0e0, rgba(200,200,200,0.45)),
+                            radial-gradient(1.5px 1.5px at 95% 55%, #fff, rgba(255,255,255,0.6))`,
           backgroundRepeat: 'repeat',
           backgroundSize: '380px 340px'
         }}
