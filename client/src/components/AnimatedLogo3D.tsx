@@ -15,7 +15,6 @@ export function AnimatedLogo3D() {
     height: "600px",
     position: "relative",
     transformStyle: "preserve-3d" as any,
-    filter: "drop-shadow(0 0 12px rgba(59, 130, 246, 0.6)) drop-shadow(0 0 8px rgba(251, 191, 36, 0.5))",
   };
 
   const logoStyle: CSSProperties = {
