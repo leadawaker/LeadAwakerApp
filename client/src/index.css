@@ -115,6 +115,21 @@
   --ring: 230 100% 60%;
 }
 
+@keyframes twinkle-fast {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@keyframes twinkle-slow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes parallax-shift-slow {
+  0%, 100% { background-position: 0 0; }
+  100% { background-position: 450px 0; }
+}
+
 @layer base {
   * {
     @apply border-border;

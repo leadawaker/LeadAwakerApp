@@ -27,7 +27,7 @@ const Plane = () => {
         left: "105%"
       }}
       animate={{
-        top: "13%",
+        top: "28%",
         left: "-5%"
       }}
       transition={{
@@ -179,7 +179,8 @@ export const SalesRepSteps = () => {
           filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
           willChange: 'transform',
           backfaceVisibility: 'hidden',
-          perspective: '1000px'
+          perspective: '1000px',
+          animation: 'twinkle-slow 4s ease-in-out infinite'
         }}
       />
       <div className="absolute inset-0 pointer-events-none" style={{
