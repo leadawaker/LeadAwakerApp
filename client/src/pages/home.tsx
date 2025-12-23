@@ -102,7 +102,7 @@ export default function Home() {
                         '0 10px 10px rgba(81, 112, 255, 0.12), 50px 0px 20px rgba(81, 112, 255, 0)'
                       ]
                     }}
-                    transition={{ color: { delay: 1.5, duration: 0 }, textShadow: { delay: 1.8, duration: 5, repeat: Infinity, ease: "easeInOut" } }}
+                    transition={{ color: { delay: 1.5, duration: 0 }, textShadow: { delay: 1.8, duration: 0 } }}
                   >
                     booked calls
                   </motion.span>
