@@ -88,7 +88,7 @@ export default function Home() {
                     className="absolute top-0 bottom-0"
                     style={{ 
                       left: '-100vw', 
-                      width: 'calc(100vw + 10%)',
+                      width: 'calc(100vw + 5%)',
                       background: 'linear-gradient(to right, rgb(0, 94, 255), rgb(245, 245, 245))',
                       originX: 0 
                     }}
