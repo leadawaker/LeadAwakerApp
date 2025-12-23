@@ -226,7 +226,7 @@ export const SalesRepSteps = () => {
       </div>
 
       {/* Step 3 */}
-      <div style={{ marginTop: "-15%" }}>
+      <div style={{ marginTop: "-10%" }}>
         <FullscreenStep 
           number="3"
           cardTitle="Revenue rolls in"
