@@ -127,9 +127,9 @@ export const SalesRepSteps = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center max-w-3xl mx-auto mb-16"
+            className="text-center max-w-3xl mx-auto mb-16 px-6"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg whitespace-nowrap" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.5)) drop-shadow(0 0 30px rgba(249, 115, 22, 0.3))' }}>Manual reactivation is broken.</h2>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg whitespace-nowrap" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.5)) drop-shadow(0 0 35px rgba(249, 115, 22, 0.5))' }}>Manual reactivation is broken.</h2>
           </motion.div>
 
           <motion.div 
