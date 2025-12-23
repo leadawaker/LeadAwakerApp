@@ -7,6 +7,7 @@ import { useInView } from "framer-motion";
 import Chat3D from "@/components/Chat3D";
 import { PipelineChart } from "@/components/PipelineChart";
 import { SalesRepSteps } from "@/components/SalesRepSteps";
+import { AnimatedLogo3D } from "@/components/AnimatedLogo3D";
 
 const KanbanCard = ({ title, delay, isInView }: { title: string; delay: number; isInView: boolean }) => (
   <motion.div
@@ -241,6 +242,14 @@ export default function Home() {
               </motion.div>
             </motion.div>
 
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex justify-center items-center"
+            >
+              <AnimatedLogo3D />
+            </motion.div>
           </div>
         </div>
       </section>
