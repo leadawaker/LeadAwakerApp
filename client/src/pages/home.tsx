@@ -99,18 +99,6 @@ export default function Home() {
                     transition={{ delay: 1, duration: 0.3, ease: "easeOut", textShadow: { delay: 1.3, duration: 5, repeat: Infinity, ease: "easeInOut" } }}
                   >
                     booked calls
-                    <motion.div
-                      className="absolute top-0 left-0 pointer-events-none"
-                      style={{
-                        background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%)',
-                        mixBlendMode: 'screen',
-                        height: '100%',
-                        width: '120px'
-                      }}
-                      initial={{ opacity: 0, x: '-120px' }}
-                      animate={{ opacity: [0, 1, 0], x: ['120px'] }}
-                      transition={{ delay: 1.5, duration: 1.2, repeat: Infinity, repeatDelay: 3.5 }}
-                    />
                   </motion.span>
                 </motion.span>
                 <span className="relative block w-full">

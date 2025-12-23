@@ -64,7 +64,7 @@ export default function BookDemo() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="relative rounded-2xl overflow-hidden border border-border"
+            className="relative rounded-2xl shadow-xl overflow-hidden border border-border"
           >
             <div className="relative w-full h-[600px] bg-white rounded-2xl overflow-hidden">
               <iframe 
