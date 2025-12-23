@@ -132,18 +132,6 @@ export default function Home() {
       {/* Results/Metrics Section */}
       <section className="py-32 lg:py-40">
         <div className="container mx-auto px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 p-8 rounded-2xl text-center max-w-3xl mx-auto mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">From chaos to certainty in 30 days</h2>
-            <p className="text-lg text-muted-foreground">
-              Sales teams shift from grind to strategy while Lead Awaker generates pipeline automatically.
-            </p>
-          </motion.div>
-
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             {[
               {
@@ -209,6 +197,18 @@ export default function Home() {
       {/* Conversion Pipeline */}
       <section className="py-32 lg:py-40 bg-muted/30 border-t border-border">
         <div className="container mx-auto px-4 md:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 p-8 rounded-2xl text-center max-w-3xl mx-auto mb-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Your Conversion Pipeline in Action</h2>
+            <p className="text-lg text-muted-foreground">
+              Watch leads flow through every stage in real-time.
+            </p>
+          </motion.div>
+
           {/* New Pipeline Component */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
@@ -217,6 +217,18 @@ export default function Home() {
             className="mt-0"
           >
             <PipelineChart />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 p-8 rounded-2xl text-center max-w-3xl mx-auto mt-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">From chaos to certainty in 30 days</h2>
+            <p className="text-lg text-muted-foreground">
+              Sales teams shift from grind to strategy while Lead Awaker generates pipeline automatically.
+            </p>
           </motion.div>
         </div>
       </section>
