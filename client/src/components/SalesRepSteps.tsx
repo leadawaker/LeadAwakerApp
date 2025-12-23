@@ -104,7 +104,7 @@ export const SalesRepSteps = () => {
     <div 
       ref={scrollRef} 
       className="min-h-screen text-foreground overflow-x-hidden selection:bg-primary/30 relative"
-      style={{ background: 'linear-gradient(to bottom, rgb(15, 23, 42), rgb(249, 115, 22), rgb(147, 51, 234), rgb(30, 144, 255))' }}
+      style={{ background: 'linear-gradient(to bottom, rgb(15, 23, 42), rgb(249, 115, 22), rgb(110, 70, 160), rgb(100, 140, 180))' }}
     >
       <div 
         className="absolute inset-0 opacity-40" 
