@@ -70,7 +70,7 @@ export default function Home() {
                   <motion.span 
                     className="absolute top-0 bottom-0 -z-10" 
                     style={{ 
-                      background: 'linear-gradient(to right, #facc15, white)',
+                      background: 'linear-gradient(to right, #FEB800, white)',
                       right: 'calc(-100vw + 100%)', 
                       left: 0, 
                       originX: 0 
@@ -82,7 +82,7 @@ export default function Home() {
                   <motion.span 
                     className="absolute top-0 bottom-0 -z-10"
                     style={{ 
-                      background: 'linear-gradient(to right, white, #facc15)',
+                      background: 'linear-gradient(to right, white, #FEB800)',
                       left: '-100vw', 
                       width: 'calc(100vw + 2%)',
                       originX: 0 
