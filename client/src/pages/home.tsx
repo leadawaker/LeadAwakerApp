@@ -107,8 +107,8 @@ export default function Home() {
                     booked calls
                   </motion.span>
                 </motion.span>
-                <span className="relative block w-full -mt-2">
-                  <span className="relative inline-block font-bold z-10 text-foreground">automatically.</span>
+                <span className="relative block w-full">
+                  <span className="relative inline-block font-bold py-2 z-10 text-foreground">automatically.</span>
                 </span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed">
