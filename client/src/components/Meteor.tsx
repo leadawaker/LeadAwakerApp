@@ -38,12 +38,12 @@ export function MeteorContainer() {
     setMeteors((prev) => prev.filter((m) => m !== id));
   };
   
-  // Auto-launch meteors every 6 seconds
+  // Auto-launch meteors every 10 seconds
   useEffect(() => {
     const meteorInterval = setInterval(() => {
       const id = Date.now();
       setMeteors(prev => [...prev, id]);
-    }, 3000);
+    }, 10000);
     return () => clearInterval(meteorInterval);
   }, []);
 
