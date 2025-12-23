@@ -75,11 +75,10 @@ export default function Home() {
                     transition={{ delay: 1, duration: 0.5, ease: "easeOut" }}
                   />
                   <motion.span 
-                    className="absolute top-0 bottom-0 -z-10"
+                    className="absolute top-0 bottom-0 bg-gradient-to-r from-white to-primary -z-10"
                     style={{ 
                       left: '-100vw', 
                       width: 'calc(100vw + 2%)',
-                      background: 'linear-gradient(to right, rgb(255, 255, 255), rgb(0, 94, 255))',
                       originX: 0 
                     }}
                     initial={{ scaleX: 0 }}
