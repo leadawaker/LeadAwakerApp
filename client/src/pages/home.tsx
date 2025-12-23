@@ -211,7 +211,7 @@ export default function Home() {
       </section>
 
       {/* Demo Section with Logo */}
-      <section id="demo" className="py-24 border-t border-border">
+      <section id="demo" className="py-24 pt-36 border-t border-border">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div
