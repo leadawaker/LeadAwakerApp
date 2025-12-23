@@ -180,7 +180,8 @@ export const SalesRepSteps = () => {
           willChange: 'transform',
           backfaceVisibility: 'hidden',
           perspective: '1000px',
-          animation: 'twinkle-fast 2s ease-in-out infinite'
+          animation: 'twinkle-fast 2s ease-in-out infinite',
+          animationDelay: '0s'
         }}
       />
       <div 
@@ -207,6 +208,7 @@ export const SalesRepSteps = () => {
           backgroundSize: '450px 380px',
           filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
           animation: 'twinkle-fast-offset-1 2.5s ease-in-out infinite',
+          animationDelay: '0.5s',
           opacity: 0.7
         }}
       />
@@ -234,6 +236,7 @@ export const SalesRepSteps = () => {
           backgroundSize: '450px 380px',
           filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
           animation: 'twinkle-fast-offset-2 2.2s ease-in-out infinite',
+          animationDelay: '1.2s',
           opacity: 0.6
         }}
       />
