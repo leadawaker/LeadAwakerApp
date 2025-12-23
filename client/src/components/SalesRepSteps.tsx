@@ -127,14 +127,14 @@ export const SalesRepSteps = () => {
                             radial-gradient(circle at 38% 51%, white 0.75px, transparent 0.75px)`,
           backgroundRepeat: 'repeat',
           backgroundSize: '450px 380px',
-          filter: 'drop-shadow(0 0 16px rgba(255,255,255,1.2)) drop-shadow(0 0 8px rgba(255,255,255,1))'
+          filter: 'drop-shadow(0 0 20px rgba(255,255,255,1.5)) drop-shadow(0 0 10px rgba(255,255,255,1))'
         }}
       />
       <div className="absolute inset-0" style={{
-        backgroundImage: `radial-gradient(ellipse 150% 40% at 50% 55%, rgba(249, 115, 22, 0.7) 0%, rgba(249, 115, 22, 0.3) 60%, transparent 100%)`
+        backgroundImage: `radial-gradient(ellipse 150% 40% at 50% 55%, rgba(249, 115, 22, 0.85) 0%, rgba(249, 115, 22, 0.4) 60%, transparent 100%)`
       }} />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent via-[70%] to-cyan-600" />
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent via-[70%] to-cyan-600/30 mix-blend-multiply" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent via-[55%] to-cyan-600" />
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent via-[55%] to-cyan-600/30 mix-blend-multiply" />
       <div className="relative z-10">
       {/* Pain Points Section */}
       <section className="py-32 md:py-40">
