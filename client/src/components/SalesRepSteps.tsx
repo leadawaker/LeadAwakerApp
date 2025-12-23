@@ -84,9 +84,9 @@ const FullscreenStep = ({
 
   const overlayOpacity = useTransform(scrollYProgress, [0.3, 0.7], [0, 1]);
   const overlayTextY = useTransform(scrollYProgress, [0.3, 0.7], [20, 0]);
-  const cardOpacity = useTransform(scrollYProgress, [-0.2, 0.4], [0, 1]);
+  const cardOpacity = useTransform(scrollYProgress, [-0.2, 0.4, 0.8, 1.2], [0, 1, 1, 0]);
   const cardY = useTransform(scrollYProgress, [-0.2, 0.4], [50, 0]);
-  const imageOpacity = useTransform(scrollYProgress, [-0.2, 0.4], [0, 1]);
+  const imageOpacity = useTransform(scrollYProgress, [-0.2, 0.4, 0.8, 1.2], [0, 1, 1, 0]);
 
   const isLeft = align === "left";
 
@@ -271,7 +271,7 @@ export const SalesRepSteps = () => {
             transition={{ duration: 0.3 }}
             className="text-center max-w-4xl mx-auto mb-16"
           >
-            <motion.h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.25)) drop-shadow(0 0 35px rgba(249, 115, 22, 0.25))' }}>Manual reactivation is broken.</motion.h2>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.25)) drop-shadow(0 0 35px rgba(249, 115, 22, 0.25))' }}>Manual reactivation is broken.</h2>
           </motion.div>
 
           <motion.div 
@@ -282,12 +282,12 @@ export const SalesRepSteps = () => {
               hidden: { opacity: 1 },
               visible: {
                 transition: {
-                  staggerChildren: 0.1,
-                  delayChildren: 0,
+                  staggerChildren: 0.08,
+                  delayChildren: 0.1,
                 }
               }
             }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-12 max-w-2xl mx-auto"
+            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
           >
             {[
               { icon: <Box className="w-8 h-8" strokeWidth={1.5} />, title: "Bloated CRMs with 1000s of \"dead\" contacts you already paid for" },
@@ -301,7 +301,7 @@ export const SalesRepSteps = () => {
                   hidden: { opacity: 0, y: 30, scale: 0.95 },
                   visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, type: "spring", stiffness: 100, damping: 15 } }
                 }}
-                className={`group relative bg-gradient-to-br from-slate-800/80 to-slate-800/60 border border-primary/40 backdrop-blur-sm p-8 rounded-2xl text-center hover:border-primary/60 transition-all duration-400 cursor-default overflow-hidden shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/40 ${i === 3 ? 'md:col-span-2' : ''}`}
+                className="group relative bg-gradient-to-br from-slate-800/80 to-slate-800/60 border border-primary/40 backdrop-blur-sm p-8 rounded-2xl text-center hover:border-primary/60 transition-all duration-400 cursor-default overflow-hidden shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/40"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:to-primary/10 transition-all duration-400" />
                 <div className="relative z-10">
