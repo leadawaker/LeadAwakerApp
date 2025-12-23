@@ -93,16 +93,14 @@ export default function Home() {
             className="text-center max-w-3xl mx-auto mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Manual Reactivation Is Broken.</h2>
-            <p className="text-lg text-muted-foreground mb-8">Sales teams drown in dead leads while burning cash.</p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
             {[
-              { icon: "∼", title: "Bloated CRMs with 1000s of \"dead\" contacts you already paid for" },
-              { icon: "⟿", title: "Reps waste 20-40 hrs/week on soul-crushing copy-paste outreach" },
-              { icon: "↘", title: "5-10% reply rates → zero ROI" },
-              { icon: "✕", title: "Generic blasts → ignored or straight to spam folder" },
-              { icon: "⊗", title: "Team burnout → turnover" }
+              { icon: "📦", title: "Bloated CRMs with 1000s of \"dead\" contacts you already paid for" },
+              { icon: "⌨️", title: "Reps waste 20-40 hrs/week on soul-crushing copy-paste outreach" },
+              { icon: "📉", title: "5-10% reply rates → zero ROI" },
+              { icon: "💬", title: "Generic blasts → ignored or straight to spam folder" }
             ].map((pain, i) => (
               <motion.div
                 key={i}
@@ -110,9 +108,9 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
-                className="bg-red-50 border border-red-200 p-6 rounded-xl text-center"
+                className="bg-red-50 border border-red-200 p-6 rounded-xl text-center hover:shadow-lg hover:border-red-300 transition-all duration-300 group cursor-default"
               >
-                <div className="text-3xl mb-3">{pain.icon}</div>
+                <div className="text-4xl mb-3 transform group-hover:scale-110 transition-transform duration-300">{pain.icon}</div>
                 <p className="text-sm font-medium text-gray-700">{pain.title}</p>
               </motion.div>
             ))}

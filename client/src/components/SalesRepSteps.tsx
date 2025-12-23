@@ -78,7 +78,7 @@ const FullscreenStep = ({
           />
           <motion.div 
             style={{ opacity: overlayOpacity }}
-            className="absolute inset-0 bg-teal-950/80 backdrop-blur-[2px] flex flex-col items-center justify-center p-8 text-center"
+            className="absolute inset-0 bg-blue-950/80 backdrop-blur-[2px] flex flex-col items-center justify-center p-8 text-center"
           >
             <motion.div style={{ y: overlayTextY }}>
               <span className="text-primary font-mono text-sm uppercase tracking-wider mb-2 block">Step {number} Details</span>
@@ -114,7 +114,7 @@ export const SalesRepSteps = ({ step1Image, step2Image, step3Image }: SalesRepSt
           className="text-center"
           data-testid="sales-rep-intro"
         >
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 text-white">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 text-black">
             Your Expert Sales Rep in 3 Steps.
           </h1>
           <p className="text-primary text-xl font-medium tracking-wide">
@@ -168,7 +168,7 @@ export const SalesRepSteps = ({ step1Image, step2Image, step3Image }: SalesRepSt
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.3 }}
-              className="absolute inset-0 bg-teal-950/60 backdrop-blur-sm flex flex-col items-center justify-center p-8"
+              className="absolute inset-0 bg-blue-950/60 backdrop-blur-sm flex flex-col items-center justify-center p-8"
             >
               <span className="text-primary font-mono text-sm uppercase tracking-wider mb-4 block">Step 1 Details</span>
               <p className="text-white text-center mb-8 font-bold text-lg max-w-xs">
@@ -213,7 +213,7 @@ export const SalesRepSteps = ({ step1Image, step2Image, step3Image }: SalesRepSt
         cardDescription="Natural, contextual SMS (not robot templates)."
         overlayTitle="Build the Automations"
         overlayDescription="Set up AI agents, workflows, and integrations in minutes."
-        image={step2Image}
+        image="@assets/woman_answering_phone_in_living_room_1766483592249.png"
         icon={<MessageSquare className="w-8 h-8" />}
         align="right"
       />
