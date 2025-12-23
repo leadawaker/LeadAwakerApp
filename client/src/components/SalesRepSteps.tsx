@@ -61,7 +61,7 @@ const FullscreenStep = ({
                 <div className="mb-6 p-3 bg-primary/10 w-fit rounded-xl text-primary" data-testid={`step-icon-${number}`}>
                   {icon}
                 </div>
-                <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-white" data-testid={`step-title-${number}`}>{cardTitle}</h3>
+                <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-black" data-testid={`step-title-${number}`}>{cardTitle}</h3>
                 <p className="text-muted-foreground text-lg leading-relaxed" data-testid={`step-description-${number}`}>
                   {cardDescription}
                 </p>
@@ -141,7 +141,7 @@ export const SalesRepSteps = () => {
                   <div className="mb-6 p-3 bg-primary/10 w-fit rounded-xl text-primary" data-testid="step-icon-1">
                     <Database className="w-8 h-8" />
                   </div>
-                  <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-white" data-testid="step-title-1">Upload database</h3>
+                  <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-black" data-testid="step-title-1">Upload database</h3>
                   <p className="text-muted-foreground text-lg leading-relaxed" data-testid="step-description-1">
                     AI instantly IDs high-potential dormant leads.
                   </p>
