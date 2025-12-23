@@ -127,11 +127,11 @@ export const SalesRepSteps = () => {
                             radial-gradient(circle at 38% 51%, white 0.75px, transparent 0.75px)`,
           backgroundRepeat: 'repeat',
           backgroundSize: '450px 380px',
-          filter: 'drop-shadow(0 0 12px rgba(255,255,255,1)) drop-shadow(0 0 6px rgba(255,255,255,0.8))'
+          filter: 'drop-shadow(0 0 16px rgba(255,255,255,1.2)) drop-shadow(0 0 8px rgba(255,255,255,1))'
         }}
       />
       <div className="absolute inset-0" style={{
-        backgroundImage: `radial-gradient(ellipse 150% 40% at 50% 40%, rgba(249, 115, 22, 0.7) 0%, rgba(249, 115, 22, 0.3) 60%, transparent 100%)`
+        backgroundImage: `radial-gradient(ellipse 150% 40% at 50% 55%, rgba(249, 115, 22, 0.7) 0%, rgba(249, 115, 22, 0.3) 60%, transparent 100%)`
       }} />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent via-[70%] to-cyan-600" />
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent via-[70%] to-cyan-600/30 mix-blend-multiply" />
