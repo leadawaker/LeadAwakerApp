@@ -42,7 +42,7 @@ export function AnimatedLogo3D() {
           alt="Top Logo"
           initial={{ opacity: 0, scale: 0.1 }}
           animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.1 }}
-          transition={{ delay: 1.7, duration: 1.2, type: "spring", stiffness: 80, damping: 20 }}
+          transition={{ delay: 0.2, duration: 0.2, type: "spring", stiffness: 80, damping: 20 }}
           style={logoStyle}
           data-testid="animated-logo-top"
         />
