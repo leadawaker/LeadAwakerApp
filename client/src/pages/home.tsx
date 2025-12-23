@@ -136,7 +136,7 @@ export default function Home() {
 
 
       {/* Pain Points Section */}
-      <section className="py-32 md:py-40 bg-gradient-to-b from-slate-950 to-slate-900 relative overflow-hidden">
+      <section className="py-32 md:py-40 bg-slate-950 relative overflow-hidden">
         <div 
           className="absolute inset-0 opacity-40" 
           style={{
