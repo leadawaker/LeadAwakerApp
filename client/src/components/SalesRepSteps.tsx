@@ -47,7 +47,7 @@ const FullscreenStep = ({
     <div ref={containerRef} className="h-[80vh] w-full flex items-center justify-center px-4 md:px-12 relative z-10">
       <div className="container mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
         <motion.div 
-          style={{ opacity: cardOpacity, y: cardY }}
+          style={{ opacity: cardOpacity, y: cardY, transform: 'translateZ(0)' }}
           className={`order-2 ${isLeft ? "md:order-1" : "md:order-2"}`}
         >
           <div className="relative">
@@ -71,7 +71,7 @@ const FullscreenStep = ({
           </div>
         </motion.div>
         <motion.div 
-          style={{ opacity: imageOpacity }}
+          style={{ opacity: imageOpacity, transform: 'translateZ(0)' }}
           className={`order-1 ${isLeft ? "md:order-2" : "md:order-1"} relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border border-white/5`}
           data-testid={`step-image-${number}`}
         >
@@ -134,16 +134,19 @@ export const SalesRepSteps = () => {
           perspective: '1000px'
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-950 opacity-0 mix-blend-darken" style={{
-        background: 'linear-gradient(180deg, transparent 0%, transparent 70%, rgba(0,0,0,0.6) 90%, rgba(0,0,0,0.8) 100%)'
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'linear-gradient(180deg, transparent 0%, transparent 70%, rgba(0,0,0,0.6) 90%, rgba(0,0,0,0.8) 100%)',
+        zIndex: 1
       }} />
-      <div className="absolute inset-0" style={{
-        backgroundImage: `radial-gradient(ellipse 150% 40% at 50% 55%, rgba(249, 115, 22, 1) 0%, rgba(249, 115, 22, 0.6) 60%, transparent 100%)`
+      <div className="absolute inset-0 pointer-events-none" style={{
+        backgroundImage: `radial-gradient(ellipse 150% 40% at 50% 55%, rgba(249, 115, 22, 1) 0%, rgba(249, 115, 22, 0.6) 60%, transparent 100%)`,
+        zIndex: 2
       }} />
-      <div className="absolute inset-0" style={{
-        backgroundImage: `radial-gradient(ellipse 150% 30% at 50% 88%, rgba(167, 139, 250, 0.45) 0%, rgba(167, 139, 250, 0.15) 60%, transparent 100%)`
+      <div className="absolute inset-0 pointer-events-none" style={{
+        backgroundImage: `radial-gradient(ellipse 150% 30% at 50% 88%, rgba(167, 139, 250, 0.45) 0%, rgba(167, 139, 250, 0.15) 60%, transparent 100%)`,
+        zIndex: 2
       }} />
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent via-[85%] to-cyan-600/20 mix-blend-multiply" />
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-slate-950/80 via-transparent via-[85%] to-slate-950/90 mix-blend-multiply" style={{zIndex: 3}} />
       <div className="relative z-10">
       {/* Pain Points Section */}
       <section className="py-32 md:py-40">
