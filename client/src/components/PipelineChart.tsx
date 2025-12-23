@@ -146,8 +146,8 @@ export function PipelineChart() {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
         {STAGES.map((stage) => (
-          <div key={stage.id} className="flex flex-col">
-            <div className="flex flex-col bg-slate-50/50 dark:bg-slate-900/50 rounded-xl p-2 border border-slate-200 dark:border-slate-800 w-full">
+          <div key={stage.id} className="flex flex-col min-h-[600px]">
+            <div className="flex flex-col bg-slate-50/50 dark:bg-slate-900/50 rounded-xl p-2 border border-slate-200 dark:border-slate-800 w-full min-h-[600px]">
             {/* Header */}
             <div 
               className={`sticky top-2 p-3 rounded-lg mb-3 flex items-center justify-between shadow-sm backdrop-blur-sm ${stage.colorClass} z-10`}
