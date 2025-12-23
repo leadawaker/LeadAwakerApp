@@ -103,7 +103,8 @@ export const SalesRepSteps = () => {
   return (
     <div 
       ref={scrollRef} 
-      className="min-h-screen bg-gradient-to-b from-slate-950 via-orange-400 to-sky-300 text-foreground overflow-x-hidden selection:bg-primary/30 relative"
+      className="min-h-screen text-foreground overflow-x-hidden selection:bg-primary/30 relative"
+      style={{ background: 'linear-gradient(to bottom, rgb(15, 23, 42), rgb(249, 115, 22), rgb(147, 51, 234), rgb(30, 144, 255))' }}
     >
       <div 
         className="absolute inset-0 opacity-40" 
@@ -227,43 +228,82 @@ export const SalesRepSteps = () => {
 
       {/* Step 2 */}
       <div style={{ marginTop: "-10%", position: "relative", overflow: "hidden" }}>
-        {/* Clouds with orange glow */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.7 }} viewBox="0 0 1200 600" preserveAspectRatio="none">
+        {/* Dramatic clouds with sunset lighting */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.85 }} viewBox="0 0 1200 600" preserveAspectRatio="none">
           <defs>
-            <filter id="cloud-glow">
-              <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+            <filter id="cloud-blur">
+              <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
               <feMerge>
                 <feMergeNode in="coloredBlur"/>
                 <feMergeNode in="SourceGraphic"/>
               </feMerge>
             </filter>
+            <filter id="heavy-blur">
+              <feGaussianBlur stdDeviation="15" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            
+            {/* Radial gradient for sunset lighting */}
+            <radialGradient id="sunsetGlow" cx="50%" cy="100%" r="80%">
+              <stop offset="0%" style={{ stopColor: "#f97316", stopOpacity: 0.6 }} />
+              <stop offset="50%" style={{ stopColor: "#fb923c", stopOpacity: 0.3 }} />
+              <stop offset="100%" style={{ stopColor: "#ffffff", stopOpacity: 0 }} />
+            </radialGradient>
           </defs>
           
-          {/* Cloud 1 - left side */}
-          <g filter="url(#cloud-glow)" style={{ opacity: 0.6 }}>
-            <ellipse cx="150" cy="100" rx="80" ry="50" fill="url(#cloudGradient1)"/>
-            <ellipse cx="220" cy="90" rx="100" ry="60" fill="url(#cloudGradient1)"/>
-            <ellipse cx="80" cy="110" rx="70" ry="45" fill="url(#cloudGradient1)"/>
+          {/* Background glow effect */}
+          <circle cx="600" cy="500" r="400" fill="url(#sunsetGlow)"/>
+          
+          {/* Large cloud mass - left side */}
+          <g filter="url(#cloud-blur)">
+            <path d="M 50 150 Q 100 80, 200 100 Q 250 70, 350 120 Q 380 60, 420 110 Q 400 180, 350 200 Q 250 220, 150 200 Q 100 210, 50 200 Z" 
+                  fill="url(#cloudGradientLeft)" style={{ opacity: 0.75 }}/>
           </g>
           
-          {/* Cloud 2 - right side */}
-          <g filter="url(#cloud-glow)" style={{ opacity: 0.5 }}>
-            <ellipse cx="1050" cy="120" rx="90" ry="55" fill="url(#cloudGradient2)"/>
-            <ellipse cx="1140" cy="105" rx="110" ry="65" fill="url(#cloudGradient2)"/>
-            <ellipse cx="960" cy="135" rx="75" ry="50" fill="url(#cloudGradient2)"/>
+          {/* Large cloud mass - right side */}
+          <g filter="url(#cloud-blur)">
+            <path d="M 800 140 Q 900 70, 1050 110 Q 1100 60, 1200 120 Q 1150 200, 1050 210 Q 900 230, 800 210 Q 750 190, 800 140 Z" 
+                  fill="url(#cloudGradientRight)" style={{ opacity: 0.7 }}/>
           </g>
           
-          {/* Gradients for clouds with orange glow from below */}
-          <linearGradient id="cloudGradient1" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style={{ stopColor: "#ffffff", stopOpacity: 0.8 }} />
-            <stop offset="70%" style={{ stopColor: "#ffffff", stopOpacity: 0.6 }} />
+          {/* Smaller dramatic clouds - top left */}
+          <g filter="url(#cloud-blur)">
+            <ellipse cx="100" cy="80" rx="120" ry="70" fill="url(#cloudGradientLeft)" style={{ opacity: 0.6 }}/>
+            <ellipse cx="200" cy="60" rx="150" ry="80" fill="url(#cloudGradientLeft)" style={{ opacity: 0.5 }}/>
+          </g>
+          
+          {/* Smaller dramatic clouds - top right */}
+          <g filter="url(#cloud-blur)">
+            <ellipse cx="1100" cy="90" rx="130" ry="75" fill="url(#cloudGradientRight)" style={{ opacity: 0.55 }}/>
+            <ellipse cx="1000" cy="70" rx="140" ry="85" fill="url(#cloudGradientRight)" style={{ opacity: 0.45 }}/>
+          </g>
+          
+          {/* Atmospheric haze layer */}
+          <g filter="url(#heavy-blur)">
+            <rect width="1200" height="300" fill="url(#hazeGradient)" style={{ opacity: 0.4 }}/>
+          </g>
+          
+          {/* Gradients */}
+          <linearGradient id="cloudGradientLeft" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style={{ stopColor: "#fca5a5", stopOpacity: 0.9 }} />
+            <stop offset="40%" style={{ stopColor: "#fdba74", stopOpacity: 0.8 }} />
+            <stop offset="70%" style={{ stopColor: "#fbbf24", stopOpacity: 0.6 }} />
             <stop offset="100%" style={{ stopColor: "#f97316", stopOpacity: 0.4 }} />
           </linearGradient>
           
-          <linearGradient id="cloudGradient2" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" style={{ stopColor: "#ffffff", stopOpacity: 0.75 }} />
-            <stop offset="70%" style={{ stopColor: "#ffffff", stopOpacity: 0.55 }} />
-            <stop offset="100%" style={{ stopColor: "#f97316", stopOpacity: 0.35 }} />
+          <linearGradient id="cloudGradientRight" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style={{ stopColor: "#e879f9", stopOpacity: 0.85 }} />
+            <stop offset="40%" style={{ stopColor: "#d8b4fe", stopOpacity: 0.7 }} />
+            <stop offset="70%" style={{ stopColor: "#fca5a5", stopOpacity: 0.5 }} />
+            <stop offset="100%" style={{ stopColor: "#fb923c", stopOpacity: 0.3 }} />
+          </linearGradient>
+          
+          <linearGradient id="hazeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style={{ stopColor: "#ffffff", stopOpacity: 0.3 }} />
+            <stop offset="100%" style={{ stopColor: "#f97316", stopOpacity: 0 }} />
           </linearGradient>
         </svg>
         
