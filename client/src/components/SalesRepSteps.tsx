@@ -101,7 +101,24 @@ export const SalesRepSteps = () => {
   const scrollRef = useRef(null);
 
   return (
-    <div ref={scrollRef} className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/30">
+    <div 
+      ref={scrollRef} 
+      className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-orange-950 text-foreground overflow-x-hidden selection:bg-primary/30 relative"
+    >
+      <div 
+        className="absolute inset-0 opacity-30" 
+        style={{
+          backgroundImage: `radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0.2)),
+                            radial-gradient(2px 2px at 60px 70px, #fff, rgba(0,0,0,0.3)),
+                            radial-gradient(1px 1px at 50px 50px, #fff, rgba(0,0,0,0.2)),
+                            radial-gradient(1px 1px at 130px 80px, #fff, rgba(0,0,0,0.2)),
+                            radial-gradient(2px 2px at 90px 10px, #fff, rgba(0,0,0,0.2))`,
+          backgroundRepeat: 'repeat',
+          backgroundSize: '200px 200px'
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-950/90 via-slate-900/80 to-orange-950/70 mix-blend-multiply" />
+      <div className="relative z-10">
       {/* Intro Section */}
       <section className="h-[80vh] flex items-center justify-center">
         <motion.div 
@@ -111,10 +128,10 @@ export const SalesRepSteps = () => {
           className="text-center"
           data-testid="sales-rep-intro"
         >
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 text-black">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 text-white drop-shadow-lg">
             Your Expert Sales Rep in 3 Steps.
           </h1>
-          <p className="text-primary text-xl font-medium tracking-wide">
+          <p className="text-accent text-xl font-medium tracking-wide">
             Dead leads <span className="opacity-50">→</span> revenue.
           </p>
         </motion.div>
@@ -228,6 +245,7 @@ export const SalesRepSteps = () => {
         icon={<TrendingUp className="w-8 h-8" />}
         align="left"
       />
+      </div>
     </div>
   );
 };
