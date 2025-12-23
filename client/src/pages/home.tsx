@@ -85,8 +85,8 @@ export default function Home() {
                 </motion.span>
                 <span className="relative block w-full">
                   <motion.span 
-                    className="absolute top-0 bottom-0 bg-gradient-to-r from-primary to-white -z-10"
-                    style={{ left: 'calc(-100vw + 100%)', originX: 0 }}
+                    className="absolute top-0 bottom-0 bg-gradient-to-r from-primary to-white"
+                    style={{ left: '-100vw', width: 'calc(100vw + 100%)', originX: 0 }}
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
                     transition={{ delay: 1.5, duration: 0.5, ease: "easeOut" }}
