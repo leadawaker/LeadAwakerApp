@@ -19,6 +19,53 @@ interface StepProps {
   align?: "left" | "right";
 }
 
+const Plane = () => {
+  return (
+    <motion.div
+      initial={{
+        top: "-5%",
+        left: "-5%"
+      }}
+      animate={{
+        top: "105%",
+        left: "105%"
+      }}
+      transition={{
+        duration: 40,
+        ease: "linear",
+        repeat: Infinity
+      }}
+      className="absolute w-2 h-2 z-20 pointer-events-none"
+    >
+      <motion.div
+        animate={{
+          opacity: [0, 1, 1, 0, 1, 1, 0],
+          backgroundColor: ["#000000", "#ffffff", "#ffffff", "#000000", "#ff0000", "#ff0000", "#000000"],
+          boxShadow: [
+            "0 0 10px 3px transparent",
+            "0 0 10px 3px #ffffff",
+            "0 0 10px 3px #ffffff",
+            "0 0 10px 3px transparent",
+            "0 0 10px 3px #ff0000",
+            "0 0 10px 3px #ff0000",
+            "0 0 10px 3px transparent"
+          ]
+        }}
+        transition={{
+          duration: 4,
+          repeat: Infinity,
+          times: [0, 0.01, 0.25, 0.5, 0.51, 0.75, 1]
+        }}
+        className="rounded-full"
+        style={{
+          width: "2px",
+          height: "2px"
+        }}
+      />
+    </motion.div>
+  );
+};
+
 const FullscreenStep = ({
   number,
   cardTitle,
@@ -151,6 +198,7 @@ export const SalesRepSteps = () => {
         background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, transparent 30%, transparent 70%, rgba(0, 168, 232, 0.9) 100%)',
         zIndex: 3
       }} />
+      <Plane />
       <div className="relative z-10">
       {/* Pain Points Section */}
       <section className="py-32 md:py-40">
