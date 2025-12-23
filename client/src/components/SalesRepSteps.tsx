@@ -265,7 +265,7 @@ export const SalesRepSteps = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.3 }}
             className="text-center max-w-4xl mx-auto mb-16"
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.25)) drop-shadow(0 0 35px rgba(249, 115, 22, 0.25))' }}>Manual reactivation is broken.</h2>
@@ -331,7 +331,7 @@ export const SalesRepSteps = () => {
         <motion.div 
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1 }}
+          transition={{ duration: 0.5 }}
           className="text-center relative z-10"
           data-testid="sales-rep-intro"
         >
