@@ -87,9 +87,9 @@ export default function Home() {
                   />
                   <motion.span 
                     className="relative inline-block font-bold py-3 z-10"
-                    initial={{ color: '#000' }}
-                    animate={{ color: '#facc15' }}
-                    transition={{ delay: 1, duration: 0.3, ease: "easeOut" }}
+                    initial={{ color: '#000', boxShadow: '0 0 0px rgba(250, 204, 21, 0)' }}
+                    animate={{ color: '#facc15', boxShadow: ['0 0 0px rgba(250, 204, 21, 0)', '0 0 20px rgba(250, 204, 21, 0.6)', '0 0 0px rgba(250, 204, 21, 0)'] }}
+                    transition={{ delay: 1, duration: 0.3, ease: "easeOut", boxShadow: { delay: 1, duration: 2, repeat: Infinity, ease: "easeInOut" } }}
                   >
                     booked calls
                   </motion.span>
