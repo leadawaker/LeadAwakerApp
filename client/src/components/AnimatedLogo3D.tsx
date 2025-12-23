@@ -11,8 +11,8 @@ export function AnimatedLogo3D() {
   };
 
   const wrapperStyle: CSSProperties = {
-    width: "300px",
-    height: "300px",
+    width: "600px",
+    height: "600px",
     position: "relative",
     transformStyle: "preserve-3d" as any,
   };
