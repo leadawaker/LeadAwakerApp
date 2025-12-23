@@ -6,6 +6,7 @@ import { Database, MessageSquare, TrendingUp, Server, MessageCircle, Mail, Calen
 import databaseIntegrationImg from "@assets/generated_images/database_upload_and_crm_integration.png";
 import womanPhoneImg from "@assets/woman_answering_phone_in_living_room_1766483592249.png";
 import dailyLeadsImg from "@assets/generated_images/daily_leads_closed_chart_dashboard.png";
+import cloudsImg from "@assets/generated_images/fluffy_white_clouds_in_blue_sky.png";
 
 interface StepProps {
   number: string;
@@ -226,7 +227,7 @@ export const SalesRepSteps = () => {
       />
 
       {/* Step 2 */}
-      <div style={{ marginTop: "-10%" }}>
+      <div style={{ marginTop: "-10%", position: 'relative' }}>
         <FullscreenStep 
           number="2"
           cardTitle="Chat GPT-5.2 conversations"
@@ -237,6 +238,9 @@ export const SalesRepSteps = () => {
           icon={<MessageSquare className="w-8 h-8" />}
           align="right"
         />
+        <div className="absolute top-0 right-0 w-96 h-96 opacity-60 pointer-events-none">
+          <img src={cloudsImg} alt="clouds" className="w-full h-full object-cover rounded-3xl" />
+        </div>
       </div>
 
       {/* Step 3 */}
