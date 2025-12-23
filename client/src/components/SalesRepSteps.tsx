@@ -128,7 +128,10 @@ export const SalesRepSteps = () => {
                             radial-gradient(circle at 38% 51%, white 0.75px, transparent 0.75px)`,
           backgroundRepeat: 'repeat',
           backgroundSize: '450px 380px',
-          filter: 'drop-shadow(0 0 24px rgba(255,255,255,1.8)) drop-shadow(0 0 12px rgba(255,255,255,1.2))'
+          filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
+          willChange: 'transform',
+          backfaceVisibility: 'hidden',
+          perspective: '1000px'
         }}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-950 opacity-0 mix-blend-darken" style={{
