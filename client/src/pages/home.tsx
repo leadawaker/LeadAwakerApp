@@ -75,6 +75,18 @@ export default function Home() {
                     transition={{ delay: 1, duration: 0.5, ease: "easeOut" }}
                   />
                   <motion.span 
+                    className="absolute top-0 bottom-0 -z-10"
+                    style={{ 
+                      left: '-100vw', 
+                      width: 'calc(100vw + 2%)',
+                      background: 'linear-gradient(to right, rgb(245, 245, 245), rgb(0, 94, 255))',
+                      originX: 0 
+                    }}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ delay: 1.5, duration: 0.5, ease: "easeOut" }}
+                  />
+                  <motion.span 
                     className="relative inline-block font-bold py-3 z-10"
                     initial={{ color: '#000' }}
                     animate={{ color: '#facc15' }}
@@ -84,18 +96,6 @@ export default function Home() {
                   </motion.span>
                 </motion.span>
                 <span className="relative block w-full">
-                  <motion.span 
-                    className="absolute top-0 bottom-0"
-                    style={{ 
-                      left: '-100vw', 
-                      width: 'calc(100vw + 2%)',
-                      background: 'linear-gradient(to right, rgb(0, 94, 255), rgb(245, 245, 245))',
-                      originX: 0 
-                    }}
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: 1 }}
-                    transition={{ delay: 1.5, duration: 0.5, ease: "easeOut" }}
-                  />
                   <span className="relative inline-block font-bold py-3 z-10 text-foreground">automatically.</span>
                 </span>
               </h1>
