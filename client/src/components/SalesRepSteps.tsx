@@ -108,13 +108,20 @@ export const SalesRepSteps = () => {
       <div 
         className="absolute inset-0 opacity-40" 
         style={{
-          backgroundImage: `radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0.2)),
-                            radial-gradient(2px 2px at 60px 70px, #fff, rgba(0,0,0,0.3)),
-                            radial-gradient(1px 1px at 50px 50px, #fff, rgba(0,0,0,0.2)),
-                            radial-gradient(1px 1px at 130px 80px, #fff, rgba(0,0,0,0.2)),
-                            radial-gradient(2px 2px at 90px 10px, #fff, rgba(0,0,0,0.2))`,
+          backgroundImage: `radial-gradient(1.5px 1.5px at 15% 25%, #fff, rgba(255,255,255,0.3)),
+                            radial-gradient(2px 2px at 28% 45%, #eee, rgba(0,0,0,0.2)),
+                            radial-gradient(1px 1px at 42% 12%, #fff, rgba(255,255,255,0.4)),
+                            radial-gradient(1.5px 1.5px at 65% 70%, #fff, rgba(255,255,255,0.35)),
+                            radial-gradient(2px 2px at 78% 38%, #eee, rgba(0,0,0,0.25)),
+                            radial-gradient(1px 1px at 52% 85%, #fff, rgba(255,255,255,0.3)),
+                            radial-gradient(1.5px 1.5px at 88% 15%, #fff, rgba(255,255,255,0.4)),
+                            radial-gradient(1px 1px at 22% 62%, #eee, rgba(0,0,0,0.2)),
+                            radial-gradient(1.5px 1.5px at 35% 35%, #fff, rgba(255,255,255,0.35)),
+                            radial-gradient(2px 2px at 72% 92%, #fff, rgba(255,255,255,0.3)),
+                            radial-gradient(1px 1px at 8% 78%, #eee, rgba(0,0,0,0.25)),
+                            radial-gradient(1.5px 1.5px at 95% 55%, #fff, rgba(255,255,255,0.4))`,
           backgroundRepeat: 'repeat',
-          backgroundSize: '200px 200px'
+          backgroundSize: '380px 340px'
         }}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent to-sky-300/20 mix-blend-multiply" />
