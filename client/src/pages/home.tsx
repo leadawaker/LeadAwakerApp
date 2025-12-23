@@ -102,23 +102,18 @@ export default function Home() {
                       overflow: 'visible'
                     }}
                   >
-                    <motion.span
+                    <motion.div
                       className="absolute inset-0 pointer-events-none"
                       style={{
-                        background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text',
-                        height: '100%',
-                        width: '100%',
-                        mixBlendMode: 'screen'
+                        background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0) 100%)',
+                        mixBlendMode: 'overlay',
+                        width: '60%'
                       }}
                       initial={{ opacity: 0, x: '-100%' }}
-                      animate={{ opacity: [0, 1, 0], x: ['100%', '-100%'] }}
-                      transition={{ delay: 1.5, duration: 1.5, repeat: Infinity, repeatDelay: 3.5 }}
-                    >
-                      booked calls
-                    </motion.span>
+                      animate={{ opacity: [0, 1, 0], x: ['0%', '100%'] }}
+                      transition={{ delay: 1.5, duration: 1.2, repeat: Infinity, repeatDelay: 3.5 }}
+                    />
+                    
                     booked calls
                   </motion.span>
                 </motion.span>
