@@ -23,11 +23,11 @@ const Plane = () => {
   return (
     <motion.div
       initial={{
-        top: "-5%",
+        top: "25%",
         left: "-5%"
       }}
       animate={{
-        top: "105%",
+        top: "35%",
         left: "105%"
       }}
       transition={{

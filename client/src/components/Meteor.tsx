@@ -43,7 +43,7 @@ export function MeteorContainer() {
     const meteorInterval = setInterval(() => {
       const id = Date.now();
       setMeteors(prev => [...prev, id]);
-    }, 6000);
+    }, 3000);
     return () => clearInterval(meteorInterval);
   }, []);
 
