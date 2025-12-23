@@ -129,13 +129,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Sales Rep Steps Section */}
-      <SalesRepSteps 
-        step1Image="@assets/generated_images/data_visualization_for_database_upload.png"
-        step2Image="@assets/generated_images/woman_answering_phone_in_office.png"
-        step3Image="@assets/generated_images/daily_leads_closed_chart_dashboard.png"
-      />
-
       {/* Conversion Pipeline */}
       <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6">
@@ -206,38 +199,27 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Seamless Integration - Moved after Results */}
-      <section className="py-16 border-t border-border bg-muted/20">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="max-w-3xl mx-auto">
-            <h3 className="text-2xl md:text-3xl font-bold mb-4 text-center">Seamless Integration, No Learning Curve</h3>
-            <p className="text-center text-muted-foreground mb-10 text-lg">Your existing stack becomes an automation powerhouse.</p>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-              {[
-                { name: "CRM Systems", icon: "📊" },
-                { name: "WhatsApp, SMS & Chat", icon: "💬" },
-                { name: "Email Platforms", icon: "✉️" },
-                { name: "Calendar Apps", icon: "📅" },
-                { name: "Webhook Endpoints", icon: "🔗" },
-                { name: "Databases", icon: "🗄️" },
-              ].map((tool, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
-                  className="flex flex-col items-center gap-3 text-center"
-                >
-                  <div className="text-4xl">{tool.icon}</div>
-                  <p className="text-sm font-medium text-foreground">{tool.name}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Lead Awaker Logo Above Sales Rep Steps */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="flex justify-center py-24"
+      >
+        <img 
+          src={leadLogo} 
+          alt="Lead Awaker Logo" 
+          className="w-48 drop-shadow-lg"
+          data-testid="lead-logo-section"
+        />
+      </motion.div>
+
+      {/* Sales Rep Steps Component */}
+      <SalesRepSteps 
+        step1Image="@assets/generated_images/data_visualization_for_database_upload.png"
+        step2Image="@assets/generated_images/woman_answering_phone_in_office.png"
+        step3Image="@assets/generated_images/daily_leads_closed_chart_dashboard.png"
+      />
 
       {/* Demo Section with Logo */}
       <section id="demo" className="py-24 border-t border-border">
