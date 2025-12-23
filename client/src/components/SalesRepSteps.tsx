@@ -127,7 +127,7 @@ export const SalesRepSteps = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center max-w-3xl mx-auto mb-16"
+            className="text-center max-w-3xl mx-auto mb-16 bg-slate-800/80 border border-primary/40 backdrop-blur-sm p-8 rounded-2xl shadow-lg shadow-primary/20"
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg whitespace-nowrap">Manual reactivation is broken.</h2>
           </motion.div>
