@@ -297,18 +297,16 @@ export const SalesRepSteps = () => {
       </div>
 
       {/* Step 3 */}
-      <div style={{ marginTop: "6%" }}>
-        <FullscreenStep 
-          number="3"
-          cardTitle="Revenue rolls in"
-          cardDescription="Auto-books meetings 24/7."
-          overlayTitle="Optimize Weekly"
-          overlayDescription="Monitor performance and continuously improve conversion rates."
-          image={dailyLeadsImg}
-          icon={<TrendingUp className="w-8 h-8" />}
-          align="left"
-        />
-      </div>
+      <FullscreenStep 
+        number="3"
+        cardTitle="Revenue rolls in"
+        cardDescription="Auto-books meetings 24/7."
+        overlayTitle="Optimize Weekly"
+        overlayDescription="Monitor performance and continuously improve conversion rates."
+        image={dailyLeadsImg}
+        icon={<TrendingUp className="w-8 h-8" />}
+        align="left"
+      />
       </div>
     </div>
   );
