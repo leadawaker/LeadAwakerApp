@@ -131,8 +131,8 @@ export const SalesRepSteps = () => {
         }}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-400/70 via-[60%] to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent via-[75%] to-slate-600/30" />
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent to-sky-300/20 mix-blend-multiply" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent via-[70%] to-slate-400" />
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent via-[70%] to-slate-400/50 mix-blend-multiply" />
       <div className="relative z-10">
       {/* Pain Points Section */}
       <section className="py-32 md:py-40">
