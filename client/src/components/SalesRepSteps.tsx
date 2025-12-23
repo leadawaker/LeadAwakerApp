@@ -129,7 +129,7 @@ export const SalesRepSteps = () => {
             transition={{ duration: 0.6 }}
             className="text-center max-w-3xl mx-auto mb-16"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg">Manual reactivation is broken.</h2>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg whitespace-nowrap">Manual reactivation is broken.</h2>
           </motion.div>
 
           <motion.div 
