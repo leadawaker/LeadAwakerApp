@@ -141,7 +141,7 @@ export default function Home() {
       <SalesRepSteps />
 
       {/* Conversion Pipeline */}
-      <section className="py-24 bg-muted/30">
+      <section className="py-48 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6">
           {/* New Pipeline Component */}
           <motion.div
