@@ -1,7 +1,5 @@
 import { motion } from "framer-motion";
 import { Users, Rocket, Target, Code2, TrendingUp, Briefcase } from "lucide-react";
-import profilePhoto from "@assets/Screenshot_20251219_160952_ChatGPT_1766322249853.jpg";
-import mainLogo from "@assets/Project_(20251219120952)_1766322389784.jpg";
 
 export default function About() {
   return (
@@ -15,11 +13,6 @@ export default function About() {
             transition={{ delay: 0.2 }}
             className="md:col-span-1 text-center"
           >
-            <img 
-              src={profilePhoto} 
-              alt="Gabriel Fronza, Founder" 
-              className="rounded-2xl shadow-2xl border border-border w-full h-auto object-cover mb-6"
-            />
             <h2 className="text-2xl font-bold">Gabriel Fronza</h2>
           </motion.div>
 
@@ -111,20 +104,6 @@ export default function About() {
           </div>
         </motion.div>
 
-        {/* Logo Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mt-24 pt-24 border-t border-border text-center"
-        >
-          <h3 className="text-sm font-semibold text-muted-foreground mb-8 uppercase tracking-wide">Powered by Lead Awaker</h3>
-          <img 
-            src={mainLogo} 
-            alt="Lead Awaker Logo" 
-            className="w-64 mx-auto drop-shadow-lg"
-          />
-        </motion.div>
       </div>
     </div>
   );

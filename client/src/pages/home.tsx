@@ -4,7 +4,6 @@ import { ArrowRight, Zap, Database, MessageSquare, Calendar, BarChart, CheckCirc
 import { Link } from "wouter";
 import { useState, useRef } from "react";
 import { useInView } from "framer-motion";
-import leadLogo from "@assets/Untitled_design_1766218788499.jpg";
 import Chat3D from "@/components/Chat3D";
 import { PipelineChart } from "@/components/PipelineChart";
 import { SalesRepSteps } from "@/components/SalesRepSteps";
@@ -242,19 +241,6 @@ export default function Home() {
               </motion.div>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="flex justify-center"
-            >
-              <img 
-                src={leadLogo} 
-                alt="Lead Awaker Logo" 
-                className="w-64 drop-shadow-lg"
-                data-testid="lead-logo"
-              />
-            </motion.div>
           </div>
         </div>
       </section>
