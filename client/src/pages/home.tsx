@@ -146,7 +146,7 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="text-center max-w-3xl mx-auto mb-16"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-red-900 to-red-700 bg-clip-text text-transparent">Manual Reactivation Is Broken.</h2>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Manual Reactivation Is Broken.</h2>
           </motion.div>
 
           <motion.div 
@@ -175,12 +175,12 @@ export default function Home() {
                   hidden: { opacity: 0, y: 30, scale: 0.95 },
                   visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 100, damping: 15 } }
                 }}
-                className="group relative bg-gradient-to-br from-red-50 to-red-50/50 border border-red-200/60 backdrop-blur-sm p-8 rounded-2xl text-center hover:border-red-400/80 transition-all duration-400 cursor-default overflow-hidden"
+                className="group relative bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 backdrop-blur-sm p-8 rounded-2xl text-center hover:border-primary/40 transition-all duration-400 cursor-default overflow-hidden shadow-md hover:shadow-lg"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-red-500/0 to-red-500/0 group-hover:from-red-500/5 group-hover:to-red-500/10 transition-all duration-400" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:to-primary/10 transition-all duration-400" />
                 <div className="relative z-10">
-                  <div className="text-red-700 mb-4 transform group-hover:scale-125 transition-transform duration-400 inline-flex items-center justify-center">{pain.icon}</div>
-                  <p className="text-sm font-semibold text-gray-800 leading-relaxed">{pain.title}</p>
+                  <div className="text-primary mb-4 transform group-hover:scale-125 transition-transform duration-400 inline-flex items-center justify-center">{pain.icon}</div>
+                  <p className="text-sm font-semibold text-foreground leading-relaxed">{pain.title}</p>
                 </div>
               </motion.div>
             ))}
@@ -191,9 +191,9 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-300/40 backdrop-blur-sm p-8 rounded-2xl text-center max-w-2xl mx-auto shadow-lg shadow-red-200/20"
+            className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 backdrop-blur-sm p-8 rounded-2xl text-center max-w-2xl mx-auto shadow-lg shadow-primary/20"
           >
-            <p className="text-base font-semibold text-red-950 leading-relaxed">Companies have invested thousands in acquiring these leads, but they're leaving millions on the table because reactivation is too painful and ineffective.</p>
+            <p className="text-base font-semibold text-foreground leading-relaxed">Companies have invested thousands in acquiring these leads, but they're leaving millions on the table because reactivation is too painful and ineffective.</p>
           </motion.div>
         </div>
       </section>
