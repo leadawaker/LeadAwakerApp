@@ -129,7 +129,7 @@ export const SalesRepSteps = () => {
             transition={{ duration: 0.6 }}
             className="text-center max-w-3xl mx-auto mb-16"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg whitespace-nowrap" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.8)) drop-shadow(0 0 30px rgba(249, 115, 22, 0.6)) drop-shadow(0 0 40px rgba(249, 115, 22, 0.4))' }}>Manual reactivation is broken.</h2>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg whitespace-nowrap" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.5)) drop-shadow(0 0 30px rgba(249, 115, 22, 0.3))' }}>Manual reactivation is broken.</h2>
           </motion.div>
 
           <motion.div 
