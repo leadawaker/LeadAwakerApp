@@ -58,10 +58,31 @@ export default function Home() {
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] mb-6 text-foreground relative">
                 Turn cold leads into<br />
-                <span className="relative block w-full">
-                  <span className="absolute left-0 top-0 bottom-0 right-0 bg-gradient-to-r from-primary to-white -z-10" style={{ right: 'calc(-100vw + 100%)' }} />
-                  <span className="relative inline-block text-white font-bold py-3 px-4 z-10">booked calls</span>
-                </span>
+                <motion.span 
+                  className="relative block w-full"
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    hidden: { opacity: 1 },
+                    visible: { opacity: 1 }
+                  }}
+                >
+                  <motion.span 
+                    className="absolute left-0 top-0 bottom-0 right-0 bg-gradient-to-r from-primary to-white -z-10" 
+                    style={{ right: 'calc(-100vw + 100%)' }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1, duration: 0.6 }}
+                  />
+                  <motion.span 
+                    className="relative inline-block font-bold py-3 px-4 z-10"
+                    initial={{ color: '#000' }}
+                    animate={{ color: '#fff' }}
+                    transition={{ delay: 1, duration: 0.6 }}
+                  >
+                    booked calls
+                  </motion.span>
+                </motion.span>
                 automatically.
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed">
