@@ -182,7 +182,7 @@ export const SalesRepSteps = () => {
       </section>
 
       {/* Intro Section */}
-      <section className="h-[25vh] flex items-center justify-center relative overflow-hidden">
+      <section className="flex items-center justify-center relative overflow-hidden" style={{ height: '12.5vh' }}>
         {/* Meteor */}
         <motion.div
           className="absolute top-20 -left-20 w-2 h-2 bg-yellow-300 rounded-full"
