@@ -69,19 +69,16 @@ export default function Home() {
                 >
                   <motion.span 
                     className="absolute left-0 top-0 bottom-0 right-0 bg-gradient-to-r from-primary to-white -z-10" 
-                    style={{ right: 'calc(-100vw + 100%)' }}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1, duration: 0.6 }}
+                    style={{ right: 'calc(-100vw + 100%)', originX: 0 }}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ delay: 1, duration: 0.3, ease: "easeOut" }}
                   />
-                  <motion.span 
-                    className="relative inline-block font-bold py-3 px-4 z-10"
-                    initial={{ color: '#000' }}
-                    animate={{ color: '#fff' }}
-                    transition={{ delay: 1, duration: 0.6 }}
+                  <span 
+                    className="relative inline-block font-bold py-3 px-4 z-10 text-yellow-400"
                   >
                     booked calls
-                  </motion.span>
+                  </span>
                 </motion.span>
                 automatically.
               </h1>
