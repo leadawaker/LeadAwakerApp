@@ -78,7 +78,7 @@ const FullscreenStep = ({
           />
           <motion.div 
             style={{ opacity: overlayOpacity }}
-            className="absolute inset-0 bg-teal-950/80 backdrop-blur-[2px] flex flex-col items-center justify-center p-8 text-center"
+            className="absolute inset-0 bg-indigo-950/80 backdrop-blur-[2px] flex flex-col items-center justify-center p-8 text-center"
           >
             <motion.div style={{ y: overlayTextY }}>
               <span className="text-primary font-mono text-sm uppercase tracking-wider mb-2 block">Step {number} Details</span>
@@ -168,7 +168,7 @@ export const SalesRepSteps = ({ step1Image, step2Image, step3Image }: SalesRepSt
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.3 }}
-              className="absolute inset-0 bg-teal-950/60 backdrop-blur-sm flex flex-col items-center justify-center p-8"
+              className="absolute inset-0 bg-indigo-950/60 backdrop-blur-sm flex flex-col items-center justify-center p-8"
             >
               <span className="text-primary font-mono text-sm uppercase tracking-wider mb-4 block">Step 1 Details</span>
               <p className="text-white text-center mb-8 font-bold text-lg max-w-xs">
