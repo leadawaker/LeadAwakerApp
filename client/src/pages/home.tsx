@@ -129,9 +129,9 @@ export default function Home() {
 
       {/* Sales Rep Steps Section */}
       <SalesRepSteps 
-        step1Image="@assets/generated_images/data_visualization_for_database_upload.png"
-        step2Image="@assets/generated_images/woman_answering_phone_in_office.png"
-        step3Image="@assets/generated_images/daily_leads_closed_chart_dashboard.png"
+        step1Image="@assets/generated_images/database_upload_and_crm_integration.png"
+        step2Image="@assets/generated_images/ai-powered_conversations_and_chat_interface.png"
+        step3Image="@assets/generated_images/revenue_dashboard_and_sales_metrics.png"
       />
 
       {/* Conversion Pipeline */}

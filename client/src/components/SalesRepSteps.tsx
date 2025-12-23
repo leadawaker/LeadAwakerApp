@@ -214,7 +214,7 @@ export const SalesRepSteps = ({ step1Image, step2Image, step3Image }: SalesRepSt
           cardDescription="Natural, contextual SMS (not robot templates)."
           overlayTitle="Build the Automations"
           overlayDescription="Set up AI agents, workflows, and integrations in minutes."
-          image="/woman_answering_phone_in_living_room_1766483592249.png"
+          image="@assets/generated_images/ai-powered_conversations_and_chat_interface.png"
           icon={<MessageSquare className="w-8 h-8" />}
           align="right"
         />
