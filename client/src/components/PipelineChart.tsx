@@ -32,8 +32,8 @@ const STAGES: Stage[] = [
     colorClass: "border-slate-300 text-slate-50",
     headerClass: "text-slate-100",
     textColorClass: "text-slate-100",
-    customStyle: { backgroundColor: "#00473E" },
-    customTextStyle: { color: "#00473E" },
+    customStyle: { backgroundColor: "#1E3A8A" },
+    customTextStyle: { color: "#1E3A8A" },
   },
   {
     id: "replied",
@@ -42,8 +42,8 @@ const STAGES: Stage[] = [
     colorClass: "border-slate-300 text-slate-50",
     headerClass: "text-slate-100",
     textColorClass: "text-slate-100",
-    customStyle: { backgroundColor: "#007A6A" },
-    customTextStyle: { color: "#007A6A" },
+    customStyle: { backgroundColor: "#2563EB" },
+    customTextStyle: { color: "#2563EB" },
   },
   {
     id: "qualified",
@@ -52,8 +52,8 @@ const STAGES: Stage[] = [
     colorClass: "border-slate-300 text-slate-50",
     headerClass: "text-black",
     textColorClass: "text-slate-100",
-    customStyle: { backgroundColor: "#00B595" },
-    customTextStyle: { color: "#00B595" },
+    customStyle: { backgroundColor: "#5170FF" },
+    customTextStyle: { color: "#5170FF" },
   },
   {
     id: "booked",
