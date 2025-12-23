@@ -126,9 +126,11 @@ export const SalesRepSteps = () => {
                             radial-gradient(circle at 14% 84%, #f0f0f0 2.5px, transparent 2.5px),
                             radial-gradient(circle at 38% 51%, white 1.5px, transparent 1.5px)`,
           backgroundRepeat: 'repeat',
-          backgroundSize: '450px 380px'
+          backgroundSize: '450px 380px',
+          filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.6)) drop-shadow(0 0 3px rgba(255,255,255,0.4))'
         }}
       />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-orange-400/30" />
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent to-sky-300/20 mix-blend-multiply" />
       <div className="relative z-10">
       {/* Pain Points Section */}
