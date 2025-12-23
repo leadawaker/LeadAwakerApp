@@ -15,6 +15,7 @@ export function AnimatedLogo3D() {
     height: "500px",
     position: "relative",
     transformStyle: "preserve-3d" as any,
+    backgroundColor: "transparent",
   };
 
   const leadStyle: CSSProperties = {
@@ -23,6 +24,7 @@ export function AnimatedLogo3D() {
     textAlign: "center",
     transformStyle: "preserve-3d" as any,
     top: "80px",
+    backgroundColor: "transparent",
   };
 
   const awakerStyle: CSSProperties = {
@@ -31,6 +33,7 @@ export function AnimatedLogo3D() {
     textAlign: "center",
     top: 200,
     transformStyle: "preserve-3d" as any,
+    backgroundColor: "transparent",
   };
 
   const topLogoStyle: CSSProperties = {
@@ -41,17 +44,7 @@ export function AnimatedLogo3D() {
     left: "50%",
     marginLeft: "-60px",
     transformStyle: "preserve-3d" as any,
-  };
-
-  const glowStyle: CSSProperties = {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    top: 100,
-    left: 0,
-    background: "radial-gradient(circle at center, rgba(81, 112, 255, 0.2) 0%, transparent 70%)",
-    borderRadius: "50%",
-    filter: "blur(30px)",
+    backgroundColor: "transparent",
   };
 
   return (
@@ -76,7 +69,6 @@ export function AnimatedLogo3D() {
             viewBox="0 0 1041.67 1041.67"
             width="200"
             height="200"
-            style={{ filter: "drop-shadow(0 4px 6px rgba(81, 112, 255, 0.3))" }}
           >
             <image href="/LEAD.svg" width="100%" height="100%" />
           </svg>
@@ -94,7 +86,6 @@ export function AnimatedLogo3D() {
             viewBox="0 0 1041.67 1041.67"
             width="180"
             height="180"
-            style={{ filter: "drop-shadow(0 4px 6px rgba(255, 184, 0, 0.3))" }}
           >
             <image href="/Awaker.svg" width="100%" height="100%" />
           </svg>
@@ -112,19 +103,10 @@ export function AnimatedLogo3D() {
             viewBox="0 0 1041.67 1041.67"
             width="100%"
             height="100%"
-            style={{ filter: "drop-shadow(0 6px 12px rgba(81, 112, 255, 0.4))" }}
           >
             <image href="/top logo.svg" width="100%" height="100%" />
           </svg>
         </motion.div>
-
-        {/* Glow effect background */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 0.4 } : { opacity: 0 }}
-          transition={{ delay: 2.5, duration: 1 }}
-          style={glowStyle}
-        />
       </div>
     </motion.div>
   );
