@@ -27,7 +27,7 @@ const Plane = () => {
         left: "105%"
       }}
       animate={{
-        top: "12%",
+        top: "13%",
         left: "-5%"
       }}
       transition={{
