@@ -182,7 +182,7 @@ export const SalesRepSteps = () => {
       </section>
 
       {/* Intro Section */}
-      <section className="h-[16vh] flex items-center justify-center">
+      <section className="h-[50vh] flex items-center justify-center">
         <motion.div 
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
