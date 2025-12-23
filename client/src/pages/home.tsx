@@ -86,7 +86,7 @@ export default function Home() {
                     transition={{ delay: 1.5, duration: 0.5, ease: "easeOut" }}
                   />
                   <motion.span 
-                    className="relative inline-block font-bold py-3 z-10 overflow-hidden"
+                    className="relative inline-block font-bold py-3 z-10"
                     initial={{ color: '#000', textShadow: 'none' }}
                     animate={{ 
                       color: '#facc15',
@@ -98,19 +98,19 @@ export default function Home() {
                     }}
                     transition={{ delay: 1, duration: 0.3, ease: "easeOut", textShadow: { delay: 1.3, duration: 5, repeat: Infinity, ease: "easeInOut" } }}
                   >
+                    booked calls
                     <motion.div
-                      className="absolute inset-0 pointer-events-none"
+                      className="absolute top-0 left-0 pointer-events-none"
                       style={{
-                        background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0) 100%)',
-                        mixBlendMode: 'overlay',
-                        width: '60%'
+                        background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%)',
+                        mixBlendMode: 'screen',
+                        height: '100%',
+                        width: '120px'
                       }}
-                      initial={{ opacity: 0, x: '-100%' }}
-                      animate={{ opacity: [0, 1, 0], x: ['0%', '100%'] }}
+                      initial={{ opacity: 0, x: '-120px' }}
+                      animate={{ opacity: [0, 1, 0], x: ['120px'] }}
                       transition={{ delay: 1.5, duration: 1.2, repeat: Infinity, repeatDelay: 3.5 }}
                     />
-                    
-                    booked calls
                   </motion.span>
                 </motion.span>
                 <span className="relative block w-full">
