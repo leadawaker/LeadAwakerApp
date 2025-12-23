@@ -57,7 +57,7 @@ export default function Home() {
               transition={{ duration: 0.6 }}
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] mb-6 text-foreground relative">
-                Awake dormant leads into<br />
+                Wake dormant leads into<br />
                 <motion.span 
                   className="relative block w-full"
                   initial="hidden"
@@ -68,11 +68,11 @@ export default function Home() {
                   }}
                 >
                   <motion.span 
-                    className="absolute left-0 top-0 bottom-0 right-0 bg-gradient-to-r from-primary to-white -z-10" 
-                    style={{ right: 'calc(-100vw + 100%)', originX: 0 }}
+                    className="absolute top-0 bottom-0 bg-gradient-to-r from-primary to-white -z-10" 
+                    style={{ right: 'calc(-100vw + 100%)', left: 0, originX: 0 }}
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
-                    transition={{ delay: 1, duration: 0.3, ease: "easeOut" }}
+                    transition={{ delay: 1, duration: 0.5, ease: "easeOut" }}
                   />
                   <motion.span 
                     className="relative inline-block font-bold py-3 z-10"
