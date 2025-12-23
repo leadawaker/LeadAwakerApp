@@ -77,7 +77,7 @@ export default function Home() {
                     }}
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
-                    transition={{ delay: 2, duration: 0.5, ease: "easeOut" }}
+                    transition={{ delay: 1.5, duration: 0.5, ease: "easeOut" }}
                   />
                   <motion.span 
                     className="absolute top-0 bottom-0 -z-10"
@@ -89,20 +89,20 @@ export default function Home() {
                     }}
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
-                    transition={{ delay: 2.5, duration: 0.5, ease: "easeOut" }}
+                    transition={{ delay: 2, duration: 0.5, ease: "easeOut" }}
                   />
                   <motion.span 
                     className="relative inline-block font-bold py-3 z-10"
                     initial={{ color: '#000', textShadow: 'none' }}
                     animate={{ 
-                      color: '#5170ff',
+                      color: '#ffffff',
                       textShadow: [
                         '0 10px 10px rgba(81, 112, 255, 0.06), -50px 0px 20px rgba(81, 112, 255, 0)',
                         '0 10px 20px rgba(81, 112, 255, 0.1), 0px 0px 20px rgba(81, 112, 255, 0.08)',
                         '0 10px 10px rgba(81, 112, 255, 0.06), 50px 0px 20px rgba(81, 112, 255, 0)'
                       ]
                     }}
-                    transition={{ color: { delay: 2, duration: 0 }, textShadow: { delay: 2.3, duration: 5, repeat: Infinity, ease: "easeInOut" } }}
+                    transition={{ color: { delay: 1.5, duration: 0 }, textShadow: { delay: 1.8, duration: 5, repeat: Infinity, ease: "easeInOut" } }}
                   >
                     booked calls
                   </motion.span>
