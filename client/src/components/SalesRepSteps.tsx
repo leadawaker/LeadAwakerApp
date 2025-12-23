@@ -108,13 +108,16 @@ export const SalesRepSteps = () => {
       <div 
         className="absolute inset-0 opacity-40" 
         style={{
-          backgroundImage: `radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0.2)),
-                            radial-gradient(2px 2px at 60px 70px, #fff, rgba(0,0,0,0.3)),
-                            radial-gradient(1px 1px at 50px 50px, #fff, rgba(0,0,0,0.2)),
-                            radial-gradient(1px 1px at 130px 80px, #fff, rgba(0,0,0,0.2)),
-                            radial-gradient(2px 2px at 90px 10px, #fff, rgba(0,0,0,0.2))`,
+          backgroundImage: `radial-gradient(1.5px 1.5px at 12% 25%, #eee, rgba(0,0,0,0.2)),
+                            radial-gradient(2px 2px at 58% 61%, #fff, rgba(0,0,0,0.3)),
+                            radial-gradient(1px 1px at 38% 42%, #fff, rgba(0,0,0,0.2)),
+                            radial-gradient(1.5px 1.5px at 72% 65%, #fff, rgba(0,0,0,0.2)),
+                            radial-gradient(2px 2px at 25% 15%, #fff, rgba(0,0,0,0.2)),
+                            radial-gradient(1px 1px at 85% 30%, #eee, rgba(0,0,0,0.15)),
+                            radial-gradient(1.5px 1.5px at 45% 78%, #fff, rgba(0,0,0,0.25)),
+                            radial-gradient(1px 1px at 8% 55%, #fff, rgba(0,0,0,0.18))`,
           backgroundRepeat: 'repeat',
-          backgroundSize: '200px 200px'
+          backgroundSize: '800px 600px'
         }}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-transparent to-sky-300/20 mix-blend-multiply" />
