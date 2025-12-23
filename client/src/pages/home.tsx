@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Zap, Database, MessageSquare, Calendar, BarChart, CheckCircle, ChevronDown, Menu } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
-import leadLogo from "@assets/generated_images/lead_awaker_logo_ultramarine_and_gold.png";
+import leadLogo from "@assets/Untitled_design_1766218788499.jpg";
 import Chat3D from "@/components/Chat3D";
 import { PipelineChart } from "@/components/PipelineChart";
 import { SalesRepSteps } from "@/components/SalesRepSteps";
@@ -84,7 +84,7 @@ export default function Home() {
 
 
       {/* Pain Points Section */}
-      <section className="py-32 lg:py-40">
+      <section className="py-24">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -129,9 +129,43 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Results/Metrics Section */}
-      <section className="py-32 lg:py-40">
+      {/* Sales Rep Steps Section */}
+      <SalesRepSteps 
+        step1Image="@assets/generated_images/data_visualization_for_database_upload.png"
+        step2Image="@assets/generated_images/woman_answering_phone_in_office.png"
+        step3Image="@assets/generated_images/daily_leads_closed_chart_dashboard.png"
+      />
+
+      {/* Conversion Pipeline */}
+      <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6">
+          {/* New Pipeline Component */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-0"
+          >
+            <PipelineChart />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Results/Metrics Section */}
+      <section className="py-24">
+        <div className="container mx-auto px-4 md:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 p-8 rounded-2xl text-center max-w-3xl mx-auto mb-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">From chaos to certainty in 30 days</h2>
+            <p className="text-lg text-muted-foreground">
+              Sales teams shift from grind to strategy while Lead Awaker generates pipeline automatically.
+            </p>
+          </motion.div>
+
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             {[
               {
@@ -172,69 +206,41 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Lead Awaker Logo Above Sales Rep Steps */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        className="flex justify-center py-8 -mb-12 relative z-20"
-      >
-        <img 
-          src={leadLogo} 
-          alt="Lead Awaker Logo" 
-          className="w-48 drop-shadow-lg"
-          data-testid="lead-logo-section"
-        />
-      </motion.div>
-
-      {/* Sales Rep Steps Component */}
-      <SalesRepSteps 
-        step1Image="@assets/generated_images/data_visualization_for_database_upload.png"
-        step2Image="@assets/generated_images/woman_answering_phone_in_office.png"
-        step3Image="@assets/generated_images/daily_leads_closed_chart_dashboard.png"
-      />
-
-      {/* Conversion Pipeline */}
-      <section className="py-32 lg:py-40 bg-muted/30 border-t border-border">
+      {/* Seamless Integration - Moved after Results */}
+      <section className="py-16 border-t border-border bg-muted/20">
         <div className="container mx-auto px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 p-8 rounded-2xl text-center max-w-3xl mx-auto mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Your Conversion Pipeline in Action</h2>
-            <p className="text-lg text-muted-foreground">
-              Watch leads flow through every stage in real-time.
-            </p>
-          </motion.div>
-
-          {/* New Pipeline Component */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mt-0"
-          >
-            <PipelineChart />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 p-8 rounded-2xl text-center max-w-3xl mx-auto mt-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">From chaos to certainty in 30 days</h2>
-            <p className="text-lg text-muted-foreground">
-              Sales teams shift from grind to strategy while Lead Awaker generates pipeline automatically.
-            </p>
-          </motion.div>
+          <div className="max-w-3xl mx-auto">
+            <h3 className="text-2xl md:text-3xl font-bold mb-4 text-center">Seamless Integration, No Learning Curve</h3>
+            <p className="text-center text-muted-foreground mb-10 text-lg">Your existing stack becomes an automation powerhouse.</p>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              {[
+                { name: "CRM Systems", icon: "📊" },
+                { name: "WhatsApp, SMS & Chat", icon: "💬" },
+                { name: "Email Platforms", icon: "✉️" },
+                { name: "Calendar Apps", icon: "📅" },
+                { name: "Webhook Endpoints", icon: "🔗" },
+                { name: "Databases", icon: "🗄️" },
+              ].map((tool, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.05 }}
+                  className="flex flex-col items-center gap-3 text-center"
+                >
+                  <div className="text-4xl">{tool.icon}</div>
+                  <p className="text-sm font-medium text-foreground">{tool.name}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Demo Section with Logo */}
-      <section id="demo" className="py-32 lg:py-40 border-t border-border">
+      <section id="demo" className="py-24 border-t border-border">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -283,7 +289,7 @@ export default function Home() {
 
 
       {/* Security & AI Guardrails Section */}
-      <section className="py-32 lg:py-40 border-t border-border">
+      <section className="py-24">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

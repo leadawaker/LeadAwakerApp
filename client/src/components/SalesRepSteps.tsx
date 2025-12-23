@@ -114,9 +114,12 @@ export const SalesRepSteps = ({ step1Image, step2Image, step3Image }: SalesRepSt
           className="text-center"
           data-testid="sales-rep-intro"
         >
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 text-black">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 text-white">
             Your Expert Sales Rep in 3 Steps.
           </h1>
+          <p className="text-primary text-xl font-medium tracking-wide">
+            Dead leads <span className="opacity-50">→</span> revenue.
+          </p>
         </motion.div>
       </section>
 
