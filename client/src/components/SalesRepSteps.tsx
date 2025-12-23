@@ -182,7 +182,7 @@ export const SalesRepSteps = () => {
       </section>
 
       {/* Intro Section */}
-      <section className="h-[80vh] flex items-center justify-center">
+      <section className="h-[16vh] flex items-center justify-center">
         <motion.div 
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -200,7 +200,7 @@ export const SalesRepSteps = () => {
       </section>
 
       {/* Step 1 with Integration Icons */}
-      <div className="h-[80vh] w-full flex items-center justify-center px-4 md:px-12 relative z-10">
+      <div className="h-[16vh] w-full flex items-center justify-center px-4 md:px-12 relative z-10">
         <div className="container mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
           <motion.div 
             initial={{ opacity: 0, y: 50 }}
@@ -283,7 +283,7 @@ export const SalesRepSteps = () => {
       </div>
 
       {/* Step 2 */}
-      <div style={{ marginTop: "30%" }}>
+      <div style={{ marginTop: "6%" }}>
         <FullscreenStep 
           number="2"
           cardTitle="Chat GPT-5.2 conversations"
