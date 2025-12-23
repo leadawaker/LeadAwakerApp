@@ -317,9 +317,9 @@ export const SalesRepSteps = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="bg-slate-800/80 border border-primary/40 backdrop-blur-sm p-8 rounded-2xl text-center max-w-2xl mx-auto shadow-lg shadow-primary/20"
+            className="text-center max-w-2xl mx-auto"
           >
-            <p className="text-base font-semibold text-white leading-relaxed">Companies have invested <span className="font-bold">THOUSANDS</span> in acquiring these leads, but they're leaving <span className="font-bold">MILLIONS</span> on the table because reactivation is too painful and ineffective.</p>
+            <p className="text-accent text-xl font-medium tracking-wide">Companies have invested <span className="font-bold">THOUSANDS</span> in acquiring these leads, but they're leaving <span className="font-bold">MILLIONS</span> on the table because reactivation is too painful and ineffective.</p>
           </motion.div>
         </div>
       </section>
@@ -341,9 +341,6 @@ export const SalesRepSteps = () => {
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 text-white drop-shadow-lg">
             Your Expert Sales Rep in 3 Steps.
           </h1>
-          <p className="text-accent text-xl font-medium tracking-wide">
-            Dead leads <span className="opacity-50">→</span> revenue.
-          </p>
         </motion.div>
       </section>
 
