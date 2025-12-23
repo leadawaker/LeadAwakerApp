@@ -248,6 +248,9 @@ export const SalesRepSteps = () => {
         backgroundImage: `radial-gradient(ellipse 150% 40% at 50% 69%, rgba(249, 115, 22, 1) 0%, rgba(249, 115, 22, 0.6) 60%, transparent 100%)`,
         zIndex: 2
       }} />
+      <svg className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ zIndex: 2 }} viewBox="0 0 1440 120" preserveAspectRatio="none" height="120">
+        <path d="M0,60 Q360,20 720,60 T1440,60 L1440,120 L0,120 Z" fill="rgba(249, 115, 22, 0.3)" />
+      </svg>
       <div className="absolute inset-0 pointer-events-none" style={{
         backgroundImage: `radial-gradient(ellipse 150% 30% at 50% 88%, rgba(167, 139, 250, 0.45) 0%, rgba(167, 139, 250, 0.15) 60%, transparent 100%)`,
         zIndex: 2
