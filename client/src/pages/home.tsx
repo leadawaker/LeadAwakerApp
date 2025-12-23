@@ -87,13 +87,13 @@ export default function Home() {
                   />
                   <motion.span 
                     className="relative inline-block font-bold py-3 z-10"
-                    initial={{ color: '#000', textShadow: '0 10px 0px rgba(250, 204, 21, 0)' }}
+                    initial={{ color: '#000', textShadow: 'none' }}
                     animate={{ 
                       color: '#facc15',
                       textShadow: [
-                        '0 10px 10px rgba(250, 204, 21, 0.2), -50px 0px 20px rgba(250, 204, 21, 0)',
-                        '0 10px 20px rgba(250, 204, 21, 0.4), 0px 0px 20px rgba(250, 204, 21, 0.3)',
-                        '0 10px 10px rgba(250, 204, 21, 0.2), 50px 0px 20px rgba(250, 204, 21, 0)'
+                        '0 10px 10px rgba(250, 204, 21, 0.15), -50px 0px 20px rgba(250, 204, 21, 0)',
+                        '0 10px 20px rgba(250, 204, 21, 0.25), 0px 0px 20px rgba(250, 204, 21, 0.2)',
+                        '0 10px 10px rgba(250, 204, 21, 0.15), 50px 0px 20px rgba(250, 204, 21, 0)'
                       ]
                     }}
                     transition={{ delay: 1, duration: 0.3, ease: "easeOut", textShadow: { delay: 1.3, duration: 5, repeat: Infinity, ease: "easeInOut" } }}
