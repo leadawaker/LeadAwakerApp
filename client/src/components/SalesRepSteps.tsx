@@ -207,11 +207,11 @@ export const SalesRepSteps = () => {
         }}
       />
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 200% 120% at 50% 100%, rgba(220, 180, 255, 0.95) 0%, rgba(180, 130, 240, 0.85) 15%, rgba(130, 100, 220, 0.65) 35%, rgba(80, 60, 180, 0.35) 55%, rgba(40, 50, 120, 0.1) 85%)',
+        background: 'radial-gradient(ellipse 200% 120% at 50% 100%, rgba(220, 180, 255, 0.7) 0%, rgba(180, 130, 240, 0.6) 15%, rgba(130, 100, 220, 0.45) 35%, rgba(80, 60, 180, 0.2) 55%, rgba(40, 50, 120, 0) 100%)',
         zIndex: 0
       }} />
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 220% 150% at 50% 95%, rgba(255, 220, 130, 0.95) 0%, rgba(240, 160, 80, 0.75) 25%, rgba(130, 80, 150, 0.4) 50%, rgba(40, 50, 120, 0.1) 75%)',
+        background: 'radial-gradient(ellipse 220% 150% at 50% 95%, rgba(255, 220, 130, 0.7) 0%, rgba(240, 160, 80, 0.55) 25%, rgba(130, 80, 150, 0.25) 50%, rgba(40, 50, 120, 0) 100%)',
         zIndex: 0
       }} />
       <Plane />
