@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -147,6 +147,7 @@ const FullscreenStep = ({
 
 export const SalesRepSteps = () => {
   const scrollRef = useRef(null);
+  const [glitchAnimating, setGlitchAnimating] = useState(false);
 
   return (
     <div 
@@ -267,6 +268,7 @@ export const SalesRepSteps = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
+            onViewportEnter={() => setGlitchAnimating(true)}
             viewport={{ once: true }}
             transition={{ duration: 0.3 }}
             className="text-center max-w-4xl mx-auto mb-24"
@@ -297,7 +299,7 @@ export const SalesRepSteps = () => {
                 is
               </span>
               <span 
-                className="hologram-glitch"
+                className={`hologram-glitch ${glitchAnimating ? 'animate' : ''}`}
                 data-testid="text-broken"
               >
                 bro<span className="flicker-letter">k</span>en
