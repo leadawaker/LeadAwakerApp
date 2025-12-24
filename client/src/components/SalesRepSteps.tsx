@@ -305,12 +305,23 @@ export const SalesRepSteps = () => {
                 initial={{ borderColor: 'rgb(249, 115, 22)' }}
                 animate={{ borderColor: 'rgb(59, 130, 246)' }}
                 transition={{ delay: i * 0.08 + 0.1 + 0.8, duration: 0.5 }}
-                className="group relative bg-gradient-to-br from-slate-800/80 to-slate-800/60 border backdrop-blur-sm p-8 rounded-2xl text-center hover:border-yellow-400 transition-all duration-400 cursor-default overflow-hidden shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-yellow-400/35"
+                className="group relative bg-gradient-to-br from-slate-800/80 to-slate-800/60 border backdrop-blur-sm p-8 rounded-2xl text-center transition-all duration-400 cursor-default overflow-hidden shadow-lg shadow-primary/20"
+                style={{
+                  borderColor: 'rgb(59, 130, 246)',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor = 'rgb(249, 115, 22)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 25px 50px -12px rgba(249, 115, 22, 0.35), 0 25px 50px -12px rgba(249, 115, 22, 0.35)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor = 'rgb(59, 130, 246)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 15px -3px rgba(59, 130, 246, 0.2), 0 10px 15px -3px rgba(59, 130, 246, 0.2)';
+                }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-yellow-400/5 group-hover:to-yellow-400/10 transition-all duration-400" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-orange-500/5 group-hover:to-orange-500/10 transition-all duration-400" style={{ background: 'linear-gradient(135deg, transparent 0%, transparent 100%)' }} />
                 <div className="relative z-10">
-                  <div className="text-primary mb-4 transform group-hover:scale-125 group-hover:text-yellow-400 transition-all duration-400 inline-flex items-center justify-center">{pain.icon}</div>
-                  <p className="text-sm font-semibold text-white group-hover:text-yellow-400 transition-all duration-400 leading-relaxed">{pain.title}</p>
+                  <div className="text-primary mb-4 transform group-hover:scale-125 transition-all duration-400 inline-flex items-center justify-center" style={{ color: 'rgb(59, 130, 246)' }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'rgb(249, 115, 22)'; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'rgb(59, 130, 246)'; }}>{pain.icon}</div>
+                  <p className="text-sm font-semibold text-white transition-all duration-400 leading-relaxed" style={{ color: 'white' }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'rgb(249, 115, 22)'; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'white'; }}>{pain.title}</p>
                 </div>
               </motion.div>
             ))}
