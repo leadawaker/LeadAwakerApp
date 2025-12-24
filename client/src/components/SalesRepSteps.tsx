@@ -271,18 +271,25 @@ export const SalesRepSteps = () => {
             transition={{ duration: 0.3 }}
             className="text-center max-w-4xl mx-auto mb-24"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.25)) drop-shadow(0 0 35px rgba(249, 115, 22, 0.25))' }}>Manual reactivation is <span style={{ display: 'inline-block', background: 'linear-gradient(to right, #3b82f6, #f97316)', backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              {'broken'.split('').map((char, i) => (
-                <motion.span
-                  key={i}
-                  initial={{ y: i % 2 === 0 ? -12 : 12 }}
-                  animate={{ y: 0 }}
-                  transition={{ delay: 0.4 + (i * 0.08), duration: 0.6, ease: 'easeOut', type: 'spring', stiffness: 100, damping: 12 }}
-                  style={{ display: 'inline-block' }}
-                >
-                  {char}
-                </motion.span>
-              ))}
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.25)) drop-shadow(0 0 35px rgba(249, 115, 22, 0.25))' }}>Manual reactivation is <span style={{ display: 'inline-block' }}>
+              <motion.span
+                initial={{ opacity: 1 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                style={{ display: 'inline-block', background: 'linear-gradient(to right, #3b82f6, #f97316)', backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+              >
+                {'broken'.split('').map((char, i) => (
+                  <motion.span
+                    key={i}
+                    initial={{ y: 0 }}
+                    animate={{ y: [0, i % 2 === 0 ? -16 : 16, 0] }}
+                    transition={{ delay: 0.3, duration: 0.5, times: [0, 0.5, 1], ease: 'easeInOut' }}
+                    style={{ display: 'inline-block' }}
+                  >
+                    {char}
+                  </motion.span>
+                ))}
+              </motion.span>
             </span>.</h2>
           </motion.div>
 
