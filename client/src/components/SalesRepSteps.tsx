@@ -271,7 +271,7 @@ export const SalesRepSteps = () => {
             transition={{ duration: 0.3 }}
             className="text-center max-w-4xl mx-auto mb-24"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.25)) drop-shadow(0 0 35px rgba(249, 115, 22, 0.25))' }}>Manual reactivation is <span style={{ background: 'linear-gradient(135deg, rgba(254, 184, 0, 0.2) 0%, rgba(234, 152, 44, 0.15) 100%)', paddingBottom: '0.125rem', borderBottom: '2px solid rgba(254, 184, 0, 0.6)', borderRadius: '2px' }}>broken</span>.</h2>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.25)) drop-shadow(0 0 35px rgba(249, 115, 22, 0.25))' }}>Manual reactivation is <span style={{ display: 'inline-block', position: 'relative' }}><span style={{ display: 'inline-block', transform: 'rotate(-2deg) translateY(-2px)', transformOrigin: 'right center' }}>bro</span><span style={{ display: 'inline-block', transform: 'rotate(2deg) translateY(2px)', transformOrigin: 'left center', marginLeft: '-2px' }}>ken</span><span style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: '2px', height: '120%', background: 'linear-gradient(90deg, transparent 0%, rgba(254, 184, 0, 0.6) 50%, transparent 100%)', pointerEvents: 'none' }} /></span>.</h2>
           </motion.div>
 
           <motion.div 
