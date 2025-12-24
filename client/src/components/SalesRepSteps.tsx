@@ -271,7 +271,44 @@ export const SalesRepSteps = () => {
             transition={{ duration: 0.3 }}
             className="text-center max-w-4xl mx-auto mb-24"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.25)) drop-shadow(0 0 35px rgba(249, 115, 22, 0.25))' }}>Manual reactivation is <span style={{ background: 'linear-gradient(135deg, rgba(254, 184, 0, 0.2) 0%, rgba(234, 152, 44, 0.15) 100%)', paddingBottom: '0.125rem', borderBottom: '2px solid rgba(254, 184, 0, 0.6)', borderRadius: '2px' }}>broken</span>.</h2>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 drop-shadow-lg">
+              <span style={{ 
+                backgroundImage: 'linear-gradient(to right, #FFFFFF 0%, #FFFFFF 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                display: 'inline-block',
+                filter: 'drop-shadow(4px 0px 15px rgba(128, 128, 128, 0.15)) drop-shadow(2px 0px 5px rgba(128, 128, 128, 0.1))',
+                textShadow: '3px 0px 6px rgba(128, 128, 128, 0.12)'
+              }}>
+                Manual reactivation
+              </span>
+              {' '}
+              <span style={{ 
+                backgroundImage: 'linear-gradient(to right, #FFFFFF 0%, #FEC966 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                display: 'inline-block',
+                marginRight: '0.24em',
+                filter: 'drop-shadow(8px 0px 30px rgba(254, 201, 102, 0.4)) drop-shadow(4px 0px 10px rgba(254, 201, 102, 0.25))',
+                textShadow: '6px 0px 12px rgba(254, 201, 102, 0.3)'
+              }}>
+                is
+              </span>
+              <span 
+                className="hologram-glitch"
+                data-testid="text-broken"
+              >
+                bro<span className="flicker-letter">k</span>en
+              </span>
+              <span style={{ 
+                color: '#FED966',
+                filter: 'drop-shadow(10px 0px 40px rgba(254, 184, 0, 0.55)) drop-shadow(5px 0px 10px rgba(254, 184, 0, 0.4))',
+                textShadow: '8px 0px 15px rgba(254, 184, 0, 0.4), 12px 0px 25px rgba(254, 184, 0, 0.25)',
+                display: 'inline-block'
+              }} data-testid="text-dot">.</span>
+            </h2>
           </motion.div>
 
           <motion.div 
