@@ -141,7 +141,7 @@ export default function Home() {
                   <motion.span 
                     className="absolute top-0 bottom-0 -z-10" 
                     style={{ 
-                      background: 'linear-gradient(to right, white, #FEB800, white)',
+                      background: 'linear-gradient(to right, rgba(255,255,255,0), #FEB800, rgba(255,255,255,0))',
                       left: 'calc(50% - 200vw)', 
                       width: '400vw',
                       originX: 0.5 
