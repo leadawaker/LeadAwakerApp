@@ -271,14 +271,15 @@ export const SalesRepSteps = () => {
             transition={{ duration: 0.3 }}
             className="text-center max-w-4xl mx-auto mb-24"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.25)) drop-shadow(0 0 35px rgba(249, 115, 22, 0.25))' }}>Manual reactivation is <span style={{ display: 'inline-block', background: 'linear-gradient(to right, #3b82f6, #f97316)', backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.25)) drop-shadow(0 0 35px rgba(249, 115, 22, 0.25))' }}>Manual reactivation is <span style={{ display: 'inline-block', background: 'linear-gradient(to right, #3b82f6, #f97316)', backgroundClip: 'text', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               {'broken'.split('').map((char, i) => (
                 <motion.span
                   key={i}
                   initial={{ y: 0, opacity: 1 }}
-                  animate={{ y: i % 2 === 0 ? [-8, 0] : [8, 0], opacity: 1 }}
-                  transition={{ delay: 0.3, duration: 0.4, ease: 'easeInOut' }}
+                  whileInView={{ y: i % 2 === 0 ? [-12, 0] : [12, 0], opacity: 1 }}
+                  transition={{ delay: 0.35 + (i * 0.05), duration: 0.5, ease: 'easeInOut', type: 'spring', stiffness: 100 }}
                   style={{ display: 'inline-block' }}
+                  viewport={{ once: true }}
                 >
                   {char}
                 </motion.span>
