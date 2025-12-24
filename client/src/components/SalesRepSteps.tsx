@@ -2,10 +2,11 @@ import React, { useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Database, MessageSquare, TrendingUp, Server, MessageCircle, Mail, Calendar, Box, Copy, TrendingDown } from "lucide-react";
+import { Database, MessageSquare, TrendingUp, Box, Copy, TrendingDown, Mail } from "lucide-react";
 import databaseIntegrationImg from "@assets/generated_images/database_upload_and_crm_integration.png";
 import womanPhoneImg from "@assets/woman_answering_phone_in_living_room_1766483592249.png";
 import dailyLeadsImg from "@assets/generated_images/daily_leads_closed_chart_dashboard.png";
+import cloudTexture from "@assets/generated_images/cloud-bottom-bar.jpg";
 import { MeteorContainer } from "./Meteor";
 
 interface StepProps {
@@ -91,16 +92,16 @@ const FullscreenStep = ({
   const isLeft = align === "left";
 
   return (
-    <div ref={containerRef} className="h-[80vh] w-full flex items-center justify-center px-4 md:px-12 relative z-10">
-      <div className="container mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
+    <div ref={containerRef} className="h-[80vh] w-full flex items-center justify-center px-4 sm:px-6 md:px-12 relative z-10">
+      <div className="container mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-16 items-center">
         <motion.div 
           style={{ opacity: cardOpacity, y: cardY, transform: 'translateZ(0)' }}
           className={`order-2 ${isLeft ? "md:order-1" : "md:order-2"}`}
         >
           <div className="relative">
-            <div className={`absolute top-1/2 -translate-y-1/2 w-16 h-[2px] bg-primary/30 hidden md:block ${isLeft ? "-right-16" : "-left-16"}`} />
-            <div className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-primary hidden md:block ${isLeft ? "-right-18 translate-x-2" : "-left-18 -translate-x-2"}`} />
-            <Badge className="mb-4 bg-orange-600 text-white hover:bg-orange-700 text-lg px-3 py-1 rounded-full w-10 h-10 flex items-center justify-center" data-testid={`step-badge-${number}`}>
+            <div className={`absolute top-1/2 -translate-y-1/2 w-16 h-[2px] bg-white z-50 hidden md:block ${isLeft ? "-right-16" : "-left-16"}`} />
+            <div className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-blue-600 hidden md:block ${isLeft ? "-right-18 translate-x-2" : "-left-18 -translate-x-2"}`} />
+            <Badge className="mb-4 bg-blue-600 text-white hover:bg-blue-700 text-lg px-3 py-1 rounded-full w-10 h-10 flex items-center justify-center" data-testid={`step-badge-${number}`}>
               {number}
             </Badge>
             
@@ -128,8 +129,11 @@ const FullscreenStep = ({
             className="w-full h-full object-cover"
           />
           <motion.div 
-            style={{ opacity: overlayOpacity }}
-            className="absolute inset-0 bg-blue-950/80 backdrop-blur-[2px] flex flex-col items-center justify-center p-8 text-center"
+            style={{ 
+              opacity: overlayOpacity,
+              boxShadow: 'inset 0 0 60px rgba(59, 130, 246, 0.5), inset 0 0 40px rgba(100, 150, 255, 0.3)'
+            }}
+            className="absolute inset-0 bg-blue-950/50 backdrop-blur-[2px] flex flex-col items-center justify-center p-8 text-center"
           >
             <motion.div style={{ y: overlayTextY }}>
               <span className="text-accent font-mono text-sm uppercase tracking-wider mb-2 block">Step {number} Details</span>
@@ -148,6 +152,11 @@ const FullscreenStep = ({
 export const SalesRepSteps = () => {
   const scrollRef = useRef(null);
   const [glitchAnimating, setGlitchAnimating] = useState(false);
+  const { scrollYProgress } = useScroll({
+    target: scrollRef,
+    offset: ["start start", "end end"]
+  });
+  const cloudY = useTransform(scrollYProgress, [0, 1], [0, 50]);
 
   return (
     <div 
@@ -158,64 +167,57 @@ export const SalesRepSteps = () => {
       <div 
         className="absolute inset-0" 
         style={{
-          backgroundImage: `radial-gradient(circle at 23% 45%, white 0.9px, transparent 0.9px),
-                            radial-gradient(circle at 68% 12%, white 1.8px, transparent 1.8px),
-                            radial-gradient(circle at 42% 28%, white 1.2px, transparent 1.2px),
-                            radial-gradient(circle at 85% 52%, white 1.2px, transparent 1.2px),
-                            radial-gradient(circle at 15% 61%, white 0.9px, transparent 0.9px),
-                            radial-gradient(circle at 72% 38%, white 1.2px, transparent 1.2px),
-                            radial-gradient(circle at 38% 8%, white 0.9px, transparent 0.9px),
-                            radial-gradient(circle at 91% 71%, white 1.2px, transparent 1.2px)`,
+          backgroundImage: `radial-gradient(circle at 23% 45%, white 0.6px, transparent 0.6px),
+                            radial-gradient(circle at 68% 12%, white 1.1px, transparent 1.1px),
+                            radial-gradient(circle at 42% 28%, white 0.8px, transparent 0.8px),
+                            radial-gradient(circle at 85% 52%, white 0.8px, transparent 0.8px)`,
           backgroundRepeat: 'repeat',
           backgroundSize: '450px 380px',
-          filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
           willChange: 'transform',
           backfaceVisibility: 'hidden',
           perspective: '1000px',
           animation: 'twinkle-fast 0.8s ease-in-out infinite',
-          animationDelay: '0s'
+          animationDelay: '0s',
+          filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
+          opacity: 0.85
         }}
       />
       <div 
         className="absolute inset-0" 
         style={{
-          backgroundImage: `radial-gradient(circle at 57% 22%, #e8e8e8 1.5px, transparent 1.5px),
-                            radial-gradient(circle at 29% 15%, white 1.2px, transparent 1.2px),
-                            radial-gradient(circle at 76% 55%, white 0.9px, transparent 0.9px),
-                            radial-gradient(circle at 11% 67%, #e8e8e8 2.25px, transparent 2.25px),
-                            radial-gradient(circle at 64% 79%, white 0.9px, transparent 0.9px),
-                            radial-gradient(circle at 47% 45%, #f0f0f0 1.5px, transparent 1.5px),
-                            radial-gradient(circle at 85% 8%, #e8e8e8 1.5px, transparent 1.5px),
-                            radial-gradient(circle at 36% 88%, #f0f0f0 1.5px, transparent 1.5px)`,
+          backgroundImage: `radial-gradient(circle at 57% 22%, #e8e8e8 1.0px, transparent 1.0px),
+                            radial-gradient(circle at 29% 15%, white 0.8px, transparent 0.8px),
+                            radial-gradient(circle at 76% 55%, white 0.6px, transparent 0.6px),
+                            radial-gradient(circle at 11% 67%, #e8e8e8 1.4px, transparent 1.4px)`,
           backgroundRepeat: 'repeat',
           backgroundSize: '450px 380px',
           filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
           animation: 'twinkle-fast-offset-1 1s ease-in-out infinite',
           animationDelay: '0.5s',
-          opacity: 0.7
+          opacity: 0.8
         }}
       />
       <div 
         className="absolute inset-0" 
         style={{
-          backgroundImage: `radial-gradient(circle at 19% 19%, white 0.9px, transparent 0.9px),
-                            radial-gradient(circle at 73% 33%, #f0f0f0 2.25px, transparent 2.25px),
-                            radial-gradient(circle at 54% 61%, white 1.2px, transparent 1.2px),
-                            radial-gradient(circle at 31% 74%, white 1.2px, transparent 1.2px),
-                            radial-gradient(circle at 92% 47%, white 0.9px, transparent 0.9px),
-                            radial-gradient(circle at 67% 82%, white 1.2px, transparent 1.2px),
-                            radial-gradient(circle at 44% 14%, #e8e8e8 1.5px, transparent 1.5px),
-                            radial-gradient(circle at 10% 51%, white 0.9px, transparent 0.9px)`,
+          backgroundImage: `radial-gradient(circle at 19% 19%, white 0.6px, transparent 0.6px),
+                            radial-gradient(circle at 73% 33%, #f0f0f0 1.4px, transparent 1.4px),
+                            radial-gradient(circle at 54% 61%, white 0.8px, transparent 0.8px),
+                            radial-gradient(circle at 31% 74%, white 0.8px, transparent 0.8px)`,
           backgroundRepeat: 'repeat',
           backgroundSize: '450px 380px',
           filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
           animation: 'twinkle-fast-offset-2 0.9s ease-in-out infinite',
           animationDelay: '1.2s',
-          opacity: 0.6
+          opacity: 0.75
         }}
       />
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 280% 320% at 45% -50%, rgba(255, 255, 220, 0.9) 0%, rgba(220, 240, 255, 0.8) 15%, rgba(150, 200, 255, 0.7) 35%, rgba(80, 140, 220, 0.8) 55%, rgba(30, 80, 180, 1) 75%, rgba(10, 40, 100, 1) 100%)',
+        background: 'radial-gradient(ellipse 200% 120% at 50% 100%, rgba(200, 150, 255, 0.4) 0%, rgba(150, 100, 220, 0.35) 15%, rgba(100, 80, 200, 0.25) 35%, rgba(60, 40, 150, 0.1) 55%, rgba(30, 40, 100, 0) 85%)',
+        zIndex: 0
+      }} />
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'radial-gradient(ellipse 220% 150% at 50% 95%, rgba(255, 200, 100, 0.4) 0%, rgba(230, 130, 60, 0.25) 25%, rgba(100, 60, 120, 0.1) 50%, rgba(30, 40, 100, 0) 75%)',
         zIndex: 0
       }} />
       <Plane />
@@ -285,7 +287,7 @@ export const SalesRepSteps = () => {
                 }
               }
             }}
-            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-24"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-24"
           >
             {[
               { icon: <Box className="w-8 h-8" strokeWidth={1.5} />, title: "Bloated CRMs with 1000s of \"dead\" contacts you already paid for" },
@@ -361,19 +363,20 @@ export const SalesRepSteps = () => {
       </section>
 
       {/* Step 1 */}
-      <FullscreenStep 
-        number="1"
-        cardTitle="Upload database"
-        cardDescription="AI instantly IDs high-potential dormant leads."
-        overlayTitle="Your existing stack becomes an automation powerhouse."
-        overlayDescription="CRM / Databases, WhatsApp, SMS & Chat, Email Platforms, Calendar Apps"
-        image={databaseIntegrationImg}
-        icon={<Database className="w-8 h-8" />}
-        align="left"
-      />
-
+      <div style={{ marginTop: "2.54cm" }}>
+        <FullscreenStep 
+          number="1"
+          cardTitle="Upload database"
+          cardDescription="AI instantly IDs high-potential dormant leads."
+          overlayTitle="Your existing stack becomes an automation powerhouse."
+          overlayDescription="CRM / Databases, WhatsApp, SMS & Chat, Email Platforms, Calendar Apps"
+          image={databaseIntegrationImg}
+          icon={<Database className="w-8 h-8" />}
+          align="left"
+        />
+      </div>
       {/* Step 2 */}
-      <div style={{ marginTop: "-40vh" }}>
+      <div style={{ marginTop: "1.27cm" }}>
         <FullscreenStep 
           number="2"
           cardTitle="Chat GPT-5.2 conversations"
@@ -385,9 +388,8 @@ export const SalesRepSteps = () => {
           align="right"
         />
       </div>
-
       {/* Step 3 */}
-      <div style={{ marginTop: "-40vh" }}>
+      <div style={{ marginTop: "1.27cm" }}>
         <FullscreenStep 
           number="3"
           cardTitle="Revenue rolls in"
