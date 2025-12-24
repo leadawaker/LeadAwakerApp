@@ -142,8 +142,8 @@ export default function Home() {
                     className="absolute top-0 bottom-0 -z-10" 
                     style={{ 
                       background: 'linear-gradient(to right, #FEB800, #FEB800)',
-                      left: '50%', 
-                      right: '50%',
+                      left: 'calc(50% - 200vw)', 
+                      width: '400vw',
                       originX: 0.5 
                     }}
                     initial={{ scaleX: 0 }}
