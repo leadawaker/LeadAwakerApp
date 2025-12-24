@@ -215,18 +215,15 @@ export default function Home() {
       </section>
 
       {/* Results/Metrics Section */}
-      <section className="py-24">
+      <section className="py-24 border-t-2 border-border">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 p-8 rounded-2xl text-center max-w-3xl mx-auto mb-16"
+            className="text-center max-w-3xl mx-auto mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">From chaos to certainty in 30 days</h2>
-            <p className="text-lg text-muted-foreground">
-              Sales teams shift from grind to strategy while Lead Awaker generates pipeline automatically.
-            </p>
+            <h2 className="text-3xl md:text-4xl font-bold">From chaos to certainty in 30 days</h2>
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
