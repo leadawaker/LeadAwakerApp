@@ -178,13 +178,13 @@ export default function Home() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 relative z-10">
                 <Link href="/book-demo">
-                  <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 text-white">
+                  <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-primary hover:bg-yellow-400 hover:text-black text-white transition-all">
                     Book a Call
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
                 <Link href="#demo">
-                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2">
+                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 hover:bg-yellow-400 hover:text-black hover:border-yellow-400 transition-all">
                     See Demo
                   </Button>
                 </Link>
