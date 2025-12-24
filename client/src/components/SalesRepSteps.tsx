@@ -275,11 +275,10 @@ export const SalesRepSteps = () => {
               {'broken'.split('').map((char, i) => (
                 <motion.span
                   key={i}
-                  initial={{ y: 0, opacity: 1 }}
-                  whileInView={{ y: i % 2 === 0 ? [-12, 0] : [12, 0], opacity: 1 }}
-                  transition={{ delay: 0.35 + (i * 0.05), duration: 0.5, ease: 'easeInOut', type: 'spring', stiffness: 100 }}
+                  initial={{ y: i % 2 === 0 ? -12 : 12 }}
+                  animate={{ y: 0 }}
+                  transition={{ delay: 0.4 + (i * 0.08), duration: 0.6, ease: 'easeOut', type: 'spring', stiffness: 100, damping: 12 }}
                   style={{ display: 'inline-block' }}
-                  viewport={{ once: true }}
                 >
                   {char}
                 </motion.span>
