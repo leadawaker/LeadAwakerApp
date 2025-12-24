@@ -184,7 +184,7 @@ export default function Home() {
                   </Button>
                 </Link>
                 <Link href="/services">
-                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 hover:bg-yellow-400 hover:text-black hover:border-yellow-400 transition-all">
+                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 hover:text-blue-500 hover:border-blue-500 transition-all">
                     See Services
                   </Button>
                 </Link>
