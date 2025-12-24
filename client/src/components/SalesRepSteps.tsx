@@ -271,7 +271,11 @@ export const SalesRepSteps = () => {
             transition={{ duration: 0.3 }}
             className="text-center max-w-4xl mx-auto mb-24"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.25)) drop-shadow(0 0 35px rgba(249, 115, 22, 0.25))', perspective: '1500px' }}>Manual reactivation is <motion.span initial={{ opacity: 0, rotateX: 80, y: -30 }} whileInView={{ opacity: 1, rotateX: 0, y: 0 }} transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }} viewport={{ once: true }} style={{ background: 'linear-gradient(135deg, rgba(254, 184, 0, 0.2) 0%, rgba(234, 152, 44, 0.15) 100%)', paddingBottom: '0.125rem', borderBottom: '2px solid rgba(254, 184, 0, 0.6)', borderRadius: '2px', display: 'inline-block', transformStyle: 'preserve-3d', transformOrigin: 'center bottom' }}>broken</motion.span>.</h2>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.25)) drop-shadow(0 0 35px rgba(249, 115, 22, 0.25))', perspective: '1500px' }}>
+              <span style={{ background: 'linear-gradient(to right, rgba(59, 130, 246, 1), rgba(249, 115, 22, 1))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Manual reactivation is </span>
+              <motion.span initial={{ opacity: 0, rotateX: 80, y: -30 }} whileInView={{ opacity: 1, rotateX: 0, y: 0 }} transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }} viewport={{ once: true }} style={{ background: 'linear-gradient(135deg, rgba(254, 184, 0, 0.2) 0%, rgba(234, 152, 44, 0.15) 100%)', paddingBottom: '0.125rem', paddingLeft: '0.25rem', paddingRight: '0.25rem', borderBottom: '2px solid rgba(254, 184, 0, 0.6)', borderRadius: '2px', display: 'inline-block', transformStyle: 'preserve-3d', transformOrigin: 'center bottom', backgroundImage: 'linear-gradient(to right, rgba(59, 130, 246, 1), rgba(249, 115, 22, 1))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>broken</motion.span>
+              <span style={{ background: 'linear-gradient(to right, rgba(59, 130, 246, 1), rgba(249, 115, 22, 1))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>.</span>
+            </h2>
           </motion.div>
 
           <motion.div 
