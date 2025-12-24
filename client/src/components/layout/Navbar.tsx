@@ -32,8 +32,8 @@ export function Navbar() {
     >
       <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
         <Link href="/" className="flex items-end gap-2 group">
-          <div className="relative w-10 h-10 overflow-hidden rounded-lg bg-primary/10 flex items-center justify-center">
-           <img src="/favicon.svg" alt="Lead Awaker Logo" className="w-8 h-8 object-contain" />
+          <div className="relative w-8 h-8 overflow-hidden rounded-lg bg-primary/10 flex items-center justify-center">
+           <img src="/favicon.svg" alt="Lead Awaker Logo" className="w-6 h-6 object-contain" />
           </div>
           <span className="font-heading font-bold text-lg tracking-tight text-foreground">
             LEAD<span className="text-primary">Awaker</span>
