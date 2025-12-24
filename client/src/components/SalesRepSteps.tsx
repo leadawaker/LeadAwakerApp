@@ -246,19 +246,20 @@ export const SalesRepSteps = () => {
         zIndex: 1
       }} />
       <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: `radial-gradient(ellipse 150% 40% at 50% 69%, rgba(249, 115, 22, 1) 0%, rgba(253, 183, 0, 0.6) 60%, transparent 100%)`,
-        zIndex: 2
-      }} />
-      <svg className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ zIndex: 2 }} viewBox="0 0 1440 120" preserveAspectRatio="none" height="120">
-        <path d="M0,80 Q360,30 720,20 T1440,80 L1440,120 L0,120 Z" fill="rgba(249, 115, 22, 0.3)" />
-      </svg>
-      <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: `radial-gradient(ellipse 150% 30% at 50% 88%, rgba(167, 139, 250, 0.45) 0%, rgba(167, 139, 250, 0.15) 60%, transparent 100%)`,
+        background: 'linear-gradient(180deg, rgba(0, 168, 232, 0.9) 0%, rgba(147, 112, 219, 0.7) 25%, rgba(249, 115, 22, 1) 60%, rgba(253, 183, 0, 0.8) 100%)',
         zIndex: 2
       }} />
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, transparent 30%, transparent 70%, rgba(0, 168, 232, 0.9) 100%)',
-        zIndex: 3
+        backgroundImage: `radial-gradient(ellipse 150% 40% at 50% 30%, rgba(0, 168, 232, 0.4) 0%, transparent 70%)`,
+        zIndex: 2
+      }} />
+      <div className="absolute inset-0 pointer-events-none" style={{
+        backgroundImage: `radial-gradient(ellipse 150% 30% at 50% 50%, rgba(147, 112, 219, 0.3) 0%, transparent 70%)`,
+        zIndex: 2
+      }} />
+      <div className="absolute inset-0 pointer-events-none" style={{
+        backgroundImage: `radial-gradient(ellipse 150% 30% at 50% 70%, rgba(249, 115, 22, 0.3) 0%, transparent 70%)`,
+        zIndex: 2
       }} />
       <Plane />
       <div className="relative z-10">
