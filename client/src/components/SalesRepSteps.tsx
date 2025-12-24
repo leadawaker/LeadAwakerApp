@@ -8,72 +8,6 @@ import womanPhoneImg from "@assets/woman_answering_phone_in_living_room_17664835
 import dailyLeadsImg from "@assets/generated_images/daily_leads_closed_chart_dashboard.png";
 import { MeteorContainer } from "./Meteor";
 
-const glitchStyle = `
-  @keyframes hologramGlitch {
-    0% {
-      opacity: 1;
-      transform: translate(0, 0);
-    }
-    10% {
-      opacity: 0.7;
-      transform: translate(-1px, 1px);
-    }
-    20% {
-      opacity: 1;
-      transform: translate(0, 0);
-    }
-    25% {
-      opacity: 0.8;
-      transform: translate(1px, -1px);
-    }
-    35% {
-      opacity: 1;
-      transform: translate(0, 0);
-    }
-    40% {
-      opacity: 0.6;
-      transform: translate(-2px, 0px);
-    }
-    50% {
-      opacity: 1;
-      transform: translate(0, 0);
-    }
-    55% {
-      opacity: 0.75;
-      transform: translate(1px, 1px);
-    }
-    65% {
-      opacity: 1;
-      transform: translate(0, 0);
-    }
-    70% {
-      opacity: 0.7;
-      transform: translate(-1px, -1px);
-    }
-    80% {
-      opacity: 1;
-      transform: translate(0, 0);
-    }
-    85% {
-      opacity: 0.65;
-      transform: translate(2px, -2px);
-    }
-    100% {
-      opacity: 1;
-      transform: translate(0, 0);
-    }
-  }
-`;
-
-if (typeof document !== 'undefined') {
-  const styleEl = document.createElement('style');
-  styleEl.textContent = glitchStyle;
-  if (!document.head.querySelector('style[data-glitch]')) {
-    styleEl.setAttribute('data-glitch', 'true');
-    document.head.appendChild(styleEl);
-  }
-}
-
 interface StepProps {
   number: string;
   cardTitle: string;
@@ -337,7 +271,11 @@ export const SalesRepSteps = () => {
             transition={{ duration: 0.3 }}
             className="text-center max-w-4xl mx-auto mb-24"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.25)) drop-shadow(0 0 35px rgba(249, 115, 22, 0.25))' }}>Manual reactivation is <span style={{ background: 'linear-gradient(135deg, rgba(254, 184, 0, 0.2) 0%, rgba(234, 152, 44, 0.15) 100%)', paddingBottom: '0.125rem', borderBottom: '2px solid rgba(254, 184, 0, 0.6)', borderRadius: '2px', animation: 'hologramGlitch 3.5s infinite' }}>broken</span>.</h2>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.25)) drop-shadow(0 0 35px rgba(249, 115, 22, 0.25))', perspective: '1500px' }}>
+              <span style={{ background: 'linear-gradient(to right, rgba(59, 130, 246, 1), rgba(249, 115, 22, 1))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Manual reactivation is </span>
+              <motion.span initial={{ opacity: 0, rotateX: 80, y: -30 }} whileInView={{ opacity: 1, rotateX: 0, y: 0 }} transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }} viewport={{ once: true }} style={{ background: 'linear-gradient(135deg, rgba(254, 184, 0, 0.2) 0%, rgba(234, 152, 44, 0.15) 100%)', paddingBottom: '0.125rem', paddingLeft: '0.25rem', paddingRight: '0.25rem', borderBottom: '2px solid rgba(254, 184, 0, 0.6)', borderRadius: '2px', display: 'inline-block', transformStyle: 'preserve-3d', transformOrigin: 'center bottom', backgroundImage: 'linear-gradient(to right, rgba(59, 130, 246, 1), rgba(249, 115, 22, 1))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>broken</motion.span>
+              <span style={{ background: 'linear-gradient(to right, rgba(59, 130, 246, 1), rgba(249, 115, 22, 1))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>.</span>
+            </h2>
           </motion.div>
 
           <motion.div 
