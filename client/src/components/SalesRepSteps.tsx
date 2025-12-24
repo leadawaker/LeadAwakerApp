@@ -309,8 +309,8 @@ export const SalesRepSteps = () => {
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-orange-500/5 group-hover:to-orange-500/10 transition-all duration-400" />
                 <div className="relative z-10">
-                  <div className="text-primary mb-4 transform group-hover:scale-125 transition-transform duration-400 inline-flex items-center justify-center">{pain.icon}</div>
-                  <p className="text-sm font-semibold text-white leading-relaxed">{pain.title}</p>
+                  <div className="text-primary mb-4 transform group-hover:scale-125 group-hover:text-orange-500 transition-all duration-400 inline-flex items-center justify-center">{pain.icon}</div>
+                  <p className="text-sm font-semibold text-white group-hover:text-orange-500 transition-all duration-400 leading-relaxed">{pain.title}</p>
                 </div>
               </motion.div>
             ))}
