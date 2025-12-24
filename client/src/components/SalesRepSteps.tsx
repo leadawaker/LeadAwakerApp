@@ -85,9 +85,9 @@ const FullscreenStep = ({
 
   const overlayOpacity = useTransform(scrollYProgress, [0.3, 0.7], [0, 1]);
   const overlayTextY = useTransform(scrollYProgress, [0.3, 0.7], [20, 0]);
-  const cardOpacity = useTransform(scrollYProgress, [-0.2, 0.4, 2], [0, 1, 1]);
-  const cardY = useTransform(scrollYProgress, [-0.2, 0.4], [50, 0]);
-  const imageOpacity = useTransform(scrollYProgress, [-0.2, 0.4], [0, 1]);
+  const cardOpacity = useTransform(scrollYProgress, [-0.2, 0.3], [0, 1]);
+  const cardY = useTransform(scrollYProgress, [-0.2, 0.3], [50, 0]);
+  const imageOpacity = useTransform(scrollYProgress, [-0.2, 0.3], [0, 1]);
 
   const isLeft = align === "left";
 
@@ -95,7 +95,7 @@ const FullscreenStep = ({
     <div ref={containerRef} className="h-[80vh] w-full flex items-center justify-center px-4 sm:px-6 md:px-12 relative z-10">
       <div className="container mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-16 items-center">
         <motion.div 
-          style={{ opacity: cardOpacity, y: cardY, transform: 'translateZ(0)' }}
+          style={{ opacity: cardOpacity, y: cardY, transform: 'translateZ(0)', willChange: 'opacity, transform' }}
           className={`order-2 ${isLeft ? "md:order-1" : "md:order-2"}`}
         >
           <div className="relative">
@@ -119,7 +119,7 @@ const FullscreenStep = ({
           </div>
         </motion.div>
         <motion.div 
-          style={{ opacity: imageOpacity, transform: 'translateZ(0)' }}
+          style={{ opacity: imageOpacity, transform: 'translateZ(0)', willChange: 'opacity, transform' }}
           className={`order-1 ${isLeft ? "md:order-2" : "md:order-1"} relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border border-white/5`}
           data-testid={`step-image-${number}`}
         >
