@@ -215,7 +215,7 @@ export default function Home() {
       </section>
 
       {/* Results/Metrics Section */}
-      <section className="py-24 border-t-2 border-border">
+      <section className="py-48 border-t-2 border-border">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -223,7 +223,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center max-w-3xl mx-auto mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold">From chaos to certainty in 30 days</h2>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">From chaos to certainty in 30 days</h2>
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
