@@ -54,7 +54,7 @@ export function Navbar() {
             </Link>
           ))}
           <Link href="/book-demo">
-            <Button className="font-heading font-semibold bg-primary hover:bg-yellow-400 hover:text-black text-white shadow-lg shadow-primary/20 hover:shadow-yellow-400/50 transition-all">
+            <Button className="font-heading font-semibold bg-primary hover:bg-yellow-400 hover:text-black text-white shadow-lg shadow-primary/20 hover:shadow-yellow-400/35 transition-all">
               Book a Demo
             </Button>
           </Link>
@@ -83,7 +83,7 @@ export function Navbar() {
             </Link>
           ))}
           <Link href="/book-demo">
-            <Button className="w-full mt-2 hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/50 transition-all" onClick={() => setIsOpen(false)}>
+            <Button className="w-full mt-2 hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all" onClick={() => setIsOpen(false)}>
               Book a Demo
             </Button>
           </Link>
