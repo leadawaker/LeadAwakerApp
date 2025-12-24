@@ -246,7 +246,7 @@ export const SalesRepSteps = () => {
         zIndex: 1
       }} />
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 300% 200% at 50% 90%, rgba(253, 183, 0, 0.9) 0%, rgba(249, 115, 22, 0.8) 4%, rgba(147, 112, 219, 0.4) 10%, rgba(0, 168, 232, 0.7) 28%, rgba(0, 50, 100, 0.9) 33%, rgba(0, 0, 0, 1) 38%, rgba(0, 0, 0, 1) 100%)',
+        background: 'linear-gradient(180deg, rgba(10, 10, 30, 1) 0%, rgba(15, 20, 60, 1) 15%, rgba(25, 35, 90, 1) 30%, rgba(50, 40, 100, 0.95) 45%, rgba(120, 60, 80, 0.9) 55%, rgba(180, 80, 40, 0.95) 70%, rgba(220, 120, 30, 1) 85%, rgba(240, 140, 20, 1) 100%)',
         zIndex: 2
       }} />
       <Plane />
