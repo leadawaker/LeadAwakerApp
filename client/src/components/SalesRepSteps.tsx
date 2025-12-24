@@ -158,7 +158,7 @@ export const SalesRepSteps = () => {
       <div 
         className="absolute inset-0" 
         style={{
-          backgroundImage: `radial-gradient(circle at 11% 19%, white 1px, transparent 1px),
+          backgroundImage: `radial-gradient(circle at 11% 19%, white 3px, transparent 3px),
                             radial-gradient(circle at 51% 31%, white 0.75px, transparent 0.75px),
                             radial-gradient(circle at 73% 14%, white 1px, transparent 1px),
                             radial-gradient(circle at 62% 55%, white 1px, transparent 1px),
@@ -179,7 +179,7 @@ export const SalesRepSteps = () => {
       <div 
         className="absolute inset-0" 
         style={{
-          backgroundImage: `radial-gradient(circle at 34% 8%, #e8e8e8 1.25px, transparent 1.25px),
+          backgroundImage: `radial-gradient(circle at 34% 8%, #e8e8e8 3.75px, transparent 3.75px),
                             radial-gradient(circle at 73% 14%, white 1px, transparent 1px),
                             radial-gradient(circle at 19% 48%, white 0.75px, transparent 0.75px),
                             radial-gradient(circle at 8% 71%, #e8e8e8 1.25px, transparent 1.25px),
@@ -199,7 +199,7 @@ export const SalesRepSteps = () => {
         className="absolute inset-0" 
         style={{
           backgroundImage: `radial-gradient(circle at 51% 31%, white 0.75px, transparent 0.75px),
-                            radial-gradient(circle at 89% 42%, #f0f0f0 1.25px, transparent 1.25px),
+                            radial-gradient(circle at 89% 42%, #f0f0f0 3.75px, transparent 3.75px),
                             radial-gradient(circle at 62% 55%, white 1px, transparent 1px),
                             radial-gradient(circle at 44% 67%, white 1px, transparent 1px),
                             radial-gradient(circle at 81% 78%, white 0.75px, transparent 0.75px),
