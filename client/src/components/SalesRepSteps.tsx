@@ -271,7 +271,7 @@ export const SalesRepSteps = () => {
             transition={{ duration: 0.3 }}
             className="text-center max-w-4xl mx-auto mb-24"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.25)) drop-shadow(0 0 35px rgba(249, 115, 22, 0.25))' }}>Manual reactivation is <span style={{ background: 'linear-gradient(135deg, rgba(254, 184, 0, 0.2) 0%, rgba(234, 152, 44, 0.15) 100%)', paddingBottom: '0.125rem', borderBottom: '2px solid rgba(254, 184, 0, 0.6)', borderRadius: '2px' }}>broken</span>.</h2>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent drop-shadow-lg" style={{ filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.25)) drop-shadow(0 0 35px rgba(249, 115, 22, 0.25))' }}>Manual reactivation is <motion.span initial={{ opacity: 0, y: 4 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} viewport={{ once: true }} style={{ background: 'linear-gradient(135deg, rgba(254, 184, 0, 0.2) 0%, rgba(234, 152, 44, 0.15) 100%)', paddingBottom: '0.125rem', borderBottom: '2px solid rgba(254, 184, 0, 0.6)', borderRadius: '2px', display: 'inline-block' }}>broken</motion.span>.</h2>
           </motion.div>
 
           <motion.div 
