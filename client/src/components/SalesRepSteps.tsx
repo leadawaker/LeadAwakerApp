@@ -288,7 +288,7 @@ export const SalesRepSteps = () => {
                 }
               }
             }}
-            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
+            className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-24"
           >
             {[
               { icon: <Box className="w-8 h-8" strokeWidth={1.5} />, title: "Bloated CRMs with 1000s of \"dead\" contacts you already paid for" },
@@ -302,9 +302,12 @@ export const SalesRepSteps = () => {
                   hidden: { opacity: 0, y: 30, scale: 0.95 },
                   visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, type: "spring", stiffness: 100, damping: 15 } }
                 }}
-                className="group relative bg-gradient-to-br from-slate-800/80 to-slate-800/60 border border-primary/40 backdrop-blur-sm p-8 rounded-2xl text-center hover:border-primary/60 transition-all duration-400 cursor-default overflow-hidden shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/40"
+                initial={{ borderColor: 'rgb(249, 115, 22)' }}
+                animate={{ borderColor: 'rgb(59, 130, 246)' }}
+                transition={{ delay: i * 0.08 + 0.1 + 0.8, duration: 0.5 }}
+                className="group relative bg-gradient-to-br from-slate-800/80 to-slate-800/60 border backdrop-blur-sm p-8 rounded-2xl text-center hover:border-orange-500 transition-all duration-400 cursor-default overflow-hidden shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/40"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:to-primary/10 transition-all duration-400" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-orange-500/5 group-hover:to-orange-500/10 transition-all duration-400" />
                 <div className="relative z-10">
                   <div className="text-primary mb-4 transform group-hover:scale-125 transition-transform duration-400 inline-flex items-center justify-center">{pain.icon}</div>
                   <p className="text-sm font-semibold text-white leading-relaxed">{pain.title}</p>
