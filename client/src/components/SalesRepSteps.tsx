@@ -246,7 +246,7 @@ export const SalesRepSteps = () => {
         zIndex: 1
       }} />
       <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: `radial-gradient(ellipse 150% 40% at 50% 69%, rgba(249, 115, 22, 1) 0%, rgba(253, 183, 0, 0.6) 60%, transparent 100%)`,
+        backgroundImage: `radial-gradient(ellipse 150% 40% at 50% 69%, rgba(253, 183, 0, 1) 0%, rgba(249, 115, 22, 0.6) 60%, transparent 100%)`,
         zIndex: 2
       }} />
       <svg className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ zIndex: 2 }} viewBox="0 0 1440 120" preserveAspectRatio="none" height="120">
