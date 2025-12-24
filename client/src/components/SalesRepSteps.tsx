@@ -215,7 +215,7 @@ export const SalesRepSteps = () => {
         }}
       />
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 200% 250% at 50% 120%, rgba(240, 235, 190, 1) 0%, rgba(255, 230, 100, 1) 12%, rgba(255, 180, 60, 1) 25%, rgba(120, 100, 180, 0.9) 40%, rgba(0, 0, 0, 1) 75%)',
+        background: 'radial-gradient(ellipse 200% 250% at 50% 120%, rgba(240, 235, 190, 1) 0%, rgba(255, 230, 100, 1) 12%, rgba(255, 180, 60, 1) 25%, rgba(120, 100, 180, 0.9) 40%, rgba(0, 0, 0, 1) 60%)',
         zIndex: 0
       }} />
       <div className="absolute inset-0 pointer-events-none" style={{
