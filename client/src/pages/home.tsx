@@ -221,7 +221,7 @@ export default function Home() {
             className="text-center max-w-3xl mx-auto mb-16"
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight drop-shadow-lg">is what you GET</h2>
-            <p className="text-lg md:text-xl text-muted-foreground mt-4">From chaos to certainty in 30 days</p>
+            <p className="text-lg md:text-xl mt-4 text-[#3c50d6]">From chaos to certainty in 30 days</p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
