@@ -413,7 +413,7 @@ export default function Home() {
                 <g>
                   {/* Single continuous path: around node perimeter then to guardrails */}
                   <path
-                    d="M 150 100 L 280 100 Q 295 100 295 115 L 295 385 Q 295 400 280 400 L 150 400 Q 135 400 135 385 L 135 115 Q 135 100 150 100 M 305 250 L 750 250"
+                    d="M 145 180 L 235 180 Q 245 180 245 190 L 245 310 Q 245 320 235 320 L 145 320 Q 135 320 135 310 L 135 190 Q 135 180 145 180 M 250 250 L 750 250"
                     fill="none"
                     stroke="#8b5cf6"
                     strokeWidth="3"
@@ -432,7 +432,7 @@ export default function Home() {
 
               {/* Static gray connector line (always visible) */}
               <line
-                x1="305"
+                x1="250"
                 y1="250"
                 x2="750"
                 y2="250"
