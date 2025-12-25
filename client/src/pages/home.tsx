@@ -111,8 +111,53 @@ const AnimatedPipeline = ({ isInView }: { isInView: boolean }) => {
   );
 };
 
+const NodeStrokeAnimation = () => (
+  <style>{`
+    @keyframes strokeRotate {
+      0% {
+        stroke-dashoffset: 0;
+      }
+      100% {
+        stroke-dashoffset: -240;
+      }
+    }
+
+    @keyframes connectorFlow {
+      0% {
+        stroke-dashoffset: 0;
+      }
+      100% {
+        stroke-dashoffset: 10;
+      }
+    }
+
+    .node-active-stroke {
+      stroke-dasharray: 60, 180;
+      animation: strokeRotate 2s linear forwards;
+    }
+
+    .connector-animated {
+      stroke-dasharray: 5, 5;
+      animation: connectorFlow 20s linear infinite;
+    }
+  `}</style>
+);
+
 export default function Home() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(0);
+  const [activeNode, setActiveNode] = useState<'agent' | 'guardrails' | null>(null);
+
+  useEffect(() => {
+    const sequence = ['agent', 'guardrails'] as const;
+    let index = 0;
+
+    const interval = setInterval(() => {
+      setActiveNode(sequence[index]);
+      index = (index + 1) % sequence.length;
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen pt-24">
@@ -337,6 +382,7 @@ export default function Home() {
       </section>
       {/* Security & AI Guardrails Section */}
       <section className="py-24 border-t border-border">
+        <NodeStrokeAnimation />
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -358,48 +404,78 @@ export default function Home() {
             {/* Connection Line SVG */}
             <svg
               className="absolute inset-0 w-full h-full pointer-events-none"
-              style={{ zIndex: 0 }}
+              style={{ zIndex: 1 }}
             >
+              {/* Main connector line */}
               <line
                 x1="15%"
                 y1="50%"
                 x2="85%"
                 y2="50%"
-                stroke="url(#canvasGradient)"
+                stroke="url(#connectorGradient)"
                 strokeWidth="2"
-                strokeDasharray="5,5"
-                markerEnd="url(#canvasArrowhead)"
+                className="connector-animated"
               />
+              {/* Arrowhead */}
+              <polygon points="85%,50% 82%,48% 82%,52%" fill="url(#connectorGradient)" />
+              
               <defs>
-                <linearGradient id="canvasGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#8b5cf6" />
-                  <stop offset="100%" stopColor="#06b6d4" />
+                <linearGradient id="connectorGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#6b7280" />
+                  <stop offset="100%" stopColor="#6b7280" />
                 </linearGradient>
-                <marker
-                  id="canvasArrowhead"
-                  markerWidth="10"
-                  markerHeight="10"
-                  refX="9"
-                  refY="3"
-                  orient="auto"
-                >
-                  <polygon points="0 0, 10 3, 0 6" fill="#06b6d4" />
-                </marker>
               </defs>
             </svg>
 
             {/* AI Agent Node */}
             <div className="absolute left-[10%] top-1/2 -translate-y-1/2 w-48 z-10" data-testid="node-agent-home">
-              <div className="group">
-                {/* Glow effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-300" />
+              <div className="relative">
+                {/* Animated stroke overlay - only visible when active */}
+                {activeNode === 'agent' && (
+                  <svg
+                    className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none"
+                    viewBox="0 0 200 160"
+                    style={{ left: '-4px', top: '-4px' }}
+                  >
+                    <rect
+                      x="4"
+                      y="4"
+                      width="192"
+                      height="152"
+                      rx="12"
+                      fill="none"
+                      stroke="#8b5cf6"
+                      strokeWidth="2"
+                      className="node-active-stroke"
+                    />
+                  </svg>
+                )}
+
+                {/* Glow effect - changes based on active state */}
+                <div className={`absolute inset-0 rounded-xl blur-xl transition-opacity duration-300 ${
+                  activeNode === 'agent' 
+                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 opacity-50' 
+                    : 'bg-gradient-to-r from-gray-500 to-gray-600 opacity-10'
+                }`} />
 
                 {/* Node body */}
-                <div className="relative bg-gradient-to-br from-card to-card/80 border border-purple-500/50 rounded-xl p-4 shadow-xl hover:border-purple-400/80 transition-all duration-300">
+                <div className={`relative bg-gradient-to-br from-card to-card/80 border-2 rounded-xl p-4 shadow-xl transition-all duration-300 ${
+                  activeNode === 'agent'
+                    ? 'border-purple-500/80'
+                    : 'border-gray-400/30'
+                }`}>
                   {/* Header */}
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 bg-purple-500/20 rounded-lg">
-                      <Zap className="w-5 h-5 text-purple-400" />
+                    <div className={`p-2 rounded-lg transition-colors ${
+                      activeNode === 'agent'
+                        ? 'bg-purple-500/30'
+                        : 'bg-gray-500/20'
+                    }`}>
+                      <Zap className={`w-5 h-5 transition-colors ${
+                        activeNode === 'agent'
+                          ? 'text-purple-400'
+                          : 'text-gray-400'
+                      }`} />
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground text-sm">AI Agent</h3>
@@ -411,7 +487,11 @@ export default function Home() {
                   <div className="space-y-2 mb-4">
                     <div className="bg-muted/50 rounded p-2 border border-border/50">
                       <p className="text-xs text-muted-foreground">
-                        <span className="text-purple-400 font-mono">model</span>
+                        <span className={`font-mono transition-colors ${
+                          activeNode === 'agent'
+                            ? 'text-purple-400'
+                            : 'text-gray-400'
+                        }`}>model</span>
                         <span className="text-muted-foreground">: gpt-4</span>
                       </p>
                     </div>
@@ -419,7 +499,11 @@ export default function Home() {
 
                   {/* Connection point indicator */}
                   <div className="flex justify-end">
-                    <div className="w-3 h-3 rounded-full bg-purple-400 animate-pulse" />
+                    <div className={`w-3 h-3 rounded-full transition-colors ${
+                      activeNode === 'agent'
+                        ? 'bg-purple-400 animate-pulse'
+                        : 'bg-gray-400'
+                    }`} />
                   </div>
                 </div>
               </div>
@@ -427,16 +511,53 @@ export default function Home() {
 
             {/* Security Guardrails Node */}
             <div className="absolute right-[10%] top-1/2 -translate-y-1/2 w-48 z-10" data-testid="node-guardrails-home">
-              <div className="group">
-                {/* Glow effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-300" />
+              <div className="relative">
+                {/* Animated stroke overlay - only visible when active */}
+                {activeNode === 'guardrails' && (
+                  <svg
+                    className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none"
+                    viewBox="0 0 200 160"
+                    style={{ left: '-4px', top: '-4px' }}
+                  >
+                    <rect
+                      x="4"
+                      y="4"
+                      width="192"
+                      height="152"
+                      rx="12"
+                      fill="none"
+                      stroke="#06b6d4"
+                      strokeWidth="2"
+                      className="node-active-stroke"
+                    />
+                  </svg>
+                )}
+
+                {/* Glow effect - changes based on active state */}
+                <div className={`absolute inset-0 rounded-xl blur-xl transition-opacity duration-300 ${
+                  activeNode === 'guardrails' 
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 opacity-50' 
+                    : 'bg-gradient-to-r from-gray-500 to-gray-600 opacity-10'
+                }`} />
 
                 {/* Node body */}
-                <div className="relative bg-gradient-to-br from-card to-card/80 border border-cyan-500/50 rounded-xl p-4 shadow-xl hover:border-cyan-400/80 transition-all duration-300">
+                <div className={`relative bg-gradient-to-br from-card to-card/80 border-2 rounded-xl p-4 shadow-xl transition-all duration-300 ${
+                  activeNode === 'guardrails'
+                    ? 'border-cyan-500/80'
+                    : 'border-gray-400/30'
+                }`}>
                   {/* Header */}
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 bg-cyan-500/20 rounded-lg">
-                      <Lock className="w-5 h-5 text-cyan-400" />
+                    <div className={`p-2 rounded-lg transition-colors ${
+                      activeNode === 'guardrails'
+                        ? 'bg-cyan-500/30'
+                        : 'bg-gray-500/20'
+                    }`}>
+                      <Lock className={`w-5 h-5 transition-colors ${
+                        activeNode === 'guardrails'
+                          ? 'text-cyan-400'
+                          : 'text-gray-400'
+                      }`} />
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground text-sm">Security Guardrails</h3>
@@ -448,7 +569,11 @@ export default function Home() {
                   <div className="space-y-2 mb-4">
                     <div className="bg-muted/50 rounded p-2 border border-border/50">
                       <p className="text-xs text-muted-foreground">
-                        <span className="text-cyan-400 font-mono">rules</span>
+                        <span className={`font-mono transition-colors ${
+                          activeNode === 'guardrails'
+                            ? 'text-cyan-400'
+                            : 'text-gray-400'
+                        }`}>rules</span>
                         <span className="text-muted-foreground">: active</span>
                       </p>
                     </div>
@@ -456,7 +581,11 @@ export default function Home() {
 
                   {/* Connection point indicator */}
                   <div className="flex justify-start">
-                    <div className="w-3 h-3 rounded-full bg-cyan-400 animate-pulse" />
+                    <div className={`w-3 h-3 rounded-full transition-colors ${
+                      activeNode === 'guardrails'
+                        ? 'bg-cyan-400 animate-pulse'
+                        : 'bg-gray-400'
+                    }`} />
                   </div>
                 </div>
               </div>
