@@ -9,6 +9,7 @@ import Home from "@/pages/home";
 import About from "@/pages/about";
 import Services from "@/pages/services";
 import BookDemo from "@/pages/book-demo";
+import Canvas from "@/pages/canvas";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -21,6 +22,7 @@ function Router() {
           <Route path="/about" component={About} />
           <Route path="/services" component={Services} />
           <Route path="/book-demo" component={BookDemo} />
+          <Route path="/canvas" component={Canvas} />
           <Route component={NotFound} />
         </Switch>
       </main>
