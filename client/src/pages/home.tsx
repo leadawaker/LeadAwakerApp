@@ -406,18 +406,18 @@ export default function Home() {
               className="absolute inset-0 w-full h-full pointer-events-none"
               style={{ zIndex: 1 }}
             >
-              {/* Main connector line */}
+              {/* Main connector line - from right edge of AI Agent to left edge of Security Guardrails */}
               <line
-                x1="15%"
+                x1="28%"
                 y1="50%"
-                x2="85%"
+                x2="72%"
                 y2="50%"
                 stroke="url(#connectorGradient)"
                 strokeWidth="2"
                 className="connector-animated"
               />
               {/* Arrowhead */}
-              <polygon points="85%,50% 82%,48% 82%,52%" fill="url(#connectorGradient)" />
+              <polygon points="72%,50% 69%,48% 69%,52%" fill="url(#connectorGradient)" />
               
               <defs>
                 <linearGradient id="connectorGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -492,7 +492,7 @@ export default function Home() {
                             ? 'text-purple-400'
                             : 'text-gray-400'
                         }`}>model</span>
-                        <span className="text-muted-foreground">: gpt-4</span>
+                        <span className="text-muted-foreground">: gpt-5.2</span>
                       </p>
                     </div>
                   </div>
