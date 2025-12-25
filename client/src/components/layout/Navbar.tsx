@@ -31,8 +31,8 @@ export function Navbar() {
       }`}
     >
       <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
-        <Link href="/" className="flex items-center bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2">
-          <img src="/SIDE LOGO Minus Top.svg" alt="Lead Awaker Logo" className="h-20 object-contain" />
+        <Link href="/" className="flex items-center">
+          <img src="/SIDE LOGO Minus Top.svg" alt="Lead Awaker Logo" className="h-10 object-contain" />
         </Link>
 
         {/* Desktop Nav */}
