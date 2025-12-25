@@ -148,9 +148,7 @@ export function PipelineChart() {
       className="w-full space-y-8"
     >
       <div className="text-center space-y-2">
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 dark:text-white">
-          Your Conversion Pipeline in Action
-        </h2>
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 dark:text-white">What you see</h2>
         <p className="text-slate-500 dark:text-slate-400">
           Real-time view of leads becoming customers
         </p>
