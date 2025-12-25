@@ -195,10 +195,8 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* Sales Rep Steps Section */}
       <SalesRepSteps />
-
       {/* Conversion Pipeline */}
       <section className="py-48 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6">
@@ -213,7 +211,6 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
-
       {/* Results/Metrics Section */}
       <section className="py-48 border-t-2 border-border">
         <div className="container mx-auto px-4 md:px-6">
@@ -223,7 +220,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center max-w-3xl mx-auto mb-16"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight drop-shadow-lg">What you get</h2>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight drop-shadow-lg">is what you GET</h2>
             <p className="text-lg md:text-xl text-muted-foreground mt-4">From chaos to certainty in 30 days</p>
           </motion.div>
 
@@ -296,7 +293,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* Demo Section with Logo */}
       <section id="demo" className="py-24 pt-36 border-t border-border">
         <div className="container mx-auto px-4 md:px-6">
@@ -339,8 +335,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-
       {/* Security & AI Guardrails Section */}
       <section className="py-24 border-t border-border">
         <div className="container mx-auto px-4 md:px-6">
@@ -388,7 +382,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* FAQ Teaser */}
       <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6 max-w-3xl">
@@ -456,7 +449,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* Bottom Demo CTA */}
       <section className="py-24 bg-primary text-primary-foreground relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 mix-blend-overlay" style={{backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')"}} />
