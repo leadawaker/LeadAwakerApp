@@ -113,32 +113,32 @@ const AnimatedPipeline = ({ isInView }: { isInView: boolean }) => {
 
 const NodeStrokeAnimation = () => (
   <style>{`
-    @keyframes strokeRotate {
+    @keyframes nodeStrokeRotate {
       0% {
         stroke-dashoffset: 0;
       }
       100% {
-        stroke-dashoffset: -240;
+        stroke-dashoffset: -456;
       }
     }
 
-    @keyframes connectorFlow {
+    @keyframes connectorGlow {
       0% {
-        stroke-dashoffset: 0;
+        stroke-dashoffset: 1000;
       }
       100% {
-        stroke-dashoffset: 10;
+        stroke-dashoffset: 0;
       }
     }
 
-    .node-active-stroke {
-      stroke-dasharray: 60, 180;
-      animation: strokeRotate 2s linear forwards;
+    .node-stroke-active {
+      stroke-dasharray: 456;
+      animation: nodeStrokeRotate 2s linear forwards;
     }
 
-    .connector-animated {
-      stroke-dasharray: 5, 5;
-      animation: connectorFlow 20s linear infinite;
+    .connector-glow-active {
+      stroke-dasharray: 1000;
+      animation: connectorGlow 1.5s ease-out forwards;
     }
   `}</style>
 );
@@ -405,52 +405,55 @@ export default function Home() {
             <svg
               className="absolute inset-0 w-full h-full pointer-events-none"
               style={{ zIndex: 1 }}
+              viewBox="0 0 1000 500"
+              preserveAspectRatio="none"
             >
-              {/* Main connector line */}
+              {/* AI Agent node outline path */}
+              {activeNode === 'agent' && (
+                <g>
+                  {/* Single continuous path: around node perimeter then to guardrails */}
+                  <path
+                    d="M 150 100 L 280 100 Q 295 100 295 115 L 295 385 Q 295 400 280 400 L 150 400 Q 135 400 135 385 L 135 115 Q 135 100 150 100 M 305 250 L 750 250"
+                    fill="none"
+                    stroke="#8b5cf6"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="node-stroke-active"
+                  />
+                  {/* Arrowhead for connector */}
+                  <polygon 
+                    points="765,250 750,245 750,255" 
+                    fill="#06b6d4"
+                    style={{ animation: 'connectorGlow 4s ease-out forwards' }}
+                  />
+                </g>
+              )}
+
+              {/* Static gray connector line (always visible) */}
               <line
-                x1="15%"
-                y1="50%"
-                x2="85%"
-                y2="50%"
-                stroke="url(#connectorGradient)"
+                x1="305"
+                y1="250"
+                x2="750"
+                y2="250"
+                stroke="#6b7280"
                 strokeWidth="2"
-                className="connector-animated"
+                opacity={activeNode !== 'agent' ? '1' : '0.3'}
+                style={{ transition: 'opacity 0.3s' }}
               />
-              {/* Arrowhead */}
-              <polygon points="85%,50% 82%,48% 82%,52%" fill="url(#connectorGradient)" />
               
-              <defs>
-                <linearGradient id="connectorGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#6b7280" />
-                  <stop offset="100%" stopColor="#6b7280" />
-                </linearGradient>
-              </defs>
+              {/* Arrowhead for static connector */}
+              {activeNode !== 'agent' && (
+                <polygon 
+                  points="765,250 750,245 750,255" 
+                  fill="#6b7280"
+                />
+              )}
             </svg>
 
             {/* AI Agent Node */}
             <div className="absolute left-[10%] top-1/2 -translate-y-1/2 w-48 z-10" data-testid="node-agent-home">
               <div className="relative">
-                {/* Animated stroke overlay - only visible when active */}
-                {activeNode === 'agent' && (
-                  <svg
-                    className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none"
-                    viewBox="0 0 200 160"
-                    style={{ left: '-4px', top: '-4px' }}
-                  >
-                    <rect
-                      x="4"
-                      y="4"
-                      width="192"
-                      height="152"
-                      rx="12"
-                      fill="none"
-                      stroke="#8b5cf6"
-                      strokeWidth="2"
-                      className="node-active-stroke"
-                    />
-                  </svg>
-                )}
-
                 {/* Glow effect - changes based on active state */}
                 <div className={`absolute inset-0 rounded-xl blur-xl transition-opacity duration-300 ${
                   activeNode === 'agent' 
@@ -512,27 +515,6 @@ export default function Home() {
             {/* Security Guardrails Node */}
             <div className="absolute right-[10%] top-1/2 -translate-y-1/2 w-48 z-10" data-testid="node-guardrails-home">
               <div className="relative">
-                {/* Animated stroke overlay - only visible when active */}
-                {activeNode === 'guardrails' && (
-                  <svg
-                    className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none"
-                    viewBox="0 0 200 160"
-                    style={{ left: '-4px', top: '-4px' }}
-                  >
-                    <rect
-                      x="4"
-                      y="4"
-                      width="192"
-                      height="152"
-                      rx="12"
-                      fill="none"
-                      stroke="#06b6d4"
-                      strokeWidth="2"
-                      className="node-active-stroke"
-                    />
-                  </svg>
-                )}
-
                 {/* Glow effect - changes based on active state */}
                 <div className={`absolute inset-0 rounded-xl blur-xl transition-opacity duration-300 ${
                   activeNode === 'guardrails' 
