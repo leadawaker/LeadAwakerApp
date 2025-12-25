@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap, Database, MessageSquare, Calendar, BarChart, CheckCircle, ChevronDown, Menu } from "lucide-react";
+import { ArrowRight, Zap, Database, MessageSquare, Calendar, BarChart, CheckCircle, ChevronDown, Menu, Lock } from "lucide-react";
 import { Link } from "wouter";
 import { useState, useRef } from "react";
 import { useInView } from "framer-motion";
@@ -348,38 +348,133 @@ export default function Home() {
             <p className="text-lg text-muted-foreground">Your brand and data stay protected every step of the way.</p>
           </motion.div>
 
-          <div className="grid md:grid-cols-4 gap-8">
-            {[
-              {
-                title: "Data Protection",
-                desc: "Encrypted data handling and restricted access"
-              },
-              {
-                title: "Compliance",
-                desc: "GDPR/CCPA-friendly practices built in"
-              },
-              {
-                title: "AI Guardrails",
-                desc: "Safety filters on every interaction"
-              },
-              {
-                title: "Sender Reputation",
-                desc: "Protects your brand from spammy outreach"
-              }
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-card p-6 rounded-xl border border-border text-center"
-              >
-                <h3 className="text-lg font-bold mb-3">{item.title}</h3>
-                <p className="text-sm text-muted-foreground">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="relative w-full h-[500px] bg-gradient-to-br from-slate-900/10 via-slate-800/5 to-slate-950/10 backdrop-blur border border-border rounded-2xl overflow-hidden"
+            data-testid="canvas-workflow"
+          >
+            {/* Connection Line SVG */}
+            <svg
+              className="absolute inset-0 w-full h-full pointer-events-none"
+              style={{ zIndex: 0 }}
+            >
+              <line
+                x1="15%"
+                y1="50%"
+                x2="85%"
+                y2="50%"
+                stroke="url(#canvasGradient)"
+                strokeWidth="2"
+                strokeDasharray="5,5"
+                markerEnd="url(#canvasArrowhead)"
+              />
+              <defs>
+                <linearGradient id="canvasGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#06b6d4" />
+                </linearGradient>
+                <marker
+                  id="canvasArrowhead"
+                  markerWidth="10"
+                  markerHeight="10"
+                  refX="9"
+                  refY="3"
+                  orient="auto"
+                >
+                  <polygon points="0 0, 10 3, 0 6" fill="#06b6d4" />
+                </marker>
+              </defs>
+            </svg>
+
+            {/* AI Agent Node */}
+            <div className="absolute left-[10%] top-1/2 -translate-y-1/2 w-48 z-10" data-testid="node-agent-home">
+              <div className="group">
+                {/* Glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-300" />
+
+                {/* Node body */}
+                <div className="relative bg-gradient-to-br from-card to-card/80 border border-purple-500/50 rounded-xl p-4 shadow-xl hover:border-purple-400/80 transition-all duration-300">
+                  {/* Header */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 bg-purple-500/20 rounded-lg">
+                      <Zap className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground text-sm">AI Agent</h3>
+                      <p className="text-xs text-muted-foreground">Processing layer</p>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="space-y-2 mb-4">
+                    <div className="bg-muted/50 rounded p-2 border border-border/50">
+                      <p className="text-xs text-muted-foreground">
+                        <span className="text-purple-400 font-mono">model</span>
+                        <span className="text-muted-foreground">: gpt-4</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Connection point indicator */}
+                  <div className="flex justify-end">
+                    <div className="w-3 h-3 rounded-full bg-purple-400 animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Security Guardrails Node */}
+            <div className="absolute right-[10%] top-1/2 -translate-y-1/2 w-48 z-10" data-testid="node-guardrails-home">
+              <div className="group">
+                {/* Glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-300" />
+
+                {/* Node body */}
+                <div className="relative bg-gradient-to-br from-card to-card/80 border border-cyan-500/50 rounded-xl p-4 shadow-xl hover:border-cyan-400/80 transition-all duration-300">
+                  {/* Header */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 bg-cyan-500/20 rounded-lg">
+                      <Lock className="w-5 h-5 text-cyan-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground text-sm">Security Guardrails</h3>
+                      <p className="text-xs text-muted-foreground">Validation layer</p>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="space-y-2 mb-4">
+                    <div className="bg-muted/50 rounded p-2 border border-border/50">
+                      <p className="text-xs text-muted-foreground">
+                        <span className="text-cyan-400 font-mono">rules</span>
+                        <span className="text-muted-foreground">: active</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Connection point indicator */}
+                  <div className="flex justify-start">
+                    <div className="w-3 h-3 rounded-full bg-cyan-400 animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Info footer */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="mt-8 bg-card/50 border border-border/50 rounded-xl p-4 backdrop-blur text-center"
+          >
+            <p className="text-sm text-muted-foreground">
+              Your <span className="text-purple-400 font-medium">AI Agent</span> processes customer interactions securely, sending output to <span className="text-cyan-400 font-medium">Security Guardrails</span> for real-time compliance validation before any action is taken.
+            </p>
+          </motion.div>
         </div>
       </section>
       {/* FAQ Teaser */}
