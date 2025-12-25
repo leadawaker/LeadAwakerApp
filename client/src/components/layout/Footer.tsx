@@ -8,11 +8,8 @@ export function Footer() {
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           <div className="md:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-6">
-              <img src="/favicon.svg" alt="Lead Awaker Favicon" className="w-6 h-6" />
-              <span className="font-heading font-bold text-2xl tracking-tight text-foreground">
-                LEAD<span className="text-primary">Awaker</span>
-              </span>
+            <Link href="/" className="flex items-center mb-6">
+              <img src="/SIDE LOGO.svg" alt="Lead Awaker Logo" className="h-12 object-contain" />
             </Link>
             <p className="text-muted-foreground max-w-sm mb-6">
               Pull fresh sales from leads you’ve already paid for and haven’t bought, using conversational AI.
