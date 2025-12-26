@@ -94,7 +94,7 @@ export default function WorkflowVisualization() {
         .line-fade-back { animation: lineFadeBack 0.8s ease-in-out forwards; }
         .node-glow-layer {
           position: absolute;
-          inset: 0;
+          inset: -4px;
           border-radius: inherit;
           z-index: -1;
           transition: all 0.5s ease;
@@ -116,18 +116,22 @@ export default function WorkflowVisualization() {
           height: 12px;
           border-radius: 999px;
           border: 2px solid white;
-          background: #cbd5e1;
+          background: #e2e8f0;
           position: absolute;
           top: 50%;
           transform: translateY(-50%);
           z-index: 20;
           transition: all 0.3s ease;
-          opacity: 0.6;
+          opacity: 0.3;
         }
         .connector-dot.active-amber { transform: translateY(-50%) scale(1.25); background: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.8); opacity: 1; }
         .connector-dot.active-purple { transform: translateY(-50%) scale(1.25); background: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.8); opacity: 1; }
         .connector-dot.active-emerald { transform: translateY(-50%) scale(1.25); background: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.8); opacity: 1; }
         .connector-dot.active-cyan { transform: translateY(-50%) scale(1.25); background: #06b6d4; box-shadow: 0 0 10px rgba(6, 182, 212, 0.8); opacity: 1; }
+        .connector-dot.visited-amber { background: #f59e0b; opacity: 0.5; }
+        .connector-dot.visited-purple { background: #a855f7; opacity: 0.5; }
+        .connector-dot.visited-emerald { background: #10b981; opacity: 0.5; }
+        .connector-dot.visited-cyan { background: #06b6d4; opacity: 0.5; }
       `}</style>
       
       <div className="relative w-full max-w-5xl md:h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300/50 rounded-3xl overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between px-12 py-12 md:py-0 space-y-24 md:space-y-0">
@@ -137,12 +141,12 @@ export default function WorkflowVisualization() {
         </svg>
 
         <div className="relative z-10">
-          <div className={`connector-dot -right-[5px] ${activeNode === 'contact' ? 'active-amber' : visitedNodes.has('agent') ? 'active-amber' : ''}`} />
+          <div className={`connector-dot -right-[6px] ${activeNode === 'contact' ? 'active-amber' : visitedNodes.has('agent') ? 'visited-amber' : ''}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 shadow-xl card-active-amber', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             <div className="node-glow-layer" />
             {activeNode === 'contact' && (
-              <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
-                <rect x="4" y="4" width="96%" height="96%" rx="12" fill="none" stroke="#f59e0b" strokeWidth="2" className="node-active-stroke" />
+              <svg className="absolute -inset-2 w-[calc(100%+16px)] h-[calc(100%+16px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
+                <rect x="2" y="2" width="98%" height="98%" rx="14" fill="none" stroke="#f59e0b" strokeWidth="2" className="node-active-stroke" />
               </svg>
             )}
             <div className="card-gradient-overlay" />
@@ -160,13 +164,13 @@ export default function WorkflowVisualization() {
         </div>
 
         <div className="relative z-10">
-          <div className={`connector-dot -left-[5px] ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('agent') ? 'active-purple' : ''}`} />
-          <div className={`connector-dot -right-[5px] ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('guardrails') ? 'active-purple' : ''}`} />
+          <div className={`connector-dot -left-[6px] ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('agent') ? 'visited-purple' : ''}`} />
+          <div className={`connector-dot -right-[6px] ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('guardrails') ? 'visited-purple' : ''}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('agent', 'border-purple-500 shadow-xl card-active-purple', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             <div className="node-glow-layer" />
             {activeNode === 'agent' && (
-              <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
-                <rect x="4" y="4" width="96%" height="96%" rx="12" fill="none" stroke="#a855f7" strokeWidth="2" className="node-active-stroke" />
+              <svg className="absolute -inset-2 w-[calc(100%+16px)] h-[calc(100%+16px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
+                <rect x="2" y="2" width="98%" height="98%" rx="14" fill="none" stroke="#a855f7" strokeWidth="2" className="node-active-stroke" />
               </svg>
             )}
             <div className="card-gradient-overlay" />
@@ -186,12 +190,12 @@ export default function WorkflowVisualization() {
         </div>
 
         <div className="relative z-10">
-          <div className={`connector-dot -left-[5px] ${activeNode === 'guardrails' ? (isApproved ? 'active-emerald' : 'active-cyan') : (isApproved ? 'active-emerald' : (visitedNodes.has('guardrails') ? 'active-cyan' : ''))}`} />
+          <div className={`connector-dot -left-[6px] ${activeNode === 'guardrails' ? (isApproved ? 'active-emerald' : 'active-cyan') : (isApproved ? 'visited-emerald' : (visitedNodes.has('guardrails') ? 'visited-cyan' : ''))}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${isApproved ? 'border-emerald-500 shadow-xl card-active-emerald' : getStatusColor('guardrails', 'border-cyan-500 shadow-xl card-active-cyan', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             <div className="node-glow-layer" />
             {activeNode === 'guardrails' && (
-              <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
-                <rect x="4" y="4" width="96%" height="96%" rx="12" fill="none" stroke={isApproved ? "#10b981" : "#06b6d4"} strokeWidth="2" className="node-active-stroke" />
+              <svg className="absolute -inset-2 w-[calc(100%+16px)] h-[calc(100%+16px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
+                <rect x="2" y="2" width="98%" height="98%" rx="14" fill="none" stroke={isApproved ? "#10b981" : "#06b6d4"} strokeWidth="2" className="node-active-stroke" />
               </svg>
             )}
             <div className="card-gradient-overlay" />
