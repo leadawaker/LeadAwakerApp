@@ -126,6 +126,10 @@ export default function WorkflowVisualization() {
           transition: all 0.3s ease;
           opacity: 0.3;
         }
+        .connector-dot.top-mobile {
+          top: -6px;
+          bottom: auto;
+        }
         @media (min-width: 768px) {
           .connector-dot {
             left: auto;
@@ -168,7 +172,7 @@ export default function WorkflowVisualization() {
         </svg>
 
         <div className="relative z-10">
-          <div className={`connector-dot right-side md:-right-[6px] ${activeNode === 'contact' ? 'active-amber' : visitedNodes.has('agent') ? 'visited-amber' : ''}`} />
+          <div className={`connector-dot bottom-mobile md:right-side md:-right-[6px] ${activeNode === 'contact' ? 'active-amber' : visitedNodes.has('agent') ? 'visited-amber' : ''}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 shadow-xl card-active-amber', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             <div className="node-glow-layer" />
             {activeNode === 'contact' && (
@@ -217,7 +221,7 @@ export default function WorkflowVisualization() {
         </div>
 
         <div className="relative z-10">
-          <div className={`connector-dot left-side md:-left-[6px] ${activeNode === 'guardrails' ? (isApproved ? 'active-emerald' : 'active-cyan') : (isApproved ? 'visited-emerald' : (visitedNodes.has('guardrails') ? 'visited-cyan' : ''))}`} />
+          <div className={`connector-dot top-mobile md:left-side md:-left-[6px] ${activeNode === 'guardrails' ? (isApproved ? 'active-emerald' : 'active-cyan') : (isApproved ? 'visited-emerald' : (visitedNodes.has('guardrails') ? 'visited-cyan' : ''))}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${isApproved ? 'border-emerald-500 shadow-xl card-active-emerald' : getStatusColor('guardrails', 'border-cyan-500 shadow-xl card-active-cyan', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             <div className="node-glow-layer" />
             {activeNode === 'guardrails' && (
