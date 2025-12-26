@@ -137,12 +137,7 @@ export default function WorkflowVisualization() {
     <div className="flex flex-col items-center justify-center p-8 font-sans text-slate-100 relative">
       <NodeStrokeAnimation />
       
-      <div className="mb-12 text-center">
-        <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">AI Agent Workflow</h2>
-        <p className="text-slate-400">Automated compliance and interaction pipeline</p>
-      </div>
-
-      <div className="relative w-full max-w-5xl md:h-[300px] bg-slate-900/40 backdrop-blur-sm border border-slate-800/50 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row items-center justify-between px-12 py-12 md:py-0 space-y-24 md:space-y-0">
+      <div className="relative w-full max-w-5xl md:h-[400px] bg-gradient-to-br from-slate-900/10 via-slate-800/5 to-slate-950/10 backdrop-blur border border-border rounded-2xl overflow-hidden shadow-2xl flex flex-col md:flex-row items-center justify-between px-12 py-12 md:py-0 space-y-24 md:space-y-0">
         
         {/* SVG Connection Lines */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
@@ -164,9 +159,14 @@ export default function WorkflowVisualization() {
                 <rect x="4" y="4" width="100%" height="100%" rx="12" fill="none" stroke="#eab308" strokeWidth="2" className="node-active-stroke" style={{ width: 'calc(100% - 8px)', height: 'calc(100% - 8px)' }} />
               </svg>
             )}
-            <div className={`relative bg-slate-900 border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 shadow-[0_0_20px_-5px_rgba(234,179,8,0.3)]', 'border-amber-500/30 shadow-none', 'border-slate-700 shadow-none')}`}>
+            <div className={`absolute inset-0 rounded-xl blur-xl transition-opacity duration-300 ${
+              activeNode === 'contact' 
+                ? 'bg-gradient-to-r from-amber-500 to-amber-600 opacity-50' 
+                : 'bg-gradient-to-r from-gray-500 to-gray-600 opacity-10'
+            }`} />
+            <div className={`relative bg-gradient-to-br from-card to-card/80 border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 shadow-xl', 'border-amber-500/30 shadow-none', 'border-slate-700/30 shadow-none')}`}>
               <div className="flex items-center gap-3 mb-4">
-                <div className={`p-2 rounded-lg ${getStatusColor('contact', 'bg-amber-500/20', 'bg-amber-500/10', 'bg-slate-800')}`}>
+                <div className={`p-2 rounded-lg ${getStatusColor('contact', 'bg-amber-500/20', 'bg-amber-500/10', 'bg-slate-800/50')}`}>
                   <User className={`w-5 h-5 ${getStatusColor('contact', 'text-amber-400', 'text-amber-400/50', 'text-slate-500')}`} />
                 </div>
                 <div>
@@ -174,7 +174,7 @@ export default function WorkflowVisualization() {
                   <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Jack Johnson</p>
                 </div>
               </div>
-              <div className="bg-slate-950/50 rounded-lg p-2 border border-slate-800">
+              <div className="bg-slate-950/30 rounded-lg p-2 border border-white/5 backdrop-blur-sm">
                 <div className="flex justify-between items-center text-[10px]">
                   <span className={`font-mono ${getStatusColor('contact', 'text-amber-400', 'text-amber-400/50', 'text-slate-500')}`}>status</span>
                   <span className="text-slate-300 font-mono">
@@ -194,9 +194,14 @@ export default function WorkflowVisualization() {
                 <rect x="4" y="4" width="100%" height="100%" rx="12" fill="none" stroke="#8b5cf6" strokeWidth="2" className="node-active-stroke" style={{ width: 'calc(100% - 8px)', height: 'calc(100% - 8px)' }} />
               </svg>
             )}
-            <div className={`relative bg-slate-900 border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('agent', 'border-purple-500 shadow-[0_0_20px_-5px_rgba(139,92,246,0.3)]', 'border-purple-500/30 shadow-none', 'border-slate-700 shadow-none')}`}>
+            <div className={`absolute inset-0 rounded-xl blur-xl transition-opacity duration-300 ${
+              activeNode === 'agent' 
+                ? 'bg-gradient-to-r from-purple-500 to-purple-600 opacity-50' 
+                : 'bg-gradient-to-r from-gray-500 to-gray-600 opacity-10'
+            }`} />
+            <div className={`relative bg-gradient-to-br from-card to-card/80 border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('agent', 'border-purple-500 shadow-xl', 'border-purple-500/30 shadow-none', 'border-slate-700/30 shadow-none')}`}>
               <div className="flex items-center gap-3 mb-4">
-                <div className={`p-2 rounded-lg ${getStatusColor('agent', 'bg-purple-500/20', 'bg-purple-500/10', 'bg-slate-800')}`}>
+                <div className={`p-2 rounded-lg ${getStatusColor('agent', 'bg-purple-500/20', 'bg-purple-500/10', 'bg-slate-800/50')}`}>
                   <Bot className={`w-5 h-5 ${getStatusColor('agent', 'text-purple-400', 'text-purple-400/50', 'text-slate-500')}`} />
                 </div>
                 <div>
@@ -204,7 +209,7 @@ export default function WorkflowVisualization() {
                   <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">GPT-5.2</p>
                 </div>
               </div>
-              <div className="bg-slate-950/50 rounded-lg p-2 border border-slate-800 h-[34px] flex items-center overflow-hidden">
+              <div className="bg-slate-950/30 rounded-lg p-2 border border-white/5 backdrop-blur-sm h-[34px] flex items-center overflow-hidden">
                 <div className="flex justify-between items-center text-[10px] w-full">
                   <span className={`font-mono ${getStatusColor('agent', 'text-purple-400', 'text-purple-400/50', 'text-slate-500')}`}>Output</span>
                   <span className="text-slate-300 font-mono text-right flex-1 truncate ml-2">
@@ -230,9 +235,14 @@ export default function WorkflowVisualization() {
                 <rect x="4" y="4" width="100%" height="100%" rx="12" fill="none" stroke={isApproved ? "#00D130" : "#06b6d4"} strokeWidth="2" className="node-active-stroke" style={{ width: 'calc(100% - 8px)', height: 'calc(100% - 8px)' }} />
               </svg>
             )}
-            <div className={`relative bg-slate-900 border-2 rounded-xl p-6 w-64 ${isApproved ? 'border-[#00D130]' : getStatusColor('guardrails', 'border-cyan-500 shadow-[0_0_20px_-5px_rgba(6,182,212,0.3)]', 'border-cyan-500/30 shadow-none', 'border-slate-700 shadow-none')}`}>
+            <div className={`absolute inset-0 rounded-xl blur-xl transition-opacity duration-300 ${
+              activeNode === 'guardrails' 
+                ? (isApproved ? 'bg-[#00D130] opacity-30' : 'bg-gradient-to-r from-cyan-500 to-blue-600 opacity-50')
+                : 'bg-gradient-to-r from-gray-500 to-gray-600 opacity-10'
+            }`} />
+            <div className={`relative bg-gradient-to-br from-card to-card/80 border-2 rounded-xl p-6 w-64 transition-all duration-300 ${isApproved ? 'border-[#00D130] shadow-xl' : getStatusColor('guardrails', 'border-cyan-500 shadow-xl', 'border-cyan-500/30 shadow-none', 'border-slate-700/30 shadow-none')}`}>
               <div className="flex items-center gap-3 mb-4">
-                <div className={`p-2 rounded-lg ${isApproved ? 'bg-[#00D130]/20' : getStatusColor('guardrails', 'bg-cyan-500/20', 'bg-cyan-500/10', 'bg-slate-800')}`}>
+                <div className={`p-2 rounded-lg ${isApproved ? 'bg-[#00D130]/20' : getStatusColor('guardrails', 'bg-cyan-500/20', 'bg-cyan-500/10', 'bg-slate-800/50')}`}>
                   {isApproved ? <CheckCircle2 className="w-5 h-5 text-[#00D130]" /> : <Shield className="w-5 h-5" />}
                 </div>
                 <div>
@@ -240,7 +250,7 @@ export default function WorkflowVisualization() {
                   <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">SECURITY</p>
                 </div>
               </div>
-              <div className="bg-slate-950/50 rounded-lg p-2 border border-slate-800 h-[34px] flex items-center">
+              <div className="bg-slate-950/30 rounded-lg p-2 border border-white/5 backdrop-blur-sm h-[34px] flex items-center">
                 <div className="flex justify-between items-center text-[10px] w-full">
                   <span className={`font-mono ${isApproved ? 'text-[#00D130]' : 'text-slate-500'}`}>status</span>
                   <span className="text-slate-300 font-mono text-right flex-1 truncate ml-2">{guardrailsStatus}</span>
