@@ -211,11 +211,11 @@ export const SalesRepSteps = () => {
         zIndex: 0
       }} />
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 220% 150% at 50% 110%, rgba(254, 215, 170, 0.4) 0%, rgba(251, 146, 60, 0.2) 25%, rgba(37, 99, 235, 0.1) 50%, rgba(30, 58, 138, 0) 100%)',
+        background: 'radial-gradient(ellipse 160% 100% at 50% 105%, rgba(254, 215, 170, 0.6) 0%, rgba(251, 146, 60, 0.3) 15%, rgba(37, 99, 235, 0) 40%)',
         zIndex: 0
       }} />
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'linear-gradient(to top, rgba(254, 243, 199, 0.15) 0%, transparent 40%)',
+        background: 'linear-gradient(to top, rgba(254, 243, 199, 0.2) 0%, transparent 25%)',
         zIndex: 0
       }} />
       <Plane />
