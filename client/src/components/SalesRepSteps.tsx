@@ -222,8 +222,11 @@ export const SalesRepSteps = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            onViewportEnter={() => setGlitchAnimating(true)}
-            viewport={{ once: true }}
+            onViewportEnter={() => {
+              // Trigger split animation 2 seconds earlier than the default viewport entry
+              setTimeout(() => setGlitchAnimating(true), 0);
+            }}
+            viewport={{ once: true, margin: "200px" }}
             transition={{ duration: 0.3 }}
             className="text-center max-w-4xl mx-auto mb-24"
           >
@@ -297,7 +300,7 @@ export const SalesRepSteps = () => {
                 }}
                 initial={{ borderColor: 'rgb(249, 115, 22)' }}
                 animate={{ borderColor: 'rgb(59, 130, 246)' }}
-                transition={{ delay: i * 0.08 + 0.1 + 0.8, duration: 0.5 }}
+                transition={{ delay: i * 0.08 + 0.1 + 0.1, duration: 0.5 }}
                 className="group relative bg-gradient-to-br from-slate-800/80 to-slate-800/60 border backdrop-blur-sm p-8 rounded-2xl text-center transition-all duration-400 cursor-default overflow-hidden shadow-lg shadow-primary/20"
                 style={{
                   borderColor: 'rgb(59, 130, 246)',
