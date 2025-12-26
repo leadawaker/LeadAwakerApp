@@ -280,7 +280,7 @@ export default function Home() {
                   All workflows respect opt-out preferences, unsubscribe links, and data residency requirements. We're fully compliant with global privacy standards.
                 </p>
               </div>
-              <div className="space-y-3 border-l border-border/50 pl-8">
+              <div className="space-y-3 md:border-l border-border/50 md:pl-8 pt-8 md:pt-0 border-t md:border-t-0 border-border/50">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-blue-500" />
                   Brand Protection
