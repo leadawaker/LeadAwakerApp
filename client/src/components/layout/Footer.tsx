@@ -6,16 +6,7 @@ export function Footer() {
   return (
     <footer className="bg-muted/30 pt-20 pb-10 border-t border-border">
       <div className="container mx-auto px-4 md:px-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-          <div className="md:col-span-2">
-            <Link href="/" className="flex items-center mb-6">
-              <span className="text-2xl font-bold text-primary">Lead Awaker</span>
-            </Link>
-            <p className="text-muted-foreground max-w-sm mb-6">
-              Pull fresh sales from leads you’ve already paid for and haven’t bought, using conversational AI.
-            </p>
-          </div>
-          
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
           <div>
             <h4 className="font-heading font-bold mb-4">Company</h4>
             <ul className="space-y-3">
