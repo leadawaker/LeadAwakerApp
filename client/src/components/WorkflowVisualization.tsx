@@ -217,7 +217,7 @@ export default function WorkflowVisualization() {
             <div className="node-glow-layer" />
             {activeNode === 'contact' && (
               <svg className="absolute -inset-[3px] w-[calc(100%+6px)] h-[calc(100%+6px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
-                <rect x="1" y="1" width="99%" height="99%" rx="12" fill="none" stroke="#f59e0b" strokeWidth="2" className="node-active-stroke" />
+                <rect x="1" y="1" width="198" height="158" rx="14" fill="none" stroke="#f59e0b" strokeWidth="2" className="node-active-stroke" />
               </svg>
             )}
             <div className="card-gradient-overlay" />
@@ -241,7 +241,7 @@ export default function WorkflowVisualization() {
             <div className="node-glow-layer" />
             {activeNode === 'agent' && (
               <svg className="absolute -inset-[3px] w-[calc(100%+6px)] h-[calc(100%+6px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
-                <rect x="1" y="1" width="99%" height="99%" rx="12" fill="none" stroke="#a855f7" strokeWidth="2" className="node-active-stroke" />
+                <rect x="1" y="1" width="198" height="158" rx="14" fill="none" stroke="#a855f7" strokeWidth="2" className="node-active-stroke" />
               </svg>
             )}
             <div className="card-gradient-overlay" />
@@ -266,7 +266,7 @@ export default function WorkflowVisualization() {
             <div className="node-glow-layer" />
             {activeNode === 'guardrails' && (
               <svg className="absolute -inset-[3px] w-[calc(100%+6px)] h-[calc(100%+6px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
-                <rect x="1" y="1" width="99%" height="99%" rx="12" fill="none" stroke={isApproved ? "#10b981" : "#06b6d4"} strokeWidth="2" className="node-active-stroke" />
+                <rect x="1" y="1" width="198" height="158" rx="14" fill="none" stroke={isApproved ? "#10b981" : "#06b6d4"} strokeWidth="2" className="node-active-stroke" />
               </svg>
             )}
             <div className="card-gradient-overlay" />
