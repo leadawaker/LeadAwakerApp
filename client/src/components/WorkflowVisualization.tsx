@@ -130,6 +130,12 @@ export default function WorkflowVisualization() {
           top: -6px;
           bottom: auto;
         }
+        .connector-dot.left-side {
+          top: -6px !important;
+          bottom: auto;
+          left: 50%;
+          transform: translateX(-50%);
+        }
         @media (min-width: 768px) {
           .connector-dot {
             left: auto;
@@ -138,8 +144,10 @@ export default function WorkflowVisualization() {
             transform: translateY(-50%);
           }
           .connector-dot.left-side {
+            top: 50% !important;
             left: -6px !important;
             right: auto;
+            transform: translateY(-50%);
           }
           .connector-dot.right-side {
             left: auto;
