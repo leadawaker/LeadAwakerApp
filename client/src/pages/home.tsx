@@ -9,6 +9,7 @@ import Chat3D from "@/components/Chat3D";
 import { PipelineChart } from "@/components/PipelineChart";
 import { SalesRepSteps } from "@/components/SalesRepSteps";
 import { AnimatedLogo3D } from "@/components/AnimatedLogo3D";
+import WorkflowVisualization from "@/components/WorkflowVisualization";
 
 const AnimatedCounter = ({ end, duration = 3, format = (v: number) => Math.round(v).toString(), suffix = "" }: { end: number | string; duration?: number; format?: (v: number) => string; suffix?: string }) => {
   const [value, setValue] = useState(0);
@@ -604,6 +605,11 @@ export default function Home() {
               Your <span className="text-purple-400 font-medium">AI Agent</span> processes customer interactions securely, sending output to <span className="text-cyan-400 font-medium">Security Guardrails</span> for real-time compliance validation before any action is taken.
             </p>
           </motion.div>
+
+          {/* Workflow Visualization */}
+          <div className="mt-16">
+            <WorkflowVisualization />
+          </div>
         </div>
       </section>
       {/* FAQ Teaser */}
