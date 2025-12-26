@@ -155,11 +155,18 @@ export default function WorkflowVisualization() {
           .connector-dot.active-purple { transform: translateY(-50%) scale(1.25); }
           .connector-dot.active-emerald { transform: translateY(-50%) scale(1.25); }
           .connector-dot.active-cyan { transform: translateY(-50%) scale(1.25); }
+          .connector-dot.visited-amber { transform: translateY(-50%); }
+          .connector-dot.visited-purple { transform: translateY(-50%); }
+          .connector-dot.visited-emerald { transform: translateY(-50%); }
+          .connector-dot.visited-cyan { transform: translateY(-50%); }
         }
         .connector-dot.visited-amber { background: #f59e0b; opacity: 0.5; }
         .connector-dot.visited-purple { background: #a855f7; opacity: 0.5; }
         .connector-dot.visited-emerald { background: #10b981; opacity: 0.5; }
         .connector-dot.visited-cyan { background: #06b6d4; opacity: 0.5; }
+        @media (min-width: 768px) {
+          .connector-wrapper { height: 100%; display: flex; align-items: center; }
+        }
       `}</style>
       
       <div className="relative w-full max-w-5xl md:h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300/50 rounded-3xl overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between px-12 py-12 md:py-0 space-y-24 md:space-y-0">
@@ -171,7 +178,7 @@ export default function WorkflowVisualization() {
           <line x1="calc(50% + 128px)" y1="50%" x2="calc(87.5% - 128px)" y2="50%" stroke="#d1d5db" strokeWidth="2" className={`hidden md:block ${isGlowing2 ? 'line-quick-glow' : ''} ${isFadingBack2 ? 'line-fade-back' : ''}`} />
         </svg>
 
-        <div className="relative z-10">
+        <div className="connector-wrapper relative z-10">
           <div className={`connector-dot bottom-mobile md:right-side md:-right-[6px] ${activeNode === 'contact' ? 'active-amber' : visitedNodes.has('agent') ? 'visited-amber' : ''}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 shadow-xl card-active-amber', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             <div className="node-glow-layer" />
@@ -194,7 +201,7 @@ export default function WorkflowVisualization() {
           </div>
         </div>
 
-        <div className="relative z-10">
+        <div className="connector-wrapper relative z-10">
           <div className={`connector-dot left-side md:-left-[6px] ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('agent') ? 'visited-purple' : ''}`} />
           <div className={`connector-dot right-side md:-right-[6px] ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('guardrails') ? 'visited-purple' : ''}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('agent', 'border-purple-500 shadow-xl card-active-purple', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
@@ -220,7 +227,7 @@ export default function WorkflowVisualization() {
           </div>
         </div>
 
-        <div className="relative z-10">
+        <div className="connector-wrapper relative z-10">
           <div className={`connector-dot top-mobile md:left-side md:-left-[6px] ${activeNode === 'guardrails' ? (isApproved ? 'active-emerald' : 'active-cyan') : (isApproved ? 'visited-emerald' : (visitedNodes.has('guardrails') ? 'visited-cyan' : ''))}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${isApproved ? 'border-emerald-500 shadow-xl card-active-emerald' : getStatusColor('guardrails', 'border-cyan-500 shadow-xl card-active-cyan', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             <div className="node-glow-layer" />
