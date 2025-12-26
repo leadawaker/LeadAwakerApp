@@ -399,10 +399,217 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-16"
+            className="relative w-full h-[500px] bg-gradient-to-br from-slate-900/10 via-slate-800/5 to-slate-950/10 backdrop-blur border border-border rounded-2xl overflow-hidden"
+            data-testid="canvas-workflow"
           >
-            <WorkflowVisualization />
+            {/* Connection Line SVG */}
+            <svg
+              className="absolute inset-0 w-full h-full pointer-events-none"
+              style={{ zIndex: 1 }}
+            >
+              {/* Main connector line - from right edge of AI Agent to left edge of Security Guardrails */}
+              <line
+                x1="28%"
+                y1="50%"
+                x2="72%"
+                y2="50%"
+                stroke="url(#connectorGradient)"
+                strokeWidth="2"
+                className="connector-animated"
+              />
+              {/* Arrowhead */}
+              <polygon points="72%,50% 69%,48% 69%,52%" fill="url(#connectorGradient)" />
+              
+              <defs>
+                <linearGradient id="connectorGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#6b7280" />
+                  <stop offset="100%" stopColor="#6b7280" />
+                </linearGradient>
+              </defs>
+            </svg>
+
+            {/* AI Agent Node */}
+            <div className="absolute left-[10%] top-1/2 -translate-y-1/2 w-48 z-10" data-testid="node-agent-home">
+              <div className="relative">
+                {/* Animated stroke overlay - only visible when active */}
+                {activeNode === 'agent' && (
+                  <svg
+                    className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none"
+                    viewBox="0 0 200 160"
+                    style={{ left: '-4px', top: '-4px' }}
+                  >
+                    <rect
+                      x="4"
+                      y="4"
+                      width="192"
+                      height="152"
+                      rx="12"
+                      fill="none"
+                      stroke="#8b5cf6"
+                      strokeWidth="2"
+                      className="node-active-stroke"
+                    />
+                  </svg>
+                )}
+
+                {/* Glow effect - changes based on active state */}
+                <div className={`absolute inset-0 rounded-xl blur-xl transition-opacity duration-300 ${
+                  activeNode === 'agent' 
+                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 opacity-50' 
+                    : 'bg-gradient-to-r from-gray-500 to-gray-600 opacity-10'
+                }`} />
+
+                {/* Node body */}
+                <div className={`relative bg-gradient-to-br from-card to-card/80 border-2 rounded-xl p-4 shadow-xl transition-all duration-300 ${
+                  activeNode === 'agent'
+                    ? 'border-purple-500/80'
+                    : 'border-gray-400/30'
+                }`}>
+                  {/* Header */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={`p-2 rounded-lg transition-colors ${
+                      activeNode === 'agent'
+                        ? 'bg-purple-500/30'
+                        : 'bg-gray-500/20'
+                    }`}>
+                      <Zap className={`w-5 h-5 transition-colors ${
+                        activeNode === 'agent'
+                          ? 'text-purple-400'
+                          : 'text-gray-400'
+                      }`} />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground text-sm">AI Agent</h3>
+                      <p className="text-xs text-muted-foreground">Processing layer</p>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="space-y-2 mb-4">
+                    <div className="bg-muted/50 rounded p-2 border border-border/50">
+                      <p className="text-xs text-muted-foreground">
+                        <span className={`font-mono transition-colors ${
+                          activeNode === 'agent'
+                            ? 'text-purple-400'
+                            : 'text-gray-400'
+                        }`}>model</span>
+                        <span className="text-muted-foreground">: gpt-5.2</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Connection point indicator */}
+                  <div className="flex justify-end">
+                    <div className={`w-3 h-3 rounded-full transition-colors ${
+                      activeNode === 'agent'
+                        ? 'bg-purple-400 animate-pulse'
+                        : 'bg-gray-400'
+                    }`} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Security Guardrails Node */}
+            <div className="absolute right-[10%] top-1/2 -translate-y-1/2 w-48 z-10" data-testid="node-guardrails-home">
+              <div className="relative">
+                {/* Animated stroke overlay - only visible when active */}
+                {activeNode === 'guardrails' && (
+                  <svg
+                    className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none"
+                    viewBox="0 0 200 160"
+                    style={{ left: '-4px', top: '-4px' }}
+                  >
+                    <rect
+                      x="4"
+                      y="4"
+                      width="192"
+                      height="152"
+                      rx="12"
+                      fill="none"
+                      stroke="#06b6d4"
+                      strokeWidth="2"
+                      className="node-active-stroke"
+                    />
+                  </svg>
+                )}
+
+                {/* Glow effect - changes based on active state */}
+                <div className={`absolute inset-0 rounded-xl blur-xl transition-opacity duration-300 ${
+                  activeNode === 'guardrails' 
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 opacity-50' 
+                    : 'bg-gradient-to-r from-gray-500 to-gray-600 opacity-10'
+                }`} />
+
+                {/* Node body */}
+                <div className={`relative bg-gradient-to-br from-card to-card/80 border-2 rounded-xl p-4 shadow-xl transition-all duration-300 ${
+                  activeNode === 'guardrails'
+                    ? 'border-cyan-500/80'
+                    : 'border-gray-400/30'
+                }`}>
+                  {/* Header */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={`p-2 rounded-lg transition-colors ${
+                      activeNode === 'guardrails'
+                        ? 'bg-cyan-500/30'
+                        : 'bg-gray-500/20'
+                    }`}>
+                      <Lock className={`w-5 h-5 transition-colors ${
+                        activeNode === 'guardrails'
+                          ? 'text-cyan-400'
+                          : 'text-gray-400'
+                      }`} />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground text-sm">Security Guardrails</h3>
+                      <p className="text-xs text-muted-foreground">Validation layer</p>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="space-y-2 mb-4">
+                    <div className="bg-muted/50 rounded p-2 border border-border/50">
+                      <p className="text-xs text-muted-foreground">
+                        <span className={`font-mono transition-colors ${
+                          activeNode === 'guardrails'
+                            ? 'text-cyan-400'
+                            : 'text-gray-400'
+                        }`}>rules</span>
+                        <span className="text-muted-foreground">: active</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Connection point indicator */}
+                  <div className="flex justify-start">
+                    <div className={`w-3 h-3 rounded-full transition-colors ${
+                      activeNode === 'guardrails'
+                        ? 'bg-cyan-400 animate-pulse'
+                        : 'bg-gray-400'
+                    }`} />
+                  </div>
+                </div>
+              </div>
+            </div>
           </motion.div>
+
+          {/* Info footer */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="mt-8 bg-card/50 border border-border/50 rounded-xl p-4 backdrop-blur text-center"
+          >
+            <p className="text-sm text-muted-foreground">
+              Your <span className="text-purple-400 font-medium">AI Agent</span> processes customer interactions securely, sending output to <span className="text-cyan-400 font-medium">Security Guardrails</span> for real-time compliance validation before any action is taken.
+            </p>
+          </motion.div>
+
+          {/* Workflow Visualization */}
+          <div className="mt-16">
+            <WorkflowVisualization />
+          </div>
         </div>
       </section>
       {/* FAQ Teaser */}
