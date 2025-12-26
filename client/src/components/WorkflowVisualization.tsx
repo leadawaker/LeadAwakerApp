@@ -89,11 +89,6 @@ export default function WorkflowVisualization() {
         .card-active-cyan .card-gradient-overlay { background: linear-gradient(to top left, rgba(6, 182, 212, 0.12), transparent 70%); }
       `}</style>
       
-      <div className="mb-12 text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2 tracking-tight">AI Agent Workflow</h1>
-        <p className="text-gray-600">Automated compliance and interaction pipeline</p>
-      </div>
-
       <div className="relative w-full max-w-5xl md:h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300/50 rounded-3xl overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between px-12 py-12 md:py-0 space-y-24 md:space-y-0">
         <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
           <line x1="25%" y1="50%" x2="50%" y2="50%" stroke="#d1d5db" strokeWidth="2" className={`${isGlowing1 ? 'line-quick-glow' : ''} ${isFadingBack1 ? 'line-fade-back' : ''}`} />
