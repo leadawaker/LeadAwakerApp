@@ -82,28 +82,33 @@ export default function WorkflowVisualization() {
         .node-active-stroke { stroke-dasharray: 60, 180; animation: strokeRotate 2s linear infinite; }
         .line-quick-glow { animation: lineQuickGlow 0.4s ease-in-out forwards; }
         .line-fade-back { animation: lineFadeBack 0.8s ease-in-out forwards; }
-        .card-gradient-overlay { position: absolute; inset: 0; pointer-events: none; border-radius: inherit; background: linear-gradient(to top left, rgba(55, 65, 81, 0.07), transparent 70%); transition: background 0.5s ease; }
-        .card-active-amber { box-shadow: 0 0 35px 10px rgba(245, 158, 11, 0.45); }
-        .card-active-purple { box-shadow: 0 0 35px 10px rgba(168, 85, 247, 0.45); }
-        .card-active-emerald { box-shadow: 0 0 35px 10px rgba(16, 185, 129, 0.45); }
-        .card-active-cyan { box-shadow: 0 0 35px 10px rgba(6, 182, 212, 0.45); }
+        .card-gradient-overlay { 
+          position: absolute; inset: 0; pointer-events: none; border-radius: inherit; 
+          background: linear-gradient(to top left, rgba(55, 65, 81, 0.05), transparent 70%); 
+          transition: background 0.5s ease; 
+        }
+        .card-active-amber .card-gradient-overlay { background: linear-gradient(to top left, rgba(245, 158, 11, 0.15), transparent 70%); }
+        .card-active-purple .card-gradient-overlay { background: linear-gradient(to top left, rgba(168, 85, 247, 0.15), transparent 70%); }
+        .card-active-emerald .card-gradient-overlay { background: linear-gradient(to top left, rgba(16, 185, 129, 0.15), transparent 70%); }
+        .card-active-cyan .card-gradient-overlay { background: linear-gradient(to top left, rgba(6, 182, 212, 0.15), transparent 70%); }
         .connector-dot {
           width: 10px;
           height: 10px;
           border-radius: 999px;
-          border: 1.5px solid #e2e8f0;
+          border: 1.5px solid #cbd5e1;
           background: white;
           position: absolute;
           top: 50%;
           transform: translateY(-50%);
           z-index: 20;
           transition: all 0.3s ease;
-          box-shadow: 0 0 6px rgba(0,0,0,0.05);
+          box-shadow: 0 0 6px rgba(0,0,0,0.03);
+          opacity: 0.6;
         }
-        .connector-dot.active-amber { border-color: #f59e0b; background: #f59e0b; box-shadow: 0 0 12px #f59e0b; }
-        .connector-dot.active-purple { border-color: #a855f7; background: #a855f7; box-shadow: 0 0 12px #a855f7; }
-        .connector-dot.active-emerald { border-color: #10b981; background: #10b981; box-shadow: 0 0 12px #10b981; }
-        .connector-dot.active-cyan { border-color: #06b6d4; background: #06b6d4; box-shadow: 0 0 12px #06b6d4; }
+        .connector-dot.active-amber { border-color: #f59e0b; background: #f59e0b; box-shadow: 0 0 12px #f59e0b; opacity: 1; }
+        .connector-dot.active-purple { border-color: #a855f7; background: #a855f7; box-shadow: 0 0 12px #a855f7; opacity: 1; }
+        .connector-dot.active-emerald { border-color: #10b981; background: #10b981; box-shadow: 0 0 12px #10b981; opacity: 1; }
+        .connector-dot.active-cyan { border-color: #06b6d4; background: #06b6d4; box-shadow: 0 0 12px #06b6d4; opacity: 1; }
       `}</style>
       
       <div className="relative w-full max-w-5xl md:h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300/50 rounded-3xl overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between px-12 py-12 md:py-0 space-y-24 md:space-y-0">
@@ -122,12 +127,14 @@ export default function WorkflowVisualization() {
             )}
             <div className="card-gradient-overlay" />
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-amber-50"><User className="w-5 h-5 text-amber-600" /></div>
-              <div><h3 className={`font-bold text-sm ${activeNode === 'contact' ? 'text-gray-900' : 'text-gray-400'}`}>Lead #315</h3><p className="text-[10px] text-gray-400 text-left">Jack Johnson</p></div>
+              <div className={`p-2 rounded-lg transition-colors duration-300 ${activeNode === 'contact' ? 'bg-amber-100' : 'bg-amber-50/50'}`}>
+                <User className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'contact' ? 'text-amber-600' : 'text-amber-400/60'}`} />
+              </div>
+              <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'contact' ? 'text-gray-900' : 'text-gray-400'}`}>Lead #315</h3><p className="text-[10px] text-gray-400 text-left">Jack Johnson</p></div>
             </div>
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] font-mono flex items-center gap-2">
-              <span className={`font-semibold ${activeNode === 'contact' ? 'text-amber-600' : 'text-gray-400'}`}>Status</span>
-              <span className={activeNode === 'contact' ? 'text-gray-700' : 'text-gray-400'}>{isApproved ? 'Lead Engaged' : 'Active'}</span>
+              <span className={`font-semibold transition-colors duration-300 ${activeNode === 'contact' ? 'text-amber-600' : 'text-amber-400/60'}`}>Status</span>
+              <span className={`transition-colors duration-300 ${activeNode === 'contact' ? 'text-gray-700' : 'text-gray-400'}`}>{isApproved ? 'Lead Engaged' : 'Active'}</span>
             </div>
           </div>
         </div>
@@ -143,12 +150,14 @@ export default function WorkflowVisualization() {
             )}
             <div className="card-gradient-overlay" />
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-purple-50"><Bot className="w-5 h-5 text-purple-600" /></div>
-              <div><h3 className={`font-bold text-sm ${activeNode === 'agent' ? 'text-gray-900' : 'text-gray-400'}`}>AI Agent</h3><p className="text-[10px] text-gray-400 text-left">GPT-5.2</p></div>
+              <div className={`p-2 rounded-lg transition-colors duration-300 ${activeNode === 'agent' ? 'bg-purple-100' : 'bg-purple-50/50'}`}>
+                <Bot className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'agent' ? 'text-purple-600' : 'text-purple-400/60'}`} />
+              </div>
+              <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'agent' ? 'text-gray-900' : 'text-gray-400'}`}>AI Agent</h3><p className="text-[10px] text-gray-400 text-left">GPT-5.2</p></div>
             </div>
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center overflow-hidden gap-2">
-              <span className={`font-semibold font-mono ${activeNode === 'agent' ? 'text-purple-600' : 'text-gray-400'}`}>Output</span>
-              <span className={`truncate font-mono ${activeNode === 'agent' ? 'text-gray-700' : 'text-gray-400'}`}>
+              <span className={`font-semibold font-mono transition-colors duration-300 ${activeNode === 'agent' ? 'text-purple-600' : 'text-purple-400/60'}`}>Output</span>
+              <span className={`truncate font-mono transition-colors duration-300 ${activeNode === 'agent' ? 'text-gray-700' : 'text-gray-400'}`}>
                 {visitedNodes.has('agent') ? (agentStatus === 'thinking' ? '...' : (agentStatus === 'msg1' ? 'Good morning :)' : 'Is this Jack?')) : ''}
               </span>
             </div>
@@ -165,14 +174,17 @@ export default function WorkflowVisualization() {
             )}
             <div className="card-gradient-overlay" />
             <div className="flex items-center gap-3 mb-4">
-              <div className={`p-2 rounded-lg ${isApproved ? (activeNode === 'guardrails' || isApproved ? 'bg-emerald-50' : 'bg-cyan-50') : 'bg-cyan-50'}`}>
-                {isApproved ? <CheckCircle2 className="w-5 h-5 text-emerald-600" /> : <Shield className="w-5 h-5 text-cyan-600" />}
+              <div className={`p-2 rounded-lg transition-colors duration-300 ${activeNode === 'guardrails' ? (isApproved ? 'bg-emerald-100' : 'bg-cyan-100') : (isApproved ? 'bg-emerald-50/50' : 'bg-cyan-50/50')}`}>
+                {isApproved ? 
+                  <CheckCircle2 className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'guardrails' || isApproved ? 'text-emerald-600' : 'text-emerald-400/60'}`} /> : 
+                  <Shield className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-cyan-600' : 'text-cyan-400/60'}`} />
+                }
               </div>
-              <div><h3 className={`font-bold text-sm ${activeNode === 'guardrails' ? 'text-gray-900' : 'text-gray-400'}`}>Guardrails</h3><p className="text-[10px] text-gray-400 text-left">SECURITY</p></div>
+              <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-gray-900' : 'text-gray-400'}`}>Guardrails</h3><p className="text-[10px] text-gray-400 text-left">SECURITY</p></div>
             </div>
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center gap-2">
-              <span className={`font-semibold font-mono ${(activeNode === 'guardrails' || isApproved) ? (isApproved ? 'text-emerald-600' : 'text-cyan-600') : 'text-gray-400'}`}>Status</span>
-              <span className={`truncate font-mono ${(activeNode === 'guardrails' || isApproved) ? 'text-gray-700' : 'text-gray-400'}`}>{guardrailsStatus}</span>
+              <span className={`font-semibold font-mono transition-colors duration-300 ${(activeNode === 'guardrails' || isApproved) ? (isApproved ? 'text-emerald-600' : 'text-cyan-600') : (isApproved ? 'text-emerald-400/60' : 'text-cyan-400/60')}`}>Status</span>
+              <span className={`truncate font-mono transition-colors duration-300 ${(activeNode === 'guardrails' || isApproved) ? 'text-gray-700' : 'text-gray-400'}`}>{guardrailsStatus}</span>
             </div>
           </div>
         </div>
