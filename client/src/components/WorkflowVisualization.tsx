@@ -216,7 +216,7 @@ export default function WorkflowVisualization() {
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 card-active-amber', 'border-gray-200', 'border-gray-200')} shadow-[0_8px_30px_rgba(0,0,0,0.2)]`}>
             <div className="node-glow-layer" />
             {activeNode === 'contact' && (
-              <svg className="absolute -inset-[2px] w-[calc(100%+4px)] h-[calc(100%+4px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
+              <svg className="absolute -inset-[3px] w-[calc(100%+6px)] h-[calc(100%+6px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
                 <rect x="1" y="1" width="99%" height="99%" rx="12" fill="none" stroke="#f59e0b" strokeWidth="2" className="node-active-stroke" />
               </svg>
             )}
@@ -240,7 +240,7 @@ export default function WorkflowVisualization() {
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('agent', 'border-purple-500 card-active-purple', 'border-gray-200', 'border-gray-200')} shadow-[0_8px_30px_rgba(0,0,0,0.2)]`}>
             <div className="node-glow-layer" />
             {activeNode === 'agent' && (
-              <svg className="absolute -inset-[2px] w-[calc(100%+4px)] h-[calc(100%+4px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
+              <svg className="absolute -inset-[3px] w-[calc(100%+6px)] h-[calc(100%+6px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
                 <rect x="1" y="1" width="99%" height="99%" rx="12" fill="none" stroke="#a855f7" strokeWidth="2" className="node-active-stroke" />
               </svg>
             )}
@@ -265,7 +265,7 @@ export default function WorkflowVisualization() {
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 shadow-[0_8px_30px_rgba(0,0,0,0.2)] ${isApproved ? 'border-emerald-500 card-active-emerald' : getStatusColor('guardrails', 'border-cyan-500 card-active-cyan', 'border-gray-200', 'border-gray-200')}`}>
             <div className="node-glow-layer" />
             {activeNode === 'guardrails' && (
-              <svg className="absolute -inset-[2px] w-[calc(100%+4px)] h-[calc(100%+4px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
+              <svg className="absolute -inset-[3px] w-[calc(100%+6px)] h-[calc(100%+6px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
                 <rect x="1" y="1" width="99%" height="99%" rx="12" fill="none" stroke={isApproved ? "#10b981" : "#06b6d4"} strokeWidth="2" className="node-active-stroke" />
               </svg>
             )}
