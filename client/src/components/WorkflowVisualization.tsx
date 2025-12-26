@@ -188,7 +188,7 @@ export default function WorkflowVisualization() {
 
         <div className="connector-wrapper relative z-10">
           <div className={`connector-dot bottom-mobile md:right-side ${activeNode === 'contact' ? 'active-amber' : visitedNodes.has('agent') ? 'visited-amber' : ''}`} />
-          <div className={`relative bg-white border-2 rounded-xl p-6 w-52 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 shadow-xl card-active-amber', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
+          <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 shadow-xl card-active-amber', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             <div className="node-glow-layer" />
             {activeNode === 'contact' && (
               <svg className="absolute -inset-[2px] w-[calc(100%+4px)] h-[calc(100%+4px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
@@ -212,7 +212,7 @@ export default function WorkflowVisualization() {
         <div className="connector-wrapper relative z-10">
           <div className={`connector-dot left-side ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('agent') ? 'visited-purple' : ''}`} />
           <div className={`connector-dot right-side ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('guardrails') ? 'visited-purple' : ''}`} />
-          <div className={`relative bg-white border-2 rounded-xl p-6 w-52 transition-all duration-300 ${getStatusColor('agent', 'border-purple-500 shadow-xl card-active-purple', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
+          <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('agent', 'border-purple-500 shadow-xl card-active-purple', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             <div className="node-glow-layer" />
             {activeNode === 'agent' && (
               <svg className="absolute -inset-[2px] w-[calc(100%+4px)] h-[calc(100%+4px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
@@ -237,7 +237,7 @@ export default function WorkflowVisualization() {
 
         <div className="connector-wrapper relative z-10">
           <div className={`connector-dot top-mobile md:left-side ${activeNode === 'guardrails' ? (isApproved ? 'active-emerald' : 'active-cyan') : (isApproved ? 'visited-emerald' : (visitedNodes.has('guardrails') ? 'visited-cyan' : ''))}`} />
-          <div className={`relative bg-white border-2 rounded-xl p-6 w-52 transition-all duration-300 ${isApproved ? 'border-emerald-500 shadow-xl card-active-emerald' : getStatusColor('guardrails', 'border-cyan-500 shadow-xl card-active-cyan', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
+          <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${isApproved ? 'border-emerald-500 shadow-xl card-active-emerald' : getStatusColor('guardrails', 'border-cyan-500 shadow-xl card-active-cyan', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             <div className="node-glow-layer" />
             {activeNode === 'guardrails' && (
               <svg className="absolute -inset-[2px] w-[calc(100%+4px)] h-[calc(100%+4px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
