@@ -183,18 +183,18 @@ export default function WorkflowVisualization() {
           <line x1="50%" y1="calc(12.5% + 64px)" x2="50%" y2="calc(50% - 64px)" stroke="#d1d5db" strokeWidth="2" className={`md:hidden ${isGlowing1 ? 'line-quick-glow' : ''} ${isFadingBack1 ? 'line-fade-back' : ''}`} />
           <line x1="50%" y1="calc(50% + 64px)" x2="50%" y2="calc(87.5% - 64px)" stroke="#d1d5db" strokeWidth="2" className={`md:hidden ${isGlowing2 ? 'line-quick-glow' : ''} ${isFadingBack2 ? 'line-fade-back' : ''}`} />
           <line 
-            x1="calc(50% - 128px - 4px)" 
+            x1="calc(50% - 304px)" 
             y1="50%" 
-            x2="calc(50% - 128px + 36px)" 
+            x2="calc(50% - 144px)" 
             y2="50%" 
             stroke="#d1d5db" 
             strokeWidth="2" 
             className={`hidden md:block ${isGlowing1 ? 'line-quick-glow' : ''} ${isFadingBack1 ? 'line-fade-back' : ''}`} 
           />
           <line 
-            x1="calc(50% + 128px - 36px)" 
+            x1="calc(50% + 144px)" 
             y1="50%" 
-            x2="calc(50% + 128px + 4px)" 
+            x2="calc(50% + 304px)" 
             y2="50%" 
             stroke="#d1d5db" 
             strokeWidth="2" 
