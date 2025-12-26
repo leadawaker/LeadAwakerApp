@@ -54,6 +54,9 @@ export default function WorkflowVisualization() {
         await new Promise(r => setTimeout(r, 920));
       }
       
+      setGuardrailsStatus('...');
+      await new Promise(r => setTimeout(r, 1500));
+      
       setGuardrailsStatus('Message Sent');
       setIsApproved(true);
       await new Promise(r => setTimeout(r, 11500));
@@ -246,13 +249,13 @@ export default function WorkflowVisualization() {
             )}
             <div className="card-gradient-overlay" />
             <div className="flex items-center gap-3 mb-4">
-              <div className={`p-2 rounded-lg transition-colors duration-300 ${activeNode === 'agent' ? 'bg-purple-100' : 'bg-gray-50/50'}`}>
-                <Bot className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'agent' ? 'text-purple-600' : 'text-gray-400/60'}`} />
+              <div className={`p-2 rounded-lg transition-colors duration-300 ${activeNode === 'agent' ? 'bg-purple-100' : (visitedNodes.has('agent') ? 'bg-purple-50/50' : 'bg-gray-50/50')}`}>
+                <Bot className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'agent' ? 'text-purple-600' : (visitedNodes.has('agent') ? 'text-purple-400/60' : 'text-gray-400/60')}`} />
               </div>
               <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'agent' ? 'text-gray-900' : 'text-gray-400'}`}>AI Agent</h3><p className="text-[10px] text-gray-400 text-left font-semibold uppercase tracking-wider">GPT-5.2</p></div>
             </div>
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center overflow-hidden justify-between">
-              <span className={`font-semibold font-mono transition-colors duration-300 ${activeNode === 'agent' ? 'text-purple-600' : 'text-gray-400/60'}`}>Output</span>
+              <span className={`font-semibold font-mono transition-colors duration-300 ${activeNode === 'agent' ? 'text-purple-600' : (visitedNodes.has('agent') ? 'text-purple-400/60' : 'text-gray-400/60')}`}>Output</span>
               <span className={`truncate font-mono transition-colors duration-300 ${activeNode === 'agent' ? 'text-gray-700' : 'text-gray-400'}`}>
                 {visitedNodes.has('agent') ? (agentStatus === 'thinking' ? '...' : (agentStatus === 'msg1' ? 'Good morning :)' : 'Is this Jack?')) : ''}
               </span>
