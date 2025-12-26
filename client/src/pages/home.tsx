@@ -313,10 +313,6 @@ export default function Home() {
               {
                 q: "How much does it cost?",
                 a: "Pricing starts at [custom quote]. We work on performance-based or flat-fee models depending on your preference. No upfront setup fees."
-              },
-              {
-                q: "What about compliance (GDPR, CCPA)?",
-                a: "All workflows respect opt-out preferences, unsubscribe links, and data residency requirements. We're fully compliant."
               }
             ].map((faq, i) => (
               <motion.div
