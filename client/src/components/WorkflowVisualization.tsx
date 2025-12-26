@@ -116,7 +116,7 @@ export default function WorkflowVisualization() {
           height: 12px;
           border-radius: 999px;
           border: 2px solid white;
-          background: #e2e8f0;
+          background: #e5e7eb;
           position: absolute;
           left: 50%;
           top: auto;
@@ -124,7 +124,7 @@ export default function WorkflowVisualization() {
           transform: translateX(-50%);
           z-index: 20;
           transition: all 0.3s ease;
-          opacity: 0.3;
+          opacity: 0.5;
         }
         .connector-dot.top-mobile {
           top: -6px;
@@ -183,18 +183,18 @@ export default function WorkflowVisualization() {
           <line x1="50%" y1="calc(12.5% + 64px)" x2="50%" y2="calc(50% - 64px)" stroke="#d1d5db" strokeWidth="2" className={`md:hidden ${isGlowing1 ? 'line-quick-glow' : ''} ${isFadingBack1 ? 'line-fade-back' : ''}`} />
           <line x1="50%" y1="calc(50% + 64px)" x2="50%" y2="calc(87.5% - 64px)" stroke="#d1d5db" strokeWidth="2" className={`md:hidden ${isGlowing2 ? 'line-quick-glow' : ''} ${isFadingBack2 ? 'line-fade-back' : ''}`} />
           <line 
-            x1="calc(50% - 144px - 8px)" 
+            x1="calc(50% - 160px - 32px)" 
             y1="50%" 
-            x2="calc(50% - 144px + 8px)" 
+            x2="calc(50% - 160px + 32px)" 
             y2="50%" 
             stroke="#d1d5db" 
             strokeWidth="2" 
             className={`hidden md:block ${isGlowing1 ? 'line-quick-glow' : ''} ${isFadingBack1 ? 'line-fade-back' : ''}`} 
           />
           <line 
-            x1="calc(50% + 144px - 8px)" 
+            x1="calc(50% + 160px - 32px)" 
             y1="50%" 
-            x2="calc(50% + 144px + 8px)" 
+            x2="calc(50% + 160px + 32px)" 
             y2="50%" 
             stroke="#d1d5db" 
             strokeWidth="2" 
