@@ -55,7 +55,6 @@ export default function WorkflowVisualization() {
 
   useEffect(() => {
     if (!isInView) return;
-
     const sequence = async () => {
       await new Promise(r => setTimeout(r, 3000));
       setVisitedNodes(prev => new Set(prev).add('engaging'));
