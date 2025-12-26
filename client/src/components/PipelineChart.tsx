@@ -151,10 +151,10 @@ export default function PipelineChart() {
         <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 dark:text-white">What you SEE</h2>
         <p className="text-slate-500 dark:text-slate-400">A real-time view of leads becoming customers</p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full items-start">
         {STAGES.map((stage) => (
-          <div key={stage.id} className="flex flex-col min-h-[600px]">
-            <div className="flex flex-col bg-slate-50/50 dark:bg-slate-900/50 rounded-xl p-2 border border-slate-200 dark:border-slate-800 w-full min-h-[600px]">
+          <div key={stage.id} className="flex flex-col">
+            <div className={`flex flex-col bg-slate-50/50 dark:bg-slate-900/50 rounded-xl p-2 border border-slate-200 dark:border-slate-800 w-full transition-all duration-300 ${stage.id === 'booked' ? 'min-h-[200px] md:min-h-[600px]' : 'h-auto md:min-h-[600px]'}`}>
             {/* Header */}
             <div 
               className={`sticky top-2 p-3 rounded-lg mb-3 flex items-center justify-between shadow-sm backdrop-blur-sm ${stage.colorClass} z-10`}

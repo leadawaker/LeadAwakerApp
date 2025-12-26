@@ -186,7 +186,7 @@ export default function WorkflowVisualization() {
         }
       `}</style>
       
-      <div className="relative w-[calc(100vw-4rem)] md:w-[1200px] md:h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300/50 rounded-3xl overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 px-12 py-12 md:py-0 space-y-24 md:space-y-0 -mx-4 md:mx-0">
+      <div className="relative w-[calc(100vw-4rem)] md:w-[1200px] h-auto md:h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300/50 rounded-3xl overflow-visible shadow-lg flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 px-12 py-12 md:py-0 space-y-24 md:space-y-0 -mx-4 md:mx-0">
         <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
           {/* Vertical lines for mobile, horizontal for desktop */}
           <line x1="50%" y1="calc(12.5% + 64px)" x2="50%" y2="calc(50% - 64px)" stroke="#d1d5db" strokeWidth="2" className={`md:hidden ${isGlowing1 ? 'line-quick-glow' : ''} ${isFadingBack1 ? 'line-fade-back' : ''}`} />
