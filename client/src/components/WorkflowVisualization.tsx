@@ -77,7 +77,7 @@ export default function WorkflowVisualization() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-8 font-sans text-gray-900 relative">
+    <div className="flex flex-col items-center justify-center font-sans text-gray-900 relative">
       <style>{`
         @keyframes strokeRotate { 0% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -240; } }
         @keyframes lineQuickGlow {
@@ -187,7 +187,7 @@ export default function WorkflowVisualization() {
         </svg>
 
         <div className="connector-wrapper relative z-10">
-          <div className={`connector-dot bottom-mobile md:right-side ${activeNode === 'contact' ? 'active-amber' : visitedNodes.has('agent') ? 'visited-amber' : ''}`} />
+          <div className={`connector-dot right-side ${activeNode === 'contact' ? 'active-amber' : visitedNodes.has('agent') ? 'visited-amber' : ''}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 shadow-xl card-active-amber', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             <div className="node-glow-layer" />
             {activeNode === 'contact' && (
