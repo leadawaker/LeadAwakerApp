@@ -256,10 +256,30 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="text-center max-w-3xl mx-auto mb-16"
+                className="text-center max-w-4xl mx-auto mb-16"
               >
                 <h2 className="text-3xl md:text-4xl font-bold mb-4">Security, Compliance, and Reputation Built In</h2>
-                <p className="text-lg text-muted-foreground">Your brand and data stay protected every step of the way.</p>
+                <p className="text-lg text-[#3c50d6] mb-8 font-medium">Every AI reply passes through Security Guardrails, so no message leaves the system without safety and compliance checks—keeping responses reliable and on‑brand.</p>
+                <div className="grid md:grid-cols-2 gap-8 text-left mt-12 bg-white/50 backdrop-blur-sm p-8 rounded-3xl border border-border/50 shadow-sm">
+                  <div className="space-y-3">
+                    <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                      GDPR & CCPA Compliant
+                    </h3>
+                    <p className="text-gray-600 text-sm leading-relaxed">
+                      All workflows respect opt-out preferences, unsubscribe links, and data residency requirements. We're fully compliant with global privacy standards.
+                    </p>
+                  </div>
+                  <div className="space-y-3 border-l border-border/50 pl-8">
+                    <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-500" />
+                      Brand Protection
+                    </h3>
+                    <p className="text-gray-600 text-sm leading-relaxed">
+                      Real-time monitoring ensures every interaction stays on-topic, professional, and perfectly aligned with your brand's voice and guidelines.
+                    </p>
+                  </div>
+                </div>
               </motion.div>
 
               <WorkflowVisualization />
