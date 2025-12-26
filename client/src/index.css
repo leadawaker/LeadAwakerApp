@@ -683,12 +683,12 @@
     text-shadow: none;
     filter: brightness(1);
   }
-  50%, 54% {
+  49%, 51% {
     color: #ffffff;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4);
-    filter: brightness(1.5);
+    text-shadow: 0 0 15px rgba(255, 255, 255, 1), 0 0 30px rgba(255, 255, 255, 0.6);
+    filter: brightness(2);
   }
-  56%, 100% {
+  52%, 100% {
     color: var(--color-blue-100);
     text-shadow: none;
     filter: brightness(1);
@@ -696,7 +696,7 @@
 }
 
 .animate-shine-text {
-  animation: shine-text 20s infinite;
+  animation: shine-text 10s infinite linear;
 }
 
 @layer base {
