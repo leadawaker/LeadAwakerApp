@@ -678,17 +678,17 @@
 }
 
 @keyframes shine-text {
-  0% {
+  0%, 48% {
     color: var(--color-blue-100);
     text-shadow: none;
     filter: brightness(1);
   }
-  2%, 8% {
+  50%, 54% {
     color: #ffffff;
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4);
     filter: brightness(1.5);
   }
-  10%, 100% {
+  56%, 100% {
     color: var(--color-blue-100);
     text-shadow: none;
     filter: brightness(1);
@@ -696,7 +696,7 @@
 }
 
 .animate-shine-text {
-  animation: shine-text 10s infinite;
+  animation: shine-text 20s infinite;
 }
 
 @layer base {
