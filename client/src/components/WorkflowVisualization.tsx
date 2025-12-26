@@ -110,54 +110,6 @@ export default function WorkflowVisualization() {
   return (
     <div ref={containerRef} className="flex flex-col items-center justify-center font-sans text-gray-900 md:overflow-hidden relative">
       <NodeStrokeAnimation />
-      
-      <div className="relative w-full max-w-5xl md:h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300/50 rounded-3xl overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between px-12 py-12 md:py-0 space-y-24 md:space-y-0">
-        <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
-          <line x1="25%" y1="50%" x2="50%" y2="50%" stroke="#d1d5db" strokeWidth="2" className={`${isGlowing1 ? 'line-quick-glow' : ''} ${isFadingBack1 ? 'line-fade-back' : ''}`} />
-          <line x1="50%" y1="50%" x2="75%" y2="50%" stroke="#d1d5db" strokeWidth="2" className={`${isGlowing2 ? 'line-quick-glow' : ''} ${isFadingBack2 ? 'line-fade-back' : ''}`} />
-        </svg>
-        {/* Lead Card */}
-        <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 shadow-xl card-active-amber', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
-          <div className="card-gradient-overlay" />
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-amber-100"><User className="w-5 h-5 text-amber-600" /></div>
-            <div><h3 className="font-bold text-sm">Lead #315</h3><p className="text-[10px] text-gray-400">Jack Johnson</p></div>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px]">
-            <span className="text-amber-600 font-mono">status: </span>
-            <span className="text-gray-700 font-mono">{isApproved ? 'Lead Engaged' : 'Active'}</span>
-          </div>
-        </div>
-        {/* Agent Card */}
-        <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('agent', 'border-purple-500 shadow-xl card-active-purple', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
-          <div className="card-gradient-overlay" />
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-purple-100"><Bot className="w-5 h-5 text-purple-600" /></div>
-            <div><h3 className="font-bold text-sm">AI Agent</h3><p className="text-[10px] text-gray-400">GPT-5.2</p></div>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center">
-            <span className="text-purple-600 font-mono">Output: </span>
-            <span className="ml-2 truncate">{agentStatus === 'thinking' ? '...' : (agentStatus === 'msg1' ? 'Good morning :)' : 'Is this Jack?')}</span>
-          </div>
-        </div>
-        {/* Guardrails Card */}
-        <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${isApproved ? 'border-emerald-500 shadow-xl card-active-emerald' : getStatusColor('guardrails', 'border-cyan-500 shadow-xl card-active-cyan', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
-          <div className="card-gradient-overlay" />
-          <div className="flex items-center gap-3 mb-4">
-            <div className={`p-2 rounded-lg ${isApproved ? 'bg-emerald-100' : 'bg-cyan-100'}`}>
-              {isApproved ? <CheckCircle2 className="w-5 h-5 text-emerald-600" /> : <Shield className="w-5 h-5 text-cyan-600" />}
-            </div>
-            <div><h3 className="font-bold text-sm">Guardrails</h3><p className="text-[10px] text-gray-400">Security</p></div>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center">
-            <span className="text-cyan-600 font-mono">status: </span>
-            <span className="ml-2 truncate">{guardrailsStatus}</span>
-          </div>
-        </div>
-      </div>
-      <p className="mt-12 text-gray-600 text-sm max-w-2xl text-center">
-        Every AI reply passes through <span className="font-bold text-cyan-600">Security Guardrails</span> for compliance.
-      </p>
     </div>
   );
 }
