@@ -38,10 +38,20 @@ export default function WorkflowVisualization() {
       setActiveNode('guardrails');
       setVisitedNodes(prev => new Set(prev).add('guardrails'));
 
-      const checks = ['verifying...', 'No violations', 'On-topic sales', 'Clean content', 'No personal data', 'No Data Leakage'];
+      const checks = [
+        'verifying...', 
+        'No violations', 
+        'On-topic sales', 
+        'Clean content', 
+        'Clean language',
+        'No personal data', 
+        'No credentials',
+        'No unauthorized links',
+        'No Data Leakage'
+      ];
       for (const t of checks) {
         setGuardrailsStatus(t);
-        await new Promise(r => setTimeout(r, 1000));
+        await new Promise(r => setTimeout(r, 800));
       }
       
       setGuardrailsStatus('Message Sent');
@@ -82,38 +92,42 @@ export default function WorkflowVisualization() {
         .node-active-stroke { stroke-dasharray: 60, 180; animation: strokeRotate 2s linear infinite; }
         .line-quick-glow { animation: lineQuickGlow 0.4s ease-in-out forwards; }
         .line-fade-back { animation: lineFadeBack 0.8s ease-in-out forwards; }
+        .node-glow-layer {
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          z-index: -1;
+          transition: all 0.5s ease;
+          opacity: 0;
+        }
         .card-gradient-overlay { 
           position: absolute; inset: 0; pointer-events: none; border-radius: inherit; 
           background: linear-gradient(to top left, rgba(55, 65, 81, 0.05), transparent 70%); 
           transition: background 0.5s ease;
           mix-blend-mode: plus-lighter;
         }
-        .card-active-amber { box-shadow: 0 0 80px 30px rgba(245, 158, 11, 0.8); }
-        .card-active-purple { box-shadow: 0 0 80px 30px rgba(168, 85, 247, 0.8); }
-        .card-active-emerald { box-shadow: 0 0 80px 30px rgba(16, 185, 129, 0.8); }
-        .card-active-cyan { box-shadow: 0 0 80px 30px rgba(6, 182, 212, 0.8); }
-        .card-active-amber .card-gradient-overlay { background: linear-gradient(to top left, rgba(245, 158, 11, 0.45), transparent 70%); }
-        .card-active-purple .card-gradient-overlay { background: linear-gradient(to top left, rgba(168, 85, 247, 0.45), transparent 70%); }
-        .card-active-emerald .card-gradient-overlay { background: linear-gradient(to top left, rgba(16, 185, 129, 0.45), transparent 70%); }
-        .card-active-cyan .card-gradient-overlay { background: linear-gradient(to top left, rgba(6, 182, 212, 0.45), transparent 70%); }
+        .card-active-amber .node-glow-layer { background: #fbbf24; opacity: 0.4; filter: blur(48px); }
+        .card-active-purple .node-glow-layer { background: #c084fc; opacity: 0.4; filter: blur(48px); }
+        .card-active-emerald .node-glow-layer { background: #34d399; opacity: 0.4; filter: blur(48px); }
+        .card-active-cyan .node-glow-layer { background: #22d3ee; opacity: 0.4; filter: blur(48px); }
+        
         .connector-dot {
-          width: 10px;
-          height: 10px;
+          width: 12px;
+          height: 12px;
           border-radius: 999px;
-          border: 1.5px solid #cbd5e1;
-          background: white;
+          border: 2px solid white;
+          background: #cbd5e1;
           position: absolute;
           top: 50%;
           transform: translateY(-50%);
           z-index: 20;
           transition: all 0.3s ease;
-          box-shadow: 0 0 6px rgba(0,0,0,0.03);
           opacity: 0.6;
         }
-        .connector-dot.active-amber { border-color: #f59e0b; background: #f59e0b; box-shadow: 0 0 12px #f59e0b; opacity: 1; }
-        .connector-dot.active-purple { border-color: #a855f7; background: #a855f7; box-shadow: 0 0 12px #a855f7; opacity: 1; }
-        .connector-dot.active-emerald { border-color: #10b981; background: #10b981; box-shadow: 0 0 12px #10b981; opacity: 1; }
-        .connector-dot.active-cyan { border-color: #06b6d4; background: #06b6d4; box-shadow: 0 0 12px #06b6d4; opacity: 1; }
+        .connector-dot.active-amber { transform: translateY(-50%) scale(1.25); background: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.8); opacity: 1; }
+        .connector-dot.active-purple { transform: translateY(-50%) scale(1.25); background: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.8); opacity: 1; }
+        .connector-dot.active-emerald { transform: translateY(-50%) scale(1.25); background: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.8); opacity: 1; }
+        .connector-dot.active-cyan { transform: translateY(-50%) scale(1.25); background: #06b6d4; box-shadow: 0 0 10px rgba(6, 182, 212, 0.8); opacity: 1; }
       `}</style>
       
       <div className="relative w-full max-w-5xl md:h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300/50 rounded-3xl overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between px-12 py-12 md:py-0 space-y-24 md:space-y-0">
@@ -125,6 +139,7 @@ export default function WorkflowVisualization() {
         <div className="relative z-10">
           <div className={`connector-dot -right-[5px] ${activeNode === 'contact' ? 'active-amber' : visitedNodes.has('agent') ? 'active-amber' : ''}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 shadow-xl card-active-amber', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
+            <div className="node-glow-layer" />
             {activeNode === 'contact' && (
               <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
                 <rect x="4" y="4" width="96%" height="96%" rx="12" fill="none" stroke="#f59e0b" strokeWidth="2" className="node-active-stroke" />
@@ -135,7 +150,7 @@ export default function WorkflowVisualization() {
               <div className={`p-2 rounded-lg transition-colors duration-300 ${activeNode === 'contact' ? 'bg-amber-100' : 'bg-amber-50/50'}`}>
                 <User className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'contact' ? 'text-amber-600' : 'text-amber-400/60'}`} />
               </div>
-              <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'contact' ? 'text-gray-900' : 'text-gray-400'}`}>Lead #315</h3><p className="text-[10px] text-gray-400 text-left">Jack Johnson</p></div>
+              <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'contact' ? 'text-gray-900' : 'text-gray-400'}`}>Lead #315</h3><p className="text-[10px] text-gray-400 text-left font-semibold uppercase tracking-wider">Jack Johnson</p></div>
             </div>
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] font-mono flex items-center justify-between">
               <span className={`font-semibold transition-colors duration-300 ${activeNode === 'contact' ? 'text-amber-600' : 'text-amber-400/60'}`}>Status</span>
@@ -148,6 +163,7 @@ export default function WorkflowVisualization() {
           <div className={`connector-dot -left-[5px] ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('agent') ? 'active-purple' : ''}`} />
           <div className={`connector-dot -right-[5px] ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('guardrails') ? 'active-purple' : ''}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('agent', 'border-purple-500 shadow-xl card-active-purple', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
+            <div className="node-glow-layer" />
             {activeNode === 'agent' && (
               <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
                 <rect x="4" y="4" width="96%" height="96%" rx="12" fill="none" stroke="#a855f7" strokeWidth="2" className="node-active-stroke" />
@@ -158,7 +174,7 @@ export default function WorkflowVisualization() {
               <div className={`p-2 rounded-lg transition-colors duration-300 ${activeNode === 'agent' ? 'bg-purple-100' : 'bg-purple-50/50'}`}>
                 <Bot className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'agent' ? 'text-purple-600' : 'text-purple-400/60'}`} />
               </div>
-              <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'agent' ? 'text-gray-900' : 'text-gray-400'}`}>AI Agent</h3><p className="text-[10px] text-gray-400 text-left">GPT-5.2</p></div>
+              <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'agent' ? 'text-gray-900' : 'text-gray-400'}`}>AI Agent</h3><p className="text-[10px] text-gray-400 text-left font-semibold uppercase tracking-wider">GPT-5.2</p></div>
             </div>
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center overflow-hidden justify-between">
               <span className={`font-semibold font-mono transition-colors duration-300 ${activeNode === 'agent' ? 'text-purple-600' : 'text-purple-400/60'}`}>Output</span>
@@ -172,6 +188,7 @@ export default function WorkflowVisualization() {
         <div className="relative z-10">
           <div className={`connector-dot -left-[5px] ${activeNode === 'guardrails' ? (isApproved ? 'active-emerald' : 'active-cyan') : (isApproved ? 'active-emerald' : (visitedNodes.has('guardrails') ? 'active-cyan' : ''))}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${isApproved ? 'border-emerald-500 shadow-xl card-active-emerald' : getStatusColor('guardrails', 'border-cyan-500 shadow-xl card-active-cyan', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
+            <div className="node-glow-layer" />
             {activeNode === 'guardrails' && (
               <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
                 <rect x="4" y="4" width="96%" height="96%" rx="12" fill="none" stroke={isApproved ? "#10b981" : "#06b6d4"} strokeWidth="2" className="node-active-stroke" />
@@ -185,7 +202,7 @@ export default function WorkflowVisualization() {
                   <Shield className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-cyan-600' : 'text-cyan-400/60'}`} />
                 }
               </div>
-              <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-gray-900' : 'text-gray-400'}`}>Guardrails</h3><p className="text-[10px] text-gray-400 text-left">SECURITY</p></div>
+              <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-gray-900' : 'text-gray-400'}`}>Guardrails</h3><p className="text-[10px] text-gray-400 text-left font-semibold uppercase tracking-wider">SECURITY</p></div>
             </div>
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center justify-between">
               <span className={`font-semibold font-mono transition-colors duration-300 ${(activeNode === 'guardrails' || isApproved) ? (isApproved ? 'text-emerald-600' : 'text-cyan-600') : (isApproved ? 'text-emerald-400/60' : 'text-cyan-400/60')}`}>Status</span>

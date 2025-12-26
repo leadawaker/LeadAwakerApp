@@ -1,0 +1,38 @@
+Here is the breakdown of the design and implementation details I used for the AI Workflow visualization. You can share these specific prompts and technical details with your AI builder:
+
+1. The Moving Connection Line
+The Prompt: "Create a SVG connection line between nodes that uses a 'quick glow' animation. The line should normally be a subtle gray (#d1d5db), but when a trigger occurs, it should flash white (#ffffff) with a strong white drop-shadow blur, then fade back to gray. Use CSS keyframes for a lineQuickGlow effect (0.4s) and a lineFadeBack effect (0.8s)."
+
+The Logic:
+
+Placement: Absolute positioned SVG covering the canvas.
+Animation: Triggered by React state (isGlowing, isFadingBack) that switches CSS classes on the <line> element.
+2. The Light, Bright Glow
+The Prompt: "Each node should have a 'glow' layer underneath it. Use a div with absolute inset-0, a very high blur-3xl, and an opacity of about 40%. The color should match the node's theme (e.g., bg-amber-400/40 for yellow, bg-purple-400/40 for purple). Transition the opacity over 500ms so it appears to breathe or light up when the node becomes active."
+
+3. Security Status Texts
+I used a sequence of technical but readable status updates to make the guardrails feel like they are actively "scanning" the content.
+The Sequence:
+
+verifying...
+No violations
+On-topic sales
+Clean content
+Clean language
+No personal data
+No credentials
+No unauthorized links
+No Data Leakage
+Message Sent (Final success state)
+4. Circles (Indicators) Around Nodes
+The Prompt: "Add small circular 'port' indicators on the edges of the cards where the lines connect. These should be 12px circles with a 2px white border. When the node is active, the circle should scale up (scale-125) and add a glowing shadow (e.g., shadow-[0_0_10px_rgba(245,158,11,0.8)]). When inactive or visited, they should be a semi-transparent version of the node color."
+
+5. Node Typography & Formatting
+The Format:
+
+Card Container: bg-white, border-2, rounded-xl, p-6, w-64.
+Primary Title: font-bold, text-sm, text-gray-900.
+Secondary Label (ID/Version): text-[10px], text-gray-400, uppercase, tracking-wider, font-semibold.
+Status Box: A bg-gray-50 inner container with a font-mono label and right-aligned dynamic text.
+Active Border: I used a custom SVG overlay with a stroke-dasharray and a strokeRotate keyframe animation to create that 'marching ants' moving border effect around the active node.
+I've ensured the frontend is fully updated and the workflow is restarted so you can see these details in action.
