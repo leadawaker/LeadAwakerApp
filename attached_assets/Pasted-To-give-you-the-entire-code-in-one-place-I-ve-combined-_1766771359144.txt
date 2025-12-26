@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
-import { User, Bot, CheckCircle2, Shield } from 'lucide-react';
+To give you the entire code in one place, I've combined the core logic, styles, and structure into a single standalone React file. This version uses Tailwind CSS classes directly and includes the animations and workflow logic.
 
+Standalone Workflow Component (WorkflowVisualization.tsx)
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { User, Bot, CheckCircle2, Shield } from 'lucide-react';
 const NodeStrokeAnimation = () => (
   <style>{`
     @keyframes strokeRotate {
@@ -38,7 +40,6 @@ const NodeStrokeAnimation = () => (
     .card-active-cyan .card-gradient-overlay { background: linear-gradient(to top left, rgba(6, 182, 212, 0.12), transparent 70%); }
   `}</style>
 );
-
 export default function WorkflowVisualization() {
   const [activeNode, setActiveNode] = useState<'contact' | 'agent' | 'guardrails' | null>('contact');
   const [visitedNodes, setVisitedNodes] = useState<Set<string>>(new Set(['contact']));
@@ -49,13 +50,7 @@ export default function WorkflowVisualization() {
   const [agentStatus, setAgentStatus] = useState<'thinking' | 'msg1' | 'msg2'>('thinking');
   const [guardrailsStatus, setGuardrailsStatus] = useState<string>('');
   const [isApproved, setIsApproved] = useState(false);
-
-  const containerRef = useRef(null);
-  const isInView = useInView(containerRef, { amount: 0.5, once: true });
-
   useEffect(() => {
-    if (!isInView) return;
-
     const sequence = async () => {
       await new Promise(r => setTimeout(r, 3000));
       setVisitedNodes(prev => new Set(prev).add('engaging'));
@@ -101,17 +96,19 @@ export default function WorkflowVisualization() {
       sequence();
     };
     sequence();
-  }, [isInView]);
-
+  }, []);
   const getStatusColor = (node: string, activeClass: string, visitedClass: string, defaultClass: string) => {
     if (activeNode === node) return activeClass;
     return visitedNodes.has(node) ? visitedClass : defaultClass;
   };
-
   return (
-    <div ref={containerRef} className="flex flex-col items-center justify-center font-sans text-gray-900 md:overflow-hidden relative">
+    <div className="min-h-screen bg-gray-200 flex flex-col items-center justify-center p-8 font-sans text-gray-900 overflow-hidden relative">
       <NodeStrokeAnimation />
       
+      <div className="mb-12 text-center">
+        <h1 className="text-4xl font-bold text-gray-900 mb-2 tracking-tight">AI Agent Workflow</h1>
+        <p className="text-gray-600">Automated compliance and interaction pipeline</p>
+      </div>
       <div className="relative w-full max-w-5xl md:h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300/50 rounded-3xl overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between px-12 py-12 md:py-0 space-y-24 md:space-y-0">
         <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
           <line x1="25%" y1="50%" x2="50%" y2="50%" stroke="#d1d5db" strokeWidth="2" className={`${isGlowing1 ? 'line-quick-glow' : ''} ${isFadingBack1 ? 'line-fade-back' : ''}`} />
@@ -162,3 +159,9 @@ export default function WorkflowVisualization() {
     </div>
   );
 }
+Required Dependencies
+To run this on your own site, ensure you have these installed:
+
+npm install framer-motion lucide-react clsx tailwind-merge
+Tailwind Configuration
+Ensure your tailwind.config.js or index.css is set up to support standard colors. The component uses standard Tailwind classes like bg-gray-200, border-amber-500, etc., so it will work out of the box with any standard Tailwind setup.
