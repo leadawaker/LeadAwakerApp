@@ -1,151 +1,27 @@
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap, Database, MessageSquare, Calendar, BarChart, CheckCircle, ChevronDown, Menu, Lock } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
-import { useState, useRef } from "react";
-import { useInView } from "framer-motion";
-import { useEffect } from "react";
+import { motion, useInView } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { 
+  ArrowRight, 
+  ChevronDown, 
+  Zap, 
+  Shield, 
+  Bot, 
+  Target, 
+  BarChart3, 
+  Lock 
+} from "lucide-react";
 import Chat3D from "@/components/Chat3D";
-import { PipelineChart } from "@/components/PipelineChart";
-import { SalesRepSteps } from "@/components/SalesRepSteps";
-import { AnimatedLogo3D } from "@/components/AnimatedLogo3D";
+import AnimatedLogo3D from "@/components/AnimatedLogo3D";
+import PipelineChart from "@/components/PipelineChart";
+import AnimatedCounter from "@/components/AnimatedCounter";
+import AnimatedRangeCounter from "@/components/AnimatedRangeCounter";
+import SalesRepSteps from "@/components/SalesRepSteps";
 import WorkflowVisualization from "@/components/WorkflowVisualization";
 
-const AnimatedCounter = ({ end, duration = 3, format = (v: number) => Math.round(v).toString(), suffix = "" }: { end: number | string; duration?: number; format?: (v: number) => string; suffix?: string }) => {
-  const [value, setValue] = useState(0);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-  
-  useEffect(() => {
-    if (!isInView) return;
-    
-    const numEnd = typeof end === 'string' ? 0 : end;
-    const start = numEnd / 2;
-    const startTime = Date.now();
-    
-    const animate = () => {
-      const elapsed = (Date.now() - startTime) / 1000;
-      const progress = Math.min(elapsed / duration, 1);
-      const current = start + (numEnd - start) * progress;
-      setValue(current);
-      
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-    
-    requestAnimationFrame(animate);
-  }, [isInView, end, duration]);
-  
-  return (
-    <div ref={ref}>
-      {typeof end === 'string' ? end : format(value)}{suffix}
-    </div>
-  );
-};
-
-const AnimatedRangeCounter = ({ start: startNum, end: endNum, duration = 3, format = (v: number) => Math.round(v).toString(), suffix = "" }: { start: number; end: number; duration?: number; format?: (v: number) => string; suffix?: string }) => {
-  const [startValue, setStartValue] = useState(0);
-  const [endValue, setEndValue] = useState(0);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-  
-  useEffect(() => {
-    if (!isInView) return;
-    
-    const startHalf = startNum / 2;
-    const endHalf = endNum / 2;
-    const startTime = Date.now();
-    
-    const animate = () => {
-      const elapsed = (Date.now() - startTime) / 1000;
-      const progress = Math.min(elapsed / duration, 1);
-      const currentStart = startHalf + (startNum - startHalf) * progress;
-      const currentEnd = endHalf + (endNum - endHalf) * progress;
-      setStartValue(currentStart);
-      setEndValue(currentEnd);
-      
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-    
-    requestAnimationFrame(animate);
-  }, [isInView, startNum, endNum, duration]);
-  
-  return (
-    <div ref={ref}>
-      {format(startValue)}-{format(endValue)}{suffix}
-    </div>
-  );
-};
-
-const KanbanCard = ({ title, delay, isInView }: { title: string; delay: number; isInView: boolean }) => (
-  <motion.div
-    initial={{ x: -100, opacity: 0 }}
-    animate={isInView ? { x: 0, opacity: 1 } : { x: -100, opacity: 0 }}
-    transition={{ delay, duration: 0.5, repeat: Infinity, repeatDelay: 4 }}
-    className="bg-white p-3 rounded-lg shadow-md border border-border text-sm font-medium w-32 text-center"
-  >
-    {title}
-  </motion.div>
-);
-
-const AnimatedPipeline = ({ isInView }: { isInView: boolean }) => {
-  const stages = ["Not Engaged", "Contacted", "Replied", "Qualified", "Sent to Client"];
-  
-  return (
-    <div className="space-y-6">
-      {stages.map((stage, idx) => (
-        <div key={idx} className="flex items-center gap-4">
-          <div className="w-32 text-sm font-semibold text-muted-foreground">{stage}</div>
-          <div className="flex-1 h-16 bg-muted/30 rounded-lg border border-dashed border-border flex items-center px-4 overflow-hidden relative">
-            {idx === 0 && <KanbanCard title="Lead #1234" delay={0} isInView={isInView} />}
-            {idx === 1 && <KanbanCard title="Lead #5678" delay={0.3} isInView={isInView} />}
-            {idx === 2 && <KanbanCard title="Lead #9012" delay={0.6} isInView={isInView} />}
-            {idx === 3 && <KanbanCard title="Lead #3456" delay={0.9} isInView={isInView} />}
-            {idx === 4 && <KanbanCard title="Lead #7890" delay={1.2} isInView={isInView} />}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const NodeStrokeAnimation = () => (
-  <style>{`
-    @keyframes strokeRotate {
-      0% {
-        stroke-dashoffset: 0;
-      }
-      100% {
-        stroke-dashoffset: -240;
-      }
-    }
-
-    @keyframes connectorFlow {
-      0% {
-        stroke-dashoffset: 0;
-      }
-      100% {
-        stroke-dashoffset: 10;
-      }
-    }
-
-    .node-active-stroke {
-      stroke-dasharray: 60, 180;
-      animation: strokeRotate 2s linear forwards;
-    }
-
-    .connector-animated {
-      stroke-dasharray: 5, 5;
-      animation: connectorFlow 20s linear infinite;
-    }
-  `}</style>
-);
-
 export default function Home() {
-  const [openFAQ, setOpenFAQ] = useState<number | null>(0);
+  const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [activeNode, setActiveNode] = useState<'agent' | 'guardrails' | null>(null);
 
   useEffect(() => {
@@ -161,7 +37,7 @@ export default function Home() {
     }
 
     return () => clearInterval(interval);
-  }, [activeNode === null]);
+  }, [activeNode]);
 
   const workflowRef = useRef(null);
   const isWorkflowInView = useInView(workflowRef, { amount: 0.5, once: true });
@@ -170,7 +46,7 @@ export default function Home() {
     if (isWorkflowInView && activeNode === null) {
       setActiveNode('agent');
     }
-  }, [isWorkflowInView]);
+  }, [isWorkflowInView, activeNode]);
 
   return (
     <div className="min-h-screen pt-24">
@@ -395,7 +271,6 @@ export default function Home() {
       </section>
       {/* Security & AI Guardrails Section */}
       <section className="py-24 border-t border-border">
-        <NodeStrokeAnimation />
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -412,77 +287,65 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="relative w-full h-[500px] bg-slate-900/40 backdrop-blur-sm border border-slate-800/50 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row items-center justify-between px-12 py-12 md:py-0 space-y-24 md:space-y-0"
+            className="relative w-full h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300/50 rounded-3xl overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between px-12 py-12 md:py-0 space-y-24 md:space-y-0"
             data-testid="canvas-workflow"
           >
-            {/* SVG Connection Lines */}
+            {/* Connection Lines */}
             <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
               <g className="hidden md:block">
                 <line 
                   x1="25%" y1="50%" x2="50%" y2="50%" 
-                  stroke="#3f3f46" strokeWidth="2" 
-                  className={`${activeNode === 'guardrails' ? 'line-visited' : 'connector-animated'}`}
+                  stroke="#d1d5db" strokeWidth="2" 
+                  className={`${activeNode === 'guardrails' || activeNode === 'agent' ? 'line-visited' : 'connector-animated'}`}
                 />
                 <line 
                   x1="50%" y1="50%" x2="75%" y2="50%" 
-                  stroke="#3f3f46" strokeWidth="2"
+                  stroke="#d1d5db" strokeWidth="2"
                   className={`${activeNode === 'guardrails' ? 'connector-animated' : ''}`}
                 />
               </g>
             </svg>
-
-            {/* AI Agent Node */}
+            {/* Card: AI Agent */}
             <div className="relative z-10">
-              <div className="relative">
-                {activeNode === 'agent' && (
-                  <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
-                    <rect x="4" y="4" width="100%" height="100%" rx="12" fill="none" stroke="#8b5cf6" strokeWidth="2" className="node-active-stroke" style={{ width: 'calc(100% - 8px)', height: 'calc(100% - 8px)' }} />
-                  </svg>
-                )}
-                <div className={`relative bg-slate-900 border-2 rounded-xl p-6 w-64 transition-all duration-300 ${activeNode === 'agent' ? 'border-purple-500 shadow-[0_0_20px_-5px_rgba(139,92,246,0.3)]' : 'border-slate-700 shadow-none'}`}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className={`p-2 rounded-lg ${activeNode === 'agent' ? 'bg-purple-500/20' : 'bg-slate-800'}`}>
-                      <Zap className={`w-5 h-5 ${activeNode === 'agent' ? 'text-purple-400' : 'text-slate-500'}`} />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-white text-sm">AI Agent</h3>
-                      <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">gpt-5.2</p>
-                    </div>
+              <div className={`absolute inset-0 rounded-xl blur-3xl transition-opacity duration-500 ${activeNode === 'agent' ? 'bg-purple-400/40 opacity-100' : 'opacity-0'}`} />
+              <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${activeNode === 'agent' ? 'border-purple-500 shadow-[0_20px_50px_-12px_rgba(168,85,247,0.6)] card-active-purple' : 'border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.2)]'}`}>
+                <div className="card-gradient-overlay" />
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`p-2 rounded-lg ${activeNode === 'agent' ? 'bg-purple-100' : 'bg-gray-100'}`}>
+                    <Bot className={`w-5 h-5 ${activeNode === 'agent' ? 'text-purple-600' : 'text-gray-400'}`} />
                   </div>
-                  <div className="bg-slate-950/50 rounded-lg p-2 border border-slate-800 h-[34px] flex items-center overflow-hidden">
+                  <div>
+                    <h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'agent' ? 'text-gray-900' : 'text-gray-500'}`}>AI Agent</h3>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">gpt-5.2</p>
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 h-[34px] flex items-center overflow-hidden">
                     <div className="flex justify-between items-center text-[10px] w-full">
-                      <span className={`font-mono ${activeNode === 'agent' ? 'text-purple-400' : 'text-slate-500'}`}>model</span>
-                      <span className="text-slate-300 font-mono text-right flex-1 truncate ml-2">gpt-5.2</span>
+                      <span className={`font-mono transition-colors duration-300 ${activeNode === 'agent' ? 'text-purple-600' : 'text-gray-400'}`}>model</span>
+                      <span className="text-gray-700 font-mono text-right flex-1 truncate ml-2">gpt-5.2</span>
                     </div>
-                  </div>
                 </div>
               </div>
             </div>
-
-            {/* Security Guardrails Node */}
+            {/* Card: Guardrails */}
             <div className="relative z-10">
-              <div className="relative">
-                {activeNode === 'guardrails' && (
-                  <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
-                    <rect x="4" y="4" width="100%" height="100%" rx="12" fill="none" stroke="#06b6d4" strokeWidth="2" className="node-active-stroke" style={{ width: 'calc(100% - 8px)', height: 'calc(100% - 8px)' }} />
-                  </svg>
-                )}
-                <div className={`relative bg-slate-900 border-2 rounded-xl p-6 w-64 transition-all duration-300 ${activeNode === 'guardrails' ? 'border-cyan-500 shadow-[0_0_20px_-5px_rgba(6,182,212,0.3)]' : 'border-slate-700 shadow-none'}`}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className={`p-2 rounded-lg ${activeNode === 'guardrails' ? 'bg-cyan-500/20' : 'bg-slate-800'}`}>
-                      <Lock className={`w-5 h-5 ${activeNode === 'guardrails' ? 'text-cyan-400' : 'text-slate-500'}`} />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-white text-sm">Security Guardrails</h3>
-                      <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">SECURITY</p>
-                    </div>
+              <div className={`absolute inset-0 rounded-xl blur-3xl transition-opacity duration-500 ${activeNode === 'guardrails' ? 'bg-cyan-400/40 opacity-100' : 'opacity-0'}`} />
+              <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${activeNode === 'guardrails' ? 'border-cyan-500 shadow-[0_20px_50px_-12px_rgba(6,182,212,0.6)] card-active-cyan' : 'border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.2)]'}`}>
+                <div className="card-gradient-overlay" />
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`p-2 rounded-lg ${activeNode === 'guardrails' ? 'bg-cyan-100' : 'bg-gray-100'}`}>
+                    <Shield className={`w-5 h-5 ${activeNode === 'guardrails' ? 'text-cyan-600' : 'text-gray-400'}`} />
                   </div>
-                  <div className="bg-slate-950/50 rounded-lg p-2 border border-slate-800 h-[34px] flex items-center">
+                  <div>
+                    <h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-gray-900' : 'text-gray-500'}`}>Security Guardrails</h3>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">SECURITY</p>
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 h-[34px] flex items-center">
                     <div className="flex justify-between items-center text-[10px] w-full">
-                      <span className={`font-mono ${activeNode === 'guardrails' ? 'text-cyan-400' : 'text-slate-500'}`}>rules</span>
-                      <span className="text-slate-300 font-mono text-right flex-1 truncate ml-2">active</span>
+                      <span className={`font-mono transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-cyan-600' : 'text-gray-400'}`}>rules</span>
+                      <span className="text-gray-700 font-mono text-right flex-1 truncate ml-2">active</span>
                     </div>
-                  </div>
                 </div>
               </div>
             </div>
