@@ -22,8 +22,8 @@ const NodeStrokeAnimation = () => (
       100% { stroke: #d1d5db; filter: drop-shadow(0 0 0px rgba(0, 0, 0, 0)); }
     }
     .node-active-stroke {
-      stroke-dasharray: 60, 180;
-      animation: strokeRotate 2s linear infinite;
+      stroke-dasharray: 40, 200;
+      animation: strokeRotate 3s linear infinite;
     }
     .line-quick-glow { animation: lineQuickGlow 0.4s ease-in-out forwards; }
     .line-fade-back { animation: lineFadeBack 0.8s ease-in-out forwards; }
@@ -128,7 +128,7 @@ export default function WorkflowVisualization() {
         <div className="relative z-10">
           <div className={`absolute -inset-1 rounded-xl transition-all duration-500 ${activeNode === 'contact' ? 'border-2 border-amber-500/50 node-active-stroke' : ''}`} />
           <div className={`absolute inset-0 rounded-xl blur-3xl transition-opacity duration-500 ${activeNode === 'contact' ? 'bg-amber-400/40 opacity-100' : 'opacity-0'}`} />
-          <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 shadow-xl card-active-amber', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
+          <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 shadow-xl card-active-amber', 'border-gray-200 shadow-md', 'border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.2)]')}`}>
             <div className="card-gradient-overlay" />
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-amber-100"><User className="w-5 h-5 text-amber-600" /></div>
@@ -145,14 +145,14 @@ export default function WorkflowVisualization() {
         <div className="relative z-10">
           <div className={`absolute -inset-1 rounded-xl transition-all duration-500 ${activeNode === 'agent' ? 'border-2 border-purple-500/50 node-active-stroke' : ''}`} />
           <div className={`absolute inset-0 rounded-xl blur-3xl transition-opacity duration-500 ${activeNode === 'agent' ? 'bg-purple-400/40 opacity-100' : 'opacity-0'}`} />
-          <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('agent', 'border-purple-500 shadow-xl card-active-purple', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
+          <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('agent', 'border-purple-500 shadow-xl card-active-purple opacity-100', 'border-gray-200 shadow-md opacity-100', 'border-gray-200 opacity-40 grayscale')}`}>
             <div className="card-gradient-overlay" />
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-purple-100"><Bot className="w-5 h-5 text-purple-600" /></div>
-              <div><h3 className="font-bold text-sm text-gray-900">AI Agent</h3><p className="text-[10px] text-gray-400 uppercase font-semibold">GPT-5.2</p></div>
+              <div className={`p-2 rounded-lg ${visitedNodes.has('agent') ? 'bg-purple-100' : 'bg-gray-100'}`}><Bot className={`w-5 h-5 ${visitedNodes.has('agent') ? 'text-purple-600' : 'text-gray-400'}`} /></div>
+              <div><h3 className={`font-bold text-sm ${visitedNodes.has('agent') ? 'text-gray-900' : 'text-gray-400'}`}>AI Agent</h3><p className="text-[10px] text-gray-400 uppercase font-semibold">GPT-5.2</p></div>
             </div>
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center">
-              <span className="text-purple-600 font-mono">Output: </span>
+              <span className={`${visitedNodes.has('agent') ? 'text-purple-600' : 'text-gray-400'} font-mono`}>Output: </span>
               <span className="ml-2 truncate text-gray-700 font-mono">{agentStatus === 'thinking' ? '...' : (agentStatus === 'msg1' ? 'Good morning :)' : 'Is this Jack?')}</span>
             </div>
           </div>
@@ -162,16 +162,16 @@ export default function WorkflowVisualization() {
         <div className="relative z-10">
           <div className={`absolute -inset-1 rounded-xl transition-all duration-500 ${activeNode === 'guardrails' ? (isApproved ? 'border-emerald-500/50' : 'border-cyan-500/50') + ' node-active-stroke' : ''}`} />
           <div className={`absolute inset-0 rounded-xl blur-3xl transition-opacity duration-500 ${isApproved ? 'bg-emerald-400/40' : activeNode === 'guardrails' ? 'bg-cyan-400/40 opacity-100' : 'opacity-0'}`} />
-          <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${isApproved ? 'border-emerald-500 shadow-xl card-active-emerald' : getStatusColor('guardrails', 'border-cyan-500 shadow-xl card-active-cyan', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
+          <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${isApproved ? 'border-emerald-500 shadow-xl card-active-emerald opacity-100' : getStatusColor('guardrails', 'border-cyan-500 shadow-xl card-active-cyan opacity-100', 'border-gray-200 shadow-md opacity-100', 'border-gray-200 opacity-40 grayscale')}`}>
             <div className="card-gradient-overlay" />
             <div className="flex items-center gap-3 mb-4">
-              <div className={`p-2 rounded-lg ${isApproved ? 'bg-emerald-100' : 'bg-cyan-100'}`}>
-                {isApproved ? <CheckCircle2 className="w-5 h-5 text-emerald-600" /> : <Shield className="w-5 h-5 text-cyan-600" />}
+              <div className={`p-2 rounded-lg ${isApproved ? 'bg-emerald-100' : activeNode === 'guardrails' || visitedNodes.has('guardrails') ? 'bg-cyan-100' : 'bg-gray-100'}`}>
+                {isApproved ? <CheckCircle2 className="w-5 h-5 text-emerald-600" /> : <Shield className={`w-5 h-5 ${activeNode === 'guardrails' || visitedNodes.has('guardrails') ? 'text-cyan-600' : 'text-gray-400'}`} />}
               </div>
-              <div><h3 className="font-bold text-sm text-gray-900">Guardrails</h3><p className="text-[10px] text-gray-400 uppercase font-semibold">Security</p></div>
+              <div><h3 className={`font-bold text-sm ${isApproved || activeNode === 'guardrails' || visitedNodes.has('guardrails') ? 'text-gray-900' : 'text-gray-400'}`}>Guardrails</h3><p className="text-[10px] text-gray-400 uppercase font-semibold">Security</p></div>
             </div>
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center">
-              <span className="text-cyan-600 font-mono">Status: </span>
+              <span className={`${isApproved || activeNode === 'guardrails' || visitedNodes.has('guardrails') ? 'text-cyan-600' : 'text-gray-400'} font-mono`}>Status: </span>
               <span className="ml-2 truncate text-gray-700 font-mono">{guardrailsStatus}</span>
             </div>
           </div>
