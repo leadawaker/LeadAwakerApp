@@ -134,7 +134,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center max-w-3xl mx-auto mb-16"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">is what you GET</h2>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">Is what you get</h2>
             <p className="text-lg md:text-xl mt-4 text-[#3c50d6]">From chaos to certainty in 30 days</p>
           </motion.div>
 
