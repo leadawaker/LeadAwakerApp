@@ -141,11 +141,6 @@ export default function WorkflowVisualization() {
   return (
     <div ref={containerRef} className="flex flex-col items-center justify-center p-8 font-sans text-slate-100 relative">
       <NodeStrokeAnimation />
-      
-      <div className="mb-12 text-center">
-        <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">AI Agent Workflow</h2>
-        <p className="text-slate-400">Automated compliance and interaction pipeline</p>
-      </div>
     </div>
   );
 }
