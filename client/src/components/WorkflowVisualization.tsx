@@ -87,6 +87,10 @@ export default function WorkflowVisualization() {
           background: linear-gradient(to top left, rgba(55, 65, 81, 0.05), transparent 70%); 
           transition: background 0.5s ease; 
         }
+        .card-active-amber { box-shadow: 0 0 65px 25px rgba(245, 158, 11, 0.7); }
+        .card-active-purple { box-shadow: 0 0 65px 25px rgba(168, 85, 247, 0.7); }
+        .card-active-emerald { box-shadow: 0 0 65px 25px rgba(16, 185, 129, 0.7); }
+        .card-active-cyan { box-shadow: 0 0 65px 25px rgba(6, 182, 212, 0.7); }
         .card-active-amber .card-gradient-overlay { background: linear-gradient(to top left, rgba(245, 158, 11, 0.15), transparent 70%); }
         .card-active-purple .card-gradient-overlay { background: linear-gradient(to top left, rgba(168, 85, 247, 0.15), transparent 70%); }
         .card-active-emerald .card-gradient-overlay { background: linear-gradient(to top left, rgba(16, 185, 129, 0.15), transparent 70%); }
@@ -132,7 +136,7 @@ export default function WorkflowVisualization() {
               </div>
               <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'contact' ? 'text-gray-900' : 'text-gray-400'}`}>Lead #315</h3><p className="text-[10px] text-gray-400 text-left">Jack Johnson</p></div>
             </div>
-            <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] font-mono flex items-center gap-2">
+            <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] font-mono flex items-center justify-between">
               <span className={`font-semibold transition-colors duration-300 ${activeNode === 'contact' ? 'text-amber-600' : 'text-amber-400/60'}`}>Status</span>
               <span className={`transition-colors duration-300 ${activeNode === 'contact' ? 'text-gray-700' : 'text-gray-400'}`}>{isApproved ? 'Lead Engaged' : 'Active'}</span>
             </div>
@@ -155,7 +159,7 @@ export default function WorkflowVisualization() {
               </div>
               <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'agent' ? 'text-gray-900' : 'text-gray-400'}`}>AI Agent</h3><p className="text-[10px] text-gray-400 text-left">GPT-5.2</p></div>
             </div>
-            <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center overflow-hidden gap-2">
+            <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center overflow-hidden justify-between">
               <span className={`font-semibold font-mono transition-colors duration-300 ${activeNode === 'agent' ? 'text-purple-600' : 'text-purple-400/60'}`}>Output</span>
               <span className={`truncate font-mono transition-colors duration-300 ${activeNode === 'agent' ? 'text-gray-700' : 'text-gray-400'}`}>
                 {visitedNodes.has('agent') ? (agentStatus === 'thinking' ? '...' : (agentStatus === 'msg1' ? 'Good morning :)' : 'Is this Jack?')) : ''}
@@ -182,7 +186,7 @@ export default function WorkflowVisualization() {
               </div>
               <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-gray-900' : 'text-gray-400'}`}>Guardrails</h3><p className="text-[10px] text-gray-400 text-left">SECURITY</p></div>
             </div>
-            <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center gap-2">
+            <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center justify-between">
               <span className={`font-semibold font-mono transition-colors duration-300 ${(activeNode === 'guardrails' || isApproved) ? (isApproved ? 'text-emerald-600' : 'text-cyan-600') : (isApproved ? 'text-emerald-400/60' : 'text-cyan-400/60')}`}>Status</span>
               <span className={`truncate font-mono transition-colors duration-300 ${(activeNode === 'guardrails' || isApproved) ? 'text-gray-700' : 'text-gray-400'}`}>{guardrailsStatus}</span>
             </div>
