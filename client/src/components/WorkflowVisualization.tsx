@@ -148,10 +148,10 @@ export default function WorkflowVisualization() {
   };
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center justify-center p-8 font-sans text-gray-900 md:overflow-hidden relative">
+    <div ref={containerRef} className="flex flex-col items-center justify-center font-sans text-gray-900 md:overflow-hidden relative">
       <NodeStrokeAnimation />
       
-      <div className="relative w-full max-w-full md:h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300/50 rounded-3xl overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between px-12 py-12 md:py-0 space-y-24 md:space-y-0">
+      <div className="relative w-full md:h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300/50 rounded-3xl overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-center px-12 py-12 md:py-0 space-y-24 md:space-y-0 gap-8 md:gap-24">
         {/* Connection Lines */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
           <g className="hidden md:block">
