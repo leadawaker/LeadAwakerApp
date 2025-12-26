@@ -347,13 +347,7 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="text-center">
-            <Link href="/faq">
-              <Button variant="outline" className="border-2">
-                View All FAQs
-              </Button>
-            </Link>
-          </div>
+          
         </div>
       </section>
       {/* Bottom Demo CTA */}
