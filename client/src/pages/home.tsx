@@ -249,50 +249,50 @@ export default function Home() {
           </div>
         </div>
       </section>
-          {/* Security & AI Guardrails Section */}
-          <section className="py-24 border-t border-border">
-            <div className="container mx-auto px-4 md:px-6">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="text-center max-w-4xl mx-auto mb-16"
-              >
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">Security, Compliance, and Reputation Built In</h2>
-              </motion.div>
+      {/* Security & AI Guardrails Section */}
+      <section className="py-24 border-t border-border">
+        <div className="container mx-auto px-4 md:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center max-w-4xl mx-auto mb-16"
+          >
+            <h2 className="md:text-4xl font-bold text-[48px] mt-[3px] mb-[3px]">Reputation Built In</h2>
+          </motion.div>
 
-              <WorkflowVisualization />
+          <WorkflowVisualization />
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
-                className="max-w-4xl mx-auto"
-              >
-                <div className="grid md:grid-cols-2 gap-8 text-left mt-12 bg-white/50 backdrop-blur-sm p-8 rounded-3xl border border-border/50 shadow-sm">
-                  <div className="space-y-3">
-                    <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                      GDPR & CCPA Compliant
-                    </h3>
-                    <p className="text-gray-600 text-sm leading-relaxed">
-                      All workflows respect opt-out preferences, unsubscribe links, and data residency requirements. We're fully compliant with global privacy standards.
-                    </p>
-                  </div>
-                  <div className="space-y-3 border-l border-border/50 pl-8">
-                    <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-blue-500" />
-                      Brand Protection
-                    </h3>
-                    <p className="text-gray-600 text-sm leading-relaxed">
-                      Real-time monitoring ensures every interaction stays on-topic, professional, and perfectly aligned with your brand's voice and guidelines.
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="max-w-4xl mx-auto"
+          >
+            <div className="grid md:grid-cols-2 gap-8 text-left mt-12 bg-white/50 backdrop-blur-sm p-8 rounded-3xl border border-border/50 shadow-sm">
+              <div className="space-y-3">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                  GDPR & CCPA Compliant
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  All workflows respect opt-out preferences, unsubscribe links, and data residency requirements. We're fully compliant with global privacy standards.
+                </p>
+              </div>
+              <div className="space-y-3 border-l border-border/50 pl-8">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                  Brand Protection
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Real-time monitoring ensures every interaction stays on-topic, professional, and perfectly aligned with your brand's voice and guidelines.
+                </p>
+              </div>
             </div>
-          </section>
+          </motion.div>
+        </div>
+      </section>
       {/* FAQ Teaser */}
       <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6 max-w-3xl">
