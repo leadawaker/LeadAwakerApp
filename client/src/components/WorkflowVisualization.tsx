@@ -67,7 +67,7 @@ export default function WorkflowVisualization() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-200 flex flex-col items-center justify-center p-8 font-sans text-gray-900 overflow-hidden relative">
+    <div className="flex flex-col items-center justify-center p-8 font-sans text-gray-900 relative">
       <style>{`
         @keyframes strokeRotate { 0% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -240; } }
         @keyframes lineQuickGlow {
