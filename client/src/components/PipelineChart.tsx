@@ -82,7 +82,7 @@ const INITIAL_LEADS: Record<StageId, Lead[]> = {
   ],
 };
 
-export function PipelineChart() {
+export default function PipelineChart() {
   const [leads, setLeads] = useState(INITIAL_LEADS);
   const [, setTick] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);

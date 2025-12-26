@@ -202,20 +202,20 @@ export default function Home() {
                       start={(result as any).start}
                       end={(result as any).end}
                       duration={3}
-                      format={(v) => Math.round(v).toString()}
+                      format={(v: number) => Math.round(v).toString()}
                       suffix={(result as any).suffix}
                     />
                   ) : (result as any).isCost ? (
                     <AnimatedCounter 
                       end={(result as any).metric} 
                       duration={3}
-                      format={(v) => `$${Math.round((result as any).metric - v).toString()}`}
+                      format={(v: number) => `$${Math.round((result as any).metric - v).toString()}`}
                     />
                   ) : (
                     <AnimatedCounter 
                       end={(result as any).metric} 
                       duration={3}
-                      format={(v) => Math.round(v).toString()}
+                      format={(v: number) => Math.round(v).toString()}
                       suffix={(result as any).suffix}
                     />
                   )}

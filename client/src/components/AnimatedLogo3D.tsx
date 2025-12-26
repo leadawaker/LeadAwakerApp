@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef, CSSProperties } from "react";
 
-export function AnimatedLogo3D() {
+export default function AnimatedLogo3D() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.6 });
 
