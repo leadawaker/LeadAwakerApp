@@ -4,7 +4,18 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { 
   ArrowRight, 
-  ChevronDown
+  ChevronDown,
+  BarChart3, 
+  Target, 
+  Zap, 
+  MessageSquare, 
+  Mail, 
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Shield,
+  Search,
+  Users
 } from "lucide-react";
 import Chat3D from "@/components/Chat3D";
 import AnimatedLogo3D from "@/components/AnimatedLogo3D";
@@ -238,23 +249,22 @@ export default function Home() {
           </div>
         </div>
       </section>
-      {/* Security & AI Guardrails Section */}
-      <section className="py-24 border-t border-border">
-        <div className="container mx-auto px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center max-w-3xl mx-auto mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Security, Compliance, and Reputation Built In</h2>
-            <p className="text-lg text-muted-foreground">Your brand and data stay protected every step of the way.</p>
-          </motion.div>
+          {/* Security & AI Guardrails Section */}
+          <section className="py-24 border-t border-border">
+            <div className="container mx-auto px-4 md:px-6">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="text-center max-w-3xl mx-auto mb-16"
+              >
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">Security, Compliance, and Reputation Built In</h2>
+                <p className="text-lg text-muted-foreground">Your brand and data stay protected every step of the way.</p>
+              </motion.div>
 
-          {/* Workflow Visualization */}
-          <WorkflowVisualization />
-        </div>
-      </section>
+              <WorkflowVisualization />
+            </div>
+          </section>
       {/* FAQ Teaser */}
       <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6 max-w-3xl">
