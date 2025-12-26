@@ -83,14 +83,26 @@ export default function WorkflowVisualization() {
         .line-quick-glow { animation: lineQuickGlow 0.4s ease-in-out forwards; }
         .line-fade-back { animation: lineFadeBack 0.8s ease-in-out forwards; }
         .card-gradient-overlay { position: absolute; inset: 0; pointer-events: none; border-radius: inherit; background: linear-gradient(to top left, rgba(55, 65, 81, 0.07), transparent 70%); transition: background 0.5s ease; }
-        .card-active-amber { box-shadow: 0 0 50px 15px rgba(245, 158, 11, 0.6); }
-        .card-active-purple { box-shadow: 0 0 50px 15px rgba(168, 85, 247, 0.6); }
-        .card-active-emerald { box-shadow: 0 0 50px 15px rgba(16, 185, 129, 0.6); }
-        .card-active-cyan { box-shadow: 0 0 50px 15px rgba(6, 182, 212, 0.6); }
-        .card-active-amber .card-gradient-overlay { background: linear-gradient(to top left, rgba(245, 158, 11, 0.12), transparent 70%); }
-        .card-active-purple .card-gradient-overlay { background: linear-gradient(to top left, rgba(168, 85, 247, 0.12), transparent 70%); }
-        .card-active-emerald .card-gradient-overlay { background: linear-gradient(to top left, rgba(16, 185, 129, 0.12), transparent 70%); }
-        .card-active-cyan .card-gradient-overlay { background: linear-gradient(to top left, rgba(6, 182, 212, 0.12), transparent 70%); }
+        .card-active-amber { box-shadow: 0 0 35px 10px rgba(245, 158, 11, 0.45); }
+        .card-active-purple { box-shadow: 0 0 35px 10px rgba(168, 85, 247, 0.45); }
+        .card-active-emerald { box-shadow: 0 0 35px 10px rgba(16, 185, 129, 0.45); }
+        .card-active-cyan { box-shadow: 0 0 35px 10px rgba(6, 182, 212, 0.45); }
+        .connector-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 999px;
+          border: 2px solid #d1d5db;
+          background: white;
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          z-index: 20;
+          transition: all 0.3s ease;
+        }
+        .connector-dot.active-amber { border-color: #f59e0b; background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
+        .connector-dot.active-purple { border-color: #a855f7; background: #a855f7; box-shadow: 0 0 8px #a855f7; }
+        .connector-dot.active-emerald { border-color: #10b981; background: #10b981; box-shadow: 0 0 8px #10b981; }
+        .connector-dot.active-cyan { border-color: #06b6d4; background: #06b6d4; box-shadow: 0 0 8px #06b6d4; }
       `}</style>
       
       <div className="relative w-full max-w-5xl md:h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300/50 rounded-3xl overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between px-12 py-12 md:py-0 space-y-24 md:space-y-0">
@@ -100,6 +112,7 @@ export default function WorkflowVisualization() {
         </svg>
 
         <div className="relative z-10">
+          <div className={`connector-dot -right-1 ${activeNode === 'contact' ? 'active-amber' : visitedNodes.has('agent') ? 'active-amber' : ''}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 shadow-xl card-active-amber', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             {activeNode === 'contact' && (
               <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
@@ -118,6 +131,8 @@ export default function WorkflowVisualization() {
         </div>
 
         <div className="relative z-10">
+          <div className={`connector-dot -left-1 ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('agent') ? 'active-purple' : ''}`} />
+          <div className={`connector-dot -right-1 ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('guardrails') ? 'active-purple' : ''}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('agent', 'border-purple-500 shadow-xl card-active-purple', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             {activeNode === 'agent' && (
               <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
@@ -139,6 +154,7 @@ export default function WorkflowVisualization() {
         </div>
 
         <div className="relative z-10">
+          <div className={`connector-dot -left-1 ${activeNode === 'guardrails' ? (isApproved ? 'active-emerald' : 'active-cyan') : (isApproved ? 'active-emerald' : (visitedNodes.has('guardrails') ? 'active-cyan' : ''))}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${isApproved ? 'border-emerald-500 shadow-xl card-active-emerald' : getStatusColor('guardrails', 'border-cyan-500 shadow-xl card-active-cyan', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             {activeNode === 'guardrails' && (
               <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
