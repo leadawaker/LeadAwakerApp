@@ -138,12 +138,12 @@ export default function WorkflowVisualization() {
             transform: translateY(-50%);
           }
           .connector-dot.left-side {
-            right: -6px;
-            left: auto;
+            left: -6px !important;
+            right: auto;
           }
           .connector-dot.right-side {
-            left: -6px;
-            right: auto;
+            left: auto;
+            right: -6px !important;
           }
         }
         .connector-dot.active-amber { transform: translateX(-50%) scale(1.25); background: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.8); opacity: 1; }
@@ -179,7 +179,7 @@ export default function WorkflowVisualization() {
         </svg>
 
         <div className="connector-wrapper relative z-10">
-          <div className={`connector-dot bottom-mobile md:right-side md:-right-[6px] ${activeNode === 'contact' ? 'active-amber' : visitedNodes.has('agent') ? 'visited-amber' : ''}`} />
+          <div className={`connector-dot bottom-mobile md:right-side ${activeNode === 'contact' ? 'active-amber' : visitedNodes.has('agent') ? 'visited-amber' : ''}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 shadow-xl card-active-amber', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             <div className="node-glow-layer" />
             {activeNode === 'contact' && (
@@ -202,8 +202,8 @@ export default function WorkflowVisualization() {
         </div>
 
         <div className="connector-wrapper relative z-10">
-          <div className={`connector-dot left-side md:-left-[6px] ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('agent') ? 'visited-purple' : ''}`} />
-          <div className={`connector-dot right-side md:-right-[6px] ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('guardrails') ? 'visited-purple' : ''}`} />
+          <div className={`connector-dot left-side ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('agent') ? 'visited-purple' : ''}`} />
+          <div className={`connector-dot right-side ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('guardrails') ? 'visited-purple' : ''}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('agent', 'border-purple-500 shadow-xl card-active-purple', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             <div className="node-glow-layer" />
             {activeNode === 'agent' && (
@@ -228,7 +228,7 @@ export default function WorkflowVisualization() {
         </div>
 
         <div className="connector-wrapper relative z-10">
-          <div className={`connector-dot top-mobile md:left-side md:-left-[6px] ${activeNode === 'guardrails' ? (isApproved ? 'active-emerald' : 'active-cyan') : (isApproved ? 'visited-emerald' : (visitedNodes.has('guardrails') ? 'visited-cyan' : ''))}`} />
+          <div className={`connector-dot top-mobile md:left-side ${activeNode === 'guardrails' ? (isApproved ? 'active-emerald' : 'active-cyan') : (isApproved ? 'visited-emerald' : (visitedNodes.has('guardrails') ? 'visited-cyan' : ''))}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${isApproved ? 'border-emerald-500 shadow-xl card-active-emerald' : getStatusColor('guardrails', 'border-cyan-500 shadow-xl card-active-cyan', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             <div className="node-glow-layer" />
             {activeNode === 'guardrails' && (
