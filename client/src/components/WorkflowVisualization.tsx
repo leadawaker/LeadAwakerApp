@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Bot, CheckCircle2, Shield } from 'lucide-react';
-
 /**
  * CUSTOM STYLES & ANIMATIONS
  * This block contains the specific keyframes for the glowing lines and rotating strokes.
@@ -39,7 +38,6 @@ const WorkflowStyles = () => (
     .card-active-cyan .card-gradient-overlay { background: linear-gradient(to top left, rgba(6, 182, 212, 0.12), transparent 70%); }
   `}</style>
 );
-
 export default function WorkflowVisualization() {
   const [activeNode, setActiveNode] = useState<'contact' | 'agent' | 'guardrails' | null>('contact');
   const [visitedNodes, setVisitedNodes] = useState<Set<string>>(new Set(['contact']));
@@ -50,22 +48,16 @@ export default function WorkflowVisualization() {
   const [agentStatus, setAgentStatus] = useState<'thinking' | 'msg1' | 'msg2'>('thinking');
   const [guardrailsStatus, setGuardrailsStatus] = useState<string>('');
   const [isApproved, setIsApproved] = useState(false);
-
   useEffect(() => {
-    let isMounted = true;
     const sequence = async () => {
-      if (!isMounted) return;
       // Step 1: Contact Engagement
       await new Promise(r => setTimeout(r, 3000));
-      if (!isMounted) return;
       setVisitedNodes(prev => new Set(prev).add('engaging'));
       
       // Step 2: Transition to Agent
       await new Promise(r => setTimeout(r, 1000));
-      if (!isMounted) return;
       setIsGlowing1(true);
       await new Promise(r => setTimeout(r, 400));
-      if (!isMounted) return;
       setIsGlowing1(false);
       setIsFadingBack1(true);
       setActiveNode('agent');
@@ -73,18 +65,14 @@ export default function WorkflowVisualization() {
       
       // Agent Logic
       await new Promise(r => setTimeout(r, 1500));
-      if (!isMounted) return;
       setAgentStatus('msg1');
       await new Promise(r => setTimeout(r, 2000));
-      if (!isMounted) return;
       setAgentStatus('msg2');
       
       // Step 3: Transition to Guardrails
       await new Promise(r => setTimeout(r, 2000));
-      if (!isMounted) return;
       setIsGlowing2(true);
       await new Promise(r => setTimeout(r, 400));
-      if (!isMounted) return;
       setIsGlowing2(false);
       setIsFadingBack2(true);
       setActiveNode('guardrails');
@@ -93,18 +81,15 @@ export default function WorkflowVisualization() {
         'verifying...', 'No violations', 'On-topic sales', 'Clean language', 'No personal data', 'No Data Leakage'
       ];
       for (const check of securityChecks) {
-        if (!isMounted) return;
         setGuardrailsStatus(check);
         await new Promise(r => setTimeout(r, 800));
       }
       
-      if (!isMounted) return;
       setGuardrailsStatus('Message Sent');
       setIsApproved(true);
       
       // Reset Loop
       await new Promise(r => setTimeout(r, 8000));
-      if (!isMounted) return;
       setActiveNode('contact');
       setVisitedNodes(new Set(['contact']));
       setIsFadingBack1(false);
@@ -115,14 +100,11 @@ export default function WorkflowVisualization() {
       sequence();
     };
     sequence();
-    return () => { isMounted = false; };
   }, []);
-
   const getStatusColor = (node: string, active: string, visited: string, base: string) => {
     if (activeNode === node) return active;
     return visitedNodes.has(node) ? visited : base;
   };
-
   return (
     <div className="w-full flex flex-col items-center justify-center p-4 md:p-8 font-sans bg-slate-50 rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
       <WorkflowStyles />
@@ -131,7 +113,6 @@ export default function WorkflowVisualization() {
         <h2 className="text-3xl font-bold text-slate-900 tracking-tight">AI Agent Workflow</h2>
         <p className="text-slate-500 text-sm mt-1">Real-time compliance & security monitoring</p>
       </div>
-
       <div className="relative w-full max-w-4xl min-h-[500px] md:min-h-[300px] flex flex-col md:flex-row items-center justify-between gap-12 md:gap-0 px-8">
         
         {/* CONNECTION SVG LAYER */}
@@ -139,7 +120,6 @@ export default function WorkflowVisualization() {
           <line x1="30%" y1="50%" x2="50%" y2="50%" stroke="#e2e8f0" strokeWidth="2" className={isGlowing1 ? 'line-quick-glow' : isFadingBack1 ? 'line-fade-back' : ''} />
           <line x1="50%" y1="50%" x2="70%" y2="50%" stroke="#e2e8f0" strokeWidth="2" className={isGlowing2 ? 'line-quick-glow' : isFadingBack2 ? 'line-fade-back' : ''} />
         </svg>
-
         {/* NODE 1: CONTACT */}
         <div className="relative z-10 w-full md:w-auto flex justify-center">
           <div className={`relative bg-white border-2 rounded-2xl p-6 w-64 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 shadow-xl card-active-amber scale-105', 'border-slate-200 shadow-sm', 'border-slate-100')}`}>
@@ -158,7 +138,6 @@ export default function WorkflowVisualization() {
             </div>
           </div>
         </div>
-
         {/* NODE 2: AI AGENT */}
         <div className="relative z-10 w-full md:w-auto flex justify-center">
           <div className={`relative bg-white border-2 rounded-2xl p-6 w-64 transition-all duration-300 ${getStatusColor('agent', 'border-purple-500 shadow-xl card-active-purple scale-105', 'border-slate-200 shadow-sm', 'border-slate-100')}`}>
@@ -178,7 +157,6 @@ export default function WorkflowVisualization() {
             </div>
           </div>
         </div>
-
         {/* NODE 3: GUARDRAILS */}
         <div className="relative z-10 w-full md:w-auto flex justify-center">
           <div className={`relative bg-white border-2 rounded-2xl p-6 w-64 transition-all duration-300 ${isApproved ? 'border-emerald-500 shadow-xl card-active-emerald' : getStatusColor('guardrails', 'border-cyan-500 shadow-xl card-active-cyan scale-105', 'border-slate-200 shadow-sm', 'border-slate-100')}`}>
@@ -201,7 +179,6 @@ export default function WorkflowVisualization() {
           </div>
         </div>
       </div>
-
       <div className="mt-12 text-center max-w-lg">
         <p className="text-slate-500 text-sm">
           Every response is analyzed for <span className="text-cyan-600 font-semibold">compliance</span> and <span className="text-purple-600 font-semibold">accuracy</span> before being sent.
