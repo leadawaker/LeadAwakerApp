@@ -259,6 +259,17 @@ export default function Home() {
                 className="text-center max-w-4xl mx-auto mb-16"
               >
                 <h2 className="text-3xl md:text-4xl font-bold mb-4">Security, Compliance, and Reputation Built In</h2>
+              </motion.div>
+
+              <WorkflowVisualization />
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="max-w-4xl mx-auto"
+              >
                 <div className="grid md:grid-cols-2 gap-8 text-left mt-12 bg-white/50 backdrop-blur-sm p-8 rounded-3xl border border-border/50 shadow-sm">
                   <div className="space-y-3">
                     <h3 className="font-bold text-gray-900 flex items-center gap-2">
@@ -280,8 +291,6 @@ export default function Home() {
                   </div>
                 </div>
               </motion.div>
-
-              <WorkflowVisualization />
             </div>
           </section>
       {/* FAQ Teaser */}
