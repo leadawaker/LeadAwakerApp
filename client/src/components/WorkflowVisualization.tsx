@@ -156,7 +156,7 @@ export default function WorkflowVisualization() {
         </div>
       </div>
       <p className="mt-12 text-gray-600 text-sm max-w-2xl text-center">
-        Every AI reply passes through <span className="font-bold text-cyan-600">Security Guardrails</span> for safety and compliance.
+        Every AI reply passes through <span className={`font-bold transition-colors duration-500 ${isApproved ? 'text-emerald-600' : 'text-cyan-600'}`}>Security Guardrails</span>, so no message leaves the system without safety and compliance checks—keeping responses reliable and on‑brand.
       </p>
     </div>
   );
