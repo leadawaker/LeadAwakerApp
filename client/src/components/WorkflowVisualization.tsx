@@ -177,13 +177,13 @@ export default function WorkflowVisualization() {
         }
       `}</style>
       
-      <div className="relative w-full max-w-5xl md:h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300/50 rounded-3xl overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 px-16 py-12 md:py-0 space-y-24 md:space-y-0 mx-auto">
+      <div className="relative w-full max-w-7xl md:h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300/50 rounded-3xl overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-center gap-8 md:gap-24 px-8 py-12 md:py-0 space-y-24 md:space-y-0 mx-auto">
         <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
           {/* Vertical lines for mobile, horizontal for desktop */}
           <line x1="50%" y1="calc(12.5% + 64px)" x2="50%" y2="calc(50% - 64px)" stroke="#d1d5db" strokeWidth="2" className={`md:hidden ${isGlowing1 ? 'line-quick-glow' : ''} ${isFadingBack1 ? 'line-fade-back' : ''}`} />
           <line x1="50%" y1="calc(50% + 64px)" x2="50%" y2="calc(87.5% - 64px)" stroke="#d1d5db" strokeWidth="2" className={`md:hidden ${isGlowing2 ? 'line-quick-glow' : ''} ${isFadingBack2 ? 'line-fade-back' : ''}`} />
           <line 
-            x1="calc(50% - 144px - 32px)" 
+            x1="calc(50% - 144px - 48px)" 
             y1="50%" 
             x2="calc(50% - 144px + 16px)" 
             y2="50%" 
@@ -194,7 +194,7 @@ export default function WorkflowVisualization() {
           <line 
             x1="calc(50% + 144px - 16px)" 
             y1="50%" 
-            x2="calc(50% + 144px + 32px)" 
+            x2="calc(50% + 144px + 48px)" 
             y2="50%" 
             stroke="#d1d5db" 
             strokeWidth="2" 
