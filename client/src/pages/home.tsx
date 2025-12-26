@@ -151,14 +151,26 @@ export default function Home() {
   useEffect(() => {
     const sequence = ['agent', 'guardrails'] as const;
     let index = 0;
+    let interval: NodeJS.Timeout;
 
-    const interval = setInterval(() => {
-      setActiveNode(sequence[index]);
-      index = (index + 1) % sequence.length;
-    }, 3000);
+    if (activeNode !== null) {
+      interval = setInterval(() => {
+        setActiveNode(sequence[index]);
+        index = (index + 1) % sequence.length;
+      }, 3000);
+    }
 
     return () => clearInterval(interval);
-  }, []);
+  }, [activeNode === null]);
+
+  const workflowRef = useRef(null);
+  const isWorkflowInView = useInView(workflowRef, { amount: 0.5, once: true });
+
+  useEffect(() => {
+    if (isWorkflowInView && activeNode === null) {
+      setActiveNode('agent');
+    }
+  }, [isWorkflowInView]);
 
   return (
     <div className="min-h-screen pt-24">
@@ -396,6 +408,7 @@ export default function Home() {
           </motion.div>
 
           <motion.div
+            ref={workflowRef}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}

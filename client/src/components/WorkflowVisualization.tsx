@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
 import { User, Bot, CheckCircle2, Shield } from 'lucide-react';
 
 const NodeStrokeAnimation = () => (
@@ -63,7 +63,12 @@ export default function WorkflowVisualization() {
   const [guardrailsStatus, setGuardrailsStatus] = useState<string>('');
   const [isApproved, setIsApproved] = useState(false);
 
+  const containerRef = useRef(null);
+  const isInView = useInView(containerRef, { amount: 0.5, once: true });
+
   useEffect(() => {
+    if (!isInView) return;
+
     setAgentStatus('thinking');
     
     const sequence = async () => {
@@ -125,7 +130,7 @@ export default function WorkflowVisualization() {
       sequence();
     };
     sequence();
-  }, []);
+  }, [isInView]);
 
   const getStatusColor = (node: string, activeClass: string, visitedClass: string, defaultClass: string) => {
     if (activeNode === node) return activeClass;
@@ -134,7 +139,7 @@ export default function WorkflowVisualization() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-8 font-sans text-slate-100 relative">
+    <div ref={containerRef} className="flex flex-col items-center justify-center p-8 font-sans text-slate-100 relative">
       <NodeStrokeAnimation />
       
       <div className="mb-12 text-center">
