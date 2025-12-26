@@ -20,7 +20,7 @@ export function Footer() {
             <h4 className="font-heading font-bold mb-4">Contact</h4>
             <ul className="space-y-3">
               <li><Link href="/book-demo" className="text-muted-foreground hover:text-primary transition-colors">Book a Demo</Link></li>
-              <li className="text-muted-foreground">hello@leadawaker.com</li>
+              <li className="text-muted-foreground">leadawaker@gmail.com</li>
             </ul>
           </div>
         </div>
