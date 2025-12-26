@@ -1,16 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { Link } from "wouter";
-import { motion, useInView } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { 
   ArrowRight, 
-  ChevronDown, 
-  Zap, 
-  Shield, 
-  Bot, 
-  Target, 
-  BarChart3, 
-  Lock 
+  ChevronDown
 } from "lucide-react";
 import Chat3D from "@/components/Chat3D";
 import AnimatedLogo3D from "@/components/AnimatedLogo3D";
@@ -22,31 +16,6 @@ import WorkflowVisualization from "@/components/WorkflowVisualization";
 
 export default function Home() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
-  const [activeNode, setActiveNode] = useState<'agent' | 'guardrails' | null>(null);
-
-  useEffect(() => {
-    const sequence = ['agent', 'guardrails'] as const;
-    let index = 0;
-    let interval: NodeJS.Timeout;
-
-    if (activeNode !== null) {
-      interval = setInterval(() => {
-        setActiveNode(sequence[index]);
-        index = (index + 1) % sequence.length;
-      }, 3000);
-    }
-
-    return () => clearInterval(interval);
-  }, [activeNode]);
-
-  const workflowRef = useRef(null);
-  const isWorkflowInView = useInView(workflowRef, { amount: 0.5, once: true });
-
-  useEffect(() => {
-    if (isWorkflowInView && activeNode === null) {
-      setActiveNode('agent');
-    }
-  }, [isWorkflowInView, activeNode]);
 
   return (
     <div className="min-h-screen pt-24">
@@ -282,92 +251,8 @@ export default function Home() {
             <p className="text-lg text-muted-foreground">Your brand and data stay protected every step of the way.</p>
           </motion.div>
 
-          <motion.div
-            ref={workflowRef}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="relative w-full h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300/50 rounded-3xl overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between px-12 py-12 md:py-0 space-y-24 md:space-y-0"
-            data-testid="canvas-workflow"
-          >
-            {/* Connection Lines */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
-              <g className="hidden md:block">
-                <line 
-                  x1="25%" y1="50%" x2="50%" y2="50%" 
-                  stroke="#d1d5db" strokeWidth="2" 
-                  className={`${activeNode === 'guardrails' || activeNode === 'agent' ? 'line-visited' : 'connector-animated'}`}
-                />
-                <line 
-                  x1="50%" y1="50%" x2="75%" y2="50%" 
-                  stroke="#d1d5db" strokeWidth="2"
-                  className={`${activeNode === 'guardrails' ? 'connector-animated' : ''}`}
-                />
-              </g>
-            </svg>
-            {/* Card: AI Agent */}
-            <div className="relative z-10">
-              <div className={`absolute inset-0 rounded-xl blur-3xl transition-opacity duration-500 ${activeNode === 'agent' ? 'bg-purple-400/40 opacity-100' : 'opacity-0'}`} />
-              <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${activeNode === 'agent' ? 'border-purple-500 shadow-[0_20px_50px_-12px_rgba(168,85,247,0.6)] card-active-purple' : 'border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.2)]'}`}>
-                <div className="card-gradient-overlay" />
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`p-2 rounded-lg ${activeNode === 'agent' ? 'bg-purple-100' : 'bg-gray-100'}`}>
-                    <Bot className={`w-5 h-5 ${activeNode === 'agent' ? 'text-purple-600' : 'text-gray-400'}`} />
-                  </div>
-                  <div>
-                    <h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'agent' ? 'text-gray-900' : 'text-gray-500'}`}>AI Agent</h3>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">gpt-5.2</p>
-                  </div>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 h-[34px] flex items-center overflow-hidden">
-                    <div className="flex justify-between items-center text-[10px] w-full">
-                      <span className={`font-mono transition-colors duration-300 ${activeNode === 'agent' ? 'text-purple-600' : 'text-gray-400'}`}>model</span>
-                      <span className="text-gray-700 font-mono text-right flex-1 truncate ml-2">gpt-5.2</span>
-                    </div>
-                </div>
-              </div>
-            </div>
-            {/* Card: Guardrails */}
-            <div className="relative z-10">
-              <div className={`absolute inset-0 rounded-xl blur-3xl transition-opacity duration-500 ${activeNode === 'guardrails' ? 'bg-cyan-400/40 opacity-100' : 'opacity-0'}`} />
-              <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${activeNode === 'guardrails' ? 'border-cyan-500 shadow-[0_20px_50px_-12px_rgba(6,182,212,0.6)] card-active-cyan' : 'border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.2)]'}`}>
-                <div className="card-gradient-overlay" />
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`p-2 rounded-lg ${activeNode === 'guardrails' ? 'bg-cyan-100' : 'bg-gray-100'}`}>
-                    <Shield className={`w-5 h-5 ${activeNode === 'guardrails' ? 'text-cyan-600' : 'text-gray-400'}`} />
-                  </div>
-                  <div>
-                    <h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-gray-900' : 'text-gray-500'}`}>Security Guardrails</h3>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">SECURITY</p>
-                  </div>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 h-[34px] flex items-center">
-                    <div className="flex justify-between items-center text-[10px] w-full">
-                      <span className={`font-mono transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-cyan-600' : 'text-gray-400'}`}>rules</span>
-                      <span className="text-gray-700 font-mono text-right flex-1 truncate ml-2">active</span>
-                    </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Info footer */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="mt-8 bg-card/50 border border-border/50 rounded-xl p-4 backdrop-blur text-center"
-          >
-            <p className="text-sm text-muted-foreground">
-              Your <span className="text-purple-400 font-medium">AI Agent</span> processes customer interactions securely, sending output to <span className="text-cyan-400 font-medium">Security Guardrails</span> for real-time compliance validation before any action is taken.
-            </p>
-          </motion.div>
-
           {/* Workflow Visualization */}
-          <div className="mt-16">
-            <WorkflowVisualization />
-          </div>
+          <WorkflowVisualization />
         </div>
       </section>
       {/* FAQ Teaser */}
