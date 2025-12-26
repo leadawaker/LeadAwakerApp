@@ -250,7 +250,7 @@ export default function Home() {
         </div>
       </section>
       {/* Security & AI Guardrails Section */}
-      <section className="py-24 border-t border-border">
+      <section className="py-24 border-t border-border pt-[3px] pb-[3px] mt-[90px] mb-[90px] text-[48px]">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
