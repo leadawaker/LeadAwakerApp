@@ -106,10 +106,10 @@ export default function WorkflowVisualization() {
           transition: background 0.5s ease;
           mix-blend-mode: plus-lighter;
         }
-        .card-active-amber .node-glow-layer { background: #fbbf24; opacity: 0.4; filter: blur(48px); }
-        .card-active-purple .node-glow-layer { background: #c084fc; opacity: 0.4; filter: blur(48px); }
-        .card-active-emerald .node-glow-layer { background: #34d399; opacity: 0.4; filter: blur(48px); }
-        .card-active-cyan .node-glow-layer { background: #22d3ee; opacity: 0.4; filter: blur(48px); }
+        .card-active-amber .node-glow-layer { background: #fbbf24; opacity: 0.6; filter: blur(48px); }
+        .card-active-purple .node-glow-layer { background: #c084fc; opacity: 0.6; filter: blur(48px); }
+        .card-active-emerald .node-glow-layer { background: #34d399; opacity: 0.6; filter: blur(48px); }
+        .card-active-cyan .node-glow-layer { background: #22d3ee; opacity: 0.6; filter: blur(48px); }
         
         .connector-dot {
           width: 12px;
