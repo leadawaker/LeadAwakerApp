@@ -88,21 +88,22 @@ export default function WorkflowVisualization() {
         .card-active-emerald { box-shadow: 0 0 35px 10px rgba(16, 185, 129, 0.45); }
         .card-active-cyan { box-shadow: 0 0 35px 10px rgba(6, 182, 212, 0.45); }
         .connector-dot {
-          width: 8px;
-          height: 8px;
+          width: 10px;
+          height: 10px;
           border-radius: 999px;
-          border: 2px solid #d1d5db;
+          border: 1.5px solid #e2e8f0;
           background: white;
           position: absolute;
           top: 50%;
           transform: translateY(-50%);
           z-index: 20;
           transition: all 0.3s ease;
+          box-shadow: 0 0 6px rgba(0,0,0,0.05);
         }
-        .connector-dot.active-amber { border-color: #f59e0b; background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
-        .connector-dot.active-purple { border-color: #a855f7; background: #a855f7; box-shadow: 0 0 8px #a855f7; }
-        .connector-dot.active-emerald { border-color: #10b981; background: #10b981; box-shadow: 0 0 8px #10b981; }
-        .connector-dot.active-cyan { border-color: #06b6d4; background: #06b6d4; box-shadow: 0 0 8px #06b6d4; }
+        .connector-dot.active-amber { border-color: #f59e0b; background: #f59e0b; box-shadow: 0 0 12px #f59e0b; }
+        .connector-dot.active-purple { border-color: #a855f7; background: #a855f7; box-shadow: 0 0 12px #a855f7; }
+        .connector-dot.active-emerald { border-color: #10b981; background: #10b981; box-shadow: 0 0 12px #10b981; }
+        .connector-dot.active-cyan { border-color: #06b6d4; background: #06b6d4; box-shadow: 0 0 12px #06b6d4; }
       `}</style>
       
       <div className="relative w-full max-w-5xl md:h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300/50 rounded-3xl overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between px-12 py-12 md:py-0 space-y-24 md:space-y-0">
@@ -112,7 +113,7 @@ export default function WorkflowVisualization() {
         </svg>
 
         <div className="relative z-10">
-          <div className={`connector-dot -right-1 ${activeNode === 'contact' ? 'active-amber' : visitedNodes.has('agent') ? 'active-amber' : ''}`} />
+          <div className={`connector-dot -right-[5px] ${activeNode === 'contact' ? 'active-amber' : visitedNodes.has('agent') ? 'active-amber' : ''}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('contact', 'border-amber-500 shadow-xl card-active-amber', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             {activeNode === 'contact' && (
               <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
@@ -122,17 +123,18 @@ export default function WorkflowVisualization() {
             <div className="card-gradient-overlay" />
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-amber-50"><User className="w-5 h-5 text-amber-600" /></div>
-              <div><h3 className="font-bold text-sm">Lead #315</h3><p className="text-[10px] text-gray-400">Jack Johnson</p></div>
+              <div><h3 className={`font-bold text-sm ${activeNode === 'contact' ? 'text-gray-900' : 'text-gray-400'}`}>Lead #315</h3><p className="text-[10px] text-gray-400 text-left">Jack Johnson</p></div>
             </div>
-            <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] font-mono">
-              <span className="text-amber-600">status:</span> <span>{isApproved ? 'Lead Engaged' : 'Active'}</span>
+            <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] font-mono flex items-center gap-2">
+              <span className={`font-semibold ${activeNode === 'contact' ? 'text-amber-600' : 'text-gray-400'}`}>Status</span>
+              <span className={activeNode === 'contact' ? 'text-gray-700' : 'text-gray-400'}>{isApproved ? 'Lead Engaged' : 'Active'}</span>
             </div>
           </div>
         </div>
 
         <div className="relative z-10">
-          <div className={`connector-dot -left-1 ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('agent') ? 'active-purple' : ''}`} />
-          <div className={`connector-dot -right-1 ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('guardrails') ? 'active-purple' : ''}`} />
+          <div className={`connector-dot -left-[5px] ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('agent') ? 'active-purple' : ''}`} />
+          <div className={`connector-dot -right-[5px] ${activeNode === 'agent' ? 'active-purple' : visitedNodes.has('guardrails') ? 'active-purple' : ''}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${getStatusColor('agent', 'border-purple-500 shadow-xl card-active-purple', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             {activeNode === 'agent' && (
               <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
@@ -142,11 +144,11 @@ export default function WorkflowVisualization() {
             <div className="card-gradient-overlay" />
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-purple-50"><Bot className="w-5 h-5 text-purple-600" /></div>
-              <div><h3 className="font-bold text-sm">AI Agent</h3><p className="text-[10px] text-gray-400">GPT-5.2</p></div>
+              <div><h3 className={`font-bold text-sm ${activeNode === 'agent' ? 'text-gray-900' : 'text-gray-400'}`}>AI Agent</h3><p className="text-[10px] text-gray-400 text-left">GPT-5.2</p></div>
             </div>
-            <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center overflow-hidden">
-              <span className="text-purple-600 font-mono">Output:</span>
-              <span className="ml-2 truncate text-gray-700 font-mono">
+            <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center overflow-hidden gap-2">
+              <span className={`font-semibold font-mono ${activeNode === 'agent' ? 'text-purple-600' : 'text-gray-400'}`}>Output</span>
+              <span className={`truncate font-mono ${activeNode === 'agent' ? 'text-gray-700' : 'text-gray-400'}`}>
                 {visitedNodes.has('agent') ? (agentStatus === 'thinking' ? '...' : (agentStatus === 'msg1' ? 'Good morning :)' : 'Is this Jack?')) : ''}
               </span>
             </div>
@@ -154,7 +156,7 @@ export default function WorkflowVisualization() {
         </div>
 
         <div className="relative z-10">
-          <div className={`connector-dot -left-1 ${activeNode === 'guardrails' ? (isApproved ? 'active-emerald' : 'active-cyan') : (isApproved ? 'active-emerald' : (visitedNodes.has('guardrails') ? 'active-cyan' : ''))}`} />
+          <div className={`connector-dot -left-[5px] ${activeNode === 'guardrails' ? (isApproved ? 'active-emerald' : 'active-cyan') : (isApproved ? 'active-emerald' : (visitedNodes.has('guardrails') ? 'active-cyan' : ''))}`} />
           <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 ${isApproved ? 'border-emerald-500 shadow-xl card-active-emerald' : getStatusColor('guardrails', 'border-cyan-500 shadow-xl card-active-cyan', 'border-gray-200 shadow-md', 'border-gray-200')}`}>
             {activeNode === 'guardrails' && (
               <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
@@ -163,14 +165,14 @@ export default function WorkflowVisualization() {
             )}
             <div className="card-gradient-overlay" />
             <div className="flex items-center gap-3 mb-4">
-              <div className={`p-2 rounded-lg ${isApproved ? 'bg-emerald-50' : 'bg-cyan-50'}`}>
+              <div className={`p-2 rounded-lg ${isApproved ? (activeNode === 'guardrails' || isApproved ? 'bg-emerald-50' : 'bg-cyan-50') : 'bg-cyan-50'}`}>
                 {isApproved ? <CheckCircle2 className="w-5 h-5 text-emerald-600" /> : <Shield className="w-5 h-5 text-cyan-600" />}
               </div>
-              <div><h3 className="font-bold text-sm">Guardrails</h3><p className="text-[10px] text-gray-400">SECURITY</p></div>
+              <div><h3 className={`font-bold text-sm ${activeNode === 'guardrails' ? 'text-gray-900' : 'text-gray-400'}`}>Guardrails</h3><p className="text-[10px] text-gray-400 text-left">SECURITY</p></div>
             </div>
-            <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center">
-              <span className={isApproved ? 'text-emerald-600 font-mono' : 'text-cyan-600 font-mono'}>status:</span>
-              <span className="ml-2 truncate text-gray-700 font-mono">{guardrailsStatus}</span>
+            <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center gap-2">
+              <span className={`font-semibold font-mono ${(activeNode === 'guardrails' || isApproved) ? (isApproved ? 'text-emerald-600' : 'text-cyan-600') : 'text-gray-400'}`}>Status</span>
+              <span className={`truncate font-mono ${(activeNode === 'guardrails' || isApproved) ? 'text-gray-700' : 'text-gray-400'}`}>{guardrailsStatus}</span>
             </div>
           </div>
         </div>
