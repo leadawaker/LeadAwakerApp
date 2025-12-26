@@ -338,7 +338,9 @@ export const SalesRepSteps = () => {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="text-center max-w-2xl mx-auto"
           >
-            <p className="text-accent text-xl font-medium tracking-wide">Companies have invested <span className="font-bold">THOUSANDS</span> in acquiring these leads, but they're leaving <span className="font-bold">MILLIONS</span> on the table because reactivation is too painful and ineffective.</p>
+            <p className="text-accent text-xl font-medium tracking-wide">
+              Companies have invested <span className="animate-shine-text font-bold text-white inline-block">THOUSANDS</span> in acquiring these leads, but they're leaving <span className="animate-shine-text font-bold text-white inline-block" style={{ animationDelay: '0.2s' }}>MILLIONS</span> on the table because reactivation is too painful and ineffective.
+            </p>
           </motion.div>
         </div>
       </section>
