@@ -85,16 +85,17 @@ export default function WorkflowVisualization() {
         .card-gradient-overlay { 
           position: absolute; inset: 0; pointer-events: none; border-radius: inherit; 
           background: linear-gradient(to top left, rgba(55, 65, 81, 0.05), transparent 70%); 
-          transition: background 0.5s ease; 
+          transition: background 0.5s ease;
+          mix-blend-mode: plus-lighter;
         }
-        .card-active-amber { box-shadow: 0 0 65px 25px rgba(245, 158, 11, 0.7); }
-        .card-active-purple { box-shadow: 0 0 65px 25px rgba(168, 85, 247, 0.7); }
-        .card-active-emerald { box-shadow: 0 0 65px 25px rgba(16, 185, 129, 0.7); }
-        .card-active-cyan { box-shadow: 0 0 65px 25px rgba(6, 182, 212, 0.7); }
-        .card-active-amber .card-gradient-overlay { background: linear-gradient(to top left, rgba(245, 158, 11, 0.15), transparent 70%); }
-        .card-active-purple .card-gradient-overlay { background: linear-gradient(to top left, rgba(168, 85, 247, 0.15), transparent 70%); }
-        .card-active-emerald .card-gradient-overlay { background: linear-gradient(to top left, rgba(16, 185, 129, 0.15), transparent 70%); }
-        .card-active-cyan .card-gradient-overlay { background: linear-gradient(to top left, rgba(6, 182, 212, 0.15), transparent 70%); }
+        .card-active-amber { box-shadow: 0 0 80px 30px rgba(245, 158, 11, 0.8); }
+        .card-active-purple { box-shadow: 0 0 80px 30px rgba(168, 85, 247, 0.8); }
+        .card-active-emerald { box-shadow: 0 0 80px 30px rgba(16, 185, 129, 0.8); }
+        .card-active-cyan { box-shadow: 0 0 80px 30px rgba(6, 182, 212, 0.8); }
+        .card-active-amber .card-gradient-overlay { background: linear-gradient(to top left, rgba(245, 158, 11, 0.45), transparent 70%); }
+        .card-active-purple .card-gradient-overlay { background: linear-gradient(to top left, rgba(168, 85, 247, 0.45), transparent 70%); }
+        .card-active-emerald .card-gradient-overlay { background: linear-gradient(to top left, rgba(16, 185, 129, 0.45), transparent 70%); }
+        .card-active-cyan .card-gradient-overlay { background: linear-gradient(to top left, rgba(6, 182, 212, 0.45), transparent 70%); }
         .connector-dot {
           width: 10px;
           height: 10px;
