@@ -78,16 +78,17 @@ export default function AnimatedCounter({
             <div className="flex flex-col items-center leading-none">
               <span className="md:text-6xl font-black uppercase tracking-tighter text-white text-[63px]">Absolute</span>
               <motion.span 
-                initial={{ filter: "brightness(1) drop-shadow(0 0 0px rgba(254, 184, 0, 0))", scale: 1 }}
+                initial={{ filter: "drop-shadow(0 0 0px rgba(254, 184, 0, 0))", scale: 1 }}
                 animate={{ 
                   filter: [
-                    "brightness(1) drop-shadow(0 0 0px rgba(254, 184, 0, 0))", 
-                    "brightness(2.5) drop-shadow(0 0 40px rgba(254, 184, 0, 1))", 
-                    "brightness(1) drop-shadow(0 0 10px rgba(254, 184, 0, 0.5))"
+                    "drop-shadow(0 0 0px rgba(254, 184, 0, 0))", 
+                    "drop-shadow(0 0 30px rgba(254, 184, 0, 1))", 
+                    "drop-shadow(0 0 0px rgba(254, 184, 0, 0))"
                   ],
-                  scale: [1, 1.15, 1]
+                  scale: [1, 1.1, 1]
                 }}
-                transition={{ duration: 1.2, times: [0, 0.3, 1], ease: "easeOut" }}
+                transition={{ duration: 1.0, times: [0, 0.4, 1], ease: "easeOut" }}
+                style={{ mixBlendMode: "color-dodge" }}
                 className="text-6xl md:text-9xl font-black uppercase tracking-tighter text-[#FEB800]"
               >
                 ZERO
