@@ -192,6 +192,13 @@ export default function ChatCard2D() {
               </motion.div>
             )}
 
+            {/* Milestone: Lead Contacted */}
+            {currentStep >= 1 && currentStep < 2 && (
+              <motion.div className="flex justify-center py-2" variants={messageVariants} initial="hidden" animate="visible">
+                <div className="text-xs text-slate-400 font-medium">---Lead Contacted---</div>
+              </motion.div>
+            )}
+
             {/* Message 2 - Sophie */}
             {currentStep >= 2 && (
               <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
@@ -216,6 +223,13 @@ export default function ChatCard2D() {
               </motion.div>
             )}
 
+            {/* Milestone: Lead Replied */}
+            {currentStep >= 3 && currentStep < 4 && (
+              <motion.div className="flex justify-center py-2" variants={messageVariants} initial="hidden" animate="visible">
+                <div className="text-xs text-slate-400 font-medium">---Lead Replied---</div>
+              </motion.div>
+            )}
+
             {/* Message 4 - Jack */}
             {currentStep >= 4 && (
               <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
@@ -225,6 +239,13 @@ export default function ChatCard2D() {
                   </div>
                   <span className="text-xs text-slate-400 pl-2">15:01</span>
                 </div>
+              </motion.div>
+            )}
+
+            {/* Milestone: Lead Qualified */}
+            {currentStep >= 4 && currentStep < 5 && (
+              <motion.div className="flex justify-center py-2" variants={messageVariants} initial="hidden" animate="visible">
+                <div className="text-xs text-slate-400 font-medium">---Lead Qualified---</div>
               </motion.div>
             )}
 
@@ -343,11 +364,17 @@ export default function ChatCard2D() {
               </motion.div>
             )}
 
-            {/* Sophie 15m later message */}
+            {/* Milestone: DSAR Completed */}
+            {currentStep >= 12 && currentStep < 13 && (
+              <motion.div className="flex justify-center py-2" variants={messageVariants} initial="hidden" animate="visible">
+                <div className="text-xs text-slate-400 font-medium">---DSAR Completed---</div>
+              </motion.div>
+            )}
+
+            {/* Sophie message after claim filled */}
             {currentStep >= 13 && (
               <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="flex flex-col items-end gap-1">
-                  <div className="text-xs text-slate-400 text-right pr-2 italic mb-1">15 minutes later</div>
                   <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
                     Jack, thanks for filling your claim, you will hear from us soon. Any further questions, feel free to ask
                   </div>
@@ -368,11 +395,17 @@ export default function ChatCard2D() {
               </motion.div>
             )}
 
+            {/* Milestone: Sent To Client */}
+            {currentStep >= 14 && currentStep < 15 && (
+              <motion.div className="flex justify-center py-2" variants={messageVariants} initial="hidden" animate="visible">
+                <div className="text-xs text-slate-400 font-medium">---Sent To Client---</div>
+              </motion.div>
+            )}
+
             {/* Sophie closing message */}
             {currentStep >= 15 && (
               <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="flex flex-col items-end gap-1">
-                  <div className="text-xs text-slate-400 text-right pr-2 italic mb-1">1 minute later</div>
                   <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
                     Ok Jack, we hope you have a great day :)
                   </div>
