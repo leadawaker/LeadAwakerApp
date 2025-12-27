@@ -296,23 +296,31 @@ Weekly performance review and campaign adjustments for ongoing lift`
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.1 }}
-                          className="flex flex-wrap gap-4 mb-6 items-center bg-black/5 p-3 rounded-lg border border-black/5"
+                          className="flex flex-wrap gap-4 mb-6 items-center bg-black/5 p-4 rounded-xl border border-black/5"
                         >
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200">
-                            <Database className="w-4 h-4 text-blue-600" />
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
+                            <img src="https://www.vectorlogo.zone/logos/salesforce/salesforce-icon.svg" alt="Salesforce" className="w-5 h-5" />
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Salesforce</span>
                           </div>
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200">
-                            <Database className="w-4 h-4 text-orange-500" />
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
+                            <img src="https://www.vectorlogo.zone/logos/hubspot/hubspot-icon.svg" alt="HubSpot" className="w-5 h-5" />
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">HubSpot</span>
                           </div>
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200">
-                            <Box className="w-4 h-4 text-green-600" />
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
+                            <img src="https://www.vectorlogo.zone/logos/pipedrive/pipedrive-icon.svg" alt="Pipedrive" className="w-5 h-5" />
+                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Pipedrive</span>
+                          </div>
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
+                            <img src="https://www.vectorlogo.zone/logos/google_sheets/google_sheets-icon.svg" alt="Sheets" className="w-5 h-5" />
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Sheets</span>
                           </div>
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200">
-                            <Box className="w-4 h-4 text-green-700" />
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
+                            <img src="https://www.vectorlogo.zone/logos/microsoft_excel/microsoft_excel-icon.svg" alt="Excel" className="w-5 h-5" />
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Excel</span>
+                          </div>
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
+                            <img src="https://www.vectorlogo.zone/logos/zapier/zapier-icon.svg" alt="Zapier" className="w-5 h-5" />
+                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Zapier</span>
                           </div>
                         </motion.div>
                       )}
