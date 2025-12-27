@@ -7,6 +7,7 @@ import databaseIntegrationImg from "@assets/generated_images/database_upload_and
 import leadsDbImg from "@assets/leads-database.png";
 import conversationImg from "@assets/Gemini_Generated_Image_j212wcj212wcj212_1766858918533.png";
 import dailyLeadsImg from "@assets/generated_images/daily_leads_closed_chart_dashboard.png";
+import calendarImg from "@assets/Gemini_Generated_Image_tmnffctmnffctmnf_1766860657536.png";
 import cloudTexture from "@assets/generated_images/cloud-bottom-bar.jpg";
 import cloudsOverlay from "@assets/Project_(20251227103213)_1766828113842.jpg";
 import { MeteorContainer } from "./Meteor";
@@ -236,6 +237,7 @@ Conversations shaped by Challenger & SPIN selling to uncover needs and handle ob
       image: dailyLeadsImg,
       icon: <TrendingUp className="w-8 h-8 text-yellow-500" />,
       align: "left" as const,
+      cardImage: calendarImg,
       leftText: `One-click Google Calendar, Calendly integration
 Smart reminders slash no-shows and cancellations
 On-demand campaign reports with lead interaction details
