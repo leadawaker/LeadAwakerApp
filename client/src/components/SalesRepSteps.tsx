@@ -661,7 +661,7 @@ export const SalesRepSteps = () => {
             className="text-center max-w-2xl mx-auto"
           >
             <p className="text-xl font-medium tracking-wide text-[#bfbfbf]">
-              You have already invested <span className="font-bold text-white inline-block">thousands</span> to acquire these leads, but you are leaving <span className="font-bold text-white inline-block">MILLIONS</span> on the table because reactivation is painful and ineffective.
+              You have already invested <span className="font-bold text-white inline-block">THOUSANDS</span> to acquire these leads, but you are leaving <span className="font-bold text-white inline-block text-[18px]">MILLIONS</span> on the table because reactivation is painful and ineffective.
             </p>
           </motion.div>
         </div>
