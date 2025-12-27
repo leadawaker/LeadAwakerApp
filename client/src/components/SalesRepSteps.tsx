@@ -72,7 +72,8 @@ const Plane = ({ startTrigger }: { startTrigger: boolean }) => {
 
 const StepCarousel = ({ onStepInView }: { onStepInView: () => void }) => {
   const [currentStep, setCurrentStep] = useState(0);
-
+  const [isLocked, setIsLocked] = useState(false);
+  const [scrollAccumulator, setScrollAccumulator] = useState(0);
   const steps = [
     {
       number: "1",
@@ -125,17 +126,63 @@ Weekly performance review and campaign adjustments for ongoing lift`
     offset: ["start start", "end end"]
   });
 
-  const stepProgress = useTransform(scrollYProgress, [0.1, 0.9], [0, steps.length - 1]);
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      if (!isLocked) return;
+
+      e.preventDefault();
+      const threshold = 50; // threshold to trigger step change
+      const delta = e.deltaY;
+
+      if (Math.abs(delta) < 5) return;
+
+      if (delta > 0) { // scrolling down
+        if (currentStep < steps.length - 1) {
+          setCurrentStep(prev => prev + 1);
+        } else if (scrollYProgress.get() >= 0.9) {
+          setIsLocked(false);
+        }
+      } else { // scrolling up
+        if (currentStep > 0) {
+          setCurrentStep(prev => prev - 1);
+        } else if (scrollYProgress.get() <= 0.1) {
+          setIsLocked(false);
+        }
+      }
+    };
+
+    const section = sectionRef.current;
+    if (section && isLocked) {
+      section.addEventListener('wheel', handleWheel, { passive: false });
+    }
+    return () => {
+      if (section) {
+        section.removeEventListener('wheel', handleWheel);
+      }
+    };
+  }, [isLocked, currentStep, steps.length, scrollYProgress]);
 
   useEffect(() => {
-    const unsubscribe = stepProgress.on("change", (v) => {
-      const rounded = Math.round(v);
-      if (rounded !== currentStep) {
-        setCurrentStep(rounded);
+    const unsubscribe = scrollYProgress.on("change", (v) => {
+      if (v > 0.05 && v < 0.95 && !isLocked) {
+        setIsLocked(true);
+      } else if ((v <= 0.05 || v >= 0.95) && isLocked) {
+        setIsLocked(false);
       }
     });
     return () => unsubscribe();
-  }, [currentStep, stepProgress]);
+  }, [isLocked, scrollYProgress]);
+
+  useEffect(() => {
+    if (isLocked) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isLocked]);
 
   const handlePrev = () => {
     setCurrentStep((prev) => (prev - 1 + steps.length) % steps.length);
@@ -147,7 +194,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
 
   return (
     <div ref={sectionRef} className="relative w-full h-[300vh]">
-      <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
+      <div className={`sticky top-0 h-screen flex flex-col justify-center ${isLocked ? 'overflow-hidden' : ''}`}>
         <div className="container mx-auto px-4 sm:px-6 md:px-12 relative z-10">
           {/* Stacked Cards Container */}
           <div className="relative h-[650px] flex flex-col items-center justify-center">
