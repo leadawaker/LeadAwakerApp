@@ -253,18 +253,90 @@ Weekly performance review and campaign adjustments for ongoing lift`
   return (
     <div className="relative w-full py-24">
       <div className="container mx-auto px-4 sm:px-6 md:px-12 relative z-10">
-        {/* Navigation Arrows */}
-        <div className="flex items-center justify-between mb-8">
-          <button
-            onClick={handlePrev}
-            data-testid="button-prev-step"
-            className="p-3 rounded-full bg-blue-500/20 border border-blue-400/50 text-white hover:bg-blue-500/30 hover:border-blue-400 transition-all duration-300 flex items-center justify-center group"
-            aria-label="Previous step"
-          >
-            <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform" />
-          </button>
+        {/* Stacked Cards Container */}
+        <div className="relative h-[650px] flex flex-col items-center justify-center">
+          <div className="relative w-full h-[550px] flex items-center justify-center">
+            {steps.map((step, index) => {
+              const position = (index - currentStep + steps.length) % steps.length;
+              const isActive = position === 0;
+              const isNext = position === 1;
+              const isPrev = position === steps.length - 1;
 
-          <div className="flex gap-2">
+              return (
+                <motion.div
+                  key={index}
+                  data-testid={`card-step-${index}`}
+                  layout
+                  initial={false}
+                  animate={{
+                    scale: isActive ? 1 : 0.9,
+                    x: isActive ? 0 : isNext ? 160 : -160,
+                    opacity: isActive ? 1 : 0.3,
+                    zIndex: isActive ? 20 : 10,
+                    filter: isActive ? 'blur(0px)' : 'blur(2px)',
+                  }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  className="absolute w-full max-w-2xl"
+                >
+                  <Card className="bg-card backdrop-blur-sm border-white/10 overflow-hidden group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
+                    <CardContent className="p-8">
+                      <div className="mb-6 p-3 bg-primary/10 w-fit rounded-xl text-primary flex items-center justify-center min-w-[56px] min-h-[56px]" data-testid={`step-icon-${step.number}`}>
+                        {step.icon}
+                      </div>
+                      <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-black" data-testid={`step-title-${step.number}`}>
+                        {step.cardTitle}
+                      </h3>
+                      <p className="text-muted-foreground text-lg leading-relaxed mb-6" data-testid={`step-description-${step.number}`}>
+                        {step.cardDescription}
+                      </p>
+
+                      {/* Bullet points for current card only */}
+                      {isActive && step.leftText && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2 }}
+                          className="space-y-4 pt-6 border-t border-white/10"
+                        >
+                          {step.leftText.split('\n').map((line, i) => (
+                            <div key={i} className="flex items-start gap-3">
+                              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-400 mt-2" />
+                              <div className="font-medium text-gray-600 text-[14px]">
+                                {line}
+                              </div>
+                            </div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+
+            {/* Side Navigation Buttons - Closer In */}
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between items-center px-4 md:px-12 z-30 pointer-events-none">
+              <button
+                onClick={handlePrev}
+                data-testid="button-prev-step"
+                className="p-3 rounded-full bg-blue-500/20 border border-blue-400/50 text-white hover:bg-blue-500/30 hover:border-blue-400 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
+                aria-label="Previous step"
+              >
+                <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform" />
+              </button>
+              <button
+                onClick={handleNext}
+                data-testid="button-next-step"
+                className="p-3 rounded-full bg-blue-500/20 border border-blue-400/50 text-white hover:bg-blue-500/30 hover:border-blue-400 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
+                aria-label="Next step"
+              >
+                <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform" />
+              </button>
+            </div>
+          </div>
+
+          {/* Pagination dots under cards */}
+          <div className="flex gap-2 mt-8">
             {steps.map((_, i) => (
               <button
                 key={i}
@@ -279,75 +351,6 @@ Weekly performance review and campaign adjustments for ongoing lift`
               />
             ))}
           </div>
-
-          <button
-            onClick={handleNext}
-            data-testid="button-next-step"
-            className="p-3 rounded-full bg-blue-500/20 border border-blue-400/50 text-white hover:bg-blue-500/30 hover:border-blue-400 transition-all duration-300 flex items-center justify-center group"
-            aria-label="Next step"
-          >
-            <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform" />
-          </button>
-        </div>
-
-        {/* Stacked Cards Container */}
-        <div className="relative h-[600px] flex items-center justify-center">
-          {steps.map((step, index) => {
-            const position = (index - currentStep + steps.length) % steps.length;
-            const isActive = position === 0;
-            const isNext = position === 1;
-            const isPrev = position === steps.length - 1;
-
-            return (
-              <motion.div
-                key={index}
-                data-testid={`card-step-${index}`}
-                layout
-                initial={false}
-                animate={{
-                  scale: isActive ? 1 : 0.95,
-                  y: isActive ? 0 : isNext ? 20 : -20,
-                  opacity: isActive ? 1 : 0.5,
-                  zIndex: isActive ? 20 : isNext ? 10 : 5
-                }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="absolute w-full max-w-2xl"
-              >
-                <Card className="bg-card backdrop-blur-sm border-white/10 overflow-hidden group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
-                  <CardContent className="p-8">
-                    <div className="mb-6 p-3 bg-primary/10 w-fit rounded-xl text-primary flex items-center justify-center min-w-[56px] min-h-[56px]" data-testid={`step-icon-${step.number}`}>
-                      {step.icon}
-                    </div>
-                    <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-black" data-testid={`step-title-${step.number}`}>
-                      {step.cardTitle}
-                    </h3>
-                    <p className="text-muted-foreground text-lg leading-relaxed mb-6" data-testid={`step-description-${step.number}`}>
-                      {step.cardDescription}
-                    </p>
-
-                    {/* Bullet points for current card only */}
-                    {isActive && step.leftText && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="space-y-4 pt-6 border-t border-white/10"
-                      >
-                        {step.leftText.split('\n').map((line, i) => (
-                          <div key={i} className="flex items-start gap-3">
-                            <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-400 mt-2" />
-                            <div className="font-medium text-gray-600 text-[14px]">
-                              {line}
-                            </div>
-                          </div>
-                        ))}
-                      </motion.div>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
         </div>
       </div>
     </div>
