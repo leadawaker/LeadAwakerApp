@@ -206,7 +206,7 @@
   padding: 0.05em 0.1em;
   border-bottom: 2px solid rgba(96, 165, 250, 0.6);
   margin-bottom: -2px;
-  animation: hologram-static 0.15s linear 5s 73 forwards, pixelate-glitch-word 0.15s ease-in-out 1.5s;
+  animation: hologram-static 0.15s linear 1.5s 10 forwards, pixelate-glitch-word 0.15s ease-in-out 1.5s;
   animation-play-state: paused;
   overflow: visible;
 }
@@ -230,7 +230,7 @@
     0 -4px 10px rgba(96, 165, 250, 0.3),
     0 0 20px rgba(96, 165, 250, 0.2),
     0 0 40px rgba(96, 165, 250, 0.15);
-  animation: text-flicker 11s ease-in-out 1 forwards, top-half-shift-left 3s ease-in-out 1.5s forwards, show-top-half 0.15s ease-in-out 1.5s, slice-glitch-top 0.15s ease-in-out 1.5s;
+  animation: text-flicker-intense 1.5s ease-in-out 1 forwards, top-half-shift-left 3s ease-in-out 1.5s forwards, show-top-half 0.15s ease-in-out 1.5s, slice-glitch-top 0.15s ease-in-out 1.5s;
   animation-play-state: paused;
   clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
   pointer-events: none;
@@ -257,7 +257,7 @@
     0 -4px 10px rgba(96, 165, 250, 0.3),
     0 0 20px rgba(96, 165, 250, 0.2),
     0 0 40px rgba(96, 165, 250, 0.15);
-  animation: text-flicker 11s ease-in-out 1 forwards, show-top-half 0.15s ease-in-out 1.5s, slice-glitch-bottom 0.15s ease-in-out 1.5s;
+  animation: text-flicker-intense 1.5s ease-in-out 1 forwards, show-top-half 0.15s ease-in-out 1.5s, slice-glitch-bottom 0.15s ease-in-out 1.5s;
   animation-play-state: paused;
   clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
   pointer-events: none;
@@ -267,6 +267,19 @@
 
 .hologram-glitch.animate::after {
   animation-play-state: running;
+}
+
+@keyframes text-flicker-intense {
+  0%, 10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 90%, 100% {
+    opacity: 1;
+    color: #60a5fa;
+    text-shadow: 0 0 20px rgba(96, 165, 250, 0.4);
+  }
+  5%, 15%, 25%, 35%, 45%, 55%, 65%, 75%, 85%, 95% {
+    opacity: 0.4;
+    color: #93c5fd;
+    text-shadow: none;
+  }
 }
 
 .flicker-letter {
