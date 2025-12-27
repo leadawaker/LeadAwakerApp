@@ -428,7 +428,7 @@ export const SalesRepSteps = () => {
           align="left"
           leftText={`We reawaken dormant leads who inquired months ago but never bought - even leads who your sales team has dialed to death
 Auto segment contacts based on past interactions
-Craft tailored re engagement offers for your niche
+We integrate with Salesforce, HubSpot, Pipedrive, Close, and custom APIs. If it has an API, we can connect to it.
 Launch SMS, Whatsapp and email campaigns for you`}
           onInView={() => setPlaneStarted(true)}
         />
