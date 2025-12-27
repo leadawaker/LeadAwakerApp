@@ -84,7 +84,7 @@ export default function ChatCard2D() {
     setIsAnimating(true);
     setIsUserScrolling(false);
     
-    // 25 second timeline
+    // 30 second timeline
     // Jack's "No sorry" (0-2s)
     await new Promise(resolve => setTimeout(resolve, 2000));
     setCurrentStep(6);
@@ -112,6 +112,18 @@ export default function ChatCard2D() {
     // Jack thanks (24-25s)
     await new Promise(resolve => setTimeout(resolve, 1000));
     setCurrentStep(12);
+    
+    // Sophie 15m later message (25-28s)
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    setCurrentStep(13);
+    
+    // Jack final message (28-29s)
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setCurrentStep(14);
+    
+    // Sophie closing message (29-30s)
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setCurrentStep(15);
     
     setIsAnimating(false);
     setShowNewMessageIndicator(false);
@@ -327,6 +339,44 @@ export default function ChatCard2D() {
                     Thanks.
                   </div>
                   <span className="text-xs text-slate-400 pl-2">15:24</span>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Sophie 15m later message */}
+            {currentStep >= 13 && (
+              <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
+                <div className="flex flex-col items-end gap-1">
+                  <div className="text-xs text-slate-400 text-right pr-2 italic mb-1">15 minutes later</div>
+                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
+                    Jack, thanks for filling your claim, you will hear from us soon. Any further questions, feel free to ask
+                  </div>
+                  <span className="text-xs text-slate-400 pr-2">15:39</span>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Jack final response */}
+            {currentStep >= 14 && (
+              <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
+                <div className="flex flex-col items-start gap-1">
+                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm text-sm">
+                    No, that is all from me
+                  </div>
+                  <span className="text-xs text-slate-400 pl-2">15:40</span>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Sophie closing message */}
+            {currentStep >= 15 && (
+              <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
+                <div className="flex flex-col items-end gap-1">
+                  <div className="text-xs text-slate-400 text-right pr-2 italic mb-1">1 minute later</div>
+                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
+                    Ok Jack, we hope you have a great day :)
+                  </div>
+                  <span className="text-xs text-slate-400 pr-2">15:41</span>
                 </div>
               </motion.div>
             )}
