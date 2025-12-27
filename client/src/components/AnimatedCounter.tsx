@@ -24,6 +24,8 @@ export default function AnimatedCounter({
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
 
+  const [isFinished, setIsFinished] = useState(false);
+
   useEffect(() => {
     if (!isInView) return;
 
@@ -31,6 +33,9 @@ export default function AnimatedCounter({
       duration,
       onComplete: () => {
         setShowSuffix(true);
+        if (end === 0) {
+          setTimeout(() => setIsFinished(true), 1000);
+        }
       }
     });
     return controls.stop;
@@ -38,37 +43,36 @@ export default function AnimatedCounter({
 
   useEffect(() => {
     return count.on("change", (latest) => {
-      const isComplete = latest >= end;
+      const isComplete = latest <= end;
       setDisplayValue(format(latest) + (isComplete || showSuffix ? suffix : ""));
     });
   }, [count, format, suffix, showSuffix, end]);
 
   return (
     <motion.div className="flex flex-col items-center relative">
-      <AnimatePresence>
-        {end === 0 && displayValue === format(0) + (suffixAtEnd ? suffix : "") && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5, rotate: -45 }}
-            animate={{ opacity: 1, scale: 1, rotate: -15 }}
-            className="absolute z-20 pointer-events-none whitespace-nowrap flex flex-col items-center"
-            style={{ top: '0%' }}
-            data-testid="text-nothing-overlay"
-          >
-            <span className="text-yellow-500 font-black text-5xl md:text-7xl tracking-tighter uppercase leading-none italic drop-shadow-2xl">Absolutely</span>
-            <span className="text-yellow-500 font-black text-5xl md:text-7xl tracking-tighter uppercase leading-none italic drop-shadow-2xl">Nothing</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
       <motion.span
         ref={ref}
         data-testid="text-animated-counter"
         animate={{ 
-          color: end === 0 && displayValue === format(0) + (suffixAtEnd ? suffix : "") ? "#94a3b8" : "inherit"
+          opacity: isFinished ? 0 : 1,
+          scale: isFinished ? 0.8 : 1
         }}
         transition={{ duration: 0.3 }}
-        className="text-[#cacbcc]">
+        className="text-inherit">
         {displayValue}
       </motion.span>
+      <AnimatePresence>
+        {isFinished && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="absolute inset-0 flex items-center justify-center whitespace-nowrap"
+            data-testid="text-zero-overlay"
+          >
+            <span className="leading-none text-white">Absolute ZERO</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

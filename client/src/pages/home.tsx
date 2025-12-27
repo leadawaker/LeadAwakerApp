@@ -141,12 +141,17 @@ export default function Home() {
           <div className="flex flex-col md:flex-row gap-8 mb-12 items-stretch max-w-4xl mx-auto">
             {/* Featured Large Card */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={false}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-card p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px]"
+              animate={{ 
+                backgroundColor: "#526fff",
+                color: "#ffffff"
+              }}
+              transition={{ delay: 6 }} // 5s counter duration + 1s delay
+              className="p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px] bg-card text-foreground"
             >
-              <div className="text-6xl md:text-9xl font-black text-primary mb-2 font-heading">
+              <div className="text-6xl md:text-9xl font-black mb-2 font-heading">
                 <AnimatedCounter 
                   start={10000}
                   end={0} 
@@ -155,7 +160,7 @@ export default function Home() {
                 />
               </div>
               <h3 className="text-4xl font-black mb-2 font-heading">Upfront Cost</h3>
-              <p className="text-xl text-muted-foreground text-blue-500 font-medium">performance‑based pricing</p>
+              <p className="text-xl font-medium opacity-80">performance‑based pricing</p>
             </motion.div>
 
             {/* Stacked Side Cards */}
