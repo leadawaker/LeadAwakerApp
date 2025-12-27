@@ -238,7 +238,7 @@ export const SalesRepSteps = () => {
       <Plane startTrigger={planeStarted} />
       <div className="relative z-10">
       {/* Pain Points Section */}
-      <section className="py-32 md:py-40">
+      <section className="pt-48 pb-32 md:pt-56 md:pb-40">
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
