@@ -129,7 +129,7 @@ export default function ChatCard2D() {
       opacity: 1,
       y: 0,
       scale: 1,
-      transition: { duration: 0.4 },
+      transition: { duration: 0.4, ease: "easeOut" },
     },
   };
 
@@ -172,7 +172,7 @@ export default function ChatCard2D() {
             {currentStep >= 1 && (
               <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
+                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm whitespace-nowrap" style={{ backgroundColor: "#2563EB" }}>
                     Hi, this is Sophie from Sterling Finance, is this Jack who wanted to check if they were owed a refund on their car finance?
                   </div>
                   <span className="text-xs text-slate-400 pr-2">14:35</span>
@@ -184,7 +184,7 @@ export default function ChatCard2D() {
             {currentStep >= 2 && (
               <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
+                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm whitespace-nowrap" style={{ backgroundColor: "#2563EB" }}>
                     just bumping this up in case you got busy before :)
                   </div>
                   <span className="text-xs text-slate-400 pr-2">14:55</span>
@@ -196,7 +196,7 @@ export default function ChatCard2D() {
             {currentStep >= 3 && (
               <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="flex flex-col items-start gap-1">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm text-sm">
+                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm text-sm whitespace-nowrap">
                     Hi, yes
                   </div>
                   <span className="text-xs text-slate-400 pl-2">15:00</span>
@@ -208,7 +208,7 @@ export default function ChatCard2D() {
             {currentStep >= 4 && (
               <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="flex flex-col items-start gap-1">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm text-sm">
+                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm text-sm whitespace-nowrap">
                     I would like to check. I had 2 cars on finance 5 years ago
                   </div>
                   <span className="text-xs text-slate-400 pl-2">15:01</span>
@@ -216,11 +216,11 @@ export default function ChatCard2D() {
               </motion.div>
             )}
 
-            {/* Message 5 - Sophie */}
+            {/* Message 5 - Sophie (with ...) */}
             {currentStep >= 5 && (
               <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
+                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm whitespace-nowrap" style={{ backgroundColor: "#2563EB" }}>
                     That's great Jack! Do you happen to have your vehicle finance agreement documents handy for those cars?
                   </div>
                   <span className="text-xs text-slate-400 pr-2">15:04</span>
@@ -228,7 +228,7 @@ export default function ChatCard2D() {
               </motion.div>
             )}
 
-            {/* Typing indicator from Jack */}
+            {/* Typing indicator (...) from Jack */}
             {currentStep === 5 && (
               <motion.div className="flex justify-start items-center gap-3" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="bg-slate-200 text-slate-500 rounded-full px-4 py-2 shadow-sm flex items-center justify-center gap-2">
@@ -244,7 +244,7 @@ export default function ChatCard2D() {
             {currentStep >= 6 && (
               <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="flex flex-col items-start gap-1">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm text-sm">
+                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm text-sm whitespace-nowrap">
                     No sorry,
                   </div>
                   <span className="text-xs text-slate-400 pl-2">15:05</span>
@@ -256,7 +256,7 @@ export default function ChatCard2D() {
             {currentStep >= 7 && (
               <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="flex flex-col items-start gap-1">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm text-sm">
+                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm text-sm whitespace-nowrap">
                     Not at Hand
                   </div>
                   <span className="text-xs text-slate-400 pl-2">15:05</span>
@@ -268,7 +268,7 @@ export default function ChatCard2D() {
             {currentStep >= 8 && (
               <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
+                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm whitespace-nowrap" style={{ backgroundColor: "#2563EB" }}>
                     No worries at all Jack. We can actually submit a Data Subject Access Request (DSAR) on your behalf to get those documents for you. Could you please complete this short DSAR form by clicking on this URL{' '}
                     <a href="https://www.dsarform.com/lead315" className="underline font-medium" style={{ color: "#FCC700" }}>
                       https://www.dsarform.com/lead315
@@ -284,7 +284,7 @@ export default function ChatCard2D() {
             {currentStep >= 9 && (
               <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="flex flex-col items-start gap-1">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm text-sm">
+                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm text-sm whitespace-nowrap">
                     What is the process from here?
                   </div>
                   <span className="text-xs text-slate-400 pl-2">15:20</span>
@@ -296,7 +296,7 @@ export default function ChatCard2D() {
             {currentStep >= 10 && (
               <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="flex flex-col items-start gap-1">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm text-sm">
+                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm text-sm whitespace-nowrap">
                     Do you let me know if I'm eligible to make a claim once you retrieve the docs and then I confirm I want to proceed?
                   </div>
                   <span className="text-xs text-slate-400 pl-2">15:20</span>
@@ -308,7 +308,7 @@ export default function ChatCard2D() {
             {currentStep >= 11 && (
               <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
+                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm whitespace-nowrap" style={{ backgroundColor: "#2563EB" }}>
                     Absolutely, Jack. Once you've completed the DSAR form, we'll request your vehicle finance agreement and review it. If we find that you're eligible for a claim, we'll get in touch with you to discuss the next steps. It typically takes us about 30 working days to get everything sorted. Remember, we operate on a no-win no fee basis, so there's no risk to you. Just pop over to the URL and fill out the form when you can{' '}
                     <a href="https://www.dsarform.com/lead315" className="underline font-medium" style={{ color: "#FCC700" }}>
                       https://www.dsarform.com/lead315
@@ -323,7 +323,7 @@ export default function ChatCard2D() {
             {currentStep >= 12 && (
               <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="flex flex-col items-start gap-1">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm text-sm">
+                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm text-sm whitespace-nowrap">
                     Thanks.
                   </div>
                   <span className="text-xs text-slate-400 pl-2">15:24</span>
@@ -333,7 +333,7 @@ export default function ChatCard2D() {
           </div>
         </div>
 
-        {/* Start Button - Appears when typing indicator is showing */}
+        {/* Start Button - Appears next to typing indicator */}
         {currentStep === 5 && !isAnimating && (
           <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-center">
             <motion.button
@@ -348,7 +348,7 @@ export default function ChatCard2D() {
           </div>
         )}
 
-        {/* New Messages Indicator - Single centered icon button */}
+        {/* New Messages Indicator - Single icon */}
         {showNewMessageIndicator && (
           <motion.button 
             initial={{ opacity: 0, y: 10 }} 
