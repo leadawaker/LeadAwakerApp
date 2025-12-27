@@ -579,7 +579,7 @@ export const SalesRepSteps = () => {
       </section>
 
       {/* Step Carousel */}
-      <section className="relative py-12">
+      <section className="relative py-6">
         <StepCarousel onStepInView={() => setPlaneStarted(true)} />
       </section>
 
