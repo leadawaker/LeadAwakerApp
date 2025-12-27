@@ -142,15 +142,25 @@ const FullscreenStep = ({
           data-testid={`step-image-${number}`}
         >
           {leftText ? (
-            <div className="w-full h-full bg-gradient-to-br from-slate-800/80 to-slate-800/60 flex flex-col items-start justify-start p-8 text-white">
-              <div className="space-y-4">
-                {leftText.split('\n').map((line, i) => (
-                  <div key={i} className="text-lg leading-relaxed">
-                    {line}
-                  </div>
-                ))}
+            <>
+              <img 
+                src={image} 
+                alt={cardTitle} 
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-transparent flex flex-col items-start justify-start p-8 text-white">
+                <div className="space-y-6 max-w-sm">
+                  {leftText.split('\n').map((line, i) => (
+                    <div key={i} className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-400 mt-2" />
+                      <div className="text-lg font-medium leading-relaxed text-gray-100">
+                        {line}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            </>
           ) : (
             <>
               <img 
