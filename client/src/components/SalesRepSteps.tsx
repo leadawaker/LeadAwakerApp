@@ -251,32 +251,32 @@ export const SalesRepSteps = () => {
       }} />
       <Plane startTrigger={planeStarted} />
       {/* Animated Clouds Overlay */}
-      <div className="absolute inset-x-0 bottom-0 pointer-events-none z-30" style={{ height: '400px' }}>
+      <div className="absolute inset-x-0 bottom-0 pointer-events-none z-[100] h-[500px] overflow-hidden">
         <motion.div 
           className="flex h-full w-[200%]"
           animate={{ x: ["0%", "-50%"] }}
           transition={{ 
-            duration: 80, 
+            duration: 40, 
             repeat: Infinity, 
             ease: "linear" 
           }}
         >
-          <div 
-            className="w-1/2 h-full bg-contain bg-bottom bg-no-repeat"
+          <img 
+            src={cloudsOverlay}
+            alt=""
+            className="w-1/2 h-full object-contain object-bottom"
             style={{ 
-              backgroundImage: `url(${cloudsOverlay})`,
-              mixBlendMode: 'screen',
-              opacity: 0.8,
-              filter: 'brightness(1.5) contrast(1.2) drop-shadow(0 0 15px rgba(255,255,255,0.2))'
+              filter: 'invert(1) brightness(2) contrast(1.2) drop-shadow(0 0 20px rgba(255,255,255,0.4))',
+              opacity: 1
             }}
           />
-          <div 
-            className="w-1/2 h-full bg-contain bg-bottom bg-no-repeat"
+          <img 
+            src={cloudsOverlay}
+            alt=""
+            className="w-1/2 h-full object-contain object-bottom"
             style={{ 
-              backgroundImage: `url(${cloudsOverlay})`,
-              mixBlendMode: 'screen',
-              opacity: 0.8,
-              filter: 'brightness(1.5) contrast(1.2) drop-shadow(0 0 15px rgba(255,255,255,0.2))'
+              filter: 'invert(1) brightness(2) contrast(1.2) drop-shadow(0 0 20px rgba(255,255,255,0.4))',
+              opacity: 1
             }}
           />
         </motion.div>
