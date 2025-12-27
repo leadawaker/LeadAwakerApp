@@ -566,8 +566,8 @@ export const SalesRepSteps = () => {
                 backgroundClip: 'text',
                 display: 'inline-block',
                 marginRight: '0.24em',
-                filter: 'drop-shadow(8px 0px 30px rgba(147, 197, 253, 0.6)) drop-shadow(4px 0px 10px rgba(147, 197, 253, 0.45))',
-                textShadow: '6px 0px 12px rgba(147, 197, 253, 0.5)'
+                filter: 'drop-shadow(2.4px 0px 9px rgba(147, 197, 253, 0.18)) drop-shadow(1.2px 0px 3px rgba(147, 197, 253, 0.135))',
+                textShadow: '1.8px 0px 3.6px rgba(147, 197, 253, 0.15)'
               }}>
                 is
               </span>
@@ -579,8 +579,8 @@ export const SalesRepSteps = () => {
               </span>
               <span style={{ 
                 color: '#93c5fd',
-                filter: 'drop-shadow(10px 0px 40px rgba(147, 197, 253, 0.75)) drop-shadow(5px 0px 10px rgba(147, 197, 253, 0.6))',
-                textShadow: '8px 0px 15px rgba(147, 197, 253, 0.6), 12px 0px 25px rgba(147, 197, 253, 0.45)',
+                filter: 'drop-shadow(3px 0px 12px rgba(147, 197, 253, 0.225)) drop-shadow(1.5px 0px 3px rgba(147, 197, 253, 0.18))',
+                textShadow: '2.4px 0px 4.5px rgba(147, 197, 253, 0.18), 3.6px 0px 7.5px rgba(147, 197, 253, 0.135)',
                 display: 'inline-block'
               }} data-testid="text-dot">.</span>
             </h2>
