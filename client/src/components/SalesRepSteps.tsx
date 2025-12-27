@@ -297,71 +297,6 @@ Weekly optimization reviews for continuous results`
                         {step.cardDescription}
                       </p>
 
-                      {/* CRM Logos Carousel for Step 1 */}
-                      {isActive && step.number === "1" && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.1 }}
-                          className="relative mb-6 rounded-lg overflow-hidden bg-black/5 border border-black/5 p-4 h-16"
-                        >
-                          <style>{`
-                            @keyframes crmScroll {
-                              0% { transform: translateX(0); }
-                              100% { transform: translateX(-50%); }
-                            }
-                            .crm-carousel-track {
-                              animation: crmScroll 50s linear infinite;
-                              display: flex;
-                              gap: 1rem;
-                            }
-                            .crm-carousel-track:hover {
-                              animation-play-state: paused;
-                            }
-                            .crm-logo-item {
-                              flex-shrink: 0;
-                              display: flex;
-                              align-items: center;
-                              gap: 0.5rem;
-                              padding: 0.375rem 0.75rem;
-                              background: white;
-                              border-radius: 0.375rem;
-                              border: 1px solid rgb(226, 232, 240);
-                            }
-                          `}</style>
-                          <div className="crm-carousel-track">
-                            {[
-                              { name: 'Salesforce', url: 'https://www.vectorlogo.zone/logos/salesforce/salesforce-icon.svg' },
-                              { name: 'HubSpot', url: 'https://www.vectorlogo.zone/logos/hubspot/hubspot-icon.svg' },
-                              { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
-                              { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
-                              { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
-                              { name: 'Excel', url: 'https://www.google.com/s2/favicons?domain=microsoft.com&sz=128' },
-                              { name: 'Supabase', url: 'https://www.vectorlogo.zone/logos/supabase/supabase-icon.svg' },
-                              { name: 'Airtable', url: 'https://www.vectorlogo.zone/logos/airtable/airtable-icon.svg' },
-                              { name: 'API', url: null }
-                            ].map((crm, i) => (
-                              <div key={i} className="crm-logo-item">
-                                {crm.url ? <img src={crm.url} alt={crm.name} className="w-5 h-5 object-contain" /> : <span className="text-blue-600 font-mono font-bold text-sm">&lt;/&gt;</span>}
-                                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">{crm.name}</span>
-                              </div>
-                            ))}
-                            {[
-                              { name: 'Salesforce', url: 'https://www.vectorlogo.zone/logos/salesforce/salesforce-icon.svg' },
-                              { name: 'HubSpot', url: 'https://www.vectorlogo.zone/logos/hubspot/hubspot-icon.svg' },
-                              { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
-                              { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
-                              { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
-                            ].map((crm, i) => (
-                              <div key={`dupe-${i}`} className="crm-logo-item">
-                                {crm.url ? <img src={crm.url} alt={crm.name} className="w-5 h-5 object-contain" /> : <span className="text-blue-600 font-mono font-bold text-sm">&lt;/&gt;</span>}
-                                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">{crm.name}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-
                       {/* Bullet points for current card only */}
                       {isActive && step.leftText && (
                         <motion.div
@@ -370,11 +305,82 @@ Weekly optimization reviews for continuous results`
                           transition={{ delay: 0.2 }}
                           className="pt-6 border-t border-white/10"
                         >
-                          {step.cardImage && (
+                          {step.cardImage && step.number === "1" ? (
+                            <div className="relative mb-6 rounded-lg overflow-hidden group">
+                              <img src={step.cardImage} alt="Step illustration" className="w-full h-auto object-cover rounded-lg" />
+                              
+                              {/* CRM Logos Carousel overlaying the image */}
+                              {isActive && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: -10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: 0.3 }}
+                                  className="absolute top-0 left-0 right-0 h-1/4 flex items-center px-4 pt-4 z-10"
+                                >
+                                  <style>{`
+                                    @keyframes crmScroll {
+                                      0% { transform: translateX(0); }
+                                      100% { transform: translateX(-50%); }
+                                    }
+                                    .crm-carousel-track {
+                                      animation: crmScroll 50s linear infinite;
+                                      display: flex;
+                                      gap: 1rem;
+                                    }
+                                    .crm-carousel-track:hover {
+                                      animation-play-state: paused;
+                                    }
+                                    .crm-logo-item {
+                                      flex-shrink: 0;
+                                      display: flex;
+                                      align-items: center;
+                                      gap: 0.5rem;
+                                      padding: 0.375rem 0.75rem;
+                                      background: rgba(255, 255, 255, 0.95);
+                                      border-radius: 0.375rem;
+                                      border: 1px solid rgb(226, 232, 240);
+                                      backdrop-filter: blur(8px);
+                                      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                                    }
+                                  `}</style>
+                                  <div className="crm-carousel-track">
+                                    {[
+                                      { name: 'Salesforce', url: 'https://www.vectorlogo.zone/logos/salesforce/salesforce-icon.svg' },
+                                      { name: 'HubSpot', url: 'https://www.vectorlogo.zone/logos/hubspot/hubspot-icon.svg' },
+                                      { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
+                                      { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
+                                      { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
+                                      { name: 'Excel', url: 'https://www.google.com/s2/favicons?domain=microsoft.com&sz=128' },
+                                      { name: 'Supabase', url: 'https://www.vectorlogo.zone/logos/supabase/supabase-icon.svg' },
+                                      { name: 'Airtable', url: 'https://www.vectorlogo.zone/logos/airtable/airtable-icon.svg' },
+                                      { name: 'API', url: null }
+                                    ].map((crm, i) => (
+                                      <div key={i} className="crm-logo-item">
+                                        {crm.url ? <img src={crm.url} alt={crm.name} className="w-5 h-5 object-contain" /> : <span className="text-blue-600 font-mono font-bold text-sm">&lt;/&gt;</span>}
+                                        <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">{crm.name}</span>
+                                      </div>
+                                    ))}
+                                    {[
+                                      { name: 'Salesforce', url: 'https://www.vectorlogo.zone/logos/salesforce/salesforce-icon.svg' },
+                                      { name: 'HubSpot', url: 'https://www.vectorlogo.zone/logos/hubspot/hubspot-icon.svg' },
+                                      { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
+                                      { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
+                                      { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
+                                    ].map((crm, i) => (
+                                      <div key={`dupe-${i}`} className="crm-logo-item">
+                                        {crm.url ? <img src={crm.url} alt={crm.name} className="w-5 h-5 object-contain" /> : <span className="text-blue-600 font-mono font-bold text-sm">&lt;/&gt;</span>}
+                                        <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">{crm.name}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </div>
+                          ) : step.cardImage ? (
                             <div className="mb-6 rounded-lg overflow-hidden">
                               <img src={step.cardImage} alt="Step illustration" className="w-full h-auto object-cover rounded-lg" />
                             </div>
-                          )}
+                          ) : null}
                           <div className="grid grid-cols-2 gap-4">
                             {step.leftText.split('\n').map((line, i) => (
                               <div key={i} className="flex items-start gap-3">
