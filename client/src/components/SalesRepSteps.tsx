@@ -218,6 +218,10 @@ export const SalesRepSteps = () => {
         background: 'linear-gradient(to top, rgba(254, 243, 199, 0.45) 0%, rgba(254, 243, 199, 0.2) 15%, transparent 50%)',
         zIndex: 0
       }} />
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'linear-gradient(to top, #edeef34d 0%, rgba(237, 238, 243, 0) 25%)',
+        zIndex: 5
+      }} />
       <Plane />
       <div className="relative z-10">
       {/* Pain Points Section */}
