@@ -48,14 +48,14 @@ export default function AnimatedCounter({
       <AnimatePresence>
         {end === 0 && displayValue === format(0) + (suffixAtEnd ? suffix : "") && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.5, rotate: -45 }}
-            animate={{ opacity: 1, scale: 1, rotate: -15 }}
+            initial={{ opacity: 0, scale: 0.8, rotate: -20, y: 20 }}
+            animate={{ opacity: 1, scale: 1.5, rotate: -12, y: 0 }}
             className="absolute z-20 pointer-events-none whitespace-nowrap flex flex-col items-center"
-            style={{ top: '0%' }}
+            style={{ top: '-10%' }}
             data-testid="text-nothing-overlay"
           >
-            <span className="text-yellow-500 font-black text-5xl md:text-7xl tracking-tighter uppercase leading-none italic drop-shadow-2xl">Absolutely</span>
-            <span className="text-yellow-500 font-black text-5xl md:text-7xl tracking-tighter uppercase leading-none italic drop-shadow-2xl">Nothing</span>
+            <span className="text-yellow-400 font-black text-6xl md:text-8xl tracking-[0.2em] uppercase leading-none italic drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] mix-blend-difference">Absolutely</span>
+            <span className="text-yellow-400 font-black text-6xl md:text-8xl tracking-[0.2em] uppercase leading-none italic drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] mix-blend-difference">Nothing</span>
           </motion.div>
         )}
       </AnimatePresence>
