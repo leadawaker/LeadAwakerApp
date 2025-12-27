@@ -278,7 +278,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
                     filter: isActive ? 'blur(0px)' : 'blur(2px)',
                   }}
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  className="absolute w-full max-w-4xl"
+                  className="absolute w-full max-w-5xl"
                 >
                   <Card className="bg-card backdrop-blur-sm border-white/10 overflow-hidden group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
                     <CardContent className="p-8">
@@ -345,21 +345,23 @@ Weekly performance review and campaign adjustments for ongoing lift`
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.2 }}
-                          className="space-y-4 pt-6 border-t border-white/10"
+                          className="pt-6 border-t border-white/10"
                         >
                           {step.cardImage && (
                             <div className="mb-6 rounded-lg overflow-hidden">
                               <img src={step.cardImage} alt="Step illustration" className="w-full h-auto object-cover rounded-lg" />
                             </div>
                           )}
-                          {step.leftText.split('\n').map((line, i) => (
-                            <div key={i} className="flex items-start gap-3">
-                              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-yellow-500 mt-2" />
-                              <div className="font-medium text-gray-600 text-[14px]">
-                                {line}
+                          <div className="grid grid-cols-2 gap-4">
+                            {step.leftText.split('\n').map((line, i) => (
+                              <div key={i} className="flex items-start gap-3">
+                                <div className="flex-shrink-0 w-2 h-2 rounded-full bg-yellow-500 mt-2" />
+                                <div className="font-medium text-gray-600 text-[14px]">
+                                  {line}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </motion.div>
                       )}
                     </CardContent>
