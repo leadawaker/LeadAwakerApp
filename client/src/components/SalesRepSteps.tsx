@@ -204,7 +204,7 @@ const StepCarousel = ({ onStepInView }: { onStepInView: () => void }) => {
       overlayTitle: "",
       overlayDescription: "",
       image: leadsDbImg,
-      icon: <Database className="w-8 h-8" />,
+      icon: <Database className="w-8 h-8 text-yellow-500" />,
       align: "left" as const,
       leftText: `We reawaken dormant leads who inquired months ago but never bought - even leads who your sales team has dialed to death
 Auto segment contacts based on past interactions
@@ -218,10 +218,10 @@ Launch SMS, Whatsapp and email campaigns for you`
       overlayTitle: "24/7 Response capability",
       overlayDescription: "Natural language processing for human-like chat • Seamless hand-off to human staff when needed",
       image: womanPhoneImg,
-      icon: <MessageSquare className="w-8 h-8" />,
+      icon: <MessageSquare className="w-8 h-8 text-yellow-500" />,
       align: "right" as const,
       leftText: `24/7 responses across SMS, WhatsApp, and email
-• Conversations shaped by Challenger and SPIN, designed to uncover real needs and handle objections with structure
+Conversations shaped by Challenger and SPIN, designed to uncover real needs and handle objections with structure
 Smart follow up timers that re engage unresponsive leads automatically, without sounding like spam
 Speaks your customers' languages and can sound buttoned up or casual
 Human takeover whenever you want a person to step in`
@@ -233,7 +233,7 @@ Human takeover whenever you want a person to step in`
       overlayTitle: "",
       overlayDescription: "",
       image: dailyLeadsImg,
-      icon: <TrendingUp className="w-8 h-8" />,
+      icon: <TrendingUp className="w-8 h-8 text-yellow-500" />,
       align: "left" as const,
       leftText: `One click integration with Google Calendar, Calendly, and more
 Automatic reminders that cut no shows and last minute cancellations
@@ -383,7 +383,10 @@ export const SalesRepSteps = () => {
         className="absolute inset-0" 
         style={{
           backgroundImage: `radial-gradient(circle at 12% 85%, white 0.6px, transparent 0.6px),
-                            radial-gradient(circle at 88% 12%, white 1.1px, transparent 1.1px)`,
+                            radial-gradient(circle at 88% 12%, white 1.1px, transparent 1.1px),
+                            radial-gradient(circle at 25% 65%, white 0.8px, transparent 0.8px),
+                            radial-gradient(circle at 75% 60%, white 0.7px, transparent 0.7px),
+                            radial-gradient(circle at 45% 70%, white 0.5px, transparent 0.5px)`,
           backgroundRepeat: 'repeat',
           backgroundSize: '1300px 1100px',
           willChange: 'transform',
