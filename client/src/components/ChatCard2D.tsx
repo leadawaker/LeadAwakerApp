@@ -60,6 +60,15 @@ export default function ChatCard2D() {
     }
   }, [currentStep, isAtBottom, scrollToBottom, isUserScrolling]);
 
+  // Auto-scroll to typing indicator when it appears
+  useEffect(() => {
+    if (currentStep === 5 && scrollRef.current) {
+      requestAnimationFrame(() => {
+        scrollToBottom();
+      });
+    }
+  }, [currentStep]);
+
   // Sequentially load initial messages on view
   useEffect(() => {
     if (isInView && currentStep === 0) {
@@ -283,6 +292,20 @@ export default function ChatCard2D() {
                   <motion.span className="text-4xl font-black" animate={{ y: [0, -8, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.2 }}>·</motion.span>
                   <motion.span className="text-4xl font-black" animate={{ y: [0, -8, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.4 }}>·</motion.span>
                 </div>
+                {!isAnimating && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={startAnimation}
+                    className="px-6 py-2 rounded-xl font-semibold text-white shadow-lg text-sm"
+                    style={{ backgroundColor: "#2563EB" }}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    Start
+                  </motion.button>
+                )}
               </motion.div>
             )}
 
@@ -440,20 +463,6 @@ export default function ChatCard2D() {
           </div>
         </div>
 
-        {/* Start Button - Appears when typing indicator is showing */}
-        {currentStep === 5 && !isAnimating && (
-          <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-center">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={startAnimation}
-              className="px-8 py-3 rounded-xl font-semibold text-white shadow-lg text-base"
-              style={{ backgroundColor: "#2563EB" }}
-            >
-              Start
-            </motion.button>
-          </div>
-        )}
 
         {/* New Messages Indicator - Single centered icon button */}
         {showNewMessageIndicator && !isAnimating && (
