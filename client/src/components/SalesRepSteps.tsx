@@ -439,7 +439,7 @@ export const SalesRepSteps = () => {
       </div>
 
       {/* Animated Clouds Overlay */}
-      <div className="absolute bottom-0 left-0 w-full overflow-hidden pointer-events-none z-20" style={{ height: '20vh' }}>
+      <div className="absolute bottom-0 left-0 w-full overflow-hidden pointer-events-none z-30" style={{ height: '30vh' }}>
         <motion.div 
           className="flex h-full w-[200%]"
           animate={{ x: ["0%", "-50%"] }}
@@ -450,19 +450,21 @@ export const SalesRepSteps = () => {
           }}
         >
           <div 
-            className="w-1/2 h-full bg-contain bg-bottom bg-no-repeat"
+            className="w-1/2 h-full bg-cover bg-bottom bg-no-repeat"
             style={{ 
               backgroundImage: `url(${cloudsOverlay})`,
               mixBlendMode: 'screen',
-              opacity: 0.6
+              opacity: 0.9,
+              filter: 'brightness(1.2) contrast(1.1)'
             }}
           />
           <div 
-            className="w-1/2 h-full bg-contain bg-bottom bg-no-repeat"
+            className="w-1/2 h-full bg-cover bg-bottom bg-no-repeat"
             style={{ 
               backgroundImage: `url(${cloudsOverlay})`,
               mixBlendMode: 'screen',
-              opacity: 0.6
+              opacity: 0.9,
+              filter: 'brightness(1.2) contrast(1.1)'
             }}
           />
         </motion.div>
