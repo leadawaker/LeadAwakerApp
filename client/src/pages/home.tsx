@@ -279,12 +279,12 @@ export default function Home() {
               See AI Work, Not Just Talk
             </h2>
             
-            <div className="space-y-6 leading-relaxed mb-12">
-              <p className="text-lg md:text-xl opacity-90">
+            <div className="space-y-6 leading-relaxed mb-12 text-justify">
+              <p className="text-lg opacity-90">
                 If a picture is worth a thousand words, a <span className="text-[#FEB800] font-bold">live demo</span> is worth a thousand pictures. Before you do anything else, experience how AI interacts with customers naturally while handling the repetitive work your team shouldn't have to.
               </p>
 
-              <p className="text-base md:text-lg opacity-80">
+              <p className="text-lg opacity-90">
                 By automating what drains your time, AI frees your team to focus on what actually moves the needle — strategy, growth, and the work you enjoy. In just a few minutes, you’ll see how smarter automation transforms your ROI and your day-to-day operations.
               </p>
             </div>
