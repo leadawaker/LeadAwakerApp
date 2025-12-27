@@ -307,7 +307,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">HubSpot</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
-                            <img src="https://www.vectorlogo.zone/logos/pipedrive/pipedrive-icon.svg" alt="Pipedrive" className="w-5 h-5" />
+                            <img src="https://www.vectorlogo.zone/logos/pipedrive/pipedrive-icon.svg" alt="Pipedrive" className="w-5 h-5" onError={(e) => { e.currentTarget.src = 'https://www.vectorlogo.zone/logos/pipedrive/pipedrive-ar21.svg' }} />
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Pipedrive</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
@@ -317,6 +317,14 @@ Weekly performance review and campaign adjustments for ongoing lift`
                           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
                             <img src="https://www.vectorlogo.zone/logos/microsoft_excel/microsoft_excel-icon.svg" alt="Excel" className="w-5 h-5" />
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Excel</span>
+                          </div>
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
+                            <img src="https://seeklogo.com/images/G/gohighlevel-logo-382902353E-seeklogo.com.png" alt="GoHighLevel" className="w-5 h-5 object-contain" />
+                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">GoHighLevel</span>
+                          </div>
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
+                            <span className="text-blue-600 font-mono font-bold text-sm">&lt;/&gt;</span>
+                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">API</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
                             <img src="https://www.vectorlogo.zone/logos/zapier/zapier-icon.svg" alt="Zapier" className="w-5 h-5" />
