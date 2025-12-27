@@ -100,7 +100,7 @@ const FullscreenStep = ({
 
   const iconOpacity = useTransform(scrollYProgress, [0.45, 0.5, 0.55], [1, 0, 1]);
 
-  const overlayOpacity = useTransform(scrollYProgress, [0.5, 0.9], [0, 1]);
+  const overlayOpacity = useTransform(scrollYProgress, [0.5, 0.9], [0, 0.4]);
   const overlayTextY = useTransform(scrollYProgress, [0.5, 0.9], [20, 0]);
   const cardOpacity = useTransform(scrollYProgress, [-0.2, 0.3], [0, 1]);
   const cardY = useTransform(scrollYProgress, [-0.2, 0.3], [50, 0]);
@@ -156,7 +156,7 @@ const FullscreenStep = ({
                   {leftText.split('\n').map((line, i) => (
                     <div key={i} className="flex items-start gap-4">
                       <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-400 mt-2" />
-                      <div className="font-medium text-gray-100 text-[17px]">
+                      <div className="font-medium text-gray-100 text-[16px]">
                         {line}
                       </div>
                     </div>
@@ -181,7 +181,7 @@ const FullscreenStep = ({
                 <motion.div style={{ y: overlayTextY }}>
                   <span className="text-accent font-mono text-sm uppercase tracking-wider mb-2 block">Step {number} Details</span>
                   <h4 className="text-3xl font-bold text-white mb-4">{overlayTitle}</h4>
-                  <p className="text-gray-200 text-lg max-w-md mx-auto leading-relaxed">
+                  <p className="text-gray-200 text-[16px] max-w-md mx-auto leading-relaxed">
                     {overlayDescription}
                   </p>
                 </motion.div>
