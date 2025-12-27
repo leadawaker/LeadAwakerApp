@@ -318,11 +318,10 @@ export default function Home() {
               </motion.div>
             ))}
           </div>
-
-          
         </div>
       </section>
-      {/* Bottom Demo CTA */}
+
+      {/* Let us show you how it's done Section */}
       <section className="py-24 bg-primary text-primary-foreground relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 mix-blend-overlay" style={{backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')"}} />
         <div className="container mx-auto px-4 md:px-6 relative z-10">
