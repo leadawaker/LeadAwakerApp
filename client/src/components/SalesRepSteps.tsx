@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Database, MessageSquare, TrendingUp, Box, Copy, TrendingDown, Mail, ChevronLeft, ChevronRight } from "lucide-react";
 import databaseIntegrationImg from "@assets/generated_images/database_upload_and_crm_integration.png";
 import leadsDbImg from "@assets/leads-database.png";
-import womanPhoneImg from "@assets/woman_answering_phone_in_living_room_1766483592249.png";
+import conversationImg from "@assets/generated_images/professional_woman_in_yellow_and_man_in_blue_conversing.png";
 import dailyLeadsImg from "@assets/generated_images/daily_leads_closed_chart_dashboard.png";
 import cloudTexture from "@assets/generated_images/cloud-bottom-bar.jpg";
 import cloudsOverlay from "@assets/Project_(20251227103213)_1766828113842.jpg";
@@ -217,7 +217,7 @@ Launch SMS, Whatsapp and email campaigns for you`
       cardDescription: "Our AI agents use the latest language models to read intent and craft tailored re‑engagement offers for your niche.",
       overlayTitle: "24/7 Response capability",
       overlayDescription: "Natural language processing for human-like chat • Seamless hand-off to human staff when needed",
-      image: womanPhoneImg,
+      image: conversationImg,
       icon: <MessageSquare className="w-8 h-8 text-yellow-500" />,
       align: "right" as const,
       leftText: `24/7 responses across SMS, WhatsApp, and email
