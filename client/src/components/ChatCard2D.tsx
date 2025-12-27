@@ -122,15 +122,15 @@ export default function ChatCard2D() {
     setCurrentStep(12);
     
     // Sophie claim message (28.25-33.25s) - 2 seconds after DSAR Completed milestone (which appears 3s after Thanks)
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await new Promise(resolve => setTimeout(resolve, 6500));
     setCurrentStep(13);
     
     // Jack final message (50.5-52s)
-    await new Promise(resolve => setTimeout(resolve, 1600));
+    await new Promise(resolve => setTimeout(resolve, 3100));
     setCurrentStep(14);
     
     // Sophie closing message (52-53.5s)
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 3000));
     setCurrentStep(15);
     
     setIsAnimating(false);
