@@ -291,7 +291,7 @@ export default function Home() {
 
               <div className="flex flex-col sm:flex-row gap-6 justify-center py-4">
                 <Link href="/book-demo">
-                  <Button size="lg" className="h-16 px-10 text-xl rounded-full shadow-2xl shadow-black/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:scale-105 transition-all duration-300 font-bold group">
+                  <Button size="lg" className="h-16 px-10 text-xl rounded-full shadow-2xl shadow-black/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:scale-105 hover:shadow-[0_0_30px_rgba(254,184,0,0.5)] transition-all duration-300 font-bold group">
                     Book a Demo
                     <ArrowRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
                   </Button>
