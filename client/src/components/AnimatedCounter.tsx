@@ -54,8 +54,8 @@ export default function AnimatedCounter({
             style={{ top: '20%' }}
             data-testid="text-nothing-overlay"
           >
-            <span className="text-yellow-500 font-black text-4xl md:text-6xl tracking-tighter uppercase leading-none">Absolutely</span>
-            <span className="text-yellow-500 font-black text-4xl md:text-6xl tracking-tighter uppercase leading-none">Nothing</span>
+            <span className="text-yellow-500 font-black text-5xl md:text-7xl tracking-tighter uppercase leading-none italic drop-shadow-2xl">Absolutely</span>
+            <span className="text-yellow-500 font-black text-5xl md:text-7xl tracking-tighter uppercase leading-none italic drop-shadow-2xl">Nothing</span>
           </motion.div>
         )}
       </AnimatePresence>

@@ -144,9 +144,9 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-card p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[3] min-h-[400px]"
+              className="bg-card p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[3] min-h-[550px]"
             >
-              <div className="text-6xl md:text-9xl font-bold text-primary mb-2">
+              <div className="text-6xl md:text-9xl font-black text-primary mb-2 font-heading">
                 <AnimatedCounter 
                   start={10000}
                   end={0} 
@@ -154,8 +154,8 @@ export default function Home() {
                   format={(v: number) => `$${Math.round(v).toString()}`}
                 />
               </div>
-              <h3 className="text-3xl font-bold mb-2">Upfront Cost</h3>
-              <p className="text-lg text-muted-foreground text-blue-500">performance‑based pricing</p>
+              <h3 className="text-4xl font-black mb-2 font-heading">Upfront Cost</h3>
+              <p className="text-xl text-muted-foreground text-blue-500 font-medium">performance‑based pricing</p>
             </motion.div>
 
             {/* Stacked Side Cards */}
@@ -196,9 +196,9 @@ export default function Home() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.1 * i }}
-                  className="bg-card p-4 rounded-2xl border border-border text-center flex flex-col justify-center flex-1"
+                  className="bg-card p-6 rounded-2xl border border-border text-center flex flex-col justify-center flex-1"
                 >
-                  <div className="text-2xl font-bold text-primary mb-1">
+                  <div className="text-3xl font-black text-primary mb-1 font-heading">
                     {result.isRange ? (
                       <AnimatedRangeCounter 
                         start={result.start}
@@ -220,7 +220,7 @@ export default function Home() {
                       />
                     )}
                   </div>
-                  <h3 className="text-sm font-bold truncate">{result.label}</h3>
+                  <h3 className="text-base font-black truncate font-heading">{result.label}</h3>
                 </motion.div>
               ))}
             </div>
