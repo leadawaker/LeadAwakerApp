@@ -152,7 +152,7 @@ export default function Home() {
               transition={{ duration: 0.5 }}
               className="p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px]"
             >
-              <div className="text-6xl md:text-9xl font-black mb-2 font-heading">
+              <div className={`text-6xl md:text-9xl font-black mb-2 font-heading transition-colors duration-500 ${isFinished ? 'text-white' : 'text-primary'}`}>
                 <AnimatedCounter 
                   start={10000}
                   end={0} 
@@ -161,7 +161,7 @@ export default function Home() {
                   onFinishedChange={(finished) => setIsFinished(finished)}
                 />
               </div>
-              <h3 className="text-4xl font-black mb-2 font-heading mt-12">Upfront Cost</h3>
+              <h3 className={`text-4xl font-black mb-2 font-heading mt-12 transition-colors duration-500 ${isFinished ? 'text-white' : 'text-black'}`}>Upfront Cost</h3>
               <div className={`text-xl font-medium transition-opacity duration-500 flex flex-col items-center ${isFinished ? 'opacity-80' : 'opacity-0'}`}>
                 <span>Performance‑based pricing</span>
                 <span>No sales / No pay</span>
