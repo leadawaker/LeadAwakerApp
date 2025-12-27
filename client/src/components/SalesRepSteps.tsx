@@ -564,7 +564,7 @@ export const SalesRepSteps = () => {
       </section>
 
       {/* Intro Section */}
-      <section className="flex items-center justify-center relative overflow-hidden" style={{ height: '15vh' }}>
+      <section className="flex items-center justify-center relative overflow-hidden" style={{ height: '10vh' }}>
         <motion.div 
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -572,14 +572,14 @@ export const SalesRepSteps = () => {
           className="text-center relative z-10"
           data-testid="sales-rep-intro"
         >
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 text-white drop-shadow-lg">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-2 text-white drop-shadow-lg">
             Your Expert Sales Rep in 3 Steps.
           </h1>
         </motion.div>
       </section>
 
       {/* Step Carousel */}
-      <section className="relative py-6">
+      <section className="relative py-2">
         <StepCarousel onStepInView={() => setPlaneStarted(true)} />
       </section>
 
