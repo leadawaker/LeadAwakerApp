@@ -256,7 +256,7 @@ export const SalesRepSteps = () => {
           className="flex h-full w-[200%]"
           animate={{ x: ["0%", "-50%"] }}
           transition={{ 
-            duration: 40, 
+            duration: 80, 
             repeat: Infinity, 
             ease: "linear" 
           }}
@@ -266,9 +266,9 @@ export const SalesRepSteps = () => {
             alt=""
             className="w-1/2 h-full object-contain object-bottom"
             style={{ 
-              filter: 'brightness(1.8) contrast(1.4) drop-shadow(0 0 20px rgba(255,255,255,0.4))',
+              filter: 'brightness(2) contrast(1.5) grayscale(1)',
               mixBlendMode: 'screen',
-              opacity: 1
+              opacity: 0.8
             }}
           />
           <img 
@@ -276,9 +276,9 @@ export const SalesRepSteps = () => {
             alt=""
             className="w-1/2 h-full object-contain object-bottom"
             style={{ 
-              filter: 'brightness(1.8) contrast(1.4) drop-shadow(0 0 20px rgba(255,255,255,0.4))',
+              filter: 'brightness(2) contrast(1.5) grayscale(1)',
               mixBlendMode: 'screen',
-              opacity: 1
+              opacity: 0.8
             }}
           />
         </motion.div>
