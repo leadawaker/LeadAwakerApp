@@ -96,18 +96,6 @@ const FullscreenStep = ({
   });
 
   const iconOpacity = useTransform(scrollYProgress, [0.45, 0.5, 0.55], [1, 0, 1]);
-  
-  const [stepContent, setStepContent] = useState<React.ReactNode>(number === "1" ? "1" : icon);
-
-  useEffect(() => {
-    return scrollYProgress.onChange((v) => {
-      if (v > 0.5) {
-        setStepContent(icon);
-      } else {
-        setStepContent(number === "1" ? "1" : icon);
-      }
-    });
-  }, [scrollYProgress, icon, number]);
 
   const overlayOpacity = useTransform(scrollYProgress, [0.3, 0.7], [0, 1]);
   const overlayTextY = useTransform(scrollYProgress, [0.3, 0.7], [20, 0]);
@@ -131,7 +119,7 @@ const FullscreenStep = ({
             <Card className="bg-card backdrop-blur-sm border-white/10 overflow-hidden group hover:border-primary/50 transition-colors duration-500">
               <CardContent className="p-8">
                 <div className="mb-6 p-3 bg-primary/10 w-fit rounded-xl text-primary flex items-center justify-center min-w-[56px] min-h-[56px]" data-testid={`step-icon-${number}`}>
-                  {stepContent}
+                  {icon}
                 </div>
                 <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-black" data-testid={`step-title-${number}`}>{cardTitle}</h3>
                 <p className="text-muted-foreground text-lg leading-relaxed" data-testid={`step-description-${number}`}>
