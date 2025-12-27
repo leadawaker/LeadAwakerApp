@@ -223,10 +223,10 @@ Launch SMS, Whatsapp and email campaigns for you`
       align: "right" as const,
       cardImage: conversationImg,
       leftText: `24/7 responses across SMS, WhatsApp, and email
-Conversations shaped by Challenger & SPIN selling to uncover needs and handle objections
-Smart follow-up timers re-engage unresponsive leads automatically
+Smart follow-up re-engage unresponsive leads automatically
 Speaks customers' languages and can sound formal or casual
-Human takeover whenever needed`
+Human takeover whenever needed
+Conversations shaped by Challenger & SPIN selling to uncover needs and handle objections`
     },
     {
       number: "3",
