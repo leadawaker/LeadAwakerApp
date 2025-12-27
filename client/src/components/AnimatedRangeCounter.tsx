@@ -4,6 +4,8 @@ import { motion, animate, useMotionValue, useTransform } from "framer-motion";
 interface AnimatedRangeCounterProps {
   start: number;
   end: number;
+  finalStart?: number;
+  finalEnd?: number;
   duration?: number;
   format?: (value: number) => string;
   suffix?: string;
@@ -12,24 +14,29 @@ interface AnimatedRangeCounterProps {
 export default function AnimatedRangeCounter({ 
   start, 
   end, 
+  finalStart,
+  finalEnd,
   duration = 2, 
   format = (v) => Math.round(v).toString(),
   suffix = ""
 }: AnimatedRangeCounterProps) {
-  const countStart = useMotionValue(0);
-  const countEnd = useMotionValue(0);
+  const countStart = useMotionValue(start);
+  const countEnd = useMotionValue(end);
   
-  const [displayValue, setDisplayValue] = useState(`${start}-${end}${suffix}`);
+  const [displayValue, setDisplayValue] = useState(`${format(start)}-${format(end)}${suffix}`);
 
   useEffect(() => {
-    const controlsStart = animate(countStart, start, { duration });
-    const controlsEnd = animate(countEnd, end, { duration });
+    const targetStart = finalStart !== undefined ? finalStart : start;
+    const targetEnd = finalEnd !== undefined ? finalEnd : end;
+    
+    const controlsStart = animate(countStart, targetStart, { duration });
+    const controlsEnd = animate(countEnd, targetEnd, { duration });
     
     return () => {
       controlsStart.stop();
       controlsEnd.stop();
     };
-  }, [start, end, duration, countStart, countEnd]);
+  }, [start, end, finalStart, finalEnd, duration, countStart, countEnd]);
 
   useEffect(() => {
     const updateDisplay = () => {

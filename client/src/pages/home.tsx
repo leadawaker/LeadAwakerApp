@@ -142,30 +142,39 @@ export default function Home() {
             {[
               {
                 isRange: true,
-                start: 40,
-                end: 60,
+                start: 20,
+                end: 30,
+                finalStart: 40,
+                finalEnd: 60,
                 suffix: "%",
                 label: "Reply Rates",
-                subtext: "vs industry 5-10%"
+                subtext: "vs industry 5-10%",
+                duration: 3
               },
               {
                 metric: 25,
+                startMetric: 12,
                 suffix: "%",
                 label: "Leads Reactivated",
-                subtext: "into live opportunities"
+                subtext: "into live opportunities",
+                duration: 4
               },
               {
                 metric: 40,
+                startMetric: 0,
                 suffix: "+",
                 label: "Hours Saved",
-                subtext: "per rep/month"
+                subtext: "per rep/month",
+                duration: 5,
+                suffixAtEnd: true
               },
               {
-                metric: 5000,
-                suffix: "",
+                metric: 0,
+                startMetric: 10000,
                 isCost: true,
                 label: "Upfront Cost",
-                subtext: "performance‑based pricing"
+                subtext: "performance‑based pricing",
+                duration: 6
               }
             ].map((result, i) => (
               <motion.div
@@ -181,22 +190,27 @@ export default function Home() {
                     <AnimatedRangeCounter 
                       start={(result as any).start}
                       end={(result as any).end}
-                      duration={3}
+                      finalStart={(result as any).finalStart}
+                      finalEnd={(result as any).finalEnd}
+                      duration={(result as any).duration}
                       format={(v: number) => Math.round(v).toString()}
                       suffix={(result as any).suffix}
                     />
                   ) : (result as any).isCost ? (
                     <AnimatedCounter 
+                      start={(result as any).startMetric}
                       end={(result as any).metric} 
-                      duration={3}
-                      format={(v: number) => `$${Math.round((result as any).metric - v).toString()}`}
+                      duration={(result as any).duration}
+                      format={(v: number) => `$${Math.round(v).toString()}`}
                     />
                   ) : (
                     <AnimatedCounter 
+                      start={(result as any).startMetric}
                       end={(result as any).metric} 
-                      duration={3}
+                      duration={(result as any).duration}
                       format={(v: number) => Math.round(v).toString()}
                       suffix={(result as any).suffix}
+                      suffixAtEnd={(result as any).suffixAtEnd}
                     />
                   )}
                 </div>
