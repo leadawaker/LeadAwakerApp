@@ -137,7 +137,12 @@ const FullscreenStep = ({
                 </div>
                 <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-black" data-testid={`step-title-${number}`}>{cardTitle}</h3>
                 <p className="text-muted-foreground text-lg leading-relaxed" data-testid={`step-description-${number}`}>
-                  {cardDescription}
+                  {cardDescription.split('\n\n').map((line, i) => (
+                    <span key={i}>
+                      {line}
+                      {i < cardDescription.split('\n\n').length - 1 && <br />}
+                    </span>
+                  ))}
                 </p>
               </CardContent>
             </Card>
