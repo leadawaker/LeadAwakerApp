@@ -144,34 +144,18 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="relative p-12 rounded-[2rem] text-center flex flex-col justify-center flex-[2] min-h-[550px] overflow-hidden group border border-border bg-gradient-to-b from-card to-background shadow-2xl shadow-primary/5"
+              className="bg-card p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px]"
             >
-              {/* Subtle glass effect background */}
-              <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-[2px] pointer-events-none" />
-              
-              {/* Decorative accent */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-
-              <div className="relative z-10">
-                <div className="text-6xl md:text-[120px] font-black text-primary mb-6 font-heading tracking-tighter leading-none">
-                  <AnimatedCounter 
-                    start={10000}
-                    end={0} 
-                    duration={5}
-                    format={(v: number) => `$${Math.round(v).toString()}`}
-                  />
-                </div>
-                <div className="space-y-4">
-                  <h3 className="text-4xl font-bold tracking-tight text-foreground/90 font-heading">Upfront Cost</h3>
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 border border-primary/10">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                    <p className="text-sm font-semibold uppercase tracking-wider text-primary">Performance-Based Model</p>
-                  </div>
-                </div>
+              <div className="text-6xl md:text-9xl font-black text-primary mb-2 font-heading">
+                <AnimatedCounter 
+                  start={10000}
+                  end={0} 
+                  duration={5}
+                  format={(v: number) => `$${Math.round(v).toString()}`}
+                />
               </div>
-
-              {/* Sophisticated corner accent */}
-              <div className="absolute bottom-0 right-0 w-32 h-32 bg-primary/5 blur-[60px] rounded-full -mr-16 -mb-16" />
+              <h3 className="text-4xl font-black mb-2 font-heading">Upfront Cost</h3>
+              <p className="text-xl text-muted-foreground text-blue-500 font-medium">performance‑based pricing</p>
             </motion.div>
 
             {/* Stacked Side Cards */}
