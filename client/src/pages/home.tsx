@@ -265,62 +265,6 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
-      {/* FAQ Teaser */}
-      <section className="py-24 bg-muted/30">
-        <div className="container mx-auto px-4 md:px-6 max-w-3xl">
-          <div className="mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
-          </div>
-
-          <div className="space-y-4 mb-12">
-            {[
-              {
-                q: "What's the setup time?",
-                a: "Most setups take 2-5 days depending on your CRM and integrations. We handle everything; you just provide access."
-              },
-              {
-                q: "Do you support our CRM?",
-                a: "We integrate with Salesforce, HubSpot, Pipedrive, Close, and custom APIs. If it has an API, we can connect to it."
-              },
-              {
-                q: "How much does it cost?",
-                a: "Pricing starts at [custom quote]. We work on performance-based or flat-fee models depending on your preference. No upfront setup fees."
-              }
-            ].map((faq, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                className="border border-border rounded-lg overflow-hidden"
-              >
-                <button
-                  onClick={() => setOpenFAQ(openFAQ === i ? null : i)}
-                  className="w-full flex items-center justify-between p-6 hover:bg-muted/50 transition-colors"
-                >
-                  <h3 className="text-lg font-bold text-left">{faq.q}</h3>
-                  <ChevronDown
-                    className={`w-5 h-5 text-primary transition-transform ${
-                      openFAQ === i ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {openFAQ === i && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="px-6 pb-6 text-muted-foreground border-t border-border"
-                  >
-                    {faq.a}
-                  </motion.div>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Let us show you how it's done Section */}
       <section className="py-24 bg-primary text-primary-foreground relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 mix-blend-overlay" style={{backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')"}} />

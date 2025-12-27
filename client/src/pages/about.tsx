@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Users, Rocket, Target, Code2, TrendingUp, Briefcase } from "lucide-react";
+import { Users, Rocket, Target, Code2, TrendingUp, Briefcase, ChevronDown } from "lucide-react";
 import AnimatedLogo3D from "@/components/AnimatedLogo3D";
 
 export default function About() {
+  const [openFAQ, setOpenFAQ] = useState<number | null>(null);
+
   return (
     <div className="min-h-screen pt-24 pb-20">
       <div className="container mx-auto px-4 md:px-6">
@@ -105,6 +108,62 @@ export default function About() {
             <p>
               At Lead Awaker, we believe you shouldn't have to keep spending more on ads to get new sales. Our mission is to reactivate your existing database using intelligent, human-like AI conversations that convert at scale.
             </p>
+          </div>
+        </motion.div>
+
+        {/* FAQ Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="max-w-3xl mx-auto mb-24"
+        >
+          <h2 className="text-3xl font-bold mb-8 text-center">Frequently Asked Questions</h2>
+          <div className="space-y-4">
+            {[
+              {
+                q: "What's the setup time?",
+                a: "Most setups take 2-5 days depending on your CRM and integrations. We handle everything; you just provide access."
+              },
+              {
+                q: "Do you support our CRM?",
+                a: "We integrate with Salesforce, HubSpot, Pipedrive, Close, and custom APIs. If it has an API, we can connect to it."
+              },
+              {
+                q: "How much does it cost?",
+                a: "Pricing starts at [custom quote]. We work on performance-based or flat-fee models depending on your preference. No upfront setup fees."
+              }
+            ].map((faq, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                className="border border-border rounded-lg overflow-hidden bg-card"
+              >
+                <button
+                  onClick={() => setOpenFAQ(openFAQ === i ? null : i)}
+                  className="w-full flex items-center justify-between p-6 hover:bg-muted/50 transition-colors"
+                >
+                  <h3 className="text-lg font-bold text-left">{faq.q}</h3>
+                  <ChevronDown
+                    className={`w-5 h-5 text-primary transition-transform ${
+                      openFAQ === i ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {openFAQ === i && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="px-6 pb-6 text-muted-foreground border-t border-border"
+                  >
+                    {faq.a}
+                  </motion.div>
+                )}
+              </motion.div>
+            ))}
           </div>
         </motion.div>
 
