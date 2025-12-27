@@ -7,6 +7,7 @@ import databaseIntegrationImg from "@assets/generated_images/database_upload_and
 import womanPhoneImg from "@assets/woman_answering_phone_in_living_room_1766483592249.png";
 import dailyLeadsImg from "@assets/generated_images/daily_leads_closed_chart_dashboard.png";
 import cloudTexture from "@assets/generated_images/cloud-bottom-bar.jpg";
+import cloudsOverlay from "@assets/Project_(20251227103213)_1766828113842.jpg";
 import { MeteorContainer } from "./Meteor";
 
 interface StepProps {
@@ -435,6 +436,36 @@ export const SalesRepSteps = () => {
           icon={<TrendingUp className="w-8 h-8" />}
           align="left"
         />
+      </div>
+
+      {/* Animated Clouds Overlay */}
+      <div className="absolute bottom-0 left-0 w-full overflow-hidden pointer-events-none z-20" style={{ height: '20vh' }}>
+        <motion.div 
+          className="flex h-full w-[200%]"
+          animate={{ x: ["0%", "-50%"] }}
+          transition={{ 
+            duration: 60, 
+            repeat: Infinity, 
+            ease: "linear" 
+          }}
+        >
+          <div 
+            className="w-1/2 h-full bg-contain bg-bottom bg-no-repeat"
+            style={{ 
+              backgroundImage: `url(${cloudsOverlay})`,
+              mixBlendMode: 'screen',
+              opacity: 0.6
+            }}
+          />
+          <div 
+            className="w-1/2 h-full bg-contain bg-bottom bg-no-repeat"
+            style={{ 
+              backgroundImage: `url(${cloudsOverlay})`,
+              mixBlendMode: 'screen',
+              opacity: 0.6
+            }}
+          />
+        </motion.div>
       </div>
       </div>
     </div>
