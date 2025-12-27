@@ -138,7 +138,7 @@ const FullscreenStep = ({
           </div>
         </motion.div>
         <motion.div 
-          style={{ opacity: imageOpacity, transform: 'translateZ(0)', willChange: 'opacity, transform' }}
+          style={{ transform: 'translateZ(0)', willChange: 'transform' }}
           className={`order-1 ${isLeft ? "md:order-2" : "md:order-1"} relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border border-white/5`}
           data-testid={`step-image-${number}`}
         >
