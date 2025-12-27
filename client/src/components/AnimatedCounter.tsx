@@ -76,7 +76,7 @@ export default function AnimatedCounter({
             data-testid="text-zero-overlay"
           >
             <div className="flex flex-col items-center leading-none">
-              <span className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white">Absolute</span>
+              <span className="md:text-6xl font-black uppercase tracking-tighter text-white text-[63px]">Absolute</span>
               <span className="text-6xl md:text-9xl font-black uppercase tracking-tighter text-[#FEB800]">ZERO</span>
             </div>
           </motion.div>
