@@ -200,7 +200,7 @@ const StepCarousel = ({ onStepInView }: { onStepInView: () => void }) => {
     {
       number: "1",
       cardTitle: "1. Upload your database",
-      cardDescription: "Send a CSV or connect your CRM. That's it, we handle the rest.",
+      cardDescription: "Send a CSV or connect your CRM. Is that simple.",
       overlayTitle: "",
       overlayDescription: "",
       image: leadsDbImg,
