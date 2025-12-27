@@ -8,6 +8,7 @@ import leadsDbImg from "../assets/step-1-main.png";
 import conversationImg from "@assets/Gemini_Generated_Image_j212wcj212wcj212_1766858918533.png";
 import dailyLeadsImg from "../assets/step-3-main.jpg";
 import calendarImg from "@assets/Gemini_Generated_Image_a2dvda2dvda2dvda_1766862327268.png";
+import appointmentBookingImg from "../assets/step-3-appointment-booking.jpg";
 import databaseImageImg from "@assets/Gemini_Generated_Image_toqbi0toqbi0toqb_1766862950610.png";
 import cloudTexture from "@assets/generated_images/cloud-bottom-bar.jpg";
 import cloudsOverlay from "@assets/Project_(20251227103213)_1766828113842.jpg";
@@ -238,7 +239,7 @@ Conversations shaped by Challenger & SPIN selling to uncover needs and handle ob
       image: dailyLeadsImg,
       icon: <TrendingUp className="w-8 h-8 text-yellow-500" />,
       align: "left" as const,
-      cardImage: calendarImg,
+      cardImage: appointmentBookingImg,
       leftText: `One-click Google Calendar, Calendly integration
 Smart reminders slash no-shows and cancellations
 On-demand campaign reports with lead interaction details
