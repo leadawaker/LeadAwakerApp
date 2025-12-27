@@ -66,11 +66,11 @@ export default function ChatCard2D() {
       const loadMessages = async () => {
         await new Promise(resolve => setTimeout(resolve, 600));
         setCurrentStep(1);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1200));
         setCurrentStep(2);
         await new Promise(resolve => setTimeout(resolve, 1200));
         setCurrentStep(3);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1600));
         setCurrentStep(4);
         await new Promise(resolve => setTimeout(resolve, 1200));
         setCurrentStep(5);
@@ -109,7 +109,7 @@ export default function ChatCard2D() {
     setCurrentStep(11);
     
     // Jack thanks (45-46.5s)
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 1600));
     setCurrentStep(12);
     
     // Sophie claim message (46.5-50.5s)
@@ -117,7 +117,7 @@ export default function ChatCard2D() {
     setCurrentStep(13);
     
     // Jack final message (50.5-52s)
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 1600));
     setCurrentStep(14);
     
     // Sophie closing message (52-53.5s)
@@ -197,7 +197,7 @@ export default function ChatCard2D() {
                 className="flex justify-center py-2" 
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.4, delay: 1 }}
+                transition={{ duration: 0.4, delay: 0.6 }}
               >
                 <div className="text-xs text-slate-400 font-medium">---Lead Contacted---</div>
               </motion.div>
@@ -233,7 +233,7 @@ export default function ChatCard2D() {
                 className="flex justify-center py-2" 
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.4, delay: 1 }}
+                transition={{ duration: 0.4, delay: 0.6 }}
               >
                 <div className="text-xs text-slate-400 font-medium">---Lead Replied---</div>
               </motion.div>
@@ -257,7 +257,7 @@ export default function ChatCard2D() {
                 className="flex justify-center py-2" 
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.4, delay: 1 }}
+                transition={{ duration: 0.4, delay: 0.6 }}
               >
                 <div className="text-xs text-slate-400 font-medium">---Lead Qualified---</div>
               </motion.div>
@@ -384,7 +384,7 @@ export default function ChatCard2D() {
                 className="flex justify-center py-2" 
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.4, delay: 1 }}
+                transition={{ duration: 0.4, delay: 0.6 }}
               >
                 <div className="text-xs text-slate-400 font-medium">---DSAR Completed---</div>
               </motion.div>
@@ -420,7 +420,7 @@ export default function ChatCard2D() {
                 className="flex justify-center py-2" 
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.4, delay: 1 }}
+                transition={{ duration: 0.4, delay: 0.6 }}
               >
                 <div className="text-xs text-slate-400 font-medium">---Sent To Client---</div>
               </motion.div>
