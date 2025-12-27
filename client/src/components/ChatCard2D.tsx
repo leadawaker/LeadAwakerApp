@@ -64,15 +64,15 @@ export default function ChatCard2D() {
   useEffect(() => {
     if (isInView && currentStep === 0) {
       const loadMessages = async () => {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 400));
         setCurrentStep(1);
-        await new Promise(resolve => setTimeout(resolve, 1200));
+        await new Promise(resolve => setTimeout(resolve, 600));
         setCurrentStep(2);
-        await new Promise(resolve => setTimeout(resolve, 1200));
+        await new Promise(resolve => setTimeout(resolve, 600));
         setCurrentStep(3);
-        await new Promise(resolve => setTimeout(resolve, 1200));
+        await new Promise(resolve => setTimeout(resolve, 600));
         setCurrentStep(4);
-        await new Promise(resolve => setTimeout(resolve, 1200));
+        await new Promise(resolve => setTimeout(resolve, 600));
         setCurrentStep(5);
       };
       loadMessages();
@@ -174,7 +174,7 @@ export default function ChatCard2D() {
         {/* Chat Messages Container */}
         <div 
           ref={scrollRef}
-          className="p-6 space-y-4 bg-slate-50 h-[550px] overflow-y-auto relative"
+          className="p-6 space-y-4 bg-slate-50 min-h-[450px] max-h-[550px] overflow-y-auto relative"
           style={{ scrollBehavior: isUserScrolling ? 'auto' : 'smooth' }}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-slate-100/20 via-transparent to-slate-100/20 pointer-events-none" />
