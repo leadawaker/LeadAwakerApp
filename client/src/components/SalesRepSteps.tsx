@@ -209,8 +209,7 @@ const StepCarousel = ({ onStepInView }: { onStepInView: () => void }) => {
       align: "left" as const,
       leftText: `We reawaken dormant leads who inquired months ago but never bought - even leads who your sales team has dialed to death
 Auto segment contacts based on past interactions
-We integrate with Salesforce, HubSpot, Pipedrive, Close, and custom APIs. If it has an API, we can connect to it.
-Launch SMS, Whatsapp and email campaigns for you`
+We integrate with Salesforce, HubSpot, Pipedrive, Close, and custom APIs. If it has an API, we can connect to it.`
     },
     {
       number: "2",
