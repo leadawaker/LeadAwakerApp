@@ -215,7 +215,7 @@ Launch SMS, Whatsapp and email campaigns for you`
     {
       number: "2",
       cardTitle: "2. We start real conversations",
-      cardDescription: "Our AI agents use the latest language models to read intent and craft tailored re‑engagement offers for your niche.",
+      cardDescription: "Our AI agents use the latest language models to read intent and craft tailored engagement offers for your niche.",
       overlayTitle: "24/7 Response capability",
       overlayDescription: "Natural language processing for human-like chat • Seamless hand-off to human staff when needed",
       image: conversationImg,
