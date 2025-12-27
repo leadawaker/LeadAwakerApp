@@ -560,7 +560,7 @@ export const SalesRepSteps = () => {
               </span>
               {' '}
               <span style={{ 
-                backgroundImage: 'linear-gradient(to right, #FFFFFF 0%, #93c5fd 100%)',
+                backgroundImage: 'linear-gradient(to right, #FFFFFF 0%, #E0F2FE 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -578,7 +578,7 @@ export const SalesRepSteps = () => {
                 bro<span className="flicker-letter">k</span>en
               </span>
               <span style={{ 
-                color: '#93c5fd',
+                color: '#E0F2FE',
                 filter: 'drop-shadow(3px 0px 12px rgba(147, 197, 253, 0.225)) drop-shadow(1.5px 0px 3px rgba(147, 197, 253, 0.18))',
                 textShadow: '2.4px 0px 4.5px rgba(147, 197, 253, 0.18), 3.6px 0px 7.5px rgba(147, 197, 253, 0.135)',
                 display: 'inline-block'
