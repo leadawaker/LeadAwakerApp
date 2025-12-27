@@ -92,7 +92,7 @@ const FullscreenStep = ({
   const isLeft = align === "left";
 
   return (
-    <div ref={containerRef} className="h-[80vh] w-full flex items-center justify-center px-4 sm:px-6 md:px-12 relative z-10">
+    <div ref={containerRef} className="h-[40vh] w-full flex items-center justify-center px-4 sm:px-6 md:px-12 relative z-10">
       <div className="container mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-16 items-center">
         <motion.div 
           style={{ opacity: cardOpacity, y: cardY, transform: 'translateZ(0)', willChange: 'opacity, transform' }}
@@ -371,7 +371,7 @@ export const SalesRepSteps = () => {
       </section>
 
       {/* Step 1 */}
-      <div style={{ marginTop: "0.76cm" }}>
+      <div style={{ marginTop: "1rem" }}>
         <FullscreenStep 
           number="1"
           cardTitle="Upload database"
@@ -384,7 +384,7 @@ export const SalesRepSteps = () => {
         />
       </div>
       {/* Step 2 */}
-      <div style={{ marginTop: "0.38cm" }}>
+      <div style={{ marginTop: "1rem" }}>
         <FullscreenStep 
           number="2"
           cardTitle="Chat GPT-5.2 conversations"
@@ -397,7 +397,7 @@ export const SalesRepSteps = () => {
         />
       </div>
       {/* Step 3 */}
-      <div style={{ marginTop: "0.38cm" }}>
+      <div style={{ marginTop: "1rem" }}>
         <FullscreenStep 
           number="3"
           cardTitle="Revenue rolls in"
