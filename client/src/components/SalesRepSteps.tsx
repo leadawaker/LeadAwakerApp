@@ -242,6 +242,24 @@ Weekly performance review and campaign adjustments for ongoing lift`
     }
   ];
 
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end end"]
+  });
+
+  const stepProgress = useTransform(scrollYProgress, [0, 1], [0, steps.length - 1]);
+
+  useEffect(() => {
+    const unsubscribe = stepProgress.on("change", (v) => {
+      const rounded = Math.round(v);
+      if (rounded !== currentStep) {
+        setCurrentStep(rounded);
+      }
+    });
+    return () => unsubscribe();
+  }, [currentStep, stepProgress]);
+
   const handlePrev = () => {
     setCurrentStep((prev) => (prev - 1 + steps.length) % steps.length);
   };
@@ -251,10 +269,11 @@ Weekly performance review and campaign adjustments for ongoing lift`
   };
 
   return (
-    <div className="relative w-full py-24">
-      <div className="container mx-auto px-4 sm:px-6 md:px-12 relative z-10">
-        {/* Stacked Cards Container */}
-        <div className="relative h-[650px] flex flex-col items-center justify-center">
+    <div ref={sectionRef} className="relative w-full h-[300vh]">
+      <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
+        <div className="container mx-auto px-4 sm:px-6 md:px-12 relative z-10">
+          {/* Stacked Cards Container */}
+          <div className="relative h-[650px] flex flex-col items-center justify-center">
           <div className="relative w-full h-[550px] flex items-center justify-center">
             {steps.map((step, index) => {
               const position = (index - currentStep + steps.length) % steps.length;
