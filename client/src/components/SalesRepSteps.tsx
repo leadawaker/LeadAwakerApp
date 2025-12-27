@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Database, MessageSquare, TrendingUp, Box, Copy, TrendingDown, Mail } from "lucide-react";
+import { Database, MessageSquare, TrendingUp, Box, Copy, TrendingDown, Mail, ChevronLeft, ChevronRight } from "lucide-react";
 import databaseIntegrationImg from "@assets/generated_images/database_upload_and_crm_integration.png";
 import leadsDbImg from "@assets/leads-database.png";
 import womanPhoneImg from "@assets/woman_answering_phone_in_living_room_1766483592249.png";
@@ -193,6 +193,167 @@ const FullscreenStep = ({
   );
 };
 
+const StepCarousel = ({ onStepInView }: { onStepInView: () => void }) => {
+  const [currentStep, setCurrentStep] = useState(0);
+
+  const steps = [
+    {
+      number: "1",
+      cardTitle: "1. Upload your database",
+      cardDescription: "Send a CSV or connect your CRM. That's it, we handle the rest.",
+      overlayTitle: "",
+      overlayDescription: "",
+      image: leadsDbImg,
+      icon: <Database className="w-8 h-8" />,
+      align: "left" as const,
+      leftText: `We reawaken dormant leads who inquired months ago but never bought - even leads who your sales team has dialed to death
+Auto segment contacts based on past interactions
+We integrate with Salesforce, HubSpot, Pipedrive, Close, and custom APIs. If it has an API, we can connect to it.
+Launch SMS, Whatsapp and email campaigns for you`
+    },
+    {
+      number: "2",
+      cardTitle: "2. We start real conversations",
+      cardDescription: "Our AI agents use the latest language models to read intent and craft tailored re‑engagement offers for your niche.",
+      overlayTitle: "24/7 Response capability",
+      overlayDescription: "Natural language processing for human-like chat • Seamless hand-off to human staff when needed",
+      image: womanPhoneImg,
+      icon: <MessageSquare className="w-8 h-8" />,
+      align: "right" as const,
+      leftText: `24/7 responses across SMS, WhatsApp, and email
+• Conversations shaped by Challenger and SPIN, designed to uncover real needs and handle objections with structure
+Smart follow up timers that re engage unresponsive leads automatically, without sounding like spam
+Speaks your customers' languages and can sound buttoned up or casual
+Human takeover whenever you want a person to step in`
+    },
+    {
+      number: "3",
+      cardTitle: "3. Automated Appointment Booking",
+      cardDescription: "The ultimate goal of reactivation is getting prospects on your calendar. Our system handles the scheduling automatically.",
+      overlayTitle: "",
+      overlayDescription: "",
+      image: dailyLeadsImg,
+      icon: <TrendingUp className="w-8 h-8" />,
+      align: "left" as const,
+      leftText: `One click integration with Google Calendar, Calendly, and more
+Automatic reminders that cut no shows and last minute cancellations
+Self service rescheduling so your team never has to chase 'what time works' again
+Weekly performance review and campaign adjustments for ongoing lift`
+    }
+  ];
+
+  const handlePrev = () => {
+    setCurrentStep((prev) => (prev - 1 + steps.length) % steps.length);
+  };
+
+  const handleNext = () => {
+    setCurrentStep((prev) => (prev + 1) % steps.length);
+  };
+
+  return (
+    <div className="relative w-full py-24">
+      <div className="container mx-auto px-4 sm:px-6 md:px-12 relative z-10">
+        {/* Navigation Arrows */}
+        <div className="flex items-center justify-between mb-8">
+          <button
+            onClick={handlePrev}
+            data-testid="button-prev-step"
+            className="p-3 rounded-full bg-blue-500/20 border border-blue-400/50 text-white hover:bg-blue-500/30 hover:border-blue-400 transition-all duration-300 flex items-center justify-center group"
+            aria-label="Previous step"
+          >
+            <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform" />
+          </button>
+
+          <div className="flex gap-2">
+            {steps.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentStep(i)}
+                data-testid={`dot-step-${i}`}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  i === currentStep
+                    ? 'bg-blue-400 w-8'
+                    : 'bg-blue-400/40 hover:bg-blue-400/60'
+                }`}
+                aria-label={`Go to step ${i + 1}`}
+              />
+            ))}
+          </div>
+
+          <button
+            onClick={handleNext}
+            data-testid="button-next-step"
+            className="p-3 rounded-full bg-blue-500/20 border border-blue-400/50 text-white hover:bg-blue-500/30 hover:border-blue-400 transition-all duration-300 flex items-center justify-center group"
+            aria-label="Next step"
+          >
+            <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform" />
+          </button>
+        </div>
+
+        {/* Stacked Cards Container */}
+        <div className="relative h-[600px] flex items-center justify-center">
+          {steps.map((step, index) => {
+            const position = (index - currentStep + steps.length) % steps.length;
+            const isActive = position === 0;
+            const isNext = position === 1;
+            const isPrev = position === steps.length - 1;
+
+            return (
+              <motion.div
+                key={index}
+                data-testid={`card-step-${index}`}
+                layout
+                initial={false}
+                animate={{
+                  scale: isActive ? 1 : 0.95,
+                  y: isActive ? 0 : isNext ? 20 : -20,
+                  opacity: isActive ? 1 : 0.5,
+                  zIndex: isActive ? 20 : isNext ? 10 : 5
+                }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="absolute w-full max-w-2xl"
+              >
+                <Card className="bg-card backdrop-blur-sm border-white/10 overflow-hidden group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
+                  <CardContent className="p-8">
+                    <div className="mb-6 p-3 bg-primary/10 w-fit rounded-xl text-primary flex items-center justify-center min-w-[56px] min-h-[56px]" data-testid={`step-icon-${step.number}`}>
+                      {step.icon}
+                    </div>
+                    <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-black" data-testid={`step-title-${step.number}`}>
+                      {step.cardTitle}
+                    </h3>
+                    <p className="text-muted-foreground text-lg leading-relaxed mb-6" data-testid={`step-description-${step.number}`}>
+                      {step.cardDescription}
+                    </p>
+
+                    {/* Bullet points for current card only */}
+                    {isActive && step.leftText && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="space-y-4 pt-6 border-t border-white/10"
+                      >
+                        {step.leftText.split('\n').map((line, i) => (
+                          <div key={i} className="flex items-start gap-3">
+                            <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-400 mt-2" />
+                            <div className="font-medium text-gray-600 text-[14px]">
+                              {line}
+                            </div>
+                          </div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const SalesRepSteps = () => {
   const scrollRef = useRef(null);
   const [glitchAnimating, setGlitchAnimating] = useState(false);
@@ -277,7 +438,6 @@ export const SalesRepSteps = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             onViewportEnter={() => {
-              // Trigger split animation immediately on viewport entry
               setGlitchAnimating(true);
             }}
             viewport={{ once: true, margin: "0px" }}
@@ -415,60 +575,10 @@ export const SalesRepSteps = () => {
         </motion.div>
       </section>
 
-      {/* Step 1 */}
-      <div style={{ marginTop: "1.15rem", marginBottom: "5rem" }}>
-        <FullscreenStep 
-          number="1"
-          cardTitle="1. Upload your database"
-          cardDescription="Send a CSV or connect your CRM. That’s it, we handle the rest."
-          overlayTitle=""
-          overlayDescription=""
-          image={leadsDbImg}
-          icon={<Database className="w-8 h-8" />}
-          align="left"
-          leftText={`We reawaken dormant leads who inquired months ago but never bought - even leads who your sales team has dialed to death
-Auto segment contacts based on past interactions
-We integrate with Salesforce, HubSpot, Pipedrive, Close, and custom APIs. If it has an API, we can connect to it.
-Launch SMS, Whatsapp and email campaigns for you`}
-          onInView={() => setPlaneStarted(true)}
-        />
-      </div>
-      {/* Step 2 */}
-      <div style={{ marginTop: "1rem", marginBottom: "5rem" }}>
-        <FullscreenStep 
-          number="2"
-          cardTitle="2. We start real conversations"
-          cardDescription="Our AI agents use the latest language models to read intent and craft tailored re‑engagement offers for your niche."
-          overlayTitle="24/7 Response capability"
-          overlayDescription="Natural language processing for human-like chat • Seamless hand-off to human staff when needed"
-          image={womanPhoneImg}
-          icon={<MessageSquare className="w-8 h-8" />}
-          align="right"
-          leftText={`24/7 responses across SMS, WhatsApp, and email
-• Conversations shaped by Challenger and SPIN, designed to uncover real needs and handle objections with structure
-Smart follow up timers that re engage unresponsive leads automatically, without sounding like spam
-Speaks your customers' languages and can sound buttoned up or casual
-Human takeover whenever you want a person to step in`}
-          onInView={() => setPlaneStarted(true)}
-        />
-      </div>
-      {/* Step 3 */}
-      <div style={{ marginTop: "1rem", marginBottom: "4rem" }}>
-        <FullscreenStep 
-          number="3"
-          cardTitle="3. Automated Appointment Booking"
-          cardDescription="The ultimate goal of reactivation is getting prospects on your calendar. Our system handles the scheduling automatically."
-          overlayTitle=""
-          overlayDescription=""
-          image={dailyLeadsImg}
-          icon={<TrendingUp className="w-8 h-8" />}
-          align="left"
-          leftText={`One click integration with Google Calendar, Calendly, and more
-Automatic reminders that cut no shows and last minute cancellations
-Self service rescheduling so your team never has to chase 'what time works' again
-Weekly performance review and campaign adjustments for ongoing lift`}
-        />
-      </div>
+      {/* Step Carousel */}
+      <section className="relative py-12">
+        <StepCarousel onStepInView={() => setPlaneStarted(true)} />
+      </section>
 
       </div>
     </div>
