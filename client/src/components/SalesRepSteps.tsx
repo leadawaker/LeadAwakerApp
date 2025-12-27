@@ -256,7 +256,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
     <div className="relative w-full py-24">
       <div className="container mx-auto px-4 sm:px-6 md:px-12 relative z-10">
         {/* Stacked Cards Container */}
-        <div className="relative h-[650px] flex flex-col items-center justify-center">
+        <div className="relative h-[750px] flex flex-col items-center justify-center">
           <div className="relative w-full h-[550px] flex items-center justify-center">
             {steps.map((step, index) => {
               const position = (index - currentStep + steps.length) % steps.length;
@@ -278,7 +278,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
                     filter: isActive ? 'blur(0px)' : 'blur(2px)',
                   }}
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  className="absolute w-full max-w-5xl"
+                  className="absolute w-full max-w-5xl z-50"
                 >
                   <Card className="bg-card backdrop-blur-sm border-white/10 overflow-hidden group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
                     <CardContent className="p-8">
@@ -649,7 +649,7 @@ export const SalesRepSteps = () => {
       </section>
 
       {/* Step Carousel */}
-      <section className="relative py-0 -mt-4">
+      <section className="relative py-0 -mt-48">
         <StepCarousel onStepInView={() => setPlaneStarted(true)} />
       </section>
 
