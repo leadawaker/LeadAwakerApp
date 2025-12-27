@@ -156,7 +156,7 @@ const FullscreenStep = ({
                   {leftText.split('\n').map((line, i) => (
                     <div key={i} className="flex items-start gap-4">
                       <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-400 mt-2" />
-                      <div className="text-lg font-medium leading-relaxed text-gray-100">
+                      <div className="font-medium text-gray-100 text-[17px]">
                         {line}
                       </div>
                     </div>
