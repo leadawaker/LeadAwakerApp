@@ -303,19 +303,44 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="text-center max-w-3xl mx-auto"
+            className="text-center max-w-4xl mx-auto"
           >
             <h2 className="md:text-4xl lg:text-5xl font-bold mb-8 text-white tracking-tight text-[40px] leading-tight">
-              See AI Work, Not Just Talk
+              Copy to give context to the chat box on the right
             </h2>
             
-            <div className="space-y-6 leading-relaxed mb-12 text-justify">
-              <p className="text-lg opacity-90">
-                If a picture is worth a thousand words, a <span className="text-[#FEB800] font-bold">live demo</span> is worth a thousand pictures. Before you do anything else, experience how AI interacts with customers naturally while handling the repetitive work your team shouldn't have to.
+            <div className="space-y-6 leading-relaxed mb-12 text-left">
+              <div>
+                <h3 className="text-2xl font-bold text-[#FEB800] mb-4">Live AI Chat Automation Example</h3>
+                <p className="text-lg opacity-90 mb-4">
+                  Watch this real conversation unfold: Our <span className="font-bold">Lead Awaker AI</span> sends an initial SMS to cold leads checking car finance refunds. When Jack responds, the AI instantly qualifies him, handles his objection about missing documents, and guides him to complete a DSAR (Data Subject Access Request).
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold mb-3">What happens next:</h3>
+                <p className="text-lg opacity-90 mb-4">
+                  The DSAR legally compels car finance companies to send Jack's agreement documents. A <span className="font-bold">law firm clerk</span> then reviews them for mis-sold commission hidden in his payments—if found, he gets a full refund (typically £1,000-£3,000).
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold mb-3">Real Results from 935 leads:</h3>
+                <ul className="text-lg opacity-90 space-y-2 ml-6">
+                  <li><span className="font-bold">42% reply rate</span> (vs industry 20%)</li>
+                  <li><span className="font-bold">20.4% DSAR completion rate</span></li>
+                  <li><span className="font-bold">Cost per DSAR: $21</span> (fully automated—no calls, no salespeople)</li>
+                  <li><span className="font-bold">Solicitor fees per win: $1,200-$1,800</span></li>
+                  <li><span className="font-bold">My agency fee: $190 per DSAR lead</span></li>
+                </ul>
+              </div>
+
+              <p className="text-lg opacity-90 mt-6">
+                This single automation generated <span className="font-bold">190 qualified cases × $190 = $36,100 revenue</span> from one SMS campaign, all handled 100% by <span className="font-bold">Lead Awaker AI</span> while you sleep.
               </p>
 
               <p className="text-lg opacity-90">
-                By automating what drains your time, AI frees your team to focus on what actually moves the needle — strategy, growth, and the work you enjoy. In just a few minutes, you’ll see how smarter automation transforms your ROI and your day-to-day operations.
+                This is the exact system I build for B2B service businesses—turning cold leads into signed cases without manual follow-up.
               </p>
             </div>
 
