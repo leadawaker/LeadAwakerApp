@@ -9,6 +9,7 @@ import conversationImg from "@assets/Gemini_Generated_Image_j212wcj212wcj212_176
 import dailyLeadsImg from "../assets/step-3-main.jpg";
 import calendarImg from "@assets/Gemini_Generated_Image_a2dvda2dvda2dvda_1766862327268.png";
 import appointmentBookingImg from "../assets/step-3-appointment-booking.jpg";
+import uploadDatabaseImg from "../assets/step-1-upload-database.png";
 import databaseImageImg from "@assets/Gemini_Generated_Image_toqbi0toqbi0toqb_1766862950610.png";
 import cloudTexture from "@assets/generated_images/cloud-bottom-bar.jpg";
 import cloudsOverlay from "@assets/Project_(20251227103213)_1766828113842.jpg";
@@ -210,7 +211,7 @@ const StepCarousel = ({ onStepInView }: { onStepInView: () => void }) => {
       image: leadsDbImg,
       icon: <Database className="w-8 h-8 text-yellow-500" />,
       align: "left" as const,
-      cardImage: databaseImageImg,
+      cardImage: uploadDatabaseImg,
       leftText: `We reawaken dormant leads who inquired months ago but never bought - even leads who your sales team has dialed to death
 Auto segment contacts based on past interactions`
     },
