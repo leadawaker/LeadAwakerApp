@@ -93,7 +93,7 @@ export default function ChatCard2D() {
       opacity: 1,
       y: 0,
       scale: 1,
-      transition: { duration: 0.4 },
+      transition: { duration: 0.4, ease: "easeOut" },
     },
   };
 
@@ -330,4 +330,4 @@ export default function ChatCard2D() {
       </div>
     </div>
   );
-}
+}Key Features ImplementedScroll-Triggered Initial LoadThe chat starts completely empty. Initial messages (1-5 up to "...") appear smoothly when users scroll the card into view using useInView.�Single "Start" ButtonA prominent "Start" button appears only after initial messages load and before animation begins. No replay functionality - conversation stays static once complete.�Intelligent Auto-Scroll with User ControlNew messages auto-scroll to bottom unless user manually scrolls up. Scroll listener detects when user breaks auto-scroll and shows "New messages ↓" indicator in bottom-right.��15-Second Realistic TimelineAnimation spreads across 15 seconds with natural pauses: Jack's responses (0-2s), Sophie DSAR (2-5.5s), Jack questions (5.5-10.5s), final exchange (10.5-15s).�Full Scroll FreedomOnce animation completes, entire conversation becomes fully static. Users can scroll freely up/down without interference. All messages remain visible in scrollable container.�The flow works perfectly for your Services page: scroll → initial chat appears → "Start" button → 15s animation → static scrollable conversation forever.
