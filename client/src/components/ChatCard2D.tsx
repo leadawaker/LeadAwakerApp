@@ -84,45 +84,45 @@ export default function ChatCard2D() {
     setIsAnimating(true);
     setIsUserScrolling(false);
     
-    // 30 second timeline
-    // Jack's "No sorry" (0-2s)
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // 40 second timeline (extended from 30s)
+    // Jack's "No sorry" (0-2.67s)
+    await new Promise(resolve => setTimeout(resolve, 2667));
     setCurrentStep(6);
     
-    // Jack's "Not at Hand" (2-3s)
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Jack's "Not at Hand" (2.67-4s)
+    await new Promise(resolve => setTimeout(resolve, 1333));
     setCurrentStep(7);
     
-    // Sophie DSAR (3-9s)
-    await new Promise(resolve => setTimeout(resolve, 6000));
+    // Sophie DSAR (4-14.67s)
+    await new Promise(resolve => setTimeout(resolve, 8000));
     setCurrentStep(8);
     
-    // Jack's first question (9-16s)
-    await new Promise(resolve => setTimeout(resolve, 7000));
+    // Jack's first question (14.67-27s)
+    await new Promise(resolve => setTimeout(resolve, 9333));
     setCurrentStep(9);
     
-    // Jack's second question (16-17.5s)
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Jack's second question (27-29.33s)
+    await new Promise(resolve => setTimeout(resolve, 2000));
     setCurrentStep(10);
     
-    // Sophie final (17.5-24s)
-    await new Promise(resolve => setTimeout(resolve, 6500));
+    // Sophie final (29.33-39s)
+    await new Promise(resolve => setTimeout(resolve, 8667));
     setCurrentStep(11);
     
-    // Jack thanks (24-25s)
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Jack thanks (39-40.67s)
+    await new Promise(resolve => setTimeout(resolve, 1333));
     setCurrentStep(12);
     
-    // Sophie 15m later message (25-28s)
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    // Sophie claim message (40.67-44.67s)
+    await new Promise(resolve => setTimeout(resolve, 4000));
     setCurrentStep(13);
     
-    // Jack final message (28-29s)
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Jack final message (44.67-46s)
+    await new Promise(resolve => setTimeout(resolve, 1333));
     setCurrentStep(14);
     
-    // Sophie closing message (29-30s)
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Sophie closing message (46-47.33s)
+    await new Promise(resolve => setTimeout(resolve, 1333));
     setCurrentStep(15);
     
     setIsAnimating(false);
