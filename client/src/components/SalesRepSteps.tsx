@@ -300,7 +300,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
                         >
                           {step.leftText.split('\n').map((line, i) => (
                             <div key={i} className="flex items-start gap-3">
-                              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-400 mt-2" />
+                              <div className="flex-shrink-0 w-2 h-2 rounded-full mt-2 bg-[#ffbf51]" />
                               <div className="font-medium text-gray-600 text-[14px]">
                                 {line}
                               </div>
