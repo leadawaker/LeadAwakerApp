@@ -285,7 +285,7 @@ Weekly optimization reviews for continuous results`
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   className="absolute w-full max-w-5xl z-50"
                 >
-                  <Card className="bg-card backdrop-blur-sm border-white/10 group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
+                  <Card className="bg-card/85 backdrop-blur-md border-white/10 group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
                     <CardContent className="p-8">
                       <div className="mb-6 p-3 w-fit rounded-xl text-gray-600 flex items-center justify-center min-w-[56px] min-h-[56px] bg-[#fff7e0]" data-testid={`step-icon-${step.number}`}>
                         {step.icon}
@@ -315,7 +315,7 @@ Weekly optimization reviews for continuous results`
                                   initial={{ opacity: 0, y: -10 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   transition={{ delay: 0.3 }}
-                                  className="absolute top-0 left-0 right-0 h-1/4 flex items-center px-4 pt-4 z-10"
+                                  className="absolute top-[15%] left-0 right-0 h-1/4 flex items-center px-4 pt-4 z-10"
                                 >
                                   <style>{`
                                     @keyframes crmScroll {
