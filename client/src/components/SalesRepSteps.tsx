@@ -450,7 +450,14 @@ export const SalesRepSteps = () => {
   useEffect(() => {
     // Proactively start the plane animation shortly after mount
     const timer = setTimeout(() => setPlaneStarted(true), 1000);
-    return () => clearTimeout(timer);
+    
+    // Trigger glitch animation much earlier
+    const glitchTimer = setTimeout(() => setGlitchAnimating(true), 500);
+    
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(glitchTimer);
+    };
   }, []);
   const { scrollYProgress } = useScroll({
     target: scrollRef,
