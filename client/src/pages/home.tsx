@@ -283,7 +283,7 @@ export default function Home() {
                 </p>
               </div>
               <div className="space-y-3 md:pl-8 pt-8 md:pt-0">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2 text-[18px]">
                   <div className="w-2 h-2 rounded-full bg-blue-500" />
                   Brand Protection
                 </h3>
