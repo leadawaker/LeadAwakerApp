@@ -425,11 +425,11 @@ export const SalesRepSteps = () => {
         }}
       />
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 500% 120% at 50% 105%, rgba(255, 191, 81, 0.8) 0%, rgba(234, 152, 44, 0.7) 25%, rgba(217, 119, 6, 0.55) 45%, rgba(180, 83, 9, 0.3) 65%, rgba(180, 83, 9, 0) 100%)',
+        background: 'linear-gradient(to bottom, #0f172a 0%, #1e3a8a 30%, #3b82f6 60%, #ffbf51 100%)',
         zIndex: 0
       }} />
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 440% 100% at 50% 95%, rgba(254, 215, 170, 0.75) 0%, rgba(251, 146, 60, 0.5) 25%, rgba(37, 99, 235, 0) 50%)',
+        background: 'radial-gradient(ellipse 440% 100% at 50% 95%, rgba(255, 191, 81, 0.4) 0%, rgba(251, 146, 60, 0.2) 25%, transparent 50%)',
         zIndex: 0
       }} />
       <div className="absolute inset-0 pointer-events-none" style={{
@@ -524,29 +524,29 @@ export const SalesRepSteps = () => {
                   hidden: { opacity: 0, y: 30, scale: 0.95 },
                   visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, type: "spring", stiffness: 100, damping: 15 } }
                 }}
-                initial={{ borderColor: 'rgb(249, 115, 22)' }}
-                animate={{ borderColor: 'rgb(255, 191, 81)' }}
+                initial={{ borderColor: 'rgb(59, 130, 246)' }}
+                animate={{ borderColor: 'rgb(59, 130, 246)' }}
                 transition={{ delay: i * 0.08 + 0.1 + 0.1, duration: 0.5 }}
                 className="group relative bg-gradient-to-br from-slate-800/80 to-slate-800/60 border backdrop-blur-sm p-8 rounded-2xl text-center transition-all duration-400 cursor-default overflow-hidden shadow-lg shadow-primary/20"
                 style={{
-                  borderColor: 'rgb(255, 191, 81)',
+                  borderColor: 'rgb(59, 130, 246)',
                 }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = 'rgb(234, 152, 44)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 25px 50px -12px rgba(234, 152, 44, 0.35), 0 25px 50px -12px rgba(234, 152, 44, 0.35)';
+                  (e.currentTarget as HTMLElement).style.borderColor = 'rgb(147, 197, 253)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 25px 50px -12px rgba(59, 130, 246, 0.35), 0 25px 50px -12px rgba(59, 130, 246, 0.35)';
                   const icon = (e.currentTarget as HTMLElement).querySelector('[data-testid="pain-icon"]') as HTMLElement;
-                  if (icon) icon.style.color = 'rgb(234, 152, 44)';
+                  if (icon) icon.style.color = 'rgb(147, 197, 253)';
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = 'rgb(255, 191, 81)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 15px -3px rgba(255, 191, 81, 0.2), 0 10px 15px -3px rgba(255, 191, 81, 0.2)';
+                  (e.currentTarget as HTMLElement).style.borderColor = 'rgb(59, 130, 246)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 15px -3px rgba(59, 130, 246, 0.2), 0 10px 15px -3px rgba(59, 130, 246, 0.2)';
                   const icon = (e.currentTarget as HTMLElement).querySelector('[data-testid="pain-icon"]') as HTMLElement;
-                  if (icon) icon.style.color = 'rgb(255, 191, 81)';
+                  if (icon) icon.style.color = 'rgb(59, 130, 246)';
                 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-orange-500/5 group-hover:to-orange-500/10 transition-all duration-400" style={{ background: 'linear-gradient(135deg, transparent 0%, transparent 100%)' }} />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-blue-500/5 group-hover:to-blue-500/10 transition-all duration-400" style={{ background: 'linear-gradient(135deg, transparent 0%, transparent 100%)' }} />
                 <div className="relative z-10">
-                  <div className="text-primary mb-4 transform group-hover:scale-125 transition-all duration-400 inline-flex items-center justify-center" style={{ color: 'rgb(255, 191, 81)' }} data-testid="pain-icon">{pain.icon}</div>
+                  <div className="text-primary mb-4 transform group-hover:scale-125 transition-all duration-400 inline-flex items-center justify-center" style={{ color: 'rgb(59, 130, 246)' }} data-testid="pain-icon">{pain.icon}</div>
                   <p className="text-sm font-semibold text-white transition-all duration-400 leading-relaxed">{pain.title}</p>
                 </div>
               </motion.div>
