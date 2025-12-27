@@ -241,7 +241,8 @@ Conversations shaped by Challenger & SPIN selling to uncover needs and handle ob
       leftText: `One-click Google Calendar, Calendly integration
 Smart reminders slash no-shows and cancellations
 On-demand campaign reports with lead interaction details
-Direct booking setup (restaurant tables, sales calls)
+Direct bookings (appointments, reservations, cart closures) for faster sales
+Sales rep calls for high-ticket niches
 Weekly optimization reviews for continuous results`
     }
   ];
