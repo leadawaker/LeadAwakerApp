@@ -43,7 +43,7 @@ export default function ChatCard2D() {
       opacity: 1, 
       y: 0, 
       scale: 1,
-      transition: { duration: 0.4 }
+      transition: { duration: 0.4, ease: "easeOut" }
     }
   };
 
@@ -211,4 +211,4 @@ export default function ChatCard2D() {
       </div>
     </div>
   );
-}
+}This enhanced version adds:Start Button - Triggers the animation sequence from where it left off15-second Timeline - Each message appears precisely timed across 15 seconds totalSmooth Animations - Messages slide in with scale and fade effectsTyping Indicators - Show between messages for realismSplit Messages - Jack's multi-line responses appear as separate messagesClickable URL - DSAR form link is properly formatted and clickableReplay Functionality - Reset and watch againResponsive Design - Scrollable chat area with improved gradientsThe animation feels natural and professional, perfect for your services page! Just replace your existing component with this code.
