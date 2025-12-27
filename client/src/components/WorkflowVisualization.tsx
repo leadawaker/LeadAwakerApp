@@ -107,11 +107,13 @@ export default function WorkflowVisualization() {
           opacity: 0;
           filter: blur(64px);
         }
+        .card-active-blue .node-glow-layer { background: #526fff; opacity: 0.4; }
         .card-active-amber .node-glow-layer { background: #fbbf24; opacity: 0.4; }
         .card-active-purple .node-glow-layer { background: #c084fc; opacity: 0.4; }
         .card-active-emerald .node-glow-layer { background: #34d399; opacity: 0.4; }
         .card-active-cyan .node-glow-layer { background: #22d3ee; opacity: 0.4; }
 
+        .card-active-blue { box-shadow: 0 20px 50px -12px rgba(82, 111, 255, 0.6); }
         .card-active-amber { box-shadow: 0 20px 50px -12px rgba(245, 158, 11, 0.6); }
         .card-active-purple { box-shadow: 0 20px 50px -12px rgba(168, 85, 247, 0.6); }
         .card-active-emerald { box-shadow: 0 20px 50px -12px rgba(16, 185, 129, 0.6); }
@@ -169,11 +171,13 @@ export default function WorkflowVisualization() {
             right: -6px !important;
           }
         }
+        .connector-dot.active-blue { transform: translateX(-50%) scale(1.25); background: #526fff; box-shadow: 0 0 10px rgba(82, 111, 255, 0.8); opacity: 1; }
         .connector-dot.active-amber { transform: translateX(-50%) scale(1.25); background: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.8); opacity: 1; }
         .connector-dot.active-purple { transform: translateX(-50%) scale(1.25); background: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.8); opacity: 1; }
         .connector-dot.active-emerald { transform: translateX(-50%) scale(1.25); background: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.8); opacity: 1; }
         .connector-dot.active-cyan { transform: translateX(-50%) scale(1.25); background: #06b6d4; box-shadow: 0 0 10px rgba(6, 182, 212, 0.8); opacity: 1; }
         @media (min-width: 768px) {
+          .connector-dot.active-blue { transform: translateY(-50%) scale(1.25); }
           .connector-dot.active-amber { transform: translateY(-50%) scale(1.25); }
           .connector-dot.active-purple { transform: translateY(-50%) scale(1.25); }
           .connector-dot.active-emerald { transform: translateY(-50%) scale(1.25); }
@@ -183,6 +187,7 @@ export default function WorkflowVisualization() {
           .connector-dot.visited-emerald { transform: translateY(-50%); }
           .connector-dot.visited-cyan { transform: translateY(-50%); }
         }
+        .connector-dot.visited-blue { background: #526fff; opacity: 0.5; }
         .connector-dot.visited-amber { background: #f59e0b; opacity: 0.5; }
         .connector-dot.visited-purple { background: #a855f7; opacity: 0.5; }
         .connector-dot.visited-emerald { background: #10b981; opacity: 0.5; }
@@ -267,26 +272,26 @@ export default function WorkflowVisualization() {
         </div>
 
         <div className="connector-wrapper relative z-10">
-          <div className={`connector-dot left-side ${activeNode === 'guardrails' ? (isApproved ? 'active-emerald' : 'active-cyan') : (isApproved ? 'visited-emerald' : (visitedNodes.has('guardrails') ? 'visited-cyan' : ''))}`} />
-          <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 shadow-[0_8px_30px_rgba(0,0,0,0.2)] ${isApproved ? 'border-emerald-500 card-active-emerald' : getStatusColor('guardrails', 'border-cyan-500 card-active-cyan', 'border-gray-200', 'border-gray-200')}`}>
+          <div className={`connector-dot left-side ${activeNode === 'guardrails' ? (isApproved ? 'active-emerald' : 'active-blue') : (isApproved ? 'visited-emerald' : (visitedNodes.has('guardrails') ? 'visited-blue' : ''))}`} />
+          <div className={`relative bg-white border-2 rounded-xl p-6 w-64 transition-all duration-300 shadow-[0_8px_30px_rgba(0,0,0,0.2)] ${isApproved ? 'border-emerald-500 card-active-emerald' : getStatusColor('guardrails', 'border-[#526fff] card-active-blue', 'border-gray-200', 'border-gray-200')}`}>
             <div className="node-glow-layer" />
             {activeNode === 'guardrails' && (
               <svg className="absolute -inset-[3px] w-[calc(100%+6px)] h-[calc(100%+6px)] pointer-events-none" viewBox="0 0 200 160" preserveAspectRatio="none">
-                <rect x="1" y="1" width="198" height="158" rx="14" fill="none" stroke={isApproved ? "#10b981" : "#06b6d4"} strokeWidth="2" className="node-active-stroke" />
+                <rect x="1" y="1" width="198" height="158" rx="14" fill="none" stroke={isApproved ? "#10b981" : "#526fff"} strokeWidth="2" className="node-active-stroke" />
               </svg>
             )}
             <div className="card-gradient-overlay" />
             <div className="flex items-center gap-3 mb-4">
-              <div className={`p-2 rounded-lg transition-colors duration-300 ${activeNode === 'guardrails' ? (isApproved ? 'bg-emerald-100' : 'bg-cyan-100') : 'bg-gray-50/50'}`}>
+              <div className={`p-2 rounded-lg transition-colors duration-300 ${activeNode === 'guardrails' ? (isApproved ? 'bg-emerald-100' : 'bg-blue-50') : 'bg-gray-50/50'}`}>
                 {isApproved ? 
                   <CheckCircle2 className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'guardrails' || isApproved ? 'text-emerald-600' : 'text-gray-400/60'}`} /> : 
-                  <Shield className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-cyan-600' : 'text-gray-400/60'}`} />
+                  <Shield className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-[#526fff]' : 'text-gray-400/60'}`} />
                 }
               </div>
               <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-gray-900' : 'text-gray-400'}`}>Guardrails</h3><p className="text-[10px] text-gray-400 text-left font-semibold uppercase tracking-wider">SECURITY</p></div>
             </div>
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center justify-between">
-              <span className={`font-semibold font-mono transition-colors duration-300 ${(activeNode === 'guardrails' || isApproved) ? (isApproved ? 'text-emerald-600' : 'text-cyan-600') : 'text-gray-400/60'}`}>Status</span>
+              <span className={`font-semibold font-mono transition-colors duration-300 ${(activeNode === 'guardrails' || isApproved) ? (isApproved ? 'text-emerald-600' : 'text-[#526fff]') : 'text-gray-400/60'}`}>Status</span>
               <span className={`truncate font-mono transition-colors duration-300 ${(activeNode === 'guardrails' || isApproved) ? 'text-gray-700' : 'text-gray-400'}`}>{guardrailsStatus}</span>
             </div>
           </div>
