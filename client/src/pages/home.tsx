@@ -284,18 +284,18 @@ export default function Home() {
                 If a picture is worth a thousand words, a <span className="text-[#FEB800] font-bold">live demo</span> is worth a thousand pictures. Before you do anything else, experience how AI interacts with customers naturally while handling the repetitive work your team shouldn't have to.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-6 justify-center py-4">
-                <Link href="/book-demo">
-                  <Button size="lg" className="h-16 px-10 text-xl rounded-full shadow-2xl shadow-black/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:scale-105 hover:shadow-[0_0_30px_rgba(254,184,0,0.5)] transition-all duration-300 font-bold group">
-                    Book a Demo
-                    <ArrowRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
-              </div>
-
               <p className="text-base md:text-lg opacity-80">
                 By automating what drains your time, AI frees your team to focus on what actually moves the needle — strategy, growth, and the work you enjoy. In just a few minutes, you’ll see how smarter automation transforms your ROI and your day-to-day operations.
               </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <Link href="/book-demo">
+                <Button size="lg" className="h-16 px-10 text-xl rounded-full shadow-xl shadow-primary/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:scale-105 hover:shadow-[0_0_30px_rgba(254,184,0,0.6)] transition-all duration-300 font-bold group">
+                  Book a Demo
+                  <ArrowRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
             </div>
           </motion.div>
         </div>
