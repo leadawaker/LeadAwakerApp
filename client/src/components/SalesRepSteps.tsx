@@ -146,8 +146,8 @@ Weekly performance review and campaign adjustments for ongoing lift`
   };
 
   return (
-    <div ref={sectionRef} className="relative w-full h-[300vh] -mt-[50vh]">
-      <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
+    <div ref={sectionRef} className="relative w-full h-[300vh]">
+      <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden bg-slate-950">
         <div className="container mx-auto px-4 sm:px-6 md:px-12 relative z-10 flex flex-col items-center">
           {/* Stacked Cards Container */}
           <div className="relative h-[600px] w-full flex flex-col items-center justify-center">
