@@ -250,35 +250,6 @@ export const SalesRepSteps = () => {
         zIndex: 5
       }} />
       <Plane startTrigger={planeStarted} />
-      {/* Animated Clouds Overlay - Moved behind content */}
-      <div className="absolute inset-x-0 bottom-0 pointer-events-none z-0 h-[500px] overflow-hidden opacity-80">
-        <motion.div 
-          className="flex h-full w-[200%]"
-          animate={{ x: ["0%", "-50%"] }}
-          transition={{ 
-            duration: 80, 
-            repeat: Infinity, 
-            ease: "linear" 
-          }}
-        >
-          <img 
-            src={cloudsOverlay}
-            alt=""
-            className="w-1/2 h-full object-contain object-bottom"
-            style={{ 
-              mixBlendMode: 'lighten'
-            }}
-          />
-          <img 
-            src={cloudsOverlay}
-            alt=""
-            className="w-1/2 h-full object-contain object-bottom"
-            style={{ 
-              mixBlendMode: 'lighten'
-            }}
-          />
-        </motion.div>
-      </div>
       <div className="relative z-10">
       {/* Pain Points Section */}
       <section className="pt-48 pb-32 md:pt-56 md:pb-40">
