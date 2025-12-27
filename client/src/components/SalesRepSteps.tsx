@@ -285,7 +285,7 @@ Weekly optimization reviews for continuous results`
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   className="absolute w-full max-w-5xl z-50"
                 >
-                  <Card className="bg-card/40 backdrop-blur-md border-white/10 group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
+                  <Card className="bg-card backdrop-blur-sm border-white/10 group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
                     <CardContent className="p-8">
                       <div className="mb-6 p-3 w-fit rounded-xl text-gray-600 flex items-center justify-center min-w-[56px] min-h-[56px] bg-[#fff7e0]" data-testid={`step-icon-${step.number}`}>
                         {step.icon}
