@@ -461,11 +461,15 @@ Human takeover whenever you want a person to step in`}
           number="3"
           cardTitle="3. Automated Appointment Booking"
           cardDescription="The ultimate goal of reactivation is getting prospects on your calendar. Our system handles the scheduling automatically."
-          overlayTitle="Seamless Calendar Integration"
-          overlayDescription="One click integration with Google Calendar, Calendly, and more • Automatic reminders that cut no shows and last minute cancellations • Self service rescheduling so your team never has to chase 'what time works' again • Weekly performance review and campaign adjustments for ongoing lift"
+          overlayTitle=""
+          overlayDescription=""
           image={dailyLeadsImg}
           icon={<TrendingUp className="w-8 h-8" />}
           align="left"
+          leftText={`One click integration with Google Calendar, Calendly, and more
+Automatic reminders that cut no shows and last minute cancellations
+Self service rescheduling so your team never has to chase 'what time works' again
+Weekly performance review and campaign adjustments for ongoing lift`}
         />
       </div>
 
