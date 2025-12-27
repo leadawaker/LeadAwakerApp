@@ -332,9 +332,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center max-w-2xl mx-auto"
           >
-            <h2 className="font-bold mb-6 text-white" style={{ fontSize: '48px' }}>
-              Compliance and Reputation Built In
-            </h2>
+            <h2 className="font-bold mb-6 text-white" style={{ fontSize: '48px' }}>Let us show you how it's done</h2>
             <p className="text-lg opacity-90 mb-8 leading-relaxed">
               If a picture is worth a thousand words, a demo is worth a thousand pictures. That's why before you do anything, I want you to see AI in action. This demo gives a taster of how AI engages with customers in a natural way and bears the brunt of repetitive tasks, so you and your team don't have to.
             </p>
