@@ -420,10 +420,10 @@ Our AI agents are trained to understand intent, follow up with unresponsive lead
       <div style={{ marginTop: "1rem", marginBottom: "4rem" }}>
         <FullscreenStep 
           number="3"
-          cardTitle="3. Revenue Rolls In"
-          cardDescription="Auto-books meetings 24/7."
-          overlayTitle="Optimize Weekly"
-          overlayDescription="Monitor performance and continuously improve conversion rates."
+          cardTitle="3. Automated Appointment Booking"
+          cardDescription="The ultimate goal of reactivation is getting prospects on your calendar. Our system handles the scheduling automatically."
+          overlayTitle="Seamless Calendar Integration"
+          overlayDescription="Integrates with Google Calendar, Calendly, etc. • Automated reminders to reduce no-shows • Rescheduling handling without manual input"
           image={dailyLeadsImg}
           icon={<TrendingUp className="w-8 h-8" />}
           align="left"
