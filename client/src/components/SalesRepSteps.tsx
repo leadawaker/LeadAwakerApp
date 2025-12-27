@@ -427,10 +427,10 @@ export const SalesRepSteps = () => {
           image={databaseIntegrationImg}
           icon={<Database className="w-8 h-8" />}
           align="left"
-          leftText="We take your list of \"dead\" leads—people who inquired 3, 6, or 12 months ago but never bought—and we wake them up.
+          leftText={`We take your list of "dead" leads—people who inquired 3, 6, or 12 months ago but never bought—and we wake them up.
 Segment your audience based on past interactions
 Craft irresistible re-engagement offers
-Launch multi-channel campaigns (SMS, Email)"
+Launch multi-channel campaigns (SMS, Email)`}
           onInView={() => setPlaneStarted(true)}
         />
       </div>
