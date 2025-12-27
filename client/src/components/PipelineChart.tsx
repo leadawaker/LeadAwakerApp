@@ -170,49 +170,53 @@ export default function PipelineChart() {
               </Badge>
             </div>
             {/* Drop Zone / List */}
-            <div className="space-y-2">
-              <AnimatePresence mode="popLayout">
-                {leads[stage.id].map((lead) => (
-                  <motion.div
-                    key={lead.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-                    transition={{ 
-                      layout: { type: "spring", stiffness: 200, damping: 25 },
-                      opacity: { duration: 0.2 }
-                    }}
-                    data-testid={`lead-card-${lead.id}`}
-                  >
-                    <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
-                      <CardContent className="p-3 space-y-2">
-                        <div className="flex justify-between items-start">
-                          <div 
-                            className={`font-semibold text-sm ${stage.textColorClass}`}
-                            style={stage.customTextStyle}
-                            data-testid={`lead-name-${lead.id}`}
-                          >
-                            {lead.name}
-                          </div>
-                          <MoreHorizontal className="w-4 h-4 text-slate-400" />
+            <div className="space-y-2 flex-1 relative">
+              {leads[stage.id].map((lead) => (
+                <motion.div
+                  key={lead.id}
+                  layoutId={lead.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ 
+                    layout: { type: "spring", stiffness: 250, damping: 30 },
+                    opacity: { duration: 0.2 }
+                  }}
+                  data-testid={`lead-card-${lead.id}`}
+                >
+                  <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                    <CardContent className="p-3 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div 
+                          className={`font-semibold text-sm ${stage.textColorClass}`}
+                          style={stage.customTextStyle}
+                          data-testid={`lead-name-${lead.id}`}
+                        >
+                          {lead.name}
                         </div>
-                        <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
-                          <span data-testid={`lead-time-${lead.id}`}>{formatTimeAgo(lead.lastContacted)}</span>
-                          <span className="font-mono font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded text-[0.65rem]" data-testid={`lead-phone-${lead.id}`}>
-                            {lead.phone}
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+                        <MoreHorizontal className="w-4 h-4 text-slate-400" />
+                      </div>
+                      <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
+                        <span data-testid={`lead-time-${lead.id}`}>{formatTimeAgo(lead.lastContacted)}</span>
+                        <span className="font-mono font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded text-[0.65rem]" data-testid={`lead-phone-${lead.id}`}>
+                          {lead.phone}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
               
               {leads[stage.id].length === 0 && (
-                <div className="flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-slate-400 text-xs italic bg-slate-50 dark:bg-slate-900 p-3" data-testid={`empty-stage-${stage.id}`}>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-slate-400 text-xs italic bg-slate-50 dark:bg-slate-900 p-3" 
+                  data-testid={`empty-stage-${stage.id}`}
+                >
                   No leads in this stage
-                </div>
+                </motion.div>
               )}
             </div>
             </div>
