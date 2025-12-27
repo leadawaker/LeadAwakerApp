@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { motion, animate, useMotionValue, useTransform } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, animate, useMotionValue, useInView } from "framer-motion";
 
 interface AnimatedRangeCounterProps {
   start: number;
@@ -22,10 +22,14 @@ export default function AnimatedRangeCounter({
 }: AnimatedRangeCounterProps) {
   const countStart = useMotionValue(start);
   const countEnd = useMotionValue(end);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
   
   const [displayValue, setDisplayValue] = useState(`${format(start)}-${format(end)}${suffix}`);
 
   useEffect(() => {
+    if (!isInView) return;
+
     const targetStart = finalStart !== undefined ? finalStart : start;
     const targetEnd = finalEnd !== undefined ? finalEnd : end;
     
@@ -36,7 +40,7 @@ export default function AnimatedRangeCounter({
       controlsStart.stop();
       controlsEnd.stop();
     };
-  }, [start, end, finalStart, finalEnd, duration, countStart, countEnd]);
+  }, [isInView, start, end, finalStart, finalEnd, duration, countStart, countEnd]);
 
   useEffect(() => {
     const updateDisplay = () => {
@@ -52,5 +56,5 @@ export default function AnimatedRangeCounter({
     };
   }, [countStart, countEnd, format, suffix]);
 
-  return <motion.span data-testid="text-animated-range-counter">{displayValue}</motion.span>;
+  return <motion.span ref={ref} data-testid="text-animated-range-counter">{displayValue}</motion.span>;
 }

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { motion, animate, useMotionValue, useTransform } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, animate, useMotionValue, useInView } from "framer-motion";
 
 interface AnimatedCounterProps {
   start?: number;
@@ -21,8 +21,12 @@ export default function AnimatedCounter({
   const count = useMotionValue(start);
   const [displayValue, setDisplayValue] = useState(format(start) + (!suffixAtEnd ? suffix : ""));
   const [showSuffix, setShowSuffix] = useState(!suffixAtEnd);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
 
   useEffect(() => {
+    if (!isInView) return;
+
     const controls = animate(count, end, { 
       duration,
       onComplete: () => {
@@ -30,7 +34,7 @@ export default function AnimatedCounter({
       }
     });
     return controls.stop;
-  }, [end, duration, count, suffixAtEnd]);
+  }, [isInView, end, duration, count, suffixAtEnd]);
 
   useEffect(() => {
     return count.onChange((latest) => {
@@ -38,5 +42,5 @@ export default function AnimatedCounter({
     });
   }, [count, format, suffix, showSuffix]);
 
-  return <motion.span data-testid="text-animated-counter">{displayValue}</motion.span>;
+  return <motion.span ref={ref} data-testid="text-animated-counter">{displayValue}</motion.span>;
 }
