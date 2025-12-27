@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Database, MessageSquare, TrendingUp, Box, Copy, TrendingDown, Mail } from "lucide-react";
 import databaseIntegrationImg from "@assets/generated_images/database_upload_and_crm_integration.png";
+import leadsDbImg from "@assets/leads-database.png";
 import womanPhoneImg from "@assets/woman_answering_phone_in_living_room_1766483592249.png";
 import dailyLeadsImg from "@assets/generated_images/daily_leads_closed_chart_dashboard.png";
 import cloudTexture from "@assets/generated_images/cloud-bottom-bar.jpg";
@@ -424,7 +425,7 @@ export const SalesRepSteps = () => {
           cardDescription="Send a CSV or connect your CRM. That’s it, we handle the rest."
           overlayTitle=""
           overlayDescription=""
-          image={databaseIntegrationImg}
+          image={leadsDbImg}
           icon={<Database className="w-8 h-8" />}
           align="left"
           leftText={`We reawaken dormant leads who inquired months ago but never bought - even leads who your sales team has dialed to death
