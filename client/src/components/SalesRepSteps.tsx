@@ -300,7 +300,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
                         >
                           {step.leftText.split('\n').map((line, i) => (
                             <div key={i} className="flex items-start gap-3">
-                              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-400 mt-2" />
+                              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-yellow-400 mt-2" />
                               <div className="font-medium text-gray-600 text-[14px]">
                                 {line}
                               </div>
@@ -319,18 +319,18 @@ Weekly performance review and campaign adjustments for ongoing lift`
               <button
                 onClick={handlePrev}
                 data-testid="button-prev-step"
-                className="p-3 rounded-full bg-blue-500/20 border border-blue-400/50 text-white hover:bg-blue-500/30 hover:border-blue-400 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
+                className="p-3 rounded-full bg-yellow-500/20 border border-yellow-400/50 text-white hover:bg-yellow-500/30 hover:border-yellow-400 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
                 aria-label="Previous step"
               >
-                <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform text-yellow-400" />
               </button>
               <button
                 onClick={handleNext}
                 data-testid="button-next-step"
-                className="p-3 rounded-full bg-blue-500/20 border border-blue-400/50 text-white hover:bg-blue-500/30 hover:border-blue-400 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
+                className="p-3 rounded-full bg-yellow-500/20 border border-yellow-400/50 text-white hover:bg-yellow-500/30 hover:border-yellow-400 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
                 aria-label="Next step"
               >
-                <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform text-yellow-400" />
               </button>
             </div>
           </div>
@@ -344,8 +344,8 @@ Weekly performance review and campaign adjustments for ongoing lift`
                 data-testid={`dot-step-${i}`}
                 className={`w-3 h-3 rounded-full transition-all duration-300 ${
                   i === currentStep
-                    ? 'bg-blue-400 w-8'
-                    : 'bg-blue-400/40 hover:bg-blue-400/60'
+                    ? 'bg-yellow-400 w-8'
+                    : 'bg-yellow-400/40 hover:bg-yellow-400/60'
                 }`}
                 aria-label={`Go to step ${i + 1}`}
               />
@@ -386,7 +386,12 @@ export const SalesRepSteps = () => {
                             radial-gradient(circle at 88% 12%, white 1.1px, transparent 1.1px),
                             radial-gradient(circle at 25% 65%, white 0.8px, transparent 0.8px),
                             radial-gradient(circle at 75% 60%, white 0.7px, transparent 0.7px),
-                            radial-gradient(circle at 45% 70%, white 0.5px, transparent 0.5px)`,
+                            radial-gradient(circle at 45% 70%, white 0.5px, transparent 0.5px),
+                            radial-gradient(circle at 15% 90%, white 0.6px, transparent 0.6px),
+                            radial-gradient(circle at 85% 85%, white 0.8px, transparent 0.8px),
+                            radial-gradient(circle at 50% 95%, white 0.5px, transparent 0.5px),
+                            radial-gradient(circle at 30% 80%, white 0.7px, transparent 0.7px),
+                            radial-gradient(circle at 70% 90%, white 0.6px, transparent 0.6px)`,
           backgroundRepeat: 'repeat',
           backgroundSize: '1300px 1100px',
           willChange: 'transform',
