@@ -253,7 +253,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
   };
 
   return (
-    <div className="relative w-full py-24">
+    <div className="relative w-full pt-24 pb-36">
       <div className="container mx-auto px-4 sm:px-6 md:px-12 relative z-10">
         {/* Stacked Cards Container */}
         <div className="relative h-[750px] flex flex-col items-center justify-center">
