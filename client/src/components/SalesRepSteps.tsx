@@ -248,14 +248,14 @@ export const SalesRepSteps = () => {
               </span>
               {' '}
               <span style={{ 
-                backgroundImage: 'linear-gradient(to right, #FFFFFF 0%, #3b82f6 100%)',
+                backgroundImage: 'linear-gradient(to right, #FFFFFF 0%, #60a5fa 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
                 display: 'inline-block',
                 marginRight: '0.24em',
-                filter: 'drop-shadow(8px 0px 30px rgba(59, 130, 246, 0.4)) drop-shadow(4px 0px 10px rgba(59, 130, 246, 0.25))',
-                textShadow: '6px 0px 12px rgba(59, 130, 246, 0.3)'
+                filter: 'drop-shadow(8px 0px 30px rgba(96, 165, 250, 0.4)) drop-shadow(4px 0px 10px rgba(96, 165, 250, 0.25))',
+                textShadow: '6px 0px 12px rgba(96, 165, 250, 0.3)'
               }}>
                 is
               </span>
@@ -266,9 +266,9 @@ export const SalesRepSteps = () => {
                 bro<span className="flicker-letter">k</span>en
               </span>
               <span style={{ 
-                color: '#3b82f6',
-                filter: 'drop-shadow(10px 0px 40px rgba(59, 130, 246, 0.55)) drop-shadow(5px 0px 10px rgba(59, 130, 246, 0.4))',
-                textShadow: '8px 0px 15px rgba(59, 130, 246, 0.4), 12px 0px 25px rgba(59, 130, 246, 0.25)',
+                color: '#60a5fa',
+                filter: 'drop-shadow(10px 0px 40px rgba(96, 165, 250, 0.55)) drop-shadow(5px 0px 10px rgba(96, 165, 250, 0.4))',
+                textShadow: '8px 0px 15px rgba(96, 165, 250, 0.4), 12px 0px 25px rgba(96, 165, 250, 0.25)',
                 display: 'inline-block'
               }} data-testid="text-dot">.</span>
             </h2>
