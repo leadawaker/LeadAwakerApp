@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Database, MessageSquare, TrendingUp, Box, Copy, TrendingDown, Mail, ChevronLeft, ChevronRight } from "lucide-react";
 import databaseIntegrationImg from "@assets/generated_images/database_upload_and_crm_integration.png";
 import leadsDbImg from "@assets/leads-database.png";
-import conversationImg from "@assets/generated_images/professional_woman_in_yellow_and_man_in_blue_conversing.png";
+import phonesImg from "@assets/generated_images/woman_in_yellow_and_man_in_blue_on_phones_smiling.png";
 import dailyLeadsImg from "@assets/generated_images/daily_leads_closed_chart_dashboard.png";
 import cloudTexture from "@assets/generated_images/cloud-bottom-bar.jpg";
 import cloudsOverlay from "@assets/Project_(20251227103213)_1766828113842.jpg";
@@ -22,6 +22,7 @@ interface StepProps {
   align?: "left" | "right";
   onInView?: () => void;
   leftText?: string;
+  cardImage?: string;
 }
 
 const Plane = ({ startTrigger }: { startTrigger: boolean }) => {
@@ -217,9 +218,10 @@ Launch SMS, Whatsapp and email campaigns for you`
       cardDescription: "Our AI agents use the latest language models to read intent and craft tailored re‑engagement offers for your niche.",
       overlayTitle: "24/7 Response capability",
       overlayDescription: "Natural language processing for human-like chat • Seamless hand-off to human staff when needed",
-      image: conversationImg,
+      image: phonesImg,
       icon: <MessageSquare className="w-8 h-8 text-yellow-500" />,
       align: "right" as const,
+      cardImage: phonesImg,
       leftText: `24/7 responses across SMS, WhatsApp, and email
 Conversations shaped by Challenger and SPIN, designed to uncover real needs and handle objections with structure
 Smart follow up timers that re engage unresponsive leads automatically, without sounding like spam
@@ -345,6 +347,11 @@ Weekly performance review and campaign adjustments for ongoing lift`
                           transition={{ delay: 0.2 }}
                           className="space-y-4 pt-6 border-t border-white/10"
                         >
+                          {step.cardImage && (
+                            <div className="mb-6 rounded-lg overflow-hidden">
+                              <img src={step.cardImage} alt="Step illustration" className="w-full h-auto object-cover rounded-lg" />
+                            </div>
+                          )}
                           {step.leftText.split('\n').map((line, i) => (
                             <div key={i} className="flex items-start gap-3">
                               <div className="flex-shrink-0 w-2 h-2 rounded-full bg-yellow-500 mt-2" />
