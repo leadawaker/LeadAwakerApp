@@ -280,16 +280,16 @@ export default function Home() {
             className="text-center max-w-3xl mx-auto"
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8 text-white tracking-tight leading-tight">
-              See AI in action — <br className="hidden md:block" />
-              <span className="text-blue-200">and what it can do for you</span>
+              If a picture is worth a thousand words... <br className="hidden md:block" />
+              <span className="text-blue-200">A demo is worth a thousand pictures.</span>
             </h2>
             
             <div className="space-y-6 text-lg md:text-xl opacity-90 leading-relaxed mb-12">
               <p>
-                If a picture is worth a thousand words, a live demo is worth a thousand pictures. Before you do anything else, experience how AI interacts with customers naturally while handling the repetitive work your team shouldn't have to.
+                Before you do anything else, see AI in action. Watch how it engages with customers naturally and handles the repetitive work your team shouldn’t have to.
               </p>
               <p>
-                By automating what drains your time, AI frees your team to focus on what actually moves the needle — strategy, growth, and the work you enjoy. In just a few minutes, you’ll see how smarter automation transforms your ROI and your day-to-day operations.
+                By automating what slows you down, AI frees your team to focus on what actually moves the needle — strategy, growth, and the work you enjoy most. In just a few minutes, you'll see how smarter automation transforms both your ROI and your day.
               </p>
             </div>
 
