@@ -72,7 +72,7 @@ export default function AnimatedCounter({
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="absolute inset-0 flex items-center justify-center whitespace-nowrap"
+            className="absolute inset-0 flex items-center justify-center whitespace-nowrap text-[63px]"
             data-testid="text-zero-overlay"
           >
             <div className="flex flex-col items-center leading-none">
