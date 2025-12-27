@@ -138,7 +138,7 @@ export default function Home() {
             <p className="text-lg md:text-xl mt-4 text-[#3c50d6]">From chaos to certainty in 30 days</p>
           </motion.div>
 
-          <div className="flex flex-col md:flex-row gap-8 mb-12 items-stretch">
+          <div className="flex flex-col md:flex-row gap-8 mb-12 items-stretch max-w-2xl mx-auto">
             {/* Featured Large Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
