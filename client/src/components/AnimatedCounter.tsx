@@ -8,7 +8,6 @@ interface AnimatedCounterProps {
   format?: (value: number) => string;
   suffix?: string;
   suffixAtEnd?: boolean;
-  onFinalComplete?: () => void;
 }
 
 export default function AnimatedCounter({ 
@@ -17,16 +16,13 @@ export default function AnimatedCounter({
   duration = 2, 
   format = (v) => Math.round(v).toString(),
   suffix = "",
-  suffixAtEnd = false,
-  onFinalComplete
+  suffixAtEnd = false
 }: AnimatedCounterProps) {
   const count = useMotionValue(start);
   const [displayValue, setDisplayValue] = useState(format(start) + (suffix && !suffixAtEnd ? suffix : ""));
   const [showSuffix, setShowSuffix] = useState(suffix && !suffixAtEnd);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
-
-  const [isZero, setIsZero] = useState(false);
 
   useEffect(() => {
     if (!isInView) return;
@@ -35,12 +31,6 @@ export default function AnimatedCounter({
       duration,
       onComplete: () => {
         setShowSuffix(true);
-        if (end === 0) {
-          setTimeout(() => {
-            setIsZero(true);
-            onFinalComplete?.();
-          }, 1000);
-        }
       }
     });
     return controls.stop;
@@ -48,41 +38,37 @@ export default function AnimatedCounter({
 
   useEffect(() => {
     return count.on("change", (latest) => {
-      const isComplete = latest <= end;
+      const isComplete = latest >= end;
       setDisplayValue(format(latest) + (isComplete || showSuffix ? suffix : ""));
     });
   }, [count, format, suffix, showSuffix, end]);
 
   return (
     <motion.div className="flex flex-col items-center relative">
-      <AnimatePresence mode="wait">
-        {isZero ? (
-          <motion.span
-            key="zero-text"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ 
-              opacity: 1, 
-              scale: 1,
-              color: "#94a3b8" 
-            }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="font-black"
+      <AnimatePresence>
+        {end === 0 && displayValue === format(0) + (suffixAtEnd ? suffix : "") && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5, rotate: -45 }}
+            animate={{ opacity: 1, scale: 1, rotate: -15 }}
+            className="absolute z-20 pointer-events-none whitespace-nowrap flex flex-col items-center"
+            style={{ top: '0%' }}
+            data-testid="text-nothing-overlay"
           >
-            Absolute ZERO
-          </motion.span>
-        ) : (
-          <motion.span
-            key="counter-value"
-            ref={ref}
-            data-testid="text-animated-counter"
-            exit={{ opacity: 0 }}
-            className="inherit"
-          >
-            {displayValue}
-          </motion.span>
+            <span className="text-yellow-500 font-black text-5xl md:text-7xl tracking-tighter uppercase leading-none italic drop-shadow-2xl">Absolutely</span>
+            <span className="text-yellow-500 font-black text-5xl md:text-7xl tracking-tighter uppercase leading-none italic drop-shadow-2xl">Nothing</span>
+          </motion.div>
         )}
       </AnimatePresence>
+      <motion.span
+        ref={ref}
+        data-testid="text-animated-counter"
+        animate={{ 
+          color: end === 0 && displayValue === format(0) + (suffixAtEnd ? suffix : "") ? "#94a3b8" : "inherit"
+        }}
+        transition={{ duration: 0.3 }}
+        className="text-[#cacbcc]">
+        {displayValue}
+      </motion.span>
     </motion.div>
   );
 }
