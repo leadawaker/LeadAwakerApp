@@ -281,7 +281,7 @@ export default function Home() {
             
             <div className="space-y-6 leading-relaxed mb-12">
               <p className="text-lg md:text-xl opacity-90">
-                If a picture is worth a thousand words, a <span className="text-[#FEB800]">live demo</span> is worth a thousand pictures. Before you do anything else, experience how AI interacts with customers naturally while handling the repetitive work your team shouldn't have to.
+                If a picture is worth a thousand words, a <span className="text-[#FEB800] font-bold">live demo</span> is worth a thousand pictures. Before you do anything else, experience how AI interacts with customers naturally while handling the repetitive work your team shouldn't have to.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-6 justify-center py-4">
