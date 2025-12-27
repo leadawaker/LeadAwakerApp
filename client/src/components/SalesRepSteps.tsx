@@ -250,6 +250,37 @@ export const SalesRepSteps = () => {
         zIndex: 5
       }} />
       <Plane startTrigger={planeStarted} />
+      {/* Animated Clouds Overlay */}
+      <div className="absolute inset-x-0 bottom-0 pointer-events-none z-30" style={{ height: '400px' }}>
+        <motion.div 
+          className="flex h-full w-[200%]"
+          animate={{ x: ["0%", "-50%"] }}
+          transition={{ 
+            duration: 80, 
+            repeat: Infinity, 
+            ease: "linear" 
+          }}
+        >
+          <div 
+            className="w-1/2 h-full bg-contain bg-bottom bg-no-repeat"
+            style={{ 
+              backgroundImage: `url(${cloudsOverlay})`,
+              mixBlendMode: 'screen',
+              opacity: 0.8,
+              filter: 'brightness(1.5) contrast(1.2) drop-shadow(0 0 15px rgba(255,255,255,0.2))'
+            }}
+          />
+          <div 
+            className="w-1/2 h-full bg-contain bg-bottom bg-no-repeat"
+            style={{ 
+              backgroundImage: `url(${cloudsOverlay})`,
+              mixBlendMode: 'screen',
+              opacity: 0.8,
+              filter: 'brightness(1.5) contrast(1.2) drop-shadow(0 0 15px rgba(255,255,255,0.2))'
+            }}
+          />
+        </motion.div>
+      </div>
       <div className="relative z-10">
       {/* Pain Points Section */}
       <section className="pt-48 pb-32 md:pt-56 md:pb-40">
@@ -438,37 +469,6 @@ export const SalesRepSteps = () => {
         />
       </div>
 
-      {/* Animated Clouds Overlay */}
-      <div className="absolute bottom-0 left-0 w-full overflow-hidden pointer-events-none z-30" style={{ height: '30vh' }}>
-        <motion.div 
-          className="flex h-full w-[200%]"
-          animate={{ x: ["0%", "-50%"] }}
-          transition={{ 
-            duration: 60, 
-            repeat: Infinity, 
-            ease: "linear" 
-          }}
-        >
-          <div 
-            className="w-1/2 h-full bg-cover bg-bottom bg-no-repeat"
-            style={{ 
-              backgroundImage: `url(${cloudsOverlay})`,
-              mixBlendMode: 'screen',
-              opacity: 0.9,
-              filter: 'brightness(1.2) contrast(1.1)'
-            }}
-          />
-          <div 
-            className="w-1/2 h-full bg-cover bg-bottom bg-no-repeat"
-            style={{ 
-              backgroundImage: `url(${cloudsOverlay})`,
-              mixBlendMode: 'screen',
-              opacity: 0.9,
-              filter: 'brightness(1.2) contrast(1.1)'
-            }}
-          />
-        </motion.div>
-      </div>
       </div>
     </div>
   );
