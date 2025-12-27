@@ -75,24 +75,11 @@ export default function AnimatedCounter({
             className="absolute inset-0 flex items-center justify-center whitespace-nowrap text-[63px]"
             data-testid="text-zero-overlay"
           >
-            <div className="flex flex-col items-center leading-none">
+            <div className="flex flex-col items-center leading-none mt-8">
               <span className="md:text-6xl font-black uppercase tracking-tighter text-white text-[63px]">Absolute</span>
-              <motion.span 
-                initial={{ filter: "drop-shadow(0 0 0px rgba(254, 184, 0, 0))", scale: 1 }}
-                animate={{ 
-                  filter: [
-                    "drop-shadow(0 0 0px rgba(254, 184, 0, 0))", 
-                    "drop-shadow(0 0 30px rgba(254, 184, 0, 1))", 
-                    "drop-shadow(0 0 0px rgba(254, 184, 0, 0))"
-                  ],
-                  scale: [1, 1.1, 1]
-                }}
-                transition={{ duration: 1.0, times: [0, 0.4, 1], ease: "easeOut" }}
-                style={{ mixBlendMode: "color-dodge" }}
-                className="text-6xl md:text-9xl font-black uppercase tracking-tighter text-[#FEB800]"
-              >
+              <span className="text-6xl md:text-9xl font-black uppercase tracking-tighter text-[#FEB800]">
                 ZERO
-              </motion.span>
+              </span>
             </div>
           </motion.div>
         )}
