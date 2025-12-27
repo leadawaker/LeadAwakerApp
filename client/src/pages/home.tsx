@@ -198,7 +198,7 @@ export default function Home() {
                   transition={{ delay: 0.1 * i }}
                   className="bg-card p-6 rounded-2xl border border-border text-center flex flex-col justify-center flex-1 min-w-[280px]"
                 >
-                  <div className="text-4xl font-black text-primary mb-1 font-heading">
+                  <div className={`font-black text-primary mb-1 font-heading ${result.isRange ? 'text-4xl' : 'text-[48px]'}`}>
                     {result.isRange ? (
                       <AnimatedRangeCounter 
                         start={result.start}
