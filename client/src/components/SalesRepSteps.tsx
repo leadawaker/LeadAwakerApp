@@ -278,9 +278,9 @@ Weekly performance review and campaign adjustments for ongoing lift`
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   className="absolute w-full max-w-2xl"
                 >
-                  <Card className="bg-card backdrop-blur-sm border-white/10 overflow-hidden group hover:border-[#ffbf51]/50 transition-colors duration-500 shadow-2xl">
+                  <Card className="bg-card backdrop-blur-sm border-white/10 overflow-hidden group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
                     <CardContent className="p-8">
-                      <div className="mb-6 p-3 bg-[#ffbf51]/10 w-fit rounded-xl text-[#ffbf51] flex items-center justify-center min-w-[56px] min-h-[56px]" data-testid={`step-icon-${step.number}`}>
+                      <div className="mb-6 p-3 bg-primary/10 w-fit rounded-xl text-primary flex items-center justify-center min-w-[56px] min-h-[56px]" data-testid={`step-icon-${step.number}`}>
                         {step.icon}
                       </div>
                       <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-black" data-testid={`step-title-${step.number}`}>
@@ -319,7 +319,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
               <button
                 onClick={handlePrev}
                 data-testid="button-prev-step"
-                className="p-3 rounded-full bg-[#ffbf51]/20 border border-[#ffbf51]/50 text-white hover:bg-[#ffbf51]/30 hover:border-[#ffbf51] transition-all duration-300 flex items-center justify-center group pointer-events-auto"
+                className="p-3 rounded-full bg-blue-500/20 border border-blue-400/50 text-white hover:bg-blue-500/30 hover:border-blue-400 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
                 aria-label="Previous step"
               >
                 <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform" />
@@ -327,7 +327,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
               <button
                 onClick={handleNext}
                 data-testid="button-next-step"
-                className="p-3 rounded-full bg-[#ffbf51]/20 border border-[#ffbf51]/50 text-white hover:bg-[#ffbf51]/30 hover:border-[#ffbf51] transition-all duration-300 flex items-center justify-center group pointer-events-auto"
+                className="p-3 rounded-full bg-blue-500/20 border border-blue-400/50 text-white hover:bg-blue-500/30 hover:border-blue-400 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
                 aria-label="Next step"
               >
                 <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform" />
@@ -344,8 +344,8 @@ Weekly performance review and campaign adjustments for ongoing lift`
                 data-testid={`dot-step-${i}`}
                 className={`w-3 h-3 rounded-full transition-all duration-300 ${
                   i === currentStep
-                    ? 'bg-[#ffbf51] w-8'
-                    : 'bg-[#ffbf51]/40 hover:bg-[#ffbf51]/60'
+                    ? 'bg-blue-400 w-8'
+                    : 'bg-blue-400/40 hover:bg-blue-400/60'
                 }`}
                 aria-label={`Go to step ${i + 1}`}
               />
@@ -425,11 +425,11 @@ export const SalesRepSteps = () => {
         }}
       />
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'linear-gradient(to bottom, #0f172a 0%, #1e3a8a 30%, #3b82f6 60%, #ffbf51 100%)',
+        background: 'radial-gradient(ellipse 500% 120% at 50% 105%, rgba(59, 130, 246, 0.8) 0%, rgba(37, 99, 235, 0.7) 25%, rgba(29, 78, 216, 0.55) 45%, rgba(30, 58, 138, 0.3) 65%, rgba(30, 58, 138, 0) 100%)',
         zIndex: 0
       }} />
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 440% 100% at 50% 95%, rgba(255, 191, 81, 0.4) 0%, rgba(251, 146, 60, 0.2) 25%, transparent 50%)',
+        background: 'radial-gradient(ellipse 440% 100% at 50% 95%, rgba(254, 215, 170, 0.75) 0%, rgba(251, 146, 60, 0.5) 25%, rgba(37, 99, 235, 0) 50%)',
         zIndex: 0
       }} />
       <div className="absolute inset-0 pointer-events-none" style={{
@@ -470,14 +470,14 @@ export const SalesRepSteps = () => {
               </span>
               {' '}
               <span style={{ 
-                backgroundImage: 'linear-gradient(to right, #FFFFFF 0%, #ffbf51 100%)',
+                backgroundImage: 'linear-gradient(to right, #FFFFFF 0%, #93c5fd 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
                 display: 'inline-block',
                 marginRight: '0.24em',
-                filter: 'drop-shadow(8px 0px 30px rgba(255, 191, 81, 0.6)) drop-shadow(4px 0px 10px rgba(255, 191, 81, 0.45))',
-                textShadow: '6px 0px 12px rgba(255, 191, 81, 0.5)'
+                filter: 'drop-shadow(8px 0px 30px rgba(147, 197, 253, 0.6)) drop-shadow(4px 0px 10px rgba(147, 197, 253, 0.45))',
+                textShadow: '6px 0px 12px rgba(147, 197, 253, 0.5)'
               }}>
                 is
               </span>
@@ -488,9 +488,9 @@ export const SalesRepSteps = () => {
                 bro<span className="flicker-letter">k</span>en
               </span>
               <span style={{ 
-                color: '#ffbf51',
-                filter: 'drop-shadow(10px 0px 40px rgba(255, 191, 81, 0.75)) drop-shadow(5px 0px 10px rgba(255, 191, 81, 0.6))',
-                textShadow: '8px 0px 15px rgba(255, 191, 81, 0.6), 12px 0px 25px rgba(255, 191, 81, 0.45)',
+                color: '#93c5fd',
+                filter: 'drop-shadow(10px 0px 40px rgba(147, 197, 253, 0.75)) drop-shadow(5px 0px 10px rgba(147, 197, 253, 0.6))',
+                textShadow: '8px 0px 15px rgba(147, 197, 253, 0.6), 12px 0px 25px rgba(147, 197, 253, 0.45)',
                 display: 'inline-block'
               }} data-testid="text-dot">.</span>
             </h2>
@@ -524,7 +524,7 @@ export const SalesRepSteps = () => {
                   hidden: { opacity: 0, y: 30, scale: 0.95 },
                   visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, type: "spring", stiffness: 100, damping: 15 } }
                 }}
-                initial={{ borderColor: 'rgb(59, 130, 246)' }}
+                initial={{ borderColor: 'rgb(249, 115, 22)' }}
                 animate={{ borderColor: 'rgb(59, 130, 246)' }}
                 transition={{ delay: i * 0.08 + 0.1 + 0.1, duration: 0.5 }}
                 className="group relative bg-gradient-to-br from-slate-800/80 to-slate-800/60 border backdrop-blur-sm p-8 rounded-2xl text-center transition-all duration-400 cursor-default overflow-hidden shadow-lg shadow-primary/20"
@@ -532,10 +532,10 @@ export const SalesRepSteps = () => {
                   borderColor: 'rgb(59, 130, 246)',
                 }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = 'rgb(147, 197, 253)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 25px 50px -12px rgba(59, 130, 246, 0.35), 0 25px 50px -12px rgba(59, 130, 246, 0.35)';
+                  (e.currentTarget as HTMLElement).style.borderColor = 'rgb(234, 152, 44)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 25px 50px -12px rgba(234, 152, 44, 0.35), 0 25px 50px -12px rgba(234, 152, 44, 0.35)';
                   const icon = (e.currentTarget as HTMLElement).querySelector('[data-testid="pain-icon"]') as HTMLElement;
-                  if (icon) icon.style.color = 'rgb(147, 197, 253)';
+                  if (icon) icon.style.color = 'rgb(234, 152, 44)';
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.borderColor = 'rgb(59, 130, 246)';
@@ -544,7 +544,7 @@ export const SalesRepSteps = () => {
                   if (icon) icon.style.color = 'rgb(59, 130, 246)';
                 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-blue-500/5 group-hover:to-blue-500/10 transition-all duration-400" style={{ background: 'linear-gradient(135deg, transparent 0%, transparent 100%)' }} />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-orange-500/5 group-hover:to-orange-500/10 transition-all duration-400" style={{ background: 'linear-gradient(135deg, transparent 0%, transparent 100%)' }} />
                 <div className="relative z-10">
                   <div className="text-primary mb-4 transform group-hover:scale-125 transition-all duration-400 inline-flex items-center justify-center" style={{ color: 'rgb(59, 130, 246)' }} data-testid="pain-icon">{pain.icon}</div>
                   <p className="text-sm font-semibold text-white transition-all duration-400 leading-relaxed">{pain.title}</p>
