@@ -383,7 +383,7 @@ export const SalesRepSteps = () => {
       </section>
 
       {/* Step 1 */}
-      <div style={{ marginTop: "1rem", marginBottom: "5rem" }}>
+      <div style={{ marginTop: "1.15rem", marginBottom: "5rem" }}>
         <FullscreenStep 
           number="1"
           cardTitle="Upload database"
