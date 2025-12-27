@@ -7,7 +7,7 @@ import databaseIntegrationImg from "@assets/generated_images/database_upload_and
 import leadsDbImg from "@assets/leads-database.png";
 import conversationImg from "@assets/Gemini_Generated_Image_j212wcj212wcj212_1766858918533.png";
 import dailyLeadsImg from "@assets/generated_images/daily_leads_closed_chart_dashboard.png";
-import calendarImg from "@assets/Gemini_Generated_Image_vfg6lpvfg6lpvfg6_1766861411702.png";
+import calendarImg from "@assets/Gemini_Generated_Image_a2dvda2dvda2dvda_1766862327268.png";
 import cloudTexture from "@assets/generated_images/cloud-bottom-bar.jpg";
 import cloudsOverlay from "@assets/Project_(20251227103213)_1766828113842.jpg";
 import { MeteorContainer } from "./Meteor";
