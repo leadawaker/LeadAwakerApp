@@ -138,13 +138,13 @@ export default function Home() {
             <p className="text-lg md:text-xl mt-4 text-[#3c50d6]">From chaos to certainty in 30 days</p>
           </motion.div>
 
-          <div className="flex flex-col md:flex-row gap-8 mb-12 items-stretch max-w-2xl mx-auto">
+          <div className="flex flex-col md:flex-row gap-8 mb-12 items-stretch max-w-4xl mx-auto">
             {/* Featured Large Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-card p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[3] min-h-[550px]"
+              className="bg-card p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px]"
             >
               <div className="text-6xl md:text-9xl font-black text-primary mb-2 font-heading">
                 <AnimatedCounter 
@@ -196,9 +196,9 @@ export default function Home() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.1 * i }}
-                  className="bg-card p-6 rounded-2xl border border-border text-center flex flex-col justify-center flex-1"
+                  className="bg-card p-6 rounded-2xl border border-border text-center flex flex-col justify-center flex-1 min-w-[280px]"
                 >
-                  <div className="text-3xl font-black text-primary mb-1 font-heading">
+                  <div className="text-4xl font-black text-primary mb-1 font-heading">
                     {result.isRange ? (
                       <AnimatedRangeCounter 
                         start={result.start}
