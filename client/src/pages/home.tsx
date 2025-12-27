@@ -374,9 +374,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center max-w-2xl mx-auto"
           >
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">
-              Ready to convert dead leads into booked sales?
-            </h2>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6">Let us show you how it's done</h2>
             <p className="text-lg opacity-90 mb-8 leading-relaxed">
               See how we've helped 50+ B2B companies reactivate their dormant databases and generate thousands in new revenue.
             </p>
