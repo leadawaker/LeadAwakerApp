@@ -281,7 +281,7 @@ export default function Home() {
           >
             <h2 className="md:text-5xl lg:text-6xl font-bold mb-8 text-white tracking-tight text-[43px]">
               If a picture is worth a thousand words... <br className="hidden md:block" />
-              <span className="text-blue-200">A demo is worth a thousand pictures.</span>
+              A <span className="text-[#FEB800]">demo</span> is worth a thousand pictures.
             </h2>
             
             <div className="space-y-6 text-lg md:text-xl opacity-90 leading-relaxed mb-12">
