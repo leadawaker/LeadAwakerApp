@@ -307,7 +307,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">HubSpot</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
-                            <img src="https://v.fastcdn.co/u/492989c9/54727142-0-GoHighLevel-Logo.png" alt="GoHighLevel" className="w-5 h-5 object-contain" />
+                            <img src="https://gohighlevel.com/favicon.ico" alt="GoHighLevel" className="w-5 h-5 object-contain" />
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">GoHighLevel</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
@@ -319,16 +319,16 @@ Weekly performance review and campaign adjustments for ongoing lift`
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Sheets</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
-                            <img src="https://static-00.iconduck.com/assets.00/microsoft-excel-icon-2048x2048-546as94v.png" alt="Excel" className="w-5 h-5 object-contain" />
+                            <img src="https://www.microsoft.com/favicon.ico" alt="Excel" className="w-5 h-5 object-contain" />
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Excel</span>
-                          </div>
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
-                            <span className="text-blue-600 font-mono font-bold text-sm">&lt;/&gt;</span>
-                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">API</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
                             <img src="https://www.vectorlogo.zone/logos/zapier/zapier-icon.svg" alt="Zapier" className="w-5 h-5" />
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Zapier</span>
+                          </div>
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
+                            <span className="text-blue-600 font-mono font-bold text-sm">&lt;/&gt;</span>
+                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">API</span>
                           </div>
                         </motion.div>
                       )}
