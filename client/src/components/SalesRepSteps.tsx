@@ -328,7 +328,7 @@ Weekly optimization reviews for continuous results`
                               border-radius: 0.375rem;
                               border: 1px solid rgb(226, 232, 240);
                             }
-                          `}
+                          `}</style>
                           <div className="crm-carousel-track">
                             {[
                               { name: 'Salesforce', url: 'https://www.vectorlogo.zone/logos/salesforce/salesforce-icon.svg' },
