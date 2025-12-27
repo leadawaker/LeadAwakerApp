@@ -280,7 +280,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
                 >
                   <Card className="bg-card backdrop-blur-sm border-white/10 overflow-hidden group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
                     <CardContent className="p-8">
-                      <div className="mb-6 p-3 bg-slate-200 w-fit rounded-xl text-gray-600 flex items-center justify-center min-w-[56px] min-h-[56px]" data-testid={`step-icon-${step.number}`}>
+                      <div className="mb-6 p-3 w-fit rounded-xl text-gray-600 flex items-center justify-center min-w-[56px] min-h-[56px] bg-[#fff7e0]" data-testid={`step-icon-${step.number}`}>
                         {step.icon}
                       </div>
                       <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-black" data-testid={`step-title-${step.number}`}>
