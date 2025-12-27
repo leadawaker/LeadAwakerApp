@@ -167,10 +167,10 @@ export const SalesRepSteps = () => {
       <div 
         className="absolute inset-0" 
         style={{
-          backgroundImage: `radial-gradient(circle at 23% 45%, white 0.6px, transparent 0.6px),
-                            radial-gradient(circle at 68% 12%, white 1.1px, transparent 1.1px)`,
+          backgroundImage: `radial-gradient(circle at 12% 85%, white 0.6px, transparent 0.6px),
+                            radial-gradient(circle at 88% 12%, white 1.1px, transparent 1.1px)`,
           backgroundRepeat: 'repeat',
-          backgroundSize: '900px 760px',
+          backgroundSize: '1300px 1100px',
           willChange: 'transform',
           backfaceVisibility: 'hidden',
           perspective: '1000px',
@@ -183,10 +183,10 @@ export const SalesRepSteps = () => {
       <div 
         className="absolute inset-0" 
         style={{
-          backgroundImage: `radial-gradient(circle at 57% 22%, #e8e8e8 1.0px, transparent 1.0px),
-                            radial-gradient(circle at 29% 15%, white 0.8px, transparent 0.8px)`,
+          backgroundImage: `radial-gradient(circle at 67% 42%, #e8e8e8 1.0px, transparent 1.0px),
+                            radial-gradient(circle at 15% 15%, white 0.8px, transparent 0.8px)`,
           backgroundRepeat: 'repeat',
-          backgroundSize: '900px 760px',
+          backgroundSize: '1700px 1400px',
           filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
           animation: 'twinkle-fast-offset-1 1s ease-in-out infinite',
           animationDelay: '0.5s',
@@ -196,10 +196,10 @@ export const SalesRepSteps = () => {
       <div 
         className="absolute inset-0" 
         style={{
-          backgroundImage: `radial-gradient(circle at 19% 19%, white 0.6px, transparent 0.6px),
-                            radial-gradient(circle at 73% 33%, #f0f0f0 1.4px, transparent 1.4px)`,
+          backgroundImage: `radial-gradient(circle at 39% 79%, white 0.6px, transparent 0.6px),
+                            radial-gradient(circle at 83% 33%, #f0f0f0 1.4px, transparent 1.4px)`,
           backgroundRepeat: 'repeat',
-          backgroundSize: '900px 760px',
+          backgroundSize: '2100px 1800px',
           filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
           animation: 'twinkle-fast-offset-2 0.9s ease-in-out infinite',
           animationDelay: '1.2s',
