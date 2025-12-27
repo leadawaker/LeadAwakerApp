@@ -300,7 +300,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
                         >
                           {step.leftText.split('\n').map((line, i) => (
                             <div key={i} className="flex items-start gap-3">
-                              <div className="flex-shrink-0 w-2 h-2 rounded-full mt-2 bg-[#ffbf51]" />
+                              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-400 mt-2" />
                               <div className="font-medium text-gray-600 text-[14px]">
                                 {line}
                               </div>
@@ -392,8 +392,7 @@ export const SalesRepSteps = () => {
           animation: 'twinkle-fast 0.8s ease-in-out infinite',
           animationDelay: '0s',
           filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
-          opacity: 0.4,
-          top: '20%'
+          opacity: 0.4
         }}
       />
       <div 
@@ -406,8 +405,7 @@ export const SalesRepSteps = () => {
           filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
           animation: 'twinkle-fast-offset-1 1s ease-in-out infinite',
           animationDelay: '0.5s',
-          opacity: 0.4,
-          top: '15%'
+          opacity: 0.4
         }}
       />
       <div 
@@ -420,8 +418,7 @@ export const SalesRepSteps = () => {
           filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
           animation: 'twinkle-fast-offset-2 0.9s ease-in-out infinite',
           animationDelay: '1.2s',
-          opacity: 0.4,
-          top: '10%'
+          opacity: 0.4
         }}
       />
       <div className="absolute inset-0 pointer-events-none" style={{
