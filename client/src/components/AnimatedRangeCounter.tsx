@@ -56,5 +56,10 @@ export default function AnimatedRangeCounter({
     };
   }, [countStart, countEnd, format, suffix]);
 
-  return <motion.span ref={ref} data-testid="text-animated-range-counter">{displayValue}</motion.span>;
+  return (
+    <motion.span
+      ref={ref}
+      data-testid="text-animated-range-counter"
+      className="text-[48px] font-semibold">{displayValue}</motion.span>
+  );
 }
