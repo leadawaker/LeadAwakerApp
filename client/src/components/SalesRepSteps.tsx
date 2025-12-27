@@ -100,7 +100,7 @@ const FullscreenStep = ({
 
   const iconOpacity = useTransform(scrollYProgress, [0.45, 0.5, 0.55], [1, 0, 1]);
 
-  const overlayOpacity = useTransform(scrollYProgress, [0.5, 0.9], [0, 0.4]);
+  const overlayOpacity = useTransform(scrollYProgress, [0.3, 0.7], [0, 1]);
   const overlayTextY = useTransform(scrollYProgress, [0.5, 0.9], [20, 0]);
   const cardOpacity = useTransform(scrollYProgress, [-0.2, 0.3], [0, 1]);
   const cardY = useTransform(scrollYProgress, [-0.2, 0.3], [50, 0]);
