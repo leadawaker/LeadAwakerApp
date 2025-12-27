@@ -6,7 +6,7 @@ import { Database, MessageSquare, TrendingUp, Box, Copy, TrendingDown, Mail, Che
 import databaseIntegrationImg from "@assets/generated_images/database_upload_and_crm_integration.png";
 import leadsDbImg from "../assets/step-1-main.png";
 import conversationImg from "@assets/Gemini_Generated_Image_j212wcj212wcj212_1766858918533.png";
-import dailyLeadsImg from "@assets/generated_images/daily_leads_closed_chart_dashboard.png";
+import dailyLeadsImg from "../assets/step-3-main.jpg";
 import calendarImg from "@assets/Gemini_Generated_Image_a2dvda2dvda2dvda_1766862327268.png";
 import databaseImageImg from "@assets/Gemini_Generated_Image_toqbi0toqbi0toqb_1766862950610.png";
 import cloudTexture from "@assets/generated_images/cloud-bottom-bar.jpg";
