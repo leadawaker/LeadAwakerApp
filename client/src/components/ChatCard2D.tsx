@@ -93,8 +93,8 @@ export default function ChatCard2D() {
     setIsAnimating(true);
     setIsUserScrolling(false);
     
-    // Jack's "No sorry" (0-3s)
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    // Jack's "No sorry" (instant)
+    await new Promise(resolve => setTimeout(resolve, 0));
     setCurrentStep(6);
     
     // Jack's "Not at Hand" (3-4.5s)
@@ -285,27 +285,13 @@ export default function ChatCard2D() {
             )}
 
             {/* Typing indicator from Jack */}
-            {currentStep === 5 && (
+            {currentStep === 5 && !isAnimating && (
               <motion.div className="flex justify-start items-center gap-3" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="bg-slate-200 text-slate-500 rounded-full px-4 py-2 shadow-sm flex items-center justify-center gap-2">
                   <motion.span className="text-4xl font-black" animate={{ y: [0, -8, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0 }}>·</motion.span>
                   <motion.span className="text-4xl font-black" animate={{ y: [0, -8, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.2 }}>·</motion.span>
                   <motion.span className="text-4xl font-black" animate={{ y: [0, -8, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.4 }}>·</motion.span>
                 </div>
-                {!isAnimating && (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={startAnimation}
-                    className="px-6 py-2 rounded-xl font-semibold text-white shadow-lg text-sm"
-                    style={{ backgroundColor: "#2563EB" }}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    Start
-                  </motion.button>
-                )}
               </motion.div>
             )}
 
@@ -463,9 +449,23 @@ export default function ChatCard2D() {
           </div>
         </div>
 
+        {/* Start Button - Appears when typing indicator is showing */}
+        {currentStep === 5 && !isAnimating && (
+          <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-center">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={startAnimation}
+              className="px-8 py-3 rounded-xl font-semibold text-white shadow-lg text-base"
+              style={{ backgroundColor: "#2563EB" }}
+            >
+              Start
+            </motion.button>
+          </div>
+        )}
 
         {/* New Messages Indicator - Single centered icon button */}
-        {showNewMessageIndicator && !isAnimating && (
+        {showNewMessageIndicator && (
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-50">
             <motion.button 
               initial={{ opacity: 0, y: 10 }} 
