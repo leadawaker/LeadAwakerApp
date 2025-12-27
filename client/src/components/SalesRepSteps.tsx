@@ -148,7 +148,10 @@ const FullscreenStep = ({
                 alt={cardTitle} 
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-transparent flex flex-col items-start justify-start p-8 text-white">
+              <motion.div 
+                style={{ opacity: overlayOpacity }}
+                className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/80 to-transparent flex flex-col items-start justify-start p-8 text-white"
+              >
                 <div className="space-y-6 max-w-sm">
                   {leftText.split('\n').map((line, i) => (
                     <div key={i} className="flex items-start gap-4">
@@ -159,7 +162,7 @@ const FullscreenStep = ({
                     </div>
                   ))}
                 </div>
-              </div>
+              </motion.div>
             </>
           ) : (
             <>
