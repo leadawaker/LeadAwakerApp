@@ -92,28 +92,28 @@ export default function ChatCard2D() {
     await new Promise(resolve => setTimeout(resolve, 1500));
     setCurrentStep(7);
     
-    // Sophie DSAR (4.5-16s) - increased to 11.5s for her longer message
-    await new Promise(resolve => setTimeout(resolve, 11500));
+    // Sophie DSAR (4.5-10.25s) - half time earlier
+    await new Promise(resolve => setTimeout(resolve, 5750));
     setCurrentStep(8);
     
-    // Jack's first question (16-29s)
+    // Jack's first question (10.25-15.58s)
     await new Promise(resolve => setTimeout(resolve, 13000));
     setCurrentStep(9);
     
-    // Jack's second question (29-31s)
+    // Jack's second question (15.58-17.58s)
     await new Promise(resolve => setTimeout(resolve, 2000));
     setCurrentStep(10);
     
-    // Sophie final (31-45s) - increased to 14s for her longer message
-    await new Promise(resolve => setTimeout(resolve, 14000));
+    // Sophie final (17.58-22.25s) - 3x faster
+    await new Promise(resolve => setTimeout(resolve, 4667));
     setCurrentStep(11);
     
-    // Jack thanks (45-46.5s)
-    await new Promise(resolve => setTimeout(resolve, 1600));
+    // Jack thanks (22.25-28.25s) - 6 seconds later
+    await new Promise(resolve => setTimeout(resolve, 6000));
     setCurrentStep(12);
     
-    // Sophie claim message (46.5-50.5s)
-    await new Promise(resolve => setTimeout(resolve, 4000));
+    // Sophie claim message (28.25-33.25s) - 2 seconds after DSAR Completed milestone (which appears 3s after Thanks)
+    await new Promise(resolve => setTimeout(resolve, 5000));
     setCurrentStep(13);
     
     // Jack final message (50.5-52s)
@@ -384,7 +384,7 @@ export default function ChatCard2D() {
                 className="flex justify-center py-2" 
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.4, delay: 0.6 }}
+                transition={{ duration: 0.4, delay: 3 }}
               >
                 <div className="text-xs text-slate-400 font-medium">---DSAR Completed---</div>
               </motion.div>
