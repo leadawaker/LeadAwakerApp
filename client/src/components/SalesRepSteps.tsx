@@ -176,9 +176,6 @@ export const SalesRepSteps = () => {
       className="bg-slate-950 text-foreground overflow-hidden selection:bg-primary/30 relative"
       style={{ minHeight: '100%' }}
     >
-      {/* Transition Gradient from Hero */}
-      <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-background to-transparent z-20 pointer-events-none" />
-      
       <div 
         className="absolute inset-0" 
         style={{
