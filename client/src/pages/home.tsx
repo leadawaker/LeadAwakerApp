@@ -162,7 +162,10 @@ export default function Home() {
                 />
               </div>
               <h3 className="text-4xl font-black mb-2 font-heading mt-12">Upfront Cost</h3>
-              <p className={`text-xl font-medium transition-opacity duration-500 ${isFinished ? 'opacity-80' : 'opacity-0'}`}>Performance‑based pricing                                                  No sales / No pay</p>
+              <p className={`text-xl font-medium transition-opacity duration-500 whitespace-pre-line ${isFinished ? 'opacity-80' : 'opacity-0'}`}>
+                Performance‑based pricing
+                No sales / No pay
+              </p>
             </motion.div>
 
             {/* Stacked Side Cards */}
