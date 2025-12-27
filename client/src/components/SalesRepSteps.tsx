@@ -266,7 +266,6 @@ export const SalesRepSteps = () => {
             alt=""
             className="w-1/2 h-full object-contain object-bottom"
             style={{ 
-              filter: 'brightness(3) contrast(2) grayscale(1)',
               mixBlendMode: 'screen',
               opacity: 1
             }}
@@ -276,7 +275,6 @@ export const SalesRepSteps = () => {
             alt=""
             className="w-1/2 h-full object-contain object-bottom"
             style={{ 
-              filter: 'brightness(3) contrast(2) grayscale(1)',
               mixBlendMode: 'screen',
               opacity: 1
             }}
