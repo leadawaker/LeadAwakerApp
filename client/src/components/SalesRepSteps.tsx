@@ -152,7 +152,7 @@ const FullscreenStep = ({
                 style={{ opacity: overlayOpacity }}
                 className="absolute inset-0 bg-gradient-to-r from-blue-950/90 to-blue-900/85 flex flex-col items-start justify-start p-8 text-white"
               >
-                <div className="space-y-6 max-w-sm">
+                <div className="space-y-6 max-w-2xl">
                   {leftText.split('\n').map((line, i) => (
                     <div key={i} className="flex items-start gap-4">
                       <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-400 mt-2" />
