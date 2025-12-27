@@ -398,11 +398,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
                 key={i}
                 onClick={() => setCurrentStep(i)}
                 data-testid={`dot-step-${i}`}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  i === currentStep
-                    ? 'bg-yellow-500 w-8'
-                    : 'bg-yellow-500/40 hover:bg-yellow-500/60'
-                }`}
+                className="h-3 rounded-full transition-all duration-300 w-8 bg-[#3b76ff]"
                 aria-label={`Go to step ${i + 1}`}
               />
             ))}
