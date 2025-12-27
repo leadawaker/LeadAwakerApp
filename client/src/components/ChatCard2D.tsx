@@ -289,7 +289,7 @@ export default function ChatCard2D() {
               <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="flex flex-col items-start gap-1">
                   <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm text-sm">
-                    No sorry,
+                    No sorry
                   </div>
                   <span className="text-xs text-slate-400 pl-2">15:05</span>
                 </div>
@@ -444,17 +444,19 @@ export default function ChatCard2D() {
 
         {/* New Messages Indicator - Single centered icon button */}
         {showNewMessageIndicator && (
-          <motion.button 
-            initial={{ opacity: 0, y: 10 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            className="fixed bottom-6 left-1/2 transform -translate-x-1/2 text-white p-3 rounded-full shadow-lg z-50 hover:scale-110 transition-transform"
-            style={{ backgroundColor: "#2563EB" }}
-            onClick={scrollToBottomManually}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
-          </motion.button>
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+            <motion.button 
+              initial={{ opacity: 0, y: 10 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              className="text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform"
+              style={{ backgroundColor: "#2563EB" }}
+              onClick={scrollToBottomManually}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </motion.button>
+          </div>
         )}
       </div>
     </div>
