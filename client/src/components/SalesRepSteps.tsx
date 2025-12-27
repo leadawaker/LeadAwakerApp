@@ -34,7 +34,7 @@ const Plane = () => {
       transition={{
         duration: 40,
         ease: "linear",
-        repeat: Infinity
+        repeat: 0
       }}
       className="absolute w-2 h-2 z-0 pointer-events-none"
     >
