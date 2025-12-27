@@ -356,8 +356,8 @@ Weekly optimization reviews for continuous results`
                                       { name: 'API', url: null }
                                     ].map((crm, i) => (
                                       <div key={i} className="crm-logo-item">
-                                        {crm.url ? <img src={crm.url} alt={crm.name} className="w-5 h-5 object-contain" /> : <span className="text-blue-600 font-mono font-bold text-sm">&lt;/&gt;</span>}
-                                        <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">{crm.name}</span>
+                                        {crm.url ? <img src={crm.url} alt={crm.name} className="w-10 h-10 object-contain" /> : <span className="text-blue-600 font-mono font-bold text-lg">&lt;/&gt;</span>}
+                                        <span className="text-[14px] font-bold text-slate-700 uppercase tracking-wider">{crm.name}</span>
                                       </div>
                                     ))}
                                     {[
@@ -368,8 +368,8 @@ Weekly optimization reviews for continuous results`
                                       { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
                                     ].map((crm, i) => (
                                       <div key={`dupe-${i}`} className="crm-logo-item">
-                                        {crm.url ? <img src={crm.url} alt={crm.name} className="w-5 h-5 object-contain" /> : <span className="text-blue-600 font-mono font-bold text-sm">&lt;/&gt;</span>}
-                                        <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">{crm.name}</span>
+                                        {crm.url ? <img src={crm.url} alt={crm.name} className="w-10 h-10 object-contain" /> : <span className="text-blue-600 font-mono font-bold text-lg">&lt;/&gt;</span>}
+                                        <span className="text-[14px] font-bold text-slate-700 uppercase tracking-wider">{crm.name}</span>
                                       </div>
                                     ))}
                                   </div>
