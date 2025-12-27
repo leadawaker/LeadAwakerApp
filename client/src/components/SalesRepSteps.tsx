@@ -20,6 +20,7 @@ interface StepProps {
   icon: React.ReactNode;
   align?: "left" | "right";
   onInView?: () => void;
+  leftText?: string;
 }
 
 const Plane = ({ startTrigger }: { startTrigger: boolean }) => {
@@ -81,6 +82,7 @@ const FullscreenStep = ({
   icon,
   align = "left",
   onInView,
+  leftText,
 }: StepProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, amount: 0.3 });
@@ -139,26 +141,40 @@ const FullscreenStep = ({
           className={`order-1 ${isLeft ? "md:order-2" : "md:order-1"} relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border border-white/5`}
           data-testid={`step-image-${number}`}
         >
-          <img 
-            src={image} 
-            alt={cardTitle} 
-            className="w-full h-full object-cover"
-          />
-          <motion.div 
-            style={{ 
-              opacity: overlayOpacity,
-              boxShadow: 'inset 0 0 60px rgba(59, 130, 246, 0.5), inset 0 0 40px rgba(100, 150, 255, 0.3)'
-            }}
-            className="absolute inset-0 bg-blue-950/50 backdrop-blur-[2px] flex flex-col items-center justify-center p-8 text-center"
-          >
-            <motion.div style={{ y: overlayTextY }}>
-              <span className="text-accent font-mono text-sm uppercase tracking-wider mb-2 block">Step {number} Details</span>
-              <h4 className="text-3xl font-bold text-white mb-4">{overlayTitle}</h4>
-              <p className="text-gray-200 text-lg max-w-md mx-auto leading-relaxed">
-                {overlayDescription}
-              </p>
-            </motion.div>
-          </motion.div>
+          {leftText ? (
+            <div className="w-full h-full bg-gradient-to-br from-slate-800/80 to-slate-800/60 flex flex-col items-start justify-start p-8 text-white">
+              <div className="space-y-4">
+                {leftText.split('\n').map((line, i) => (
+                  <div key={i} className="text-lg leading-relaxed">
+                    {line}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              <img 
+                src={image} 
+                alt={cardTitle} 
+                className="w-full h-full object-cover"
+              />
+              <motion.div 
+                style={{ 
+                  opacity: overlayOpacity,
+                  boxShadow: 'inset 0 0 60px rgba(59, 130, 246, 0.5), inset 0 0 40px rgba(100, 150, 255, 0.3)'
+                }}
+                className="absolute inset-0 bg-blue-950/50 backdrop-blur-[2px] flex flex-col items-center justify-center p-8 text-center"
+              >
+                <motion.div style={{ y: overlayTextY }}>
+                  <span className="text-accent font-mono text-sm uppercase tracking-wider mb-2 block">Step {number} Details</span>
+                  <h4 className="text-3xl font-bold text-white mb-4">{overlayTitle}</h4>
+                  <p className="text-gray-200 text-lg max-w-md mx-auto leading-relaxed">
+                    {overlayDescription}
+                  </p>
+                </motion.div>
+              </motion.div>
+            </>
+          )}
         </motion.div>
       </div>
     </div>
@@ -407,12 +423,16 @@ export const SalesRepSteps = () => {
           number="2"
           cardTitle="2. Conversational AI Agents"
           cardDescription="We do not just send blasts. We start real conversations.
-AI agents understand intent, follow up with quiet leads, answer questions, and handle objections in real time, in any language your customers speak and in a tone that matches your brand, from serious to relaxed."
+AI agents, powered by the latest generation of language models, understand intent, follow up with quiet leads, answer questions, and handle objections in real time, in any language and in a tone that matches your brand."
           overlayTitle="24/7 Response capability"
           overlayDescription="Natural language processing for human-like chat • Seamless hand-off to human staff when needed"
           image={womanPhoneImg}
           icon={<MessageSquare className="w-8 h-8" />}
           align="right"
+          leftText="24/7 responses
+Brand matched voice in any language, from serious to relaxed
+Follow up sequences built on Challenger and SPIN selling principles
+Human takeover whenever you want a person to step in"
           onInView={() => setPlaneStarted(true)}
         />
       </div>
