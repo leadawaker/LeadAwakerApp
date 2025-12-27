@@ -138,89 +138,92 @@ export default function Home() {
             <p className="text-lg md:text-xl mt-4 text-[#3c50d6]">From chaos to certainty in 30 days</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-8 mb-12 items-stretch">
-            {[
-              {
-                metric: 0,
-                startMetric: 10000,
-                isCost: true,
-                label: "Upfront Cost",
-                subtext: "performance‑based pricing",
-                duration: 5,
-                isBig: true
-              },
-              {
-                isRange: true,
-                start: 20,
-                end: 30,
-                finalStart: 40,
-                finalEnd: 60,
-                suffix: "%",
-                label: "Reply Rates",
-                subtext: "vs industry 5-10%",
-                duration: 2
-              },
-              {
-                metric: 25,
-                startMetric: 12,
-                suffix: "%",
-                label: "Leads Reactivated",
-                subtext: "into live opportunities",
-                duration: 3
-              },
-              {
-                metric: 40,
-                startMetric: 0,
-                suffix: "+",
-                label: "Hours Saved",
-                subtext: "per rep/month",
-                duration: 4,
-                suffixAtEnd: true
-              }
-            ].map((result, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className={`bg-card p-8 rounded-2xl border border-border text-center flex flex-col justify-center ${
-                  result.isBig ? "md:col-span-3 lg:col-span-3" : "md:col-span-1 lg:col-span-1"
-                }`}
-              >
-                <div className={`${result.isBig ? "text-6xl md:text-8xl" : "text-4xl md:text-5xl"} font-bold text-primary mb-2`}>
-                  {(result as any).isRange ? (
-                    <AnimatedRangeCounter 
-                      start={(result as any).start}
-                      end={(result as any).end}
-                      finalStart={(result as any).finalStart}
-                      finalEnd={(result as any).finalEnd}
-                      duration={(result as any).duration}
-                      format={(v: number) => Math.round(v).toString()}
-                      suffix={(result as any).suffix}
-                    />
-                  ) : (result as any).isCost ? (
-                    <AnimatedCounter 
-                      start={(result as any).startMetric}
-                      end={(result as any).metric} 
-                      duration={(result as any).duration}
-                      format={(v: number) => `$${Math.round(v).toString()}`}
-                    />
-                  ) : (
-                    <AnimatedCounter 
-                      start={(result as any).startMetric}
-                      end={(result as any).metric} 
-                      duration={(result as any).duration}
-                      format={(v: number) => Math.round(v).toString()}
-                      suffix={(result as any).suffix}
-                      suffixAtEnd={(result as any).suffixAtEnd}
-                    />
-                  )}
-                </div>
-                <h3 className={`${result.isBig ? "text-2xl" : "text-lg"} font-bold mb-1`}>{(result as any).label}</h3>
-                <p className={`${result.isBig ? "text-base" : "text-sm"} text-muted-foreground`}>{(result as any).subtext}</p>
-              </motion.div>
-            ))}
+          <div className="flex flex-col md:flex-row gap-8 mb-12 items-stretch">
+            {/* Featured Large Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-card p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[3] min-h-[400px]"
+            >
+              <div className="text-6xl md:text-9xl font-bold text-primary mb-2">
+                <AnimatedCounter 
+                  start={10000}
+                  end={0} 
+                  duration={5}
+                  format={(v: number) => `$${Math.round(v).toString()}`}
+                />
+              </div>
+              <h3 className="text-3xl font-bold mb-2">Upfront Cost</h3>
+              <p className="text-lg text-muted-foreground text-blue-500">performance‑based pricing</p>
+            </motion.div>
+
+            {/* Stacked Side Cards */}
+            <div className="flex flex-col gap-4 flex-1">
+              {[
+                {
+                  isRange: true,
+                  start: 20,
+                  end: 30,
+                  finalStart: 40,
+                  finalEnd: 60,
+                  suffix: "%",
+                  label: "Reply Rates",
+                  subtext: "vs industry 5-10%",
+                  duration: 2
+                },
+                {
+                  metric: 25,
+                  startMetric: 12,
+                  suffix: "%",
+                  label: "Leads Reactivated",
+                  subtext: "into live",
+                  duration: 3
+                },
+                {
+                  metric: 40,
+                  startMetric: 0,
+                  suffix: "+",
+                  label: "Hours Saved",
+                  subtext: "per rep/month",
+                  duration: 4,
+                  suffixAtEnd: true
+                }
+              ].map((result, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.1 * i }}
+                  className="bg-card p-4 rounded-2xl border border-border text-center flex flex-col justify-center flex-1"
+                >
+                  <div className="text-2xl font-bold text-primary mb-1">
+                    {result.isRange ? (
+                      <AnimatedRangeCounter 
+                        start={result.start}
+                        end={result.end}
+                        finalStart={result.finalStart}
+                        finalEnd={result.finalEnd}
+                        duration={result.duration}
+                        format={(v: number) => Math.round(v).toString()}
+                        suffix={result.suffix}
+                      />
+                    ) : (
+                      <AnimatedCounter 
+                        start={result.startMetric}
+                        end={result.metric} 
+                        duration={result.duration}
+                        format={(v: number) => Math.round(v).toString()}
+                        suffix={result.suffix}
+                        suffixAtEnd={result.suffixAtEnd}
+                      />
+                    )}
+                  </div>
+                  <h3 className="text-sm font-bold truncate">{result.label}</h3>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
