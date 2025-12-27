@@ -221,92 +221,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-      {/* Demo Section with Logo */}
-      <section id="demo" className="py-48 border-t border-border">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="space-y-6"
-            >
-              <h2 className="md:text-4xl font-bold text-[48px]">Let us show you how it's done</h2>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                If a picture is worth a thousand words, a demo is worth a thousand pictures. That's why before you do anything, I want you to see AI in action. This demo gives a taster of how AI engages with customers in a natural way and bears the brunt of repetitive tasks, so you and your team don't have to.
-              </p>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                With AI freeing up valuable man-power and doing the work you'd "never get around to doing", you can unlock new levels of ROI whilst focusing on the things you enjoy.
-              </p>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-              >
-                <Link href="/book-demo">
-                  <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all text-white">
-                    Check Out The Demo
-                    <ArrowRight className="ml-2 w-5 h-5" />
-                  </Button>
-                </Link>
-              </motion.div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="flex justify-center items-center"
-            >
-              <AnimatedLogo3D />
-            </motion.div>
-          </div>
-        </div>
-      </section>
-      {/* Security & AI Guardrails Section */}
-      <section className="py-48 border-t border-border">
-        <div className="container mx-auto px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center max-w-4xl mx-auto mb-16"
-          >
-            <h2 className="md:text-4xl font-bold mt-[3px] mb-[3px] text-[48px]">Compliance and Reputation Built In</h2>
-          </motion.div>
-
-          <WorkflowVisualization />
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="max-w-4xl mx-auto"
-          >
-            <div className="grid md:grid-cols-2 gap-8 text-left mt-12 p-8">
-              <div className="space-y-3">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                  GDPR & CCPA Compliant
-                </h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  All workflows respect opt-out preferences, unsubscribe links, and data residency requirements. We're fully compliant with global privacy standards.
-                </p>
-              </div>
-              <div className="space-y-3 md:pl-8 pt-8 md:pt-0">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  Brand Protection
-                </h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  Real-time monitoring ensures every interaction stays on-topic, professional, and perfectly aligned with your brand's voice and guidelines.
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
       {/* FAQ Teaser */}
       <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6 max-w-3xl">
@@ -375,8 +289,8 @@ export default function Home() {
             className="text-center max-w-2xl mx-auto"
           >
             <h2 className="text-3xl md:text-5xl font-bold mb-6">If a picture is worth a thousand words...</h2>
-            <p className="text-lg opacity-90 mb-8 leading-relaxed">
-              ...a demo is worth a thousand pictures. See AI in action before you commit to anything. Watch how it engages customers naturally and handles the repetitive work, so your team can focus on closing deals.
+            <p className="text-lg opacity-90 mb-8 leading-relaxed px-4">
+              ...a demo is worth a thousand pictures. That's why before you do anything, I want you to see AI in action. This demo gives a taster of how AI engages with customers in a natural way and bears the brunt of repetitive tasks, so you and your team don't have to.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/book-demo">
