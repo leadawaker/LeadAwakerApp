@@ -465,7 +465,7 @@ export default function ChatCard2D() {
         )}
 
         {/* New Messages Indicator - Single centered icon button */}
-        {showNewMessageIndicator && (
+        {isUserScrolling && currentStep > 5 && (
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-50">
             <motion.button 
               initial={{ opacity: 0, y: 10 }} 
