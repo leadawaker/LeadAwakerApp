@@ -436,15 +436,15 @@ export const SalesRepSteps = () => {
           number="2"
           cardTitle="2. Conversational AI Agents"
           cardDescription="We do not just send blasts. We start real conversations.
-AI agents, powered by the latest generation of language models, understand intent, follow up with quiet leads, answer questions, and handle objections in real time, in any language and in a tone that matches your brand."
+AI agents, powered by the latest generation of language models, understand intent, follow up with quiet leads, answer questions, and handle objections in real time."
           overlayTitle="24/7 Response capability"
           overlayDescription="Natural language processing for human-like chat • Seamless hand-off to human staff when needed"
           image={womanPhoneImg}
           icon={<MessageSquare className="w-8 h-8" />}
           align="right"
-          leftText="24/7 responses
-Brand matched voice in any language, from serious to relaxed
-Follow up sequences built on Challenger and SPIN selling principles
+          leftText="24/7 responses across SMS, WhatsApp or email
+Challenger and SPIN based conversations that surface needs and handle objections with structure
+Smart follow up timers that re engage unresponsive leads automatically, without nagging
 Human takeover whenever you want a person to step in"
           onInView={() => setPlaneStarted(true)}
         />
