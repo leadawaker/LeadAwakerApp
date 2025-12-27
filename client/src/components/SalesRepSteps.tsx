@@ -219,7 +219,7 @@ export const SalesRepSteps = () => {
         zIndex: 0
       }} />
       <div className="absolute inset-x-0 bottom-0 pointer-events-none" style={{
-        background: 'linear-gradient(to bottom, transparent 0%, #edeef3 100%)',
+        background: 'linear-gradient(to bottom, transparent 0%, #F4F5F9 100%)',
         height: '25vh',
         zIndex: 5
       }} />
