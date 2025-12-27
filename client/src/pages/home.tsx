@@ -284,7 +284,7 @@ export default function Home() {
             transition={{ delay: 0.2 }}
             className="max-w-4xl mx-auto"
           >
-            <div className="grid md:grid-cols-2 gap-8 text-left mt-12 bg-white/50 backdrop-blur-sm p-8 rounded-3xl border border-border/50 shadow-sm">
+            <div className="grid md:grid-cols-2 gap-8 text-left mt-12 p-8">
               <div className="space-y-3">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-emerald-500" />
@@ -294,7 +294,7 @@ export default function Home() {
                   All workflows respect opt-out preferences, unsubscribe links, and data residency requirements. We're fully compliant with global privacy standards.
                 </p>
               </div>
-              <div className="space-y-3 md:border-l border-border/50 md:pl-8 pt-8 md:pt-0 border-t md:border-t-0 border-border/50">
+              <div className="space-y-3 md:pl-8 pt-8 md:pt-0">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-blue-500" />
                   Brand Protection
