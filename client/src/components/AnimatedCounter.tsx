@@ -24,6 +24,8 @@ export default function AnimatedCounter({
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
 
+  const [isZero, setIsZero] = useState(false);
+
   useEffect(() => {
     if (!isInView) return;
 
@@ -31,6 +33,11 @@ export default function AnimatedCounter({
       duration,
       onComplete: () => {
         setShowSuffix(true);
+        if (end === 0) {
+          setTimeout(() => {
+            setIsZero(true);
+          }, 1000);
+        }
       }
     });
     return controls.stop;
@@ -38,19 +45,36 @@ export default function AnimatedCounter({
 
   useEffect(() => {
     return count.on("change", (latest) => {
-      const isComplete = latest >= end;
+      const isComplete = latest <= end;
       setDisplayValue(format(latest) + (isComplete || showSuffix ? suffix : ""));
     });
   }, [count, format, suffix, showSuffix, end]);
 
   return (
     <motion.div className="flex flex-col items-center relative">
-      <motion.span
-        ref={ref}
-        data-testid="text-animated-counter"
-        className="text-[#cacbcc]">
-        {displayValue}
-      </motion.span>
+      <AnimatePresence mode="wait">
+        {isZero ? (
+          <motion.span
+            key="zero-text"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="text-yellow-500 font-black italic uppercase tracking-tighter"
+          >
+            Absolute ZERO
+          </motion.span>
+        ) : (
+          <motion.span
+            key="counter-value"
+            ref={ref}
+            data-testid="text-animated-counter"
+            exit={{ opacity: 0 }}
+            className="text-[#cacbcc]"
+          >
+            {displayValue}
+          </motion.span>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
