@@ -145,7 +145,7 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               animate={{ 
-                backgroundColor: isFinished ? "#526fff" : "#ffffff",
+                backgroundColor: isFinished ? "#273887" : "#ffffff",
                 color: isFinished ? "#ffffff" : "#3c50d6"
               }}
               transition={{ duration: 0.5 }}
