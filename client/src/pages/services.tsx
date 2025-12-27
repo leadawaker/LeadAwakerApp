@@ -30,7 +30,7 @@ export default function Services() {
               viewport={{ once: true }}
               className="order-2 md:order-1"
             >
-              <h2 className="text-3xl font-bold mb-6"><span className="text-primary">Car Finance Law Firm</span> Example</h2>
+              <h2 className="text-3xl font-bold mb-6">Example 1 - <span className="text-primary">Car Finance Law Firm</span></h2>
               <p className="text-muted-foreground text-base mb-6 leading-relaxed">
                 Watch this real conversation unfold: Our <strong>Lead Awaker AI</strong> sends an initial SMS to cold leads checking car finance refunds. When Jack responds, the AI instantly qualifies him, handles his objection about missing documents, and guides him to complete a DSAR (Data Subject Access Request).
               </p>
