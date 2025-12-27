@@ -94,6 +94,20 @@ const FullscreenStep = ({
     offset: ["start center", "center center"],
   });
 
+  const iconOpacity = useTransform(scrollYProgress, [0.45, 0.5, 0.55], [1, 0, 1]);
+  
+  const [stepContent, setStepContent] = useState<React.ReactNode>(number === "1" ? "1" : icon);
+
+  useEffect(() => {
+    return scrollYProgress.onChange((v) => {
+      if (v > 0.5) {
+        setStepContent(icon);
+      } else {
+        setStepContent(number === "1" ? "1" : icon);
+      }
+    });
+  }, [scrollYProgress, icon, number]);
+
   const overlayOpacity = useTransform(scrollYProgress, [0.3, 0.7], [0, 1]);
   const overlayTextY = useTransform(scrollYProgress, [0.3, 0.7], [20, 0]);
   const cardOpacity = useTransform(scrollYProgress, [-0.2, 0.3], [0, 1]);
@@ -112,14 +126,13 @@ const FullscreenStep = ({
           <div className="relative">
             <div className={`absolute top-1/2 -translate-y-1/2 w-16 h-[2px] bg-white z-50 hidden md:block ${isLeft ? "-right-16" : "-left-16"}`} />
             <div className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-blue-600 hidden md:block ${isLeft ? "-right-18 translate-x-2" : "-left-18 -translate-x-2"}`} />
-            <Badge className="mb-4 bg-blue-600 text-white hover:bg-blue-700 text-lg px-3 py-1 rounded-full w-10 h-10 flex items-center justify-center" data-testid={`step-badge-${number}`}>
-              {number}
-            </Badge>
             
             <Card className="bg-card backdrop-blur-sm border-white/10 overflow-hidden group hover:border-primary/50 transition-colors duration-500">
               <CardContent className="p-8">
-                <div className="mb-6 p-3 bg-primary/10 w-fit rounded-xl text-primary" data-testid={`step-icon-${number}`}>
-                  {icon}
+                <div className="mb-6 p-3 bg-primary/10 w-fit rounded-xl text-primary flex items-center justify-center min-w-[56px] min-h-[56px]" data-testid={`step-icon-${number}`}>
+                  <motion.div style={{ opacity: iconOpacity }}>
+                    {stepContent}
+                  </motion.div>
                 </div>
                 <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-black" data-testid={`step-title-${number}`}>{cardTitle}</h3>
                 <p className="text-muted-foreground text-lg leading-relaxed" data-testid={`step-description-${number}`}>
@@ -386,8 +399,8 @@ export const SalesRepSteps = () => {
       <div style={{ marginTop: "1.15rem", marginBottom: "5rem" }}>
         <FullscreenStep 
           number="1"
-          cardTitle="Upload database"
-          cardDescription="AI instantly IDs high-potential dormant leads."
+          cardTitle="Upload your database"
+          cardDescription="Send a CSV or connect your CRM. That’s it, we handle the rest."
           overlayTitle="Your existing stack becomes an automation powerhouse."
           overlayDescription="CRM / Databases, WhatsApp, SMS & Chat, Email Platforms, Calendar Apps"
           image={databaseIntegrationImg}
