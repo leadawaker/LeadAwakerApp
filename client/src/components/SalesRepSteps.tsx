@@ -311,15 +311,15 @@ Weekly performance review and campaign adjustments for ongoing lift`
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">GoHighLevel</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/3/30/Pipedrive_logo.svg" alt="Pipedrive" className="w-5 h-5 object-contain" />
+                            <img src="https://cdn.worldvectorlogo.com/logos/pipedrive.svg" alt="Pipedrive" className="w-5 h-5 object-contain" />
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Pipedrive</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/3/30/Google_Sheets_logo_%282014-2020%29.svg" alt="Sheets" className="w-5 h-5 object-contain" />
+                            <img src="https://www.vectorlogo.zone/logos/google_sheets/google_sheets-icon.svg" alt="Sheets" className="w-5 h-5 object-contain" />
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Sheets</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/3/34/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg" alt="Excel" className="w-5 h-5 object-contain" />
+                            <img src="https://www.vectorlogo.zone/logos/microsoft_excel/microsoft_excel-icon.svg" alt="Excel" className="w-5 h-5 object-contain" />
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Excel</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
