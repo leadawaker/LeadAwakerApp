@@ -251,7 +251,7 @@ export const SalesRepSteps = () => {
       }} />
       <Plane startTrigger={planeStarted} />
       {/* Animated Clouds Overlay - Moved behind content */}
-      <div className="absolute inset-x-0 bottom-0 pointer-events-none z-0 h-[500px] overflow-hidden opacity-80">
+      <div className="absolute inset-x-0 bottom-0 pointer-events-none z-0 h-[500px] overflow-hidden opacity-80" style={{ isolation: 'isolate' }}>
         <motion.div 
           className="flex h-full w-[200%]"
           animate={{ x: ["0%", "-50%"] }}
@@ -266,7 +266,8 @@ export const SalesRepSteps = () => {
             alt=""
             className="w-1/2 h-full object-contain object-bottom"
             style={{ 
-              mixBlendMode: 'lighten'
+              mixBlendMode: 'screen',
+              willChange: 'transform'
             }}
           />
           <img 
@@ -274,7 +275,8 @@ export const SalesRepSteps = () => {
             alt=""
             className="w-1/2 h-full object-contain object-bottom"
             style={{ 
-              mixBlendMode: 'lighten'
+              mixBlendMode: 'screen',
+              willChange: 'transform'
             }}
           />
         </motion.div>
