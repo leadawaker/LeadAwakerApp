@@ -414,10 +414,10 @@ export const SalesRepSteps = () => {
       <div style={{ marginTop: "1rem", marginBottom: "5rem" }}>
         <FullscreenStep 
           number="2"
-          cardTitle="Chat GPT-5.2 conversations"
-          cardDescription="Natural, contextual SMS (not robot templates)."
-          overlayTitle="Build the Automations"
-          overlayDescription="Set up AI agents, workflows, and integrations in minutes."
+          cardTitle="Conversational AI Agents"
+          cardDescription="We don't just send blasts; we start conversations. Our AI agents are trained to understand intent, answer questions, and handle objections in real-time."
+          overlayTitle="24/7 Response capability"
+          overlayDescription="Natural language processing for human-like chat • Seamless hand-off to human staff when needed"
           image={womanPhoneImg}
           icon={<MessageSquare className="w-8 h-8" />}
           align="right"
