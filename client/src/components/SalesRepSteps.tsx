@@ -441,15 +441,14 @@ Launch SMS, Whatsapp and email campaigns for you`}
         <FullscreenStep 
           number="2"
           cardTitle="2. Conversational AI Agents"
-          cardDescription="We do not just send blasts. We start real conversations.
-AI agents, powered by the latest generation of language models, understand intent, follow up with quiet leads, answer questions, and handle objections in real time."
+          cardDescription="We start real conversations."
           overlayTitle="24/7 Response capability"
           overlayDescription="Natural language processing for human-like chat • Seamless hand-off to human staff when needed"
           image={womanPhoneImg}
           icon={<MessageSquare className="w-8 h-8" />}
           align="right"
           leftText={`24/7 responses across SMS, WhatsApp, and email
-Conversations shaped by Challenger and SPIN, designed to uncover real needs and handle objections with structure
+Our AI agents use the latest language models to read intent and craft tailored re‑engagement offers for your niche
 Smart follow up timers that re engage unresponsive leads automatically, without sounding like spam
 Speaks your customers' languages and can sound buttoned up or casual
 Human takeover whenever you want a person to step in`}
