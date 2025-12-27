@@ -161,8 +161,8 @@ export default function Home() {
                   onFinishedChange={(finished) => setIsFinished(finished)}
                 />
               </div>
-              <h3 className="text-4xl font-black mb-2 font-heading">Upfront Cost</h3>
-              <p className="text-xl font-medium opacity-80">performance‑based pricing</p>
+              <h3 className="text-4xl font-black mb-2 font-heading mt-12">Upfront Cost</h3>
+              <p className={`text-xl font-medium transition-opacity duration-500 ${isFinished ? 'opacity-80' : 'opacity-0'}`}>performance‑based pricing</p>
             </motion.div>
 
             {/* Stacked Side Cards */}
