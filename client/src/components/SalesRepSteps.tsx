@@ -392,7 +392,8 @@ export const SalesRepSteps = () => {
           animation: 'twinkle-fast 0.8s ease-in-out infinite',
           animationDelay: '0s',
           filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
-          opacity: 0.4
+          opacity: 0.4,
+          top: '20%'
         }}
       />
       <div 
@@ -405,7 +406,8 @@ export const SalesRepSteps = () => {
           filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
           animation: 'twinkle-fast-offset-1 1s ease-in-out infinite',
           animationDelay: '0.5s',
-          opacity: 0.4
+          opacity: 0.4,
+          top: '15%'
         }}
       />
       <div 
@@ -418,7 +420,8 @@ export const SalesRepSteps = () => {
           filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
           animation: 'twinkle-fast-offset-2 0.9s ease-in-out infinite',
           animationDelay: '1.2s',
-          opacity: 0.4
+          opacity: 0.4,
+          top: '10%'
         }}
       />
       <div className="absolute inset-0 pointer-events-none" style={{
