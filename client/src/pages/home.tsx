@@ -220,7 +220,7 @@ export default function Home() {
                       />
                     )}
                   </div>
-                  <h3 className="text-base font-black truncate font-heading">{result.label}</h3>
+                  <h3 className="font-black truncate font-heading text-[22px]">{result.label}</h3>
                 </motion.div>
               ))}
             </div>
