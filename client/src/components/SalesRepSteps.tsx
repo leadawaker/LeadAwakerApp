@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Database, MessageSquare, TrendingUp, Box, Copy, TrendingDown, Mail, ChevronLeft, ChevronRight } from "lucide-react";
 import databaseIntegrationImg from "@assets/generated_images/database_upload_and_crm_integration.png";
-import leadsDbImg from "@assets/leads-database.png";
+import leadsDbImg from "@assets/step-1-main.png";
 import conversationImg from "@assets/Gemini_Generated_Image_j212wcj212wcj212_1766858918533.png";
 import dailyLeadsImg from "@assets/generated_images/daily_leads_closed_chart_dashboard.png";
 import calendarImg from "@assets/Gemini_Generated_Image_a2dvda2dvda2dvda_1766862327268.png";
