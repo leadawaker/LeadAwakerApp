@@ -218,8 +218,9 @@ export const SalesRepSteps = () => {
         background: 'linear-gradient(to top, rgba(254, 243, 199, 0.45) 0%, rgba(254, 243, 199, 0.2) 15%, transparent 50%)',
         zIndex: 0
       }} />
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'linear-gradient(to top, #edeef34d 0%, rgba(237, 238, 243, 0) 25%)',
+      <div className="absolute inset-x-0 bottom-0 pointer-events-none" style={{
+        background: 'linear-gradient(to bottom, transparent 0%, #edeef3 80%, #edeef3 100%)',
+        height: '40vh',
         zIndex: 5
       }} />
       <Plane />
