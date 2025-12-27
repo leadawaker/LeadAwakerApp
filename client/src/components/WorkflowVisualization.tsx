@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, Bot, CheckCircle2, Shield } from 'lucide-react';
+import { useInView } from 'framer-motion';
 
 export default function WorkflowVisualization() {
   const [activeNode, setActiveNode] = useState('contact');
@@ -12,8 +13,18 @@ export default function WorkflowVisualization() {
   const [guardrailsStatus, setGuardrailsStatus] = useState('');
   const [isApproved, setIsApproved] = useState(false);
   const [isEngaging, setIsEngaging] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
+  const ref = React.useRef(null);
+  const isInView = useInView(ref, { once: false, amount: 0.5 });
 
   useEffect(() => {
+    if (isInView && !hasStarted) {
+      setHasStarted(true);
+    }
+  }, [isInView, hasStarted]);
+
+  useEffect(() => {
+    if (!hasStarted) return;
     const sequence = async () => {
       await new Promise(r => setTimeout(r, 3000));
       setVisitedNodes(prev => new Set(prev).add('engaging'));
@@ -41,7 +52,6 @@ export default function WorkflowVisualization() {
       setVisitedNodes(prev => new Set(prev).add('guardrails'));
 
       const checks = [
-        'No violations', 
         'On-topic sales', 
         'Clean content', 
         'Clean language',
@@ -57,6 +67,9 @@ export default function WorkflowVisualization() {
       
       setGuardrailsStatus('...');
       await new Promise(r => setTimeout(r, 1500));
+      
+      setGuardrailsStatus('No violations');
+      await new Promise(r => setTimeout(r, 1000));
       
       setGuardrailsStatus('Message Sent');
       setIsApproved(true);
@@ -74,7 +87,7 @@ export default function WorkflowVisualization() {
       sequence();
     };
     sequence();
-  }, []);
+  }, [hasStarted]);
 
   const getStatusColor = (node: string, activeClass: string, visitedClass: string, defaultClass: string) => {
     if (activeNode === node) return activeClass;
@@ -83,7 +96,7 @@ export default function WorkflowVisualization() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center font-sans text-gray-900 relative w-full overflow-visible">
+    <div ref={ref} className="flex flex-col items-center justify-center font-sans text-gray-900 relative w-full overflow-visible">
       <style>{`
         @keyframes strokeRotate { 0% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -240; } }
         @keyframes lineQuickGlow {
