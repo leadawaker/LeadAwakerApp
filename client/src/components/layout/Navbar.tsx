@@ -48,6 +48,11 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
+          <Link href="/login">
+            <Button variant="outline" className="font-heading font-semibold">
+              Login
+            </Button>
+          </Link>
           <Link href="/book-demo">
             <Button className="font-heading font-semibold bg-primary hover:bg-yellow-400 hover:text-black text-white shadow-lg shadow-primary/20 hover:shadow-yellow-400/35 transition-all">
               Book a Demo
@@ -77,6 +82,11 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
+          <Link href="/login" onClick={() => setIsOpen(false)}>
+            <Button variant="outline" className="w-full mt-2">
+              Login
+            </Button>
+          </Link>
           <Link href="/book-demo">
             <Button className="w-full mt-2 hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all" onClick={() => setIsOpen(false)}>
               Book a Demo
