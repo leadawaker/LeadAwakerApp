@@ -15,9 +15,7 @@ import {
   Clock,
   Shield,
   Search,
-  Users,
-  Lock,
-  FileCheck
+  Users
 } from "lucide-react";
 import Chat3D from "@/components/Chat3D";
 import AnimatedLogo3D from "@/components/AnimatedLogo3D";
@@ -94,13 +92,13 @@ export default function Home() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 relative z-10">
                 <Link href="/book-demo">
-                  <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 text-white transition-all" data-testid="button-book-call">
+                  <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 text-white transition-all">
                     Book a Call
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
                 <Link href="/services">
-                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 hover:text-blue-500 hover:border-blue-500 transition-all" data-testid="button-see-services">
+                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 hover:text-blue-500 hover:border-blue-500 transition-all">
                     See Services
                   </Button>
                 </Link>
@@ -111,13 +109,12 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* Sales Rep Steps Section */}
       <SalesRepSteps />
-
       {/* Conversion Pipeline */}
       <section className="py-48 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6">
+          {/* New Pipeline Component */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -128,7 +125,6 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
-
       {/* Results/Metrics Section */}
       <section className="py-48 border-t-2 border-border">
         <div className="container mx-auto px-4 md:px-6">
@@ -225,72 +221,94 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Compliance Section */}
-      <section className="py-24 bg-muted/30 border-y border-border">
+      {/* Demo Section with Logo */}
+      <section id="demo" className="py-48 border-t border-border">
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
+              className="space-y-6"
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-                <Shield className="w-4 h-4" />
-                Enterprise Grade Security
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">Built for scale, secured for enterprise</h2>
-              <p className="text-lg text-muted-foreground mb-8">
-                Our AI systems are built with data privacy and security as a core foundation. We ensure full compliance with modern security standards while providing the scalability your business needs.
+              <h2 className="md:text-4xl font-bold text-[48px]">Let us show you how it's done</h2>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                If a picture is worth a thousand words, a demo is worth a thousand pictures. That's why before you do anything, I want you to see AI in action. This demo gives a taster of how AI engages with customers in a natural way and bears the brunt of repetitive tasks, so you and your team don't have to.
               </p>
-              <div className="grid sm:grid-cols-2 gap-6">
-                <div className="flex items-start gap-3">
-                  <div className="mt-1 p-2 rounded-lg bg-primary/10 text-primary">
-                    <Lock className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold mb-1">Data Privacy</h4>
-                    <p className="text-sm text-muted-foreground">SOC2 & GDPR compliant data handling protocols.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="mt-1 p-2 rounded-lg bg-primary/10 text-primary">
-                    <FileCheck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold mb-1">Risk Mitigated</h4>
-                    <p className="text-sm text-muted-foreground">Rigorous testing and safety guardrails on all AI responses.</p>
-                  </div>
-                </div>
-              </div>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                With AI freeing up valuable man-power and doing the work you'd "never get around to doing", you can unlock new levels of ROI whilst focusing on the things you enjoy.
+              </p>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+              >
+                <Link href="/book-demo">
+                  <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all text-white">
+                    Check Out The Demo
+                    <ArrowRight className="ml-2 w-5 h-5" />
+                  </Button>
+                </Link>
+              </motion.div>
             </motion.div>
+
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="relative aspect-square md:aspect-video rounded-2xl overflow-hidden border border-border bg-card p-8 flex items-center justify-center"
+              className="flex justify-center items-center"
             >
-              <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
-                {[
-                  { label: "SOC2", status: "Compliant" },
-                  { label: "GDPR", status: "Compliant" },
-                  { label: "ISO 27001", status: "Certified" },
-                  { label: "HIPAA", status: "Ready" }
-                ].map((item, i) => (
-                  <div key={i} className="p-6 rounded-xl border border-border bg-background flex flex-col items-center text-center">
-                    <CheckCircle2 className="w-8 h-8 text-green-500 mb-2" />
-                    <span className="font-bold">{item.label}</span>
-                    <span className="text-xs text-muted-foreground">{item.status}</span>
-                  </div>
-                ))}
-              </div>
+              <AnimatedLogo3D />
             </motion.div>
           </div>
         </div>
       </section>
+      {/* Security & AI Guardrails Section */}
+      <section className="py-48 border-t border-border">
+        <div className="container mx-auto px-4 md:px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center max-w-4xl mx-auto mb-16"
+          >
+            <h2 className="md:text-4xl font-bold mt-[3px] mb-[3px] text-[48px]">Compliance and Reputation Built In</h2>
+          </motion.div>
 
+          <WorkflowVisualization />
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="max-w-4xl mx-auto"
+          >
+            <div className="grid md:grid-cols-2 gap-8 text-left mt-12 p-8">
+              <div className="space-y-3">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                  GDPR & CCPA Compliant
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  All workflows respect opt-out preferences, unsubscribe links, and data residency requirements. We're fully compliant with global privacy standards.
+                </p>
+              </div>
+              <div className="space-y-3 md:pl-8 pt-8 md:pt-0">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                  Brand Protection
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Real-time monitoring ensures every interaction stays on-topic, professional, and perfectly aligned with your brand's voice and guidelines.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
       {/* FAQ Teaser */}
-      <section className="py-24">
+      <section className="py-24 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6 max-w-3xl">
           <div className="mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
@@ -321,7 +339,6 @@ export default function Home() {
                 <button
                   onClick={() => setOpenFAQ(openFAQ === i ? null : i)}
                   className="w-full flex items-center justify-between p-6 hover:bg-muted/50 transition-colors"
-                  data-testid={`button-faq-toggle-${i}`}
                 >
                   <h3 className="text-lg font-bold text-left">{faq.q}</h3>
                   <ChevronDown
@@ -343,10 +360,11 @@ export default function Home() {
               </motion.div>
             ))}
           </div>
+
+          
         </div>
       </section>
-
-      {/* Bottom CTA */}
+      {/* Bottom Demo CTA */}
       <section className="py-24 bg-primary text-primary-foreground relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 mix-blend-overlay" style={{backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')"}} />
         <div className="container mx-auto px-4 md:px-6 relative z-10">
@@ -356,24 +374,20 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center max-w-2xl mx-auto"
           >
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">If a picture is worth a thousand words...</h2>
-            <p className="text-lg opacity-90 mb-8 leading-relaxed px-4">
-              ...a demo is worth a thousand pictures. That's why before you do anything, I want you to see AI in action. This demo gives a taster of how AI engages with customers in a natural way and bears the brunt of repetitive tasks, so you and your team don't have to.
+            <h2 className="font-bold mb-6 text-white" style={{ fontSize: '48px' }}>
+              Compliance and Reputation Built In
+            </h2>
+            <p className="text-lg opacity-90 mb-8 leading-relaxed">
+              If a picture is worth a thousand words, a demo is worth a thousand pictures. That's why before you do anything, I want you to see AI in action. This demo gives a taster of how AI engages with customers in a natural way and bears the brunt of repetitive tasks, so you and your team don't have to.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/book-demo">
-                <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all font-bold" data-testid="button-cta-book-demo">
+                <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all font-bold">
                   Book a Demo
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Link href="/services">
-                <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 border-white text-white hover:bg-white/10" data-testid="button-cta-services">
-                  See Services
-                </Button>
-              </Link>
             </div>
-            <p className="text-sm opacity-75 mt-8">Average setup: 2-5 days | Performance-based pricing</p>
           </motion.div>
         </div>
       </section>
