@@ -147,6 +147,7 @@ const FullscreenStep = ({
                 src={image} 
                 alt={cardTitle} 
                 className="w-full h-full object-cover"
+                style={{ opacity: 0.4 }}
               />
               <motion.div 
                 style={{ opacity: overlayOpacity }}
@@ -170,6 +171,7 @@ const FullscreenStep = ({
                 src={image} 
                 alt={cardTitle} 
                 className="w-full h-full object-cover"
+                style={{ opacity: 0.4 }}
               />
               <motion.div 
                 style={{ 
