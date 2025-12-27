@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Database, MessageSquare, TrendingUp, Box, Copy, TrendingDown, Mail } from "lucide-react";
@@ -18,21 +18,24 @@ interface StepProps {
   image: string;
   icon: React.ReactNode;
   align?: "left" | "right";
+  onInView?: () => void;
 }
 
-const Plane = () => {
+const Plane = ({ startTrigger }: { startTrigger: boolean }) => {
   return (
     <motion.div
       initial={{
-        top: "60%",
-        left: "105%"
+        top: "35%",
+        left: "105%",
+        rotate: -5
       }}
-      animate={{
-        top: "70%",
-        left: "-5%"
-      }}
+      animate={startTrigger ? {
+        top: "75%",
+        left: "-10%",
+        rotate: -15
+      } : {}}
       transition={{
-        duration: 40,
+        duration: 35,
         ease: "linear",
         repeat: 0
       }}
@@ -76,8 +79,16 @@ const FullscreenStep = ({
   image,
   icon,
   align = "left",
+  onInView,
 }: StepProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef, { once: true, amount: 0.3 });
+
+  useEffect(() => {
+    if (isInView && onInView) {
+      onInView();
+    }
+  }, [isInView, onInView]);
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start center", "center center"],
@@ -152,6 +163,7 @@ const FullscreenStep = ({
 export const SalesRepSteps = () => {
   const scrollRef = useRef(null);
   const [glitchAnimating, setGlitchAnimating] = useState(false);
+  const [planeStarted, setPlaneStarted] = useState(false);
   const { scrollYProgress } = useScroll({
     target: scrollRef,
     offset: ["start start", "end end"]
@@ -223,7 +235,7 @@ export const SalesRepSteps = () => {
         height: '25vh',
         zIndex: 5
       }} />
-      <Plane />
+      <Plane startTrigger={planeStarted} />
       <div className="relative z-10">
       {/* Pain Points Section */}
       <section className="py-32 md:py-40">
@@ -381,6 +393,7 @@ export const SalesRepSteps = () => {
           image={databaseIntegrationImg}
           icon={<Database className="w-8 h-8" />}
           align="left"
+          onInView={() => setPlaneStarted(true)}
         />
       </div>
       {/* Step 2 */}
