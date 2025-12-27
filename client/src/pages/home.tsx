@@ -278,7 +278,7 @@ export default function Home() {
                   <div className="w-2 h-2 rounded-full bg-emerald-500" />
                   GDPR & CCPA Compliant
                 </h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
+                <p className="text-gray-600 text-[16px]">
                   All workflows respect opt-out preferences, unsubscribe links, and data residency requirements. We're fully compliant with global privacy standards.
                 </p>
               </div>
