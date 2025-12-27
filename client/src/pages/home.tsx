@@ -149,7 +149,7 @@ export default function Home() {
                 suffix: "%",
                 label: "Reply Rates",
                 subtext: "vs industry 5-10%",
-                duration: 3
+                duration: 2
               },
               {
                 metric: 25,
@@ -157,7 +157,7 @@ export default function Home() {
                 suffix: "%",
                 label: "Leads Reactivated",
                 subtext: "into live opportunities",
-                duration: 4
+                duration: 3
               },
               {
                 metric: 40,
@@ -165,7 +165,7 @@ export default function Home() {
                 suffix: "+",
                 label: "Hours Saved",
                 subtext: "per rep/month",
-                duration: 5,
+                duration: 4,
                 suffixAtEnd: true
               },
               {
@@ -174,7 +174,7 @@ export default function Home() {
                 isCost: true,
                 label: "Upfront Cost",
                 subtext: "performance‑based pricing",
-                duration: 6
+                duration: 5
               }
             ].map((result, i) => (
               <motion.div
