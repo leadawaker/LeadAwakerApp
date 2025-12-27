@@ -23,84 +23,39 @@ export default function Services() {
 
         <div className="space-y-24">
           {/* Chat Card Section */}
-          <div className="flex gap-8 items-start max-w-6xl mx-auto py-12">
-            {/* Chat Card */}
+          <div className="grid md:grid-cols-2 gap-12 items-center py-12">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="flex-shrink-0"
+              className="order-2 md:order-1"
             >
-              <ChatCard2D />
+              <h2 className="text-3xl font-bold mb-4">See Our AI in Action</h2>
+              <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
+                Watch how our conversational AI agents engage with prospects naturally and authentically. These aren't robotic automated messages—they're intelligent, context-aware conversations that build trust and drive results.
+              </p>
+              <ul className="space-y-3 mb-8">
+                <li className="flex gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
+                  <span>Intelligent responses tailored to each prospect</span>
+                </li>
+                <li className="flex gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
+                  <span>Multi-channel conversations (SMS, Email, WhatsApp)</span>
+                </li>
+                <li className="flex gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
+                  <span>Seamless escalation to your team when needed</span>
+                </li>
+              </ul>
             </motion.div>
-            
-            {/* Explanation Panel */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="flex-1 max-w-md space-y-6 pt-8"
+              className="order-1 md:order-2 max-w-md mx-auto w-full"
             >
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100 shadow-sm">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  AI-Powered Lead Awakening
-                </h3>
-                
-                <p className="text-gray-700 text-sm leading-relaxed mb-6">
-                  This chat shows our <strong>"Sleeping Beauty Android"</strong> in action – a fully automated SMS conversation that wakes up cold leads.
-                </p>
-
-                <div className="space-y-4 mb-6">
-                  <div className="flex items-center gap-3 p-3 bg-white/50 rounded-xl">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                    <span className="text-sm font-medium text-gray-900">Initial SMS sent automatically</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-3 p-3 bg-white/50 rounded-xl">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                    <span className="text-sm font-medium text-gray-900">Lead replies → AI asks qualifying questions</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-3 p-3 bg-white/50 rounded-xl">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full" />
-                    <span className="text-sm font-medium text-gray-900">Handles objections → Pushes to DSAR</span>
-                  </div>
-                </div>
-
-                <div className="p-4 bg-blue-500/10 border border-blue-200 rounded-xl mb-6">
-                  <p className="text-sm text-gray-800 font-medium mb-1">
-                    <strong>DSAR = Data Subject Access Request</strong>
-                  </p>
-                  <p className="text-xs text-gray-600">
-                    Gets car finance documents from providers. Signing confirms they're ready to pursue their refund claim.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 text-center p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-                  <div>
-                    <div className="text-2xl font-bold text-emerald-700">42%</div>
-                    <div className="text-xs text-emerald-800 uppercase tracking-wide">Reply Rate</div>
-                    <div className="text-xs text-gray-600">(vs 20% industry avg)</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-emerald-700">20.4%</div>
-                    <div className="text-xs text-emerald-800 uppercase tracking-wide">DSAR Signed</div>
-                  </div>
-                </div>
-
-                <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl text-sm">
-                  <p className="font-bold text-gray-900 mb-1">Real Results:</p>
-                  <ul className="text-xs space-y-1 text-gray-700 list-disc list-inside">
-                    <li>$21 cost per DSAR completion (pure AI, no calls)</li>
-                    <li>Solicitors earn $1,200-$1,800 per case</li>
-                    <li>My fee: $190 per DSAR lead</li>
-                  </ul>
-                </div>
-
-                <p className="text-xs text-gray-500 italic pt-4 border-t border-gray-200">
-                  No salespeople. No phone calls. Just AI converting cold leads into high-value cases.
-                </p>
-              </div>
+              <ChatCard2D />
             </motion.div>
           </div>
         </div>
