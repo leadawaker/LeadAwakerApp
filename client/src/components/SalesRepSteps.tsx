@@ -191,7 +191,7 @@ export const SalesRepSteps = () => {
       style={{ minHeight: '100%' }}
     >
       <div 
-        className="absolute inset-0" 
+        className="absolute inset-0 -z-20" 
         style={{
           backgroundImage: `radial-gradient(circle at 12% 85%, white 0.6px, transparent 0.6px),
                             radial-gradient(circle at 88% 12%, white 1.1px, transparent 1.1px)`,
@@ -207,7 +207,7 @@ export const SalesRepSteps = () => {
         }}
       />
       <div 
-        className="absolute inset-0" 
+        className="absolute inset-0 -z-20" 
         style={{
           backgroundImage: `radial-gradient(circle at 67% 42%, #e8e8e8 1.0px, transparent 1.0px),
                             radial-gradient(circle at 15% 15%, white 0.8px, transparent 0.8px)`,
@@ -220,7 +220,7 @@ export const SalesRepSteps = () => {
         }}
       />
       <div 
-        className="absolute inset-0" 
+        className="absolute inset-0 -z-20" 
         style={{
           backgroundImage: `radial-gradient(circle at 39% 79%, white 0.6px, transparent 0.6px),
                             radial-gradient(circle at 83% 33%, #f0f0f0 1.4px, transparent 1.4px)`,
@@ -232,26 +232,22 @@ export const SalesRepSteps = () => {
           opacity: 0.75
         }}
       />
-      <div className="absolute inset-0 pointer-events-none" style={{
+      <div className="absolute inset-0 pointer-events-none -z-10" style={{
         background: 'radial-gradient(ellipse 500% 120% at 50% 105%, rgba(59, 130, 246, 0.8) 0%, rgba(37, 99, 235, 0.7) 25%, rgba(29, 78, 216, 0.55) 45%, rgba(30, 58, 138, 0.3) 65%, rgba(30, 58, 138, 0) 100%)',
-        zIndex: 0
       }} />
-      <div className="absolute inset-0 pointer-events-none" style={{
+      <div className="absolute inset-0 pointer-events-none -z-10" style={{
         background: 'radial-gradient(ellipse 440% 100% at 50% 95%, rgba(254, 215, 170, 0.75) 0%, rgba(251, 146, 60, 0.5) 25%, rgba(37, 99, 235, 0) 50%)',
-        zIndex: 0
       }} />
-      <div className="absolute inset-0 pointer-events-none" style={{
+      <div className="absolute inset-0 pointer-events-none -z-10" style={{
         background: 'linear-gradient(to top, rgba(254, 243, 199, 0.45) 0%, rgba(254, 243, 199, 0.2) 15%, transparent 50%)',
-        zIndex: 0
       }} />
-      <div className="absolute inset-x-0 bottom-0 pointer-events-none" style={{
+      <div className="absolute inset-x-0 bottom-0 pointer-events-none -z-10" style={{
         background: 'linear-gradient(to bottom, transparent 0%, #F4F5F9 100%)',
         height: '25vh',
-        zIndex: 5
       }} />
       <Plane startTrigger={planeStarted} />
       {/* Animated Clouds Overlay - Moved behind content */}
-      <div className="absolute inset-x-0 bottom-0 pointer-events-none z-0 h-[500px] overflow-hidden opacity-80" style={{ isolation: 'isolate' }}>
+      <div className="absolute inset-x-0 bottom-0 pointer-events-none z-0 h-[500px] overflow-hidden opacity-80">
         <motion.div 
           className="flex h-full w-[200%]"
           animate={{ x: ["0%", "-50%"] }}
