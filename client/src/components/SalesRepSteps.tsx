@@ -410,7 +410,7 @@ export const SalesRepSteps = () => {
         />
       </div>
       {/* Step 3 */}
-      <div style={{ marginTop: "1rem" }}>
+      <div style={{ marginTop: "1rem", marginBottom: "8rem" }}>
         <FullscreenStep 
           number="3"
           cardTitle="Revenue rolls in"
