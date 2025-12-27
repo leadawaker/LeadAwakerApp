@@ -361,6 +361,12 @@ export const SalesRepSteps = () => {
   const scrollRef = useRef(null);
   const [glitchAnimating, setGlitchAnimating] = useState(false);
   const [planeStarted, setPlaneStarted] = useState(false);
+  
+  useEffect(() => {
+    // Proactively start the plane animation shortly after mount
+    const timer = setTimeout(() => setPlaneStarted(true), 1000);
+    return () => clearTimeout(timer);
+  }, []);
   const { scrollYProgress } = useScroll({
     target: scrollRef,
     offset: ["start start", "end end"]
