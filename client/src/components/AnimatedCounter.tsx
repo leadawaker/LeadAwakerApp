@@ -59,14 +59,14 @@ export default function AnimatedCounter({
           </motion.div>
         )}
       </AnimatePresence>
-      <motion.span 
-        ref={ref} 
+      <motion.span
+        ref={ref}
         data-testid="text-animated-counter"
         animate={{ 
           color: end === 0 && displayValue === format(0) + (suffixAtEnd ? suffix : "") ? "#94a3b8" : "inherit"
         }}
         transition={{ duration: 0.3 }}
-      >
+        className="text-[#cacbcc]">
         {displayValue}
       </motion.span>
     </motion.div>
