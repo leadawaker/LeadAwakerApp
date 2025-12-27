@@ -1,0 +1,106 @@
+Add a subtle starry night overlay effect that ONLY activates when the card turns blue (on hover or state change), fully contained within card boundaries for perfect clipping.HTML Structure:<div class="pricing-card">
+  <div class="stars-overlay">
+    <div class="stars"></div>
+    <div class="stars stars2"></div>
+    <div class="stars stars3"></div>
+  </div>
+  <div class="card-content">
+    <h1>Absolute</h1>
+    <h2>ZERO</h2>
+    <h3>Upfront Cost</h3>
+    <p>Performance‑based pricing<br>No sales / No pay</p>
+  </div>
+</div>CSS Code (stars HIDDEN by default, appear ONLY on blue state):.pricing-card {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  height: 500px;
+  background: #526fff !important;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.pricing-card.blue-state {
+  /* Trigger this class to activate stars */
+  background: #526fff;
+}
+
+.stars-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.pricing-card.blue-state .stars-overlay {
+  opacity: 1; /* Stars appear ONLY in blue state */
+}
+
+.stars {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  background: transparent;
+  box-shadow: 
+    /* ~150 small stars - generate random positions 0-500px */
+    45px 123px #FFF, 234px 89px #FFF, 312px 456px #FFF, 178px 234px #FFF,
+    456px 67px #FFF, 89px 345px #FFF, 567px 123px #FFF /* add 150 total */;
+  animation: animStar 60s linear infinite;
+  opacity: 0.8;
+}
+
+.stars:after {
+  content: "";
+  position: absolute;
+  top: 2000px;
+  width: 1px;
+  height: 1px;
+  background: transparent;
+  box-shadow: /* copy .stars box-shadow */;
+}
+
+.stars2 {
+  width: 2px;
+  height: 2px;
+  box-shadow: /* ~60 medium stars */;
+  animation: animStar 120s linear infinite;
+}
+
+.stars3 {
+  width: 3px;
+  height: 3px;
+  box-shadow: /* ~20 big stars */;
+  animation: animStar 180s linear infinite;
+}
+
+@keyframes animStar {
+  from { transform: translateY(0px); }
+  to { transform: translateY(-2000px); }
+}
+
+.card-content {
+  position: relative;
+  z-index: 2;
+  padding: 40px;
+  color: white;
+  text-align: center;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.card-content h1 { font-size: 3em; font-weight: 900; margin: 0 0 10px; color: #FFF; }
+.card-content h2 { font-size: 5em; font-weight: 900; margin: 0 0 20px; color: #FFF; letter-spacing: -3px; }
+.card-content h3 { font-size: 1.5em; font-weight: 300; margin: 0 0 30px; color: #E8F0FE; }
+.card-content p { font-size: 1.2em; margin: 0; line-height: 1.6; color: #F0F4FF; }Activation: Add .blue-state class to .pricing-card via JavaScript/hover to trigger stars (e.g., :hover .blue-state or button click). Keep #526fff background always visible behind semi-transparent stars. Ensure mobile performance with ~230 total stars, fully contained by overflow: hidden.�

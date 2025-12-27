@@ -1,0 +1,94 @@
+Create a visually stunning card component for my Lead Awaker website with a scrolling starry night sky background effect. The card should showcase my AI-powered lead generation service. Use this exact pure CSS for the animated stars (adapt the box-shadow values to generate ~300 total stars across layers for performance), and ensure it's contained within the card boundaries.HTML Structure Needed:<div class="starry-card">
+  <div class="stars-bg">
+    <div class="stars"></div>
+    <div class="stars stars2"></div>
+    <div class="stars stars3"></div>
+  </div>
+  <div class="card-content">
+    <h3>Lead Awaker</h3>
+    <p>AI-powered lead generation & CRM automation</p>
+    <button>Get Started</button>
+  </div>
+</div>CSS Code (paste exactly, generate full box-shadows if needed):.starry-card {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  height: 500px;
+  background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.stars-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.stars {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  background: transparent;
+  box-shadow: 
+    /* Small stars layer - generate ~200 random positions */
+    184px 234px #FFF, 567px 892px #FFF, 1123px 456px #FFF, 789px 1234px #FFF /* add more */;
+  animation: animStar 50s linear infinite;
+}
+
+.stars:after {
+  content: "";
+  position: absolute;
+  top: 2000px;
+  width: 1px;
+  height: 1px;
+  background: transparent;
+  box-shadow: /* same as .stars */;
+}
+
+.stars2 {
+  width: 2px;
+  height: 2px;
+  box-shadow: /* Medium stars ~80 */;
+  animation: animStar 100s linear infinite;
+}
+
+.stars3 {
+  width: 3px;
+  height: 3px;
+  box-shadow: /* Big stars ~20 */;
+  animation: animStar 150s linear infinite;
+}
+
+@keyframes animStar {
+  from { transform: translateY(0px); }
+  to { transform: translateY(-2000px); }
+}
+
+.card-content {
+  position: relative;
+  z-index: 2;
+  padding: 40px;
+  color: white;
+  text-align: center;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.card-content h3 {
+  font-size: 2.5em;
+  margin: 0 0 20px;
+  background: linear-gradient(white, #38495a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 300;
+  letter-spacing: 5px;
+}Make the stars responsive, performant on mobile, and ensure content stays readable over the animation. Match my brand: dark space theme, professional B2B vibe for lead automation agency.
