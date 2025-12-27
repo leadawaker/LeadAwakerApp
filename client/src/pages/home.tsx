@@ -112,7 +112,8 @@ export default function Home() {
       {/* Sales Rep Steps Section */}
       <SalesRepSteps />
       {/* Conversion Pipeline */}
-      <section className="py-48 bg-muted/30">
+      <section className="py-48 bg-muted/30 relative">
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
         <div className="container mx-auto px-4 md:px-6">
           {/* New Pipeline Component */}
           <motion.div
@@ -126,7 +127,8 @@ export default function Home() {
         </div>
       </section>
       {/* Results/Metrics Section */}
-      <section className="py-48 border-t-2 border-border">
+      <section className="py-48 relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-muted/30 to-transparent pointer-events-none" />
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
