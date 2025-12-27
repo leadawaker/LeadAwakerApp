@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Database, MessageSquare, TrendingUp, Box, Copy, TrendingDown, Mail, ChevronLeft, ChevronRight } from "lucide-react";
 import databaseIntegrationImg from "@assets/generated_images/database_upload_and_crm_integration.png";
 import leadsDbImg from "@assets/leads-database.png";
-import phonesImg from "@assets/generated_images/woman_in_yellow_and_man_in_blue_on_phones_smiling.png";
+import conversationImg from "@assets/Gemini_Generated_Image_j212wcj212wcj212_1766858918533.png";
 import dailyLeadsImg from "@assets/generated_images/daily_leads_closed_chart_dashboard.png";
 import cloudTexture from "@assets/generated_images/cloud-bottom-bar.jpg";
 import cloudsOverlay from "@assets/Project_(20251227103213)_1766828113842.jpg";
@@ -218,10 +218,10 @@ Launch SMS, Whatsapp and email campaigns for you`
       cardDescription: "Our AI agents use the latest language models to read intent and craft tailored re‑engagement offers for your niche.",
       overlayTitle: "24/7 Response capability",
       overlayDescription: "Natural language processing for human-like chat • Seamless hand-off to human staff when needed",
-      image: phonesImg,
+      image: conversationImg,
       icon: <MessageSquare className="w-8 h-8 text-yellow-500" />,
       align: "right" as const,
-      cardImage: phonesImg,
+      cardImage: conversationImg,
       leftText: `24/7 responses across SMS, WhatsApp, and email
 Conversations shaped by Challenger & SPIN selling to uncover needs and handle objections
 Smart follow-up timers re-engage unresponsive leads automatically
