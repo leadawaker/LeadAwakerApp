@@ -149,7 +149,7 @@ export default function Home() {
                 color: isFinished ? "#ffffff" : "#3c50d6"
               }}
               transition={{ duration: 0.5 }}
-              className="p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px] relative overflow-hidden bg-[#21378f]"
+              className="p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px] relative overflow-hidden bg-[#c4c4c4]"
             >
               <AnimatePresence>
                 {isFinished && (
