@@ -139,6 +139,53 @@
    HOLOGRAM GLITCH EFFECT - ALL ANIMATIONS
    ======================================== */
 
+@keyframes text-flicker {
+  0%, 60%, 100% {
+    color: #60a5fa;
+    text-shadow: 
+      0 -8px 20px rgba(96, 165, 250, 0.3),
+      0 -4px 10px rgba(96, 165, 250, 0.2),
+      0 0 20px rgba(96, 165, 250, 0.15);
+  }
+  4% {
+    color: rgba(96, 165, 250, 0.9);
+    text-shadow: 
+      0 -8px 20px rgba(96, 165, 250, 0.15),
+      0 -4px 10px rgba(96, 165, 250, 0.1),
+      0 0 20px rgba(96, 165, 250, 0.08);
+  }
+  6% {
+    color: #60a5fa;
+    text-shadow: 
+      0 -8px 20px rgba(96, 165, 250, 0.3),
+      0 -4px 10px rgba(96, 165, 250, 0.2),
+      0 0 20px rgba(96, 165, 250, 0.15);
+  }
+  22% {
+    color: #60a5fa;
+    text-shadow: 
+      0 -8px 20px rgba(96, 165, 250, 0.3),
+      0 -4px 10px rgba(96, 165, 250, 0.2),
+      0 0 20px rgba(96, 165, 250, 0.15);
+  }
+  26% {
+    color: #94a3b8;
+    text-shadow: none;
+  }
+  28% {
+    color: #64748b;
+    text-shadow: none;
+  }
+  31% {
+    color: #94a3b8;
+    text-shadow: none;
+  }
+  33% {
+    color: #64748b;
+    text-shadow: none;
+  }
+}
+
 /* Main .hologram-glitch class */
 .hologram-glitch {
   position: relative;
@@ -244,34 +291,34 @@
     background: 
       repeating-linear-gradient(
         90deg,
-        rgba(226, 137, 22, 0.18) 0px,
-        rgba(226, 137, 22, 0.18) 1px,
+        rgba(96, 165, 250, 0.18) 0px,
+        rgba(96, 165, 250, 0.18) 1px,
         transparent 1px,
         transparent 2px
       ),
-      linear-gradient(135deg, rgba(254, 184, 0, 0.15) 0%, rgba(226, 137, 22, 0.1) 100%);
+      linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(96, 165, 250, 0.1) 100%);
   }
   50% {
     background: 
       repeating-linear-gradient(
         90deg,
-        rgba(226, 137, 22, 0.1) 0px,
-        rgba(226, 137, 22, 0.1) 1px,
+        rgba(96, 165, 250, 0.1) 0px,
+        rgba(96, 165, 250, 0.1) 1px,
         transparent 1px,
         transparent 2px
       ),
-      linear-gradient(135deg, rgba(254, 184, 0, 0.15) 0%, rgba(226, 137, 22, 0.1) 100%);
+      linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(96, 165, 250, 0.1) 100%);
   }
   100% {
     background: 
       repeating-linear-gradient(
         90deg,
-        rgba(226, 137, 22, 0.18) 0px,
-        rgba(226, 137, 22, 0.18) 1px,
+        rgba(96, 165, 250, 0.18) 0px,
+        rgba(96, 165, 250, 0.18) 1px,
         transparent 1px,
         transparent 2px
       ),
-      linear-gradient(135deg, rgba(254, 184, 0, 0.15) 0%, rgba(226, 137, 22, 0.1) 100%);
+      linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(96, 165, 250, 0.1) 100%);
   }
 }
 

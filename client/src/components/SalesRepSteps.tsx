@@ -227,10 +227,10 @@ export const SalesRepSteps = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             onViewportEnter={() => {
-              // Trigger split animation 2 seconds earlier than the default viewport entry
+              // Trigger split animation 4 seconds earlier than the default viewport entry
               setTimeout(() => setGlitchAnimating(true), 0);
             }}
-            viewport={{ once: true, margin: "200px" }}
+            viewport={{ once: true, margin: "400px" }}
             transition={{ duration: 0.3 }}
             className="text-center max-w-4xl mx-auto mb-24"
           >
