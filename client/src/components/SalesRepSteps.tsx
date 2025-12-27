@@ -251,7 +251,7 @@ export const SalesRepSteps = () => {
       }} />
       <Plane startTrigger={planeStarted} />
       {/* Animated Clouds Overlay */}
-      <div className="absolute inset-x-0 bottom-0 pointer-events-none z-50 h-[600px] overflow-hidden">
+      <div className="absolute inset-x-0 bottom-0 pointer-events-none z-[100] h-[500px] overflow-hidden">
         <motion.div 
           className="flex h-full w-[200%]"
           animate={{ x: ["0%", "-50%"] }}
@@ -261,33 +261,30 @@ export const SalesRepSteps = () => {
             ease: "linear" 
           }}
         >
-          <div 
-            className="w-1/2 h-full"
+          <img 
+            src={cloudsOverlay}
+            alt=""
+            className="w-1/2 h-full object-contain object-bottom"
             style={{ 
-              backgroundImage: `url(${cloudsOverlay})`,
-              backgroundSize: 'contain',
-              backgroundPosition: 'bottom',
-              backgroundRepeat: 'no-repeat',
+              filter: 'brightness(1.5) contrast(1.2) drop-shadow(0 0 20px rgba(255,255,255,0.4))',
               mixBlendMode: 'screen',
-              filter: 'brightness(2) contrast(1.5)',
               opacity: 1
             }}
           />
-          <div 
-            className="w-1/2 h-full"
+          <img 
+            src={cloudsOverlay}
+            alt=""
+            className="w-1/2 h-full object-contain object-bottom"
             style={{ 
-              backgroundImage: `url(${cloudsOverlay})`,
-              backgroundSize: 'contain',
-              backgroundPosition: 'bottom',
-              backgroundRepeat: 'no-repeat',
+              filter: 'brightness(1.5) contrast(1.2) drop-shadow(0 0 20px rgba(255,255,255,0.4))',
               mixBlendMode: 'screen',
-              filter: 'brightness(2) contrast(1.5)',
               opacity: 1
             }}
           />
         </motion.div>
       </div>
-      <div className="relative z-[60]">
+      <div className="relative z-10">
+      {/* Pain Points Section */}
       <section className="pt-48 pb-32 md:pt-56 md:pb-40">
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div
