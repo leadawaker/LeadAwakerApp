@@ -386,8 +386,8 @@ export const SalesRepSteps = () => {
       <div style={{ marginTop: "1.15rem", marginBottom: "5rem" }}>
         <FullscreenStep 
           number="1"
-          cardTitle="Upload database"
-          cardDescription="AI instantly IDs high-potential dormant leads."
+          cardTitle="Send a CSV or connect your CRM"
+          cardDescription="That’s it, we handle the rest."
           overlayTitle="Your existing stack becomes an automation powerhouse."
           overlayDescription="CRM / Databases, WhatsApp, SMS & Chat, Email Platforms, Calendar Apps"
           image={databaseIntegrationImg}
