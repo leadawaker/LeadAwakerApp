@@ -414,8 +414,8 @@ export const SalesRepSteps = () => {
       <div style={{ marginTop: "1rem", marginBottom: "5rem" }}>
         <FullscreenStep 
           number="2"
-          cardTitle="Conversational AI Agents"
-          cardDescription="2. We don't just send blasts; we start conversations.\n\nOur AI agents are trained to understand intent, follow up with unresponsive leads, answer questions, and handle objections in real-time."
+          cardTitle="2. Conversational AI Agents"
+          cardDescription="We don't just send blasts; we start conversations.\n\nOur AI agents are trained to understand intent, follow up with unresponsive leads, answer questions, and handle objections in real-time."
           overlayTitle="24/7 Response capability"
           overlayDescription="Natural language processing for human-like chat • Seamless hand-off to human staff when needed"
           image={womanPhoneImg}
