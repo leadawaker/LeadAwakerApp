@@ -193,7 +193,7 @@ export default function ChatCard2D() {
             )}
 
             {/* Milestone: Lead Contacted */}
-            {currentStep >= 1 && currentStep < 2 && (
+            {currentStep >= 1 && (
               <motion.div className="flex justify-center py-2" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="text-xs text-slate-400 font-medium">---Lead Contacted---</div>
               </motion.div>
@@ -224,7 +224,7 @@ export default function ChatCard2D() {
             )}
 
             {/* Milestone: Lead Replied */}
-            {currentStep >= 3 && currentStep < 4 && (
+            {currentStep >= 3 && (
               <motion.div className="flex justify-center py-2" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="text-xs text-slate-400 font-medium">---Lead Replied---</div>
               </motion.div>
@@ -243,7 +243,7 @@ export default function ChatCard2D() {
             )}
 
             {/* Milestone: Lead Qualified */}
-            {currentStep >= 4 && currentStep < 5 && (
+            {currentStep >= 4 && (
               <motion.div className="flex justify-center py-2" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="text-xs text-slate-400 font-medium">---Lead Qualified---</div>
               </motion.div>
@@ -365,7 +365,7 @@ export default function ChatCard2D() {
             )}
 
             {/* Milestone: DSAR Completed */}
-            {currentStep >= 12 && currentStep < 13 && (
+            {currentStep >= 12 && (
               <motion.div className="flex justify-center py-2" variants={messageVariants} initial="hidden" animate="visible">
                 <div className="text-xs text-slate-400 font-medium">---DSAR Completed---</div>
               </motion.div>
