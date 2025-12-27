@@ -265,25 +265,39 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
-      {/* Let us show you how it's done Section */}
-      <section className="py-24 bg-primary text-primary-foreground relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 mix-blend-overlay" style={{backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')"}} />
+      {/* Bottom Demo CTA Section */}
+      <section className="py-32 bg-gradient-to-br from-primary via-primary to-blue-700 text-primary-foreground relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20 mix-blend-overlay" style={{backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')"}} />
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl" />
+        
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center max-w-2xl mx-auto"
+            transition={{ duration: 0.8 }}
+            className="text-center max-w-3xl mx-auto"
           >
-            <h2 className="font-bold mb-6 text-white" style={{ fontSize: '48px' }}>Let us show you how it's done</h2>
-            <p className="text-lg opacity-90 mb-8 leading-relaxed">
-              If a picture is worth a thousand words, a demo is worth a thousand pictures. That's why before you do anything, I want you to see AI in action. This demo gives a taster of how AI engages with customers in a natural way and bears the brunt of repetitive tasks, so you and your team don't have to.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8 text-white tracking-tight leading-tight">
+              See AI in action — <br className="hidden md:block" />
+              <span className="text-blue-200">and what it can do for you</span>
+            </h2>
+            
+            <div className="space-y-6 text-lg md:text-xl opacity-90 leading-relaxed mb-12">
+              <p>
+                If a picture is worth a thousand words, a live demo is worth a thousand pictures. Before you do anything else, experience how AI interacts with customers naturally while handling the repetitive work your team shouldn't have to.
+              </p>
+              <p>
+                By automating what drains your time, AI frees your team to focus on what actually moves the needle — strategy, growth, and the work you enjoy. In just a few minutes, you’ll see how smarter automation transforms your ROI and your day-to-day operations.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link href="/book-demo">
-                <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all font-bold">
+                <Button size="lg" className="h-16 px-10 text-xl rounded-full shadow-2xl shadow-black/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:scale-105 transition-all duration-300 font-bold group">
                   Book a Demo
-                  <ArrowRight className="ml-2 w-5 h-5" />
+                  <ArrowRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
             </div>
