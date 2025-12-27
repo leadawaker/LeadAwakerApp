@@ -115,9 +115,6 @@ const FullscreenStep = ({
           className={`order-2 ${isLeft ? "md:order-1" : "md:order-2"}`}
         >
           <div className="relative">
-            <div className={`absolute top-1/2 -translate-y-1/2 w-16 h-[2px] bg-white z-50 hidden md:block ${isLeft ? "-right-16" : "-left-16"}`} />
-            <div className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-blue-600 hidden md:block ${isLeft ? "-right-18 translate-x-2" : "-left-18 -translate-x-2"}`} />
-            
             <Card className="bg-card backdrop-blur-sm border-white/10 overflow-hidden group hover:border-primary/50 transition-colors duration-500">
               <CardContent className="p-8">
                 <div className="mb-6 p-3 bg-primary/10 w-fit rounded-xl text-primary flex items-center justify-center min-w-[56px] min-h-[56px]" data-testid={`step-icon-${number}`}>
