@@ -152,7 +152,7 @@ export default function Home() {
               transition={{ duration: 0.5 }}
               className="p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px]"
             >
-              <div className={`text-6xl md:text-9xl font-black mb-2 font-heading transition-colors duration-500 ${isFinished ? 'text-white' : 'text-primary'}`}>
+              <div className={`text-6xl md:text-8xl font-bold mb-2 font-heading transition-colors duration-500 ${isFinished ? 'text-white' : 'text-primary'}`}>
                 <AnimatedCounter 
                   start={10000}
                   end={0} 
