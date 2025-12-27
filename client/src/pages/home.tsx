@@ -15,7 +15,9 @@ import {
   Clock,
   Shield,
   Search,
-  Users
+  Users,
+  Lock,
+  FileCheck
 } from "lucide-react";
 import Chat3D from "@/components/Chat3D";
 import AnimatedLogo3D from "@/components/AnimatedLogo3D";
@@ -92,13 +94,13 @@ export default function Home() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 relative z-10">
                 <Link href="/book-demo">
-                  <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 text-white transition-all">
+                  <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 text-white transition-all" data-testid="button-book-call">
                     Book a Call
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
                 <Link href="/services">
-                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 hover:text-blue-500 hover:border-blue-500 transition-all">
+                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 hover:text-blue-500 hover:border-blue-500 transition-all" data-testid="button-see-services">
                     See Services
                   </Button>
                 </Link>
@@ -109,12 +111,13 @@ export default function Home() {
           </div>
         </div>
       </section>
+
       {/* Sales Rep Steps Section */}
       <SalesRepSteps />
+
       {/* Conversion Pipeline */}
       <section className="py-48 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6">
-          {/* New Pipeline Component */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -125,6 +128,7 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
       {/* Results/Metrics Section */}
       <section className="py-48 border-t-2 border-border">
         <div className="container mx-auto px-4 md:px-6">
@@ -221,8 +225,72 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Compliance Section */}
+      <section className="py-24 bg-muted/30 border-y border-border">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+                <Shield className="w-4 h-4" />
+                Enterprise Grade Security
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">Built for scale, secured for enterprise</h2>
+              <p className="text-lg text-muted-foreground mb-8">
+                Our AI systems are built with data privacy and security as a core foundation. We ensure full compliance with modern security standards while providing the scalability your business needs.
+              </p>
+              <div className="grid sm:grid-cols-2 gap-6">
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 p-2 rounded-lg bg-primary/10 text-primary">
+                    <Lock className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold mb-1">Data Privacy</h4>
+                    <p className="text-sm text-muted-foreground">SOC2 & GDPR compliant data handling protocols.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 p-2 rounded-lg bg-primary/10 text-primary">
+                    <FileCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold mb-1">Risk Mitigated</h4>
+                    <p className="text-sm text-muted-foreground">Rigorous testing and safety guardrails on all AI responses.</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="relative aspect-square md:aspect-video rounded-2xl overflow-hidden border border-border bg-card p-8 flex items-center justify-center"
+            >
+              <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+                {[
+                  { label: "SOC2", status: "Compliant" },
+                  { label: "GDPR", status: "Compliant" },
+                  { label: "ISO 27001", status: "Certified" },
+                  { label: "HIPAA", status: "Ready" }
+                ].map((item, i) => (
+                  <div key={i} className="p-6 rounded-xl border border-border bg-background flex flex-col items-center text-center">
+                    <CheckCircle2 className="w-8 h-8 text-green-500 mb-2" />
+                    <span className="font-bold">{item.label}</span>
+                    <span className="text-xs text-muted-foreground">{item.status}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* FAQ Teaser */}
-      <section className="py-24 bg-muted/30">
+      <section className="py-24">
         <div className="container mx-auto px-4 md:px-6 max-w-3xl">
           <div className="mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
@@ -253,6 +321,7 @@ export default function Home() {
                 <button
                   onClick={() => setOpenFAQ(openFAQ === i ? null : i)}
                   className="w-full flex items-center justify-between p-6 hover:bg-muted/50 transition-colors"
+                  data-testid={`button-faq-toggle-${i}`}
                 >
                   <h3 className="text-lg font-bold text-left">{faq.q}</h3>
                   <ChevronDown
@@ -274,11 +343,10 @@ export default function Home() {
               </motion.div>
             ))}
           </div>
-
-          
         </div>
       </section>
-      {/* Bottom Demo CTA */}
+
+      {/* Bottom CTA */}
       <section className="py-24 bg-primary text-primary-foreground relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 mix-blend-overlay" style={{backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')"}} />
         <div className="container mx-auto px-4 md:px-6 relative z-10">
@@ -294,14 +362,14 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/book-demo">
-                <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all font-bold">
+                <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all font-bold" data-testid="button-cta-book-demo">
                   Book a Demo
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Link href="#demo">
-                <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 border-white text-white hover:bg-white/10">
-                  See How It Works
+              <Link href="/services">
+                <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 border-white text-white hover:bg-white/10" data-testid="button-cta-services">
+                  See Services
                 </Button>
               </Link>
             </div>
