@@ -11,11 +11,13 @@ export default function WorkflowVisualization() {
   const [agentStatus, setAgentStatus] = useState('thinking');
   const [guardrailsStatus, setGuardrailsStatus] = useState('');
   const [isApproved, setIsApproved] = useState(false);
+  const [isEngaging, setIsEngaging] = useState(false);
 
   useEffect(() => {
     const sequence = async () => {
       await new Promise(r => setTimeout(r, 3000));
       setVisitedNodes(prev => new Set(prev).add('engaging'));
+      setIsEngaging(true);
       
       await new Promise(r => setTimeout(r, 1000));
       setIsGlowing1(true);
@@ -59,6 +61,7 @@ export default function WorkflowVisualization() {
       
       setGuardrailsStatus('Message Sent');
       setIsApproved(true);
+      setIsEngaging(false);
       await new Promise(r => setTimeout(r, 11500));
       
       setActiveNode('contact');
@@ -68,6 +71,7 @@ export default function WorkflowVisualization() {
       setAgentStatus('thinking');
       setGuardrailsStatus('');
       setIsApproved(false);
+      setIsEngaging(false);
       sequence();
     };
     sequence();
@@ -232,7 +236,7 @@ export default function WorkflowVisualization() {
             </div>
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] font-mono flex items-center justify-between">
               <span className={`font-semibold transition-colors duration-300 ${activeNode === 'contact' ? 'text-amber-600' : 'text-amber-400/60'}`}>Status</span>
-              <span className={`transition-colors duration-300 ${activeNode === 'contact' ? 'text-gray-700' : 'text-gray-400'}`}>{isApproved ? 'Lead Engaged' : 'Lead Engaged'}</span>
+              <span className={`transition-colors duration-300 ${activeNode === 'contact' ? 'text-gray-700' : 'text-gray-400'}`}>{isApproved ? 'Lead Engaged' : (isEngaging ? 'Engaging Lead' : 'Not Engaged')}</span>
             </div>
           </div>
         </div>
