@@ -276,7 +276,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
                     filter: isActive ? 'blur(0px)' : 'blur(2px)',
                   }}
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  className="absolute w-full max-w-3xl"
+                  className="absolute w-full max-w-4xl"
                 >
                   <Card className="bg-card backdrop-blur-sm border-white/10 overflow-hidden group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
                     <CardContent className="p-8">
@@ -307,7 +307,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">HubSpot</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
-                            <img src="https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=64" alt="GoHighLevel" className="w-5 h-5 object-contain" />
+                            <img src="https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128" alt="GoHighLevel" className="w-5 h-5 object-contain" />
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">GoHighLevel</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
@@ -319,7 +319,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Sheets</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
-                            <img src="https://www.google.com/s2/favicons?domain=microsoft.com&sz=64" alt="Excel" className="w-5 h-5 object-contain" />
+                            <img src="https://www.google.com/s2/favicons?domain=microsoft.com&sz=128" alt="Excel" className="w-5 h-5 object-contain" />
                             <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Excel</span>
                           </div>
                           <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
