@@ -285,7 +285,7 @@ Weekly optimization reviews for continuous results`
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   className="absolute w-full max-w-5xl z-50"
                 >
-                  <Card className="bg-card/85 backdrop-blur-md border-white/10 group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
+                  <Card className="bg-card backdrop-blur-sm border-white/10 group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
                     <CardContent className="p-8">
                       <div className="mb-6 p-3 w-fit rounded-xl text-gray-600 flex items-center justify-center min-w-[56px] min-h-[56px] bg-[#fff7e0]" data-testid={`step-icon-${step.number}`}>
                         {step.icon}
@@ -315,7 +315,7 @@ Weekly optimization reviews for continuous results`
                                   initial={{ opacity: 0, y: -10 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   transition={{ delay: 0.3 }}
-                                  className="absolute top-[15%] left-0 right-0 h-1/4 flex items-center px-4 pt-4 z-10"
+                                  className="absolute top-[8%] left-0 right-0 h-1/4 flex items-center px-4 pt-4 z-10"
                                 >
                                   <style>{`
                                     @keyframes crmScroll {
@@ -336,10 +336,10 @@ Weekly optimization reviews for continuous results`
                                       align-items: center;
                                       gap: 0.5rem;
                                       padding: 0.375rem 0.75rem;
-                                      background: rgba(255, 255, 255, 0.95);
+                                      background: rgba(255, 255, 255, 0.7);
                                       border-radius: 0.375rem;
-                                      border: 1px solid rgb(226, 232, 240);
-                                      backdrop-filter: blur(8px);
+                                      border: 1px solid rgba(226, 232, 240, 0.5);
+                                      backdrop-filter: blur(4px);
                                       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
                                     }
                                   `}</style>
