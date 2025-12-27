@@ -315,7 +315,7 @@ Weekly optimization reviews for continuous results`
                                   initial={{ opacity: 0, y: -10 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   transition={{ delay: 0.3 }}
-                                  className="absolute top-[8%] left-0 right-0 h-1/4 flex items-center px-4 pt-4 z-10"
+                                  className="absolute top-[5%] left-0 right-0 h-1/4 flex items-center px-4 pt-4 z-10"
                                 >
                                   <style>{`
                                     @keyframes crmScroll {
