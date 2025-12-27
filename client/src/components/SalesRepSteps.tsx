@@ -3,9 +3,12 @@ import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Database, MessageSquare, TrendingUp, Box, Copy, TrendingDown, Mail, ChevronLeft, ChevronRight } from "lucide-react";
+import databaseIntegrationImg from "@assets/generated_images/database_upload_and_crm_integration.png";
 import leadsDbImg from "@assets/leads-database.png";
 import womanPhoneImg from "@assets/woman_answering_phone_in_living_room_1766483592249.png";
 import dailyLeadsImg from "@assets/generated_images/daily_leads_closed_chart_dashboard.png";
+import cloudTexture from "@assets/generated_images/cloud-bottom-bar.jpg";
+import cloudsOverlay from "@assets/Project_(20251227103213)_1766828113842.jpg";
 import { MeteorContainer } from "./Meteor";
 
 interface StepProps {
@@ -70,10 +73,129 @@ const Plane = ({ startTrigger }: { startTrigger: boolean }) => {
   );
 };
 
+const FullscreenStep = ({
+  number,
+  cardTitle,
+  cardDescription,
+  overlayTitle,
+  overlayDescription,
+  image,
+  icon,
+  align = "left",
+  onInView,
+  leftText,
+}: StepProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef, { once: true, amount: 0.3 });
+
+  useEffect(() => {
+    if (isInView && onInView) {
+      onInView();
+    }
+  }, [isInView, onInView]);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start center", "center center"],
+  });
+
+  const iconOpacity = useTransform(scrollYProgress, [0.45, 0.5, 0.55], [1, 0, 1]);
+
+  const overlayOpacity = useTransform(scrollYProgress, [-0.2, 0.3], [0, 1]);
+  const overlayTextY = useTransform(scrollYProgress, [0.5, 0.9], [20, 0]);
+  const cardOpacity = useTransform(scrollYProgress, [-0.2, 0.3], [0, 1]);
+  const cardY = useTransform(scrollYProgress, [-0.2, 0.3], [50, 0]);
+
+  const isLeft = align === "left";
+
+  return (
+    <div ref={containerRef} className="h-[40vh] w-full flex items-center justify-center px-4 sm:px-6 md:px-12 relative z-10">
+      <div className="container mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-16 items-center">
+        <motion.div 
+          style={{ opacity: cardOpacity, transform: 'translateZ(0)', willChange: 'opacity' }}
+          className={`order-2 ${isLeft ? "md:order-1" : "md:order-2"}`}
+        >
+          <div className="relative">
+            <Card className="bg-card backdrop-blur-sm border-white/10 overflow-hidden group hover:border-primary/50 transition-colors duration-500">
+              <CardContent className="p-8">
+                <div className="mb-6 p-3 bg-primary/10 w-fit rounded-xl text-primary flex items-center justify-center min-w-[56px] min-h-[56px]" data-testid={`step-icon-${number}`}>
+                  {icon}
+                </div>
+                <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-black" data-testid={`step-title-${number}`}>{cardTitle}</h3>
+                <p className="text-muted-foreground text-lg leading-relaxed" data-testid={`step-description-${number}`}>
+                  {cardDescription.split('\n\n').map((line, i) => (
+                    <span key={i}>
+                      {line}
+                      {i < cardDescription.split('\n\n').length - 1 && <br />}
+                    </span>
+                  ))}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </motion.div>
+        <motion.div 
+          style={{ transform: 'translateZ(0)', willChange: 'transform' }}
+          className={`order-1 ${isLeft ? "md:order-2" : "md:order-1"} relative ${number === "3" ? "h-full" : "aspect-[4/3]"} rounded-2xl overflow-hidden shadow-2xl border border-white/5`}
+          data-testid={`step-image-${number}`}
+        >
+          {leftText ? (
+            <>
+              <img 
+                src={image} 
+                alt={cardTitle} 
+                className="w-full h-full object-cover"
+                style={{ opacity: 0.4 }}
+              />
+              <motion.div 
+                style={{ opacity: overlayOpacity }}
+                className="absolute inset-0 bg-gradient-to-r from-blue-950/90 to-blue-900/85 flex flex-col items-start justify-start p-8 text-white"
+              >
+                <div className="space-y-6 max-w-2xl">
+                  {leftText.split('\n').map((line, i) => (
+                    <div key={i} className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-400 mt-2" />
+                      <div className="font-medium text-gray-100 text-[16px]">
+                        {line}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </>
+          ) : (
+            <>
+              <img 
+                src={image} 
+                alt={cardTitle} 
+                className="w-full h-full object-cover"
+                style={{ opacity: 0.4 }}
+              />
+              <motion.div 
+                style={{ 
+                  opacity: overlayOpacity,
+                  boxShadow: 'inset 0 0 60px rgba(59, 130, 246, 0.5), inset 0 0 40px rgba(100, 150, 255, 0.3)'
+                }}
+                className="absolute inset-0 bg-blue-950/50 backdrop-blur-[2px] flex flex-col items-center justify-center p-8 text-center"
+              >
+                <motion.div style={{ y: overlayTextY }}>
+                  <span className="text-accent font-mono text-sm uppercase tracking-wider mb-2 block">Step {number} Details</span>
+                  <h4 className="text-3xl font-bold text-white mb-4">{overlayTitle}</h4>
+                  <p className="text-gray-200 text-[16px] max-w-md mx-auto leading-relaxed">
+                    {overlayDescription}
+                  </p>
+                </motion.div>
+              </motion.div>
+            </>
+          )}
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
 const StepCarousel = ({ onStepInView }: { onStepInView: () => void }) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [isLocked, setIsLocked] = useState(false);
-  const [scrollAccumulator, setScrollAccumulator] = useState(0);
+
   const steps = [
     {
       number: "1",
@@ -120,70 +242,6 @@ Weekly performance review and campaign adjustments for ongoing lift`
     }
   ];
 
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end end"]
-  });
-
-  useEffect(() => {
-    const handleWheel = (e: WheelEvent) => {
-      if (!isLocked) return;
-
-      e.preventDefault();
-      const threshold = 50; // threshold to trigger step change
-      const delta = e.deltaY;
-
-      if (Math.abs(delta) < 5) return;
-
-      if (delta > 0) { // scrolling down
-        if (currentStep < steps.length - 1) {
-          setCurrentStep(prev => prev + 1);
-        } else if (scrollYProgress.get() >= 0.9) {
-          setIsLocked(false);
-        }
-      } else { // scrolling up
-        if (currentStep > 0) {
-          setCurrentStep(prev => prev - 1);
-        } else if (scrollYProgress.get() <= 0.1) {
-          setIsLocked(false);
-        }
-      }
-    };
-
-    const section = sectionRef.current;
-    if (section && isLocked) {
-      section.addEventListener('wheel', handleWheel, { passive: false });
-    }
-    return () => {
-      if (section) {
-        section.removeEventListener('wheel', handleWheel);
-      }
-    };
-  }, [isLocked, currentStep, steps.length, scrollYProgress]);
-
-  useEffect(() => {
-    const unsubscribe = scrollYProgress.on("change", (v) => {
-      if (v > 0.05 && v < 0.95 && !isLocked) {
-        setIsLocked(true);
-      } else if ((v <= 0.05 || v >= 0.95) && isLocked) {
-        setIsLocked(false);
-      }
-    });
-    return () => unsubscribe();
-  }, [isLocked, scrollYProgress]);
-
-  useEffect(() => {
-    if (isLocked) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isLocked]);
-
   const handlePrev = () => {
     setCurrentStep((prev) => (prev - 1 + steps.length) % steps.length);
   };
@@ -193,107 +251,105 @@ Weekly performance review and campaign adjustments for ongoing lift`
   };
 
   return (
-    <div ref={sectionRef} className="relative w-full h-[300vh]">
-      <div className={`sticky top-0 h-screen flex flex-col justify-center ${isLocked ? 'overflow-hidden' : ''}`}>
-        <div className="container mx-auto px-4 sm:px-6 md:px-12 relative z-10">
-          {/* Stacked Cards Container */}
-          <div className="relative h-[650px] flex flex-col items-center justify-center">
-            <div className="relative w-full h-[550px] flex items-center justify-center">
-              {steps.map((step, index) => {
-                const position = (index - currentStep + steps.length) % steps.length;
-                const isActive = position === 0;
-                const isNext = position === 1;
-                const isPrev = position === steps.length - 1;
+    <div className="relative w-full py-24">
+      <div className="container mx-auto px-4 sm:px-6 md:px-12 relative z-10">
+        {/* Stacked Cards Container */}
+        <div className="relative h-[650px] flex flex-col items-center justify-center">
+          <div className="relative w-full h-[550px] flex items-center justify-center">
+            {steps.map((step, index) => {
+              const position = (index - currentStep + steps.length) % steps.length;
+              const isActive = position === 0;
+              const isNext = position === 1;
+              const isPrev = position === steps.length - 1;
 
-                return (
-                  <motion.div
-                    key={index}
-                    data-testid={`card-step-${index}`}
-                    layout
-                    initial={false}
-                    animate={{
-                      scale: isActive ? 1 : 0.9,
-                      x: isActive ? 0 : isNext ? 160 : -160,
-                      opacity: isActive ? 1 : 0.3,
-                      zIndex: isActive ? 20 : 10,
-                      filter: isActive ? 'blur(0px)' : 'blur(2px)',
-                    }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    className="absolute w-full max-w-2xl"
-                  >
-                    <Card className="bg-card backdrop-blur-sm border-white/10 overflow-hidden group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
-                      <CardContent className="p-8">
-                        <div className="mb-6 p-3 bg-primary/10 w-fit rounded-xl text-primary flex items-center justify-center min-w-[56px] min-h-[56px]" data-testid={`step-icon-${step.number}`}>
-                          {step.icon}
-                        </div>
-                        <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-black" data-testid={`step-title-${step.number}`}>
-                          {step.cardTitle}
-                        </h3>
-                        <p className="text-muted-foreground text-lg leading-relaxed mb-6" data-testid={`step-description-${step.number}`}>
-                          {step.cardDescription}
-                        </p>
+              return (
+                <motion.div
+                  key={index}
+                  data-testid={`card-step-${index}`}
+                  layout
+                  initial={false}
+                  animate={{
+                    scale: isActive ? 1 : 0.9,
+                    x: isActive ? 0 : isNext ? 160 : -160,
+                    opacity: isActive ? 1 : 0.3,
+                    zIndex: isActive ? 20 : 10,
+                    filter: isActive ? 'blur(0px)' : 'blur(2px)',
+                  }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  className="absolute w-full max-w-2xl"
+                >
+                  <Card className="bg-card backdrop-blur-sm border-white/10 overflow-hidden group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
+                    <CardContent className="p-8">
+                      <div className="mb-6 p-3 bg-primary/10 w-fit rounded-xl text-primary flex items-center justify-center min-w-[56px] min-h-[56px]" data-testid={`step-icon-${step.number}`}>
+                        {step.icon}
+                      </div>
+                      <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-black" data-testid={`step-title-${step.number}`}>
+                        {step.cardTitle}
+                      </h3>
+                      <p className="text-muted-foreground text-lg leading-relaxed mb-6" data-testid={`step-description-${step.number}`}>
+                        {step.cardDescription}
+                      </p>
 
-                        {/* Bullet points for current card only */}
-                        {isActive && step.leftText && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="space-y-4 pt-6 border-t border-white/10"
-                          >
-                            {step.leftText.split('\n').map((line, i) => (
-                              <div key={i} className="flex items-start gap-3">
-                                <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-400 mt-2" />
-                                <div className="font-medium text-gray-600 text-[14px]">
-                                  {line}
-                                </div>
+                      {/* Bullet points for current card only */}
+                      {isActive && step.leftText && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2 }}
+                          className="space-y-4 pt-6 border-t border-white/10"
+                        >
+                          {step.leftText.split('\n').map((line, i) => (
+                            <div key={i} className="flex items-start gap-3">
+                              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-400 mt-2" />
+                              <div className="font-medium text-gray-600 text-[14px]">
+                                {line}
                               </div>
-                            ))}
-                          </motion.div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
+                            </div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
 
-              {/* Side Navigation Buttons - Closer In */}
-              <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between items-center px-4 md:px-12 z-30 pointer-events-none">
-                <button
-                  onClick={handlePrev}
-                  data-testid="button-prev-step"
-                  className="p-3 rounded-full bg-blue-500/20 border border-blue-400/50 text-white hover:bg-blue-500/30 hover:border-blue-400 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
-                  aria-label="Previous step"
-                >
-                  <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                </button>
-                <button
-                  onClick={handleNext}
-                  data-testid="button-next-step"
-                  className="p-3 rounded-full bg-blue-500/20 border border-blue-400/50 text-white hover:bg-blue-500/30 hover:border-blue-400 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
-                  aria-label="Next step"
-                >
-                  <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                </button>
-              </div>
+            {/* Side Navigation Buttons - Closer In */}
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between items-center px-4 md:px-12 z-30 pointer-events-none">
+              <button
+                onClick={handlePrev}
+                data-testid="button-prev-step"
+                className="p-3 rounded-full bg-blue-500/20 border border-blue-400/50 text-white hover:bg-blue-500/30 hover:border-blue-400 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
+                aria-label="Previous step"
+              >
+                <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform" />
+              </button>
+              <button
+                onClick={handleNext}
+                data-testid="button-next-step"
+                className="p-3 rounded-full bg-blue-500/20 border border-blue-400/50 text-white hover:bg-blue-500/30 hover:border-blue-400 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
+                aria-label="Next step"
+              >
+                <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform" />
+              </button>
             </div>
+          </div>
 
-            {/* Pagination dots under cards */}
-            <div className="flex gap-2 mt-8">
-              {steps.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentStep(i)}
-                  data-testid={`dot-step-${i}`}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                    i === currentStep
-                      ? 'bg-blue-400 w-8'
-                      : 'bg-blue-400/40 hover:bg-blue-400/60'
-                  }`}
-                  aria-label={`Go to step ${i + 1}`}
-                />
-              ))}
-            </div>
+          {/* Pagination dots under cards */}
+          <div className="flex gap-2 mt-8">
+            {steps.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentStep(i)}
+                data-testid={`dot-step-${i}`}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  i === currentStep
+                    ? 'bg-blue-400 w-8'
+                    : 'bg-blue-400/40 hover:bg-blue-400/60'
+                }`}
+                aria-label={`Go to step ${i + 1}`}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -309,6 +365,7 @@ export const SalesRepSteps = () => {
     target: scrollRef,
     offset: ["start start", "end end"]
   });
+  const cloudY = useTransform(scrollYProgress, [0, 1], [0, 50]);
 
   return (
     <div 
