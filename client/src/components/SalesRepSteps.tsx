@@ -251,7 +251,7 @@ export const SalesRepSteps = () => {
       }} />
       <Plane startTrigger={planeStarted} />
       {/* Animated Clouds Overlay */}
-      <div className="absolute inset-x-0 bottom-0 pointer-events-none z-10 h-[500px] overflow-hidden">
+      <div className="absolute inset-x-0 bottom-0 pointer-events-none z-50 h-[600px] overflow-hidden">
         <motion.div 
           className="flex h-full w-[200%]"
           animate={{ x: ["0%", "-50%"] }}
@@ -262,26 +262,32 @@ export const SalesRepSteps = () => {
           }}
         >
           <div 
-            className="w-1/2 h-full bg-contain bg-bottom bg-no-repeat"
+            className="w-1/2 h-full"
             style={{ 
               backgroundImage: `url(${cloudsOverlay})`,
+              backgroundSize: 'contain',
+              backgroundPosition: 'bottom',
+              backgroundRepeat: 'no-repeat',
               mixBlendMode: 'screen',
-              opacity: 1,
-              filter: 'brightness(1.5) contrast(1.2)'
+              filter: 'brightness(2) contrast(1.5)',
+              opacity: 1
             }}
           />
           <div 
-            className="w-1/2 h-full bg-contain bg-bottom bg-no-repeat"
+            className="w-1/2 h-full"
             style={{ 
               backgroundImage: `url(${cloudsOverlay})`,
+              backgroundSize: 'contain',
+              backgroundPosition: 'bottom',
+              backgroundRepeat: 'no-repeat',
               mixBlendMode: 'screen',
-              opacity: 1,
-              filter: 'brightness(1.5) contrast(1.2)'
+              filter: 'brightness(2) contrast(1.5)',
+              opacity: 1
             }}
           />
         </motion.div>
       </div>
-      <div className="relative z-20">
+      <div className="relative z-[60]">
       <section className="pt-48 pb-32 md:pt-56 md:pb-40">
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div
