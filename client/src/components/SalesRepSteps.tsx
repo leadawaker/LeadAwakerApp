@@ -8,6 +8,7 @@ import leadsDbImg from "@assets/leads-database.png";
 import conversationImg from "@assets/Gemini_Generated_Image_j212wcj212wcj212_1766858918533.png";
 import dailyLeadsImg from "@assets/generated_images/daily_leads_closed_chart_dashboard.png";
 import calendarImg from "@assets/Gemini_Generated_Image_a2dvda2dvda2dvda_1766862327268.png";
+import databaseImageImg from "@assets/Gemini_Generated_Image_toqbi0toqbi0toqb_1766862950610.png";
 import cloudTexture from "@assets/generated_images/cloud-bottom-bar.jpg";
 import cloudsOverlay from "@assets/Project_(20251227103213)_1766828113842.jpg";
 import { MeteorContainer } from "./Meteor";
@@ -208,6 +209,7 @@ const StepCarousel = ({ onStepInView }: { onStepInView: () => void }) => {
       image: leadsDbImg,
       icon: <Database className="w-8 h-8 text-yellow-500" />,
       align: "left" as const,
+      cardImage: databaseImageImg,
       leftText: `We reawaken dormant leads who inquired months ago but never bought - even leads who your sales team has dialed to death
 Auto segment contacts based on past interactions
 We integrate with Salesforce, HubSpot, Pipedrive, Close, and custom APIs. If it has an API, we can connect to it.`
@@ -295,49 +297,67 @@ Weekly optimization reviews for continuous results`
                         {step.cardDescription}
                       </p>
 
-                      {/* CRM Logos for Step 1 */}
+                      {/* CRM Logos Carousel for Step 1 */}
                       {isActive && step.number === "1" && (
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.1 }}
-                          className="flex flex-wrap gap-4 mb-6 items-center bg-black/5 p-4 rounded-xl border border-black/5"
+                          className="relative mb-6 rounded-lg overflow-hidden bg-black/5 border border-black/5 p-4 h-16"
                         >
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
-                            <img src="https://www.vectorlogo.zone/logos/salesforce/salesforce-icon.svg" alt="Salesforce" className="w-5 h-5" />
-                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Salesforce</span>
-                          </div>
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
-                            <img src="https://www.vectorlogo.zone/logos/hubspot/hubspot-icon.svg" alt="HubSpot" className="w-5 h-5" />
-                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">HubSpot</span>
-                          </div>
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
-                            <img src="https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128" alt="GoHighLevel" className="w-5 h-5 object-contain" />
-                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">GoHighLevel</span>
-                          </div>
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
-                            <img src="https://cdn.worldvectorlogo.com/logos/pipedrive.svg" alt="Pipedrive" className="w-5 h-5 object-contain" />
-                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Pipedrive</span>
-                          </div>
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
-                            <img src="https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png" alt="Sheets" className="w-5 h-5 object-contain" />
-                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Sheets</span>
-                          </div>
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
-                            <img src="https://www.google.com/s2/favicons?domain=microsoft.com&sz=128" alt="Excel" className="w-5 h-5 object-contain" />
-                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Excel</span>
-                          </div>
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
-                            <img src="https://www.vectorlogo.zone/logos/supabase/supabase-icon.svg" alt="Supabase" className="w-5 h-5" />
-                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Supabase</span>
-                          </div>
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
-                            <img src="https://www.vectorlogo.zone/logos/airtable/airtable-icon.svg" alt="Airtable" className="w-5 h-5" />
-                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Airtable</span>
-                          </div>
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200 hover:scale-105 transition-transform">
-                            <span className="text-blue-600 font-mono font-bold text-sm">&lt;/&gt;</span>
-                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">API</span>
+                          <style>{`
+                            @keyframes crmScroll {
+                              0% { transform: translateX(0); }
+                              100% { transform: translateX(-50%); }
+                            }
+                            .crm-carousel-track {
+                              animation: crmScroll 50s linear infinite;
+                              display: flex;
+                              gap: 1rem;
+                            }
+                            .crm-carousel-track:hover {
+                              animation-play-state: paused;
+                            }
+                            .crm-logo-item {
+                              flex-shrink: 0;
+                              display: flex;
+                              align-items: center;
+                              gap: 0.5rem;
+                              padding: 0.375rem 0.75rem;
+                              background: white;
+                              border-radius: 0.375rem;
+                              border: 1px solid rgb(226, 232, 240);
+                            }
+                          `}
+                          <div className="crm-carousel-track">
+                            {[
+                              { name: 'Salesforce', url: 'https://www.vectorlogo.zone/logos/salesforce/salesforce-icon.svg' },
+                              { name: 'HubSpot', url: 'https://www.vectorlogo.zone/logos/hubspot/hubspot-icon.svg' },
+                              { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
+                              { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
+                              { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
+                              { name: 'Excel', url: 'https://www.google.com/s2/favicons?domain=microsoft.com&sz=128' },
+                              { name: 'Supabase', url: 'https://www.vectorlogo.zone/logos/supabase/supabase-icon.svg' },
+                              { name: 'Airtable', url: 'https://www.vectorlogo.zone/logos/airtable/airtable-icon.svg' },
+                              { name: 'API', url: null }
+                            ].map((crm, i) => (
+                              <div key={i} className="crm-logo-item">
+                                {crm.url ? <img src={crm.url} alt={crm.name} className="w-5 h-5 object-contain" /> : <span className="text-blue-600 font-mono font-bold text-sm">&lt;/&gt;</span>}
+                                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">{crm.name}</span>
+                              </div>
+                            ))}
+                            {[
+                              { name: 'Salesforce', url: 'https://www.vectorlogo.zone/logos/salesforce/salesforce-icon.svg' },
+                              { name: 'HubSpot', url: 'https://www.vectorlogo.zone/logos/hubspot/hubspot-icon.svg' },
+                              { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
+                              { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
+                              { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
+                            ].map((crm, i) => (
+                              <div key={`dupe-${i}`} className="crm-logo-item">
+                                {crm.url ? <img src={crm.url} alt={crm.name} className="w-5 h-5 object-contain" /> : <span className="text-blue-600 font-mono font-bold text-sm">&lt;/&gt;</span>}
+                                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">{crm.name}</span>
+                              </div>
+                            ))}
                           </div>
                         </motion.div>
                       )}
