@@ -383,7 +383,7 @@ export const SalesRepSteps = () => {
       </section>
 
       {/* Step 1 */}
-      <div style={{ marginTop: "1rem" }}>
+      <div style={{ marginTop: "1rem", marginBottom: "10rem" }}>
         <FullscreenStep 
           number="1"
           cardTitle="Upload database"
@@ -397,7 +397,7 @@ export const SalesRepSteps = () => {
         />
       </div>
       {/* Step 2 */}
-      <div style={{ marginTop: "1rem" }}>
+      <div style={{ marginTop: "1rem", marginBottom: "10rem" }}>
         <FullscreenStep 
           number="2"
           cardTitle="Chat GPT-5.2 conversations"
@@ -407,6 +407,7 @@ export const SalesRepSteps = () => {
           image={womanPhoneImg}
           icon={<MessageSquare className="w-8 h-8" />}
           align="right"
+          onInView={() => setPlaneStarted(true)}
         />
       </div>
       {/* Step 3 */}
