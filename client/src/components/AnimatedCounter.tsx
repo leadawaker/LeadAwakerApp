@@ -37,10 +37,11 @@ export default function AnimatedCounter({
   }, [isInView, end, duration, count, suffixAtEnd]);
 
   useEffect(() => {
-    return count.onChange((latest) => {
-      setDisplayValue(format(latest) + (showSuffix ? suffix : ""));
+    return count.on("change", (latest) => {
+      const isComplete = latest >= end;
+      setDisplayValue(format(latest) + (isComplete || showSuffix ? suffix : ""));
     });
-  }, [count, format, suffix, showSuffix]);
+  }, [count, format, suffix, showSuffix, end]);
 
   return <motion.span ref={ref} data-testid="text-animated-counter">{displayValue}</motion.span>;
 }
