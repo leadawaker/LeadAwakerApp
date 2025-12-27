@@ -300,7 +300,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
                         >
                           {step.leftText.split('\n').map((line, i) => (
                             <div key={i} className="flex items-start gap-3">
-                              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-yellow-400 mt-2" />
+                              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-yellow-500 mt-2" />
                               <div className="font-medium text-gray-600 text-[14px]">
                                 {line}
                               </div>
@@ -319,18 +319,18 @@ Weekly performance review and campaign adjustments for ongoing lift`
               <button
                 onClick={handlePrev}
                 data-testid="button-prev-step"
-                className="p-3 rounded-full bg-yellow-500/20 border border-yellow-400/50 text-white hover:bg-yellow-500/30 hover:border-yellow-400 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
+                className="p-3 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-white hover:bg-yellow-500/30 hover:border-yellow-500 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
                 aria-label="Previous step"
               >
-                <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform text-yellow-400" />
+                <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform text-yellow-500" />
               </button>
               <button
                 onClick={handleNext}
                 data-testid="button-next-step"
-                className="p-3 rounded-full bg-yellow-500/20 border border-yellow-400/50 text-white hover:bg-yellow-500/30 hover:border-yellow-400 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
+                className="p-3 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-white hover:bg-yellow-500/30 hover:border-yellow-500 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
                 aria-label="Next step"
               >
-                <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform text-yellow-400" />
+                <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform text-yellow-500" />
               </button>
             </div>
           </div>
@@ -344,8 +344,8 @@ Weekly performance review and campaign adjustments for ongoing lift`
                 data-testid={`dot-step-${i}`}
                 className={`w-3 h-3 rounded-full transition-all duration-300 ${
                   i === currentStep
-                    ? 'bg-yellow-400 w-8'
-                    : 'bg-yellow-400/40 hover:bg-yellow-400/60'
+                    ? 'bg-yellow-500 w-8'
+                    : 'bg-yellow-500/40 hover:bg-yellow-500/60'
                 }`}
                 aria-label={`Go to step ${i + 1}`}
               />
