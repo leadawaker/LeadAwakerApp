@@ -195,10 +195,9 @@ export default function ChatCard2D() {
             {currentStep >= 1 && (
               <motion.div 
                 className="flex justify-center py-2" 
-                variants={messageVariants} 
-                initial="hidden" 
-                animate="visible"
-                transition={{ duration: 0.4, delay: 0.5 }}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.4, delay: 1 }}
               >
                 <div className="text-xs text-slate-400 font-medium">---Lead Contacted---</div>
               </motion.div>
@@ -232,10 +231,9 @@ export default function ChatCard2D() {
             {currentStep >= 3 && (
               <motion.div 
                 className="flex justify-center py-2" 
-                variants={messageVariants} 
-                initial="hidden" 
-                animate="visible"
-                transition={{ duration: 0.4, delay: 0.6 }}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.4, delay: 1 }}
               >
                 <div className="text-xs text-slate-400 font-medium">---Lead Replied---</div>
               </motion.div>
@@ -257,10 +255,9 @@ export default function ChatCard2D() {
             {currentStep >= 4 && (
               <motion.div 
                 className="flex justify-center py-2" 
-                variants={messageVariants} 
-                initial="hidden" 
-                animate="visible"
-                transition={{ duration: 0.4, delay: 0.6 }}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.4, delay: 1 }}
               >
                 <div className="text-xs text-slate-400 font-medium">---Lead Qualified---</div>
               </motion.div>
@@ -385,10 +382,9 @@ export default function ChatCard2D() {
             {currentStep >= 12 && (
               <motion.div 
                 className="flex justify-center py-2" 
-                variants={messageVariants} 
-                initial="hidden" 
-                animate="visible"
-                transition={{ duration: 0.4, delay: 0.5 }}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.4, delay: 1 }}
               >
                 <div className="text-xs text-slate-400 font-medium">---DSAR Completed---</div>
               </motion.div>
@@ -419,13 +415,12 @@ export default function ChatCard2D() {
             )}
 
             {/* Milestone: Sent To Client */}
-            {currentStep >= 14 && currentStep < 15 && (
+            {currentStep >= 14 && (
               <motion.div 
                 className="flex justify-center py-2" 
-                variants={messageVariants} 
-                initial="hidden" 
-                animate="visible"
-                transition={{ duration: 0.4, delay: 0.5 }}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.4, delay: 1 }}
               >
                 <div className="text-xs text-slate-400 font-medium">---Sent To Client---</div>
               </motion.div>
