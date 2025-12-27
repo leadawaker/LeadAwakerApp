@@ -149,7 +149,7 @@ export default function PipelineChart() {
     >
       <div className="text-center space-y-2">
         <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 dark:text-white">What you see</h2>
-        <p className="text-slate-500 dark:text-slate-400">A real-time view of leads becoming customers</p>
+        <p className="text-slate-500 dark:text-slate-400 text-[18px] pt-[20px] pb-[20px]">A real-time view of leads becoming customers through our conversion pipeline display</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full items-start">
         {STAGES.map((stage) => (
