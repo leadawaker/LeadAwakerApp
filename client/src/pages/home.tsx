@@ -266,11 +266,7 @@ export default function Home() {
         </div>
       </section>
       {/* Bottom Demo CTA Section */}
-      <section className="py-32 bg-gradient-to-br from-primary via-primary to-blue-700 text-primary-foreground relative overflow-hidden">
-        <div className="absolute inset-0 opacity-20 mix-blend-overlay" style={{backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')"}} />
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl" />
-        
+      <section className="py-32 bg-primary text-primary-foreground relative overflow-hidden">
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -280,8 +276,8 @@ export default function Home() {
             className="text-center max-w-3xl mx-auto"
           >
             <h2 className="md:text-4xl lg:text-5xl font-bold mb-8 text-white tracking-tight text-[40px] leading-tight">
-              If a picture is worth a 1000 words... <br className="hidden md:block" />
-              A <span className="text-[#FEB800]">demo</span> is worth a 1000 pictures.
+              If a picture is worth a thousand words... <br className="hidden md:block" />
+              A <span className="text-[#FEB800]">demo</span> is worth a thousand pictures.
             </h2>
             
             <div className="space-y-6 leading-relaxed mb-12">
@@ -299,7 +295,7 @@ export default function Home() {
               </div>
 
               <p className="text-base md:text-lg opacity-80">
-                By automating what slows you down, AI frees your team to focus on what actually moves the needle: strategy, growth, and the work you enjoy. In just a few minutes, you’ll see how smarter automation boosts your ROI and lightens your day-to-day.
+                By automating what slows you down, AI frees your team to focus on what actually moves the needle: strategy, growth, and the work you enjoy.
               </p>
             </div>
           </motion.div>
