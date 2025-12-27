@@ -291,9 +291,9 @@ export default function Home() {
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link href="/book-demo">
-                <Button size="lg" className="h-16 px-10 text-xl rounded-full shadow-lg shadow-yellow-400/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:scale-105 hover:shadow-yellow-400/35 transition-all duration-300 font-bold group">
+                <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all">
                   Book a Demo
-                  <ArrowRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
             </div>
