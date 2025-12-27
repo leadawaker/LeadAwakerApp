@@ -125,7 +125,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
     offset: ["start start", "end end"]
   });
 
-  const stepProgress = useTransform(scrollYProgress, [0, 1], [0, steps.length - 1]);
+  const stepProgress = useTransform(scrollYProgress, [0.1, 0.9], [0, steps.length - 1]);
 
   useEffect(() => {
     const unsubscribe = stepProgress.on("change", (v) => {
