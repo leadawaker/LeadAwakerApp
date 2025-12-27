@@ -113,8 +113,8 @@ export default function ChatCard2D() {
     await new Promise(resolve => setTimeout(resolve, 2000));
     setCurrentStep(10);
     
-    // Sophie final (17.58-22.25s) - 3x faster
-    await new Promise(resolve => setTimeout(resolve, 4667));
+    // Sophie final (17.58-22.25s) - double duration
+    await new Promise(resolve => setTimeout(resolve, 9334));
     setCurrentStep(11);
     
     // Jack thanks (22.25-28.25s) - 6 seconds later
@@ -464,22 +464,6 @@ export default function ChatCard2D() {
           </div>
         )}
 
-        {/* New Messages Indicator - Single centered icon button */}
-        {showNewMessageIndicator && (
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-50">
-            <motion.button 
-              initial={{ opacity: 0, y: 10 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              className="text-white p-3 rounded-full shadow-lg hover:scale-110 transition-transform"
-              style={{ backgroundColor: "#2563EB" }}
-              onClick={scrollToBottomManually}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-            </motion.button>
-          </div>
-        )}
       </div>
     </div>
   );
