@@ -272,7 +272,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center max-w-4xl mx-auto mb-16"
           >
-            <h2 className="md:text-4xl font-bold mt-[3px] mb-[3px] text-[46px]">Compliance and Reputation Built In</h2>
+            <h2 className="md:text-4xl font-bold mt-[3px] mb-[3px] text-[48px]">Compliance and Reputation Built In</h2>
           </motion.div>
 
           <WorkflowVisualization />
