@@ -230,16 +230,17 @@ Conversations shaped by Challenger & SPIN selling to uncover needs and handle ob
     {
       number: "3",
       cardTitle: "3. Automated Appointment Booking",
-      cardDescription: "The ultimate goal of reactivation is getting prospects on your calendar. Our system handles the scheduling automatically.",
+      cardDescription: "Turn reactivation into revenue.",
       overlayTitle: "",
       overlayDescription: "",
       image: dailyLeadsImg,
       icon: <TrendingUp className="w-8 h-8 text-yellow-500" />,
       align: "left" as const,
-      leftText: `One click integration with Google Calendar, Calendly, and more
-Automatic reminders that cut no shows and last minute cancellations
-Self service rescheduling so your team never has to chase 'what time works' again
-Weekly performance review and campaign adjustments for ongoing lift`
+      leftText: `One-click Google Calendar, Calendly integration
+Smart reminders slash no-shows and cancellations
+On-demand campaign reports with lead interaction details
+Direct booking setup (restaurant tables, sales calls)
+Weekly optimization reviews for continuous results`
     }
   ];
 
