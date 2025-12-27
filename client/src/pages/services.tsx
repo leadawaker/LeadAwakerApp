@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Database, MessageSquare, Calendar, BarChart, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import ChatCard2D from "@/components/ChatCard2D";
 
 export default function Services() {
   return (
@@ -141,6 +142,43 @@ export default function Services() {
             >
                <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent opacity-50" />
                <Calendar className="w-32 h-32 text-primary/20" />
+            </motion.div>
+          </div>
+
+          {/* Chat Card Section */}
+          <div className="grid md:grid-cols-2 gap-12 items-center py-12">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="order-2 md:order-1"
+            >
+              <h2 className="text-3xl font-bold mb-4">See Our AI in Action</h2>
+              <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
+                Watch how our conversational AI agents engage with prospects naturally and authentically. These aren't robotic automated messages—they're intelligent, context-aware conversations that build trust and drive results.
+              </p>
+              <ul className="space-y-3 mb-8">
+                <li className="flex gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
+                  <span>Intelligent responses tailored to each prospect</span>
+                </li>
+                <li className="flex gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
+                  <span>Multi-channel conversations (SMS, Email, WhatsApp)</span>
+                </li>
+                <li className="flex gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
+                  <span>Seamless escalation to your team when needed</span>
+                </li>
+              </ul>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="order-1 md:order-2 max-w-md mx-auto w-full"
+            >
+              <ChatCard2D />
             </motion.div>
           </div>
         </div>
