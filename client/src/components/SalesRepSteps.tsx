@@ -442,9 +442,10 @@ AI agents, powered by the latest generation of language models, understand inten
           image={womanPhoneImg}
           icon={<MessageSquare className="w-8 h-8" />}
           align="right"
-          leftText="24/7 responses across SMS, WhatsApp or email
-Challenger and SPIN based conversations that surface needs and handle objections with structure
-Smart follow up timers that re engage unresponsive leads automatically, without nagging
+          leftText="24/7 responses across SMS, WhatsApp, and email
+Conversations shaped by Challenger and SPIN, designed to uncover real needs and handle objections with structure.
+Smart follow up timers that re engage unresponsive leads automatically
+Speaks your customers' languages and can sound buttoned up or casual
 Human takeover whenever you want a person to step in"
           onInView={() => setPlaneStarted(true)}
         />
