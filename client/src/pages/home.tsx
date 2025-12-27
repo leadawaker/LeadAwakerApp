@@ -274,7 +274,7 @@ export default function Home() {
           >
             <div className="grid md:grid-cols-2 gap-8 text-left mt-12 p-8">
               <div className="space-y-3">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2 text-[18px]">
                   <div className="w-2 h-2 rounded-full bg-emerald-500" />
                   GDPR & CCPA Compliant
                 </h3>
