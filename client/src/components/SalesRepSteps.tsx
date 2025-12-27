@@ -266,9 +266,9 @@ export const SalesRepSteps = () => {
             alt=""
             className="w-1/2 h-full object-contain object-bottom"
             style={{ 
-              filter: 'brightness(2) contrast(1.5) grayscale(1)',
+              filter: 'brightness(3) contrast(2) grayscale(1)',
               mixBlendMode: 'screen',
-              opacity: 0.8
+              opacity: 1
             }}
           />
           <img 
@@ -276,9 +276,9 @@ export const SalesRepSteps = () => {
             alt=""
             className="w-1/2 h-full object-contain object-bottom"
             style={{ 
-              filter: 'brightness(2) contrast(1.5) grayscale(1)',
+              filter: 'brightness(3) contrast(2) grayscale(1)',
               mixBlendMode: 'screen',
-              opacity: 0.8
+              opacity: 1
             }}
           />
         </motion.div>
