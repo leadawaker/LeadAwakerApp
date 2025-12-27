@@ -221,48 +221,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-      {/* Demo Section with Logo */}
-      <section id="demo" className="py-48 border-t border-border">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="space-y-6"
-            >
-              <h2 className="md:text-4xl font-bold text-[48px]">Let us show you how it's done</h2>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                If a picture is worth a thousand words, a demo is worth a thousand pictures. That's why before you do anything, I want you to see AI in action. This demo gives a taster of how AI engages with customers in a natural way and bears the brunt of repetitive tasks, so you and your team don't have to.
-              </p>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                With AI freeing up valuable man-power and doing the work you'd "never get around to doing", you can unlock new levels of ROI whilst focusing on the things you enjoy.
-              </p>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-              >
-                <Link href="/book-demo">
-                  <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all text-white">
-                    Check Out The Demo
-                    <ArrowRight className="ml-2 w-5 h-5" />
-                  </Button>
-                </Link>
-              </motion.div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="flex justify-center items-center"
-            >
-              <AnimatedLogo3D />
-            </motion.div>
-          </div>
-        </div>
-      </section>
       {/* Security & AI Guardrails Section */}
       <section className="py-48 border-t border-border">
         <div className="container mx-auto px-4 md:px-6">

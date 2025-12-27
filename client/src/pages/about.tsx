@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Users, Rocket, Target, Code2, TrendingUp, Briefcase } from "lucide-react";
+import AnimatedLogo3D from "@/components/AnimatedLogo3D";
 
 export default function About() {
   return (
@@ -13,6 +14,9 @@ export default function About() {
             transition={{ delay: 0.2 }}
             className="md:col-span-1 text-center"
           >
+            <div className="flex justify-center mb-6">
+              <AnimatedLogo3D />
+            </div>
             <h2 className="text-2xl font-bold">Gabriel Fronza</h2>
           </motion.div>
 
