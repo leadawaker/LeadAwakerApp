@@ -336,9 +336,9 @@ Weekly optimization reviews for continuous results`
                                       align-items: center;
                                       gap: 0.5rem;
                                       padding: 0.375rem 0.75rem;
-                                      background: rgba(255, 255, 255, 0.7);
+                                      background: rgba(255, 255, 255, 0.35);
                                       border-radius: 0.375rem;
-                                      border: 1px solid rgba(226, 232, 240, 0.5);
+                                      border: 1px solid rgba(226, 232, 240, 0.3);
                                       backdrop-filter: blur(4px);
                                       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
                                     }
