@@ -126,7 +126,7 @@ export default function Home() {
         </div>
       </section>
       {/* Results/Metrics Section */}
-      <section className="pb-48 pt-32 bg-muted/30">
+      <section className="pb-48 pt-16 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
