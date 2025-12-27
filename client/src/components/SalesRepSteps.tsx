@@ -422,11 +422,15 @@ export const SalesRepSteps = () => {
           number="1"
           cardTitle="1. Upload your database"
           cardDescription="Send a CSV or connect your CRM. That’s it, we handle the rest."
-          overlayTitle="Your existing stack becomes an automation powerhouse."
-          overlayDescription="CRM / Databases, WhatsApp, SMS & Chat, Email Platforms, Calendar Apps"
+          overlayTitle=""
+          overlayDescription=""
           image={databaseIntegrationImg}
           icon={<Database className="w-8 h-8" />}
           align="left"
+          leftText="We take your list of \"dead\" leads—people who inquired 3, 6, or 12 months ago but never bought—and we wake them up.
+Segment your audience based on past interactions
+Craft irresistible re-engagement offers
+Launch multi-channel campaigns (SMS, Email)"
           onInView={() => setPlaneStarted(true)}
         />
       </div>
