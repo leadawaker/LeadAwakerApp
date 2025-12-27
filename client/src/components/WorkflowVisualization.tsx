@@ -232,7 +232,7 @@ export default function WorkflowVisualization() {
             </div>
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] font-mono flex items-center justify-between">
               <span className={`font-semibold transition-colors duration-300 ${activeNode === 'contact' ? 'text-amber-600' : 'text-amber-400/60'}`}>Status</span>
-              <span className={`transition-colors duration-300 ${activeNode === 'contact' ? 'text-gray-700' : 'text-gray-400'}`}>{isApproved ? 'Lead Engaged' : 'Active'}</span>
+              <span className={`transition-colors duration-300 ${activeNode === 'contact' ? 'text-gray-700' : 'text-gray-400'}`}>{isApproved ? 'Lead Engaged' : 'Lead Engaged'}</span>
             </div>
           </div>
         </div>
