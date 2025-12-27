@@ -8,6 +8,7 @@ interface AnimatedCounterProps {
   format?: (value: number) => string;
   suffix?: string;
   suffixAtEnd?: boolean;
+  onFinishedChange?: (finished: boolean) => void;
 }
 
 export default function AnimatedCounter({ 
@@ -16,7 +17,8 @@ export default function AnimatedCounter({
   duration = 2, 
   format = (v) => Math.round(v).toString(),
   suffix = "",
-  suffixAtEnd = false
+  suffixAtEnd = false,
+  onFinishedChange
 }: AnimatedCounterProps) {
   const count = useMotionValue(start);
   const [displayValue, setDisplayValue] = useState(format(start) + (suffix && !suffixAtEnd ? suffix : ""));
@@ -25,6 +27,10 @@ export default function AnimatedCounter({
   const isInView = useInView(ref, { once: true });
 
   const [isFinished, setIsFinished] = useState(false);
+
+  useEffect(() => {
+    onFinishedChange?.(isFinished);
+  }, [isFinished, onFinishedChange]);
 
   useEffect(() => {
     if (!isInView) return;
@@ -69,7 +75,10 @@ export default function AnimatedCounter({
             className="absolute inset-0 flex items-center justify-center whitespace-nowrap"
             data-testid="text-zero-overlay"
           >
-            <span className="leading-none text-white">Absolute ZERO</span>
+            <div className="flex flex-col items-center leading-none">
+              <span className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white">Absolute</span>
+              <span className="text-6xl md:text-9xl font-black uppercase tracking-tighter text-[#FEB800]">ZERO</span>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

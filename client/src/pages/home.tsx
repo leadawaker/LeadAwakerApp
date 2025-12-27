@@ -27,6 +27,7 @@ import WorkflowVisualization from "@/components/WorkflowVisualization";
 
 export default function Home() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
+  const [isFinished, setIsFinished] = useState(false);
 
   return (
     <div className="min-h-screen pt-24">
@@ -145,11 +146,11 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               animate={{ 
-                backgroundColor: "#526fff",
-                color: "#ffffff"
+                backgroundColor: isFinished ? "#526fff" : "#ffffff",
+                color: isFinished ? "#ffffff" : "#3c50d6"
               }}
-              transition={{ delay: 6 }} // 5s counter duration + 1s delay
-              className="p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px] bg-card text-foreground"
+              transition={{ duration: 0.5 }}
+              className="p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px]"
             >
               <div className="text-6xl md:text-9xl font-black mb-2 font-heading">
                 <AnimatedCounter 
@@ -157,6 +158,7 @@ export default function Home() {
                   end={0} 
                   duration={5}
                   format={(v: number) => `$${Math.round(v).toString()}`}
+                  onFinishedChange={(finished) => setIsFinished(finished)}
                 />
               </div>
               <h3 className="text-4xl font-black mb-2 font-heading">Upfront Cost</h3>
