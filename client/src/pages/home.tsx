@@ -287,7 +287,7 @@ export default function Home() {
                   <div className="w-2 h-2 rounded-full bg-blue-500" />
                   Brand Protection
                 </h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
+                <p className="text-gray-600 text-[16px]">
                   Real-time monitoring ensures every interaction stays on-topic, professional, and perfectly aligned with your brand's voice and guidelines.
                 </p>
               </div>
