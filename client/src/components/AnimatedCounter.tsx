@@ -19,8 +19,8 @@ export default function AnimatedCounter({
   suffixAtEnd = false
 }: AnimatedCounterProps) {
   const count = useMotionValue(start);
-  const [displayValue, setDisplayValue] = useState(format(start) + (!suffixAtEnd ? suffix : ""));
-  const [showSuffix, setShowSuffix] = useState(!suffixAtEnd);
+  const [displayValue, setDisplayValue] = useState(format(start) + (suffix && !suffixAtEnd ? suffix : ""));
+  const [showSuffix, setShowSuffix] = useState(suffix && !suffixAtEnd);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
 
@@ -30,7 +30,7 @@ export default function AnimatedCounter({
     const controls = animate(count, end, { 
       duration,
       onComplete: () => {
-        if (suffixAtEnd) setShowSuffix(true);
+        setShowSuffix(true);
       }
     });
     return controls.stop;
