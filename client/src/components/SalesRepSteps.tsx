@@ -250,41 +250,41 @@ export const SalesRepSteps = () => {
         zIndex: 5
       }} />
       <Plane startTrigger={planeStarted} />
+      {/* Animated Clouds Overlay */}
+      <div className="absolute inset-x-0 bottom-0 pointer-events-none z-[100] h-[500px] overflow-hidden">
+        <motion.div 
+          className="flex h-full w-[200%]"
+          animate={{ x: ["0%", "-50%"] }}
+          transition={{ 
+            duration: 80, 
+            repeat: Infinity, 
+            ease: "linear" 
+          }}
+        >
+          <img 
+            src={cloudsOverlay}
+            alt=""
+            className="w-1/2 h-full object-contain object-bottom"
+            style={{ 
+              mixBlendMode: 'screen',
+              opacity: 1
+            }}
+          />
+          <img 
+            src={cloudsOverlay}
+            alt=""
+            className="w-1/2 h-full object-contain object-bottom"
+            style={{ 
+              mixBlendMode: 'screen',
+              opacity: 1
+            }}
+          />
+        </motion.div>
+      </div>
       <div className="relative z-10">
-        {/* Pain Points Section */}
-        <section className="pt-48 pb-32 md:pt-56 md:pb-40 relative">
-          {/* Animated Clouds Overlay - Positioned behind content but above background gradients */}
-          <div className="absolute inset-x-0 bottom-0 pointer-events-none z-0 h-[500px] overflow-hidden">
-            <motion.div 
-              className="flex h-full w-[200%]"
-              animate={{ x: ["0%", "-50%"] }}
-              transition={{ 
-                duration: 80, 
-                repeat: Infinity, 
-                ease: "linear" 
-              }}
-            >
-              <img 
-                src={cloudsOverlay}
-                alt=""
-                className="w-1/2 h-full object-contain object-bottom"
-                style={{ 
-                  mixBlendMode: 'screen',
-                  opacity: 0.8
-                }}
-              />
-              <img 
-                src={cloudsOverlay}
-                alt=""
-                className="w-1/2 h-full object-contain object-bottom"
-                style={{ 
-                  mixBlendMode: 'screen',
-                  opacity: 0.8
-                }}
-              />
-            </motion.div>
-          </div>
-          <div className="container mx-auto px-4 md:px-6 relative z-10">
+      {/* Pain Points Section */}
+      <section className="pt-48 pb-32 md:pt-56 md:pb-40">
+        <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
