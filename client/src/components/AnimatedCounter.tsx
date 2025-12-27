@@ -51,7 +51,7 @@ export default function AnimatedCounter({
             initial={{ opacity: 0, scale: 0.5, rotate: -45 }}
             animate={{ opacity: 1, scale: 1, rotate: -15 }}
             className="absolute z-20 pointer-events-none whitespace-nowrap flex flex-col items-center"
-            style={{ top: '20%' }}
+            style={{ top: '0%' }}
             data-testid="text-nothing-overlay"
           >
             <span className="text-yellow-500 font-black text-5xl md:text-7xl tracking-tighter uppercase leading-none italic drop-shadow-2xl">Absolutely</span>
