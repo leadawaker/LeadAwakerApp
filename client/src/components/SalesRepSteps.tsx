@@ -150,7 +150,7 @@ const FullscreenStep = ({
               />
               <motion.div 
                 style={{ opacity: overlayOpacity }}
-                className="absolute inset-0 bg-gradient-to-r from-blue-950/95 via-blue-900/80 to-transparent flex flex-col items-start justify-start p-8 text-white"
+                className="absolute inset-0 bg-gradient-to-r from-blue-950/90 to-blue-900/85 flex flex-col items-start justify-start p-8 text-white"
               >
                 <div className="space-y-6 max-w-sm">
                   {leftText.split('\n').map((line, i) => (
