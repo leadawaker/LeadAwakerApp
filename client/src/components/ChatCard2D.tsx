@@ -64,15 +64,15 @@ export default function ChatCard2D() {
   useEffect(() => {
     if (isInView && currentStep === 0) {
       const loadMessages = async () => {
-        await new Promise(resolve => setTimeout(resolve, 400));
+        await new Promise(resolve => setTimeout(resolve, 600));
         setCurrentStep(1);
-        await new Promise(resolve => setTimeout(resolve, 600));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         setCurrentStep(2);
-        await new Promise(resolve => setTimeout(resolve, 600));
+        await new Promise(resolve => setTimeout(resolve, 1200));
         setCurrentStep(3);
-        await new Promise(resolve => setTimeout(resolve, 600));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         setCurrentStep(4);
-        await new Promise(resolve => setTimeout(resolve, 600));
+        await new Promise(resolve => setTimeout(resolve, 1200));
         setCurrentStep(5);
       };
       loadMessages();
@@ -84,45 +84,44 @@ export default function ChatCard2D() {
     setIsAnimating(true);
     setIsUserScrolling(false);
     
-    // 40 second timeline (extended from 30s)
-    // Jack's "No sorry" (0-2.67s)
-    await new Promise(resolve => setTimeout(resolve, 2667));
+    // Jack's "No sorry" (0-3s)
+    await new Promise(resolve => setTimeout(resolve, 3000));
     setCurrentStep(6);
     
-    // Jack's "Not at Hand" (2.67-4s)
-    await new Promise(resolve => setTimeout(resolve, 1333));
+    // Jack's "Not at Hand" (3-4.5s)
+    await new Promise(resolve => setTimeout(resolve, 1500));
     setCurrentStep(7);
     
-    // Sophie DSAR (4-14.67s)
-    await new Promise(resolve => setTimeout(resolve, 8000));
+    // Sophie DSAR (4.5-16s) - increased to 11.5s for her longer message
+    await new Promise(resolve => setTimeout(resolve, 11500));
     setCurrentStep(8);
     
-    // Jack's first question (14.67-27s)
-    await new Promise(resolve => setTimeout(resolve, 9333));
+    // Jack's first question (16-29s)
+    await new Promise(resolve => setTimeout(resolve, 13000));
     setCurrentStep(9);
     
-    // Jack's second question (27-29.33s)
+    // Jack's second question (29-31s)
     await new Promise(resolve => setTimeout(resolve, 2000));
     setCurrentStep(10);
     
-    // Sophie final (29.33-39s)
-    await new Promise(resolve => setTimeout(resolve, 8667));
+    // Sophie final (31-45s) - increased to 14s for her longer message
+    await new Promise(resolve => setTimeout(resolve, 14000));
     setCurrentStep(11);
     
-    // Jack thanks (39-40.67s)
-    await new Promise(resolve => setTimeout(resolve, 1333));
+    // Jack thanks (45-46.5s)
+    await new Promise(resolve => setTimeout(resolve, 1500));
     setCurrentStep(12);
     
-    // Sophie claim message (40.67-44.67s)
+    // Sophie claim message (46.5-50.5s)
     await new Promise(resolve => setTimeout(resolve, 4000));
     setCurrentStep(13);
     
-    // Jack final message (44.67-46s)
-    await new Promise(resolve => setTimeout(resolve, 1333));
+    // Jack final message (50.5-52s)
+    await new Promise(resolve => setTimeout(resolve, 1500));
     setCurrentStep(14);
     
-    // Sophie closing message (46-47.33s)
-    await new Promise(resolve => setTimeout(resolve, 1333));
+    // Sophie closing message (52-53.5s)
+    await new Promise(resolve => setTimeout(resolve, 1500));
     setCurrentStep(15);
     
     setIsAnimating(false);
@@ -174,7 +173,7 @@ export default function ChatCard2D() {
         {/* Chat Messages Container */}
         <div 
           ref={scrollRef}
-          className="p-6 space-y-4 bg-slate-50 min-h-[450px] max-h-[550px] overflow-y-auto relative"
+          className="p-6 space-y-4 bg-slate-50 h-[600px] overflow-y-auto relative"
           style={{ scrollBehavior: isUserScrolling ? 'auto' : 'smooth' }}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-slate-100/20 via-transparent to-slate-100/20 pointer-events-none" />
@@ -225,7 +224,13 @@ export default function ChatCard2D() {
 
             {/* Milestone: Lead Replied */}
             {currentStep >= 3 && (
-              <motion.div className="flex justify-center py-2" variants={messageVariants} initial="hidden" animate="visible">
+              <motion.div 
+                className="flex justify-center py-2" 
+                variants={messageVariants} 
+                initial="hidden" 
+                animate="visible"
+                transition={{ duration: 0.4, delay: 0.6 }}
+              >
                 <div className="text-xs text-slate-400 font-medium">---Lead Replied---</div>
               </motion.div>
             )}
@@ -244,7 +249,13 @@ export default function ChatCard2D() {
 
             {/* Milestone: Lead Qualified */}
             {currentStep >= 4 && (
-              <motion.div className="flex justify-center py-2" variants={messageVariants} initial="hidden" animate="visible">
+              <motion.div 
+                className="flex justify-center py-2" 
+                variants={messageVariants} 
+                initial="hidden" 
+                animate="visible"
+                transition={{ duration: 0.4, delay: 0.6 }}
+              >
                 <div className="text-xs text-slate-400 font-medium">---Lead Qualified---</div>
               </motion.div>
             )}
