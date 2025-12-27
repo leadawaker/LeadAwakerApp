@@ -266,7 +266,7 @@ export const SalesRepSteps = () => {
             alt=""
             className="w-1/2 h-full object-contain object-bottom"
             style={{ 
-              mixBlendMode: 'screen'
+              mixBlendMode: 'lighten'
             }}
           />
           <img 
@@ -274,7 +274,7 @@ export const SalesRepSteps = () => {
             alt=""
             className="w-1/2 h-full object-contain object-bottom"
             style={{ 
-              mixBlendMode: 'screen'
+              mixBlendMode: 'lighten'
             }}
           />
         </motion.div>
