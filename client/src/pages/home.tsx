@@ -27,6 +27,7 @@ import WorkflowVisualization from "@/components/WorkflowVisualization";
 
 export default function Home() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
+  const [isZeroCompleted, setIsZeroCompleted] = useState(false);
 
   return (
     <div className="min-h-screen pt-24">
@@ -144,18 +145,33 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-card p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px]"
+              className="p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px] transition-all duration-1000"
+              style={{
+                backgroundColor: "var(--primary)",
+                color: "white"
+              }}
+              animate={isZeroCompleted ? {
+                backgroundColor: "rgba(241, 245, 249, 1)",
+                color: "#64748b",
+                borderColor: "#e2e8f0"
+              } : {
+                backgroundColor: "var(--primary)",
+                color: "white"
+              }}
             >
-              <div className="text-6xl md:text-9xl font-black text-primary mb-2 font-heading">
+              <div className="text-6xl md:text-9xl font-black mb-2 font-heading">
                 <AnimatedCounter 
                   start={10000}
                   end={0} 
                   duration={5}
                   format={(v: number) => `$${Math.round(v).toString()}`}
+                  onFinalComplete={() => setIsZeroCompleted(true)}
                 />
               </div>
               <h3 className="text-4xl font-black mb-2 font-heading">Upfront Cost</h3>
-              <p className="text-xl text-muted-foreground text-blue-500 font-medium">performance‑based pricing</p>
+              <p className={`text-xl font-medium transition-opacity duration-1000 ${isZeroCompleted ? 'opacity-60' : 'opacity-80'}`}>
+                performance‑based pricing
+              </p>
             </motion.div>
 
             {/* Stacked Side Cards */}
@@ -198,7 +214,7 @@ export default function Home() {
                   transition={{ delay: 0.1 * i }}
                   className="bg-card p-6 rounded-2xl border border-border text-center flex flex-col justify-center flex-1 min-w-[280px]"
                 >
-                  <div className={`font-bold text-primary mb-1 font-heading ${result.isRange ? 'text-4xl' : 'text-[48px]'}`}>
+                  <div className={`font-bold text-[#3c50d6] mb-1 font-heading ${result.isRange ? 'text-4xl' : 'text-[48px]'}`}>
                     {result.isRange ? (
                       <AnimatedRangeCounter 
                         start={result.start}
@@ -220,7 +236,7 @@ export default function Home() {
                       />
                     )}
                   </div>
-                  <h3 className="font-bold truncate font-heading text-[22px]">{result.label}</h3>
+                  <h3 className="font-bold truncate font-heading text-[22px] text-foreground">{result.label}</h3>
                 </motion.div>
               ))}
             </div>

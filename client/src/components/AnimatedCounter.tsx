@@ -8,6 +8,7 @@ interface AnimatedCounterProps {
   format?: (value: number) => string;
   suffix?: string;
   suffixAtEnd?: boolean;
+  onFinalComplete?: () => void;
 }
 
 export default function AnimatedCounter({ 
@@ -16,7 +17,8 @@ export default function AnimatedCounter({
   duration = 2, 
   format = (v) => Math.round(v).toString(),
   suffix = "",
-  suffixAtEnd = false
+  suffixAtEnd = false,
+  onFinalComplete
 }: AnimatedCounterProps) {
   const count = useMotionValue(start);
   const [displayValue, setDisplayValue] = useState(format(start) + (suffix && !suffixAtEnd ? suffix : ""));
@@ -36,6 +38,7 @@ export default function AnimatedCounter({
         if (end === 0) {
           setTimeout(() => {
             setIsZero(true);
+            onFinalComplete?.();
           }, 1000);
         }
       }
@@ -56,10 +59,15 @@ export default function AnimatedCounter({
         {isZero ? (
           <motion.span
             key="zero-text"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="text-yellow-500 font-black italic uppercase tracking-tighter"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1,
+              color: "#94a3b8" 
+            }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="font-black"
           >
             Absolute ZERO
           </motion.span>
@@ -69,7 +77,7 @@ export default function AnimatedCounter({
             ref={ref}
             data-testid="text-animated-counter"
             exit={{ opacity: 0 }}
-            className="text-[#cacbcc]"
+            className="inherit"
           >
             {displayValue}
           </motion.span>
