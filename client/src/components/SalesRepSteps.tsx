@@ -276,7 +276,7 @@ Weekly performance review and campaign adjustments for ongoing lift`
                     filter: isActive ? 'blur(0px)' : 'blur(2px)',
                   }}
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  className="absolute w-full max-w-2xl"
+                  className="absolute w-full max-w-3xl"
                 >
                   <Card className="bg-card backdrop-blur-sm border-white/10 overflow-hidden group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
                     <CardContent className="p-8">
@@ -289,6 +289,33 @@ Weekly performance review and campaign adjustments for ongoing lift`
                       <p className="text-muted-foreground text-lg leading-relaxed mb-6" data-testid={`step-description-${step.number}`}>
                         {step.cardDescription}
                       </p>
+
+                      {/* CRM Logos for Step 1 */}
+                      {isActive && step.number === "1" && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.1 }}
+                          className="flex flex-wrap gap-4 mb-6 items-center bg-black/5 p-3 rounded-lg border border-black/5"
+                        >
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200">
+                            <Database className="w-4 h-4 text-blue-600" />
+                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Salesforce</span>
+                          </div>
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200">
+                            <Database className="w-4 h-4 text-orange-500" />
+                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">HubSpot</span>
+                          </div>
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200">
+                            <Box className="w-4 h-4 text-green-600" />
+                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Sheets</span>
+                          </div>
+                          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-md shadow-sm border border-slate-200">
+                            <Box className="w-4 h-4 text-green-700" />
+                            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Excel</span>
+                          </div>
+                        </motion.div>
+                      )}
 
                       {/* Bullet points for current card only */}
                       {isActive && step.leftText && (
