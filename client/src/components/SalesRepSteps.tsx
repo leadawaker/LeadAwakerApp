@@ -383,7 +383,7 @@ export const SalesRepSteps = () => {
       </section>
 
       {/* Step 1 */}
-      <div style={{ marginTop: "1rem", marginBottom: "10rem" }}>
+      <div style={{ marginTop: "1rem", marginBottom: "5rem" }}>
         <FullscreenStep 
           number="1"
           cardTitle="Upload database"
@@ -397,7 +397,7 @@ export const SalesRepSteps = () => {
         />
       </div>
       {/* Step 2 */}
-      <div style={{ marginTop: "1rem", marginBottom: "10rem" }}>
+      <div style={{ marginTop: "1rem", marginBottom: "5rem" }}>
         <FullscreenStep 
           number="2"
           cardTitle="Chat GPT-5.2 conversations"
@@ -411,7 +411,7 @@ export const SalesRepSteps = () => {
         />
       </div>
       {/* Step 3 */}
-      <div style={{ marginTop: "1rem", marginBottom: "8rem" }}>
+      <div style={{ marginTop: "1rem", marginBottom: "4rem" }}>
         <FullscreenStep 
           number="3"
           cardTitle="Revenue rolls in"
