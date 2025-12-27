@@ -231,7 +231,7 @@ export default function Home() {
               viewport={{ once: true }}
               className="space-y-6"
             >
-              <h2 className="text-3xl md:text-4xl font-bold">Let us show you how it's done</h2>
+              <h2 className="md:text-4xl font-bold text-[48px]">Let us show you how it's done</h2>
               <p className="text-lg text-muted-foreground leading-relaxed">
                 If a picture is worth a thousand words, a demo is worth a thousand pictures. That's why before you do anything, I want you to see AI in action. This demo gives a taster of how AI engages with customers in a natural way and bears the brunt of repetitive tasks, so you and your team don't have to.
               </p>
