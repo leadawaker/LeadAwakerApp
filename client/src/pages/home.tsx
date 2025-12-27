@@ -279,7 +279,7 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="text-center max-w-3xl mx-auto"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8 text-white tracking-tight leading-tight">
+            <h2 className="md:text-5xl lg:text-6xl font-bold mb-8 text-white tracking-tight text-[43px]">
               If a picture is worth a thousand words... <br className="hidden md:block" />
               <span className="text-blue-200">A demo is worth a thousand pictures.</span>
             </h2>
