@@ -35,7 +35,7 @@ export default function Services() {
                 Watch this real conversation unfold: Our <strong>Lead Awaker AI</strong> sends an initial SMS to cold leads checking car finance refunds. When Jack responds, the AI instantly qualifies him, handles his objection about missing documents, and guides him to complete a DSAR (Data Subject Access Request).
               </p>
               <p className="text-muted-foreground text-base mb-6 leading-relaxed">
-                <strong>What happens next:</strong> The DSAR legally compels car finance companies to send Jack's agreement documents. A <strong>law firm clerk</strong> then reviews them for mis-sold commission hidden in his payments—if found, he gets a full refund (typically £1,000-£3,000).
+                <strong>What happens next:</strong> The DSAR legally compels car finance companies to send Jack's agreement documents. A <strong>law firm clerk</strong> then reviews them for mis-sold commission hidden in his payments -- if found, he gets a full refund (typically £1,000-£3,000).
               </p>
               <h3 className="font-semibold text-lg mb-4">Real Results from 935 leads:</h3>
               <ul className="space-y-2 mb-8">
@@ -49,7 +49,7 @@ export default function Services() {
                 </li>
                 <li className="flex gap-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                  <span><strong>Cost per DSAR: $21</strong> (fully automated—no calls, no salespeople)</span>
+                  <span><strong>Cost per DSAR: $21</strong> (fully automated -- no calls, no salespeople)</span>
                 </li>
                 <li className="flex gap-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
