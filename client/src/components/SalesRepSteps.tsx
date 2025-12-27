@@ -634,7 +634,7 @@ export const SalesRepSteps = () => {
       </section>
 
       {/* Intro Section */}
-      <section className="flex items-center justify-center relative overflow-hidden" style={{ height: '6vh' }}>
+      <section className="flex items-center justify-center relative overflow-hidden mb-32" style={{ height: '6vh' }}>
         <motion.div 
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
