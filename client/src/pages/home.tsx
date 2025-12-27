@@ -138,8 +138,17 @@ export default function Home() {
             <p className="text-lg md:text-xl mt-4 text-[#3c50d6]">From chaos to certainty in 30 days</p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-8 mb-12 items-stretch">
             {[
+              {
+                metric: 0,
+                startMetric: 10000,
+                isCost: true,
+                label: "Upfront Cost",
+                subtext: "performance‑based pricing",
+                duration: 5,
+                isBig: true
+              },
               {
                 isRange: true,
                 start: 20,
@@ -167,14 +176,6 @@ export default function Home() {
                 subtext: "per rep/month",
                 duration: 4,
                 suffixAtEnd: true
-              },
-              {
-                metric: 0,
-                startMetric: 10000,
-                isCost: true,
-                label: "Upfront Cost",
-                subtext: "performance‑based pricing",
-                duration: 5
               }
             ].map((result, i) => (
               <motion.div
@@ -183,9 +184,11 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-card p-8 rounded-2xl border border-border text-center"
+                className={`bg-card p-8 rounded-2xl border border-border text-center flex flex-col justify-center ${
+                  result.isBig ? "md:col-span-3 lg:col-span-3" : "md:col-span-1 lg:col-span-1"
+                }`}
               >
-                <div className="text-4xl md:text-5xl font-bold text-primary mb-2">
+                <div className={`${result.isBig ? "text-6xl md:text-8xl" : "text-4xl md:text-5xl"} font-bold text-primary mb-2`}>
                   {(result as any).isRange ? (
                     <AnimatedRangeCounter 
                       start={(result as any).start}
@@ -214,8 +217,8 @@ export default function Home() {
                     />
                   )}
                 </div>
-                <h3 className="text-lg font-bold mb-1">{(result as any).label}</h3>
-                <p className="text-sm text-muted-foreground">{(result as any).subtext}</p>
+                <h3 className={`${result.isBig ? "text-2xl" : "text-lg"} font-bold mb-1`}>{(result as any).label}</h3>
+                <p className={`${result.isBig ? "text-base" : "text-sm"} text-muted-foreground`}>{(result as any).subtext}</p>
               </motion.div>
             ))}
           </div>

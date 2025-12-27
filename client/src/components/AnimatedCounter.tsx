@@ -43,5 +43,16 @@ export default function AnimatedCounter({
     });
   }, [count, format, suffix, showSuffix, end]);
 
-  return <motion.span ref={ref} data-testid="text-animated-counter">{displayValue}</motion.span>;
+  return (
+    <motion.span 
+      ref={ref} 
+      data-testid="text-animated-counter"
+      animate={{ 
+        color: end === 0 && displayValue === format(0) + (suffixAtEnd ? suffix : "") ? "#EAB308" : "inherit"
+      }}
+      transition={{ duration: 0.3 }}
+    >
+      {displayValue}
+    </motion.span>
+  );
 }
