@@ -30,24 +30,39 @@ export default function Services() {
               viewport={{ once: true }}
               className="order-2 md:order-1"
             >
-              <h2 className="text-3xl font-bold mb-4">See Our AI in Action</h2>
-              <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
-                Watch how our conversational AI agents engage with prospects naturally and authentically. These aren't robotic automated messages—they're intelligent, context-aware conversations that build trust and drive results.
+              <h2 className="text-3xl font-bold mb-4">Live AI Chat Automation Example</h2>
+              <p className="text-muted-foreground text-base mb-6 leading-relaxed">
+                Watch this real conversation unfold: Our Lead Awaker AI sends an initial SMS to cold leads checking car finance refunds. When Jack responds, the AI instantly qualifies him, handles his objection about missing documents, and guides him to complete a DSAR (Data Subject Access Request).
               </p>
+              <p className="text-muted-foreground text-base mb-6 leading-relaxed">
+                What happens next: The DSAR legally compels car finance companies to send Jack's agreement documents. A law firm clerk then reviews them for mis-sold commission hidden in his payments—if found, he gets a full refund (typically £1,000-£3,000).
+              </p>
+              <h3 className="font-semibold text-lg mb-3">Real Results from 935 leads:</h3>
               <ul className="space-y-3 mb-8">
                 <li className="flex gap-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
-                  <span>Intelligent responses tailored to each prospect</span>
+                  <span>42% reply rate (vs industry 20%)</span>
                 </li>
                 <li className="flex gap-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
-                  <span>Multi-channel conversations (SMS, Email, WhatsApp)</span>
+                  <span>20.4% DSAR completion rate</span>
                 </li>
                 <li className="flex gap-3">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
-                  <span>Seamless escalation to your team when needed</span>
+                  <span>Cost per DSAR: $21 (fully automated—no calls, no salespeople)</span>
+                </li>
+                <li className="flex gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
+                  <span>Solicitor fees per win: $1,200-$1,800</span>
+                </li>
+                <li className="flex gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
+                  <span>My agency fee: $190 per DSAR lead</span>
                 </li>
               </ul>
+              <p className="text-muted-foreground text-base">
+                This single automation generated 190 qualified cases × $190 = $36,100 revenue from one SMS campaign, all handled 100% by Lead Awaker AI while you sleep. This is the exact system I build for B2B service businesses—turning cold leads into signed cases without manual follow-up.
+              </p>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, x: 20 }}
