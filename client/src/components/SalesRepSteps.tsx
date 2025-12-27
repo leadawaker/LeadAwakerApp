@@ -112,7 +112,7 @@ const FullscreenStep = ({
     <div ref={containerRef} className="h-[40vh] w-full flex items-center justify-center px-4 sm:px-6 md:px-12 relative z-10">
       <div className="container mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-16 items-center">
         <motion.div 
-          style={{ opacity: cardOpacity, y: cardY, transform: 'translateZ(0)', willChange: 'opacity, transform' }}
+          style={{ opacity: cardOpacity, transform: 'translateZ(0)', willChange: 'opacity' }}
           className={`order-2 ${isLeft ? "md:order-1" : "md:order-2"}`}
         >
           <div className="relative">
