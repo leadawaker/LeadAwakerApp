@@ -374,9 +374,8 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center max-w-2xl mx-auto"
           >
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">If a picture is worth a thousand words...</h2>
             <p className="text-lg opacity-90 mb-8 leading-relaxed">
-              ...a demo is worth a thousand pictures. See AI in action before you commit to anything. Watch how it engages customers naturally and handles the repetitive work, so your team can focus on closing deals.
+              If a picture is worth a thousand words, a demo is worth a thousand pictures. That's why before you do anything, I want you to see AI in action. This demo gives a taster of how AI engages with customers in a natural way and bears the brunt of repetitive tasks, so you and your team don't have to.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/book-demo">
@@ -385,13 +384,7 @@ export default function Home() {
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Link href="#demo">
-                <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 border-white text-white hover:bg-white/10">
-                  See How It Works
-                </Button>
-              </Link>
             </div>
-            <p className="text-sm opacity-75 mt-8">Average setup: 2-5 days | Performance-based pricing</p>
           </motion.div>
         </div>
       </section>
