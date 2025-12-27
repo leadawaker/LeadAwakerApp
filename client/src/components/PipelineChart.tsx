@@ -175,11 +175,14 @@ export default function PipelineChart() {
                 {leads[stage.id].map((lead) => (
                   <motion.div
                     key={lead.id}
-                    layoutId={lead.id}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                    transition={{ 
+                      layout: { type: "spring", stiffness: 200, damping: 25 },
+                      opacity: { duration: 0.2 }
+                    }}
                     data-testid={`lead-card-${lead.id}`}
                   >
                     <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
