@@ -2,88 +2,89 @@ import { motion, useInView, useAnimationControls } from "framer-motion";
 import { useState, useEffect, useRef, useCallback } from "react";
 
 export default function ChatCard2D() {
-  const [currentStep, setCurrentStep] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [currentStep, setCurrentStep] = useState(0);
   const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const isInView = useInView(containerRef, { once: false, margin: "-10% 0px -10% 0px" });
+  const isInView = useInView(containerRef, { once: false, margin: "-100px" });
+  const controls = useAnimationControls();
 
-  // Track if user is at bottom
-  const checkIfAtBottom = useCallback(() => {
-    if (!scrollRef.current) return;
-    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-    const atBottom = scrollTop + clientHeight >= scrollHeight - 5;
-    setIsAtBottom(atBottom);
-    setShowNewMessageIndicator(!atBottom && currentStep > 1);
-  }, [currentStep]);
-
-  // Scroll handler
-  useEffect(() => {
-    const handleScroll = () => checkIfAtBottom();
-    const currentScrollRef = scrollRef.current;
-    currentScrollRef?.addEventListener("scroll", handleScroll, { passive: true });
-    return () => currentScrollRef?.removeEventListener("scroll", handleScroll);
-  }, [checkIfAtBottom]);
-
-  // Initial messages sequence when entering viewport
-  useEffect(() => {
-    if (isInView && currentStep === 0) {
-      const timer1 = setTimeout(() => setCurrentStep(1), 400);
-      const timer2 = setTimeout(() => setCurrentStep(2), 1200);
-      const timer3 = setTimeout(() => setCurrentStep(3), 2200);
-      const timer4 = setTimeout(() => setCurrentStep(4), 3200);
-      const timer5 = setTimeout(() => setCurrentStep(5), 4200);
-      return () => {
-        clearTimeout(timer1); clearTimeout(timer2); clearTimeout(timer3); 
-        clearTimeout(timer4); clearTimeout(timer5);
-      };
-    }
-  }, [isInView, currentStep]);
-
-  // Auto-scroll only when at bottom
-  useEffect(() => {
-    if (currentStep > 0 && isAtBottom && scrollRef.current) {
+  // Auto-scroll to bottom logic with user interruption detection
+  const scrollToBottom = useCallback(() => {
+    if (scrollRef.current && !showNewMessageIndicator) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [currentStep, isAtBottom]);
+  }, [showNewMessageIndicator]);
+
+  // Watch scroll position to detect if user scrolled up
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!scrollRef.current || !isAnimating || currentStep === 0) return;
+      
+      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 5;
+      
+      if (!isAtBottom && currentStep > 0) {
+        setShowNewMessageIndicator(true);
+      }
+    };
+
+    const currentScrollRef = scrollRef.current;
+    currentScrollRef?.addEventListener("scroll", handleScroll);
+    return () => currentScrollRef?.removeEventListener("scroll", handleScroll);
+  }, [isAnimating, currentStep]);
+
+  // Scroll to bottom when new step appears (if user hasn't scrolled up)
+  useEffect(() => {
+    if (currentStep > 0 && !showNewMessageIndicator) {
+      scrollToBottom();
+    }
+  }, [currentStep, scrollToBottom, showNewMessageIndicator]);
+
+  // Initial messages appear on scroll into view
+  useEffect(() => {
+    if (isInView) {
+      setTimeout(() => setCurrentStep(1), 300); // Slight delay for smooth entrance
+    }
+  }, [isInView]);
 
   const startAnimation = async () => {
-    if (isAnimating || currentStep < 5) return;
+    if (isAnimating) return;
     setIsAnimating(true);
     
-    // 25-second timeline
-    await new Promise(resolve => setTimeout(resolve, 2000));  // 0-2s
+    // Step 2: Jack's response (0-1.5s)
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setCurrentStep(2);
+    
+    // Step 3: Jack's second message (1.5-2s)
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setCurrentStep(3);
+    
+    // Step 4: Sophie DSAR (2-5.5s)
+    await new Promise(resolve => setTimeout(resolve, 3500));
+    setCurrentStep(4);
+    
+    // Step 5-6: Jack's questions (5.5-10.5s)
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    setCurrentStep(5);
+    await new Promise(resolve => setTimeout(resolve, 800));
     setCurrentStep(6);
     
-    await new Promise(resolve => setTimeout(resolve, 1000));  // 2-3s
+    // Step 7: Sophie final (10.5-14.5s)
+    await new Promise(resolve => setTimeout(resolve, 4000));
     setCurrentStep(7);
     
-    await new Promise(resolve => setTimeout(resolve, 4500));  // 3-7.5s
+    // Step 8: Jack thanks (14.5-15s)
+    await new Promise(resolve => setTimeout(resolve, 500));
     setCurrentStep(8);
-    
-    await new Promise(resolve => setTimeout(resolve, 6000));  // 7.5-13.5s
-    setCurrentStep(9);
-    
-    await new Promise(resolve => setTimeout(resolve, 1200));  // 13.5-14.7s
-    setCurrentStep(10);
-    
-    await new Promise(resolve => setTimeout(resolve, 5500));  // 14.7-20.2s
-    setCurrentStep(11);
-    
-    await new Promise(resolve => setTimeout(resolve, 4800));  // 20.2-25s
-    setCurrentStep(12);
     
     setIsAnimating(false);
   };
 
-  const scrollToBottom = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-      setShowNewMessageIndicator(false);
-      setIsAtBottom(true);
-    }
+  const scrollToBottomManually = () => {
+    scrollToBottom();
+    setShowNewMessageIndicator(false);
   };
 
   const messageVariants = {
@@ -93,6 +94,15 @@ export default function ChatCard2D() {
       y: 0,
       scale: 1,
       transition: { duration: 0.4 },
+    },
+  };
+
+  const typingVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: { duration: 0.3 },
     },
   };
 
@@ -116,173 +126,205 @@ export default function ChatCard2D() {
         {/* Chat Messages Container */}
         <div 
           ref={scrollRef}
-          className="p-6 space-y-4 bg-slate-50 min-h-[500px] max-h-[600px] overflow-y-auto relative scroll-smooth"
+          className="p-6 space-y-4 bg-slate-50 min-h-[450px] max-h-[550px] overflow-y-auto relative scroll-smooth"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-slate-100/20 via-transparent to-slate-100/20 pointer-events-none" />
           
           <div className="relative z-10 space-y-4">
-            {/* Message 1 - Sophie (14:35) */}
+            {/* Messages 1-4: Initial static messages (appear on scroll into view) */}
             {currentStep >= 1 && (
-              <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
-                <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-none px-4 py-3 max-w-[85%] shadow-sm text-sm whitespace-nowrap" style={{ backgroundColor: "#2563EB" }}>
-                    Hi, this is Sophie from Sterling Finance, is this Jack who wanted to check if they were owed a refund on their car finance?
+              <>
+                {/* Message 1 - Sophie */}
+                <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
+                      Hi, this is Sophie from Sterling Finance, is this Jack who wanted to check if they were owed a refund on their car finance?
+                    </div>
+                    <span className="text-xs text-slate-400 pr-2">14:35</span>
                   </div>
-                  <span className="text-xs text-slate-400 pr-2">14:35</span>
-                </div>
-              </motion.div>
+                </motion.div>
+
+                {/* Message 2 - Sophie */}
+                <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
+                      just bumping this up in case you got busy before :)
+                    </div>
+                    <span className="text-xs text-slate-400 pr-2">14:55</span>
+                  </div>
+                </motion.div>
+
+                {/* Message 3 - Jack */}
+                <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
+                  <div className="flex flex-col items-start gap-1">
+                    <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[95%] shadow-sm text-sm whitespace-nowrap">
+                      Hi, yes
+                    </div>
+                    <span className="text-xs text-slate-400 pl-2">15:00</span>
+                  </div>
+                </motion.div>
+
+                {/* Message 4 - Jack */}
+                <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
+                  <div className="flex flex-col items-start gap-1">
+                    <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] shadow-sm text-sm">
+                      I would like to check. I had 2 cars on finance 5 years ago
+                    </div>
+                    <span className="text-xs text-slate-400 pl-2">15:01</span>
+                  </div>
+                </motion.div>
+
+                {/* Message 5 - Sophie */}
+                <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
+                      That's great Jack! Do you happen to have your vehicle finance agreement documents handy for those cars?
+                    </div>
+                    <span className="text-xs text-slate-400 pr-2">15:04</span>
+                  </div>
+                </motion.div>
+              </>
             )}
 
-            {/* Message 2 - Sophie (14:55) */}
+            {/* Dynamic messages after "Start" button */}
             {currentStep >= 2 && (
-              <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
-                <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-none px-4 py-3 max-w-[85%] shadow-sm text-sm whitespace-nowrap" style={{ backgroundColor: "#2563EB" }}>
-                    just bumping this up in case you got busy before :)
-                  </div>
-                  <span className="text-xs text-slate-400 pr-2">14:55</span>
-                </div>
-              </motion.div>
-            )}
+              <>
+                {/* Typing indicator before Jack's response */}
+                {currentStep === 2 && (
+                  <motion.div className="flex justify-start" variants={typingVariants} initial="hidden" animate="visible">
+                    <div className="bg-slate-200 text-slate-500 rounded-full px-4 py-2 shadow-sm flex items-center justify-center gap-2">
+                      <motion.span className="text-4xl font-black" animate={{ y: [0, -8, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0 }}>·</motion.span>
+                      <motion.span className="text-4xl font-black" animate={{ y: [0, -8, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.2 }}>·</motion.span>
+                      <motion.span className="text-4xl font-black" animate={{ y: [0, -8, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.4 }}>·</motion.span>
+                    </div>
+                  </motion.div>
+                )}
 
-            {/* Message 3 - Jack (15:00) */}
-            {currentStep >= 3 && (
-              <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
-                <div className="flex flex-col items-start gap-1 pr-12">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%] shadow-sm text-sm whitespace-nowrap">
-                    Hi, yes
-                  </div>
-                  <span className="text-xs text-slate-400 pl-2">15:00</span>
-                </div>
-              </motion.div>
-            )}
+                {/* Jack: No sorry */}
+                {currentStep >= 2 && (
+                  <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] shadow-sm text-sm">
+                        No sorry,
+                      </div>
+                      <span className="text-xs text-slate-400 pl-2">15:05</span>
+                    </div>
+                  </motion.div>
+                )}
 
-            {/* Message 4 - Jack (15:01) */}
-            {currentStep >= 4 && (
-              <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
-                <div className="flex flex-col items-start gap-1 pr-12">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%] shadow-sm text-sm whitespace-nowrap">
-                    I would like to check. I had 2 cars on finance 5 years ago
-                  </div>
-                  <span className="text-xs text-slate-400 pl-2">15:01</span>
-                </div>
-              </motion.div>
-            )}
+                {/* Jack: Not at Hand */}
+                {currentStep >= 3 && (
+                  <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] shadow-sm text-sm">
+                        Not at Hand
+                      </div>
+                      <span className="text-xs text-slate-400 pl-2">15:05</span>
+                    </div>
+                  </motion.div>
+                )}
 
-            {/* Message 5 - Sophie (...) (15:04) */}
-            {currentStep >= 5 && (
-              <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
-                <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-none px-4 py-3 max-w-[85%] shadow-sm text-sm whitespace-nowrap" style={{ backgroundColor: "#2563EB" }}>
-                    That's great Jack! Do you happen to have your vehicle finance agreement documents handy for those cars? (...)
-                  </div>
-                  <span className="text-xs text-slate-400 pr-2">15:04</span>
-                </div>
-              </motion.div>
-            )}
+                {/* Sophie DSAR */}
+                {currentStep >= 4 && (
+                  <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
+                        No worries at all Jack. We can actually submit a Data Subject Access Request (DSAR) on your behalf to get those documents for you. Could you please complete this short DSAR form by clicking on this URL{' '}
+                        <a href="https://www.dsarform.com/lead315" className="underline font-medium" style={{ color: "#FCC700" }}>
+                          https://www.dsarform.com/lead315
+                        </a>
+                        ? It will help us move things forward with you
+                      </div>
+                      <span className="text-xs text-slate-400 pr-2">15:09</span>
+                    </div>
+                  </motion.div>
+                )}
 
-            {/* Jack: No sorry, Not at Hand (15:05) */}
-            {currentStep >= 6 && (
-              <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
-                <div className="flex flex-col items-start gap-1 pr-12">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%] shadow-sm text-sm whitespace-nowrap">
-                    No sorry, Not at Hand
-                  </div>
-                  <span className="text-xs text-slate-400 pl-2">15:05</span>
-                </div>
-              </motion.div>
-            )}
+                {/* Jack's process question 1 */}
+                {currentStep >= 5 && (
+                  <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] shadow-sm text-sm">
+                        What is the process from here?
+                      </div>
+                      <span className="text-xs text-slate-400 pl-2">15:20</span>
+                    </div>
+                  </motion.div>
+                )}
 
-            {/* Sophie DSAR (15:09) */}
-            {currentStep >= 8 && (
-              <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
-                <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-none px-4 py-3 max-w-[85%] shadow-sm text-sm whitespace-nowrap" style={{ backgroundColor: "#2563EB" }}>
-                    No worries at all Jack. We can submit a Data Subject Access Request (DSAR) on your behalf. Complete this form: <a href="https://www.dsarform.com/lead315" className="underline font-medium" style={{ color: "#FCC700" }}>https://www.dsarform.com/lead315</a>
-                  </div>
-                  <span className="text-xs text-slate-400 pr-2">15:09</span>
-                </div>
-              </motion.div>
-            )}
+                {/* Jack's process question 2 */}
+                {currentStep >= 6 && (
+                  <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] shadow-sm text-sm">
+                        Do you let me know if I'm eligible to make a claim once you retrieve the docs and then I confirm I want to proceed?
+                      </div>
+                      <span className="text-xs text-slate-400 pl-2">15:20</span>
+                    </div>
+                  </motion.div>
+                )}
 
-            {/* Jack process question 1 (15:20) */}
-            {currentStep >= 9 && (
-              <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
-                <div className="flex flex-col items-start gap-1 pr-12">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%] shadow-sm text-sm whitespace-nowrap">
-                    What is the process from here?
-                  </div>
-                  <span className="text-xs text-slate-400 pl-2">15:20</span>
-                </div>
-              </motion.div>
-            )}
+                {/* Sophie final response */}
+                {currentStep >= 7 && (
+                  <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
+                        Absolutely, Jack. Once you've completed the DSAR form, we'll request your vehicle finance agreement and review it. If we find that you're eligible for a claim, we'll get in touch with you to discuss the next steps. It typically takes us about 30 working days to get everything sorted. Remember, we operate on a no-win no fee basis, so there's no risk to you. Just pop over to the URL and fill out the form when you can{' '}
+                        <a href="https://www.dsarform.com/lead315" className="underline font-medium" style={{ color: "#FCC700" }}>
+                          https://www.dsarform.com/lead315
+                        </a>
+                      </div>
+                      <span className="text-xs text-slate-400 pr-2">15:22</span>
+                    </div>
+                  </motion.div>
+                )}
 
-            {/* Jack process question 2 (15:20) */}
-            {currentStep >= 10 && (
-              <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
-                <div className="flex flex-col items-start gap-1 pr-12">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%] shadow-sm text-sm whitespace-nowrap">
-                    Do you let me know if I'm eligible to make a claim once you retrieve the docs and then I confirm I want to proceed?
-                  </div>
-                  <span className="text-xs text-slate-400 pl-2">15:20</span>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Sophie final response (15:22) */}
-            {currentStep >= 11 && (
-              <motion.div className="flex justify-end" variants={messageVariants} initial="hidden" animate="visible">
-                <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-none px-4 py-3 max-w-[85%] shadow-sm text-sm whitespace-nowrap" style={{ backgroundColor: "#2563EB" }}>
-                    Absolutely Jack. Complete DSAR form and we'll review in ~30 days. No win no fee. <a href="https://www.dsarform.com/lead315" className="underline font-medium" style={{ color: "#FCC700" }}>https://www.dsarform.com/lead315</a>
-                  </div>
-                  <span className="text-xs text-slate-400 pr-2">15:22</span>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Jack thanks (15:24) */}
-            {currentStep >= 12 && (
-              <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
-                <div className="flex flex-col items-start gap-1 pr-12">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%] shadow-sm text-sm whitespace-nowrap">
-                    Thanks.
-                  </div>
-                  <span className="text-xs text-slate-400 pl-2">15:24</span>
-                </div>
-              </motion.div>
+                {/* Jack final thanks */}
+                {currentStep >= 8 && (
+                  <motion.div className="flex justify-start" variants={messageVariants} initial="hidden" animate="visible">
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] shadow-sm text-sm">
+                        Thanks.
+                      </div>
+                      <span className="text-xs text-slate-400 pl-2">15:24</span>
+                    </div>
+                  </motion.div>
+                )}
+              </>
             )}
           </div>
+
+          {/* New Messages Indicator */}
+          {showNewMessageIndicator && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              className="fixed bottom-6 right-6 bg-blue-500 text-white px-4 py-2 rounded-full text-sm shadow-lg flex items-center gap-2 z-50 cursor-pointer hover:bg-blue-600"
+              onClick={scrollToBottomManually}
+            >
+              <span>New messages</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </motion.div>
+          )}
         </div>
 
-        {/* Single New Messages Indicator */}
-        {showNewMessageIndicator && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.8 }} 
-            animate={{ opacity: 1, scale: 1 }} 
-            className="fixed bottom-8 right-8 bg-blue-500 text-white px-4 py-2 rounded-full text-sm shadow-2xl flex items-center gap-2 z-[1000] cursor-pointer hover:bg-blue-600 active:scale-95 border-2 border-white/20"
-            onClick={scrollToBottom}
-          >
-            <span>New messages</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
-          </motion.div>
-        )}
-
-        {/* Start Button - Only after message 5 */}
-        {currentStep >= 5 && currentStep < 6 && (
-          <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-center items-center gap-6">
-            <div className="flex-1 h-px bg-slate-200" />
+        {/* Start Button - Only shows after initial messages and before animation starts */}
+        {currentStep >= 1 && currentStep < 2 && (
+          <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-center">
             <motion.button
               whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
+              whileTap={{ scale: 0.95 }}
               onClick={startAnimation}
-              className="px-8 py-4 rounded-2xl font-semibold text-white shadow-xl text-base bg-gradient-to-r from-[#2563EB] to-[#1D4ED8] min-w-[100px]"
+              className="px-8 py-4 rounded-2xl font-semibold text-white shadow-xl flex items-center gap-3 text-base bg-gradient-to-r from-[#2563EB] to-[#1D4ED8]"
             >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
               Start
             </motion.button>
-            <div className="flex-1 h-px bg-slate-200" />
           </div>
         )}
       </div>
