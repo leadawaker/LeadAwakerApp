@@ -44,17 +44,19 @@ export default function AnimatedCounter({
   }, [count, format, suffix, showSuffix, end]);
 
   return (
-    <motion.div className="flex flex-col items-center">
+    <motion.div className="flex flex-col items-center relative">
       <AnimatePresence>
         {end === 0 && displayValue === format(0) + (suffixAtEnd ? suffix : "") && (
-          <motion.span
-            initial={{ opacity: 0, y: 10, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            className="text-yellow-500 font-black text-2xl md:text-3xl mb-[-0.5rem] tracking-tighter uppercase"
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5, rotate: -45 }}
+            animate={{ opacity: 1, scale: 1, rotate: -15 }}
+            className="absolute z-20 pointer-events-none whitespace-nowrap flex flex-col items-center"
+            style={{ top: '20%' }}
             data-testid="text-nothing-overlay"
           >
-            Absolutely Nothing
-          </motion.span>
+            <span className="text-yellow-500 font-black text-4xl md:text-6xl tracking-tighter uppercase leading-none">Absolutely</span>
+            <span className="text-yellow-500 font-black text-4xl md:text-6xl tracking-tighter uppercase leading-none">Nothing</span>
+          </motion.div>
         )}
       </AnimatePresence>
       <motion.span 
