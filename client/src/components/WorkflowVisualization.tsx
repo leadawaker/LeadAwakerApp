@@ -41,7 +41,6 @@ export default function WorkflowVisualization() {
       setVisitedNodes(prev => new Set(prev).add('guardrails'));
 
       const checks = [
-        'verifying...', 
         'No violations', 
         'On-topic sales', 
         'Clean content', 
