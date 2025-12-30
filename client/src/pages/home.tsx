@@ -233,7 +233,7 @@ export default function Home() {
               </AnimatePresence>
               <div className="relative z-10">
                 <motion.div
-                  animate={{ y: isFinished ? -15 : 60 }}
+                  animate={{ y: isFinished ? -8 : 60 }}
                   transition={{ duration: 0.6, delay: 0.1 }}
                   className={`text-6xl md:text-8xl font-bold mb-2 font-heading transition-colors duration-500 ${isFinished ? 'text-white' : 'text-primary'}`}
                 >
@@ -246,7 +246,7 @@ export default function Home() {
                   />
                 </motion.div>
                 <motion.h3
-                  animate={{ y: isFinished ? -15 : 60 }}
+                  animate={{ y: isFinished ? -8 : 60 }}
                   transition={{ duration: 0.6, delay: 0.1 }}
                   className={`text-4xl font-black mb-2 font-heading mt-16 transition-colors duration-500 ${isFinished ? 'text-white' : 'text-black'}`}
                 >
