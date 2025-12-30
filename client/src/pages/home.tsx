@@ -242,11 +242,39 @@ export default function Home() {
                   />
                 </div>
                 <h3 className={`text-4xl font-black mb-2 font-heading mt-16 transition-colors duration-500 ${isFinished ? 'text-white' : 'text-black'}`}>Upfront Cost</h3>
-                <div className={`text-lg font-medium transition-opacity duration-500 flex flex-col items-stretch text-justify ${isFinished ? 'opacity-80' : 'opacity-0'}`}>
-                  <span className="font-bold text-base mb-3">Performance Partnership</span>
-                  <span className="leading-relaxed mb-2">We solve problems not create them</span>
-                  <span className="leading-relaxed mb-2">Results first payment second</span>
-                  <span className="leading-relaxed">30-Day guarante</span>
+                <div className={`text-lg font-medium flex flex-col items-stretch text-justify ${isFinished ? '' : 'pointer-events-none'}`}>
+                  <motion.span 
+                    className="font-bold text-base mb-3"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={isFinished ? { opacity: 0.8, y: 0 } : { opacity: 0, y: 10 }}
+                    transition={{ duration: 0.5, delay: 0 }}
+                  >
+                    Performance Partnership
+                  </motion.span>
+                  <motion.span 
+                    className="leading-relaxed mb-2"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={isFinished ? { opacity: 0.8, y: 0 } : { opacity: 0, y: 10 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                  >
+                    We solve problems not create them
+                  </motion.span>
+                  <motion.span 
+                    className="leading-relaxed mb-2"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={isFinished ? { opacity: 0.8, y: 0 } : { opacity: 0, y: 10 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                  >
+                    Results first payment second
+                  </motion.span>
+                  <motion.span 
+                    className="leading-relaxed"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={isFinished ? { opacity: 0.8, y: 0 } : { opacity: 0, y: 10 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                  >
+                    30-Day guarante
+                  </motion.span>
                 </div>
               </div>
             </motion.div>
