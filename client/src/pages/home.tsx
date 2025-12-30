@@ -232,7 +232,11 @@ export default function Home() {
                 )}
               </AnimatePresence>
               <div className="relative z-10">
-                <div className={`text-6xl md:text-8xl font-bold mb-2 font-heading transition-colors duration-500 ${isFinished ? 'text-white' : 'text-primary'}`}>
+                <motion.div
+                  animate={{ y: isFinished ? -40 : 40 }}
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                  className={`text-6xl md:text-8xl font-bold mb-2 font-heading transition-colors duration-500 ${isFinished ? 'text-white' : 'text-primary'}`}
+                >
                   <AnimatedCounter 
                     start={10000}
                     end={0} 
@@ -240,8 +244,14 @@ export default function Home() {
                     format={(v: number) => `$${Math.round(v).toString()}`}
                     onFinishedChange={(finished) => setIsFinished(finished)}
                   />
-                </div>
-                <h3 className={`text-4xl font-black mb-2 font-heading mt-16 transition-colors duration-500 ${isFinished ? 'text-white' : 'text-black'}`}>Upfront Cost</h3>
+                </motion.div>
+                <motion.h3
+                  animate={{ y: isFinished ? -40 : 40 }}
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                  className={`text-4xl font-black mb-2 font-heading mt-16 transition-colors duration-500 ${isFinished ? 'text-white' : 'text-black'}`}
+                >
+                  Upfront Cost
+                </motion.h3>
                 <div className={`text-lg font-medium flex flex-col items-center text-center pt-8 ${isFinished ? '' : 'pointer-events-none'}`}>
                   <motion.span 
                     className="font-bold mb-3 text-[18px]"
