@@ -248,7 +248,7 @@ export default function Home() {
                 <motion.h3
                   animate={{ y: isFinished ? -8 : 60 }}
                   transition={{ duration: 0.6, delay: 0.1 }}
-                  className="mb-2 font-heading mt-16 transition-colors duration-500 text-white text-[40px] font-bold"
+                  className={`mb-2 font-heading mt-12 transition-colors duration-500 text-[40px] font-bold ${isFinished ? 'text-white' : 'text-black'}`}
                 >
                   Upfront Cost
                 </motion.h3>
