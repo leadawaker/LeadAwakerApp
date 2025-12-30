@@ -260,7 +260,7 @@ export default function Home() {
                     We solve problems not create them
                   </motion.span>
                   <motion.span 
-                    className="leading-relaxed mb-2"
+                    className="leading-relaxed mb-2 text-center"
                     initial={{ opacity: 0, y: 10 }}
                     animate={isFinished ? { opacity: 0.8, y: 0 } : { opacity: 0, y: 10 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
