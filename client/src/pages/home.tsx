@@ -31,6 +31,18 @@ export default function Home() {
 
   return (
     <div className="min-h-screen pt-24">
+      <style>{`
+        @keyframes rotatingBlueGradient {
+          0% { background: linear-gradient(135deg, #1c2973 0%, #273887 25%, #3c50d6 50%, #273887 75%, #1c2973 100%); background-size: 400% 400%; }
+          25% { background: linear-gradient(225deg, #273887 0%, #3c50d6 25%, #526fff 50%, #3c50d6 75%, #273887 100%); background-size: 400% 400%; }
+          50% { background: linear-gradient(315deg, #3c50d6 0%, #526fff 25%, #5170ff 50%, #526fff 75%, #3c50d6 100%); background-size: 400% 400%; }
+          75% { background: linear-gradient(45deg, #526fff 0%, #5170ff 25%, #273887 50%, #5170ff 75%, #526fff 100%); background-size: 400% 400%; }
+          100% { background: linear-gradient(135deg, #1c2973 0%, #273887 25%, #3c50d6 50%, #273887 75%, #1c2973 100%); background-size: 400% 400%; }
+        }
+        .rotating-gradient {
+          animation: rotatingBlueGradient 8s ease infinite;
+        }
+      `}</style>
       {/* Hero Section */}
       <section className="relative overflow-hidden pb-20 md:pb-32">
         <div className="absolute top-0 right-0 -z-10 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent blur-3xl opacity-50" />
@@ -149,7 +161,7 @@ export default function Home() {
                 color: isFinished ? "#ffffff" : "#3c50d6"
               }}
               transition={{ duration: 0.5 }}
-              className="p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px] relative overflow-hidden bg-[#1c2973]"
+              className={`p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px] relative overflow-hidden bg-[#1c2973] ${isFinished ? 'rotating-gradient' : ''}`}
             >
               <AnimatePresence>
                 {isFinished && (
