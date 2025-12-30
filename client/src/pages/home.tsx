@@ -242,9 +242,11 @@ export default function Home() {
                   />
                 </div>
                 <h3 className={`text-4xl font-black mb-2 font-heading mt-16 transition-colors duration-500 ${isFinished ? 'text-white' : 'text-black'}`}>Upfront Cost</h3>
-                <div className={`text-xl font-medium transition-opacity duration-500 flex flex-col items-center ${isFinished ? 'opacity-80' : 'opacity-0'}`}>
-                  <span>Performance‑based pricing</span>
-                  <span>No sales / No pay</span>
+                <div className={`text-lg font-medium transition-opacity duration-500 flex flex-col items-stretch text-justify ${isFinished ? 'opacity-80' : 'opacity-0'}`}>
+                  <span className="font-bold text-base mb-3">Performance Partnership</span>
+                  <span className="leading-relaxed mb-2">We solve problems not create them</span>
+                  <span className="leading-relaxed mb-2">Results first payment second</span>
+                  <span className="leading-relaxed">30-Day guarante</span>
                 </div>
               </div>
             </motion.div>
