@@ -40,7 +40,7 @@ export default function AnimatedCounter({
       onComplete: () => {
         setShowSuffix(true);
         if (end === 0) {
-          setTimeout(() => setIsFinished(true), 1000);
+          setIsFinished(true);
         }
       }
     });

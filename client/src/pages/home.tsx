@@ -140,48 +140,6 @@ export default function Home() {
           </motion.div>
 
           <div className="flex flex-col md:flex-row gap-8 mb-12 items-stretch max-w-4xl mx-auto">
-            <motion.div
-              initial={false}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              animate={{ 
-                backgroundColor: isFinished ? "#273887" : "#ffffff",
-                color: isFinished ? "#ffffff" : "#3c50d6"
-              }}
-              transition={{ duration: 0.5 }}
-              className="p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px] relative overflow-hidden bg-[#1c2973]"
-            >
-              <AnimatePresence>
-                {isFinished && (
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="stars-overlay"
-                  >
-                    <div className="stars"></div>
-                    <div className="stars stars2"></div>
-                    <div className="stars stars3"></div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              <div className="relative z-10">
-                <div className={`text-6xl md:text-8xl font-bold mb-2 font-heading transition-colors duration-500 ${isFinished ? 'text-white' : 'text-primary'}`}>
-                  <AnimatedCounter 
-                    start={10000}
-                    end={0} 
-                    duration={5}
-                    format={(v: number) => `$${Math.round(v).toString()}`}
-                    onFinishedChange={(finished) => setIsFinished(finished)}
-                  />
-                </div>
-                <h3 className={`text-4xl font-black mb-2 font-heading mt-16 transition-colors duration-500 ${isFinished ? 'text-white' : 'text-black'}`}>Upfront Cost</h3>
-                <div className={`text-xl font-medium transition-opacity duration-500 flex flex-col items-center ${isFinished ? 'opacity-80' : 'opacity-0'}`}>
-                  <span>Performance‑based pricing</span>
-                  <span>No sales / No pay</span>
-                </div>
-              </div>
-            </motion.div>
-
             {/* Stacked Side Cards */}
             <div className="flex flex-col gap-4 flex-1">
               {[
@@ -248,6 +206,48 @@ export default function Home() {
                 </motion.div>
               ))}
             </div>
+
+            <motion.div
+              initial={false}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              animate={{ 
+                backgroundColor: isFinished ? "#273887" : "#ffffff",
+                color: isFinished ? "#ffffff" : "#3c50d6"
+              }}
+              transition={{ duration: 0.5 }}
+              className="p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px] relative overflow-hidden bg-[#1c2973]"
+            >
+              <AnimatePresence>
+                {isFinished && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="stars-overlay"
+                  >
+                    <div className="stars"></div>
+                    <div className="stars stars2"></div>
+                    <div className="stars stars3"></div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <div className="relative z-10">
+                <div className={`text-6xl md:text-8xl font-bold mb-2 font-heading transition-colors duration-500 ${isFinished ? 'text-white' : 'text-primary'}`}>
+                  <AnimatedCounter 
+                    start={10000}
+                    end={0} 
+                    duration={5}
+                    format={(v: number) => `$${Math.round(v).toString()}`}
+                    onFinishedChange={(finished) => setIsFinished(finished)}
+                  />
+                </div>
+                <h3 className={`text-4xl font-black mb-2 font-heading mt-16 transition-colors duration-500 ${isFinished ? 'text-white' : 'text-black'}`}>Upfront Cost</h3>
+                <div className={`text-xl font-medium transition-opacity duration-500 flex flex-col items-center ${isFinished ? 'opacity-80' : 'opacity-0'}`}>
+                  <span>Performance‑based pricing</span>
+                  <span>No sales / No pay</span>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
