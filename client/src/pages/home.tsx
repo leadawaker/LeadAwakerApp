@@ -242,12 +242,12 @@ export default function Home() {
                   />
                 </div>
                 <h3 className={`text-4xl font-black mb-2 font-heading mt-16 transition-colors duration-500 ${isFinished ? 'text-white' : 'text-black'}`}>Upfront Cost</h3>
-                <div className={`text-lg font-medium flex flex-col items-stretch text-justify ${isFinished ? '' : 'pointer-events-none'}`}>
+                <div className={`text-lg font-medium flex flex-col items-center text-center ${isFinished ? '' : 'pointer-events-none'}`}>
                   <motion.span 
                     className="font-bold text-base mb-3"
                     initial={{ opacity: 0, y: 10 }}
                     animate={isFinished ? { opacity: 0.8, y: 0 } : { opacity: 0, y: 10 }}
-                    transition={{ duration: 0.5, delay: 0 }}
+                    transition={{ duration: 0.8, delay: 0 }}
                   >
                     Performance Partnership
                   </motion.span>
@@ -255,15 +255,15 @@ export default function Home() {
                     className="leading-relaxed mb-2"
                     initial={{ opacity: 0, y: 10 }}
                     animate={isFinished ? { opacity: 0.8, y: 0 } : { opacity: 0, y: 10 }}
-                    transition={{ duration: 0.5, delay: 0.1 }}
+                    transition={{ duration: 0.8, delay: 0.3 }}
                   >
                     We solve problems not create them
                   </motion.span>
                   <motion.span 
-                    className="leading-relaxed mb-2 text-center"
+                    className="leading-relaxed mb-2"
                     initial={{ opacity: 0, y: 10 }}
                     animate={isFinished ? { opacity: 0.8, y: 0 } : { opacity: 0, y: 10 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
+                    transition={{ duration: 0.8, delay: 0.6 }}
                   >
                     Results first payment second
                   </motion.span>
@@ -271,7 +271,7 @@ export default function Home() {
                     className="leading-relaxed"
                     initial={{ opacity: 0, y: 10 }}
                     animate={isFinished ? { opacity: 0.8, y: 0 } : { opacity: 0, y: 10 }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
+                    transition={{ duration: 0.8, delay: 0.9 }}
                   >
                     30-Day guarante
                   </motion.span>
