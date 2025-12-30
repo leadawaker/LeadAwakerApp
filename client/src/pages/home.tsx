@@ -33,14 +33,11 @@ export default function Home() {
     <div className="min-h-screen pt-24">
       <style>{`
         @keyframes rotatingBlueGradient {
-          0% { background: linear-gradient(135deg, #1c2973 0%, #273887 25%, #3c50d6 50%, #273887 75%, #1c2973 100%); background-size: 400% 400%; }
-          25% { background: linear-gradient(225deg, #273887 0%, #3c50d6 25%, #526fff 50%, #3c50d6 75%, #273887 100%); background-size: 400% 400%; }
-          50% { background: linear-gradient(315deg, #3c50d6 0%, #526fff 25%, #5170ff 50%, #526fff 75%, #3c50d6 100%); background-size: 400% 400%; }
-          75% { background: linear-gradient(45deg, #526fff 0%, #5170ff 25%, #273887 50%, #5170ff 75%, #526fff 100%); background-size: 400% 400%; }
-          100% { background: linear-gradient(135deg, #1c2973 0%, #273887 25%, #3c50d6 50%, #273887 75%, #1c2973 100%); background-size: 400% 400%; }
+          0% { background-image: conic-gradient(from 0deg, #1c2973, #273887, #3c50d6, #526fff, #5170ff, #526fff, #3c50d6, #273887, #1c2973); }
+          100% { background-image: conic-gradient(from 360deg, #1c2973, #273887, #3c50d6, #526fff, #5170ff, #526fff, #3c50d6, #273887, #1c2973); }
         }
         .rotating-gradient {
-          animation: rotatingBlueGradient 8s ease infinite;
+          animation: rotatingBlueGradient 8s linear infinite;
         }
       `}</style>
       {/* Hero Section */}
