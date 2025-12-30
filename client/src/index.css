@@ -774,8 +774,8 @@
   .stars {
     position: absolute;
     top: 0;
-    width: 2px;
-    height: 2px;
+    width: 1px;
+    height: 1px;
     background: transparent;
     box-shadow: 
       45px 123px #FFD700, 234px 89px #FFD700, 312px 456px #FFD700, 178px 234px #FFD700,
@@ -790,15 +790,15 @@
     content: "";
     position: absolute;
     top: 1000px;
-    width: 2px;
-    height: 2px;
+    width: 1px;
+    height: 1px;
     background: transparent;
     box-shadow: inherit;
   }
 
   .stars2 {
-    width: 4px;
-    height: 4px;
+    width: 2px;
+    height: 2px;
     box-shadow: 
       123px 45px #FFD700, 89px 234px #FFD700, 456px 312px #FFD700, 234px 178px #FFD700,
       67px 456px #FFD700, 345px 89px #FFD700, 123px 567px #FFD700, 450px 120px #FFD700;
@@ -811,8 +811,8 @@
   }
 
   .stars3 {
-    width: 6px;
-    height: 6px;
+    width: 3px;
+    height: 3px;
     box-shadow: 
       234px 345px #FFD700, 123px 89px #FFD700, 45px 567px #FFD700, 312px 450px #FFD700;
     animation: animStar 180s linear infinite;
