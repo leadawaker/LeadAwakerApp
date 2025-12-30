@@ -755,21 +755,6 @@
   }
 }
 
-@keyframes pulse-yellow {
-  0%, 100% {
-    color: #ffffff;
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-  }
-  50% {
-    color: #FEB800;
-    text-shadow: 0 0 20px rgba(254, 184, 0, 0.8);
-  }
-}
-
-.animate-pulse-yellow {
-  animation: pulse-yellow 3s ease-in-out infinite;
-}
-
 .animate-shine-text {
   animation: shine-text 10s infinite linear;
 }
