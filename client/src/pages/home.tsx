@@ -31,25 +31,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen pt-24">
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .rotating-gradient::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: conic-gradient(#1c2973, #273887, #3c50d6, #526fff, #5170ff, #526fff, #3c50d6, #273887, #1c2973);
-          border-radius: inherit;
-          animation: spin 6s linear infinite;
-          z-index: 0;
-        }
-        .rotating-gradient > * {
-          position: relative;
-          z-index: 1;
-        }
-      `}</style>
       {/* Hero Section */}
       <section className="relative overflow-hidden pb-20 md:pb-32">
         <div className="absolute top-0 right-0 -z-10 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent blur-3xl opacity-50" />
@@ -164,13 +145,11 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               animate={{ 
+                backgroundColor: isFinished ? "#273887" : "#ffffff",
                 color: isFinished ? "#ffffff" : "#3c50d6"
               }}
               transition={{ duration: 0.5 }}
-              className={`p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px] relative overflow-hidden ${isFinished ? 'rotating-gradient' : 'bg-white'}`}
-              style={{
-                backgroundColor: !isFinished ? "#ffffff" : "transparent"
-              }}
+              className="p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px] relative overflow-hidden bg-[#1c2973]"
             >
               <AnimatePresence>
                 {isFinished && (
