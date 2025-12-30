@@ -244,7 +244,7 @@ export default function Home() {
                 <h3 className={`text-4xl font-black mb-2 font-heading mt-16 transition-colors duration-500 ${isFinished ? 'text-white' : 'text-black'}`}>Upfront Cost</h3>
                 <div className={`text-lg font-medium flex flex-col items-center text-center ${isFinished ? '' : 'pointer-events-none'}`}>
                   <motion.span 
-                    className="font-bold text-base mb-3"
+                    className="font-bold mb-3 text-[18px]"
                     initial={{ opacity: 0, y: 10 }}
                     animate={isFinished ? { opacity: 0.8, y: 0 } : { opacity: 0, y: 10 }}
                     transition={{ duration: 0.8, delay: 0 }}
