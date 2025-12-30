@@ -32,12 +32,22 @@ export default function Home() {
   return (
     <div className="min-h-screen pt-24">
       <style>{`
-        @keyframes rotatingBlueGradient {
-          0% { background: conic-gradient(from 0deg at 50% 50%, #1c2973 0deg, #273887 45deg, #3c50d6 90deg, #526fff 135deg, #5170ff 180deg, #526fff 225deg, #3c50d6 270deg, #273887 315deg, #1c2973 360deg); }
-          100% { background: conic-gradient(from 360deg at 50% 50%, #1c2973 0deg, #273887 45deg, #3c50d6 90deg, #526fff 135deg, #5170ff 180deg, #526fff 225deg, #3c50d6 270deg, #273887 315deg, #1c2973 360deg); }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
-        .rotating-gradient {
-          animation: rotatingBlueGradient 6s linear infinite;
+        .rotating-gradient::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: conic-gradient(#1c2973, #273887, #3c50d6, #526fff, #5170ff, #526fff, #3c50d6, #273887, #1c2973);
+          border-radius: inherit;
+          animation: spin 6s linear infinite;
+          z-index: 0;
+        }
+        .rotating-gradient > * {
+          position: relative;
+          z-index: 1;
         }
       `}</style>
       {/* Hero Section */}
@@ -154,11 +164,13 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               animate={{ 
-                backgroundColor: isFinished ? "#273887" : "#ffffff",
                 color: isFinished ? "#ffffff" : "#3c50d6"
               }}
               transition={{ duration: 0.5 }}
-              className={`p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px] relative overflow-hidden bg-[#1c2973] ${isFinished ? 'rotating-gradient' : ''}`}
+              className={`p-8 rounded-2xl border border-border text-center flex flex-col justify-center flex-[2] min-h-[550px] relative overflow-hidden ${isFinished ? 'rotating-gradient' : 'bg-white'}`}
+              style={{
+                backgroundColor: !isFinished ? "#ffffff" : "transparent"
+              }}
             >
               <AnimatePresence>
                 {isFinished && (
