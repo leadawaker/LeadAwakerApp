@@ -242,7 +242,7 @@ export default function Home() {
                   />
                 </div>
                 <h3 className={`text-4xl font-black mb-2 font-heading mt-16 transition-colors duration-500 ${isFinished ? 'text-white' : 'text-black'}`}>Upfront Cost</h3>
-                <div className={`text-lg font-medium flex flex-col items-center text-center ${isFinished ? '' : 'pointer-events-none'}`}>
+                <div className={`text-lg font-medium flex flex-col items-center text-center pt-8 ${isFinished ? '' : 'pointer-events-none'}`}>
                   <motion.span 
                     className="font-bold mb-3 text-[18px]"
                     initial={{ opacity: 0, y: 10 }}
