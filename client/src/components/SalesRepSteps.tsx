@@ -360,8 +360,8 @@ Weekly optimization reviews for continuous results`
                                   { name: 'API', url: null }
                                 ].map((crm, i) => (
                                   <div key={i} className="crm-logo-item">
-                                    {crm.url ? <img src={crm.url} alt={crm.name} className="w-10 h-10 object-contain" /> : <span className="text-blue-600 font-mono font-bold text-lg">&lt;/&gt;</span>}
-                                    <span className="text-[14px] font-bold text-slate-700 uppercase tracking-wider">{crm.name}</span>
+                                    {crm.url ? <img src={crm.url} alt={crm.name} className="w-6 h-6 object-contain" /> : <span className="text-blue-600 font-mono font-bold text-sm">&lt;/&gt;</span>}
+                                    <span className="text-[12px] font-bold text-slate-700 uppercase tracking-wider">{crm.name}</span>
                                   </div>
                                 ))}
                               </div>
