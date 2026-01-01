@@ -396,6 +396,26 @@ Weekly optimization reviews for continuous results`
                               </div>
                             ))}
                           </div>
+
+                          {/* Pagination dots within card */}
+                          <div className="flex justify-center gap-2 mt-8 pb-2">
+                            {steps.map((_, i) => (
+                              <button
+                                key={i}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCurrentStep(i);
+                                }}
+                                data-testid={`dot-step-internal-${i}`}
+                                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                                  i === index
+                                    ? 'bg-yellow-500 w-6'
+                                    : 'bg-yellow-500/20 hover:bg-yellow-500/40'
+                                }`}
+                                aria-label={`Go to step ${i + 1}`}
+                              />
+                            ))}
+                          </div>
                         </motion.div>
                       )}
                     </CardContent>
@@ -425,22 +445,7 @@ Weekly optimization reviews for continuous results`
             </div>
           </div>
 
-          {/* Pagination dots under cards */}
-          <div className="flex gap-2 mt-8 relative z-[60]">
-            {steps.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentStep(i)}
-                data-testid={`dot-step-${i}`}
-                className={`w-3 h-3 rounded-full transition-all duration-300 pointer-events-auto ${
-                  i === currentStep
-                    ? 'bg-yellow-500 w-8'
-                    : 'bg-yellow-500/40 hover:bg-yellow-500/60'
-                }`}
-                aria-label={`Go to step ${i + 1}`}
-              />
-            ))}
-          </div>
+          {/* External pagination dots removed as they are now inside cards */}
         </div>
       </div>
     </div>
