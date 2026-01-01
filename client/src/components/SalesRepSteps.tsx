@@ -278,7 +278,7 @@ Weekly optimization reviews for continuous results`
                   initial={false}
                   animate={{
                     scale: isActive ? 1 : 0.85,
-                    x: isActive ? 0 : isNext ? 240 : -240,
+                    x: isActive ? 0 : isNext ? 150 : -150,
                     opacity: isActive ? 1 : 0.4,
                     zIndex: isActive ? 20 : 10,
                     filter: isActive ? 'blur(0px)' : 'blur(2px)',
