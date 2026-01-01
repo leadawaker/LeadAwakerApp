@@ -114,7 +114,30 @@ const CASES = [
           </li>
         </ul>
       </>
-    )
+    ),
+    messages: [
+      { type: "system", content: "Lead Engaged - 09:15 AM", id: "s1" },
+      { type: "agent", sender: "Michael", content: "Hi, it's Michael from Aviax Solar here. Is this the same Gabriel that got a solar panel installer quote from us in the last couple of months? 🙂", time: "09:15 AM" },
+      { type: "user", sender: "Gabriel Fronza", content: "yes that is me", time: "09:22 AM" },
+      { type: "agent", sender: "Michael", content: "Nice! My manager asked me to reach out but I didnt want to spam you.\n\nAre you still looking?", time: "09:23 AM" },
+      { type: "user", sender: "Gabriel Fronza", content: "yes I happen to be", time: "09:35 AM" },
+      { type: "agent", sender: "Michael", content: "Awesome Gabriel! Let's get you sorted with solar for your home 🔆\n\nRoughly how much are you paying each month for electricity now, and has that gone up over the last year?", time: "09:36 AM" },
+      { type: "user", sender: "Gabriel Fronza", content: "I am paying about 200 euros and it has gone up a little bit in the past 3 years indeed. Specially since covid started", time: "09:42 AM" },
+      { type: "agent", sender: "Michael", content: "Got it, 200 euros and creeping up since covid sounds familiar to a lot of people.\n\nPerfect. We're experts in higher efficiency and neat, unique solar designs and our team really hates being beaten on price. Would you like to hop on a quick call to go over options together?", time: "09:43 AM" },
+      { type: "user", sender: "Gabriel Fronza", content: "the issue is that my house faces north\n\nso I dont think a solar panel would cover it's original costs anytime soon for me", time: "09:55 AM" },
+      { type: "system", content: "Handling Technical Objection - 09:56 AM", id: "s2" },
+      { type: "agent", sender: "Michael", content: "I totally get that concern, Gabriel, a lot of people worry about roof direction at first.\n\nOur advisor can check roof angle, shading and layout to see if it still stacks up for you. Would you be open to a quick call to review that together?", time: "09:56 AM" },
+      { type: "user", sender: "Gabriel Fronza", content: "can you reassure that this would pay back in less than 10 years?", time: "10:05 AM" },
+      { type: "agent", sender: "Michael", content: "Great question! I'm admin support so I can't promise exact payback or run the full numbers myself.\n\nOur specialist can look at your north facing roof, usage and local rates to see if under 10 years is realistic. Would you be ok jumping on a quick call so they can walk you through that?", time: "10:06 AM" },
+      { type: "user", sender: "Gabriel Fronza", content: "ok sure", time: "10:15 AM" },
+      { type: "system", content: "Lead Qualified - Booking Link Sent - 10:16 AM", id: "s3" },
+      { type: "agent", sender: "Michael", content: "Great! Here's my calendar: https://calendar.app.google/uvWx5JWm7SLZSCqz7\n\nPick a time that works for you in the next few days and our solar specialist will call you.", time: "10:16 AM" },
+      { type: "system", content: "Appointment Confirmed - 10:25 AM", id: "s4" },
+      { type: "agent", sender: "Michael", content: "Awesome Gabriel 🎉 You're set for this Monday at 11:00\n\nOur advisor will call you then to go over payback time and your north facing roof concerns\n\nAnything else or need to reshedule, just let me know!", time: "10:25 AM" },
+      { type: "user", sender: "Gabriel Fronza", content: "will do, thanks for the help", time: "10:30 AM" },
+      { type: "agent", sender: "Michael", content: "You're welcome, have a great day 🙂", time: "10:31 AM" },
+      { type: "system", content: "Closed - Appointment Set", id: "s5" }
+    ]
   },
   {
     id: 5,
@@ -208,7 +231,7 @@ export default function Services() {
               <div className="order-1 md:order-2 max-w-md mx-auto w-full">
                 <div className="relative">
                   <div className="absolute -inset-4 bg-primary/5 rounded-[2.5rem] blur-2xl -z-10" />
-                  <ChatCard2D />
+                  <ChatCard2D messages={CASES[activeCase].messages} />
                 </div>
               </div>
             </motion.div>
