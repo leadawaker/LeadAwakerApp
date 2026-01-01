@@ -355,6 +355,16 @@ Weekly optimization reviews for continuous results`
                                   { name: 'Excel', url: 'https://www.vectorlogo.zone/logos/microsoft_excel/microsoft_excel-tile.svg' },
                                   { name: 'Supabase', url: 'https://www.vectorlogo.zone/logos/supabase/supabase-icon.svg' },
                                   { name: 'Airtable', url: 'https://www.vectorlogo.zone/logos/airtable/airtable-icon.svg' },
+                                  { name: 'API', url: null },
+                                  // Duplicate for seamless loop
+                                  { name: 'Salesforce', url: 'https://www.vectorlogo.zone/logos/salesforce/salesforce-icon.svg' },
+                                  { name: 'HubSpot', url: 'https://www.vectorlogo.zone/logos/hubspot/hubspot-icon.svg' },
+                                  { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
+                                  { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
+                                  { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
+                                  { name: 'Excel', url: 'https://www.vectorlogo.zone/logos/microsoft_excel/microsoft_excel-tile.svg' },
+                                  { name: 'Supabase', url: 'https://www.vectorlogo.zone/logos/supabase/supabase-icon.svg' },
+                                  { name: 'Airtable', url: 'https://www.vectorlogo.zone/logos/airtable/airtable-icon.svg' },
                                   { name: 'API', url: null }
                                 ].map((crm, i) => (
                                   <div key={i} className="crm-logo-item">
