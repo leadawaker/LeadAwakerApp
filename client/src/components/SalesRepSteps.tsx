@@ -328,6 +328,7 @@ Weekly optimization reviews for continuous results`
                                   animation: crmScroll 22s linear infinite;
                                   display: flex;
                                   gap: 1rem;
+                                  width: max-content;
                                 }
                                 .crm-carousel-track:hover {
                                   animation-play-state: paused;
