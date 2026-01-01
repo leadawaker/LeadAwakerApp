@@ -423,18 +423,18 @@ Weekly optimization reviews for continuous results`
               <button
                 onClick={handlePrev}
                 data-testid="button-prev-step"
-                className="p-3 rounded-full bg-blue-500/20 border border-blue-500/50 text-white hover:bg-blue-500/30 hover:border-blue-500 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                className="p-3 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-white hover:bg-yellow-500/30 hover:border-yellow-500 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(234,179,8,0.3)]"
                 aria-label="Previous step"
               >
-                <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform text-white [filter:drop-shadow(0_0_1px_#3b82f6)_drop-shadow(0_0_1px_#3b82f6)_drop-shadow(0_0_1px_#3b82f6)]" />
+                <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform text-yellow-500" />
               </button>
               <button
                 onClick={handleNext}
                 data-testid="button-next-step"
-                className="p-3 rounded-full bg-blue-500/20 border border-blue-500/50 text-white hover:bg-blue-500/30 hover:border-blue-500 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                className="p-3 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-white hover:bg-yellow-500/30 hover:border-yellow-500 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(234,179,8,0.3)]"
                 aria-label="Next step"
               >
-                <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform text-white [filter:drop-shadow(0_0_1px_#3b82f6)_drop-shadow(0_0_1px_#3b82f6)_drop-shadow(0_0_1px_#3b82f6)]" />
+                <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform text-yellow-500" />
               </button>
             </div>
           </div>
