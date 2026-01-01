@@ -259,7 +259,7 @@ Weekly optimization reviews for continuous results`
   };
 
   return (
-    <div className="relative w-full pt-24 pb-48">
+    <div className="relative w-full pt-12 pb-48">
       <div className="container mx-auto px-4 sm:px-6 md:px-12 relative z-10">
         {/* Stacked Cards Container */}
         <div className="relative h-[850px] flex flex-col items-center justify-center">
@@ -423,18 +423,18 @@ Weekly optimization reviews for continuous results`
               <button
                 onClick={handlePrev}
                 data-testid="button-prev-step"
-                className="p-3 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-white hover:bg-yellow-500/30 hover:border-yellow-500 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(234,179,8,0.3)]"
+                className="p-3 rounded-full bg-white/10 border border-white text-white hover:bg-white/20 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(255,255,255,0.4),0_0_20px_rgba(234,179,8,0.5)]"
                 aria-label="Previous step"
               >
-                <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform text-yellow-500" />
+                <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform text-white" />
               </button>
               <button
                 onClick={handleNext}
                 data-testid="button-next-step"
-                className="p-3 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-white hover:bg-yellow-500/30 hover:border-yellow-500 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(234,179,8,0.3)]"
+                className="p-3 rounded-full bg-white/10 border border-white text-white hover:bg-white/20 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(255,255,255,0.4),0_0_20px_rgba(234,179,8,0.5)]"
                 aria-label="Next step"
               >
-                <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform text-yellow-500" />
+                <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform text-white" />
               </button>
             </div>
           </div>
