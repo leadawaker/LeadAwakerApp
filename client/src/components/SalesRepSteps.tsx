@@ -16,6 +16,7 @@ import cloudsOverlay from "@assets/Project_(20251227103213)_1766828113842.jpg";
 import { MeteorContainer } from "./Meteor";
 
 import excelLogo from "@assets/Microsoft_Office_Excel_(2019–2025).svg_1767283614696.png";
+import conversationCardImg from "@assets/Gemini_Generated_Image_j212wcj212wcj212_1767283699067.png";
 
 interface StepProps {
   number: string;
@@ -226,7 +227,7 @@ Auto segment contacts based on past interactions`
       image: conversationImg,
       icon: <MessageSquare className="w-8 h-8 text-yellow-500" />,
       align: "right" as const,
-      cardImage: conversationImg,
+      cardImage: conversationCardImg,
       leftText: `24/7 responses across SMS, WhatsApp, and email
 Smart follow-up re-engage unresponsive leads automatically
 Speaks customers' languages and can sound formal or casual
