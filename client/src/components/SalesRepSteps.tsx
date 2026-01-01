@@ -384,7 +384,7 @@ Weekly optimization reviews for continuous results`
                           <div className="grid grid-cols-2 gap-4 pb-4">
                             {step.leftText.split('\n').map((line, i) => (
                               <div key={i} className="flex items-start gap-3">
-                                <div className="flex-shrink-0 w-2 h-2 rounded-full bg-yellow-500 mt-2" />
+                                <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500 mt-2" />
                                 <div className="font-medium text-gray-600 text-[14px]">
                                   {line}
                                 </div>
@@ -425,18 +425,18 @@ Weekly optimization reviews for continuous results`
               <button
                 onClick={handlePrev}
                 data-testid="button-prev-step"
-                className="p-3 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-white hover:bg-yellow-500/30 hover:border-yellow-500 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
+                className="p-3 rounded-full bg-blue-500/20 border border-blue-500/50 text-white hover:bg-blue-500/30 hover:border-blue-500 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
                 aria-label="Previous step"
               >
-                <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform text-yellow-500" />
+                <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform text-blue-500" />
               </button>
               <button
                 onClick={handleNext}
                 data-testid="button-next-step"
-                className="p-3 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-white hover:bg-yellow-500/30 hover:border-yellow-500 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
+                className="p-3 rounded-full bg-blue-500/20 border border-blue-500/50 text-white hover:bg-blue-500/30 hover:border-blue-500 transition-all duration-300 flex items-center justify-center group pointer-events-auto"
                 aria-label="Next step"
               >
-                <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform text-yellow-500" />
+                <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform text-blue-500" />
               </button>
             </div>
           </div>
