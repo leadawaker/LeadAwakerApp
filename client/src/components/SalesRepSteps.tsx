@@ -354,7 +354,7 @@ Weekly optimization reviews for continuous results`
                                   { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
                                   { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
                                   { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
-                                  { name: 'Excel', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg/1101px-Microsoft_Office_Excel_%282019%E2%80%93present%29.svg.png' },
+                                  { name: 'Excel', url: 'https://cdn.pixabay.com/photo/2017/01/31/15/22/document-2025001_1280.png' },
                                   { name: 'Supabase', url: 'https://www.vectorlogo.zone/logos/supabase/supabase-icon.svg' },
                                   { name: 'Airtable', url: 'https://www.vectorlogo.zone/logos/airtable/airtable-icon.svg' },
                                   { name: 'API', url: null }
@@ -425,18 +425,18 @@ Weekly optimization reviews for continuous results`
               <button
                 onClick={handlePrev}
                 data-testid="button-prev-step"
-                className="p-3 rounded-full bg-blue-500/20 border border-blue-500/50 text-white hover:bg-blue-500/30 hover:border-blue-500 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                className="p-3 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-white hover:bg-yellow-500/30 hover:border-yellow-500 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(234,179,8,0.3)]"
                 aria-label="Previous step"
               >
-                <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform text-white [filter:drop-shadow(0_0_1px_#3b82f6)_drop-shadow(0_0_1px_#3b82f6)_drop-shadow(0_0_1px_#3b82f6)]" />
+                <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform text-white [filter:drop-shadow(0_0_1px_#eab308)_drop-shadow(0_0_1px_#eab308)_drop-shadow(0_0_1px_#eab308)]" />
               </button>
               <button
                 onClick={handleNext}
                 data-testid="button-next-step"
-                className="p-3 rounded-full bg-blue-500/20 border border-blue-500/50 text-white hover:bg-blue-500/30 hover:border-blue-500 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                className="p-3 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-white hover:bg-yellow-500/30 hover:border-yellow-500 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(234,179,8,0.3)]"
                 aria-label="Next step"
               >
-                <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform text-white [filter:drop-shadow(0_0_1px_#3b82f6)_drop-shadow(0_0_1px_#3b82f6)_drop-shadow(0_0_1px_#3b82f6)]" />
+                <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform text-white [filter:drop-shadow(0_0_1px_#eab308)_drop-shadow(0_0_1px_#eab308)_drop-shadow(0_0_1px_#eab308)]" />
               </button>
             </div>
           </div>
