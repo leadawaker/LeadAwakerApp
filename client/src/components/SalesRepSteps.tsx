@@ -277,20 +277,14 @@ Weekly optimization reviews for continuous results`
                   layout
                   initial={false}
                   animate={{
-                    scale: isActive ? 1 : 0.95,
-                    x: isActive ? 0 : position === 1 ? 40 : -40,
-                    opacity: isActive ? 1 : 0,
+                    scale: isActive ? 1 : 0.9,
+                    x: isActive ? 0 : isNext ? 160 : -160,
+                    opacity: isActive ? 1 : 0.3,
                     zIndex: isActive ? 20 : 10,
-                    pointerEvents: isActive ? 'auto' : 'none',
+                    filter: isActive ? 'blur(0px)' : 'blur(2px)',
                   }}
-                  transition={{ 
-                    type: 'spring', 
-                    stiffness: 260, 
-                    damping: 26,
-                    mass: 0.8,
-                    opacity: { duration: 0.3 }
-                  }}
-                  className="absolute w-full max-w-5xl left-1/2 -translate-x-1/2"
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  className="absolute w-full max-w-5xl z-50"
                 >
                   <Card className="bg-card backdrop-blur-sm border-white/10 group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
                     <CardContent className="p-8">
