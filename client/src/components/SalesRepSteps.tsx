@@ -277,9 +277,9 @@ Weekly optimization reviews for continuous results`
                   layout
                   initial={false}
                   animate={{
-                    scale: isActive ? 1 : 0.7,
-                    x: isActive ? 0 : isNext ? 70 : -70,
-                    opacity: isActive ? 1 : 0.2,
+                    scale: isActive ? 1 : 0.85,
+                    x: isActive ? 0 : isNext ? 240 : -240,
+                    opacity: isActive ? 1 : 0.4,
                     zIndex: isActive ? 20 : 10,
                     filter: isActive ? 'blur(0px)' : 'blur(2px)',
                     pointerEvents: isActive ? 'auto' : 'none',
