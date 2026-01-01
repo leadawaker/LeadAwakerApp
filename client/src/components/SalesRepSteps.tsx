@@ -259,11 +259,11 @@ Weekly optimization reviews for continuous results`
   };
 
   return (
-    <div className="relative w-full pt-24 pb-36">
+    <div className="relative w-full pt-24 pb-48">
       <div className="container mx-auto px-4 sm:px-6 md:px-12 relative z-10">
         {/* Stacked Cards Container */}
-        <div className="relative h-[750px] flex flex-col items-center justify-center">
-          <div className="relative w-full h-[550px] flex items-center justify-center">
+        <div className="relative h-[850px] flex flex-col items-center justify-center">
+          <div className="relative w-full h-[650px] flex items-center justify-center">
             {steps.map((step, index) => {
               const position = (index - currentStep + steps.length) % steps.length;
               const isActive = position === 0;
