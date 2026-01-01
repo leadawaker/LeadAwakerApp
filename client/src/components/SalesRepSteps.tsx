@@ -398,17 +398,18 @@ Weekly optimization reviews for continuous results`
                           </div>
 
                           {/* Pagination dots within card */}
-                          <div className="flex justify-center gap-2 mt-8 pb-2">
+                          <div className="flex justify-center gap-2 mt-8 pb-2 relative z-[70]">
                             {steps.map((_, i) => (
                               <button
                                 key={i}
                                 onClick={(e) => {
+                                  e.preventDefault();
                                   e.stopPropagation();
                                   setCurrentStep(i);
                                 }}
                                 data-testid={`dot-step-internal-${i}`}
-                                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                                  i === index
+                                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer pointer-events-auto ${
+                                  i === currentStep
                                     ? 'bg-yellow-500 w-6'
                                     : 'bg-yellow-500/20 hover:bg-yellow-500/40'
                                 }`}
