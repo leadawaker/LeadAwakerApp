@@ -325,7 +325,7 @@ Weekly optimization reviews for continuous results`
                                   100% { transform: translateX(-50%); }
                                 }
                                 .crm-carousel-track {
-                                  animation: crmScroll 50s linear infinite;
+                                  animation: crmScroll 33s linear infinite;
                                   display: flex;
                                   gap: 1rem;
                                 }
@@ -352,7 +352,7 @@ Weekly optimization reviews for continuous results`
                                   { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
                                   { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
                                   { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
-                                  { name: 'Excel', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
+                                  { name: 'Excel', url: 'https://www.vectorlogo.zone/logos/microsoft_excel/microsoft_excel-icon.svg' },
                                   { name: 'Supabase', url: 'https://www.vectorlogo.zone/logos/supabase/supabase-icon.svg' },
                                   { name: 'Airtable', url: 'https://www.vectorlogo.zone/logos/airtable/airtable-icon.svg' },
                                   { name: 'API', url: null }
