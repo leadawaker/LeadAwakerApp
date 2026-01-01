@@ -15,6 +15,8 @@ import cloudTexture from "@assets/generated_images/cloud-bottom-bar.jpg";
 import cloudsOverlay from "@assets/Project_(20251227103213)_1766828113842.jpg";
 import { MeteorContainer } from "./Meteor";
 
+import excelLogo from "@assets/Microsoft_Office_Excel_(2019–2025).svg_1767283614696.png";
+
 interface StepProps {
   number: string;
   cardTitle: string;
@@ -353,7 +355,7 @@ Weekly optimization reviews for continuous results`
                                   { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
                                   { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
                                   { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
-                                  { name: 'Excel', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_Excel_%282019%E2%80%93present%29.svg.png' },
+                                  { name: 'Excel', url: excelLogo },
                                   { name: 'Supabase', url: 'https://www.vectorlogo.zone/logos/supabase/supabase-icon.svg' },
                                   { name: 'Airtable', url: 'https://www.vectorlogo.zone/logos/airtable/airtable-icon.svg' },
                                   { name: 'API', url: null },
@@ -363,7 +365,7 @@ Weekly optimization reviews for continuous results`
                                   { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
                                   { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
                                   { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
-                                  { name: 'Excel', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Microsoft_Office_Excel_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_Excel_%282019%E2%80%93present%29.svg.png' },
+                                  { name: 'Excel', url: excelLogo },
                                   { name: 'Supabase', url: 'https://www.vectorlogo.zone/logos/supabase/supabase-icon.svg' },
                                   { name: 'Airtable', url: 'https://www.vectorlogo.zone/logos/airtable/airtable-icon.svg' },
                                   { name: 'API', url: null }
