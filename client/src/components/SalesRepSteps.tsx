@@ -328,7 +328,7 @@ Weekly optimization reviews for continuous results`
                                   100% { transform: translateX(-50%); }
                                 }
                                 .crm-carousel-track {
-                                  animation: crmScroll 31.4s linear infinite;
+                                  animation: crmScroll 52.3s linear infinite;
                                   display: flex;
                                   gap: 1rem;
                                   width: max-content;
