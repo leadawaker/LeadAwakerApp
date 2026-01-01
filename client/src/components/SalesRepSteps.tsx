@@ -285,9 +285,9 @@ Weekly optimization reviews for continuous results`
                     pointerEvents: isActive ? 'auto' : 'none',
                   }}
                   transition={{ 
-                    type: 'spring', 
-                    stiffness: 260, 
-                    damping: 25,
+                    layout: { duration: 0 },
+                    x: { type: 'spring', stiffness: 260, damping: 25 },
+                    scale: { type: 'spring', stiffness: 260, damping: 25 },
                     opacity: { duration: 0.2 }
                   }}
                   className="absolute w-full max-w-5xl left-1/2 -translate-x-1/2"
@@ -354,7 +354,7 @@ Weekly optimization reviews for continuous results`
                                   { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
                                   { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
                                   { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
-                                  { name: 'Excel', url: 'https://cdn.pixabay.com/photo/2017/01/31/15/22/document-2025001_1280.png' },
+                                  { name: 'Excel', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
                                   { name: 'Supabase', url: 'https://www.vectorlogo.zone/logos/supabase/supabase-icon.svg' },
                                   { name: 'Airtable', url: 'https://www.vectorlogo.zone/logos/airtable/airtable-icon.svg' },
                                   { name: 'API', url: null }
@@ -428,7 +428,7 @@ Weekly optimization reviews for continuous results`
                 className="p-3 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-white hover:bg-yellow-500/30 hover:border-yellow-500 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(234,179,8,0.3)]"
                 aria-label="Previous step"
               >
-                <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform text-white [filter:drop-shadow(0_0_1px_#eab308)_drop-shadow(0_0_1px_#eab308)_drop-shadow(0_0_1px_#eab308)]" />
+                <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform text-yellow-500" />
               </button>
               <button
                 onClick={handleNext}
@@ -436,7 +436,7 @@ Weekly optimization reviews for continuous results`
                 className="p-3 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-white hover:bg-yellow-500/30 hover:border-yellow-500 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(234,179,8,0.3)]"
                 aria-label="Next step"
               >
-                <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform text-white [filter:drop-shadow(0_0_1px_#eab308)_drop-shadow(0_0_1px_#eab308)_drop-shadow(0_0_1px_#eab308)]" />
+                <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform text-yellow-500" />
               </button>
             </div>
           </div>
