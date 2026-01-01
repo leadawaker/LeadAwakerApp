@@ -277,11 +277,11 @@ Weekly optimization reviews for continuous results`
                   layout
                   initial={false}
                   animate={{
-                    scale: isActive ? 1 : 0.8,
-                    x: isActive ? 0 : isNext ? 280 : -280,
-                    opacity: isActive ? 1 : 0.4,
+                    scale: isActive ? 1 : 0.95,
+                    x: isActive ? 0 : isNext ? 40 : -40,
+                    opacity: isActive ? 1 : 0.2,
                     zIndex: isActive ? 20 : 10,
-                    filter: isActive ? 'blur(0px)' : 'blur(4px)',
+                    filter: isActive ? 'blur(0px)' : 'blur(2px)',
                     pointerEvents: isActive ? 'auto' : 'none',
                   }}
                   transition={{ 
