@@ -406,8 +406,8 @@ Weekly optimization reviews for continuous results`
                               data-testid={`dot-step-internal-${i}`}
                               className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer pointer-events-auto ${
                                 i === currentStep
-                                  ? 'bg-yellow-500 w-6'
-                                  : 'bg-yellow-500/20 hover:bg-yellow-500/40'
+                                  ? 'bg-blue-500 w-6'
+                                  : 'bg-blue-500/20 hover:bg-blue-500/40'
                                 }`}
                               aria-label={`Go to step ${i + 1}`}
                             />
