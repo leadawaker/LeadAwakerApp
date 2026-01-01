@@ -426,13 +426,13 @@ Weekly optimization reviews for continuous results`
           </div>
 
           {/* Pagination dots under cards */}
-          <div className="flex gap-2 mt-8">
+          <div className="flex gap-2 mt-8 relative z-[60]">
             {steps.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrentStep(i)}
                 data-testid={`dot-step-${i}`}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                className={`w-3 h-3 rounded-full transition-all duration-300 pointer-events-auto ${
                   i === currentStep
                     ? 'bg-yellow-500 w-8'
                     : 'bg-yellow-500/40 hover:bg-yellow-500/60'
