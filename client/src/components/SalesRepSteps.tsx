@@ -424,7 +424,7 @@ Weekly optimization reviews for continuous results`
                 <button
                   onClick={handlePrev}
                   data-testid="button-prev-step"
-                  className="p-3 rounded-full bg-white/10 border border-white text-white hover:bg-white/20 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(255,255,255,0.4),0_0_20px_rgba(234,179,8,0.5)] -translate-x-16"
+                  className="p-3 rounded-full bg-white/10 border border-white text-white hover:bg-white/20 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(255,255,255,0.4),0_0_20px_rgba(234,179,8,0.5)] translate-x-12"
                   aria-label="Previous step"
                 >
                   <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform text-white" />
@@ -432,7 +432,7 @@ Weekly optimization reviews for continuous results`
                 <button
                   onClick={handleNext}
                   data-testid="button-next-step"
-                  className="p-3 rounded-full bg-white/10 border border-white text-white hover:bg-white/20 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(255,255,255,0.4),0_0_20px_rgba(234,179,8,0.5)] translate-x-16"
+                  className="p-3 rounded-full bg-white/10 border border-white text-white hover:bg-white/20 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(255,255,255,0.4),0_0_20px_rgba(234,179,8,0.5)] -translate-x-12"
                   aria-label="Next step"
                 >
                   <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform text-white" />
