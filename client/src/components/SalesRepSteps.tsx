@@ -418,24 +418,26 @@ Weekly optimization reviews for continuous results`
               );
             })}
 
-            {/* Side Navigation Buttons - Closer In */}
-            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between items-center px-4 md:px-12 z-30 pointer-events-none">
-              <button
-                onClick={handlePrev}
-                data-testid="button-prev-step"
-                className="p-3 rounded-full bg-white/10 border border-white text-white hover:bg-white/20 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(255,255,255,0.4),0_0_20px_rgba(234,179,8,0.5)]"
-                aria-label="Previous step"
-              >
-                <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform text-white" />
-              </button>
-              <button
-                onClick={handleNext}
-                data-testid="button-next-step"
-                className="p-3 rounded-full bg-white/10 border border-white text-white hover:bg-white/20 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(255,255,255,0.4),0_0_20px_rgba(234,179,8,0.5)]"
-                aria-label="Next step"
-              >
-                <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform text-white" />
-              </button>
+            {/* Side Navigation Buttons - Fixed Position relative to container */}
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between items-center z-30 pointer-events-none">
+              <div className="w-full max-w-5xl mx-auto px-4 flex justify-between items-center">
+                <button
+                  onClick={handlePrev}
+                  data-testid="button-prev-step"
+                  className="p-3 rounded-full bg-white/10 border border-white text-white hover:bg-white/20 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(255,255,255,0.4),0_0_20px_rgba(234,179,8,0.5)] -translate-x-16"
+                  aria-label="Previous step"
+                >
+                  <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform text-white" />
+                </button>
+                <button
+                  onClick={handleNext}
+                  data-testid="button-next-step"
+                  className="p-3 rounded-full bg-white/10 border border-white text-white hover:bg-white/20 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(255,255,255,0.4),0_0_20px_rgba(234,179,8,0.5)] translate-x-16"
+                  aria-label="Next step"
+                >
+                  <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform text-white" />
+                </button>
+              </div>
             </div>
           </div>
 
