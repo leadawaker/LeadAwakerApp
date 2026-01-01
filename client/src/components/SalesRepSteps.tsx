@@ -277,9 +277,9 @@ Weekly optimization reviews for continuous results`
                   layout
                   initial={false}
                   animate={{
-                    scale: isActive ? 1 : 0.9,
-                    x: isActive ? 0 : isNext ? 160 : -160,
-                    opacity: isActive ? 1 : 0,
+                    scale: isActive ? 1 : 0.8,
+                    x: isActive ? 0 : isNext ? 280 : -280,
+                    opacity: isActive ? 1 : 0.4,
                     zIndex: isActive ? 20 : 10,
                     filter: isActive ? 'blur(0px)' : 'blur(4px)',
                     pointerEvents: isActive ? 'auto' : 'none',
@@ -304,95 +304,84 @@ Weekly optimization reviews for continuous results`
                         {step.cardDescription}
                       </p>
 
-                      {/* Bullet points for current card only */}
-                      {isActive && step.leftText && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.2 }}
-                          className="pt-6 border-t border-white/10"
-                        >
-                          {step.cardImage && step.number === "1" ? (
-                            <div className="relative mb-6 rounded-lg overflow-hidden group">
-                              <img src={step.cardImage} alt="Step illustration" className="w-full h-auto object-cover rounded-lg" />
-                              
-                              {/* CRM Logos Carousel overlaying the image */}
-                              {isActive && (
-                                <motion.div
-                                  initial={{ opacity: 0, y: -10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: 0.3 }}
-                                  className="absolute top-[5%] left-0 right-0 h-1/4 flex items-center px-4 pt-4 z-10"
-                                  style={{
-                                    maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
-                                    WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)'
-                                  }}
-                                >
-                                  <style>{`
-                                    @keyframes crmScroll {
-                                      0% { transform: translateX(0); }
-                                      100% { transform: translateX(-50%); }
-                                    }
-                                    .crm-carousel-track {
-                                      animation: crmScroll 50s linear infinite;
-                                      display: flex;
-                                      gap: 1rem;
-                                    }
-                                    .crm-carousel-track:hover {
-                                      animation-play-state: paused;
-                                    }
-                                    .crm-logo-item {
-                                      flex-shrink: 0;
-                                      display: flex;
-                                      align-items: center;
-                                      gap: 0.5rem;
-                                      padding: 0.375rem 0.75rem;
-                                      background: rgba(255, 255, 255, 0.35);
-                                      border-radius: 0.375rem;
-                                      border: 1px solid rgba(226, 232, 240, 0.3);
-                                      backdrop-filter: blur(4px);
-                                      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                                    }
-                                  `}</style>
-                                  <div className="crm-carousel-track">
-                                    {[
-                                      { name: 'Salesforce', url: 'https://www.vectorlogo.zone/logos/salesforce/salesforce-icon.svg' },
-                                      { name: 'HubSpot', url: 'https://www.vectorlogo.zone/logos/hubspot/hubspot-icon.svg' },
-                                      { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
-                                      { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
-                                      { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
-                                      { name: 'Excel', url: 'https://www.google.com/s2/favicons?domain=microsoft.com&sz=128' },
-                                      { name: 'Supabase', url: 'https://www.vectorlogo.zone/logos/supabase/supabase-icon.svg' },
-                                      { name: 'Airtable', url: 'https://www.vectorlogo.zone/logos/airtable/airtable-icon.svg' },
-                                      { name: 'API', url: null }
-                                    ].map((crm, i) => (
-                                      <div key={i} className="crm-logo-item">
-                                        {crm.url ? <img src={crm.url} alt={crm.name} className="w-10 h-10 object-contain" /> : <span className="text-blue-600 font-mono font-bold text-lg">&lt;/&gt;</span>}
-                                        <span className="text-[14px] font-bold text-slate-700 uppercase tracking-wider">{crm.name}</span>
-                                      </div>
-                                    ))}
-                                    {[
-                                      { name: 'Salesforce', url: 'https://www.vectorlogo.zone/logos/salesforce/salesforce-icon.svg' },
-                                      { name: 'HubSpot', url: 'https://www.vectorlogo.zone/logos/hubspot/hubspot-icon.svg' },
-                                      { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
-                                      { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
-                                      { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
-                                    ].map((crm, i) => (
-                                      <div key={`dupe-${i}`} className="crm-logo-item">
-                                        {crm.url ? <img src={crm.url} alt={crm.name} className="w-10 h-10 object-contain" /> : <span className="text-blue-600 font-mono font-bold text-lg">&lt;/&gt;</span>}
-                                        <span className="text-[14px] font-bold text-slate-700 uppercase tracking-wider">{crm.name}</span>
-                                      </div>
-                                    ))}
+                      {/* Bullet points and media */}
+                      <div className="pt-6 border-t border-white/10">
+                        {step.cardImage && step.number === "1" ? (
+                          <div className="relative mb-6 rounded-lg overflow-hidden group">
+                            <img src={step.cardImage} alt="Step illustration" className="w-full h-auto object-cover rounded-lg" />
+                            
+                            {/* CRM Logos Carousel overlaying the image */}
+                            <motion.div
+                              initial={false}
+                              animate={{ opacity: isActive ? 1 : 0 }}
+                              transition={{ duration: 0.3 }}
+                              className="absolute top-[5%] left-0 right-0 h-1/4 flex items-center px-4 pt-4 z-10"
+                              style={{
+                                maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
+                                WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)'
+                              }}
+                            >
+                              <style>{`
+                                @keyframes crmScroll {
+                                  0% { transform: translateX(0); }
+                                  100% { transform: translateX(-50%); }
+                                }
+                                .crm-carousel-track {
+                                  animation: crmScroll 50s linear infinite;
+                                  display: flex;
+                                  gap: 1rem;
+                                }
+                                .crm-carousel-track:hover {
+                                  animation-play-state: paused;
+                                }
+                                .crm-logo-item {
+                                  flex-shrink: 0;
+                                  display: flex;
+                                  align-items: center;
+                                  gap: 0.5rem;
+                                  padding: 0.375rem 0.75rem;
+                                  background: rgba(255, 255, 255, 0.35);
+                                  border-radius: 0.375rem;
+                                  border: 1px solid rgba(226, 232, 240, 0.3);
+                                  backdrop-filter: blur(4px);
+                                  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                                }
+                              `}</style>
+                              <div className="crm-carousel-track">
+                                {[
+                                  { name: 'Salesforce', url: 'https://www.vectorlogo.zone/logos/salesforce/salesforce-icon.svg' },
+                                  { name: 'HubSpot', url: 'https://www.vectorlogo.zone/logos/hubspot/hubspot-icon.svg' },
+                                  { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
+                                  { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
+                                  { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
+                                  { name: 'Excel', url: 'https://www.google.com/s2/favicons?domain=microsoft.com&sz=128' },
+                                  { name: 'Supabase', url: 'https://www.vectorlogo.zone/logos/supabase/supabase-icon.svg' },
+                                  { name: 'Airtable', url: 'https://www.vectorlogo.zone/logos/airtable/airtable-icon.svg' },
+                                  { name: 'API', url: null }
+                                ].map((crm, i) => (
+                                  <div key={i} className="crm-logo-item">
+                                    {crm.url ? <img src={crm.url} alt={crm.name} className="w-10 h-10 object-contain" /> : <span className="text-blue-600 font-mono font-bold text-lg">&lt;/&gt;</span>}
+                                    <span className="text-[14px] font-bold text-slate-700 uppercase tracking-wider">{crm.name}</span>
                                   </div>
-                                </motion.div>
-                              )}
-                            </div>
-                          ) : step.cardImage ? (
-                            <div className="mb-6 rounded-lg overflow-hidden">
-                              <img src={step.cardImage} alt="Step illustration" className="w-full h-auto object-cover rounded-lg" />
-                            </div>
-                          ) : null}
-                          <div className="grid grid-cols-2 gap-4">
+                                ))}
+                              </div>
+                            </motion.div>
+                          </div>
+                        ) : step.cardImage ? (
+                          <div className="mb-6 rounded-lg overflow-hidden">
+                            <img src={step.cardImage} alt="Step illustration" className="w-full h-auto object-cover rounded-lg" />
+                          </div>
+                        ) : null}
+
+                        <motion.div
+                          animate={{ 
+                            height: isActive ? "auto" : 0,
+                            opacity: isActive ? 1 : 0
+                          }}
+                          transition={{ duration: 0.4 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="grid grid-cols-2 gap-4 pb-4">
                             {step.leftText.split('\n').map((line, i) => (
                               <div key={i} className="flex items-start gap-3">
                                 <div className="flex-shrink-0 w-2 h-2 rounded-full bg-yellow-500 mt-2" />
@@ -402,29 +391,29 @@ Weekly optimization reviews for continuous results`
                               </div>
                             ))}
                           </div>
-
-                          {/* Pagination dots within card */}
-                          <div className="flex justify-center gap-2 mt-8 pb-2 relative z-[70]">
-                            {steps.map((_, i) => (
-                              <button
-                                key={i}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setCurrentStep(i);
-                                }}
-                                data-testid={`dot-step-internal-${i}`}
-                                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer pointer-events-auto ${
-                                  i === currentStep
-                                    ? 'bg-yellow-500 w-6'
-                                    : 'bg-yellow-500/20 hover:bg-yellow-500/40'
-                                }`}
-                                aria-label={`Go to step ${i + 1}`}
-                              />
-                            ))}
-                          </div>
                         </motion.div>
-                      )}
+
+                        {/* Pagination dots within card */}
+                        <div className="flex justify-center gap-2 mt-4 pb-2 relative z-[70]">
+                          {steps.map((_, i) => (
+                            <button
+                              key={i}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setCurrentStep(i);
+                              }}
+                              data-testid={`dot-step-internal-${i}`}
+                              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer pointer-events-auto ${
+                                i === currentStep
+                                  ? 'bg-yellow-500 w-6'
+                                  : 'bg-yellow-500/20 hover:bg-yellow-500/40'
+                                }`}
+                              aria-label={`Go to step ${i + 1}`}
+                            />
+                          ))}
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 </motion.div>
