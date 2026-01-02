@@ -1,5 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useState, useEffect, useRef, useCallback } from "react";
+import { Button } from "@/components/ui/button";
 
 interface Message {
   type: "agent" | "user" | "system";
