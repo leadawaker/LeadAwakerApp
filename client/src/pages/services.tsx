@@ -192,7 +192,7 @@ export default function Services() {
               onClick={() => setActiveCase(index)}
               className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all duration-300 min-w-[200px] flex-1 md:flex-none relative overflow-hidden ${
                 activeCase === index
-                  ? "bg-white border-primary shadow-[0_20px_40px_-10px_rgba(37,99,235,0.4)] scale-105 z-10"
+                  ? "bg-white border-primary shadow-xl shadow-primary/10 scale-105 z-10"
                   : "bg-white/50 border-slate-200 hover:border-slate-300 grayscale hover:grayscale-0 opacity-70 hover:opacity-100"
               }`}
             >
