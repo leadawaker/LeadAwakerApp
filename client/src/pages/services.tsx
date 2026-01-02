@@ -141,35 +141,11 @@ const CASES = [
   },
   {
     id: 5,
-    title: "Travel Company",
-    icon: <Globe className="w-6 h-6" />,
-    description: (
-      <>
-        <h2 className="text-3xl font-bold mb-6">Case 5 - <span className="text-primary">Travel Company</span></h2>
-        <p className="text-muted-foreground text-base mb-6 leading-relaxed">
-          Personalized luxury travel suggestions based on preferred climates and past booking value. AI acts as a concierge to pre-qualify holiday preferences.
-        </p>
-        <h3 className="font-semibold text-lg mb-4">Key Metrics:</h3>
-        <ul className="space-y-2 mb-8">
-          <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-            <span><strong>$15,000 Avg. booking value</strong> reactivated</span>
-          </li>
-          <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-            <span><strong>98% CSAT</strong> on automated interactions</span>
-          </li>
-        </ul>
-      </>
-    )
-  },
-  {
-    id: 6,
     title: "Real Estate Company",
     icon: <Building2 className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 6 - <span className="text-primary">Real Estate Company</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 5 - <span className="text-primary">Real Estate Company</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Nurturing long-term buyer and seller leads. Our AI identifies "motivated" behavior patterns and automatically offers virtual tours or instant valuation reports.
         </p>
