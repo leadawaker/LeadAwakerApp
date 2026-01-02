@@ -93,24 +93,24 @@ const CASES = [
       <>
         <h2 className="text-3xl font-bold mb-6">Case 4 - <span className="text-primary">Solar Panel Installation</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
-          Re-engaging homeowners who received a quote but didn't proceed. Our <strong>Eco-Response AI</strong> updates them on new government grants and reduced equipment costs, handling technical questions about battery storage and installation timelines.
+          Watch this real conversation unfold: Our <strong>Eco-Response AI</strong> re-engages Gabriel, a homeowner who received a quote months ago. The AI handles his technical concerns about his north-facing roof with expert-level reassurance.
         </p>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
-          <strong>What happens next:</strong> Once intent is confirmed, the AI schedules a technical site survey directly into the installation team's calendar, ensuring no momentum is lost.
+          <strong>The Outcome:</strong> By acknowledging his specific "payback period" concerns without being pushy, the AI builds enough trust to secure a technical site survey. 
         </p>
-        <h3 className="font-semibold text-lg mb-4">Expected Performance:</h3>
+        <h3 className="font-semibold text-lg mb-4">Key Performance Indicators:</h3>
         <ul className="space-y-2 mb-8">
           <li className="flex gap-3">
             <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-            <span><strong>12.5% Appointment rate</strong> from 6+ month old leads</span>
+            <span><strong>12.5% Appointment rate</strong> from cold quote history</span>
           </li>
           <li className="flex gap-3">
             <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-            <span><strong>Automated qualification</strong> of roof type and orientation</span>
+            <span><strong>Zero manual intervention</strong> until the specialist call</span>
           </li>
           <li className="flex gap-3">
             <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-            <span><strong>Calendar sync</strong> with real-time surveyor availability</span>
+            <span><strong>Integrated Calendar sync</strong> for instant booking</span>
           </li>
         </ul>
       </>
@@ -141,11 +141,11 @@ const CASES = [
   },
   {
     id: 5,
-    title: "Real Estate Company",
+    title: "Real Estate",
     icon: <Building2 className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 5 - <span className="text-primary">Real Estate Company</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 5 - <span className="text-primary">Real Estate</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Nurturing long-term buyer and seller leads. Our AI identifies "motivated" behavior patterns and automatically offers virtual tours or instant valuation reports.
         </p>
@@ -226,9 +226,9 @@ export default function Services() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
-              className="grid md:grid-cols-2 gap-12 items-center"
+              className="grid lg:grid-cols-2 gap-12 items-start"
             >
-              <div className="order-2 md:order-1">
+              <div className="order-1">
                 {CASES[activeCase].description}
                 <div className="mt-8 pt-8 border-t border-slate-100">
                   <p className="text-slate-500 text-sm italic">
@@ -237,7 +237,7 @@ export default function Services() {
                 </div>
               </div>
               
-              <div className="order-1 md:order-2 max-w-md mx-auto w-full">
+              <div className="order-2 max-w-md mx-auto lg:mx-0 w-full lg:sticky lg:top-8">
                 <div className="relative">
                   <div className="absolute -inset-4 bg-primary/5 rounded-[2.5rem] blur-2xl -z-10" />
                   <ChatCard2D messages={CASES[activeCase].messages} />
