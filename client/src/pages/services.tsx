@@ -190,19 +190,28 @@ export default function Services() {
             <button
               key={item.id}
               onClick={() => setActiveCase(index)}
-              className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all duration-300 min-w-[200px] flex-1 md:flex-none ${
+              className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all duration-300 min-w-[200px] flex-1 md:flex-none relative overflow-hidden ${
                 activeCase === index
-                  ? "bg-white border-primary shadow-xl shadow-primary/10 scale-105"
+                  ? "bg-white border-primary shadow-[0_20px_40px_-10px_rgba(37,99,235,0.4)] scale-105 z-10"
                   : "bg-white/50 border-slate-200 hover:border-slate-300 grayscale hover:grayscale-0 opacity-70 hover:opacity-100"
               }`}
             >
-              <span className={`text-sm font-bold uppercase tracking-wider mb-2 ${activeCase === index ? "text-primary" : "text-slate-500"}`}>
+              {/* Gradient Overlays */}
+              <div 
+                className={`absolute inset-0 transition-opacity duration-300 pointer-events-none ${
+                  activeCase === index 
+                    ? "bg-gradient-to-tl from-primary/10 to-transparent opacity-100" 
+                    : "bg-gradient-to-tl from-slate-400/10 to-transparent opacity-100"
+                }`} 
+              />
+              
+              <span className={`text-sm font-bold uppercase tracking-wider mb-2 relative z-10 ${activeCase === index ? "text-primary" : "text-slate-500"}`}>
                 Case {item.id}
               </span>
-              <div className={`mb-3 ${activeCase === index ? "text-primary" : "text-slate-400"}`}>
+              <div className={`mb-3 relative z-10 ${activeCase === index ? "text-primary" : "text-slate-400"}`}>
                 {item.icon}
               </div>
-              <span className={`font-bold text-center leading-tight ${activeCase === index ? "text-slate-900" : "text-slate-500"}`}>
+              <span className={`font-bold text-center leading-tight relative z-10 ${activeCase === index ? "text-slate-900" : "text-slate-500"}`}>
                 {item.title}
               </span>
             </button>
