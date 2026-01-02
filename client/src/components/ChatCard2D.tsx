@@ -44,7 +44,6 @@ export default function ChatCard2D({ messages }: { messages?: Message[] }) {
 
   const chatMessages = messages || defaultMessages;
 
-  // Dynamically determine header name based on the first "user" message in the array
   const headerName = chatMessages.find(msg => msg.type === 'user')?.sender?.split(' ')[0] || "Augusto";
 
   const isAtBottom = useCallback(() => {
@@ -129,8 +128,6 @@ export default function ChatCard2D({ messages }: { messages?: Message[] }) {
     hidden: { opacity: 0, y: 20, scale: 0.95 },
     visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4 } },
   };
-
-  const headerName = 'Jack';
 
   return (
     <div ref={containerRef} className="w-full max-w-2xl mx-auto relative">
