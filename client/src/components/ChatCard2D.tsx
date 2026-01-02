@@ -160,13 +160,10 @@ export default function ChatCard2D({ messages }: { messages?: Message[] }) {
                 ) : (
                   <motion.div className={`flex ${msg.type === 'agent' ? 'justify-end' : 'justify-start'}`} variants={messageVariants} initial="hidden" animate="visible">
                     <div className={`flex flex-col ${msg.type === 'agent' ? 'items-end' : 'items-start'} gap-1 max-w-[85%]`}>
-                      <span className="text-[10px] font-semibold text-slate-500 px-1 uppercase tracking-wider">
-                        {msg.sender || (msg.type === 'agent' ? 'Agent' : 'Lead')}
-                      </span>
                       <div className={`rounded-2xl px-4 py-3 shadow-sm text-sm ${msg.type === 'agent' ? 'text-white rounded-tr-sm' : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'}`} style={msg.type === 'agent' ? { backgroundColor: "#2563EB" } : {}}>
                         {msg.content?.split('\n').map((line, i) => <div key={i}>{line}</div>)}
                       </div>
-                      <span className="text-[10px] text-slate-400 px-1">{msg.time}</span>
+                      <span className="text-xs text-slate-400">{msg.time}</span>
                     </div>
                   </motion.div>
                 )}
