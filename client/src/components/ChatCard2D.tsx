@@ -127,7 +127,7 @@ export default function ChatCard2D({ messages }: { messages?: Message[] }) {
     visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4 } },
   };
 
-  const headerName = chatMessages[0]?.sender || 'Agent';
+  const headerName = 'Jack';
 
   return (
     <div ref={containerRef} className="w-full max-w-2xl mx-auto relative">
