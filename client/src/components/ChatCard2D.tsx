@@ -103,8 +103,19 @@ export default function ChatCard2D({ messages }: { messages?: Message[] }) {
     setIsUserScrolling(false);
     for (let i = 6; i <= chatMessages.length; i++) {
       setCurrentStep(i);
-      // Fixed 5s delay for each message as requested
-      const delay = 5000;
+      
+      const message = chatMessages[i-1];
+      let delay = 1000; // Minimum 1s delay
+      
+      if (message && message.content && (message.type === 'agent' || message.type === 'user')) {
+        // Calculate delay based on character count (excluding spaces and newlines)
+        const charCount = message.content.replace(/\s/g, '').length;
+        const calculatedDelay = charCount * 80;
+        delay = Math.max(1000, calculatedDelay);
+      } else if (message && message.type === 'system') {
+        delay = 800; // Standard system message delay
+      }
+      
       await new Promise(resolve => setTimeout(resolve, delay));
     }
     setIsAnimating(false);

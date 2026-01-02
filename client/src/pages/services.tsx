@@ -161,7 +161,34 @@ const CASES = [
           </li>
         </ul>
       </>
-    )
+    ),
+    messages: [
+      { type: "system", content: "Lead Engaged - 10:00 AM", id: "re-s1" },
+      { type: "agent", sender: "Mirela", content: "Hi, it’s Mirela from HomeHaven Realty here\n\nIs this the same Augusto that got a real Estate quote from us in the last couple of months? 🙂", time: "10:00 AM" },
+      { type: "user", sender: "Gabriel Fronza", content: "Hi yes how are you?", time: "10:05 AM" },
+      { type: "agent", sender: "Mirela", content: "Nice! My manager asked me to reach out but I didnt want to spam you.\n\nAre you still looking?", time: "10:06 AM" },
+      { type: "user", sender: "Gabriel Fronza", content: "I was for a while but started feeling like this might be a bad time to invest", time: "10:15 AM" },
+      { type: "agent", sender: "Mirela", content: "Got it Augusto, thanks for being honest, a lot of buyers feel that way at first.\n\nWhen were you hoping to move ideally, and what would be your top must haves in a home?", time: "10:16 AM" },
+      { type: "user", sender: "Gabriel Fronza", content: "Ideally end of February or March next year. I really want a beach view or close to the beach, at least 2 bedrooms and good security. Do you think properties like this are not too overpriced atm?", time: "10:25 AM" },
+      { type: "agent", sender: "Mirela", content: "Nice, that timing gives us some room to plan, and beachside with security is a strong brief.\n\nPrices in those areas can be steep, but an advisor can check what’s fair value right now for you.\n\nPerfect. We’re great at tailoring searches to your budget. Would you like a quick call to go over options and timing?", time: "10:26 AM" },
+      { type: "user", sender: "Gabriel Fronza", content: "I'm not ready for a call yet. I really need to get a better sense of the current market prices first since things feel a bit volatile. Can you send over a few listings that match those criteria so I can see what's realistic for my budget?", time: "10:35 AM" },
+      { type: "system", content: "Handling Resistance - Market Education - 10:36 AM", id: "re-s2" },
+      { type: "agent", sender: "Mirela", content: "Totally understand, Augusto, the market does feel a bit all over the place right now.\n\nGreat question! I’m admin support, so our advisor can pick good examples for you on the call.\n\nTo keep it useful for your budget, what rough price range are you thinking for a 2 bed near the beach?", time: "10:36 AM" },
+      { type: "user", sender: "Gabriel Fronza", content: "200k", time: "10:40 AM" },
+      { type: "agent", sender: "Mirela", content: "Thanks, that helps a lot. Around 200k for a 2 bed near the beach is tight but sometimes doable depending on area.\n\nPricing is customized. Best to discuss specifics on the call with our specialist who can walk through live listings and value for that budget.\n\nWould you be open to a shorter call just to review a few real examples, so you can see what 200k actually gets you right now?", time: "10:41 AM" },
+      { type: "user", sender: "Gabriel Fronza", content: "yes", time: "10:45 AM" },
+      { type: "system", content: "Lead Qualified - Booking Link Sent - 10:46 AM", id: "re-s3" },
+      { type: "agent", sender: "Mirela", content: "Nice, thanks Augusto, that will make things much clearer for you.\n\nHere’s my calendar: https://calendar.app.google/uvWx5JWm7SLZSCqz7\n\nGrab a short slot that suits you and our specialist will walk you through real 200k beachside options.", time: "10:46 AM" },
+      { type: "user", sender: "Gabriel Fronza", content: "cant you tell me yourself?", time: "10:50 AM" },
+      { type: "agent", sender: "Mirela", content: "I wish I coud, but I’m just admin support and don’t have access to live market data.\n\nOur advisor tracks current listings and price shifts daily, so a quick call is the best way to get accurate numbers for your 200k budget.\n\nIf you’d like, I can note that you only want a short call focused just on prices and examples.", time: "10:51 AM" },
+      { type: "user", sender: "Gabriel Fronza", content: "please note the short call", time: "11:00 AM" },
+      { type: "agent", sender: "Mirela", content: "Got it, I’ve noted you want a short call focused only on current prices and examples.\n\nWhen you’re ready, just use this link to book a quick slot: https://calendar.app.google/uvWx5JWm7SLZSCqz7", time: "11:01 AM" },
+      { type: "system", content: "Appointment Confirmed - 11:10 AM", id: "re-s4" },
+      { type: "agent", sender: "Mirela", content: "Awesome Augusto 🎉 You’re set for this Wednesday at 16:00.\n\nOur advisor will call you then to run through beachside options and realistic prices for your 200k budget.\n\nAnything else or need to reshedule, just let me know!", time: "11:10 AM" },
+      { type: "user", sender: "Gabriel Fronza", content: "ok thanks!", time: "11:15 AM" },
+      { type: "agent", sender: "Mirela", content: "You’re welcome, talk to you Wednesday 🙂", time: "11:16 AM" },
+      { type: "system", content: "Closed - Appointment Set", id: "re-s5" }
+    ]
   }
 ];
 
