@@ -44,6 +44,9 @@ export default function ChatCard2D({ messages }: { messages?: Message[] }) {
 
   const chatMessages = messages || defaultMessages;
 
+  // Dynamically determine header name based on the first "user" message in the array
+  const headerName = chatMessages.find(msg => msg.type === 'user')?.sender?.split(' ')[0] || "Augusto";
+
   const isAtBottom = useCallback(() => {
     if (!scrollRef.current) return false;
     const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
