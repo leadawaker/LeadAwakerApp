@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Briefcase, Dumbbell, Utensils, Sun, Globe } from "lucide-react";
+import { ArrowRight, Briefcase, Dumbbell, Utensils, Sun, Globe, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import ChatCard2D from "@/components/ChatCard2D";
@@ -8,11 +8,11 @@ import ChatCard2D from "@/components/ChatCard2D";
 const CASES = [
   {
     id: 1,
-    title: "Car Finance Law Firm",
+    title: "Law Firm",
     icon: <Briefcase className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 1 - <span className="text-primary">Car Finance Law Firm</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 1 - <span className="text-primary">Law Firm</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Watch this real conversation unfold: Our <strong>Lead Awaker AI</strong> sends an initial SMS to cold leads checking car finance refunds. When Jack responds, the AI instantly qualifies him, handles his objection about missing documents, and guides him to complete a DSAR (Data Subject Access Request).
         </p>
@@ -141,11 +141,11 @@ const CASES = [
   },
   {
     id: 5,
-    title: "High End Travel Company",
+    title: "Travel Company",
     icon: <Globe className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 5 - <span className="text-primary">High End Travel Company</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 5 - <span className="text-primary">Travel Company</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Personalized luxury travel suggestions based on preferred climates and past booking value. AI acts as a concierge to pre-qualify holiday preferences.
         </p>
@@ -158,6 +158,30 @@ const CASES = [
           <li className="flex gap-3">
             <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
             <span><strong>98% CSAT</strong> on automated interactions</span>
+          </li>
+        </ul>
+      </>
+    )
+  },
+  {
+    id: 6,
+    title: "Real Estate Company",
+    icon: <Building2 className="w-6 h-6" />,
+    description: (
+      <>
+        <h2 className="text-3xl font-bold mb-6">Case 6 - <span className="text-primary">Real Estate Company</span></h2>
+        <p className="text-muted-foreground text-base mb-6 leading-relaxed">
+          Nurturing long-term buyer and seller leads. Our AI identifies "motivated" behavior patterns and automatically offers virtual tours or instant valuation reports.
+        </p>
+        <h3 className="font-semibold text-lg mb-4">Key Metrics:</h3>
+        <ul className="space-y-2 mb-8">
+          <li className="flex gap-3">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+            <span><strong>22% Engagement increase</strong> for 12+ month leads</span>
+          </li>
+          <li className="flex gap-3">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+            <span><strong>Automated appraisal bookings</strong> synced with agent apps</span>
           </li>
         </ul>
       </>
