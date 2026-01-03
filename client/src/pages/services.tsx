@@ -64,38 +64,45 @@ const CASES = [
   {
     id: 2,
     title: "Gym Membership",
-    color: "#D946EF", // Fuchsia
-    darkColor: "#A21CAF", // Darker Fuchsia
+    color: "#8B5CF6", // Lavender (Purple-500)
+    darkColor: "#7C3AED", // Darker Lavender (Purple-600)
     icon: <Dumbbell className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 2 - <span style={{ color: "#A21CAF" }}>Gym Membership</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 2 - <span style={{ color: "#7C3AED" }}>Gym Membership</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Reactivating former members who cancelled during the off-season. Our AI handles the "I'm too busy" objection with a specialized 15-minute express workout offer.
         </p>
         <h3 className="font-semibold text-lg mb-4">Key Metrics:</h3>
         <ul className="space-y-2 mb-8">
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#A21CAF" }} />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#7C3AED" }} />
             <span><strong>15% Re-signup rate</strong> within 48 hours</span>
           </li>
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#A21CAF" }} />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#7C3AED" }} />
             <span><strong>Automated booking</strong> for induction sessions</span>
           </li>
         </ul>
       </>
     ),
     messages: [
-      { type: "agent", sender: "Coach Emma", content: "Hi! It's Coach Emma from TotalFit Gym. We missed you at the squat rack lately! Are you still looking to get back into your fitness routine? 🏋️", time: "10:00 AM" },
+      { type: "agent", sender: "Sara", content: "It’s Sara from IronPulse Fitness Club here. Is this the same Vito who used to be a member at our gym in the last couple of years? 🙂", time: "10:00 AM" },
       { type: "system", content: "Lead Engaged - 10:00 AM", id: "gym-1" },
-      { type: "user", sender: "Alex", content: "Hi, yeah I want to, but honestly I'm just so busy with work right now.", time: "10:15 AM" },
-      { type: "agent", sender: "Coach Emma", content: "I totally get it Alex, work can be a real workout on its own! What if we set you up with our new 15-minute express sessions? They're designed to give you maximum results in minimum time. Would you be open to a trying one out this week?", time: "10:16 AM" },
-      { type: "user", sender: "Alex", content: "15 minutes? That actually sounds doable.", time: "10:30 AM" },
-      { type: "agent", sender: "Coach Emma", content: "Perfect! It's a game changer for busy schedules. I have a slot open tomorrow at 5:30 PM or Thursday at 8:00 AM. Which one works best for you?", time: "10:31 AM" },
-      { type: "user", sender: "Alex", content: "Thursday morning works best.", time: "10:45 AM" },
-      { type: "agent", sender: "Coach Emma", content: "You're all set for Thursday at 8:00 AM! I'll have a trainer waiting for you. See you then! 💪", time: "10:46 AM" },
-      { type: "system", content: "Re-signup Confirmed", id: "gym-2" }
+      { type: "user", sender: "Vito", content: "yes that was me, its been quite a while ago", time: "10:15 AM" },
+      { type: "agent", sender: "Sara", content: "Nice! My manager asked me to reach out but I didnt want to spam you.\n\nAre you still looking?", time: "10:16 AM" },
+      { type: "user", sender: "Vito", content: "I happen to be, I was really into it but then my baby girl was born and since then I was not able to get back into it", time: "10:30 AM" },
+      { type: "agent", sender: "Sara", content: "Awesome Vito, congrats on your baby girl! Let’s get you back into a good groove with the gym 🙂\n\nThinking about your new routine, how many days a week could you realistically come in, and do you see yourself more in classes, on machines, or with free weights?", time: "10:31 AM" },
+      { type: "user", sender: "Vito", content: "now that my baby goes to daycare, I have more time during the day. I was interested in kickboxing and doing some weight lifting", time: "10:45 AM" },
+      { type: "agent", sender: "Sara", content: "Nice, that’s great timing now that daycare has freed up your days a bit.\n\nWe’re really good at helping busy parents get back on track with flexible options. Would you be up for a quick call to go over kickboxing and lifting options together?", time: "10:46 AM" },
+      { type: "user", sender: "Vito", content: "my main issue is that I need some personal trainer support, I find it hard to know if I am making progress and I get demotivated easily if not", time: "11:00 AM" },
+      { type: "agent", sender: "Sara", content: "I totally get that, staying motivated and knowing you’re progressing is huge, especially getting back in after a break.\n\nWe’ve got trainers who track your progress for you and keep you accountable with clear, simple goals. Would you be open to a quick call so our specialist can walk you through personal training options that fit your schedule?", time: "11:01 AM" },
+      { type: "user", sender: "Vito", content: "yeah I guess, I would be open to it", time: "11:15 AM" },
+      { type: "agent", sender: "Sara", content: "Great! Here's my calendar: https://calendar.app.google/uvWx5JWm7SLZSCqz7\n\nPick a time that suits you in the next few days and our gym specialist will call to chat about PT, kickboxing and weights.", time: "11:16 AM" },
+      { type: "system", content: "Appointment Confirmed", id: "gym-2" },
+      { type: "agent", sender: "Sara", content: "Awesome Vito 🎉 You’re set for this Monday at 7:00 pm.\n\nOur advisor will call you then to go over personal training, kickboxing and a plan that keeps you motivated.\n\nAnything else or need to reshedule, just let me know!", time: "11:30 AM" },
+      { type: "user", sender: "Vito", content: "that is all thanks a lot!", time: "11:45 AM" },
+      { type: "agent", sender: "Sara", content: "You’re welcome, have a great day 🙂", time: "11:46 AM" }
     ]
   },
   {
