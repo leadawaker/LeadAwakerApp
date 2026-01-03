@@ -186,7 +186,7 @@ export default function ChatCard2D({ messages, themeColor = "#2563EB" }: { messa
         {!isAnimating && currentStep < chatMessages.length && (
           <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-center">
             <Button onClick={startAnimation} className="rounded-xl px-8" style={{ backgroundColor: themeColor }}>
-              {currentStep === 5 ? "Start" : "Continue"}
+              Continue
             </Button>
           </div>
         )}
