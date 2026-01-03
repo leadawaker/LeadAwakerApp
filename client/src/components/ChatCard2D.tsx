@@ -132,7 +132,7 @@ export default function ChatCard2D({ messages, themeColor = "#2563EB" }: { messa
   return (
     <div ref={containerRef} className="w-full max-w-2xl mx-auto relative">
       <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden relative">
-        <div className="p-4 flex items-center gap-3" style={{ backgroundColor: themeColor }}>
+        <div className="p-4 flex items-center gap-3" style={{ backgroundColor: `color-mix(in srgb, ${themeColor}, black 15%)` }}>
           <div className="rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ width: "44px", height: "44px", backgroundColor: "#6B6B6B" }}>
             {headerName[0]}
           </div>
@@ -185,7 +185,7 @@ export default function ChatCard2D({ messages, themeColor = "#2563EB" }: { messa
 
         {!isAnimating && currentStep < chatMessages.length && (
           <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-center">
-            <Button onClick={startAnimation} className="rounded-xl px-8" style={{ backgroundColor: themeColor }}>
+            <Button onClick={startAnimation} className="rounded-xl px-8" style={{ backgroundColor: `color-mix(in srgb, ${themeColor}, black 15%)` }}>
               Continue
             </Button>
           </div>

@@ -10,10 +10,11 @@ const CASES = [
     id: 1,
     title: "Law Firm",
     color: "#2563EB", // Blue
+    darkColor: "#1E40AF", // Darker Blue
     icon: <Briefcase className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 1 - <span style={{ color: "#2563EB" }}>Law Firm</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 1 - <span style={{ color: "#1E40AF" }}>Law Firm</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Watch this real conversation unfold: Our <strong>Lead Awaker AI</strong> sends an initial SMS to cold leads checking car finance refunds. When Jack responds, the AI instantly qualifies him, handles his objection about missing documents, and guides him to complete a DSAR (Data Subject Access Request).
         </p>
@@ -23,73 +24,108 @@ const CASES = [
         <h3 className="font-semibold text-lg mb-4">Real Results from 935 leads:</h3>
         <ul className="space-y-2 mb-8">
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#2563EB" }} />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#1E40AF" }} />
             <span><strong>42% reply rate</strong> (vs industry 20%)</span>
           </li>
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#2563EB" }} />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#1E40AF" }} />
             <span><strong>20.4% DSAR completion rate</strong></span>
           </li>
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#2563EB" }} />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#1E40AF" }} />
             <span><strong>Cost per DSAR: $21</strong> (fully automated -- no calls, no salespeople)</span>
           </li>
         </ul>
       </>
-    )
+    ),
+    messages: [
+      { type: "agent", sender: "Sophie", content: "Hi, this is Sophie from Sterling Finance, is this Jack who wanted to check if they were owed a refund on their car finance?", time: "14:35" },
+      { type: "system", content: "Lead Engaged - 02:35 PM", id: "s1" },
+      { type: "agent", sender: "Sophie", content: "just bumping this up in case you got busy before :)", time: "14:55" },
+      { type: "user", sender: "Jack", content: "Hi, yes", time: "15:00" },
+      { type: "system", content: "Lead Replied", id: "s2" },
+      { type: "user", sender: "Jack", content: "I would like to check. I had 2 cars on finance 5 years ago", time: "15:01" },
+      { type: "system", content: "Lead Qualified", id: "s3" },
+      { type: "agent", sender: "Sophie", content: "That's great Jack! Do you happen to have your vehicle finance agreement documents handy for those cars?", time: "15:04" },
+      { type: "user", sender: "Jack", content: "No sorry", time: "15:05" },
+      { type: "user", sender: "Jack", content: "Not at Hand", time: "15:05" },
+      { type: "agent", sender: "Sophie", content: "No worries at all Jack. We can actually submit a Data Subject Access Request (DSAR) on your behalf to get those documents for you. Could you please complete this short DSAR form by clicking on this URL https://www.dsarform.com/lead315 ?", time: "15:09" },
+      { type: "user", sender: "Jack", content: "What is the process from here?", time: "15:20" },
+      { type: "user", sender: "Jack", content: "Do you let me know if I'm eligible to make a claim once you retrieve the docs and then I confirm I want to proceed?", time: "15:20" },
+      { type: "agent", sender: "Sophie", content: "Absolutely, Jack. Once you've completed the DSAR form, we'll request your vehicle finance agreement and review it. If we find that you're eligible for a claim, we'll get in touch with you to discuss the next steps. It typically takes us about 30 working days to get everything sorted. Remember, we operate on a no-win no fee basis, so there's no risk to you. Just pop over to the URL and fill out the form when you can https://www.dsarform.com/lead315", time: "15:22" },
+      { type: "user", sender: "Jack", content: "Thanks.", time: "15:24" },
+      { type: "system", content: "DSAR Completed", id: "s4" },
+      { type: "agent", sender: "Sophie", content: "Jack, thanks for filling your claim, you will hear from us soon. Any further questions, feel free to ask", time: "15:39" },
+      { type: "user", sender: "Jack", content: "No, that is all from me", time: "15:40" },
+      { type: "system", content: "Sent To Client", id: "s5" },
+      { type: "agent", sender: "Sophie", content: "Ok Jack, we hope you have a great day :)", time: "15:41" }
+    ]
   },
   {
     id: 2,
     title: "Gym Membership",
     color: "#D946EF", // Fuchsia
+    darkColor: "#A21CAF", // Darker Fuchsia
     icon: <Dumbbell className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 2 - <span style={{ color: "#D946EF" }}>Gym Membership</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 2 - <span style={{ color: "#A21CAF" }}>Gym Membership</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Reactivating former members who cancelled during the off-season. Our AI handles the "I'm too busy" objection with a specialized 15-minute express workout offer.
         </p>
         <h3 className="font-semibold text-lg mb-4">Key Metrics:</h3>
         <ul className="space-y-2 mb-8">
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#D946EF" }} />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#A21CAF" }} />
             <span><strong>15% Re-signup rate</strong> within 48 hours</span>
           </li>
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#D946EF" }} />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#A21CAF" }} />
             <span><strong>Automated booking</strong> for induction sessions</span>
           </li>
         </ul>
       </>
-    )
+    ),
+    messages: [
+      { type: "agent", sender: "Coach Emma", content: "Hi! It's Coach Emma from TotalFit Gym. We missed you at the squat rack lately! Are you still looking to get back into your fitness routine? 🏋️", time: "10:00 AM" },
+      { type: "system", content: "Lead Engaged - 10:00 AM", id: "gym-1" },
+      { type: "user", sender: "Alex", content: "Hi, yeah I want to, but honestly I'm just so busy with work right now.", time: "10:15 AM" },
+      { type: "agent", sender: "Coach Emma", content: "I totally get it Alex, work can be a real workout on its own! What if we set you up with our new 15-minute express sessions? They're designed to give you maximum results in minimum time. Would you be open to a trying one out this week?", time: "10:16 AM" },
+      { type: "user", sender: "Alex", content: "15 minutes? That actually sounds doable.", time: "10:30 AM" },
+      { type: "agent", sender: "Coach Emma", content: "Perfect! It's a game changer for busy schedules. I have a slot open tomorrow at 5:30 PM or Thursday at 8:00 AM. Which one works best for you?", time: "10:31 AM" },
+      { type: "user", sender: "Alex", content: "Thursday morning works best.", time: "10:45 AM" },
+      { type: "agent", sender: "Coach Emma", content: "You're all set for Thursday at 8:00 AM! I'll have a trainer waiting for you. See you then! 💪", time: "10:46 AM" },
+      { type: "system", content: "Re-signup Confirmed", id: "gym-2" }
+    ]
   },
   {
     id: 3,
     title: "Restaurant Booking",
     color: "#F97316", // Orange
+    darkColor: "#C2410C", // Darker Orange
     icon: <Utensils className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 3 - <span style={{ color: "#F97316" }}>Restaurant Booking</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 3 - <span style={{ color: "#C2410C" }}>Restaurant Booking</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Watch how our <strong>Lead Awaker AI</strong> handles a personalized restaurant reservation. The AI reactivates a previous inquiry, manages a specific request for a birthday surprise, and seamlessly handles a last-minute rescheduling request without any staff intervention.
         </p>
         <h3 className="font-semibold text-lg mb-4">Key Metrics:</h3>
         <ul className="space-y-2 mb-8">
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#F97316" }} />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#C2410C" }} />
             <span><strong>28% Conversion rate</strong> on abandoned inquiries</span>
           </li>
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#F97316" }} />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#C2410C" }} />
             <span><strong>100% Automated</strong> handling of re-scheduling and special requests</span>
           </li>
         </ul>
       </>
     ),
     messages: [
-      { type: "system", content: "Lead Engaged - 11:00 AM", id: "rb-1" },
       { type: "agent", sender: "Jennifer", content: "Hi, it’s Jennifer from Dragon Wok Kitchen here\n\nIs this the same Steve that made an inquiry via email about booking a table at our restaurant last week? 🙂", time: "11:00 AM" },
+      { type: "system", content: "Lead Engaged - 11:00 AM", id: "rb-1" },
       { type: "user", sender: "Steve Martin", content: "Yes it was me about 2 weeks ago I think", time: "11:05 AM" },
       { type: "agent", sender: "Jennifer", content: "Nice! My manager asked me to reach out but I didnt want to spam you.\n\nAre you still looking?", time: "11:06 AM" },
       { type: "user", sender: "Steve Martin", content: "yup, the wife's bday is coming up soon and perhaps your venue would be a nice place to celebrate", time: "11:15 AM" },
@@ -97,7 +133,7 @@ const CASES = [
       { type: "user", sender: "Steve Martin", content: "I suppose, do you guys do anything special for bdays?", time: "11:25 AM" },
       { type: "agent", sender: "Jennifer", content: "Nice, birthday dinners are popular here for couples and families.\n\nWe can add a little dessert surprise and help with a nice table setup; what day were you thinking of coming in?", time: "11:26 AM" },
       { type: "user", sender: "Steve Martin", content: "her bday is this Thursday", time: "11:35 AM" },
-      { type: "agent", sender: "Jennifer", content: "This Thursday works, we get lots of birthday dinners that night.\n\nWe’re experts in making things easy for your celebration and keeping it affordable. Shall we lock in a reservation time for this Thursday?", time: "11:36 AM" },
+      { type: "agent", sender: "Jennifer", content: "This Thursday works, we get lots of birthday dinners night.\n\nWe’re experts in making things easy for your celebration and keeping it affordable. Shall we lock in a reservation time for this Thursday?", time: "11:36 AM" },
       { type: "user", sender: "Steve Martin", content: "yes", time: "11:45 AM" },
       { type: "agent", sender: "Jennifer", content: "Great! Here’s the link to book your reservation time: https://calendar.app.google/uvWx5JWm7SLZSCqz7\n\nChoose a time this Thursday that suits you and we’ll reserve that table for you.", time: "11:46 AM" },
       { type: "system", content: "Appointment Set - 11:55 AM", id: "rb-2" },
@@ -118,10 +154,11 @@ const CASES = [
     id: 4,
     title: "Solar Panel",
     color: "#10B981", // Emerald
+    darkColor: "#047857", // Darker Emerald
     icon: <Sun className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 4 - <span style={{ color: "#10B981" }}>Solar Panel Installation</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 4 - <span style={{ color: "#047857" }}>Solar Panel Installation</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Watch this real conversation unfold: Our <strong>Eco-Response AI</strong> re-engages Gabriel, a homeowner who received a quote months ago. The AI handles his technical concerns about his north-facing roof with expert-level reassurance.
         </p>
@@ -131,23 +168,23 @@ const CASES = [
         <h3 className="font-semibold text-lg mb-4">Key Performance Indicators:</h3>
         <ul className="space-y-2 mb-8">
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#10B981" }} />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#047857" }} />
             <span><strong>12.5% Appointment rate</strong> from cold quote history</span>
           </li>
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#10B981" }} />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#047857" }} />
             <span><strong>Zero manual intervention</strong> until the specialist call</span>
           </li>
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#10B981" }} />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#047857" }} />
             <span><strong>Integrated Calendar sync</strong> for instant booking</span>
           </li>
         </ul>
       </>
     ),
     messages: [
-      { type: "system", content: "Lead Engaged - 09:15 AM", id: "s1" },
       { type: "agent", sender: "Michael", content: "Hi, it's Michael from Aviax Solar here. Is this the same Gabriel that got a solar panel installer quote from us in the last couple of months? 🙂", time: "09:15 AM" },
+      { type: "system", content: "Lead Engaged - 09:15 AM", id: "s1" },
       { type: "user", sender: "Gabriel Fronza", content: "yes that is me", time: "09:22 AM" },
       { type: "agent", sender: "Michael", content: "Nice! My manager asked me to reach out but I didnt want to spam you.\n\nAre you still looking?", time: "09:23 AM" },
       { type: "user", sender: "Gabriel Fronza", content: "yes I happen to be", time: "09:35 AM" },
@@ -173,29 +210,30 @@ const CASES = [
     id: 5,
     title: "Real Estate",
     color: "#6366F1", // Indigo
+    darkColor: "#4338CA", // Darker Indigo
     icon: <Building2 className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 5 - <span style={{ color: "#6366F1" }}>Real Estate</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 5 - <span style={{ color: "#4338CA" }}>Real Estate</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Nurturing long-term buyer and seller leads. Our AI identifies "motivated" behavior patterns and automatically offers virtual tours or instant valuation reports.
         </p>
         <h3 className="font-semibold text-lg mb-4">Key Metrics:</h3>
         <ul className="space-y-2 mb-8">
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#6366F1" }} />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#4338CA" }} />
             <span><strong>22% Engagement increase</strong> for 12+ month leads</span>
           </li>
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#6366F1" }} />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#4338CA" }} />
             <span><strong>Automated appraisal bookings</strong> synced with agent apps</span>
           </li>
         </ul>
       </>
     ),
     messages: [
-      { type: "system", content: "Lead Engaged - 10:00 AM", id: "re-s1" },
       { type: "agent", sender: "Mirela", content: "Hi, it’s Mirela from HomeHaven Realty here\n\nIs this the same Augusto that got a real Estate quote from us in the last couple of months? 🙂", time: "10:00 AM" },
+      { type: "system", content: "Lead Engaged - 10:00 AM", id: "re-s1" },
       { type: "user", sender: "Gabriel Fronza", content: "Hi yes how are you?", time: "10:05 AM" },
       { type: "agent", sender: "Mirela", content: "Nice! My manager asked me to reach out but I didnt want to spam you.\n\nAre you still looking?", time: "10:06 AM" },
       { type: "user", sender: "Gabriel Fronza", content: "I was for a while but started feeling like this might be a bad time to invest", time: "10:15 AM" },
@@ -225,29 +263,30 @@ const CASES = [
     id: 6,
     title: "Health Clinic",
     color: "#E11D48", // Rose/Red
+    darkColor: "#BE123C", // Darker Rose
     icon: <Globe className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 6 - <span style={{ color: "#E11D48" }}>Health Clinic</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 6 - <span style={{ color: "#BE123C" }}>Health Clinic</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Watch our <strong>Lead Awaker AI</strong> handle a sensitive medical inquiry. The AI re-engages a lead seeking relief for severe chronic symptoms, empathizes with their situation, and qualifies their specific needs before securing an in-person specialist consultation.
         </p>
         <h3 className="font-semibold text-lg mb-4">Key Metrics:</h3>
         <ul className="space-y-2 mb-8">
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#E11D48" }} />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#BE123C" }} />
             <span><strong>31% Appointment rate</strong> for chronic symptom leads</span>
           </li>
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#E11D48" }} />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#BE123C" }} />
             <span><strong>100% Automated</strong> symptom qualification and triage</span>
           </li>
         </ul>
       </>
     ),
     messages: [
-      { type: "system", content: "Lead Engaged - 02:00 PM", id: "hc-1" },
       { type: "agent", sender: "Marcia", content: "It’s Marcia from Holistica Balance Center here. Is this the same Kado who booked an integrative health consultation last week? 🙂", time: "02:00 PM" },
+      { type: "system", content: "Lead Engaged - 02:00 PM", id: "hc-1" },
       { type: "user", sender: "Kado", content: "yes that was me", time: "02:05 PM" },
       { type: "agent", sender: "Marcia", content: "Awesome Kado! Let’s get you sorted with your integrative health consultation 😊\n\nWhen you reached out on our website, were you mainly looking for support with stress, chronic symptoms, or something else?", time: "02:06 PM" },
       { type: "user", sender: "Kado", content: "I have severe heart burn and Im done with it", time: "02:15 PM" },
