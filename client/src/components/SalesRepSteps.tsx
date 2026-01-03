@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Database, MessageSquare, TrendingUp, Box, Copy, TrendingDown, Mail, ChevronLeft, ChevronRight } from "lucide-react";
 import databaseIntegrationImg from "@assets/generated_images/database_upload_and_crm_integration.png";
 import leadsDbImg from "../assets/step-1-main.png";
@@ -14,7 +13,6 @@ import uploadDatabaseImg from "../assets/step-1-upload-database.png";
 import databaseImageImg from "@assets/Gemini_Generated_Image_toqbi0toqbi0toqb_1766862950610.png";
 import cloudTexture from "@assets/generated_images/cloud-bottom-bar.jpg";
 import cloudsOverlay from "@assets/Project_(20251227103213)_1766828113842.jpg";
-import ChatCard2D from "./ChatCard2D";
 import { MeteorContainer } from "./Meteor";
 
 import excelLogo from "@assets/Microsoft_Office_Excel_(2019–2025).svg_1767283614696.png";
@@ -214,11 +212,9 @@ const StepCarousel = ({ onStepInView }: { onStepInView: () => void }) => {
       overlayTitle: "",
       overlayDescription: "",
       image: leadsDbImg,
-      icon: <Database className="w-8 h-8 text-amber-500" />,
+      icon: <Database className="w-8 h-8 text-yellow-500" />,
       align: "left" as const,
       cardImage: uploadDatabaseImg,
-      color: "#f59e0b", // amber-500
-      lightColor: "#fffbeb", // amber-50
       leftText: `We reawaken dormant leads who inquired months ago but never bought - even leads who your sales team has dialed to death
 Auto segment contacts based on past interactions`
     },
@@ -229,11 +225,9 @@ Auto segment contacts based on past interactions`
       overlayTitle: "24/7 Response capability",
       overlayDescription: "Natural language processing for human-like chat • Seamless hand-off to human staff when needed",
       image: conversationImg,
-      icon: <MessageSquare className="w-8 h-8 text-indigo-500" />,
+      icon: <MessageSquare className="w-8 h-8 text-yellow-500" />,
       align: "right" as const,
       cardImage: conversationCardImg,
-      color: "#6366f1", // indigo-500
-      lightColor: "#eef2ff", // indigo-50
       leftText: `24/7 responses across SMS, WhatsApp, and email
 Smart follow-up re-engage unresponsive leads automatically
 Speaks customers' languages and can sound formal or casual
@@ -247,11 +241,9 @@ Conversations shaped by Challenger & SPIN selling to uncover needs and handle ob
       overlayTitle: "",
       overlayDescription: "",
       image: dailyLeadsImg,
-      icon: <TrendingUp className="w-8 h-8 text-emerald-500" />,
+      icon: <TrendingUp className="w-8 h-8 text-yellow-500" />,
       align: "left" as const,
       cardImage: appointmentBookingImg,
-      color: "#10b981", // emerald-500
-      lightColor: "#ecfdf5", // emerald-50
       leftText: `One-click Google Calendar, Calendly integration
 Smart reminders slash no-shows and cancellations
 On-demand campaign reports with lead interaction details
@@ -301,19 +293,9 @@ Weekly optimization reviews for continuous results`
                   }}
                   className="absolute w-full max-w-5xl left-1/2 -translate-x-1/2"
                 >
-                  <Card 
-                    className="bg-card backdrop-blur-sm border-white/10 group transition-colors duration-500 shadow-2xl overflow-hidden"
-                    style={{ 
-                      borderColor: isActive ? step.color : 'rgba(255,255,255,0.1)',
-                      borderWidth: isActive ? '2px' : '1px'
-                    }}
-                  >
+                  <Card className="bg-card backdrop-blur-sm border-white/10 group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
                     <CardContent className="p-8">
-                      <div 
-                        className="mb-6 p-3 w-fit rounded-xl flex items-center justify-center min-w-[56px] min-h-[56px]" 
-                        style={{ backgroundColor: step.lightColor, color: step.color }}
-                        data-testid={`step-icon-${step.number}`}
-                      >
+                      <div className="mb-6 p-3 w-fit rounded-xl text-gray-600 flex items-center justify-center min-w-[56px] min-h-[56px] bg-[#fff7e0]" data-testid={`step-icon-${step.number}`}>
                         {step.icon}
                       </div>
                       <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-black" data-testid={`step-title-${step.number}`}>
@@ -390,16 +372,12 @@ Weekly optimization reviews for continuous results`
                                   { name: 'API', url: null }
                                 ].map((crm, i) => (
                                   <div key={i} className="crm-logo-item">
-                                    {crm.url ? <img src={crm.url} alt={crm.name} className="w-6 h-6 object-contain" /> : <span className="font-mono font-bold text-sm" style={{ color: step.color }}>&lt;/&gt;</span>}
+                                    {crm.url ? <img src={crm.url} alt={crm.name} className="w-6 h-6 object-contain" /> : <span className="text-blue-600 font-mono font-bold text-sm">&lt;/&gt;</span>}
                                     <span className="text-[12px] font-bold text-slate-700 uppercase tracking-wider">{crm.name}</span>
                                   </div>
                                 ))}
                               </div>
                             </motion.div>
-                          </div>
-                        ) : step.cardImage && step.number === "2" ? (
-                          <div className="mb-6 rounded-lg overflow-hidden border-2" style={{ borderColor: step.color }}>
-                            <ChatCard2D color={step.color} />
                           </div>
                         ) : step.cardImage ? (
                           <div className="mb-6 rounded-lg overflow-hidden">
@@ -418,7 +396,7 @@ Weekly optimization reviews for continuous results`
                           <div className="grid grid-cols-2 gap-4 pb-4">
                             {step.leftText.split('\n').map((line, i) => (
                               <div key={i} className="flex items-start gap-3">
-                                <div className="flex-shrink-0 w-2 h-2 rounded-full mt-2" style={{ backgroundColor: step.color }} />
+                                <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500 mt-2" />
                                 <div className="font-medium text-gray-600 text-[14px]">
                                   {line}
                                 </div>
@@ -426,16 +404,6 @@ Weekly optimization reviews for continuous results`
                             ))}
                           </div>
                         </motion.div>
-
-                        <div className="flex justify-center gap-4 mt-6">
-                           <Button 
-                             onClick={handleNext}
-                             className="rounded-full px-8 text-white font-bold"
-                             style={{ backgroundColor: step.color }}
-                           >
-                             Next Step
-                           </Button>
-                        </div>
 
                         {/* Pagination dots within card */}
                         <div className="flex justify-center gap-2 mt-4 pb-2 relative z-[70]">
@@ -450,10 +418,9 @@ Weekly optimization reviews for continuous results`
                               data-testid={`dot-step-internal-${i}`}
                               className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer pointer-events-auto ${
                                 i === currentStep
-                                  ? 'w-6'
-                                  : 'opacity-20 hover:opacity-40'
+                                  ? 'bg-blue-500 w-6'
+                                  : 'bg-blue-500/20 hover:bg-blue-500/40'
                                 }`}
-                              style={{ backgroundColor: step.color }}
                               aria-label={`Go to step ${i + 1}`}
                             />
                           ))}
