@@ -10,7 +10,7 @@ interface Message {
   id?: string;
 }
 
-export default function ChatCard2D({ messages }: { messages?: Message[] }) {
+export default function ChatCard2D({ messages, themeColor = "#2563EB" }: { messages?: Message[], themeColor?: string }) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
@@ -132,7 +132,7 @@ export default function ChatCard2D({ messages }: { messages?: Message[] }) {
   return (
     <div ref={containerRef} className="w-full max-w-2xl mx-auto relative">
       <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden relative">
-        <div className="p-4 flex items-center gap-3" style={{ backgroundColor: "#2563EB" }}>
+        <div className="p-4 flex items-center gap-3" style={{ backgroundColor: themeColor }}>
           <div className="rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ width: "44px", height: "44px", backgroundColor: "#6B6B6B" }}>
             {headerName[0]}
           </div>
@@ -160,7 +160,7 @@ export default function ChatCard2D({ messages }: { messages?: Message[] }) {
                 ) : (
                   <motion.div className={`flex ${msg.type === 'agent' ? 'justify-end' : 'justify-start'}`} variants={messageVariants} initial="hidden" animate="visible">
                     <div className={`flex flex-col ${msg.type === 'agent' ? 'items-end' : 'items-start'} gap-1 max-w-[85%]`}>
-                      <div className={`rounded-2xl px-4 py-3 shadow-sm text-sm ${msg.type === 'agent' ? 'text-white rounded-tr-sm' : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'}`} style={msg.type === 'agent' ? { backgroundColor: "#2563EB" } : {}}>
+                      <div className={`rounded-2xl px-4 py-3 shadow-sm text-sm ${msg.type === 'agent' ? 'text-white rounded-tr-sm' : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'}`} style={msg.type === 'agent' ? { backgroundColor: themeColor } : {}}>
                         {msg.content?.split('\n').map((line, i) => <div key={i}>{line}</div>)}
                       </div>
                       <span className="text-xs text-slate-400">{msg.time}</span>
@@ -183,7 +183,7 @@ export default function ChatCard2D({ messages }: { messages?: Message[] }) {
 
         {!isAnimating && currentStep < chatMessages.length && (
           <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-center">
-            <Button onClick={startAnimation} className="rounded-xl px-8" style={{ backgroundColor: "#2563EB" }}>
+            <Button onClick={startAnimation} className="rounded-xl px-8" style={{ backgroundColor: themeColor }}>
               {currentStep === 5 ? "Start" : "Continue"}
             </Button>
           </div>

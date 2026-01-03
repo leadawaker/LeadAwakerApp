@@ -9,10 +9,11 @@ const CASES = [
   {
     id: 1,
     title: "Law Firm",
+    color: "#2563EB", // Blue
     icon: <Briefcase className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 1 - <span className="text-primary">Law Firm</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 1 - <span style={{ color: "#2563EB" }}>Law Firm</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Watch this real conversation unfold: Our <strong>Lead Awaker AI</strong> sends an initial SMS to cold leads checking car finance refunds. When Jack responds, the AI instantly qualifies him, handles his objection about missing documents, and guides him to complete a DSAR (Data Subject Access Request).
         </p>
@@ -22,15 +23,15 @@ const CASES = [
         <h3 className="font-semibold text-lg mb-4">Real Results from 935 leads:</h3>
         <ul className="space-y-2 mb-8">
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#2563EB" }} />
             <span><strong>42% reply rate</strong> (vs industry 20%)</span>
           </li>
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#2563EB" }} />
             <span><strong>20.4% DSAR completion rate</strong></span>
           </li>
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#2563EB" }} />
             <span><strong>Cost per DSAR: $21</strong> (fully automated -- no calls, no salespeople)</span>
           </li>
         </ul>
@@ -40,21 +41,22 @@ const CASES = [
   {
     id: 2,
     title: "Gym Membership",
+    color: "#D946EF", // Fuchsia
     icon: <Dumbbell className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 2 - <span className="text-primary">Gym Membership</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 2 - <span style={{ color: "#D946EF" }}>Gym Membership</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Reactivating former members who cancelled during the off-season. Our AI handles the "I'm too busy" objection with a specialized 15-minute express workout offer.
         </p>
         <h3 className="font-semibold text-lg mb-4">Key Metrics:</h3>
         <ul className="space-y-2 mb-8">
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#D946EF" }} />
             <span><strong>15% Re-signup rate</strong> within 48 hours</span>
           </li>
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#D946EF" }} />
             <span><strong>Automated booking</strong> for induction sessions</span>
           </li>
         </ul>
@@ -64,21 +66,22 @@ const CASES = [
   {
     id: 3,
     title: "B2B Catering",
+    color: "#F97316", // Orange
     icon: <Utensils className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 3 - <span className="text-primary">B2B Catering</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 3 - <span style={{ color: "#F97316" }}>B2B Catering</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Targeting past corporate clients for event season. AI analyzes past order history to suggest personalized menus and volume discounts.
         </p>
         <h3 className="font-semibold text-lg mb-4">Key Metrics:</h3>
         <ul className="space-y-2 mb-8">
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#F97316" }} />
             <span><strong>3.5x ROI</strong> on database reactivation</span>
           </li>
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#F97316" }} />
             <span><strong>Zero manual outreach</strong> required by sales team</span>
           </li>
         </ul>
@@ -88,10 +91,11 @@ const CASES = [
   {
     id: 4,
     title: "Solar Panel",
+    color: "#10B981", // Emerald
     icon: <Sun className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 4 - <span className="text-primary">Solar Panel Installation</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 4 - <span style={{ color: "#10B981" }}>Solar Panel Installation</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Watch this real conversation unfold: Our <strong>Eco-Response AI</strong> re-engages Gabriel, a homeowner who received a quote months ago. The AI handles his technical concerns about his north-facing roof with expert-level reassurance.
         </p>
@@ -101,15 +105,15 @@ const CASES = [
         <h3 className="font-semibold text-lg mb-4">Key Performance Indicators:</h3>
         <ul className="space-y-2 mb-8">
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#10B981" }} />
             <span><strong>12.5% Appointment rate</strong> from cold quote history</span>
           </li>
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#10B981" }} />
             <span><strong>Zero manual intervention</strong> until the specialist call</span>
           </li>
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#10B981" }} />
             <span><strong>Integrated Calendar sync</strong> for instant booking</span>
           </li>
         </ul>
@@ -142,21 +146,22 @@ const CASES = [
   {
     id: 5,
     title: "Real Estate",
+    color: "#6366F1", // Indigo
     icon: <Building2 className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 5 - <span className="text-primary">Real Estate</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 5 - <span style={{ color: "#6366F1" }}>Real Estate</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Nurturing long-term buyer and seller leads. Our AI identifies "motivated" behavior patterns and automatically offers virtual tours or instant valuation reports.
         </p>
         <h3 className="font-semibold text-lg mb-4">Key Metrics:</h3>
         <ul className="space-y-2 mb-8">
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#6366F1" }} />
             <span><strong>22% Engagement increase</strong> for 12+ month leads</span>
           </li>
           <li className="flex gap-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#6366F1" }} />
             <span><strong>Automated appraisal bookings</strong> synced with agent apps</span>
           </li>
         </ul>
@@ -219,23 +224,32 @@ export default function Services() {
               onClick={() => setActiveCase(index)}
               className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all duration-300 min-w-[200px] flex-1 md:flex-none relative overflow-hidden ${
                 activeCase === index
-                  ? "bg-white border-primary shadow-xl shadow-primary/10 scale-105 z-10"
+                  ? "bg-white shadow-xl scale-105 z-10"
                   : "bg-white/50 border-slate-200 hover:border-slate-300 grayscale hover:grayscale-0 opacity-70 hover:opacity-100"
               }`}
+              style={activeCase === index ? { borderColor: item.color, boxShadow: `0 20px 25px -5px ${item.color}15` } : {}}
             >
               {/* Gradient Overlays */}
               <div 
-                className={`absolute inset-0 transition-opacity duration-300 pointer-events-none ${
-                  activeCase === index 
-                    ? "bg-gradient-to-tl from-primary/10 to-transparent opacity-100" 
-                    : "bg-gradient-to-tl from-slate-400/10 to-transparent opacity-100"
-                }`} 
+                className={`absolute inset-0 transition-opacity duration-300 pointer-events-none`}
+                style={{ 
+                  background: activeCase === index 
+                    ? `linear-gradient(to top left, ${item.color}10, transparent)` 
+                    : `linear-gradient(to top left, #94a3b810, transparent)`,
+                  opacity: 1
+                }} 
               />
               
-              <span className={`text-sm font-bold uppercase tracking-wider mb-2 relative z-10 ${activeCase === index ? "text-primary" : "text-slate-500"}`}>
+              <span 
+                className={`text-sm font-bold uppercase tracking-wider mb-2 relative z-10`}
+                style={{ color: activeCase === index ? item.color : "#64748b" }}
+              >
                 Case {item.id}
               </span>
-              <div className={`mb-3 relative z-10 ${activeCase === index ? "text-primary" : "text-slate-400"}`}>
+              <div 
+                className={`mb-3 relative z-10`}
+                style={{ color: activeCase === index ? item.color : "#94a3b8" }}
+              >
                 {item.icon}
               </div>
               <span className={`font-bold text-center leading-tight relative z-10 ${activeCase === index ? "text-slate-900" : "text-slate-500"}`}>
@@ -266,8 +280,14 @@ export default function Services() {
               
               <div className="order-2 max-w-md mx-auto lg:mx-0 w-full lg:sticky lg:top-8">
                 <div className="relative">
-                  <div className="absolute -inset-4 bg-primary/5 rounded-[2.5rem] blur-2xl -z-10" />
-                  <ChatCard2D messages={CASES[activeCase].messages} />
+                  <div 
+                    className="absolute -inset-4 rounded-[2.5rem] blur-2xl -z-10"
+                    style={{ backgroundColor: `${CASES[activeCase].color}10` }}
+                  />
+                  <ChatCard2D 
+                    messages={CASES[activeCase].messages} 
+                    themeColor={CASES[activeCase].color}
+                  />
                 </div>
               </div>
             </motion.div>
@@ -276,7 +296,14 @@ export default function Services() {
 
         <div className="mt-24 text-center">
           <Link href="/book-demo">
-            <Button size="lg" className="h-14 px-10 text-lg rounded-full shadow-xl shadow-primary/20 hover:scale-105 transition-transform">
+            <Button 
+              size="lg" 
+              className="h-14 px-10 text-lg rounded-full shadow-xl transition-transform hover:scale-105"
+              style={{ 
+                backgroundColor: CASES[activeCase].color,
+                boxShadow: `0 10px 15px -3px ${CASES[activeCase].color}40`
+              }}
+            >
               Apply to Your Business
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
