@@ -65,28 +65,54 @@ const CASES = [
   },
   {
     id: 3,
-    title: "B2B Catering",
+    title: "Restaurant Booking",
     color: "#F97316", // Orange
     icon: <Utensils className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 3 - <span style={{ color: "#F97316" }}>B2B Catering</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 3 - <span style={{ color: "#F97316" }}>Restaurant Booking</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
-          Targeting past corporate clients for event season. AI analyzes past order history to suggest personalized menus and volume discounts.
+          Watch how our <strong>Lead Awaker AI</strong> handles a personalized restaurant reservation. The AI reactivates a previous inquiry, manages a specific request for a birthday surprise, and seamlessly handles a last-minute rescheduling request without any staff intervention.
         </p>
         <h3 className="font-semibold text-lg mb-4">Key Metrics:</h3>
         <ul className="space-y-2 mb-8">
           <li className="flex gap-3">
             <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#F97316" }} />
-            <span><strong>3.5x ROI</strong> on database reactivation</span>
+            <span><strong>28% Conversion rate</strong> on abandoned inquiries</span>
           </li>
           <li className="flex gap-3">
             <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#F97316" }} />
-            <span><strong>Zero manual outreach</strong> required by sales team</span>
+            <span><strong>100% Automated</strong> handling of re-scheduling and special requests</span>
           </li>
         </ul>
       </>
-    )
+    ),
+    messages: [
+      { type: "system", content: "Lead Engaged - 11:00 AM", id: "rb-1" },
+      { type: "agent", sender: "Jennifer", content: "Hi, it’s Jennifer from Dragon Wok Kitchen here\n\nIs this the same Steve that made an inquiry via email about booking a table at our restaurant last week? 🙂", time: "11:00 AM" },
+      { type: "user", sender: "Steve Martin", content: "Yes it was me about 2 weeks ago I think", time: "11:05 AM" },
+      { type: "agent", sender: "Jennifer", content: "Nice! My manager asked me to reach out but I didnt want to spam you.\n\nAre you still looking?", time: "11:06 AM" },
+      { type: "user", sender: "Steve Martin", content: "yup, the wife's bday is coming up soon and perhaps your venue would be a nice place to celebrate", time: "11:15 AM" },
+      { type: "agent", sender: "Jennifer", content: "Awesome Steve! 🎉 Let’s get your wife’s birthday celebration set at Dragon Wok.\n\nWould you like to reserve a private table for the birthday dinner?", time: "11:16 AM" },
+      { type: "user", sender: "Steve Martin", content: "I suppose, do you guys do anything special for bdays?", time: "11:25 AM" },
+      { type: "agent", sender: "Jennifer", content: "Nice, birthday dinners are popular here for couples and families.\n\nWe can add a little dessert surprise and help with a nice table setup; what day were you thinking of coming in?", time: "11:26 AM" },
+      { type: "user", sender: "Steve Martin", content: "her bday is this Thursday", time: "11:35 AM" },
+      { type: "agent", sender: "Jennifer", content: "This Thursday works, we get lots of birthday dinners that night.\n\nWe’re experts in making things easy for your celebration and keeping it affordable. Shall we lock in a reservation time for this Thursday?", time: "11:36 AM" },
+      { type: "user", sender: "Steve Martin", content: "yes", time: "11:45 AM" },
+      { type: "agent", sender: "Jennifer", content: "Great! Here’s the link to book your reservation time: https://calendar.app.google/uvWx5JWm7SLZSCqz7\n\nChoose a time this Thursday that suits you and we’ll reserve that table for you.", time: "11:46 AM" },
+      { type: "system", content: "Appointment Set - 11:55 AM", id: "rb-2" },
+      { type: "agent", sender: "Jennifer", content: "Awesome Steve 🎉 You’re set for this Thursday at 4:00 PM.\n\nWe’ll be ready to host your birthday reservation at that time.\n\nAnything else or need to reschedule, just let me know!", time: "11:55 AM" },
+      { type: "user", sender: "Steve Martin", content: "awesome, thanks!", time: "12:00 PM" },
+      { type: "agent", sender: "Jennifer", content: "You’re welcome, have a great day 🙂", time: "12:01 PM" },
+      { type: "user", sender: "Steve Martin", content: "oh by the way, I realized I have to pick up my kid from school at that time, can I book for another time?", time: "12:10 PM" },
+      { type: "system", content: "Handling Reschedule Request - 12:11 PM", id: "rb-3" },
+      { type: "agent", sender: "Jennifer", content: "No worries at all, we can totally shift that booking for you.\n\nWhat time this Thursday would suit you better for the birthday dinner?", time: "12:11 PM" },
+      { type: "user", sender: "Steve Martin", content: "5pm", time: "12:20 PM" },
+      { type: "agent", sender: "Jennifer", content: "Perfect, I’ll move your reservation to this Thursday at 5:00 PM instead.\n\nWe’ll be ready for your birthday dinner then, including a nice table setup.\n\nAnything else or need to tweak the time again, just tell me!", time: "12:21 PM" },
+      { type: "user", sender: "Steve Martin", content: "ah thanks for the flexibility, have a good day", time: "12:30 PM" },
+      { type: "agent", sender: "Jennifer", content: "Pleasure Steve, enjoy the birthday dinner and have a great day 🙂", time: "12:31 PM" },
+      { type: "system", content: "Closed - Reservation Updated", id: "rb-4" }
+    ]
   },
   {
     id: 4,
