@@ -220,6 +220,49 @@ const CASES = [
       { type: "agent", sender: "Mirela", content: "You’re welcome, talk to you Wednesday 🙂", time: "11:16 AM" },
       { type: "system", content: "Closed - Appointment Set", id: "re-s5" }
     ]
+  },
+  {
+    id: 6,
+    title: "Health Clinic",
+    color: "#E11D48", // Rose/Red
+    icon: <Globe className="w-6 h-6" />,
+    description: (
+      <>
+        <h2 className="text-3xl font-bold mb-6">Case 6 - <span style={{ color: "#E11D48" }}>Health Clinic</span></h2>
+        <p className="text-muted-foreground text-base mb-6 leading-relaxed">
+          Watch our <strong>Lead Awaker AI</strong> handle a sensitive medical inquiry. The AI re-engages a lead seeking relief for severe chronic symptoms, empathizes with their situation, and qualifies their specific needs before securing an in-person specialist consultation.
+        </p>
+        <h3 className="font-semibold text-lg mb-4">Key Metrics:</h3>
+        <ul className="space-y-2 mb-8">
+          <li className="flex gap-3">
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#E11D48" }} />
+            <span><strong>31% Appointment rate</strong> for chronic symptom leads</span>
+          </li>
+          <li className="flex gap-3">
+            <div className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: "#E11D48" }} />
+            <span><strong>100% Automated</strong> symptom qualification and triage</span>
+          </li>
+        </ul>
+      </>
+    ),
+    messages: [
+      { type: "system", content: "Lead Engaged - 02:00 PM", id: "hc-1" },
+      { type: "agent", sender: "Marcia", content: "It’s Marcia from Holistica Balance Center here. Is this the same Kado who booked an integrative health consultation last week? 🙂", time: "02:00 PM" },
+      { type: "user", sender: "Kado", content: "yes that was me", time: "02:05 PM" },
+      { type: "agent", sender: "Marcia", content: "Awesome Kado! Let’s get you sorted with your integrative health consultation 😊\n\nWhen you reached out on our website, were you mainly looking for support with stress, chronic symptoms, or something else?", time: "02:06 PM" },
+      { type: "user", sender: "Kado", content: "I have severe heart burn and Im done with it", time: "02:15 PM" },
+      { type: "agent", sender: "Marcia", content: "Got it, that sounds really rough, Kado, and you shouldn’t have to just live with that.\n\nHas anyone already done tests or given you a diagnosis for the heartburn, or are you still looking for proper answers?", time: "02:16 PM" },
+      { type: "user", sender: "Kado", content: "I think it has to do with eating FODMAPS. I find that avoiding them helps a lot but I still have the problem", time: "02:25 PM" },
+      { type: "agent", sender: "Marcia", content: "Makes sense, sounds like you’ve already noticed a clear link with food but still don’t have it fully under control.\n\nWe often combine nutrition, gut support and medical review for cases like this. We’re great at personalizing care for digestive issues, would you like to book an in‑person consult so a specialist can really dig into this with you?", time: "02:26 PM" },
+      { type: "agent", sender: "Marcia", content: "Just checking in, Kado — want to go ahead and schedule that consult so a specialist can dive into your heartburn?", time: "02:40 PM" },
+      { type: "user", sender: "Kado", content: "sorry I got  busy before\n\nyes lets do it", time: "02:55 PM" },
+      { type: "agent", sender: "Marcia", content: "Awesome Kado! We’ll help you get to the bottom of this heartburn de vez 🙂\n\nHere’s the link to book your consultation time: https://calendar.app.google/uvWx5JWm7SLZSCqz7\n\nPick a time that works for you and we’ll reserve that slot for your visit", time: "02:56 PM" },
+      { type: "system", content: "Appointment Set - 03:05 PM", id: "hc-2" },
+      { type: "agent", sender: "Marcia", content: "Awesome Kado 🎉 You’re set for this Monday at 4 pm\n\nWe’ll be ready for your integrative health consultation at that time\n\nAnything else or need to reshedule, just let me know!", time: "03:05 PM" },
+      { type: "user", sender: "Kado", content: "🙏 will do", time: "03:10 PM" },
+      { type: "agent", sender: "Marcia", content: "You’re very welcome, Kado, see you Monday 🙂", time: "03:11 PM" },
+      { type: "system", content: "Closed - Consultation Booked", id: "hc-3" }
+    ]
   }
 ];
 
