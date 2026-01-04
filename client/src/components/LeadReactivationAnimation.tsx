@@ -118,7 +118,7 @@ const LeadReactivationAnimation = () => {
       <motion.button
         ref={buttonRef}
         animate={{ 
-          scale: hasReachedEnd ? 1 : 0.25 + clickScale,
+          scale: hasReachedEnd ? 1 : 0.25 + (clickScale * 0.95),
           opacity: 1,
           boxShadow: brightness === 0 
             ? [

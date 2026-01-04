@@ -93,7 +93,7 @@ const LeadReactivationAnimation = () => {
           ref={buttonRef}
           data-testid="button-reactivation"
           animate={{ 
-            scale: hasReachedEnd ? 1 : 0.25 + clickScale,
+            scale: hasReachedEnd ? 1 : 0.25 + (clickScale * 0.95),
             boxShadow: brightness === 0 
               ? [
                   '0 4px 12px rgba(0,0,0,0.05), 0 0 0px rgba(255,255,255,0), inset 0 1px 2px rgba(255,255,255,0.4)',
