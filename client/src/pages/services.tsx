@@ -332,7 +332,7 @@ export default function Services() {
         </div>
 
         {/* Case Navigation Tabs */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:flex lg:flex-nowrap justify-between gap-4 mb-16 px-4 md:px-0">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:flex lg:flex-nowrap justify-between gap-4 px-4 md:px-0 mt-[20px] mb-[20px]">
           {CASES.map((item, index) => (
             <button
               key={item.id}
