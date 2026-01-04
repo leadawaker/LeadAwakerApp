@@ -1,0 +1,57 @@
+The logic that swaps the arrow for a hand is handled by a combination of collision detection and conditional rendering.
+
+Here is the specific code responsible for that transition:
+
+1. The Collision Detection (Tracking the Hover)
+Inside the Cursor component, a setInterval runs every 16ms (60fps) to check if the cursor's bounding box overlaps with the button's bounding box.
+
+// Inside Cursor component
+const checkInterval = setInterval(() => {
+  const buttonElement = document.querySelector('button');
+  const cursorElement = document.getElementById(`cursor-${startX}-${startY}`);
+  if (buttonRect && cursorElement) {
+    const cursorRect = cursorElement.getBoundingClientRect();
+    
+    // Check for overlap between the cursor and the button
+    const isOverlapping = !(
+      cursorRect.right < buttonRect.left ||
+      cursorRect.left > buttonRect.right ||
+      cursorRect.bottom < buttonRect.top ||
+      cursorRect.top > buttonRect.bottom
+    );
+    if (isOverlapping) {
+      // Transition from 'moving' to 'hovering'
+      setPhase(prev => (prev === 'moving' || prev === 'idle') ? 'hovering' : prev);
+    }
+  }
+}, 16);
+2. The Visual Swap (Arrow to Hand)
+Once the phase changes to hovering, clicking, or disappearing, the component reactively hides the Arrow SVG and shows the Hand SVG.
+
+// Derived state for rendering
+const isPointer = phase === 'idle' || phase === 'moving';
+const isHand = phase === 'hovering' || phase === 'clicking' || phase === 'disappearing';
+// ... in the JSX ...
+return (
+  <motion.div ...>
+    {/* Show the arrow only when moving/idle */}
+    {isPointer && (
+      <svg className="pointer-svg">...</svg>
+    )}
+    {/* Show the hand as soon as it hovers or clicks */}
+    {isHand && (
+      <svg className="hand-svg">...</svg>
+    )}
+  </motion.div>
+);
+3. The "Snap" Offset
+When swapping to the hand, I also added a specific style adjustment. This is because standard cursors and hand icons have different "hotspots" (the tip of the arrow vs. the tip of the index finger). This bit of math ensures the hand doesn't jump position visually when it appears:
+
+<svg 
+  style={{
+    // Offsets the hand so the index finger tip lands exactly 
+    // where the tip of the arrow was
+    marginLeft: `${(1 - 19) * (45 / 32)}px`,
+    marginTop: `${(3 - 1) * (45 / 24)}px`
+  }}
+>

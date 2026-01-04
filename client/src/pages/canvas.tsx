@@ -77,6 +77,7 @@ const LeadReactivationAnimation = () => {
         {cursors.map(c => (
           <Cursor 
             key={c.id} 
+            id={`cursor-${c.startX}-${c.startY}`}
             startX={c.startX} 
             startY={c.startY} 
             targetOffsetX={c.offsetX}
@@ -162,7 +163,7 @@ const LeadReactivationAnimation = () => {
   );
 };
 
-const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHover }: { startX: number, startY: number, targetOffsetX: number, targetOffsetY: number, buttonRef: React.RefObject<HTMLButtonElement>, onHover: (clicking: boolean) => void }) => {
+const Cursor = ({ id, startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHover }: { id: string, startX: number, startY: number, targetOffsetX: number, targetOffsetY: number, buttonRef: React.RefObject<HTMLButtonElement>, onHover: (clicking: boolean) => void }) => {
   const [phase, setPhase] = useState('moving');
   const cursorRef = useRef<HTMLDivElement>(null);
   
@@ -186,29 +187,29 @@ const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHov
   });
 
   useEffect(() => {
-    const checkCollision = setInterval(() => {
-      if (!cursorRef.current || !buttonRef.current || phase === 'clicking' || phase === 'done') return;
+    const checkInterval = setInterval(() => {
+      const buttonElement = buttonRef.current;
+      const cursorElement = cursorRef.current;
       
-      const cursorRect = cursorRef.current.getBoundingClientRect();
-      const buttonRect = buttonRef.current.getBoundingClientRect();
-      
-      const cx = cursorRect.left + cursorRect.width / 2;
-      const cy = cursorRect.top + cursorRect.height / 2;
-      
-      const inside = (
-        cx >= buttonRect.left &&
-        cx <= buttonRect.right &&
-        cy >= buttonRect.top &&
-        cy <= buttonRect.bottom
-      );
-
-      if (inside && phase === 'moving') {
-        setPhase('hover');
+      if (buttonElement && cursorElement) {
+        const buttonRect = buttonElement.getBoundingClientRect();
+        const cursorRect = cursorElement.getBoundingClientRect();
+        
+        const isOverlapping = !(
+          cursorRect.right < buttonRect.left ||
+          cursorRect.left > buttonRect.right ||
+          cursorRect.bottom < buttonRect.top ||
+          cursorRect.top > buttonRect.bottom
+        );
+        
+        if (isOverlapping) {
+          setPhase(prev => (prev === 'moving' || prev === 'idle') ? 'hovering' : prev);
+        }
       }
-    }, 50);
+    }, 16);
     
-    return () => clearInterval(checkCollision);
-  }, [buttonRef, phase]);
+    return () => clearInterval(checkInterval);
+  }, [buttonRef]);
 
   useEffect(() => {
     const t_click = setTimeout(() => { 
@@ -229,7 +230,8 @@ const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHov
   if (phase === 'done') return null;
 
   const isClicking = phase === 'clicking';
-  const isHand = phase === 'hover' || phase === 'clicking';
+  const isPointer = phase === 'idle' || phase === 'moving';
+  const isHand = phase === 'hovering' || phase === 'clicking' || phase === 'disappearing';
 
   const getKeyframes = () => {
     if (isClicking) return { x: 0, y: 0, scale: 0.77 };
@@ -237,22 +239,22 @@ const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHov
     const halfwayX = randomConfig.halfwayOffset.x;
     const halfwayY = randomConfig.halfwayOffset.y;
     switch(randomConfig.pathType) {
-      case 1: // Curved: Adds a single arc via a halfway point
+      case 1: // Curved path
         return {
           x: [0, halfwayX, randomConfig.jitterX, 0],
           y: [0, halfwayY, randomConfig.jitterY, 0],
         };
-      case 2: // Erratic: Moves back and forth (zags) before settling
+      case 2: // Erratic path
         return {
           x: [0, halfwayX, -randomConfig.jitterX * 0.8, randomConfig.jitterX, 0],
           y: [0, -halfwayY * 0.5, randomConfig.jitterY, -randomConfig.jitterY * 0.3, 0],
         };
-      case 3: // Spiral/Overshoot: Swings wide (overshoots) then pulls back
+      case 3: // Spiral path
         return {
           x: [0, halfwayX * 1.5, -randomConfig.jitterX, randomConfig.jitterX * 0.5, 0],
           y: [0, -halfwayY, randomConfig.jitterY * 1.2, 0],
         };
-      default: // Subtle: A slight wobble rather than a pure straight line
+      default: // Subtle path
         return {
           x: [0, halfwayX * 0.2, randomConfig.jitterX, 0],
           y: [0, halfwayY * 0.2, randomConfig.jitterY, 0],
@@ -265,6 +267,7 @@ const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHov
   return (
     <motion.div
       ref={cursorRef}
+      id={id}
       initial={{ left: `${startX}%`, top: `${startY}%`, rotate: Math.random() * 30 - 15 }}
       animate={{ 
         left: `calc(50% + ${targetOffsetX}px)`, 
@@ -282,46 +285,58 @@ const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHov
       }}
       className="absolute z-20 pointer-events-none"
     >
-      {!isHand ? (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" className="drop-shadow-lg">
-          <path
-            d="M1 1l12.5 25.5L17 17l9.5-3.5L1 1z"
-            fill="white"
-            stroke="black"
-            strokeWidth="2.9"
-            strokeLinejoin="round"
-          />
-        </svg>
-      ) : (
-        <div className="relative">
-          <svg width="34" height="34" viewBox="0 0 32 32" fill="none" className="drop-shadow-lg">
+      <div className="relative">
+        {isPointer && (
+          <svg 
+            width="28" height="28" viewBox="0 0 32 32" fill="none" className="drop-shadow-lg"
+          >
             <path
-              d="M19 1h2v1h1v4h2v1h3v1h2v1h1v1h1v7h-1v3h-1v3H19v-3h-1v-2h-1v-2h-1v-2h-1v-1h-1v-10h3v1h1V2h1"
+              d="M1 1l12.5 25.5L17 17l9.5-3.5L1 1z"
               fill="white"
               stroke="black"
               strokeWidth="2.9"
               strokeLinejoin="round"
             />
-            <path d="M22 6v6" stroke="black" strokeWidth="2.4" />
-            <path d="M25 7v5" stroke="black" strokeWidth="2.4" />
-            <path d="M28 8v4" stroke="black" strokeWidth="2.4" />
           </svg>
-          
-          {isClicking && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.5, y: 5 }} 
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="absolute -top-10 left-1/2 -translate-x-1/2 pointer-events-none"
+        )}
+        
+        {isHand && (
+          <div className="relative">
+            <svg 
+              width="34" height="34" viewBox="0 0 32 32" fill="none" className="drop-shadow-lg"
+              style={{
+                marginLeft: `${(1 - 19) * (34 / 32)}px`,
+                marginTop: `${(3 - 1) * (34 / 24)}px`
+              }}
             >
-              <svg width="40" height="40" viewBox="0 0 32 24" className="overflow-visible">
-                <path d="M12 -8 L6 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
-                <path d="M21 -12 L21 -24" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
-                <path d="M30 -8 L36 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
-              </svg>
-            </motion.div>
-          )}
-        </div>
-      )}
+              <path
+                d="M19 1h2v1h1v4h2v1h3v1h2v1h1v1h1v7h-1v3h-1v3H19v-3h-1v-2h-1v-2h-1v-2h-1v-1h-1v-10h3v1h1V2h1"
+                fill="white"
+                stroke="black"
+                strokeWidth="2.9"
+                strokeLinejoin="round"
+              />
+              <path d="M22 6v6" stroke="black" strokeWidth="2.4" />
+              <path d="M25 7v5" stroke="black" strokeWidth="2.4" />
+              <path d="M28 8v4" stroke="black" strokeWidth="2.4" />
+            </svg>
+            
+            {isClicking && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.5, y: 5 }} 
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="absolute -top-10 left-1/2 -translate-x-1/2 pointer-events-none"
+              >
+                <svg width="40" height="40" viewBox="0 0 32 24" className="overflow-visible">
+                  <path d="M12 -8 L6 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
+                  <path d="M21 -12 L21 -24" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
+                  <path d="M30 -8 L36 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
+                </svg>
+              </motion.div>
+            )}
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 };
