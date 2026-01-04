@@ -173,8 +173,9 @@ const Cursor = ({ startX, startY, buttonRef, onHover }: { startX: number, startY
       const cursorRect = cursorRef.current.getBoundingClientRect();
       const buttonRect = buttonRef.current.getBoundingClientRect();
       
-      const cx = cursorRect.left + cursorRect.width / 2;
-      const cy = cursorRect.top + cursorRect.height / 2;
+      // Use the tip of the arrow for collision
+      const cx = cursorRect.left;
+      const cy = cursorRect.top;
       
       const inside = (
         cx >= buttonRect.left &&
@@ -191,7 +192,7 @@ const Cursor = ({ startX, startY, buttonRef, onHover }: { startX: number, startY
       const bcy = buttonRect.top + buttonRect.height / 2;
       const dist = Math.sqrt(Math.pow(cx - bcx, 2) + Math.pow(cy - bcy, 2));
 
-      if (dist < 15 && !isClicked) {
+      if (dist < 20 && !isClicked) {
         setIsClicked(true);
         onHover(true);
         setTimeout(() => onHover(false), 300);
@@ -214,7 +215,7 @@ const Cursor = ({ startX, startY, buttonRef, onHover }: { startX: number, startY
       transition={{ duration: 1, ease: "linear" }}
       className="absolute z-20 pointer-events-none"
     >
-      <div className="relative w-[45px] h-[45px] -translate-x-1/2 -translate-y-1/2">
+      <div className="relative w-[45px] h-[45px]">
         {!isOverButton ? (
           <svg width="45" height="45" viewBox="0 -1 32 26" fill="none" className="drop-shadow-xl absolute top-0 left-0">
             <path
