@@ -189,14 +189,14 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
     
     const jitterMultiplier = isFirstFew ? 1.2 : 0.8;
     return {
-      jitterX: (isFirstFew ? (Math.random() - 0.5) * 8 : (Math.random() - 0.5) * 5) * jitterMultiplier,
-      jitterY: (isFirstFew ? (Math.random() - 0.5) * 8 : (Math.random() - 0.5) * 5) * jitterMultiplier,
+      jitterX: (isFirstFew ? (Math.random() - 0.5) * 40 : (Math.random() - 0.5) * 25) * jitterMultiplier,
+      jitterY: (isFirstFew ? (Math.random() - 0.5) * 40 : (Math.random() - 0.5) * 25) * jitterMultiplier,
       duration: isSlow ? baseDuration * 1.3 : baseDuration,
       delay: Math.random() * 0.2,
       pathType: Math.floor(Math.random() * 4),
       halfwayOffset: {
-        x: (Math.random() - 0.5) * (isFirstFew ? 18 : 12),
-        y: (Math.random() - 0.5) * (isFirstFew ? 18 : 12)
+        x: (Math.random() - 0.5) * (isFirstFew ? 60 : 40),
+        y: (Math.random() - 0.5) * (isFirstFew ? 60 : 40)
       }
     };
   });
