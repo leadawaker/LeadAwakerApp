@@ -332,12 +332,12 @@ export default function Services() {
         </div>
 
         {/* Case Navigation Tabs */}
-        <div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-4 mb-16">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:flex lg:flex-nowrap justify-between gap-4 mb-16 px-4 md:px-0">
           {CASES.map((item, index) => (
             <button
               key={item.id}
               onClick={() => setActiveCase(index)}
-              className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all duration-300 min-w-0 md:min-w-[200px] flex-1 md:flex-none relative overflow-hidden ${
+              className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all duration-300 min-w-0 flex-1 relative overflow-hidden ${
                 activeCase === index
                   ? "bg-white shadow-xl scale-105 z-10"
                   : "bg-white/50 border-slate-200 hover:border-slate-300 grayscale hover:grayscale-0 opacity-70 hover:opacity-100"
