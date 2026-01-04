@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Users, Rocket, Target, Code2, TrendingUp, Briefcase, ChevronDown } from "lucide-react";
 import AnimatedLogo3D from "@/components/AnimatedLogo3D";
+import LeadReactivationAnimation from "@/components/LeadReactivationAnimation";
 
 export default function About() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
@@ -100,6 +101,7 @@ export default function About() {
           viewport={{ once: true }}
           className="max-w-3xl mx-auto mb-24"
         >
+          <LeadReactivationAnimation />
           <h2 className="text-3xl font-bold mb-8 text-center">Our Mission</h2>
           <div className="space-y-6 text-lg text-muted-foreground">
             <p>
