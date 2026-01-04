@@ -19,12 +19,21 @@ const LeadReactivationAnimation = () => {
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
   const [activeClickCount, setActiveClickCount] = useState(0);
   const [clickScale, setClickScale] = useState(0);
+  const [showInitialHighlight, setShowInitialHighlight] = useState(true);
 
   useEffect(() => {
     if (activeClickCount > 0) {
       setClickScale(prev => Math.min(prev + (0.75 / 30), 0.75));
     }
   }, [activeClickCount]);
+
+  useEffect(() => {
+    // Hide initial blue highlight after 1.5 seconds
+    const timer = setTimeout(() => {
+      setShowInitialHighlight(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const currentC1 = {
     r: 59 + (251 - 59) * (brightness / 100),
@@ -94,12 +103,25 @@ const LeadReactivationAnimation = () => {
             color: brightness > 50 ? '#ffffff' : '#1e293b'
           }}
         >
-          {/* Subtle highlight effect at small size */}
+          {/* Initial Blue Highlight - appears only once at the beginning */}
+          <AnimatePresence>
+            {showInitialHighlight && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: [0, 0.6, 0], scale: [0.8, 1.2, 1.5] }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1.2, ease: "easeOut" }}
+                className="absolute inset-0 bg-blue-500/40 pointer-events-none rounded-2xl blur-md"
+              />
+            )}
+          </AnimatePresence>
+
+          {/* Subtle persistent highlight effect at small size */}
           {!hasReachedEnd && (
             <motion.div 
               animate={{ 
-                opacity: [0.05, 0.2, 0.05],
-                scale: [1, 1.1, 1]
+                opacity: [0.05, 0.15, 0.05],
+                scale: [1, 1.05, 1]
               }}
               transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
               className="absolute inset-0 bg-white pointer-events-none rounded-2xl"
@@ -153,12 +175,8 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
   const [phase, setPhase] = useState('moving');
   
   useEffect(() => {
-    // Phase 1: Moving (Arrow) - 0 to 800ms
-    // Phase 2: Hover (Hand) - starts at 800ms
     const t_hover = setTimeout(() => { setPhase('hover'); }, 800);
-    // Phase 3: Clicking (Pressed Hand) - starts at 1000ms
     const t_click = setTimeout(() => { setPhase('clicking'); onHover(true); }, 1000);
-    // Phase 4: Done - starts at 1300ms
     const t_done = setTimeout(() => { setPhase('done'); onHover(false); }, 1300);
     
     return () => { 
@@ -170,7 +188,6 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
 
   if (phase === 'done') return null;
 
-  // Show hand only during hover and clicking phases
   const isHand = phase === 'hover' || phase === 'clicking';
 
   return (
