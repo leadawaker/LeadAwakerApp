@@ -104,28 +104,6 @@ const LeadReactivationAnimation = () => {
             color: brightness > 50 ? '#ffffff' : '#1e293b'
           }}
         >
-          {!hasReachedEnd && (
-            <motion.div 
-              animate={{ 
-                opacity: [0.05, 0.15, 0.05],
-                scale: [1, 1.05, 1]
-              }}
-              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-              className="absolute inset-0 bg-white pointer-events-none rounded-2xl"
-            />
-          )}
-
-          <AnimatePresence>
-            {hasReachedEnd && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0, 0.8, 0] }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                className="absolute inset-0 bg-white pointer-events-none rounded-2xl z-20"
-              />
-            )}
-          </AnimatePresence>
-
           Your Brand
         </motion.button>
         
@@ -195,6 +173,7 @@ const Cursor = ({ id, startX, startY, targetOffsetX, targetOffsetY, buttonRef, o
         const buttonRect = buttonElement.getBoundingClientRect();
         const cursorRect = cursorElement.getBoundingClientRect();
         
+        // Exact bounding box overlap check as provided in your logic
         const isOverlapping = !(
           cursorRect.right < buttonRect.left ||
           cursorRect.left > buttonRect.right ||
@@ -206,12 +185,13 @@ const Cursor = ({ id, startX, startY, targetOffsetX, targetOffsetY, buttonRef, o
           setPhase(prev => (prev === 'moving' || prev === 'idle') ? 'hovering' : prev);
         }
       }
-    }, 16);
+    }, 16); // 60fps check
     
     return () => clearInterval(checkInterval);
   }, [buttonRef]);
 
   useEffect(() => {
+    // Determine click timing based on when it hits the center
     const t_click = setTimeout(() => { 
       setPhase('clicking'); 
       onHover(true); 
@@ -230,8 +210,8 @@ const Cursor = ({ id, startX, startY, targetOffsetX, targetOffsetY, buttonRef, o
   if (phase === 'done') return null;
 
   const isClicking = phase === 'clicking';
-  const isPointer = phase === 'idle' || phase === 'moving';
-  const isHand = phase === 'hovering' || phase === 'clicking' || phase === 'disappearing';
+  const isPointer = phase === 'moving' || phase === 'idle';
+  const isHand = phase === 'hovering' || phase === 'clicking';
 
   const getKeyframes = () => {
     if (isClicking) return { x: 0, y: 0, scale: 0.77 };
@@ -239,22 +219,22 @@ const Cursor = ({ id, startX, startY, targetOffsetX, targetOffsetY, buttonRef, o
     const halfwayX = randomConfig.halfwayOffset.x;
     const halfwayY = randomConfig.halfwayOffset.y;
     switch(randomConfig.pathType) {
-      case 1: // Curved path
+      case 1:
         return {
           x: [0, halfwayX, randomConfig.jitterX, 0],
           y: [0, halfwayY, randomConfig.jitterY, 0],
         };
-      case 2: // Erratic path
+      case 2:
         return {
           x: [0, halfwayX, -randomConfig.jitterX * 0.8, randomConfig.jitterX, 0],
           y: [0, -halfwayY * 0.5, randomConfig.jitterY, -randomConfig.jitterY * 0.3, 0],
         };
-      case 3: // Spiral path
+      case 3:
         return {
           x: [0, halfwayX * 1.5, -randomConfig.jitterX, randomConfig.jitterX * 0.5, 0],
           y: [0, -halfwayY, randomConfig.jitterY * 1.2, 0],
         };
-      default: // Subtle path
+      default:
         return {
           x: [0, halfwayX * 0.2, randomConfig.jitterX, 0],
           y: [0, halfwayY * 0.2, randomConfig.jitterY, 0],
@@ -286,6 +266,7 @@ const Cursor = ({ id, startX, startY, targetOffsetX, targetOffsetY, buttonRef, o
       className="absolute z-20 pointer-events-none"
     >
       <div className="relative">
+        {/* ARROW - Shown during moving phase */}
         {isPointer && (
           <svg 
             width="28" height="28" viewBox="0 0 32 32" fill="none" className="drop-shadow-lg"
@@ -300,11 +281,13 @@ const Cursor = ({ id, startX, startY, targetOffsetX, targetOffsetY, buttonRef, o
           </svg>
         )}
         
+        {/* HAND - Shown as soon as collision is detected (hovering/clicking) */}
         {isHand && (
           <div className="relative">
             <svg 
               width="34" height="34" viewBox="0 0 32 32" fill="none" className="drop-shadow-lg"
               style={{
+                // Snap offset logic to align hotspots
                 marginLeft: `${(1 - 19) * (34 / 32)}px`,
                 marginTop: `${(3 - 1) * (34 / 24)}px`
               }}
