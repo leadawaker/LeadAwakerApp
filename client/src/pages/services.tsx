@@ -317,8 +317,8 @@ export default function Services() {
 
   return (
     <div className="min-h-screen pt-24 pb-20 bg-slate-50">
-      <div className="container mx-auto px-0 md:px-6">
-        <div className="max-w-3xl mx-auto text-center mb-16 px-4 md:px-0">
+      <div className="container mx-auto px-4 md:px-0">
+        <div className="max-w-3xl mx-auto text-center mb-16 px-0">
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -332,7 +332,7 @@ export default function Services() {
         </div>
 
         {/* Case Navigation Tabs */}
-        <div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-4 mb-16 px-0">
+        <div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-4 mb-16">
           {CASES.map((item, index) => (
             <button
               key={item.id}
@@ -374,7 +374,7 @@ export default function Services() {
           ))}
         </div>
 
-        <div className="bg-white rounded-[2rem] p-8 md:p-12 shadow-2xl shadow-slate-200/50 border border-slate-100 mx-4 md:mx-0">
+        <div className="bg-white rounded-[2rem] p-8 md:p-12 shadow-2xl shadow-slate-200/50 border border-slate-100 mx-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeCase}
