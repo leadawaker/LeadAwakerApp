@@ -71,8 +71,9 @@ const LeadReactivationAnimation = () => {
     sequence.forEach((cursor, index) => {
       setTimeout(() => {
         const id = Date.now() + index;
-        const offsetX = (Math.random() - 0.5) * 30; // +/- 15px
-        const offsetY = (Math.random() - 0.5) * 10; // +/- 5px
+        // Shifted clicks slightly more to the left: offsetX range is now approx -40 to +20 instead of -15 to +15
+        const offsetX = ((Math.random() - 0.5) * 30) - 10; 
+        const offsetY = (Math.random() - 0.5) * 10; 
         setCursors(prev => [...prev, { ...cursor, id, offsetX, offsetY }]);
         
         setTimeout(() => {
@@ -85,6 +86,7 @@ const LeadReactivationAnimation = () => {
       }, cursor.delay);
     });
   }, []);
+
 
   return (
     <div className="relative w-full h-[400px] bg-white flex items-center justify-center overflow-hidden font-sans rounded-xl border border-border mb-12">
@@ -239,26 +241,26 @@ const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHov
     >
       <div className="relative w-[54px] h-[54px]">
         {!isOverButton ? (
-          <svg width="54" height="54" viewBox="0 -1 32 26" fill="none" className="drop-shadow-xl absolute top-0 left-0">
+          <svg width="54" height="54" viewBox="0 -1 32 26" fill="none" className="absolute top-0 left-0">
             <path
               d="M1 3h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v2H9v1h1v2h1v2h-1v1H8v-1H7v-2H6v-2H5v1H4v1H3v1H1v-17z"
               fill="#ffffff"
               stroke="#000"
-              strokeWidth="1.2"
+              strokeWidth="0.7"
             />
           </svg>
         ) : (
           <div className="absolute top-0 left-0">
-            <svg width="54" height="54" viewBox="0 0 32 24" fill="none" className="drop-shadow-xl">
+            <svg width="54" height="54" viewBox="0 0 32 24" fill="none">
               <path
                 d="M19 1h2v1h1v4h2v1h3v1h2v1h1v1h1v7h-1v3h-1v3H19v-3h-1v-2h-1v-2h-1v-2h-1v-1h-1v-3h3v1h1V2h1"
                 fill="#ffffff"
                 stroke="#000"
-                strokeWidth="1.2"
+                strokeWidth="0.7"
               />
-              <path d="M22 6v6" stroke="#000" strokeWidth="1.2" />
-              <path d="M25 7v5" stroke="#000" strokeWidth="1.2" />
-              <path d="M28 8v4" stroke="#000" strokeWidth="1.2" />
+              <path d="M22 6v6" stroke="#000" strokeWidth="0.7" />
+              <path d="M25 7v5" stroke="#000" strokeWidth="0.7" />
+              <path d="M28 8v4" stroke="#000" strokeWidth="0.7" />
             </svg>
             {isClicked && (
               <motion.div 
