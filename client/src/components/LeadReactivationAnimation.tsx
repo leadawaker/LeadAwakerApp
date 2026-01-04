@@ -284,12 +284,12 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, a
     };
   }, [buttonCenterX, buttonCenterY, startX, startY, randomConfig]);
 
-  useEffect(() => {
-    if (phase === 'clicking') {
-      onHover?.(true);
-      return () => onHover?.(false);
-    }
-  }, [phase, onHover]);
+    useEffect(() => {
+      if (phase === 'clicking') {
+        onHover?.(true);
+        return () => onHover?.(false);
+      }
+    }, [phase, onHover]);
 
   const isPointer = phase === 'idle' || phase === 'moving';
   const isHand = phase === 'hovering' || phase === 'clicking' || phase === 'disappearing';
@@ -387,13 +387,16 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, a
               initial={{ opacity: 0, scale: 0.8, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 1.1 }}
-              transition={{ duration: 0.12, ease: "easeOut" }}
-              style={{ transform: 'translateZ(0.1px)' }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              style={{ 
+                transform: 'translateZ(10px)',
+                filter: 'drop-shadow(0 0 4px #fbbf24)'
+              }}
             >
-              {/* 3 angled stroke lines like browser click */}
-              <path d="M12 -8 L6 -18" stroke="#fbbf24" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-              <path d="M21 -12 L21 -24" stroke="#fbbf24" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-              <path d="M30 -8 L36 -18" stroke="#fbbf24" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+              {/* 3 angled stroke lines - YELLOW MATCHING BUTTON GLOW */}
+              <path d="M12 -8 L6 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="1" />
+              <path d="M21 -12 L21 -24" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="1" />
+              <path d="M30 -8 L36 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="1" />
             </motion.g>
           )}
         </svg>
