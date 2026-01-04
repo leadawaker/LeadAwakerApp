@@ -263,6 +263,8 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, a
 
         if (isOverlapping) {
           setPhase(prev => (prev === 'moving' || prev === 'idle') ? 'hovering' : prev);
+        } else {
+          setPhase(prev => (prev === 'hovering') ? 'moving' : prev);
         }
       }
     }, 16);
