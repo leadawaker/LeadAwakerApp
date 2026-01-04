@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -71,9 +71,11 @@ const LeadReactivationAnimation = () => {
     sequence.forEach((cursor, index) => {
       setTimeout(() => {
         const id = Date.now() + index;
-        // Random offset for each click within the button's area
-        const offsetX = (Math.random() - 0.5) * 60; // +/- 30px
-        const offsetY = (Math.random() - 0.5) * 30; // +/- 15px
+        // Tighter offsets to ensure they stay on the button (even when it's small)
+        // Max button width is approx 200px (px-12), max height approx 80px (py-6)
+        // When scale is 0.25, width is 50px, height is 20px.
+        const offsetX = (Math.random() - 0.5) * 30; // +/- 15px
+        const offsetY = (Math.random() - 0.5) * 10; // +/- 5px
         setCursors(prev => [...prev, { ...cursor, id, offsetX, offsetY }]);
         
         setTimeout(() => {
@@ -178,6 +180,7 @@ const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHov
       const cursorRect = cursorRef.current.getBoundingClientRect();
       const buttonRect = buttonRef.current.getBoundingClientRect();
       
+      // Use the tip of the arrow for collision (top-left)
       const cx = cursorRect.left;
       const cy = cursorRect.top;
       
@@ -194,9 +197,14 @@ const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHov
       
       const targetX = buttonRect.left + buttonRect.width / 2 + targetOffsetX;
       const targetY = buttonRect.top + buttonRect.height / 2 + targetOffsetY;
-      const dist = Math.sqrt(Math.pow(cx - targetX, 2) + Math.pow(cy - targetY, 2));
+      
+      // Distance check to trigger click - use distance from target point
+      const dx = cx - targetX;
+      const dy = cy - targetY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
 
-      if (dist < 10 && !isClicked) {
+      // Increased threshold for click to ensure it triggers while over the small button
+      if (dist < 15 && !isClicked) {
         setIsClicked(true);
         onHover(true);
         setTimeout(() => onHover(false), 300);
