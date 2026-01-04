@@ -96,9 +96,9 @@ const LeadReactivationAnimation = () => {
             scale: hasReachedEnd ? 1 : 0.25 + clickScale,
             boxShadow: brightness === 0 
               ? [
-                  '0 4px 12px rgba(0,0,0,0.05), 0 0 0px rgba(255,255,255,0)',
-                  '0 4px 12px rgba(0,0,0,0.05), 0 0 20px 4px rgba(255,255,255,0.6)',
-                  '0 4px 12px rgba(0,0,0,0.05), 0 0 0px rgba(255,255,255,0)'
+                  '0 4px 12px rgba(0,0,0,0.05), 0 0 0px rgba(255,255,255,0), inset 0 1px 2px rgba(255,255,255,0.4)',
+                  '0 4px 12px rgba(0,0,0,0.05), 0 0 20px 4px rgba(255,255,255,0.6), inset 0 1px 4px rgba(255,255,255,0.8)',
+                  '0 4px 12px rgba(0,0,0,0.05), 0 0 0px rgba(255,255,255,0), inset 0 1px 2px rgba(255,255,255,0.4)'
                 ]
               : hasReachedEnd 
                 ? '0 20px 40px -10px rgba(251, 191, 36, 0.5), inset 0 1px 0 rgba(255,255,255,0.2)' 
