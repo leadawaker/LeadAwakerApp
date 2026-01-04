@@ -261,7 +261,7 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
       transition={{ 
         duration: randomConfig.duration, 
         delay: randomConfig.delay,
-        ease: [0.34, 1.56, 0.64, 1]
+        ease: [0.34, 1.56, 0.64, 1] // Bezier easing for course correction overshoot
       }}
       className="absolute z-20 pointer-events-none"
     >
@@ -271,7 +271,7 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
             d="M1 1l12.5 25.5L17 17l9.5-3.5L1 1z"
             fill="white"
             stroke="black"
-            strokeWidth="2.3"
+            strokeWidth="2.6"
             strokeLinejoin="round"
           />
         </svg>
@@ -282,12 +282,12 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
               d="M19 1h2v1h1v4h2v1h3v1h2v1h1v1h1v7h-1v3h-1v3H19v-3h-1v-2h-1v-2h-1v-2h-1v-1h-1v-10h3v1h1V2h1"
               fill="white"
               stroke="black"
-              strokeWidth="2.3"
+              strokeWidth="2.6"
               strokeLinejoin="round"
             />
-            <path d="M22 6v6" stroke="black" strokeWidth="1.8" />
-            <path d="M25 7v5" stroke="black" strokeWidth="1.8" />
-            <path d="M28 8v4" stroke="black" strokeWidth="1.8" />
+            <path d="M22 6v6" stroke="black" strokeWidth="2.1" />
+            <path d="M25 7v5" stroke="black" strokeWidth="2.1" />
+            <path d="M28 8v4" stroke="black" strokeWidth="2.1" />
           </svg>
           
           {isClicking && (
