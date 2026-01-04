@@ -9,7 +9,7 @@ function cn(...inputs: ClassValue[]) {
 
 const LeadReactivationAnimation = () => {
   const [brightness, setBrightness] = useState(0);
-  const [cursors, setCursors] = useState<{id: number, startX: number, startY: number, type: 'arrow' | 'hand'}[]>([]);
+  const [cursors, setCursors] = useState<{id: number, startX: number, startY: number}[]>([]);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
   const [activeClickCount, setActiveClickCount] = useState(0);
   const [clickScale, setClickScale] = useState(0);
@@ -32,23 +32,26 @@ const LeadReactivationAnimation = () => {
   };
 
   useEffect(() => {
-    for (let i = 0; i < 30; i++) {
-      setTimeout(() => {
-        const id = Date.now() + i;
-        const startX = Math.random() * 100;
-        const startY = Math.random() * 100;
-        const type = Math.random() > 0.5 ? 'arrow' : 'hand';
-        setCursors(prev => [...prev, { id, startX, startY, type }]);
-        
+    const startSequence = setTimeout(() => {
+      for (let i = 0; i < 30; i++) {
         setTimeout(() => {
-          setCursors(prev => prev.filter(c => c.id !== id));
-          setBrightness(b => Math.min(b + (100 / 30), 100));
-          if (i === 29) {
-            setHasReachedEnd(true);
-          }
-        }, 1400);
-      }, i * 250);
-    }
+          const id = Date.now() + i;
+          const startX = Math.random() * 100;
+          const startY = Math.random() * 100;
+          setCursors(prev => [...prev, { id, startX, startY }]);
+          
+          setTimeout(() => {
+            setCursors(prev => prev.filter(c => c.id !== id));
+            setBrightness(b => Math.min(b + (100 / 30), 100));
+            if (i === 29) {
+              setHasReachedEnd(true);
+            }
+          }, 1400);
+        }, i * 250);
+      }
+    }, 1000); // 1 second initial delay
+
+    return () => clearTimeout(startSequence);
   }, []);
 
   return (
@@ -69,13 +72,12 @@ const LeadReactivationAnimation = () => {
             key={c.id} 
             startX={c.startX} 
             startY={c.startY} 
-            type={c.type}
             onHover={(clicking) => setActiveClickCount(n => clicking ? n + 1 : Math.max(0, n - 1))} 
           />
         ))}
       </AnimatePresence>
       <motion.button
-        animate={{ scale: hasReachedEnd ? 1 : 0.25 + clickScale }}
+        animate={{ scale: hasReachedEnd ? 1 : 0.45 + clickScale }}
         className="relative px-12 py-6 text-2xl font-bold rounded-2xl z-10 select-none overflow-hidden border border-black/10"
         style={{
           background: `linear-gradient(135deg, rgb(${currentC1.r}, ${currentC1.g}, ${currentC1.b}), rgb(${currentC2.r}, ${currentC2.g}, ${currentC2.b}))`,
@@ -83,6 +85,11 @@ const LeadReactivationAnimation = () => {
           color: brightness > 50 ? '#ffffff' : '#1e293b'
         }}
       >
+        <motion.div
+          animate={{ left: ['-100%', '200%'] }}
+          transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
+          className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 z-20"
+        />
         Your Brand
       </motion.button>
       {hasReachedEnd && (
@@ -110,15 +117,17 @@ const LeadReactivationAnimation = () => {
   );
 };
 
-const Cursor = ({ startX, startY, type, onHover }: { startX: number, startY: number, type: 'arrow' | 'hand', onHover: (clicking: boolean) => void }) => {
-  const [phase, setPhase] = useState('moving');
+const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, onHover: (clicking: boolean) => void }) => {
+  const [phase, setPhase] = useState<'moving' | 'clicking' | 'done'>('moving');
   
   useEffect(() => {
     const t1 = setTimeout(() => { setPhase('clicking'); onHover(true); }, 1000);
     const t2 = setTimeout(() => { setPhase('done'); onHover(false); }, 1300);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
+
   if (phase === 'done') return null;
+
   return (
     <motion.div
       initial={{ left: `${startX}%`, top: `${startY}%` }}
@@ -130,7 +139,7 @@ const Cursor = ({ startX, startY, type, onHover }: { startX: number, startY: num
       transition={{ duration: 1, ease: [0.34, 1.56, 0.64, 1] }}
       className="absolute z-20 pointer-events-none"
     >
-      {type === 'arrow' ? (
+      {phase === 'moving' ? (
         <svg width="45" height="45" viewBox="0 -1 32 26" fill="none">
           <path
             d="M1 3h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v2H9v1h1v2h1v2h-1v1H8v-1H7v-2H6v-2H5v1H4v1H3v1H1v-17z"
@@ -140,24 +149,30 @@ const Cursor = ({ startX, startY, type, onHover }: { startX: number, startY: num
           />
         </svg>
       ) : (
-        <svg width="45" height="45" viewBox="0 0 32 24" fill="none">
-          <path
-            d="M19 1h2v1h1v4h2v1h3v1h2v1h1v1h1v7h-1v3h-1v3H19v-3h-1v-2h-1v-2h-1v-2h-1v-1h-1v-3h3v1h1V2h1"
-            fill="#ffffff"
-            stroke="#000"
-            strokeWidth="0.2"
-          />
-          <path d="M22 6v6" stroke="#000" strokeWidth="0.2" />
-          <path d="M25 7v5" stroke="#000" strokeWidth="0.2" />
-          <path d="M28 8v4" stroke="#000" strokeWidth="0.2" />
-          {phase === 'clicking' && (
-            <motion.g initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }}>
+        <div className="relative">
+          <svg width="45" height="45" viewBox="0 0 32 24" fill="none">
+            <path
+              d="M19 1h2v1h1v4h2v1h3v1h2v1h1v1h1v7h-1v3h-1v3H19v-3h-1v-2h-1v-2h-1v-2h-1v-1h-1v-3h3v1h1V2h1"
+              fill="#ffffff"
+              stroke="#000"
+              strokeWidth="0.2"
+            />
+            <path d="M22 6v6" stroke="#000" strokeWidth="0.2" />
+            <path d="M25 7v5" stroke="#000" strokeWidth="0.2" />
+            <path d="M28 8v4" stroke="#000" strokeWidth="0.2" />
+          </svg>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.5 }} 
+            animate={{ opacity: 1, scale: 1 }}
+            className="absolute -top-12 left-0 pointer-events-none"
+          >
+            <svg width="45" height="45" viewBox="0 0 32 24" className="overflow-visible">
               <path d="M12 -8 L6 -18" stroke="#fbbf24" strokeWidth="3" strokeLinecap="round" />
               <path d="M21 -12 L21 -24" stroke="#fbbf24" strokeWidth="3" strokeLinecap="round" />
               <path d="M30 -8 L36 -18" stroke="#fbbf24" strokeWidth="3" strokeLinecap="round" />
-            </motion.g>
-          )}
-        </svg>
+            </svg>
+          </motion.div>
+        </div>
       )}
     </motion.div>
   );
