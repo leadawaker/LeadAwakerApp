@@ -122,9 +122,9 @@ const LeadReactivationAnimation = () => {
           opacity: 1,
           boxShadow: brightness === 0 
             ? [
-                '0 4px 12px -4px rgba(0,0,0,0.1), 0 0 0 0px rgba(59, 130, 246, 0)',
-                '0 4px 12px -4px rgba(0,0,0,0.1), 0 0 20px 4px rgba(59, 130, 246, 0.5)',
-                '0 4px 12px -4px rgba(0,0,0,0.1), 0 0 0 0px rgba(59, 130, 246, 0)'
+                '0 4px 12px -4px rgba(0,0,0,0.1), 0 0 0 0px rgba(255, 255, 255, 0), inset 0 0 0px rgba(255,255,255,0)',
+                '0 4px 12px -4px rgba(0,0,0,0.1), 0 0 20px 4px rgba(255, 255, 255, 0.6), inset 0 1px 2px rgba(255,255,255,0.4)',
+                '0 4px 12px -4px rgba(0,0,0,0.1), 0 0 0 0px rgba(255, 255, 255, 0), inset 0 0 0px rgba(255,255,255,0)'
               ]
             : hasReachedEnd 
               ? '0 15px 35px -12px rgba(251, 191, 36, 0.4), 0 8px 15px -6px rgba(251, 146, 60, 0.2), inset 0 1px 1px rgba(255,255,255,0.4)' 

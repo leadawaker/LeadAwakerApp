@@ -94,13 +94,20 @@ const LeadReactivationAnimation = () => {
           data-testid="button-reactivation"
           animate={{ 
             scale: hasReachedEnd ? 1 : 0.25 + clickScale,
+            boxShadow: brightness === 0 
+              ? [
+                  '0 4px 12px rgba(0,0,0,0.05), 0 0 0px rgba(255,255,255,0)',
+                  '0 4px 12px rgba(0,0,0,0.05), 0 0 20px 4px rgba(255,255,255,0.6)',
+                  '0 4px 12px rgba(0,0,0,0.05), 0 0 0px rgba(255,255,255,0)'
+                ]
+              : hasReachedEnd 
+                ? '0 20px 40px -10px rgba(251, 191, 36, 0.5), inset 0 1px 0 rgba(255,255,255,0.2)' 
+                : '0 4px 12px rgba(0,0,0,0.05)',
           }}
+          transition={brightness === 0 ? { boxShadow: { repeat: Infinity, duration: 2 } } : { duration: 0.2 }}
           className="relative px-12 py-6 text-2xl font-bold rounded-2xl z-10 select-none overflow-hidden border border-black/5 shadow-xl transition-shadow"
           style={{
             background: `linear-gradient(135deg, rgb(${currentC1.r}, ${currentC1.g}, ${currentC1.b}), rgb(${currentC2.r}, ${currentC2.g}, ${currentC2.b}))`,
-            boxShadow: hasReachedEnd 
-              ? '0 20px 40px -10px rgba(251, 191, 36, 0.5), inset 0 1px 0 rgba(255,255,255,0.2)' 
-              : '0 4px 12px rgba(0,0,0,0.05)',
             color: brightness > 50 ? '#ffffff' : '#1e293b'
           }}
         >
