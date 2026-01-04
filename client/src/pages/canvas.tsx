@@ -189,14 +189,14 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
     
     const jitterMultiplier = isFirstFew ? 1.2 : 0.8;
     return {
-      jitterX: (isFirstFew ? (Math.random() - 0.5) * 40 : (Math.random() - 0.5) * 25) * jitterMultiplier,
-      jitterY: (isFirstFew ? (Math.random() - 0.5) * 40 : (Math.random() - 0.5) * 25) * jitterMultiplier,
+      jitterX: (isFirstFew ? (Math.random() - 0.5) * 8 : (Math.random() - 0.5) * 5) * jitterMultiplier * 25,
+      jitterY: (isFirstFew ? (Math.random() - 0.5) * 8 : (Math.random() - 0.5) * 5) * jitterMultiplier * 25,
       duration: isSlow ? baseDuration * 1.3 : baseDuration,
       delay: Math.random() * 0.2,
       pathType: Math.floor(Math.random() * 4),
       halfwayOffset: {
-        x: (Math.random() - 0.5) * (isFirstFew ? 60 : 40),
-        y: (Math.random() - 0.5) * (isFirstFew ? 60 : 40)
+        x: (Math.random() - 0.5) * (isFirstFew ? 18 : 12) * 5,
+        y: (Math.random() - 0.5) * (isFirstFew ? 18 : 12) * 5
       }
     };
   });
@@ -261,7 +261,7 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
         scale: keyframes.scale ?? 1
       }}
       transition={{ 
-        duration: randomConfig.duration, 
+        duration: 1, // Fixed duration for movement to ensure keyframes are visible
         delay: randomConfig.delay,
         ease: [0.34, 1.56, 0.64, 1] 
       }}
