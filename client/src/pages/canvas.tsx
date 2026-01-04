@@ -28,7 +28,6 @@ const LeadReactivationAnimation = () => {
   }, [activeClickCount]);
 
   useEffect(() => {
-    // Hide initial blue highlight after 1.5 seconds
     const timer = setTimeout(() => {
       setShowInitialHighlight(false);
     }, 1500);
@@ -103,7 +102,6 @@ const LeadReactivationAnimation = () => {
             color: brightness > 50 ? '#ffffff' : '#1e293b'
           }}
         >
-          {/* Initial Blue Highlight - appears only once at the beginning */}
           <AnimatePresence>
             {showInitialHighlight && (
               <motion.div 
@@ -116,7 +114,6 @@ const LeadReactivationAnimation = () => {
             )}
           </AnimatePresence>
 
-          {/* Subtle persistent highlight effect at small size */}
           {!hasReachedEnd && (
             <motion.div 
               animate={{ 
@@ -128,7 +125,6 @@ const LeadReactivationAnimation = () => {
             />
           )}
 
-          {/* Final White Flash/Highlight at the end */}
           <AnimatePresence>
             {hasReachedEnd && (
               <motion.div 
@@ -143,7 +139,6 @@ const LeadReactivationAnimation = () => {
           Your Brand
         </motion.button>
         
-        {/* Glow effect */}
         <motion.div
           animate={{ 
             scale: hasReachedEnd ? 1.4 : 0.2 + clickScale,
@@ -187,13 +182,28 @@ interface CursorProps {
 const Cursor = ({ startX, startY, onHover }: CursorProps) => {
   const [phase, setPhase] = useState('moving');
   
+  const [randomConfig] = useState(() => {
+    const isFirstFew = Math.random() > 0.5;
+    const isSlow = Math.random() < (5 / 30);
+    const baseDuration = 0.5 + Math.random() * 0.6;
+    
+    const jitterMultiplier = isFirstFew ? 1.2 : 0.8;
+    return {
+      jitterX: (isFirstFew ? (Math.random() - 0.5) * 8 : (Math.random() - 0.5) * 5) * jitterMultiplier,
+      jitterY: (isFirstFew ? (Math.random() - 0.5) * 8 : (Math.random() - 0.5) * 5) * jitterMultiplier,
+      duration: isSlow ? baseDuration * 1.3 : baseDuration,
+      delay: Math.random() * 0.2,
+      pathType: Math.floor(Math.random() * 4),
+      halfwayOffset: {
+        x: (Math.random() - 0.5) * (isFirstFew ? 18 : 12),
+        y: (Math.random() - 0.5) * (isFirstFew ? 18 : 12)
+      }
+    };
+  });
+
   useEffect(() => {
-    // Arrow for 60% of travel (approx 600ms)
-    // Turns to hand as it hits the "edge" (around 600ms to 800ms)
     const t_hover = setTimeout(() => { setPhase('hover'); }, 600);
-    // Stops and clicks at center (1000ms)
     const t_click = setTimeout(() => { setPhase('clicking'); onHover(true); }, 1000);
-    // Done at 1300ms
     const t_done = setTimeout(() => { setPhase('done'); onHover(false); }, 1300);
     
     return () => { 
@@ -205,18 +215,54 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
 
   if (phase === 'done') return null;
 
+  const isClicking = phase === 'clicking';
   const isHand = phase === 'hover' || phase === 'clicking';
+
+  const getKeyframes = () => {
+    if (isClicking) return { x: 0, y: 0, scale: 0.77 };
+    
+    const halfwayX = randomConfig.halfwayOffset.x;
+    const halfwayY = randomConfig.halfwayOffset.y;
+    switch(randomConfig.pathType) {
+      case 1: // Curved path
+        return {
+          x: [0, halfwayX, randomConfig.jitterX, 0],
+          y: [0, halfwayY, randomConfig.jitterY, 0],
+        };
+      case 2: // Erratic/Jittery path
+        return {
+          x: [0, halfwayX, -randomConfig.jitterX * 0.8, randomConfig.jitterX, 0],
+          y: [0, -halfwayY * 0.5, randomConfig.jitterY, -randomConfig.jitterY * 0.3, 0],
+        };
+      case 3: // Spiral/Overshoot path
+        return {
+          x: [0, halfwayX * 1.5, -randomConfig.jitterX, randomConfig.jitterX * 0.5, 0],
+          y: [0, -halfwayY, randomConfig.jitterY * 1.2, 0],
+        };
+      default: // Simple/Straight path
+        return {
+          x: [0, halfwayX * 0.2, randomConfig.jitterX, 0],
+          y: [0, halfwayY * 0.2, randomConfig.jitterY, 0],
+        };
+    }
+  };
+
+  const keyframes = getKeyframes();
 
   return (
     <motion.div
       initial={{ left: `${startX}%`, top: `${startY}%`, rotate: Math.random() * 30 - 15 }}
       animate={{ 
         left: '50%', 
-        top: '50%', 
-        scale: phase === 'clicking' ? 0.8 : 1,
-        rotate: phase === 'clicking' ? 0 : (Math.random() * 20 - 10)
+        top: '50%',
+        rotate: isClicking ? 0 : (Math.random() * 20 - 10),
+        ...keyframes
       }}
-      transition={{ duration: 1, ease: "linear" }}
+      transition={{ 
+        duration: randomConfig.duration, 
+        delay: randomConfig.delay,
+        ease: "linear" 
+      }}
       className="absolute z-20 pointer-events-none"
     >
       {!isHand ? (
@@ -244,11 +290,11 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
             <path d="M28 8v4" stroke="black" strokeWidth="1.5" />
           </svg>
           
-          {phase === 'clicking' && (
+          {isClicking && (
             <motion.div 
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1.2, opacity: 1 }}
-              className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[60%] pt-2"
+              className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[40%] pt-1"
             >
               <div className="flex gap-1">
                 {[...Array(3)].map((_, i) => (
