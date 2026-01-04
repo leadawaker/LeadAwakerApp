@@ -133,6 +133,22 @@ const LeadReactivationAnimation = () => {
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-50 pointer-events-none" />
+        
+        {/* Periodic Shine Effect */}
+        {hasReachedEnd && (
+          <motion.div
+            initial={{ left: '-100%' }}
+            animate={{ left: '200%' }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              repeatDelay: 5.5, // 1.5s duration + 5.5s delay = 7s cycle
+              ease: "easeInOut"
+            }}
+            className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 z-20 pointer-events-none"
+          />
+        )}
+
         <span className="relative z-10 tracking-tight text-[1.44em]">Your Brand</span>
       </motion.button>
       {hasReachedEnd && (
