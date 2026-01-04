@@ -110,7 +110,7 @@ const LeadReactivationAnimation = () => {
   }, []);
 
   return (
-    <div className="relative w-full h-[60vh] bg-white flex items-center justify-center overflow-hidden font-sans">
+    <div className="relative w-full h-[60vh] bg-white flex items-center justify-center overflow-hidden font-sans rounded-2xl border border-border shadow-sm mb-12">
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none mix-blend-multiply"></div>
 
       <AnimatePresence>
@@ -161,18 +161,20 @@ const LeadReactivationAnimation = () => {
       >
         <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-50 pointer-events-none" />
 
-        <motion.div
-          animate={{
-            left: ['-100%', '200%'],
-          }}
-          transition={{
-            duration: 1.5,
-            repeat: Infinity,
-            repeatDelay: 8.5,
-            ease: "easeInOut"
-          }}
-          className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 pointer-events-none z-20"
-        />
+        {(brightness >= 100 || hasReachedEnd) && (
+          <motion.div
+            animate={{
+              left: ['-100%', '200%'],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              repeatDelay: 8.5,
+              ease: "easeInOut"
+            }}
+            className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 pointer-events-none z-20"
+          />
+        )}
 
         <span className="relative z-10 tracking-tight text-[1.44em]">Your Brand</span>
       </motion.button>
