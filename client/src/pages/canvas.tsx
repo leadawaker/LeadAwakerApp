@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -11,6 +11,8 @@ interface CursorData {
   id: number;
   startX: number;
   startY: number;
+  offsetX: number;
+  offsetY: number;
 }
 
 const LeadReactivationAnimation = () => {
@@ -19,20 +21,13 @@ const LeadReactivationAnimation = () => {
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
   const [activeClickCount, setActiveClickCount] = useState(0);
   const [clickScale, setClickScale] = useState(0);
-  const [showInitialHighlight, setShowInitialHighlight] = useState(true);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (activeClickCount > 0) {
       setClickScale(prev => Math.min(prev + (0.75 / 30), 0.75));
     }
   }, [activeClickCount]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowInitialHighlight(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
 
   const currentC1 = {
     r: 59 + (251 - 59) * (brightness / 100),
@@ -51,7 +46,9 @@ const LeadReactivationAnimation = () => {
         const id = Date.now() + i;
         const startX = Math.random() * 100;
         const startY = Math.random() * 100;
-        setCursors(prev => [...prev, { id, startX, startY }]);
+        const offsetX = (Math.random() - 0.5) * 40;
+        const offsetY = (Math.random() - 0.5) * 40;
+        setCursors(prev => [...prev, { id, startX, startY, offsetX, offsetY }]);
         
         setTimeout(() => {
           setCursors(prev => prev.filter(c => c.id !== id));
@@ -82,6 +79,9 @@ const LeadReactivationAnimation = () => {
             key={c.id} 
             startX={c.startX} 
             startY={c.startY} 
+            targetOffsetX={c.offsetX}
+            targetOffsetY={c.offsetY}
+            buttonRef={buttonRef}
             onHover={(clicking) => setActiveClickCount(n => clicking ? n + 1 : Math.max(0, n - 1))} 
           />
         ))}
@@ -89,6 +89,7 @@ const LeadReactivationAnimation = () => {
 
       <div className="relative">
         <motion.button
+          ref={buttonRef}
           data-testid="button-reactivation"
           animate={{ 
             scale: hasReachedEnd ? 1 : 0.25 + clickScale,
@@ -102,18 +103,6 @@ const LeadReactivationAnimation = () => {
             color: brightness > 50 ? '#ffffff' : '#1e293b'
           }}
         >
-          <AnimatePresence>
-            {showInitialHighlight && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: [0, 0.6, 0], scale: [0.8, 1.2, 1.5] }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 1.2, ease: "easeOut" }}
-                className="absolute inset-0 bg-blue-500/40 pointer-events-none rounded-2xl blur-md"
-              />
-            )}
-          </AnimatePresence>
-
           {!hasReachedEnd && (
             <motion.div 
               animate={{ 
@@ -173,14 +162,9 @@ const LeadReactivationAnimation = () => {
   );
 };
 
-interface CursorProps {
-  startX: number;
-  startY: number;
-  onHover: (clicking: boolean) => void;
-}
-
-const Cursor = ({ startX, startY, onHover }: CursorProps) => {
+const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHover }: { startX: number, startY: number, targetOffsetX: number, targetOffsetY: number, buttonRef: React.RefObject<HTMLButtonElement>, onHover: (clicking: boolean) => void }) => {
   const [phase, setPhase] = useState('moving');
+  const cursorRef = useRef<HTMLDivElement>(null);
   
   const [randomConfig] = useState(() => {
     const isFirstFew = Math.random() > 0.5;
@@ -202,12 +186,41 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
   });
 
   useEffect(() => {
-    const t_hover = setTimeout(() => { setPhase('hover'); }, 600);
-    const t_click = setTimeout(() => { setPhase('clicking'); onHover(true); }, 1000);
-    const t_done = setTimeout(() => { setPhase('done'); onHover(false); }, 1300);
+    const checkCollision = setInterval(() => {
+      if (!cursorRef.current || !buttonRef.current || phase === 'clicking' || phase === 'done') return;
+      
+      const cursorRect = cursorRef.current.getBoundingClientRect();
+      const buttonRect = buttonRef.current.getBoundingClientRect();
+      
+      const cx = cursorRect.left + cursorRect.width / 2;
+      const cy = cursorRect.top + cursorRect.height / 2;
+      
+      const inside = (
+        cx >= buttonRect.left &&
+        cx <= buttonRect.right &&
+        cy >= buttonRect.top &&
+        cy <= buttonRect.bottom
+      );
+
+      if (inside && phase === 'moving') {
+        setPhase('hover');
+      }
+    }, 50);
+    
+    return () => clearInterval(checkCollision);
+  }, [buttonRef, phase]);
+
+  useEffect(() => {
+    const t_click = setTimeout(() => { 
+      setPhase('clicking'); 
+      onHover(true); 
+    }, 1000);
+    const t_done = setTimeout(() => { 
+      setPhase('done'); 
+      onHover(false); 
+    }, 1300);
     
     return () => { 
-      clearTimeout(t_hover); 
       clearTimeout(t_click); 
       clearTimeout(t_done); 
     };
@@ -251,17 +264,19 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
 
   return (
     <motion.div
+      ref={cursorRef}
       initial={{ left: `${startX}%`, top: `${startY}%`, rotate: Math.random() * 30 - 15 }}
       animate={{ 
-        left: '50%', 
-        top: '50%',
+        left: `calc(50% + ${targetOffsetX}px)`, 
+        top: `calc(50% + ${targetOffsetY}px)`,
         rotate: isClicking ? 0 : (Math.random() * 20 - 10),
         x: keyframes.x,
         y: keyframes.y,
-        scale: keyframes.scale ?? 1
+        scale: keyframes.scale ?? 1,
+        opacity: isClicking ? [1, 1, 0] : 1
       }}
       transition={{ 
-        duration: 1, // Fixed duration for movement to ensure keyframes are visible
+        duration: 1.2, 
         delay: randomConfig.delay,
         ease: [0.34, 1.56, 0.64, 1] 
       }}
@@ -273,7 +288,7 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
             d="M1 1l12.5 25.5L17 17l9.5-3.5L1 1z"
             fill="white"
             stroke="black"
-            strokeWidth="2.6"
+            strokeWidth="2.9"
             strokeLinejoin="round"
           />
         </svg>
@@ -284,31 +299,25 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
               d="M19 1h2v1h1v4h2v1h3v1h2v1h1v1h1v7h-1v3h-1v3H19v-3h-1v-2h-1v-2h-1v-2h-1v-1h-1v-10h3v1h1V2h1"
               fill="white"
               stroke="black"
-              strokeWidth="2.6"
+              strokeWidth="2.9"
               strokeLinejoin="round"
             />
-            <path d="M22 6v6" stroke="black" strokeWidth="2.1" />
-            <path d="M25 7v5" stroke="black" strokeWidth="2.1" />
-            <path d="M28 8v4" stroke="black" strokeWidth="2.1" />
+            <path d="M22 6v6" stroke="black" strokeWidth="2.4" />
+            <path d="M25 7v5" stroke="black" strokeWidth="2.4" />
+            <path d="M28 8v4" stroke="black" strokeWidth="2.4" />
           </svg>
           
           {isClicking && (
             <motion.div 
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1.2, opacity: 1 }}
-              className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[40%] pt-1"
+              initial={{ opacity: 0, scale: 0.5, y: 5 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="absolute -top-10 left-1/2 -translate-x-1/2 pointer-events-none"
             >
-              <div className="flex gap-1">
-                {[...Array(3)].map((_, i) => (
-                  <motion.div 
-                    key={i}
-                    animate={{ height: [4, 12, 4], opacity: [0, 1, 0] }}
-                    transition={{ duration: 0.3, repeat: 1 }}
-                    className="w-1 bg-amber-400 rounded-full"
-                    style={{ transform: `rotate(${(i - 1) * 35}deg)` }}
-                  />
-                ))}
-              </div>
+              <svg width="40" height="40" viewBox="0 0 32 24" className="overflow-visible">
+                <path d="M12 -8 L6 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
+                <path d="M21 -12 L21 -24" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
+                <path d="M30 -8 L36 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
+              </svg>
             </motion.div>
           )}
         </div>
