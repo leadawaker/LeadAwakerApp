@@ -16,7 +16,6 @@ const LeadReactivationAnimation = () => {
 
   useEffect(() => {
     if (activeClickCount > 0) {
-      // Logic for 33 sequential clicks resulting in exactly 0.75 growth (total 1.0)
       setClickScale(prev => Math.min(prev + (0.75 / 33), 0.75));
     }
   }, [activeClickCount]);
@@ -163,6 +162,7 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, o
   const [phase, setPhase] = useState<'moving' | 'clicking' | 'done'>('moving');
   
   useEffect(() => {
+    // Each cursor instance handles its own timing independently
     const t1 = setTimeout(() => { 
       setPhase('clicking'); 
       onHover(true); 
@@ -187,7 +187,7 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, o
       transition={{ duration: 1, ease: [0.34, 1.56, 0.64, 1] }}
       className="absolute z-20 pointer-events-none"
     >
-      <div className="relative w-[45px] h-[45px]">
+      <div className="relative w-[45px] h-[45px] -translate-x-1/2 -translate-y-1/2">
         {phase === 'moving' ? (
           <svg width="45" height="45" viewBox="0 -1 32 26" fill="none" className="drop-shadow-xl absolute top-0 left-0">
             <path
