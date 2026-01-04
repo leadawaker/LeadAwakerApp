@@ -324,7 +324,7 @@ export default function Services() {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl md:text-5xl font-bold mb-6 text-slate-900"
           >
-            Real Case Studies
+            Real Use Cases
           </motion.h1>
           <p className="text-xl text-slate-600 whitespace-nowrap">
             Select a case study below to see how our AI handles different industries and use cases.
