@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const LeadReactivationAnimation = () => {
@@ -73,6 +73,7 @@ const LeadReactivationAnimation = () => {
 
 const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, onHover: (clicking: boolean) => void }) => {
   const [phase, setPhase] = useState('moving');
+  const useHand = useMemo(() => Math.random() > 0.5, []);
   
   useEffect(() => {
     const t1 = setTimeout(() => { setPhase('clicking'); onHover(true); }, 1000);
@@ -81,6 +82,18 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, o
   }, []);
 
   if (phase === 'done') return null;
+
+  const arrowSVG = (
+    <svg width="30" height="30" viewBox="0 0 32 24">
+      <path d="M1 3h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v2H9v1h1v2h1v2h-1v1H8v-1H7v-2H6v-2H5v1H4v1H3v1H1" fill="#ffffff" stroke="#000" strokeWidth="0.2"/>
+    </svg>
+  );
+
+  const handSVG = (
+    <svg width="30" height="30" viewBox="0 0 32 24">
+      <path d="M19 1h2v1h1v4h2v1h3v1h2v1h1v1h1v7h-1v3h-1v3H19v-3h-1v-2h-1v-2h-1v-2h-1v-1h-1v-3h3v1h1V2h1" fill="#ffffff" stroke="#000" strokeWidth="0.2"/>
+    </svg>
+  );
 
   return (
     <motion.div
@@ -93,23 +106,15 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, o
       transition={{ duration: 1, ease: "easeOut" }}
       className="absolute z-20 pointer-events-none"
     >
-      {phase === 'moving' ? (
-        /* Arrow Cursor SVG */
-        <svg width="35" height="35" viewBox="0 0 32 32" fill="none">
-          <path d="M1 1l12 24 5-9 9-5z" fill="white" stroke="black" strokeWidth="1.5" />
-        </svg>
-      ) : (
-        /* Hand Cursor SVG */
-        <svg width="35" height="35" viewBox="0 0 32 32" fill="none">
-          <path d="M19 1h2v1h1v4h2v1h3v1h2v1h1v1h1v7h-1v3h-1v3H19v-3h-1v-2h-1v-2h-1v-2h-1v-1h-1v-3h3v1h1V2h1" fill="white" stroke="black" strokeWidth="1" />
-          {phase === 'clicking' && (
-             <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      {useHand ? handSVG : arrowSVG}
+      {phase === 'clicking' && (
+         <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 pointer-events-none">
+            <svg width="30" height="30" viewBox="0 0 32 24" className="overflow-visible">
                 <path d="M12 -8 L6 -18" stroke="#fbbf24" strokeWidth="3" />
                 <path d="M21 -12 L21 -24" stroke="#fbbf24" strokeWidth="3" />
                 <path d="M30 -8 L36 -18" stroke="#fbbf24" strokeWidth="3" />
-             </motion.g>
-          )}
-        </svg>
+            </svg>
+         </motion.g>
       )}
     </motion.div>
   );
