@@ -34,46 +34,43 @@ const LeadReactivationAnimation = () => {
 
   useEffect(() => {
     const sequence = [
-      { delay: 1500, startX: 20, startY: 20 },
-      { delay: 3000, startX: 80, startY: 30 },
-      { delay: 4500, startX: 15, startY: 70 },
-      { delay: 6000, startX: 40, startY: 10 },
-      { delay: 6300, startX: 60, startY: 15 },
-      { delay: 6600, startX: 25, startY: 50 },
-      { delay: 6900, startX: 75, startY: 60 },
-      { delay: 7200, startX: 35, startY: 80 },
-      { delay: 7400, startX: 55, startY: 25 },
-      { delay: 7600, startX: 10, startY: 40 },
-      { delay: 7800, startX: 85, startY: 45 },
-      { delay: 8000, startX: 30, startY: 65 },
-      { delay: 8100, startX: 70, startY: 75 },
-      { delay: 8200, startX: 45, startY: 35 },
-      { delay: 8300, startX: 65, startY: 85 },
-      { delay: 8400, startX: 20, startY: 55 },
-      { delay: 8500, startX: 80, startY: 20 },
-      { delay: 8600, startX: 50, startY: 90 },
-      { delay: 8700, startX: 15, startY: 25 },
-      { delay: 8800, startX: 75, startY: 40 },
-      { delay: 8900, startX: 35, startY: 15 },
-      { delay: 9000, startX: 60, startY: 70 },
-      { delay: 9100, startX: 25, startY: 85 },
-      { delay: 9200, startX: 85, startY: 30 },
-      { delay: 9300, startX: 40, startY: 60 },
-      { delay: 9400, startX: 70, startY: 50 },
-      { delay: 9500, startX: 30, startY: 35 },
-      { delay: 9600, startX: 55, startY: 80 },
-      { delay: 9700, startX: 10, startY: 65 },
-      { delay: 9800, startX: 90, startY: 55 },
-      { delay: 9900, startX: 50, startY: 45 },
-      { delay: 10000, startX: 65, startY: 20 },
-      { delay: 10100, startX: 22, startY: 75 }
+      { delay: 1500, startX: 0, startY: 20 },
+      { delay: 3000, startX: 100, startY: 30 },
+      { delay: 4500, startX: 15, startY: 100 },
+      { delay: 6000, startX: 40, startY: 0 },
+      { delay: 6300, startX: 100, startY: 15 },
+      { delay: 6600, startX: 0, startY: 50 },
+      { delay: 6900, startX: 100, startY: 60 },
+      { delay: 7200, startX: 35, startY: 100 },
+      { delay: 7400, startX: 100, startY: 25 },
+      { delay: 7600, startX: 0, startY: 40 },
+      { delay: 7800, startX: 100, startY: 45 },
+      { delay: 8000, startX: 0, startY: 65 },
+      { delay: 8100, startX: 100, startY: 75 },
+      { delay: 8200, startX: 45, startY: 0 },
+      { delay: 8300, startX: 100, startY: 85 },
+      { delay: 8400, startX: 0, startY: 55 },
+      { delay: 8500, startX: 100, startY: 20 },
+      { delay: 8600, startX: 50, startY: 100 },
+      { delay: 8700, startX: 0, startY: 25 },
+      { delay: 8800, startX: 100, startY: 40 },
+      { delay: 8900, startX: 35, startY: 0 },
+      { delay: 9000, startX: 100, startY: 70 },
+      { delay: 9100, startX: 0, startY: 85 },
+      { delay: 9200, startX: 100, startY: 30 },
+      { delay: 9300, startX: 40, startY: 100 },
+      { delay: 9400, startX: 100, startY: 50 },
+      { delay: 9500, startX: 0, startY: 35 },
+      { delay: 9600, startX: 55, startY: 100 },
+      { delay: 9700, startX: 0, startY: 65 },
+      { delay: 9800, startX: 100, startY: 55 },
+      { delay: 9900, startX: 50, startY: 0 },
+      { delay: 10000, startX: 100, startY: 20 },
+      { delay: 10100, startX: 0, startY: 75 }
     ];
     sequence.forEach((cursor, index) => {
       setTimeout(() => {
         const id = Date.now() + index;
-        // Tighter offsets to ensure they stay on the button (even when it's small)
-        // Max button width is approx 200px (px-12), max height approx 80px (py-6)
-        // When scale is 0.25, width is 50px, height is 20px.
         const offsetX = (Math.random() - 0.5) * 30; // +/- 15px
         const offsetY = (Math.random() - 0.5) * 10; // +/- 5px
         setCursors(prev => [...prev, { ...cursor, id, offsetX, offsetY }]);
@@ -196,7 +193,6 @@ const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHov
       const cursorRect = cursorRef.current.getBoundingClientRect();
       const buttonRect = buttonRef.current.getBoundingClientRect();
       
-      // Use the tip of the arrow for collision (top-left)
       const cx = cursorRect.left;
       const cy = cursorRect.top;
       
@@ -214,12 +210,10 @@ const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHov
       const targetX = buttonRect.left + buttonRect.width / 2 + targetOffsetX;
       const targetY = buttonRect.top + buttonRect.height / 2 + targetOffsetY;
       
-      // Distance check to trigger click - use distance from target point
       const dx = cx - targetX;
       const dy = cy - targetY;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
-      // Increased threshold for click to ensure it triggers while over the small button
       if (dist < 15 && !isClicked) {
         setIsClicked(true);
         onHover(true);
@@ -250,7 +244,7 @@ const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHov
               d="M1 3h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v2H9v1h1v2h1v2h-1v1H8v-1H7v-2H6v-2H5v1H4v1H3v1H1v-17z"
               fill="#ffffff"
               stroke="#000"
-              strokeWidth="0.2"
+              strokeWidth="1.2"
             />
           </svg>
         ) : (
@@ -260,11 +254,11 @@ const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHov
                 d="M19 1h2v1h1v4h2v1h3v1h2v1h1v1h1v7h-1v3h-1v3H19v-3h-1v-2h-1v-2h-1v-2h-1v-1h-1v-3h3v1h1V2h1"
                 fill="#ffffff"
                 stroke="#000"
-                strokeWidth="0.2"
+                strokeWidth="1.2"
               />
-              <path d="M22 6v6" stroke="#000" strokeWidth="0.2" />
-              <path d="M25 7v5" stroke="#000" strokeWidth="0.2" />
-              <path d="M28 8v4" stroke="#000" strokeWidth="0.2" />
+              <path d="M22 6v6" stroke="#000" strokeWidth="1.2" />
+              <path d="M25 7v5" stroke="#000" strokeWidth="1.2" />
+              <path d="M28 8v4" stroke="#000" strokeWidth="1.2" />
             </svg>
             {isClicked && (
               <motion.div 
