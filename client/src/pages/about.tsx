@@ -101,9 +101,9 @@ export default function About() {
           viewport={{ once: true }}
           className="max-w-3xl mx-auto mb-24"
         >
-          <LeadReactivationAnimation />
           <h2 className="text-3xl font-bold mb-8 text-center">Our Mission</h2>
-          <div className="space-y-6 text-lg text-muted-foreground">
+          <LeadReactivationAnimation />
+          <div className="space-y-6 text-lg text-muted-foreground mt-8">
             <p>
               Most businesses sit on a goldmine of unconverted leads. You paid for them, they showed interest, but life got in the way.
             </p>
