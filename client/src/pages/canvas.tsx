@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -28,7 +28,6 @@ const LeadReactivationAnimation = () => {
   }, [activeClickCount]);
 
   useEffect(() => {
-    // Hide initial blue highlight after 1.5 seconds
     const timer = setTimeout(() => {
       setShowInitialHighlight(false);
     }, 1500);
@@ -103,7 +102,6 @@ const LeadReactivationAnimation = () => {
             color: brightness > 50 ? '#ffffff' : '#1e293b'
           }}
         >
-          {/* Initial Blue Highlight - appears only once at the beginning */}
           <AnimatePresence>
             {showInitialHighlight && (
               <motion.div 
@@ -116,7 +114,6 @@ const LeadReactivationAnimation = () => {
             )}
           </AnimatePresence>
 
-          {/* Subtle persistent highlight effect at small size */}
           {!hasReachedEnd && (
             <motion.div 
               animate={{ 
@@ -128,7 +125,6 @@ const LeadReactivationAnimation = () => {
             />
           )}
 
-          {/* Final White Flash/Highlight at the end */}
           <AnimatePresence>
             {hasReachedEnd && (
               <motion.div 
@@ -143,7 +139,6 @@ const LeadReactivationAnimation = () => {
           Your Brand
         </motion.button>
         
-        {/* Glow effect */}
         <motion.div
           animate={{ 
             scale: hasReachedEnd ? 1.4 : 0.2 + clickScale,
@@ -187,11 +182,27 @@ interface CursorProps {
 const Cursor = ({ startX, startY, onHover }: CursorProps) => {
   const [phase, setPhase] = useState('moving');
   
+  // Human-like path generation
+  const path = useMemo(() => {
+    // Control points for a "course-correcting" path
+    // We add 1-2 random midpoint deviations
+    const midX1 = startX + (50 - startX) * (0.3 + Math.random() * 0.2) + (Math.random() * 10 - 5);
+    const midY1 = startY + (50 - startY) * (0.3 + Math.random() * 0.2) + (Math.random() * 10 - 5);
+    
+    const midX2 = startX + (50 - startX) * (0.7 + Math.random() * 0.2) + (Math.random() * 6 - 3);
+    const midY2 = startY + (50 - startY) * (0.7 + Math.random() * 0.2) + (Math.random() * 6 - 3);
+
+    return {
+      left: [`${startX}%`, `${midX1}%`, `${midX2}%`, '50%'],
+      top: [`${startY}%`, `${midY1}%`, `${midY2}%`, '50%'],
+    };
+  }, [startX, startY]);
+
   useEffect(() => {
-    // Arrow for 60% of travel (approx 600ms)
-    // Turns to hand as it hits the "edge" (around 600ms to 800ms)
-    const t_hover = setTimeout(() => { setPhase('hover'); }, 600);
-    // Stops and clicks at center (1000ms)
+    // Arrow for travel (0 to 850ms)
+    // Turns to hand as it hits the edge (850ms)
+    const t_hover = setTimeout(() => { setPhase('hover'); }, 850);
+    // Clicks at center (1000ms)
     const t_click = setTimeout(() => { setPhase('clicking'); onHover(true); }, 1000);
     // Done at 1300ms
     const t_done = setTimeout(() => { setPhase('done'); onHover(false); }, 1300);
@@ -209,14 +220,17 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
 
   return (
     <motion.div
-      initial={{ left: `${startX}%`, top: `${startY}%`, rotate: Math.random() * 30 - 15 }}
+      initial={{ left: `${startX}%`, top: `${startY}%`, rotate: Math.random() * 40 - 20 }}
       animate={{ 
-        left: '50%', 
-        top: '50%', 
+        ...path,
         scale: phase === 'clicking' ? 0.8 : 1,
         rotate: phase === 'clicking' ? 0 : (Math.random() * 20 - 10)
       }}
-      transition={{ duration: 1, ease: "linear" }}
+      transition={{ 
+        duration: 1, 
+        times: [0, 0.4, 0.8, 1], // Timing for the midpoints
+        ease: "easeInOut" 
+      }}
       className="absolute z-20 pointer-events-none"
     >
       {!isHand ? (
@@ -248,7 +262,7 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
             <motion.div 
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1.2, opacity: 1 }}
-              className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[60%] pt-2"
+              className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[45%] pt-2"
             >
               <div className="flex gap-1">
                 {[...Array(3)].map((_, i) => (
