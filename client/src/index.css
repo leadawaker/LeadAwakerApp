@@ -843,7 +843,15 @@
   a,
   input[type="submit"],
   input[type="button"],
-  button * {
+  button *,
+  .cursor-pointer * {
+    cursor: pointer !important;
+  }
+  
+  /* Final override to ensure no arrow appears on buttons */
+  button:hover,
+  [role="button"]:hover,
+  .cursor-pointer:hover {
     cursor: pointer !important;
   }
   h1, h2, h3, h4, h5, h6 {
