@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -9,7 +9,7 @@ function cn(...inputs: ClassValue[]) {
 
 const LeadReactivationAnimation = () => {
   const [brightness, setBrightness] = useState(0);
-  const [cursors, setCursors] = useState<{id: number, startX: number, startY: number}[]>([]);
+  const [cursors, setCursors] = useState<{id: number, startX: number, startY: number, offsetX: number, offsetY: number}[]>([]);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
   const [activeClickCount, setActiveClickCount] = useState(0);
   const [clickScale, setClickScale] = useState(0);
@@ -71,7 +71,10 @@ const LeadReactivationAnimation = () => {
     sequence.forEach((cursor, index) => {
       setTimeout(() => {
         const id = Date.now() + index;
-        setCursors(prev => [...prev, { ...cursor, id }]);
+        // Random offset for each click within the button's area
+        const offsetX = (Math.random() - 0.5) * 60; // +/- 30px
+        const offsetY = (Math.random() - 0.5) * 30; // +/- 15px
+        setCursors(prev => [...prev, { ...cursor, id, offsetX, offsetY }]);
         
         setTimeout(() => {
           setCursors(prev => prev.filter(c => c.id !== id));
@@ -104,6 +107,8 @@ const LeadReactivationAnimation = () => {
             key={c.id} 
             startX={c.startX} 
             startY={c.startY} 
+            targetOffsetX={c.offsetX}
+            targetOffsetY={c.offsetY}
             buttonRef={buttonRef}
             onHover={(clicking) => setActiveClickCount(n => clicking ? n + 1 : Math.max(0, n - 1))} 
           />
@@ -161,7 +166,7 @@ const LeadReactivationAnimation = () => {
   );
 };
 
-const Cursor = ({ startX, startY, buttonRef, onHover }: { startX: number, startY: number, buttonRef: React.RefObject<HTMLButtonElement>, onHover: (clicking: boolean) => void }) => {
+const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHover }: { startX: number, startY: number, targetOffsetX: number, targetOffsetY: number, buttonRef: React.RefObject<HTMLButtonElement>, onHover: (clicking: boolean) => void }) => {
   const [isOverButton, setIsOverButton] = useState(false);
   const [isClicked, setIsClicked] = useState(false);
   const cursorRef = useRef<HTMLDivElement>(null);
@@ -173,7 +178,6 @@ const Cursor = ({ startX, startY, buttonRef, onHover }: { startX: number, startY
       const cursorRect = cursorRef.current.getBoundingClientRect();
       const buttonRect = buttonRef.current.getBoundingClientRect();
       
-      // Use the tip of the arrow for collision
       const cx = cursorRect.left;
       const cy = cursorRect.top;
       
@@ -188,11 +192,11 @@ const Cursor = ({ startX, startY, buttonRef, onHover }: { startX: number, startY
         setIsOverButton(true);
       }
       
-      const bcx = buttonRect.left + buttonRect.width / 2;
-      const bcy = buttonRect.top + buttonRect.height / 2;
-      const dist = Math.sqrt(Math.pow(cx - bcx, 2) + Math.pow(cy - bcy, 2));
+      const targetX = buttonRect.left + buttonRect.width / 2 + targetOffsetX;
+      const targetY = buttonRect.top + buttonRect.height / 2 + targetOffsetY;
+      const dist = Math.sqrt(Math.pow(cx - targetX, 2) + Math.pow(cy - targetY, 2));
 
-      if (dist < 20 && !isClicked) {
+      if (dist < 10 && !isClicked) {
         setIsClicked(true);
         onHover(true);
         setTimeout(() => onHover(false), 300);
@@ -200,19 +204,19 @@ const Cursor = ({ startX, startY, buttonRef, onHover }: { startX: number, startY
     }, 10);
     
     return () => clearInterval(checkCollision);
-  }, [buttonRef, isOverButton, isClicked, onHover]);
+  }, [buttonRef, isOverButton, isClicked, onHover, targetOffsetX, targetOffsetY]);
 
   return (
     <motion.div
       ref={cursorRef}
       initial={{ left: `${startX}%`, top: `${startY}%` }}
       animate={{ 
-        left: '50%', 
-        top: '50%', 
+        left: `calc(50% + ${targetOffsetX}px)`, 
+        top: `calc(50% + ${targetOffsetY}px)`, 
         scale: isClicked ? 0.77 : 1,
         opacity: isClicked ? 0 : 1
       }}
-      transition={{ duration: 1, ease: "linear" }}
+      transition={{ duration: 1.2, ease: "linear" }}
       className="absolute z-20 pointer-events-none"
     >
       <div className="relative w-[45px] h-[45px]">
