@@ -261,7 +261,7 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
       transition={{ 
         duration: randomConfig.duration, 
         delay: randomConfig.delay,
-        ease: [0.34, 1.56, 0.64, 1] // Bezier easing for course correction overshoot
+        ease: [0.34, 1.56, 0.64, 1]
       }}
       className="absolute z-20 pointer-events-none"
     >
