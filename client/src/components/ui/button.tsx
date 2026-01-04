@@ -23,12 +23,10 @@ const buttonVariants = cva(
         secondary:
           // @replit border, no hover, no shadow, secondary border.
           "border bg-secondary text-secondary-foreground border border-secondary-border ",
-        // @replit no hover, transparent border
         ghost: "border border-transparent",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        // @replit changed sizes
         default: "min-h-9 px-4 py-2",
         sm: "min-h-8 rounded-md px-3 text-xs",
         lg: "min-h-10 rounded-md px-8",
@@ -53,7 +51,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(buttonVariants({ variant, size, className }), "border-black/15")}
         ref={ref}
         {...props}
       />

@@ -119,15 +119,22 @@ const LeadReactivationAnimation = () => {
         ref={buttonRef}
         animate={{ 
           scale: hasReachedEnd ? 1 : 0.25 + clickScale,
-          opacity: 1 
+          opacity: 1,
+          boxShadow: brightness === 0 
+            ? [
+                '0 4px 12px -4px rgba(0,0,0,0.1), 0 0 0 0px rgba(59, 130, 246, 0)',
+                '0 4px 12px -4px rgba(0,0,0,0.1), 0 0 20px 4px rgba(59, 130, 246, 0.5)',
+                '0 4px 12px -4px rgba(0,0,0,0.1), 0 0 0 0px rgba(59, 130, 246, 0)'
+              ]
+            : hasReachedEnd 
+              ? '0 15px 35px -12px rgba(251, 191, 36, 0.4), 0 8px 15px -6px rgba(251, 146, 60, 0.2), inset 0 1px 1px rgba(255,255,255,0.4)' 
+              : `0 4px 12px -4px rgba(0,0,0,0.1), 0 ${brightness * 0.1}px ${brightness * 0.4}px rgba(251, 191, 36, ${brightness * 0.003 + 0.05}), inset 0 1px 1px rgba(255,255,255,0.2)`
         }}
+        transition={brightness === 0 ? { boxShadow: { repeat: Infinity, duration: 2 } } : { duration: 0.2 }}
         initial={{ opacity: 0, scale: 0.25 }}
-        className="relative px-12 py-6 text-2xl font-bold rounded-2xl z-10 select-none overflow-hidden border border-black/10 transition-all duration-200"
+        className="relative px-12 py-6 text-2xl font-bold rounded-2xl z-10 select-none overflow-hidden border border-black/15 transition-all duration-200"
         style={{
           background: `linear-gradient(135deg, rgb(${currentC1.r}, ${currentC1.g}, ${currentC1.b}), rgb(${currentC2.r}, ${currentC2.g}, ${currentC2.b}))`,
-          boxShadow: hasReachedEnd 
-            ? '0 15px 35px -12px rgba(251, 191, 36, 0.4), 0 8px 15px -6px rgba(251, 146, 60, 0.2), inset 0 1px 1px rgba(255,255,255,0.4)' 
-            : `0 4px 12px -4px rgba(0,0,0,0.1), 0 ${brightness * 0.1}px ${brightness * 0.4}px rgba(251, 191, 36, ${brightness * 0.003 + 0.05}), inset 0 1px 1px rgba(255,255,255,0.2)`,
           color: (activeClickCount > 0 || hasReachedEnd) ? '#ffffff' : '#1e293b'
         }}
       >
@@ -233,7 +240,7 @@ const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHov
       animate={{ 
         left: `calc(50% + ${targetOffsetX}px)`, 
         top: `calc(50% + ${targetOffsetY}px)`, 
-        scale: isClicked ? 0.77 : 1,
+        scale: isClicked ? 0.616 : 0.8,
         opacity: isClicked ? 0 : 1
       }}
       transition={{ duration: 1.2, ease: "linear" }}
@@ -246,7 +253,7 @@ const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHov
               d="M1 3h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v2H9v1h1v2h1v2h-1v1H8v-1H7v-2H6v-2H5v1H4v1H3v1H1v-17z"
               fill="#ffffff"
               stroke="#000"
-              strokeWidth="0.7"
+              strokeWidth="1.2"
             />
           </svg>
         ) : (
@@ -256,11 +263,11 @@ const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHov
                 d="M19 1h2v1h1v4h2v1h3v1h2v1h1v1h1v7h-1v3h-1v3H19v-3h-1v-2h-1v-2h-1v-2h-1v-1h-1v-3h3v1h1V2h1"
                 fill="#ffffff"
                 stroke="#000"
-                strokeWidth="0.7"
+                strokeWidth="1.2"
               />
-              <path d="M22 6v6" stroke="#000" strokeWidth="0.7" />
-              <path d="M25 7v5" stroke="#000" strokeWidth="0.7" />
-              <path d="M28 8v4" stroke="#000" strokeWidth="0.7" />
+              <path d="M22 6v6" stroke="#000" strokeWidth="1.2" />
+              <path d="M25 7v5" stroke="#000" strokeWidth="1.2" />
+              <path d="M28 8v4" stroke="#000" strokeWidth="1.2" />
             </svg>
             {isClicked && (
               <motion.div 
