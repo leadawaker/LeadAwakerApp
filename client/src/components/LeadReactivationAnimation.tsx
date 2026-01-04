@@ -89,104 +89,19 @@ const LeadReactivationAnimation = () => {
 
 
   return (
-    <div className="relative w-full h-[400px] bg-white flex items-center justify-center overflow-hidden font-sans rounded-xl border border-border mb-12">
-      <style>{`
-        @keyframes sparkle {
-          0%, 100% { transform: scale(0); opacity: 0; }
-          50% { transform: scale(var(--s, 1)); opacity: 1; }
-        }
-        .animate-sparkle {
-          animation: sparkle 0.75s both;
-        }
-      `}</style>
-      
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none mix-blend-multiply" />
-      
-      <AnimatePresence>
-        {cursors.map(c => (
-          <Cursor 
-            key={c.id} 
-            startX={c.startX} 
-            startY={c.startY} 
-            targetOffsetX={c.offsetX}
-            targetOffsetY={c.offsetY}
-            buttonRef={buttonRef}
-            onHover={(clicking) => setActiveClickCount(n => clicking ? n + 1 : Math.max(0, n - 1))} 
-          />
-        ))}
-      </AnimatePresence>
-      <motion.button
-        ref={buttonRef}
-        animate={{ 
-          scale: hasReachedEnd ? 1 : 0.25 + (clickScale * 0.95),
-          opacity: 1,
-          boxShadow: brightness === 0 
-            ? [
-                '0 4px 12px -4px rgba(0,0,0,0.1), 0 0 0 0px rgba(255, 255, 255, 0), inset 0 1px 2px rgba(255,255,255,0.4)',
-                '0 4px 12px -4px rgba(0,0,0,0.1), 0 0 20px 4px rgba(255, 255, 255, 0.6), inset 0 1px 4px rgba(255,255,255,0.8)',
-                '0 4px 12px -4px rgba(0,0,0,0.1), 0 0 0 0px rgba(255, 255, 255, 0), inset 0 1px 2px rgba(255,255,255,0.4)'
-              ]
-            : hasReachedEnd 
-              ? '0 15px 35px -12px rgba(251, 191, 36, 0.4), 0 8px 15px -6px rgba(251, 146, 60, 0.2), inset 0 1px 1px rgba(255,255,255,0.4)' 
-              : `0 4px 12px -4px rgba(0,0,0,0.1), 0 ${brightness * 0.1}px ${brightness * 0.4}px rgba(251, 191, 36, ${brightness * 0.003 + 0.05}), inset 0 1px 1px rgba(255,255,255,0.2)`
-        }}
-        transition={brightness === 0 ? { boxShadow: { repeat: Infinity, duration: 2 } } : { duration: 0.2 }}
-        initial={{ opacity: 0, scale: 0.25 }}
-        className="relative px-12 py-6 text-2xl font-bold rounded-2xl z-10 select-none overflow-hidden border border-black/15 transition-all duration-200"
-        style={{
-          background: `linear-gradient(135deg, rgb(${currentC1.r}, ${currentC1.g}, ${currentC1.b}), rgb(${currentC2.r}, ${currentC2.g}, ${currentC2.b}))`,
-          color: (activeClickCount > 0 || hasReachedEnd) ? '#ffffff' : '#1e293b'
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-50 pointer-events-none" />
-        
-        {/* Periodic Shine Effect */}
-        {hasReachedEnd && (
-          <motion.div
-            initial={{ left: '-100%' }}
-            animate={{ left: '200%' }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              repeatDelay: 5.5, // 1.5s duration + 5.5s delay = 7s cycle
-              ease: "easeInOut"
-            }}
-            className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 z-20 pointer-events-none"
-          />
-        )}
-
-        <span className="relative z-10 tracking-tight text-[1.44em]">Your Brand</span>
-      </motion.button>
-      {hasReachedEnd && (
-        <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
-          <div className="relative w-[400px] h-[150px]">
-            {[
-              { x: 0, y: 20, s: 1.1, d: 0 },
-              { x: 15, y: 80, s: 1.25, d: 0.2 },
-              { x: 45, y: 40, s: 1.1, d: 0.4 },
-              { x: 75, y: 60, s: 0.9, d: 0.6 },
-              { x: 100, y: 30, s: 0.8, d: 0.8 },
-              { x: 25, y: 10, s: 1.0, d: 1.0 },
-              { x: 85, y: 90, s: 1.2, d: 1.2 },
-            ].map((config, i) => (
-              <svg
-                key={i}
-                viewBox="0 0 24 24"
-                className="absolute w-6 h-6 fill-white opacity-0 animate-sparkle"
-                style={{
-                  left: `${config.x}%`,
-                  top: `${config.y}%`,
-                  '--s': config.s,
-                  animationDelay: `${config.d}s`,
-                } as any}
-              >
-                <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
-              </svg>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+    <AnimatePresence>
+      {cursors.map(c => (
+        <Cursor 
+          key={c.id} 
+          startX={c.startX} 
+          startY={c.startY} 
+          targetOffsetX={c.offsetX}
+          targetOffsetY={c.offsetY}
+          buttonRef={buttonRef}
+          onHover={(clicking) => setActiveClickCount(n => clicking ? n + 1 : Math.max(0, n - 1))} 
+        />
+      ))}
+    </AnimatePresence>
   );
 };
 
