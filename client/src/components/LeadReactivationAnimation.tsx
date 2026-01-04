@@ -163,8 +163,14 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, o
   const [phase, setPhase] = useState<'moving' | 'clicking' | 'done'>('moving');
   
   useEffect(() => {
-    const t1 = setTimeout(() => { setPhase('clicking'); onHover(true); }, 1000);
-    const t2 = setTimeout(() => { setPhase('done'); onHover(false); }, 1300);
+    const t1 = setTimeout(() => { 
+      setPhase('clicking'); 
+      onHover(true); 
+    }, 1000);
+    const t2 = setTimeout(() => { 
+      setPhase('done'); 
+      onHover(false); 
+    }, 1300);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [onHover]);
 
@@ -181,41 +187,43 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, o
       transition={{ duration: 1, ease: [0.34, 1.56, 0.64, 1] }}
       className="absolute z-20 pointer-events-none"
     >
-      {phase === 'moving' ? (
-        <svg width="45" height="45" viewBox="0 -1 32 26" fill="none" className="drop-shadow-xl">
-          <path
-            d="M1 3h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v2H9v1h1v2h1v2h-1v1H8v-1H7v-2H6v-2H5v1H4v1H3v1H1v-17z"
-            fill="#ffffff"
-            stroke="#000"
-            strokeWidth="0.2"
-          />
-        </svg>
-      ) : (
-        <div className="relative">
-          <svg width="45" height="45" viewBox="0 0 32 24" fill="none" className="drop-shadow-xl">
+      <div className="relative w-[45px] h-[45px]">
+        {phase === 'moving' ? (
+          <svg width="45" height="45" viewBox="0 -1 32 26" fill="none" className="drop-shadow-xl absolute top-0 left-0">
             <path
-              d="M19 1h2v1h1v4h2v1h3v1h2v1h1v1h1v7h-1v3h-1v3H19v-3h-1v-2h-1v-2h-1v-2h-1v-1h-1v-3h3v1h1V2h1"
+              d="M1 3h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v2H9v1h1v2h1v2h-1v1H8v-1H7v-2H6v-2H5v1H4v1H3v1H1v-17z"
               fill="#ffffff"
               stroke="#000"
               strokeWidth="0.2"
             />
-            <path d="M22 6v6" stroke="#000" strokeWidth="0.2" />
-            <path d="M25 7v5" stroke="#000" strokeWidth="0.2" />
-            <path d="M28 8v4" stroke="#000" strokeWidth="0.2" />
           </svg>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.5, y: 10 }} 
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="absolute -top-12 left-0 pointer-events-none"
-          >
-            <svg width="45" height="45" viewBox="0 0 32 24" className="overflow-visible">
-              <path d="M12 -8 L6 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
-              <path d="M21 -12 L21 -24" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
-              <path d="M30 -8 L36 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
+        ) : (
+          <div className="absolute top-0 left-0">
+            <svg width="45" height="45" viewBox="0 0 32 24" fill="none" className="drop-shadow-xl">
+              <path
+                d="M19 1h2v1h1v4h2v1h3v1h2v1h1v1h1v7h-1v3h-1v3H19v-3h-1v-2h-1v-2h-1v-2h-1v-1h-1v-3h3v1h1V2h1"
+                fill="#ffffff"
+                stroke="#000"
+                strokeWidth="0.2"
+              />
+              <path d="M22 6v6" stroke="#000" strokeWidth="0.2" />
+              <path d="M25 7v5" stroke="#000" strokeWidth="0.2" />
+              <path d="M28 8v4" stroke="#000" strokeWidth="0.2" />
             </svg>
-          </motion.div>
-        </div>
-      )}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.5, y: 10 }} 
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="absolute -top-12 left-0 pointer-events-none"
+            >
+              <svg width="45" height="45" viewBox="0 0 32 24" className="overflow-visible">
+                <path d="M12 -8 L6 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
+                <path d="M21 -12 L21 -24" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
+                <path d="M30 -8 L36 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
+              </svg>
+            </motion.div>
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 };
