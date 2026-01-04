@@ -224,22 +224,22 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
     const halfwayX = randomConfig.halfwayOffset.x;
     const halfwayY = randomConfig.halfwayOffset.y;
     switch(randomConfig.pathType) {
-      case 1: // Curved path
+      case 1: // Curved: Adds a single arc via a halfway point
         return {
           x: [0, halfwayX, randomConfig.jitterX, 0],
           y: [0, halfwayY, randomConfig.jitterY, 0],
         };
-      case 2: // Erratic/Jittery path
+      case 2: // Erratic: Moves back and forth (zags) before settling
         return {
           x: [0, halfwayX, -randomConfig.jitterX * 0.8, randomConfig.jitterX, 0],
           y: [0, -halfwayY * 0.5, randomConfig.jitterY, -randomConfig.jitterY * 0.3, 0],
         };
-      case 3: // Spiral/Overshoot path
+      case 3: // Spiral/Overshoot: Swings wide (overshoots) then pulls back
         return {
           x: [0, halfwayX * 1.5, -randomConfig.jitterX, randomConfig.jitterX * 0.5, 0],
           y: [0, -halfwayY, randomConfig.jitterY * 1.2, 0],
         };
-      default: // Simple/Straight path
+      default: // Subtle: A slight wobble rather than a pure straight line
         return {
           x: [0, halfwayX * 0.2, randomConfig.jitterX, 0],
           y: [0, halfwayY * 0.2, randomConfig.jitterY, 0],
@@ -261,7 +261,7 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
       transition={{ 
         duration: randomConfig.duration, 
         delay: randomConfig.delay,
-        ease: "linear" 
+        ease: [0.34, 1.56, 0.64, 1] // Bezier easing for course correction overshoot
       }}
       className="absolute z-20 pointer-events-none"
     >
@@ -271,7 +271,7 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
             d="M1 1l12.5 25.5L17 17l9.5-3.5L1 1z"
             fill="white"
             stroke="black"
-            strokeWidth="2"
+            strokeWidth="2.3"
             strokeLinejoin="round"
           />
         </svg>
@@ -282,12 +282,12 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
               d="M19 1h2v1h1v4h2v1h3v1h2v1h1v1h1v7h-1v3h-1v3H19v-3h-1v-2h-1v-2h-1v-2h-1v-1h-1v-10h3v1h1V2h1"
               fill="white"
               stroke="black"
-              strokeWidth="2"
+              strokeWidth="2.3"
               strokeLinejoin="round"
             />
-            <path d="M22 6v6" stroke="black" strokeWidth="1.5" />
-            <path d="M25 7v5" stroke="black" strokeWidth="1.5" />
-            <path d="M28 8v4" stroke="black" strokeWidth="1.5" />
+            <path d="M22 6v6" stroke="black" strokeWidth="1.8" />
+            <path d="M25 7v5" stroke="black" strokeWidth="1.8" />
+            <path d="M28 8v4" stroke="black" strokeWidth="1.8" />
           </svg>
           
           {isClicking && (
