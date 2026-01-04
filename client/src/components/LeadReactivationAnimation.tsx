@@ -176,8 +176,22 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, o
       animate={{ x: buttonCenterX, y: buttonCenterY, scale: phase === 'clicking' ? 0.77 : 1 }}
       style={{ left: `${startX}%`, top: `${startY}%`, opacity: phase === 'disappearing' ? 0 : 1 }}
     >
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M5.5 3.5L19.5 12.5L12.5 14.5L10.5 21.5L5.5 3.5Z" fill="black" stroke="white" strokeWidth="2" strokeLinejoin="round"/>
+      <svg width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'rotate(-15deg)' }}>
+        <g filter="url(#filter0_d_1_2)">
+          <path d="M7.5 18.5V4.5L17.5 14.5H12.5L11.5 15.5L14.5 21.5L12.5 22.5L9.5 16.5L7.5 18.5Z" fill="white"/>
+          <path d="M8 5.70711V17.2929L9.29289 16L9.58579 15.7071H10H10.4142L10.7071 16L13.4142 21.4142L13.5858 21.0858L10.8787 15.6716L10.5858 15.3787L10.2929 15.0858L10 14.7929V14.5V14H10.5H16.2929L8 5.70711Z" stroke="black" strokeWidth="1"/>
+        </g>
+        <defs>
+          <filter id="filter0_d_1_2" x="3.5" y="0.5" width="18" height="26" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+            <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+            <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+            <feOffset dy="1"/>
+            <feGaussianBlur stdDeviation="1.5"/>
+            <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+            <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1_2"/>
+            <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1_2" result="shape"/>
+          </filter>
+        </defs>
       </svg>
     </motion.div>
   );
