@@ -1,192 +1,238 @@
-import { useRef, useState } from "react";
-import { Zap, Lock, ArrowRight } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
-export default function Canvas() {
-  const [isDragging, setIsDragging] = useState<string | null>(null);
-  const [positions, setPositions] = useState({
-    agent: { x: 100, y: 150 },
-    guardrails: { x: 500, y: 150 },
-  });
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const startPos = useRef<{ x: number; y: number } | null>(null);
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
-  const handleMouseDown = (nodeId: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDragging(nodeId);
-    startPos.current = { x: e.clientX, y: e.clientY };
+interface CursorData {
+  id: number;
+  startX: number;
+  startY: number;
+}
+
+const LeadReactivationAnimation = () => {
+  const [brightness, setBrightness] = useState(0);
+  const [cursors, setCursors] = useState<CursorData[]>([]);
+  const [hasReachedEnd, setHasReachedEnd] = useState(false);
+  const [activeClickCount, setActiveClickCount] = useState(0);
+  const [clickScale, setClickScale] = useState(0);
+
+  useEffect(() => {
+    if (activeClickCount > 0) {
+      setClickScale(prev => Math.min(prev + (0.75 / 30), 0.75));
+    }
+  }, [activeClickCount]);
+
+  const currentC1 = {
+    r: 59 + (251 - 59) * (brightness / 100),
+    g: 130 + (191 - 130) * (brightness / 100),
+    b: 246 + (36 - 246) * (brightness / 100)
+  };
+  const currentC2 = {
+    r: 13 + (251 - 13) * (brightness / 100),
+    g: 148 + (146 - 148) * (brightness / 100),
+    b: 136 + (60 - 136) * (brightness / 100)
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !startPos.current || !canvasRef.current) return;
-
-    const deltaX = e.clientX - startPos.current.x;
-    const deltaY = e.clientY - startPos.current.y;
-
-    setPositions((prev) => ({
-      ...prev,
-      [isDragging]: {
-        x: Math.max(0, Math.min(canvasRef.current!.clientWidth - 200, prev[isDragging as keyof typeof prev].x + deltaX)),
-        y: Math.max(0, Math.min(canvasRef.current!.clientHeight - 160, prev[isDragging as keyof typeof prev].y + deltaY)),
-      },
-    }));
-
-    startPos.current = { x: e.clientX, y: e.clientY };
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(null);
-    startPos.current = null;
-  };
+  useEffect(() => {
+    for (let i = 0; i < 30; i++) {
+      setTimeout(() => {
+        const id = Date.now() + i;
+        const startX = Math.random() * 100;
+        const startY = Math.random() * 100;
+        setCursors(prev => [...prev, { id, startX, startY }]);
+        
+        setTimeout(() => {
+          setCursors(prev => prev.filter(c => c.id !== id));
+          setBrightness(b => Math.min(b + (100 / 30), 100));
+          if (i === 29) {
+            setHasReachedEnd(true);
+          }
+        }, 1400);
+      }, i * 250);
+    }
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 pt-20 pb-20">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">AI Agent Canvas</h1>
-          <p className="text-slate-400">Drag nodes to arrange your workflow</p>
-        </div>
+    <div className="relative w-full h-screen bg-slate-50 flex items-center justify-center overflow-hidden font-sans">
+      <style>{`
+        @keyframes sparkle {
+          0%, 100% { transform: scale(0); opacity: 0; }
+          50% { transform: scale(var(--s, 1)); opacity: 1; }
+        }
+        .animate-sparkle {
+          animation: sparkle 0.75s both;
+        }
+      `}</style>
+      
+      <AnimatePresence>
+        {cursors.map(c => (
+          <Cursor 
+            key={c.id} 
+            startX={c.startX} 
+            startY={c.startY} 
+            onHover={(clicking) => setActiveClickCount(n => clicking ? n + 1 : Math.max(0, n - 1))} 
+          />
+        ))}
+      </AnimatePresence>
 
-        <div
-          ref={canvasRef}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          className="relative w-full h-[600px] bg-slate-800/30 backdrop-blur border border-slate-700/50 rounded-2xl overflow-hidden cursor-move"
+      <div className="relative">
+        <motion.button
+          data-testid="button-reactivation"
+          animate={{ 
+            scale: hasReachedEnd ? 1 : 0.25 + clickScale,
+          }}
+          className="relative px-12 py-6 text-2xl font-bold rounded-2xl z-10 select-none overflow-hidden border border-black/5 shadow-xl transition-shadow"
+          style={{
+            background: `linear-gradient(135deg, rgb(${currentC1.r}, ${currentC1.g}, ${currentC1.b}), rgb(${currentC2.r}, ${currentC2.g}, ${currentC2.b}))`,
+            boxShadow: hasReachedEnd 
+              ? '0 20px 40px -10px rgba(251, 191, 36, 0.5), inset 0 1px 0 rgba(255,255,255,0.2)' 
+              : '0 4px 12px rgba(0,0,0,0.05)',
+            color: brightness > 50 ? '#ffffff' : '#1e293b'
+          }}
         >
-          {/* Connection Line */}
-          <svg
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            style={{ zIndex: 0 }}
-          >
-            <line
-              x1={positions.agent.x + 100}
-              y1={positions.agent.y + 60}
-              x2={positions.guardrails.x + 100}
-              y2={positions.guardrails.y + 60}
-              stroke="url(#gradient)"
-              strokeWidth="2"
-              strokeDasharray="5,5"
-              markerEnd="url(#arrowhead)"
+          {/* Subtle highlight effect at small size */}
+          {!hasReachedEnd && (
+            <motion.div 
+              animate={{ 
+                opacity: [0.05, 0.2, 0.05],
+                scale: [1, 1.1, 1]
+              }}
+              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+              className="absolute inset-0 bg-white pointer-events-none rounded-2xl"
             />
-            <defs>
-              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#8b5cf6" />
-                <stop offset="100%" stopColor="#06b6d4" />
-              </linearGradient>
-              <marker
-                id="arrowhead"
-                markerWidth="10"
-                markerHeight="10"
-                refX="9"
-                refY="3"
-                orient="auto"
-              >
-                <polygon points="0 0, 10 3, 0 6" fill="#06b6d4" />
-              </marker>
-            </defs>
-          </svg>
-
-          {/* AI Agent Node */}
-          <div
-            onMouseDown={(e) => handleMouseDown("agent", e)}
-            style={{
-              transform: `translate(${positions.agent.x}px, ${positions.agent.y}px)`,
-              cursor: isDragging === "agent" ? "grabbing" : "grab",
-            }}
-            className="absolute w-48 transition-transform duration-75 z-10"
-            data-testid="node-ai-agent"
-          >
-            <div className="group">
-              {/* Glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-300" />
-
-              {/* Node body */}
-              <div className="relative bg-gradient-to-br from-slate-700 to-slate-800 border border-purple-500/50 rounded-xl p-4 shadow-2xl hover:border-purple-400/80 transition-all duration-300">
-                {/* Header */}
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-purple-500/20 rounded-lg">
-                    <Zap className="w-5 h-5 text-purple-400" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white text-sm">AI Agent</h3>
-                    <p className="text-xs text-slate-400">Processing node</p>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="space-y-2 mb-4">
-                  <div className="bg-slate-900/50 rounded p-2 border border-slate-600/30">
-                    <p className="text-xs text-slate-300">
-                      <span className="text-purple-400 font-mono">model</span>
-                      <span className="text-slate-500">: gpt-4</span>
-                    </p>
-                  </div>
-                </div>
-
-                {/* Connection point indicator */}
-                <div className="flex justify-end">
-                  <div className="w-3 h-3 rounded-full bg-purple-400 animate-pulse" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Security Guardrails Node */}
-          <div
-            onMouseDown={(e) => handleMouseDown("guardrails", e)}
-            style={{
-              transform: `translate(${positions.guardrails.x}px, ${positions.guardrails.y}px)`,
-              cursor: isDragging === "guardrails" ? "grabbing" : "grab",
-            }}
-            className="absolute w-48 transition-transform duration-75 z-10"
-            data-testid="node-security-guardrails"
-          >
-            <div className="group">
-              {/* Glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-300" />
-
-              {/* Node body */}
-              <div className="relative bg-gradient-to-br from-slate-700 to-slate-800 border border-cyan-500/50 rounded-xl p-4 shadow-2xl hover:border-cyan-400/80 transition-all duration-300">
-                {/* Header */}
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-cyan-500/20 rounded-lg">
-                    <Lock className="w-5 h-5 text-cyan-400" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white text-sm">Security Guardrails</h3>
-                    <p className="text-xs text-slate-400">Validation layer</p>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="space-y-2 mb-4">
-                  <div className="bg-slate-900/50 rounded p-2 border border-slate-600/30">
-                    <p className="text-xs text-slate-300">
-                      <span className="text-cyan-400 font-mono">rules</span>
-                      <span className="text-slate-500">: active</span>
-                    </p>
-                  </div>
-                </div>
-
-                {/* Connection point indicator */}
-                <div className="flex justify-start">
-                  <div className="w-3 h-3 rounded-full bg-cyan-400 animate-pulse" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Info footer */}
-        <div className="mt-6 bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 backdrop-blur">
-          <div className="flex items-center gap-3 text-sm text-slate-300">
-            <ArrowRight className="w-4 h-4 text-slate-500" />
-            <p>
-              The <span className="text-purple-400 font-medium">AI Agent</span> processes input and sends output to the <span className="text-cyan-400 font-medium">Security Guardrails</span> for validation before final output.
-            </p>
-          </div>
-        </div>
+          )}
+          Your Brand
+        </motion.button>
+        
+        {/* Glow effect */}
+        <motion.div
+          animate={{ 
+            scale: hasReachedEnd ? 1.4 : 0.2 + clickScale,
+            opacity: hasReachedEnd ? 0.3 : 0.1
+          }}
+          className="absolute inset-0 bg-blue-400 blur-3xl -z-10 rounded-full"
+        />
       </div>
+
+      {hasReachedEnd && (
+        <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
+          <div className="relative w-[400px] h-[150px]">
+            {[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8].map((d, i) => (
+              <svg
+                key={i}
+                viewBox="0 0 24 24"
+                className="absolute w-6 h-6 fill-amber-400 opacity-0 animate-sparkle"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                  '--s': 0.5 + Math.random(),
+                  animationDelay: `${d}s`,
+                } as any}
+              >
+                <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
+              </svg>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
+};
+
+interface CursorProps {
+  startX: number;
+  startY: number;
+  onHover: (clicking: boolean) => void;
 }
+
+const Cursor = ({ startX, startY, onHover }: CursorProps) => {
+  const [phase, setPhase] = useState('moving');
+  
+  useEffect(() => {
+    // Phase 1: Moving (Arrow) - 0 to 800ms
+    // Phase 2: Hover (Hand) - starts at 800ms
+    const t_hover = setTimeout(() => { setPhase('hover'); }, 800);
+    // Phase 3: Clicking (Pressed Hand) - starts at 1000ms
+    const t_click = setTimeout(() => { setPhase('clicking'); onHover(true); }, 1000);
+    // Phase 4: Done - starts at 1300ms
+    const t_done = setTimeout(() => { setPhase('done'); onHover(false); }, 1300);
+    
+    return () => { 
+      clearTimeout(t_hover); 
+      clearTimeout(t_click); 
+      clearTimeout(t_done); 
+    };
+  }, [onHover]);
+
+  if (phase === 'done') return null;
+
+  // Show hand only during hover and clicking phases
+  const isHand = phase === 'hover' || phase === 'clicking';
+
+  return (
+    <motion.div
+      initial={{ left: `${startX}%`, top: `${startY}%`, rotate: Math.random() * 30 - 15 }}
+      animate={{ 
+        left: '50%', 
+        top: '50%', 
+        scale: phase === 'clicking' ? 0.8 : 1,
+        rotate: phase === 'clicking' ? 0 : (Math.random() * 20 - 10)
+      }}
+      transition={{ duration: 1, ease: "easeOut" }}
+      className="absolute z-20 pointer-events-none"
+    >
+      {!isHand ? (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" className="drop-shadow-lg">
+          <path
+            d="M1 1l12.5 25.5L17 17l9.5-3.5L1 1z"
+            fill="white"
+            stroke="black"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ) : (
+        <div className="relative">
+          <svg width="34" height="34" viewBox="0 0 32 32" fill="none" className="drop-shadow-lg">
+            <path
+              d="M19 1h2v1h1v4h2v1h3v1h2v1h1v1h1v7h-1v3h-1v3H19v-3h-1v-2h-1v-2h-1v-2h-1v-1h-1v-10h3v1h1V2h1"
+              fill="white"
+              stroke="black"
+              strokeWidth="2"
+              strokeLinejoin="round"
+            />
+            <path d="M22 6v6" stroke="black" strokeWidth="1.5" />
+            <path d="M25 7v5" stroke="black" strokeWidth="1.5" />
+            <path d="M28 8v4" stroke="black" strokeWidth="1.5" />
+          </svg>
+          
+          {phase === 'clicking' && (
+            <motion.div 
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1.2, opacity: 1 }}
+              className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full pt-4"
+            >
+              <div className="flex gap-1.5">
+                {[...Array(3)].map((_, i) => (
+                  <motion.div 
+                    key={i}
+                    animate={{ height: [4, 14, 4], opacity: [0, 1, 0] }}
+                    transition={{ duration: 0.3, repeat: 1 }}
+                    className="w-1 bg-amber-400 rounded-full"
+                    style={{ transform: `rotate(${(i - 1) * 35}deg)` }}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
+export default LeadReactivationAnimation;
