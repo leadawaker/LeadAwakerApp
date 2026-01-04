@@ -188,8 +188,12 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
   const [phase, setPhase] = useState('moving');
   
   useEffect(() => {
-    const t_hover = setTimeout(() => { setPhase('hover'); }, 800);
+    // Arrow for 60% of travel (approx 600ms)
+    // Turns to hand as it hits the "edge" (around 600ms to 800ms)
+    const t_hover = setTimeout(() => { setPhase('hover'); }, 600);
+    // Stops and clicks at center (1000ms)
     const t_click = setTimeout(() => { setPhase('clicking'); onHover(true); }, 1000);
+    // Done at 1300ms
     const t_done = setTimeout(() => { setPhase('done'); onHover(false); }, 1300);
     
     return () => { 
@@ -212,7 +216,7 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
         scale: phase === 'clicking' ? 0.8 : 1,
         rotate: phase === 'clicking' ? 0 : (Math.random() * 20 - 10)
       }}
-      transition={{ duration: 1, ease: "easeOut" }}
+      transition={{ duration: 1, ease: "linear" }}
       className="absolute z-20 pointer-events-none"
     >
       {!isHand ? (
@@ -244,13 +248,13 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
             <motion.div 
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1.2, opacity: 1 }}
-              className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full pt-4"
+              className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[60%] pt-2"
             >
-              <div className="flex gap-1.5">
+              <div className="flex gap-1">
                 {[...Array(3)].map((_, i) => (
                   <motion.div 
                     key={i}
-                    animate={{ height: [4, 14, 4], opacity: [0, 1, 0] }}
+                    animate={{ height: [4, 12, 4], opacity: [0, 1, 0] }}
                     transition={{ duration: 0.3, repeat: 1 }}
                     className="w-1 bg-amber-400 rounded-full"
                     style={{ transform: `rotate(${(i - 1) * 35}deg)` }}
