@@ -131,6 +131,7 @@ const LeadReactivationAnimation = () => {
       </AnimatePresence>
 
       <motion.button
+        id="lead-button"
         initial={{ scale: 0.45, opacity: 0 }}
         animate={{ 
           scale: (brightness >= 100 || hasReachedEnd) 
@@ -244,7 +245,7 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, a
     }, 50 + randomConfig.delay * 1000);
 
     const checkInterval = setInterval(() => {
-      const buttonElement = document.querySelector('button');
+      const buttonElement = document.getElementById('lead-button');
       const buttonRect = buttonElement?.getBoundingClientRect();
       const cursorElement = document.getElementById(`cursor-${startX}-${startY}`);
 
@@ -254,11 +255,12 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, a
         setButtonScale(matrix.a);
 
         const cursorRect = cursorElement.getBoundingClientRect();
+        // Adding 4px buffer for more reliable detection
         const isOverlapping = !(
-          cursorRect.right < buttonRect.left ||
-          cursorRect.left > buttonRect.right ||
-          cursorRect.bottom < buttonRect.top ||
-          cursorRect.top > buttonRect.bottom
+          cursorRect.right < buttonRect.left - 4 ||
+          cursorRect.left > buttonRect.right + 4 ||
+          cursorRect.bottom < buttonRect.top - 4 ||
+          cursorRect.top > buttonRect.bottom + 4
         );
 
         if (isOverlapping) {
