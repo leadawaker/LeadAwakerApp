@@ -101,7 +101,6 @@ export default function About() {
           viewport={{ once: true }}
           className="max-w-3xl mx-auto mb-24"
         >
-          <LeadReactivationAnimation />
           <h2 className="text-3xl font-bold mb-8 text-center">Our Mission</h2>
           <div className="space-y-6 text-lg text-muted-foreground">
             <p>
