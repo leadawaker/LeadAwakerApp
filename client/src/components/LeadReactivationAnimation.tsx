@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -17,7 +17,7 @@ const LeadReactivationAnimation = () => {
 
   useEffect(() => {
     if (activeClickCount > 0) {
-      setClickScale(prev => Math.min(prev + (0.7 / 33), 0.7));
+      setClickScale(prev => Math.min(prev + (0.75 / 33), 0.75));
     }
   }, [activeClickCount]);
 
@@ -71,9 +71,9 @@ const LeadReactivationAnimation = () => {
     sequence.forEach((cursor, index) => {
       setTimeout(() => {
         const id = Date.now() + index;
-        // Tighter offsets centered on the button
-        const offsetX = (Math.random() - 0.5) * 40; // +/- 20px
-        const offsetY = (Math.random() - 0.5) * 20; // +/- 10px
+        // Random offset for each click within the button's area
+        const offsetX = (Math.random() - 0.5) * 60; // +/- 30px
+        const offsetY = (Math.random() - 0.5) * 30; // +/- 15px
         setCursors(prev => [...prev, { ...cursor, id, offsetX, offsetY }]);
         
         setTimeout(() => {
@@ -117,10 +117,10 @@ const LeadReactivationAnimation = () => {
       <motion.button
         ref={buttonRef}
         animate={{ 
-          scale: hasReachedEnd ? 1 : 0.3 + clickScale,
+          scale: hasReachedEnd ? 1 : 0.25 + clickScale,
           opacity: 1 
         }}
-        initial={{ opacity: 0, scale: 0.3 }}
+        initial={{ opacity: 0, scale: 0.25 }}
         className="relative px-12 py-6 text-2xl font-bold rounded-2xl z-10 select-none overflow-hidden border border-black/10 transition-all duration-200"
         style={{
           background: `linear-gradient(135deg, rgb(${currentC1.r}, ${currentC1.g}, ${currentC1.b}), rgb(${currentC2.r}, ${currentC2.g}, ${currentC2.b}))`,
@@ -178,7 +178,6 @@ const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHov
       const cursorRect = cursorRef.current.getBoundingClientRect();
       const buttonRect = buttonRef.current.getBoundingClientRect();
       
-      // Tip of the arrow
       const cx = cursorRect.left;
       const cy = cursorRect.top;
       
@@ -197,7 +196,6 @@ const Cursor = ({ startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHov
       const targetY = buttonRect.top + buttonRect.height / 2 + targetOffsetY;
       const dist = Math.sqrt(Math.pow(cx - targetX, 2) + Math.pow(cy - targetY, 2));
 
-      // Trigger click when near target point
       if (dist < 10 && !isClicked) {
         setIsClicked(true);
         onHover(true);
