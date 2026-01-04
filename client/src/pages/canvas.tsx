@@ -256,12 +256,14 @@ const Cursor = ({ startX, startY, onHover }: CursorProps) => {
         left: '50%', 
         top: '50%',
         rotate: isClicking ? 0 : (Math.random() * 20 - 10),
-        ...keyframes
+        x: keyframes.x,
+        y: keyframes.y,
+        scale: keyframes.scale ?? 1
       }}
       transition={{ 
         duration: randomConfig.duration, 
         delay: randomConfig.delay,
-        ease: [0.34, 1.56, 0.64, 1] // Bezier easing for course correction overshoot
+        ease: [0.34, 1.56, 0.64, 1] 
       }}
       className="absolute z-20 pointer-events-none"
     >
