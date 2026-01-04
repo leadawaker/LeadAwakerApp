@@ -9,14 +9,15 @@ function cn(...inputs: ClassValue[]) {
 
 const LeadReactivationAnimation = () => {
   const [brightness, setBrightness] = useState(0);
-  const [cursors, setCursors] = useState<{id: number, startX: number, startY: number, type: string}[]>([]);
+  const [cursors, setCursors] = useState<{id: number, startX: number, startY: number}[]>([]);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
   const [activeClickCount, setActiveClickCount] = useState(0);
   const [clickScale, setClickScale] = useState(0);
 
   useEffect(() => {
     if (activeClickCount > 0) {
-      setClickScale(prev => Math.min(prev + (0.75 / 30), 0.75));
+      // Logic for 33 sequential clicks resulting in exactly 0.75 growth (total 1.0)
+      setClickScale(prev => Math.min(prev + (0.75 / 33), 0.75));
     }
   }, [activeClickCount]);
 
@@ -33,49 +34,48 @@ const LeadReactivationAnimation = () => {
 
   useEffect(() => {
     const sequence = [
-      { delay: 500, startX: 20, startY: 20 },
-      { delay: 2000, startX: 80, startY: 30 },
-      { delay: 3500, startX: 15, startY: 70 },
-      { delay: 5000, startX: 40, startY: 10 },
-      { delay: 5300, startX: 60, startY: 15 },
-      { delay: 5600, startX: 25, startY: 50 },
-      { delay: 5900, startX: 75, startY: 60 },
-      { delay: 6200, startX: 35, startY: 80 },
-      { delay: 6400, startX: 55, startY: 25 },
-      { delay: 6600, startX: 10, startY: 40 },
-      { delay: 6800, startX: 85, startY: 45 },
-      { delay: 7000, startX: 30, startY: 65 },
-      { delay: 7100, startX: 70, startY: 75 },
-      { delay: 7200, startX: 45, startY: 35 },
-      { delay: 7300, startX: 65, startY: 85 },
-      { delay: 7400, startX: 20, startY: 55 },
-      { delay: 7500, startX: 80, startY: 20 },
-      { delay: 7600, startX: 50, startY: 90 },
-      { delay: 7700, startX: 15, startY: 25 },
-      { delay: 7800, startX: 75, startY: 40 },
-      { delay: 7900, startX: 35, startY: 15 },
-      { delay: 8000, startX: 60, startY: 70 },
-      { delay: 8100, startX: 25, startY: 85 },
-      { delay: 8200, startX: 85, startY: 30 },
-      { delay: 8300, startX: 40, startY: 60 },
-      { delay: 8400, startX: 70, startY: 50 },
-      { delay: 8500, startX: 30, startY: 35 },
-      { delay: 8600, startX: 55, startY: 80 },
-      { delay: 8700, startX: 10, startY: 65 },
-      { delay: 8800, startX: 90, startY: 55 },
-      { delay: 8900, startX: 50, startY: 45 },
-      { delay: 9000, startX: 65, startY: 20 },
-      { delay: 9100, startX: 22, startY: 75 }
+      { delay: 1500, startX: 20, startY: 20 },
+      { delay: 3000, startX: 80, startY: 30 },
+      { delay: 4500, startX: 15, startY: 70 },
+      { delay: 6000, startX: 40, startY: 10 },
+      { delay: 6300, startX: 60, startY: 15 },
+      { delay: 6600, startX: 25, startY: 50 },
+      { delay: 6900, startX: 75, startY: 60 },
+      { delay: 7200, startX: 35, startY: 80 },
+      { delay: 7400, startX: 55, startY: 25 },
+      { delay: 7600, startX: 10, startY: 40 },
+      { delay: 7800, startX: 85, startY: 45 },
+      { delay: 8000, startX: 30, startY: 65 },
+      { delay: 8100, startX: 70, startY: 75 },
+      { delay: 8200, startX: 45, startY: 35 },
+      { delay: 8300, startX: 65, startY: 85 },
+      { delay: 8400, startX: 20, startY: 55 },
+      { delay: 8500, startX: 80, startY: 20 },
+      { delay: 8600, startX: 50, startY: 90 },
+      { delay: 8700, startX: 15, startY: 25 },
+      { delay: 8800, startX: 75, startY: 40 },
+      { delay: 8900, startX: 35, startY: 15 },
+      { delay: 9000, startX: 60, startY: 70 },
+      { delay: 9100, startX: 25, startY: 85 },
+      { delay: 9200, startX: 85, startY: 30 },
+      { delay: 9300, startX: 40, startY: 60 },
+      { delay: 9400, startX: 70, startY: 50 },
+      { delay: 9500, startX: 30, startY: 35 },
+      { delay: 9600, startX: 55, startY: 80 },
+      { delay: 9700, startX: 10, startY: 65 },
+      { delay: 9800, startX: 90, startY: 55 },
+      { delay: 9900, startX: 50, startY: 45 },
+      { delay: 10000, startX: 65, startY: 20 },
+      { delay: 10100, startX: 22, startY: 75 }
     ];
     sequence.forEach((cursor, index) => {
       setTimeout(() => {
         const id = Date.now() + index;
-        const type = Math.random() > 0.5 ? 'arrow' : 'hand';
-        setCursors(prev => [...prev, { ...cursor, id, type }]);
+        setCursors(prev => [...prev, { ...cursor, id }]);
         
         setTimeout(() => {
           setCursors(prev => prev.filter(c => c.id !== id));
-          setBrightness(b => Math.min(b + (100 / 30), 100));
+          setBrightness(b => Math.min(b + (100 / 33), 100));
           if (index === sequence.length - 1) {
             setHasReachedEnd(true);
           }
@@ -104,7 +104,6 @@ const LeadReactivationAnimation = () => {
             key={c.id} 
             startX={c.startX} 
             startY={c.startY} 
-            type={c.type}
             onHover={(clicking) => setActiveClickCount(n => clicking ? n + 1 : Math.max(0, n - 1))} 
           />
         ))}
@@ -114,7 +113,7 @@ const LeadReactivationAnimation = () => {
           scale: hasReachedEnd ? 1 : 0.25 + clickScale,
           opacity: 1 
         }}
-        initial={{ opacity: 0, scale: 0.45 }}
+        initial={{ opacity: 0, scale: 0.25 }}
         className="relative px-12 py-6 text-2xl font-bold rounded-2xl z-10 select-none overflow-hidden border border-black/10 transition-all duration-200"
         style={{
           background: `linear-gradient(135deg, rgb(${currentC1.r}, ${currentC1.g}, ${currentC1.b}), rgb(${currentC2.r}, ${currentC2.g}, ${currentC2.b}))`,
@@ -160,8 +159,8 @@ const LeadReactivationAnimation = () => {
   );
 };
 
-const Cursor = ({ startX, startY, type, onHover }: { startX: number, startY: number, type: string, onHover: (clicking: boolean) => void }) => {
-  const [phase, setPhase] = useState('moving');
+const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, onHover: (clicking: boolean) => void }) => {
+  const [phase, setPhase] = useState<'moving' | 'clicking' | 'done'>('moving');
   
   useEffect(() => {
     const t1 = setTimeout(() => { setPhase('clicking'); onHover(true); }, 1000);
@@ -182,7 +181,7 @@ const Cursor = ({ startX, startY, type, onHover }: { startX: number, startY: num
       transition={{ duration: 1, ease: [0.34, 1.56, 0.64, 1] }}
       className="absolute z-20 pointer-events-none"
     >
-      {type === 'arrow' ? (
+      {phase === 'moving' ? (
         <svg width="45" height="45" viewBox="0 -1 32 26" fill="none" className="drop-shadow-xl">
           <path
             d="M1 3h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v2H9v1h1v2h1v2h-1v1H8v-1H7v-2H6v-2H5v1H4v1H3v1H1v-17z"
@@ -192,24 +191,30 @@ const Cursor = ({ startX, startY, type, onHover }: { startX: number, startY: num
           />
         </svg>
       ) : (
-        <svg width="45" height="45" viewBox="0 0 32 24" fill="none" className="drop-shadow-xl">
-          <path
-            d="M19 1h2v1h1v4h2v1h3v1h2v1h1v1h1v7h-1v3h-1v3H19v-3h-1v-2h-1v-2h-1v-2h-1v-1h-1v-3h3v1h1V2h1"
-            fill="#ffffff"
-            stroke="#000"
-            strokeWidth="0.2"
-          />
-          <path d="M22 6v6" stroke="#000" strokeWidth="0.2" />
-          <path d="M25 7v5" stroke="#000" strokeWidth="0.2" />
-          <path d="M28 8v4" stroke="#000" strokeWidth="0.2" />
-          {phase === 'clicking' && (
-            <motion.g initial={{ opacity: 0, scale: 0.5, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }}>
+        <div className="relative">
+          <svg width="45" height="45" viewBox="0 0 32 24" fill="none" className="drop-shadow-xl">
+            <path
+              d="M19 1h2v1h1v4h2v1h3v1h2v1h1v1h1v7h-1v3h-1v3H19v-3h-1v-2h-1v-2h-1v-2h-1v-1h-1v-3h3v1h1V2h1"
+              fill="#ffffff"
+              stroke="#000"
+              strokeWidth="0.2"
+            />
+            <path d="M22 6v6" stroke="#000" strokeWidth="0.2" />
+            <path d="M25 7v5" stroke="#000" strokeWidth="0.2" />
+            <path d="M28 8v4" stroke="#000" strokeWidth="0.2" />
+          </svg>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.5, y: 10 }} 
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="absolute -top-12 left-0 pointer-events-none"
+          >
+            <svg width="45" height="45" viewBox="0 0 32 24" className="overflow-visible">
               <path d="M12 -8 L6 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
               <path d="M21 -12 L21 -24" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
               <path d="M30 -8 L36 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
-            </motion.g>
-          )}
-        </svg>
+            </svg>
+          </motion.div>
+        </div>
       )}
     </motion.div>
   );
