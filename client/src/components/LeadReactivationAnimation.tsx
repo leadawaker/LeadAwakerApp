@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -13,6 +13,7 @@ const LeadReactivationAnimation = () => {
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
   const [activeClickCount, setActiveClickCount] = useState(0);
   const [clickScale, setClickScale] = useState(0);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (activeClickCount > 0) {
@@ -103,11 +104,13 @@ const LeadReactivationAnimation = () => {
             key={c.id} 
             startX={c.startX} 
             startY={c.startY} 
+            buttonRef={buttonRef}
             onHover={(clicking) => setActiveClickCount(n => clicking ? n + 1 : Math.max(0, n - 1))} 
           />
         ))}
       </AnimatePresence>
       <motion.button
+        ref={buttonRef}
         animate={{ 
           scale: hasReachedEnd ? 1 : 0.25 + clickScale,
           opacity: 1 
@@ -158,37 +161,61 @@ const LeadReactivationAnimation = () => {
   );
 };
 
-const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, onHover: (clicking: boolean) => void }) => {
-  const [phase, setPhase] = useState<'moving' | 'clicking' | 'done'>('moving');
+const Cursor = ({ startX, startY, buttonRef, onHover }: { startX: number, startY: number, buttonRef: React.RefObject<HTMLButtonElement>, onHover: (clicking: boolean) => void }) => {
+  const [isOverButton, setIsOverButton] = useState(false);
+  const [isClicked, setIsClicked] = useState(false);
+  const cursorRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    // Each cursor instance handles its own timing independently
-    const t1 = setTimeout(() => { 
-      setPhase('clicking'); 
-      onHover(true); 
-    }, 1000);
-    const t2 = setTimeout(() => { 
-      setPhase('done'); 
-      onHover(false); 
-    }, 1300);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [onHover]);
+    const checkCollision = setInterval(() => {
+      if (!cursorRef.current || !buttonRef.current || isClicked) return;
+      
+      const cursorRect = cursorRef.current.getBoundingClientRect();
+      const buttonRect = buttonRef.current.getBoundingClientRect();
+      
+      const cx = cursorRect.left + cursorRect.width / 2;
+      const cy = cursorRect.top + cursorRect.height / 2;
+      
+      const inside = (
+        cx >= buttonRect.left &&
+        cx <= buttonRect.right &&
+        cy >= buttonRect.top &&
+        cy <= buttonRect.bottom
+      );
 
-  if (phase === 'done') return null;
+      if (inside && !isOverButton) {
+        setIsOverButton(true);
+      }
+      
+      const bcx = buttonRect.left + buttonRect.width / 2;
+      const bcy = buttonRect.top + buttonRect.height / 2;
+      const dist = Math.sqrt(Math.pow(cx - bcx, 2) + Math.pow(cy - bcy, 2));
+
+      if (dist < 15 && !isClicked) {
+        setIsClicked(true);
+        onHover(true);
+        setTimeout(() => onHover(false), 300);
+      }
+    }, 10);
+    
+    return () => clearInterval(checkCollision);
+  }, [buttonRef, isOverButton, isClicked, onHover]);
 
   return (
     <motion.div
+      ref={cursorRef}
       initial={{ left: `${startX}%`, top: `${startY}%` }}
       animate={{ 
         left: '50%', 
         top: '50%', 
-        scale: phase === 'clicking' ? 0.77 : 1 
+        scale: isClicked ? 0.77 : 1,
+        opacity: isClicked ? 0 : 1
       }}
-      transition={{ duration: 1, ease: [0.34, 1.56, 0.64, 1] }}
+      transition={{ duration: 1, ease: "linear" }}
       className="absolute z-20 pointer-events-none"
     >
       <div className="relative w-[45px] h-[45px] -translate-x-1/2 -translate-y-1/2">
-        {phase === 'moving' ? (
+        {!isOverButton ? (
           <svg width="45" height="45" viewBox="0 -1 32 26" fill="none" className="drop-shadow-xl absolute top-0 left-0">
             <path
               d="M1 3h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v2H9v1h1v2h1v2h-1v1H8v-1H7v-2H6v-2H5v1H4v1H3v1H1v-17z"
@@ -210,17 +237,19 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, o
               <path d="M25 7v5" stroke="#000" strokeWidth="0.2" />
               <path d="M28 8v4" stroke="#000" strokeWidth="0.2" />
             </svg>
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.5, y: 10 }} 
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="absolute -top-12 left-0 pointer-events-none"
-            >
-              <svg width="45" height="45" viewBox="0 0 32 24" className="overflow-visible">
-                <path d="M12 -8 L6 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
-                <path d="M21 -12 L21 -24" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
-                <path d="M30 -8 L36 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
-              </svg>
-            </motion.div>
+            {isClicked && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.5, y: 10 }} 
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                className="absolute -top-12 left-0 pointer-events-none"
+              >
+                <svg width="45" height="45" viewBox="0 0 32 24" className="overflow-visible">
+                  <path d="M12 -8 L6 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
+                  <path d="M21 -12 L21 -24" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
+                  <path d="M30 -8 L36 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" />
+                </svg>
+              </motion.div>
+            )}
           </div>
         )}
       </div>
