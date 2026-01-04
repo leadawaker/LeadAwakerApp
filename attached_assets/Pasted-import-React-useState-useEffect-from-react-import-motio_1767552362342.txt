@@ -2,24 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
-
 const LeadReactivationAnimation = () => {
   const [brightness, setBrightness] = useState(0);
-  const [cursors, setCursors] = useState<{id: number, startX: number, startY: number, type: 'arrow' | 'hand'}[]>([]);
+  const [cursors, setCursors] = useState([]);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
   const [activeClickCount, setActiveClickCount] = useState(0);
   const [clickScale, setClickScale] = useState(0);
-
   useEffect(() => {
     if (activeClickCount > 0) {
       setClickScale(prev => Math.min(prev + (0.75 / 30), 0.75));
     }
   }, [activeClickCount]);
-
   const currentC1 = {
     r: 59 + (251 - 59) * (brightness / 100),
     g: 130 + (191 - 130) * (brightness / 100),
@@ -30,7 +26,6 @@ const LeadReactivationAnimation = () => {
     g: 148 + (146 - 148) * (brightness / 100),
     b: 136 + (60 - 136) * (brightness / 100)
   };
-
   useEffect(() => {
     for (let i = 0; i < 30; i++) {
       setTimeout(() => {
@@ -50,9 +45,8 @@ const LeadReactivationAnimation = () => {
       }, i * 250);
     }
   }, []);
-
   return (
-    <div className="relative w-full h-[400px] bg-white flex items-center justify-center overflow-hidden font-sans rounded-xl border border-border mb-12">
+    <div className="relative w-full h-screen bg-white flex items-center justify-center overflow-hidden font-sans">
       <style>{`
         @keyframes sparkle {
           0%, 100% { transform: scale(0); opacity: 0; }
@@ -109,8 +103,7 @@ const LeadReactivationAnimation = () => {
     </div>
   );
 };
-
-const Cursor = ({ startX, startY, type, onHover }: { startX: number, startY: number, type: 'arrow' | 'hand', onHover: (clicking: boolean) => void }) => {
+const Cursor = ({ startX, startY, type, onHover }) => {
   const [phase, setPhase] = useState('moving');
   
   useEffect(() => {
@@ -162,5 +155,4 @@ const Cursor = ({ startX, startY, type, onHover }: { startX: number, startY: num
     </motion.div>
   );
 };
-
 export default LeadReactivationAnimation;
