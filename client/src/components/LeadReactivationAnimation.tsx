@@ -365,10 +365,12 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, a
       )}
       {isHand && (
         <svg 
-          width="45" height="45" viewBox="0 0 32 24" fill="none" className="drop-shadow-xl"
+          width="45" height="45" viewBox="0 0 32 24" fill="none" className="drop-shadow-xl overflow-visible"
           style={{
             marginLeft: `${(1 - 19) * (45 / 32)}px`,
-            marginTop: `${(3 - 1) * (45 / 24)}px`
+            marginTop: `${(3 - 1) * (45 / 24)}px`,
+            position: 'relative',
+            zIndex: 10
           }}
         >
           <path
@@ -382,23 +384,26 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, a
           <path d="M25 7v5" stroke="black" strokeWidth="1" />
           <path d="M28 8v4" stroke="black" strokeWidth="1" />
 
-          {isClicking && (
-            <motion.g
-              initial={{ opacity: 0, scale: 0.8, y: 8 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 1.1 }}
-              transition={{ duration: 0.15, ease: "easeOut" }}
-              style={{ 
-                transform: 'translateZ(10px)',
-                filter: 'drop-shadow(0 0 4px #fbbf24)'
-              }}
-            >
-              {/* 3 angled stroke lines - YELLOW MATCHING BUTTON GLOW */}
-              <path d="M12 -8 L6 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="1" />
-              <path d="M21 -12 L21 -24" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="1" />
-              <path d="M30 -8 L36 -18" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="1" />
-            </motion.g>
-          )}
+          <AnimatePresence>
+            {isClicking && (
+              <motion.g
+                key="click-strokes"
+                initial={{ opacity: 0, scale: 0.8, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 1.1 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                style={{ 
+                  zIndex: 100,
+                  position: 'relative'
+                }}
+              >
+                {/* 3 angled stroke lines - YELLOW MATCHING BUTTON GLOW */}
+                <path d="M12 -8 L6 -18" stroke="#fbbf24" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                <path d="M21 -12 L21 -24" stroke="#fbbf24" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                <path d="M30 -8 L36 -18" stroke="#fbbf24" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+              </motion.g>
+            )}
+          </AnimatePresence>
         </svg>
       )}
     </motion.div>
