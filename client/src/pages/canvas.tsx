@@ -127,6 +127,19 @@ const LeadReactivationAnimation = () => {
               className="absolute inset-0 bg-white pointer-events-none rounded-2xl"
             />
           )}
+
+          {/* Final White Flash/Highlight at the end */}
+          <AnimatePresence>
+            {hasReachedEnd && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 0.8, 0] }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="absolute inset-0 bg-white pointer-events-none rounded-2xl z-20"
+              />
+            )}
+          </AnimatePresence>
+
           Your Brand
         </motion.button>
         
