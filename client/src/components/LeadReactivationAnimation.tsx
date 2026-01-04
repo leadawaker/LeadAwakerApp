@@ -120,17 +120,11 @@ const LeadReactivationAnimation = () => {
         animate={{ 
           scale: hasReachedEnd ? 1 : 0.25 + clickScale,
           opacity: 1,
-          boxShadow: brightness === 0 
-            ? [
-                '0 4px 12px -4px rgba(0,0,0,0.1), 0 0 0 0px rgba(59, 130, 246, 0)',
-                '0 4px 12px -4px rgba(0,0,0,0.1), 0 0 20px 4px rgba(59, 130, 246, 0.5)',
-                '0 4px 12px -4px rgba(0,0,0,0.1), 0 0 0 0px rgba(59, 130, 246, 0)'
-              ]
-            : hasReachedEnd 
-              ? '0 15px 35px -12px rgba(251, 191, 36, 0.4), 0 8px 15px -6px rgba(251, 146, 60, 0.2), inset 0 1px 1px rgba(255,255,255,0.4)' 
-              : `0 4px 12px -4px rgba(0,0,0,0.1), 0 ${brightness * 0.1}px ${brightness * 0.4}px rgba(251, 191, 36, ${brightness * 0.003 + 0.05}), inset 0 1px 1px rgba(255,255,255,0.2)`
+          boxShadow: hasReachedEnd 
+            ? '0 15px 35px -12px rgba(251, 191, 36, 0.4), 0 8px 15px -6px rgba(251, 146, 60, 0.2), inset 0 1px 1px rgba(255,255,255,0.4)' 
+            : `0 4px 12px -4px rgba(0,0,0,0.1), 0 ${brightness * 0.1}px ${brightness * 0.4}px rgba(251, 191, 36, ${brightness * 0.003 + 0.05}), inset 0 1px 1px rgba(255,255,255,0.2)`
         }}
-        transition={brightness === 0 ? { boxShadow: { repeat: Infinity, duration: 2 } } : { duration: 0.2 }}
+        transition={{ duration: 0.2 }}
         initial={{ opacity: 0, scale: 0.25 }}
         className="relative px-12 py-6 text-2xl font-bold rounded-2xl z-10 select-none overflow-hidden border border-black/15 transition-all duration-200"
         style={{
@@ -141,19 +135,17 @@ const LeadReactivationAnimation = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-50 pointer-events-none" />
         
         {/* Periodic Shine Effect */}
-        {hasReachedEnd && (
-          <motion.div
-            initial={{ left: '-100%' }}
-            animate={{ left: '200%' }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              repeatDelay: 5.5, // 1.5s duration + 5.5s delay = 7s cycle
-              ease: "easeInOut"
-            }}
-            className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 z-20 pointer-events-none"
-          />
-        )}
+        <motion.div
+          initial={{ left: '-100%' }}
+          animate={{ left: '200%' }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            repeatDelay: hasReachedEnd ? 5.5 : 2.5,
+            ease: "easeInOut"
+          }}
+          className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 z-20 pointer-events-none"
+        />
 
         <span className="relative z-10 tracking-tight text-[1.44em]">Your Brand</span>
       </motion.button>
