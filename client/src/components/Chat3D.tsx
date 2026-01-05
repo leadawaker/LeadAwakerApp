@@ -190,15 +190,6 @@ export default function Chat3D() {
                   </motion.div>
                 ) : (
                   <>
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex flex-col items-center gap-2 py-4"
-                    >
-                      <div className="h-[1px] w-full bg-slate-200" />
-                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Engaged</span>
-                    </motion.div>
-                    
                     {engagementMessages.map((msg, idx) => (
                       <div key={idx} className="space-y-4">
                         <motion.div 
