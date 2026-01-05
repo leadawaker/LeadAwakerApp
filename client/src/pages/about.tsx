@@ -115,7 +115,7 @@ export default function About() {
               At Lead Awaker, the belief is that your energy should go into what you excel at: delivering the quality service you already provide. The job here is to help you harness the power of attention.
             </p>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              For your brand to mean something valuable to a lead, that person has to be treated as an individual first, not as a line in a spreadsheet. When they are approached in a way that respects their timing, context, and preferences, they feel understood, and when they feel understood, they are finally awake to understand <CyclingWord words={["you", "your company", "your brand", "your services", "your products", "your story", "your values"]} />.
+              For your brand to mean something valuable to a lead, that person has to be treated as an individual first, not as a line in a spreadsheet. When they are approached in a way that respects their timing, context, and preferences, they feel understood, and when they feel understood, they are finally awake to understand <CyclingWord words={["you.", "your company.", "your brand.", "your services.", "your products.", "your story.", "your values."]} />
             </p>
           </div>
         </motion.div>
