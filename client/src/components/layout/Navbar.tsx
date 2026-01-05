@@ -52,10 +52,10 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-8">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="flex items-center gap-2 font-medium h-9 px-3 hover:bg-muted/50 transition-colors" data-testid="button-language-selector">
+              <button className="flex items-center gap-2 font-medium h-9 px-2 hover:opacity-80 transition-opacity focus:outline-none" data-testid="button-language-selector">
                 <span className="text-base leading-none">{currentLang.flag}</span>
                 <span className="text-sm font-semibold tracking-wide text-muted-foreground">{currentLang.code}</span>
-              </Button>
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40 p-1">
               {languages.map((lang) => (
