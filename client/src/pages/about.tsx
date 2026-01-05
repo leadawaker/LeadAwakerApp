@@ -141,7 +141,7 @@ export default function About() {
                       <AnimatedLogo3D />
                     </div>
                     <div className="text-center mt-8 space-y-1">
-                      <h3 className="text-2xl font-bold tracking-tight text-gray-900">Gabriel Fronza</h3>
+                      <h3 className="text-2xl font-bold tracking-tight text-gray-900">Gabriel B. Fronza</h3>
                       <div className="flex items-center justify-center gap-2">
                         <div className="h-[1px] w-4 bg-primary/50" />
                         <p className="text-sm font-semibold uppercase tracking-wider text-primary">Founder</p>
