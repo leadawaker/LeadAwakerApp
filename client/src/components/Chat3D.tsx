@@ -70,7 +70,7 @@ export default function Chat3D() {
           transform: `rotateY(${Math.min(-10.5 + scrollY * 0.05, 0)}deg) rotateX(${Math.max(10.5 - scrollY * 0.05, 0)}deg)`, 
           transformStyle: "preserve-3d",
           transition: "transform 0.1s ease-out",
-          marginTop: "20px"
+          marginTop: "50px"
         }}>
         {/* The Chat Card */}
         <div 
