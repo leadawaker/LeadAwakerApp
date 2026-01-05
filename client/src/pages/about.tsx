@@ -135,7 +135,7 @@ export default function About() {
           </div>
 
           <div className="space-y-6 w-full text-left mt-0 p-0">
-            <p className="text-xl text-muted-foreground leading-relaxed text-left">You pour time, money, and heart into building your business, yet so much of that energy goes into chasing your clients' attention back. They showed interest but life got in their way.</p>
+            <p className="text-xl text-muted-foreground leading-relaxed text-left">You pour time, money, and heart into building your business, yet so much of that energy gets burned getting new clients' through the door. They showed interest but life gets in their way, and the spark disappears.</p>
             <p className="text-xl text-muted-foreground leading-relaxed text-left">
               At Lead Awaker, the belief is that your energy should go into what you excel at: delivering the quality service you already provide. The job here is to help you harness the power of attention.
             </p>
