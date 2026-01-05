@@ -62,9 +62,9 @@ export default function Chat3D() {
           
           {/* Chat Header */}
           <div className="p-4 flex items-center gap-3" style={{ backgroundColor: "#2563EB" }}>
-            <div className="rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ width: "44px", height: "44px", backgroundColor: "#6B6B6B" }} data-testid="chat-avatar">M</div>
+            <div className="rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ width: "44px", height: "44px", backgroundColor: "#6B6B6B" }} data-testid="chat-avatar">J</div>
             <div>
-              <h3 className="text-white font-medium text-sm" data-testid="chat-name">Maria Silva</h3>
+              <h3 className="text-white font-medium text-sm" data-testid="chat-name">Jack Johnson</h3>
               <p className="text-xs flex items-center gap-1" style={{ color: "#FCC700" }} data-testid="chat-status">
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#FCC700" }} />
                 Online
@@ -82,7 +82,7 @@ export default function Chat3D() {
               <motion.div className="flex justify-end" custom={0} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-1">
                 <div className="flex flex-col items-end gap-1">
                   <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
-                    Hi Maria, this is Sophie from Peak Creative checking in. You reached out back in July about getting a new website that converts better for your coaching business. Did that timing work out, or should we circle back? 😊
+                    Hi Jack, this is Sophie from Peak Creative checking in. You reached out back in July about getting a new website that converts better for your coaching business. Did that timing work out, or should we circle back? 😊
                   </div>
                   <span className="text-xs text-slate-400 pr-2">14:35</span>
                 </div>
@@ -98,8 +98,8 @@ export default function Chat3D() {
                 </div>
               </motion.div>
 
-              {/* Message 3 - Maria */}
-              <motion.div className="flex justify-start" custom={2} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-maria-1">
+              {/* Message 3 - Jack */}
+              <motion.div className="flex justify-start" custom={2} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-jack-1">
                 <div className="flex flex-col items-start gap-1">
                   <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[95%] shadow-sm text-sm">
                     Hi Sophie! Yes sorry, summer was crazy with client launches. The website is definitely still something I need.
@@ -111,73 +111,17 @@ export default function Chat3D() {
               {/* Message 4 - Sophie */}
               <motion.div className="flex justify-end" custom={3} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-3">
                 <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>No worries at all Maria, I totally get it! Quick question: what was the main blocker that kept it on hold? (Budget, timeline, or just other fires?)</div>
+                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>No worries at all Jack, I totally get it! Quick question: what was the main blocker that kept it on hold? (Budget, timeline, or just other fires?)</div>
                   <span className="text-xs text-slate-400 pr-2">15:03</span>
                 </div>
               </motion.div>
 
-              {/* Lead Engaged Divider */}
-              <motion.div 
-                className="flex items-center justify-center gap-4 py-2"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 4 }}
-              >
-                <div className="h-[1px] flex-grow bg-slate-200" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">--- Lead Engaged ---</span>
-                <div className="h-[1px] flex-grow bg-slate-200" />
-              </motion.div>
-
-              {/* Message 5 - Maria */}
-              <motion.div className="flex justify-start" custom={5} initial="hidden" animate="visible" variants={messageVariants} data-testid="message-maria-2">
-                <div className="flex flex-col items-start gap-1">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[95%] shadow-sm text-sm">
-                    Honestly a bit of all three. I need something that looks pro but doesn't take forever or cost a fortune.
-                  </div>
-                  <span className="text-xs text-slate-400 pl-2">15:06</span>
-                </div>
-              </motion.div>
-
-              {/* Message 6 - Sophie */}
-              <motion.div className="flex justify-end" custom={6} initial="hidden" animate="visible" variants={messageVariants} data-testid="message-sophie-4">
-                <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
-                    Perfect, that's exactly what we specialize in. We've since added templates that cut delivery from 8 weeks to 3 while keeping the custom feel. Want me to send over 3 options that match your coaching niche with rough timelines and pricing? Or hop on a quick 15-min call tomorrow to walk through?
-                  </div>
-                  <span className="text-xs text-slate-400 pr-2">15:08</span>
-                </div>
-              </motion.div>
-
-              {/* Message 7 - Maria */}
-              <motion.div className="flex justify-start" custom={7} initial="hidden" animate="visible" variants={messageVariants} data-testid="message-maria-3">
-                <div className="flex flex-col items-start gap-1">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[95%] shadow-sm text-sm">
-                    The 15-min call tomorrow works great! What times do you have?
-                  </div>
-                  <span className="text-xs text-slate-400 pl-2">15:09</span>
-                </div>
-              </motion.div>
-
-              {/* Appointment Confirmed Divider */}
-              <motion.div 
-                className="flex items-center justify-center gap-4 py-2"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 8 }}
-              >
-                <div className="h-[1px] flex-grow bg-green-200" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-green-500">--- Appointment Confirmed ---</span>
-                <div className="h-[1px] flex-grow bg-green-200" />
-              </motion.div>
-
-              {/* Message 8 - Sophie */}
-              <motion.div className="flex justify-end" custom={9} initial="hidden" animate="visible" variants={messageVariants} data-testid="message-sophie-5">
-                <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
-                    Awesome! Here's my Calendly for tomorrow: [link]<br/>
-                    I'll send a recap of our chat there too so you have it handy. Talk soon Maria! 🚀
-                  </div>
-                  <span className="text-xs text-slate-400 pr-2">15:10</span>
+              {/* Typing Indicator */}
+              <motion.div className="flex justify-start" custom={4} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-typing">
+                <div className="bg-slate-200 text-slate-500 rounded-full px-4 py-2 shadow-sm flex items-center justify-center gap-2">
+                  <motion.span className="text-4xl font-black" animate={{ y: [0, -8, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0 }}>·</motion.span>
+                  <motion.span className="text-4xl font-black" animate={{ y: [0, -8, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.2 }}>·</motion.span>
+                  <motion.span className="text-4xl font-black" animate={{ y: [0, -8, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.4 }}>·</motion.span>
                 </div>
               </motion.div>
             </div>
