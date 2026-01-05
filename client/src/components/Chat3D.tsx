@@ -155,6 +155,16 @@ export default function Chat3D() {
                 </div>
               </motion.div>
 
+              {/* Message 3 - Jack */}
+              <motion.div className="flex justify-start" custom={2} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-jack-1">
+                <div className="flex flex-col items-start gap-1">
+                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[95%] shadow-sm text-sm">
+                    Hi Sophie! Yes sorry, summer was crazy with client launches. The website is definitely still something I need.
+                  </div>
+                  <span className="text-xs text-slate-400 pl-2">15:02</span>
+                </div>
+              </motion.div>
+
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
@@ -162,7 +172,7 @@ export default function Chat3D() {
                 className="flex flex-col items-center gap-2 py-2"
               >
                 <div className="h-[1px] w-full bg-slate-200" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Replied</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Follow up sent</span>
               </motion.div>
 
               {/* Message 4 - Sophie */}
