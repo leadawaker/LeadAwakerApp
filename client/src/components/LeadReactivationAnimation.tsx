@@ -95,6 +95,25 @@ const LeadReactivationAnimation = () => {
     });
   }, [hasStarted]);
 
+  const interpolateColor = (c1: {r: number, g: number, b: number}, c2: {r: number, g: number, b: number}, factor: number) => {
+    return {
+      r: Math.round(c1.r + (c2.r - c1.r) * factor),
+      g: Math.round(c1.g + (c2.g - c1.g) * factor),
+      b: Math.round(c1.b + (c2.b - c1.b) * factor),
+    };
+  };
+
+  const startC1 = { r: 241, g: 245, b: 249 };
+  const startC2 = { r: 255, g: 255, b: 255 };
+  const activeC1 = { r: 252, g: 211, b: 77 };
+  const activeC2 = { r: 251, g: 146, b: 60 };
+  
+  const factor = Math.min(brightness / 100, 1);
+  const currentC1 = interpolateColor(startC1, activeC1, factor);
+  const currentC2 = interpolateColor(startC2, activeC2, factor);
+  
+  const isWordHighlight = brightness >= 100 || hasReachedEnd;
+
   return (
     <div 
       ref={containerRef}
@@ -117,10 +136,6 @@ const LeadReactivationAnimation = () => {
             key={cursor.id} 
             startX={cursor.startX} 
             startY={cursor.startY}
-            arrowX={arrowX}
-            arrowY={arrowY}
-            handX={handX}
-            handY={handY}
             onHover={(isClicking) => {
               setActiveClickCount(prev => isClicking ? prev + 1 : Math.max(0, prev - 1));
             }}
@@ -208,7 +223,7 @@ const LeadReactivationAnimation = () => {
   );
 };
 
-const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, arrowX: number, arrowY: number, handX: number, handY: number, onHover?: (isClicking: boolean) => void }) => {
+const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, onHover?: (isClicking: boolean) => void }) => {
   const [phase, setPhase] = useState<'idle' | 'moving' | 'hovering' | 'clicking' | 'disappearing'>('idle');
   const [buttonScale, setButtonScale] = useState(1);
   const [offsets] = useState(() => ({
