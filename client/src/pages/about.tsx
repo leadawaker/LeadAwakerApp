@@ -121,43 +121,57 @@ export default function About() {
         </motion.div>
 
         {/* 2. Meet the Founder */}
-        <div className="grid md:grid-cols-3 gap-12 items-start mb-20">
+        <div className="grid md:grid-cols-5 gap-8 items-center max-w-4xl mx-auto mb-20">
+          {/* Left: Logo */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="md:col-span-1 text-center sticky top-32"
+            className="md:col-span-2 flex flex-col items-center"
           >
-            <div className="flex justify-center mb-6">
-              <AnimatedLogo3D />
-            </div>
-            <h2 className="text-2xl font-bold">Gabriel Fronza</h2>
-            <p className="text-muted-foreground">Founder & Tech Lead</p>
+            <AnimatedLogo3D />
+            <h3 className="text-xl font-bold mt-4">Gabriel Fronza</h3>
+            <p className="text-sm text-muted-foreground">Founder</p>
           </motion.div>
 
-          <div className="md:col-span-2 grid sm:grid-cols-2 gap-4">
-            {sections.map((section, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-card p-5 rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="mb-4 bg-primary/10 w-fit p-2 rounded-lg">{section.icon}</div>
-                <h3 className="text-lg font-bold mb-3 leading-tight">{section.title}</h3>
-                <ul className="space-y-2">
-                  {section.items.map((item, idx) => (
-                    <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2 leading-relaxed">
-                      <span className="text-primary mt-1 flex-shrink-0">•</span>
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            ))}
-          </div>
+          {/* Right: Short story */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="md:col-span-3 space-y-4"
+          >
+            <p className="text-base text-muted-foreground leading-relaxed">
+              10+ years building production software, 5 years obsessing over data and automation systems, 4 years running a business with his wife.
+            </p>
+            <p className="text-base text-muted-foreground leading-relaxed">
+              Lead Awaker exists because Gabriel kept seeing the same problem: businesses stuck buying more ads instead of waking up the leads they already paid for.
+            </p>
+          </motion.div>
+        </div>
+
+        <div className="md:grid-cols-2 grid sm:grid-cols-2 gap-4 mb-20">
+          {sections.map((section, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="bg-card p-5 rounded-2xl border border-border shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="mb-4 bg-primary/10 w-fit p-2 rounded-lg">{section.icon}</div>
+              <h3 className="text-lg font-bold mb-3 leading-tight">{section.title}</h3>
+              <ul className="space-y-2">
+                {section.items.map((item, idx) => (
+                  <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2 leading-relaxed">
+                    <span className="text-primary mt-1 flex-shrink-0">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          ))}
         </div>
 
         <div className="max-w-4xl mx-auto">
