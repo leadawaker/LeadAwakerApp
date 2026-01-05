@@ -17,6 +17,7 @@ const LeadReactivationAnimation = () => {
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
   const [forceWhite, setForceWhite] = useState(false);
   const [clickScale, setClickScale] = useState(0);
+  const [sparkleKey, setSparkleKey] = useState(0);
 
   useEffect(() => {
     if (brightness > 80) {
@@ -114,10 +115,10 @@ const LeadReactivationAnimation = () => {
       <style>{`
         @keyframes sparkle {
           0%, 100% { transform: scale(0); opacity: 0; }
-          50% { transform: scale(var(--s, 1)); opacity: 1; }
+          20%, 80% { transform: scale(var(--s, 1)); opacity: 1; }
         }
         .animate-sparkle {
-          animation: sparkle 0.75s both;
+          animation: sparkle 1.5s both;
         }
       `}</style>
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none mix-blend-multiply"></div>
@@ -180,6 +181,12 @@ const LeadReactivationAnimation = () => {
             repeatDelay: 8.5,
             ease: "easeInOut"
           }}
+          onUpdate={(latest: any) => {
+            const left = parseFloat(latest.left);
+            if (left > 0 && left < 10) {
+              setSparkleKey(prev => prev + 1);
+            }
+          }}
           className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 pointer-events-none z-20"
         />
 
@@ -188,7 +195,7 @@ const LeadReactivationAnimation = () => {
 
       {(brightness >= 100 || hasReachedEnd) && (
         <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
-          <div className="relative w-[400px] h-[150px]">
+          <div className="relative w-[400px] h-[150px]" key={sparkleKey}>
             {[
               { x: 0, y: 20, d: 0 },
               { x: 15, y: 80, d: 0.2 },
