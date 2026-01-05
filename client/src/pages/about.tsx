@@ -121,33 +121,37 @@ export default function About() {
         </motion.div>
 
         {/* 2. Meet the Founder */}
-        <div className="grid md:grid-cols-5 gap-8 items-center max-w-4xl mx-auto mb-20">
-          {/* Left: Logo */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="md:col-span-2 flex flex-col items-center"
-          >
-            <AnimatedLogo3D />
-            <h3 className="text-xl font-bold mt-4">Gabriel Fronza</h3>
-            <p className="text-sm text-muted-foreground">Founder</p>
-          </motion.div>
+        <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] mr-[50vw] bg-[#E5E7EB] py-20 mb-20">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="grid md:grid-cols-5 gap-8 items-center max-w-4xl mx-auto">
+              {/* Left: Logo */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="md:col-span-2 flex flex-col items-center"
+              >
+                <AnimatedLogo3D />
+                <h3 className="text-xl font-bold mt-4">Gabriel Fronza</h3>
+                <p className="text-sm text-muted-foreground">Founder</p>
+              </motion.div>
 
-          {/* Right: Short story */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="md:col-span-3 space-y-4"
-          >
-            <p className="text-base text-muted-foreground leading-relaxed">
-              10+ years building production software, 5 years obsessing over data and automation systems, 4 years running a business with his wife.
-            </p>
-            <p className="text-base text-muted-foreground leading-relaxed">
-              Lead Awaker exists because Gabriel kept seeing the same problem: businesses stuck buying more ads instead of waking up the leads they already paid for.
-            </p>
-          </motion.div>
+              {/* Right: Short story */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="md:col-span-3 space-y-4"
+              >
+                <p className="text-base text-gray-700 font-medium leading-relaxed">
+                  10+ years building production software, 5 years obsessing over data and automation systems, 4 years running a business with his wife.
+                </p>
+                <p className="text-base text-gray-600 leading-relaxed">
+                  Lead Awaker exists because Gabriel kept seeing the same problem: businesses stuck buying more ads instead of waking up the leads they already paid for.
+                </p>
+              </motion.div>
+            </div>
+          </div>
         </div>
 
         <div className="md:grid-cols-2 grid sm:grid-cols-2 gap-4 mb-20">
