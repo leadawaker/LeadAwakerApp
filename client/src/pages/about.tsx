@@ -1,8 +1,36 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Users, Rocket, Target, Code2, TrendingUp, Briefcase, ChevronDown } from "lucide-react";
 import AnimatedLogo3D from "@/components/AnimatedLogo3D";
 import LeadReactivationAnimation from "@/components/LeadReactivationAnimation";
+
+const CyclingWord = ({ words, duration = 3000 }: { words: string[], duration?: number }) => {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % words.length);
+    }, duration);
+    return () => clearInterval(timer);
+  }, [words, duration]);
+
+  return (
+    <span className="inline-flex min-w-[8rem]">
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={words[index]}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.4 }}
+          className="text-primary font-bold"
+        >
+          {words[index]}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+};
 
 export default function About() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
@@ -87,7 +115,7 @@ export default function About() {
               At Lead Awaker, the belief is that your energy should go into what you excel at: delivering the quality service you already provide. The job here is to help you harness the power of attention.
             </p>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              For your brand to mean something valuable to a lead, that person has to be treated as an individual first, not as a line in a spreadsheet. When they are approached in a way that respects their timing, context, and preferences, they feel understood, and when they feel understood, they are finally awake to understand you.
+              For your brand to mean something valuable to a lead, that person has to be treated as an individual first, not as a line in a spreadsheet. When they are approached in a way that respects their timing, context, and preferences, they feel understood, and when they feel understood, they are finally awake to understand <CyclingWord words={["you", "your company", "your brand", "your services", "your products", "your story", "your values"]} />.
             </p>
           </div>
         </motion.div>
