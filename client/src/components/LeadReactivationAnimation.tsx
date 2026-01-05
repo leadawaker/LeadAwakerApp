@@ -147,7 +147,17 @@
             const hoverBrightnessBoost = isButtonHovered && (brightness >= 100 || hasReachedEnd) ? 1.15 : 1;
             const hoverScaleBoost = isButtonHovered && (brightness >= 100 || hasReachedEnd) ? 1.1 : 1;
 
-            const isWordHighlight = brightness >= 100 || hasReachedEnd || forceWhite;
+            const [isClicking, setIsClicking] = useState(false);
+
+            useEffect(() => {
+              if (activeClickCount > 0) {
+                setIsClicking(true);
+                const timer = setTimeout(() => setIsClicking(false), 150);
+                return () => clearTimeout(timer);
+              }
+            }, [activeClickCount]);
+
+            const isWordHighlight = isClicking || brightness >= 100 || hasReachedEnd || forceWhite;
 
             return (
               <div
