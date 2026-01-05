@@ -97,6 +97,16 @@ export default function Chat3D() {
                 </div>
               </motion.div>
 
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                className="flex flex-col items-center gap-2 py-2"
+              >
+                <div className="h-[1px] w-full bg-slate-200" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Engaged</span>
+              </motion.div>
+
               {/* Message 2 - Sophie */}
               <motion.div className="flex justify-end" custom={1} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-2">
                 <div className="flex flex-col items-end gap-1">
@@ -107,6 +117,16 @@ export default function Chat3D() {
                 </div>
               </motion.div>
 
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                className="flex flex-col items-center gap-2 py-2"
+              >
+                <div className="h-[1px] w-full bg-slate-200" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Re-Engaged</span>
+              </motion.div>
+
               {/* Message 3 - Jack */}
               <motion.div className="flex justify-start" custom={2} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-jack-1">
                 <div className="flex flex-col items-start gap-1">
@@ -115,6 +135,16 @@ export default function Chat3D() {
                   </div>
                   <span className="text-xs text-slate-400 pl-2">15:02</span>
                 </div>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                className="flex flex-col items-center gap-2 py-2"
+              >
+                <div className="h-[1px] w-full bg-slate-200" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Replied</span>
               </motion.div>
 
               {/* Message 4 - Sophie */}
@@ -152,28 +182,40 @@ export default function Chat3D() {
                     </motion.div>
                     
                     {engagementMessages.map((msg, idx) => (
-                      <motion.div 
-                        key={idx}
-                        className={`flex ${msg.type === 'sophie' ? 'justify-end' : 'justify-start'}`}
-                        custom={idx}
-                        initial="hidden"
-                        animate="visible"
-                        variants={messageVariants}
-                      >
-                        <div className={`flex flex-col ${msg.type === 'sophie' ? 'items-end' : 'items-start'} gap-1`}>
-                          <div 
-                            className={`rounded-2xl px-4 py-3 max-w-[95%] shadow-sm text-sm ${
-                              msg.type === 'sophie' 
-                                ? 'text-white rounded-tr-sm' 
-                                : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'
-                            }`}
-                            style={msg.type === 'sophie' ? { backgroundColor: "#2563EB" } : {}}
-                          >
-                            {msg.text}
+                      <div key={idx} className="space-y-4">
+                        <motion.div 
+                          className={`flex ${msg.type === 'sophie' ? 'justify-end' : 'justify-start'}`}
+                          custom={idx}
+                          initial="hidden"
+                          animate="visible"
+                          variants={messageVariants}
+                        >
+                          <div className={`flex flex-col ${msg.type === 'sophie' ? 'items-end' : 'items-start'} gap-1`}>
+                            <div 
+                              className={`rounded-2xl px-4 py-3 max-w-[95%] shadow-sm text-sm ${
+                                msg.type === 'sophie' 
+                                  ? 'text-white rounded-tr-sm' 
+                                  : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'
+                              }`}
+                              style={msg.type === 'sophie' ? { backgroundColor: "#2563EB" } : {}}
+                            >
+                              {msg.text}
+                            </div>
+                            <span className={`text-xs text-slate-400 ${msg.type === 'sophie' ? 'pr-2' : 'pl-2'}`}>{msg.time}</span>
                           </div>
-                          <span className={`text-xs text-slate-400 ${msg.type === 'sophie' ? 'pr-2' : 'pl-2'}`}>{msg.time}</span>
-                        </div>
-                      </motion.div>
+                        </motion.div>
+
+                        {msg.text.includes("15-min call tomorrow") && (
+                          <motion.div 
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="flex flex-col items-center gap-2 py-2"
+                          >
+                            <div className="h-[1px] w-full bg-slate-200" />
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Qualified</span>
+                          </motion.div>
+                        )}
+                      </div>
                     ))}
                     
                     <motion.div 
@@ -183,7 +225,10 @@ export default function Chat3D() {
                       className="flex flex-col items-center gap-2 py-4"
                     >
                       <div className="h-[1px] w-full bg-slate-200" />
-                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary bg-slate-50 px-3 -mt-3.5">Call Booked 🗓️</span>
+                      <div className="flex flex-col items-center bg-slate-50 px-3 -mt-3.5">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Call Booked 🗓️</span>
+                        <span className="text-[8px] font-medium text-slate-400 uppercase tracking-widest mt-1">Sent to Client</span>
+                      </div>
                     </motion.div>
                   </>
                 )}
