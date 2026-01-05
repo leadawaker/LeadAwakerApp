@@ -53,7 +53,7 @@ export function Navbar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 font-medium h-9 px-2 hover:opacity-80 transition-opacity focus:outline-none" data-testid="button-language-selector">
-                <img src={currentLang.flag} alt={currentLang.code} className="h-4 w-auto rounded-sm object-contain shadow-sm" />
+                <img src={currentLang.flag} alt={currentLang.code} className="h-4 w-5 rounded-sm object-cover shadow-sm" />
                 <span className="text-sm font-semibold tracking-wide text-muted-foreground">{currentLang.code}</span>
               </button>
             </DropdownMenuTrigger>
@@ -66,7 +66,7 @@ export function Navbar() {
                   data-testid={`menu-item-lang-${lang.code}`}
                 >
                   <span className="flex items-center gap-3">
-                    <img src={lang.flag} alt={lang.label} className="h-4 w-auto rounded-sm object-contain shadow-sm" />
+                    <img src={lang.flag} alt={lang.label} className="h-4 w-5 rounded-sm object-cover shadow-sm" />
                     {lang.label}
                   </span>
                   {currentLang.code === lang.code && (
