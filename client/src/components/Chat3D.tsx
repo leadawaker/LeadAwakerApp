@@ -164,7 +164,7 @@ export default function Chat3D() {
                     exit={{ opacity: 0, scale: 0.95 }}
                     className="relative flex justify-center items-center pt-4 pb-2"
                   >
-                    <div className="absolute left-0 flex items-center gap-1 bg-white border border-slate-100 px-3 py-3 rounded-2xl rounded-bl-sm shadow-sm scale-90">
+                    <div className="absolute left-0 flex items-center gap-1 bg-white border border-slate-100 px-3 py-4 rounded-2xl rounded-bl-sm shadow-sm scale-90">
                       <motion.span 
                         animate={{ opacity: [0.4, 1, 0.4] }} 
                         transition={{ repeat: Infinity, duration: 1.4, delay: 0 }}
