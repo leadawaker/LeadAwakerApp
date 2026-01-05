@@ -11,8 +11,8 @@ import {
 
 const languages = [
   { code: "EN", label: "ENGLISH", flag: "🇬🇧" },
-  { code: "PT", label: "PORTUGUESE", flag: "🇧🇷" },
-  { code: "NL", label: "DUTCH", flag: "🇳🇱" },
+  { code: "PT", label: "PORTUGUÊS", flag: "🇧🇷" },
+  { code: "NL", label: "NEDERLANDS", flag: "🇳🇱" },
 ];
 
 export function Navbar() {
@@ -89,7 +89,7 @@ export function Navbar() {
             </Link>
           ))}
           <Link href="/login">
-            <Button variant="outline" className="font-heading font-semibold">
+            <Button variant="ghost" className="font-heading font-semibold">
               Login
             </Button>
           </Link>
@@ -123,7 +123,7 @@ export function Navbar() {
             </Link>
           ))}
           <Link href="/login" onClick={() => setIsOpen(false)}>
-            <Button variant="outline" className="w-full mt-2">
+            <Button variant="ghost" className="w-full mt-2">
               Login
             </Button>
           </Link>
