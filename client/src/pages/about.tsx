@@ -121,34 +121,63 @@ export default function About() {
         </motion.div>
 
         {/* 2. Meet the Founder */}
-        <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] mr-[50vw] bg-[#E5E7EB] py-20 mb-20">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="grid md:grid-cols-5 gap-8 items-center max-w-4xl mx-auto">
-              {/* Left: Logo */}
+        <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] mr-[50vw] bg-[#E5E7EB] py-24 mb-20 overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+          <div className="container mx-auto px-4 md:px-6 relative">
+            <div className="grid md:grid-cols-5 gap-12 items-center max-w-5xl mx-auto">
+              {/* Left: Logo/Photo Card */}
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                className="md:col-span-2 flex flex-col items-center"
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="md:col-span-2"
               >
-                <AnimatedLogo3D />
-                <h3 className="text-xl font-bold mt-4">Gabriel Fronza</h3>
-                <p className="text-sm text-muted-foreground">Founder</p>
+                <div className="relative group">
+                  <div className="absolute -inset-4 bg-primary/5 rounded-[2rem] blur-2xl group-hover:bg-primary/10 transition-colors duration-500" />
+                  <div className="relative bg-white/40 backdrop-blur-sm p-8 rounded-[2rem] border border-white/50 shadow-xl flex flex-col items-center">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
+                      <AnimatedLogo3D />
+                    </div>
+                    <div className="text-center mt-8 space-y-1">
+                      <h3 className="text-2xl font-bold tracking-tight text-gray-900">Gabriel Fronza</h3>
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="h-[1px] w-4 bg-primary/50" />
+                        <p className="text-sm font-semibold uppercase tracking-wider text-primary">Founder</p>
+                        <div className="h-[1px] w-4 bg-primary/50" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </motion.div>
 
               {/* Right: Short story */}
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: 30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                className="md:col-span-3 space-y-4"
+                transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+                className="md:col-span-3 space-y-8"
               >
-                <p className="text-base text-gray-700 font-medium leading-relaxed">
-                  10+ years building production software, 5 years obsessing over data and automation systems, 4 years running a business with his wife.
-                </p>
-                <p className="text-base text-gray-600 leading-relaxed">
-                  Lead Awaker exists because Gabriel kept seeing the same problem: businesses stuck buying more ads instead of waking up the leads they already paid for.
-                </p>
+                <div className="space-y-6">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/50 border border-white/80 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                    The Mission
+                  </div>
+                  <p className="text-xl text-gray-800 font-medium leading-relaxed italic border-l-4 border-primary/30 pl-6">
+                    "10+ years building production software, 5 years obsessing over data and automation systems, 4 years running a business with his wife."
+                  </p>
+                  <p className="text-lg text-gray-600 leading-relaxed font-light">
+                    Lead Awaker exists because Gabriel kept seeing the same problem: businesses stuck buying more ads instead of <span className="text-gray-900 font-semibold">waking up</span> the leads they already paid for.
+                  </p>
+                </div>
+                
+                <div className="pt-4 flex gap-4">
+                  <div className="h-1 w-12 bg-primary rounded-full" />
+                  <div className="h-1 w-4 bg-primary/30 rounded-full" />
+                  <div className="h-1 w-2 bg-primary/10 rounded-full" />
+                </div>
               </motion.div>
             </div>
           </div>
