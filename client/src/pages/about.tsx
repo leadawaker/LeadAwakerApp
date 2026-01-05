@@ -77,7 +77,7 @@ export default function About() {
             About Lead Awaker
           </p>
           <h1 className="text-4xl md:text-6xl font-bold mb-8 tracking-tight">
-            Our Mission
+            What we are about
           </h1>
           
           <div className="mb-12">
