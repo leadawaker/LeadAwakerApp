@@ -99,22 +99,22 @@ export default function About() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-4xl mx-auto text-center mb-16"
+          className="max-w-4xl mx-auto mb-16"
         >
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mt-[10px] mb-0">What we care about</h1>
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mt-[10px] mb-0 text-left">What we care about</h1>
           
-          <div className="mb-0 p-0">
+          <div className="mb-0 p-0 flex justify-center">
             <LeadReactivationAnimation />
           </div>
 
           <div className="space-y-6 w-full text-left mt-0 p-0">
-            <p className="text-xl text-muted-foreground leading-relaxed">
+            <p className="text-xl text-muted-foreground leading-relaxed text-left">
               You spend time, money, and effort building your business, yet so much of that energy goes into just getting your clients' attention back. They showed interest, then life got in the way.
             </p>
-            <p className="text-xl text-muted-foreground leading-relaxed">
+            <p className="text-xl text-muted-foreground leading-relaxed text-left">
               At Lead Awaker, the belief is that your energy should go into what you excel at: delivering the quality service you already provide. The job here is to help you harness the power of attention.
             </p>
-            <p className="text-xl text-muted-foreground leading-relaxed">
+            <p className="text-xl text-muted-foreground leading-relaxed text-left">
               For your brand to mean something valuable to a lead, that person has to be treated as an individual first, not as a line in a spreadsheet. When they are approached in a way that respects their timing, context, and preferences, they feel understood, and when they feel understood, they are finally awake to understand <span className="text-primary font-bold">you</span><CyclingWord words={[".", "r company.", "r brand.", "r services.", "r products.", "r story.", "r values."]} />
             </p>
           </div>
@@ -193,7 +193,7 @@ export default function About() {
           className="max-w-3xl mx-auto mb-24"
         >
           <div className="bg-card/50 border border-border rounded-3xl p-8 md:p-12">
-            <h2 className="text-3xl font-bold mb-10 text-center">Frequently Asked Questions</h2>
+            <h2 className="text-3xl font-bold mb-10 text-left">Frequently Asked Questions</h2>
             <div className="space-y-4">
               {faqs.map((faq, i) => (
                 <div
