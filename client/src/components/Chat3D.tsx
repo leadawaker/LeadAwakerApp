@@ -232,6 +232,17 @@ export default function Chat3D() {
                               </div>
                             </motion.div>
 
+                            {msg.text.includes("Honestly a bit of all three.") && (
+                              <motion.div 
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="flex flex-col items-center gap-2 py-2"
+                              >
+                                <div className="h-[1px] w-full bg-slate-200" />
+                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Replied</span>
+                              </motion.div>
+                            )}
+
                             {msg.text.includes("The 15-min call tomorrow works great!") && (
                               <motion.div 
                                 initial={{ opacity: 0, scale: 0.9 }}
