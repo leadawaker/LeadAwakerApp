@@ -69,41 +69,39 @@
             useEffect(() => {
               if (!hasStarted) return;
 
-              // UPDATED: Arrows spawn from container edges (0-10% or 90-100%)
+              // UPDATED: Arrows spawn from OUTSIDE container edges (-15% or 115%)
               const cursorSequence: CursorData[] = [
-                { delay: 500, startX: 5, startY: 5 },      // Top-left edge
-                { delay: 2000, startX: 95, startY: 8 },    // Top-right edge
-                { delay: 3500, startX: 2, startY: 92 },    // Bottom-left edge
-                { delay: 5000, startX: 88, startY: 3 },    // Top edge
-                { delay: 5300, startX: 98, startY: 15 },   // Right edge
-                { delay: 5600, startX: 3, startY: 48 },    // Left edge
-                { delay: 5900, startX: 92, startY: 62 },   // Right edge
-                { delay: 6200, startX: 8, startY: 98 },    // Bottom edge
-                { delay: 6400, startX: 95, startY: 22 },   // Right edge
-                { delay: 6600, startX: 1, startY: 38 },    // Left edge
-                { delay: 6800, startX: 97, startY: 47 },   // Right edge
-                { delay: 7000, startX: 4, startY: 68 },    // Left edge
-                { delay: 7100, startX: 93, startY: 78 },   // Right edge
-                { delay: 7200, startX: 7, startY: 32 },    // Left edge
-                { delay: 7300, startX: 89, startY: 87 },   // Right edge
-                { delay: 7400, startX: 3, startY: 53 },    // Left edge
-                { delay: 7500, startX: 96, startY: 18 },   // Right edge
-                { delay: 7600, startX: 52, startY: 99 },   // Bottom edge
-                { delay: 7700, startX: 12, startY: 23 },   // Left edge
-                { delay: 7800, startX: 91, startY: 42 },   // Right edge
-                { delay: 7900, startX: 6, startY: 13 },    // Left edge
-                { delay: 8000, startX: 94, startY: 72 },   // Right edge
-                { delay: 8100, startX: 2, startY: 88 },    // Left edge
-                { delay: 8200, startX: 98, startY: 28 },   // Right edge
-                { delay: 8300, startX: 42, startY: 4 },    // Top edge
-                { delay: 8400, startX: 72, startY: 52 },   // Right edge
-                { delay: 8500, startX: 28, startY: 35 },   // Left edge
-                { delay: 8600, startX: 57, startY: 82 },   // Right edge
-                { delay: 8700, startX: 8, startY: 67 },    // Left edge
-                { delay: 8800, startX: 99, startY: 57 },   // Right edge
-                { delay: 8900, startX: 48, startY: 43 },   // Bottom edge
-                { delay: 9000, startX: 67, startY: 22 },   // Right edge
-                { delay: 9100, startX: 20, startY: 77 }    // Left edge
+                { delay: 400, startX: -15, startY: -15 },   
+                { delay: 1600, startX: 115, startY: -10 },   
+                { delay: 2800, startX: -10, startY: 110 },   
+                { delay: 4000, startX: 50, startY: -15 },    
+                { delay: 4240, startX: 115, startY: 15 },   
+                { delay: 4480, startX: -15, startY: 50 },    
+                { delay: 4720, startX: 115, startY: 60 },   
+                { delay: 4960, startX: 10, startY: 115 },    
+                { delay: 5120, startX: 115, startY: 25 },   
+                { delay: 5280, startX: -15, startY: 40 },    
+                { delay: 5440, startX: 115, startY: 45 },   
+                { delay: 5600, startX: -15, startY: 65 },    
+                { delay: 5680, startX: 115, startY: 75 },   
+                { delay: 5760, startX: 50, startY: -15 },    
+                { delay: 5840, startX: 115, startY: 85 },   
+                { delay: 5920, startX: -15, startY: 55 },    
+                { delay: 6000, startX: 115, startY: 20 },   
+                { delay: 6080, startX: 50, startY: 115 },   
+                { delay: 6160, startX: -15, startY: 25 },   
+                { delay: 6240, startX: 115, startY: 40 },   
+                { delay: 6320, startX: 35, startY: -15 },   
+                { delay: 6400, startX: 115, startY: 70 },   
+                { delay: 6480, startX: -15, startY: 85 },   
+                { delay: 6560, startX: 115, startY: 30 },   
+                { delay: 6640, startX: 40, startY: 115 },   
+                { delay: 6720, startX: 115, startY: 50 },   
+                { delay: 6800, startX: -15, startY: 35 },   
+                { delay: 6880, startX: 55, startY: 115 },   
+                { delay: 6960, startX: -15, startY: 65 },   
+                { delay: 7040, startX: 115, startY: 55 },   
+                { delay: 7120, startX: 50, startY: 115 }    
               ];
 
               cursorSequence.forEach((cursor, index) => {
@@ -117,9 +115,9 @@
 
                     if (index === cursorSequence.length - 1) {
                       setHasReachedEnd(true);
-                      setTimeout(() => setAnimationComplete(true), 1500);
+                      setTimeout(() => setAnimationComplete(true), 1200);
                     }
-                  }, 1400);
+                  }, 1120);
                 }, cursor.delay);
               });
             }, [hasStarted]);
@@ -284,7 +282,6 @@
             );
           };
 
-          // Cursor component remains unchanged
           const Cursor = ({
             startX,
             startY,
@@ -309,7 +306,7 @@
             const [randomConfig] = useState(() => {
               const isFirstFew = Math.random() > 0.5;
               const isSlow = Math.random() < 5 / 30;
-              const baseDuration = 0.5 + Math.random() * 0.6;
+              const baseDuration = (0.5 + Math.random() * 0.6) * 1.5; // Slow down movement further
               const jitterMultiplier = isFirstFew ? 1.2 : 0.8;
               return {
                 jitterX:
@@ -441,7 +438,7 @@
                     phase === 'hovering' ||
                     phase === 'clicking' ||
                     phase === 'disappearing'
-                      ? `left ${randomConfig.duration}s cubic-bezier(0.34, 1.56, 0.64, 1), top ${randomConfig.duration}s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease-out`
+                      ? `left ${randomConfig.duration}s cubic-bezier(0.45, 0.05, 0.55, 0.95), top ${randomConfig.duration}s cubic-bezier(0.45, 0.05, 0.55, 0.95), opacity 0.2s ease-out`
                       : 'none'
                 }}
                 animate={{
