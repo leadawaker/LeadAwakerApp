@@ -142,7 +142,7 @@ export default function Chat3D() {
                 className="flex flex-col items-center gap-2 py-2"
               >
                 <div className="h-[1px] w-full bg-slate-200" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Follow up sent</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Re-engaged</span>
               </motion.div>
 
               {/* Message 3 - Jack */}
@@ -171,6 +171,16 @@ export default function Chat3D() {
                   <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>No worries at all Jack, I totally get it! Quick question: what was the main blocker that kept it on hold? (Budget, timeline, or just other fires?)</div>
                   <span className="text-xs text-slate-400 pr-2">15:03</span>
                 </div>
+              </motion.div>
+
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                className="flex flex-col items-center gap-2 py-2"
+              >
+                <div className="h-[1px] w-full bg-slate-200" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Engaged</span>
               </motion.div>
 
               <AnimatePresence>
