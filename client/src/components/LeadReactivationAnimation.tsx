@@ -152,7 +152,7 @@
             return (
               <div
                 ref={containerRef}
-                className="relative w-full h-[45vh] bg-white flex items-center justify-center overflow-hidden font-sans rounded-2xl border border-border shadow-sm mb-12"
+                className="relative w-full h-[32vh] flex items-center justify-center overflow-hidden font-sans mb-12"
               >
                 <style>{`
                   @keyframes sparkle {
