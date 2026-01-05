@@ -162,18 +162,14 @@ export default function About() {
                         <AnimatedLogo3D />
                       </div>
                     </div>
-                    <div className="flex-grow space-y-6">
+                    <div className="flex-grow space-y-4">
                       <div className="space-y-1">
                         <h3 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900">Gabriel B. Fronza</h3>
-                        <div className="flex items-center gap-2">
-                          <div className="h-[1px] w-4 bg-primary/50" />
-                          <p className="text-sm font-semibold uppercase tracking-wider text-primary">Founder</p>
-                          <div className="h-[1px] w-4 bg-primary/50" />
-                        </div>
+                        <p className="text-sm font-semibold uppercase tracking-wider text-primary">Founder</p>
                       </div>
                       
-                      <div className="space-y-6">
-                        <p className="text-gray-800 font-medium italic border-l-4 border-primary/30 pl-6 text-[19px]">"I first noticed it in my parents’ health clinic, and then everywhere else. Patients would book consultations, show real interest, then go quiet while the clinic kept paying for ads to get new ones."</p>
+                      <div className="space-y-4">
+                        <p className="text-gray-800 font-medium italic border-l-4 border-primary/30 pl-6 text-[19px] leading-snug">"I first noticed it in my parents’ health clinic, and then everywhere else. Patients would book consultations, show real interest, then go quiet while the clinic kept paying for ads to get new ones."</p>
                         <p className="text-lg text-gray-600 leading-relaxed font-light">Lead Awaker is the result of 10+ years building production software, 5 years obsessing over data and automation systems, 4 years running a business with wife Danique.</p>
                       </div>
                     </div>
