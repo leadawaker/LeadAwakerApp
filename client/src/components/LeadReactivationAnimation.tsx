@@ -522,25 +522,25 @@
                           }}
                         >
                           <path
-                            d="M12 -8 L6 -18"
+                            d="M12 -4 L9 -9"
                             stroke="#3b82f6"
-                            strokeWidth="4.5"
+                            strokeWidth="3.15"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             fill="none"
                           />
                           <path
-                            d="M21 -12 L21 -24"
+                            d="M21 -6 L21 -12"
                             stroke="#3b82f6"
-                            strokeWidth="4.5"
+                            strokeWidth="3.15"
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             fill="none"
                           />
                           <path
-                            d="M30 -8 L36 -18"
+                            d="M30 -4 L33 -9"
                             stroke="#3b82f6"
-                            strokeWidth="4.5"
+                            strokeWidth="3.15"
                             strokeLinecap="round"
                             fill="none"
                           />
