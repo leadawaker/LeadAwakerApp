@@ -82,7 +82,7 @@ export default function Chat3D() {
           </div>
 
           {/* Chat Messages */}
-          <div className="p-6 space-y-4 bg-slate-50 min-h-[480px] max-h-[550px] overflow-y-auto relative scrollbar-hide">
+          <div className="p-6 space-y-4 bg-slate-50 min-h-[580px] max-h-[650px] overflow-y-auto relative scrollbar-hide">
             {/* Overlay effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-slate-100/20 via-transparent to-slate-100/20 pointer-events-none" />
             
@@ -161,9 +161,9 @@ export default function Chat3D() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="flex justify-center items-center gap-4 pt-4"
+                    className="relative flex justify-center items-center pt-4 pb-2"
                   >
-                    <div className="flex items-center gap-1 bg-white border border-slate-100 px-3 py-2 rounded-2xl rounded-bl-sm shadow-sm">
+                    <div className="absolute left-0 flex items-center gap-1 bg-white border border-slate-100 px-3 py-2 rounded-2xl rounded-bl-sm shadow-sm scale-90">
                       <motion.span 
                         animate={{ opacity: [0.4, 1, 0.4] }} 
                         transition={{ repeat: Infinity, duration: 1.4, delay: 0 }}
@@ -182,7 +182,7 @@ export default function Chat3D() {
                     </div>
                     <button 
                       onClick={() => setShowEngagement(true)}
-                      className="bg-primary text-white px-6 py-2 rounded-full font-bold shadow-lg hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 text-sm"
+                      className="bg-primary text-white px-8 py-2.5 rounded-full font-bold shadow-lg hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 text-sm z-10"
                     >
                       Continue
                     </button>
