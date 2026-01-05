@@ -162,7 +162,7 @@
             return (
               <div
                 ref={containerRef}
-                className="relative w-full h-[32vh] flex items-center justify-center overflow-hidden font-sans mb-12"
+                className="relative w-full h-[32vh] flex items-center justify-center overflow-hidden font-sans mb-12 text-center"
               >
                 <style>{`
                   @keyframes sparkle {
@@ -173,9 +173,7 @@
                     animation: sparkle 0.75s both;
                   }
                 `}</style>
-
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none mix-blend-multiply" />
-
                 <AnimatePresence>
                   {cursors.map(cursor => (
                     <Cursor
@@ -190,7 +188,6 @@
                     />
                   ))}
                 </AnimatePresence>
-
                 <motion.button
                   id="lead-button"
                   initial={{ scale: 0.45, opacity: 0 }}
@@ -260,7 +257,6 @@
                     Your Brand
                   </span>
                 </motion.button>
-
                 {(brightness >= 100 || hasReachedEnd) && showSparkles && (
                   <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
                     <div className="relative w-[400px] h-[150px]">
