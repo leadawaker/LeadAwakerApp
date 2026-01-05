@@ -52,7 +52,8 @@ export default function Chat3D() {
         <div style={{ 
           transform: `rotateY(${Math.min(-10.5 + scrollY * 0.05, 0)}deg) rotateX(${Math.max(10.5 - scrollY * 0.05, 0)}deg)`, 
           transformStyle: "preserve-3d",
-          transition: "transform 0.1s ease-out"
+          transition: "transform 0.1s ease-out",
+          marginTop: "20px"
         }}>
         {/* The Chat Card */}
         <div 
@@ -82,7 +83,7 @@ export default function Chat3D() {
           </div>
 
           {/* Chat Messages */}
-          <div className="p-6 space-y-4 bg-slate-50 min-h-[700px] max-h-[800px] overflow-y-auto relative scrollbar-hide">
+          <div className="p-6 pb-2 space-y-4 bg-slate-50 min-h-[700px] max-h-[800px] overflow-y-auto relative scrollbar-hide">
             {/* Overlay effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-slate-100/20 via-transparent to-slate-100/20 pointer-events-none" />
             
@@ -182,7 +183,7 @@ export default function Chat3D() {
                     </div>
                     <button 
                       onClick={() => setShowEngagement(true)}
-                      className="bg-primary text-white px-8 py-2.5 rounded-full font-bold shadow-lg hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 text-sm z-10"
+                      className="bg-primary text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 text-sm z-10"
                     >
                       Continue
                     </button>
