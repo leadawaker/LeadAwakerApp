@@ -10,9 +10,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const languages = [
-  { code: "EN", label: "ENGLISH", flag: "https://flagcdn.com/w40/gb.png" },
-  { code: "PT", label: "PORTUGUÊS", flag: "https://flagcdn.com/w40/br.png" },
-  { code: "NL", label: "NEDERLANDS", flag: "https://flagcdn.com/w40/nl.png" },
+  { code: "EN", label: "English", flag: "https://flagcdn.com/w40/gb.png" },
+  { code: "PT", label: "Português", flag: "https://flagcdn.com/w40/br.png" },
+  { code: "NL", label: "Nederlands", flag: "https://flagcdn.com/w40/nl.png" },
 ];
 
 export function Navbar() {
