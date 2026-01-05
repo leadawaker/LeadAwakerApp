@@ -211,7 +211,7 @@ export default function About() {
           viewport={{ once: true }}
           className="max-w-4xl mx-auto mb-24"
         >
-          <div className="bg-card/50 border border-border rounded-3xl p-8 md:p-12">
+          <div className="bg-card/50 rounded-3xl p-8 md:p-12">
             <h2 className="text-3xl font-bold mb-10 text-left">Frequently Asked Questions</h2>
             <div className="space-y-4">
               {faqs.map((faq, i) => (
