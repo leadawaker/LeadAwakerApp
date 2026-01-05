@@ -93,9 +93,9 @@ export default function Home() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 relative z-10">
                 <Link href="/book-demo">
-                  <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 text-white transition-all">
+                  <Button size="lg" className="h-16 px-10 text-xl rounded-full shadow-xl shadow-primary/20 bg-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 text-white transition-all scale-110">
                     Book a Call
-                    <ArrowRight className="ml-2 w-5 h-5" />
+                    <ArrowRight className="ml-2 w-6 h-6" />
                   </Button>
                 </Link>
                 <Link href="/services">
