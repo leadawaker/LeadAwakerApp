@@ -523,7 +523,7 @@
                         >
                           <path
                             d="M12 -8 L6 -18"
-                            stroke="#fbbf24"
+                            stroke="#3b82f6"
                             strokeWidth="4.5"
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -531,7 +531,7 @@
                           />
                           <path
                             d="M21 -12 L21 -24"
-                            stroke="#fbbf24"
+                            stroke="#3b82f6"
                             strokeWidth="4.5"
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -539,7 +539,7 @@
                           />
                           <path
                             d="M30 -8 L36 -18"
-                            stroke="#fbbf24"
+                            stroke="#3b82f6"
                             strokeWidth="4.5"
                             strokeLinecap="round"
                             fill="none"
