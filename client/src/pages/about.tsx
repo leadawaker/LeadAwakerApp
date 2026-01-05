@@ -103,11 +103,11 @@ export default function About() {
         >
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight mt-[10px] mb-[10px]">What we care about</h1>
           
-          <div className="mb-12">
+          <div className="mb-0">
             <LeadReactivationAnimation />
           </div>
 
-          <div className="space-y-6 max-w-4xl mx-auto text-left">
+          <div className="space-y-6 max-w-4xl mx-auto text-left mt-0">
             <p className="text-xl text-muted-foreground leading-relaxed">
               You spend time, money, and effort building your business, yet so much of that energy goes into just getting your clients' attention back. They showed interest, then life got in the way.
             </p>
