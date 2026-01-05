@@ -49,7 +49,7 @@ export default function AnimatedLogo3D() {
           <img
             src={profileImg}
             alt="My Photo"
-            className="w-full h-full object-cover rounded-2xl"
+            className="w-full h-full object-contain"
           />
         </motion.div>
       </div>
