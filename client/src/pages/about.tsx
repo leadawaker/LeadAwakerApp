@@ -84,12 +84,18 @@ export default function About() {
             <LeadReactivationAnimation />
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-6 max-w-4xl mx-auto text-left">
             <p className="text-xl text-muted-foreground leading-relaxed">
-              Most businesses sit on a goldmine of sleeping leads. You paid for them, they showed interest, then life got in the way.
+              You spend time, money, and effort building your business so you can help people in your own particular way. You care about the work, the result, and the people behind every name in your CRM. Yet you still end up pouring a huge amount of energy into just trying to get your clients' attention back on your brand.
             </p>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              At Lead Awaker, the mission is to wake up those dormant leads with <strong>personalized, caring conversations</strong> that make your brand look like the hero, so you grow without endlessly buying more clicks.
+              They showed interest, then life got in the way. The quotes you sent, the calls you had, the trust you started building, all of that energy gets diluted as their attention drifts somewhere else.
+            </p>
+            <p className="text-xl text-muted-foreground leading-relaxed">
+              At Lead Awaker, the belief is that your energy should go into what you excel at: delivering the quality service or product you already know how to provide. The job here is to help you harness the power of attention.
+            </p>
+            <p className="text-xl text-muted-foreground leading-relaxed">
+              For your brand to mean something valuable to a lead, that person has to be treated as an individual first, not as a line in a spreadsheet. Every touchpoint should feel like it was written for them. When they are approached in a way that respects their timing, context, and preferences, they feel understood, and when they feel understood, they are finally in the right place to understand you.
             </p>
           </div>
         </motion.div>
