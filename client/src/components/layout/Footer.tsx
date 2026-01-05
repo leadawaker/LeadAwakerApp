@@ -21,6 +21,10 @@ export function Footer() {
             <ul className="space-y-3">
               <li><Link href="/book-demo" className="text-muted-foreground hover:text-primary transition-colors">Book a Demo</Link></li>
               <li className="text-muted-foreground">leadawaker@gmail.com</li>
+              <li className="text-muted-foreground text-sm">
+                Christiaan Huygensweg 32,<br />
+                s'Hertogenbosch, NL
+              </li>
             </ul>
           </div>
         </div>
