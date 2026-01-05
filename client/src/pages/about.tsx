@@ -92,7 +92,7 @@ export default function About() {
   ];
 
   return (
-    <div className="min-h-screen pt-24 pb-20">
+    <div className="min-h-screen pt-24 pb-20 text-center">
       <div className="container mx-auto px-4 md:px-6">
         
         {/* 1. Intro Section */}
