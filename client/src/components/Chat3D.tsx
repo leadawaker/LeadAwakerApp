@@ -111,9 +111,7 @@ export default function Chat3D() {
               {/* Message 4 - Sophie */}
               <motion.div className="flex justify-end" custom={3} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-3">
                 <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
-                    No worries at all Jack, I totally get it! Quick question — what was the main blocker that kept it on hold? (Budget, timeline, or just other fires?)
-                  </div>
+                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>No worries at all Jack, I totally get it! Quick question: what was the main blocker that kept it on hold? (Budget, timeline, or just other fires?)</div>
                   <span className="text-xs text-slate-400 pr-2">15:03</span>
                 </div>
               </motion.div>
