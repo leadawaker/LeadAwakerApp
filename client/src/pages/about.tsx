@@ -145,10 +145,10 @@ export default function About() {
         </motion.div>
 
         {/* 2. Meet the Founder */}
-        <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] mr-[50vw] bg-[#E5E7EB] py-24 mb-20 overflow-hidden">
+        <div className="w-full bg-[#E5E7EB] py-24 mb-20 overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
           <div className="container mx-auto px-4 md:px-6 relative text-left">
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-4xl mx-auto">
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -160,7 +160,7 @@ export default function About() {
                   <div className="relative bg-white/40 backdrop-blur-sm p-8 md:p-12 rounded-[2rem] border border-white/50 shadow-xl flex flex-col md:flex-row items-center gap-12">
                     <div className="relative shrink-0">
                       <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
-                      <div className="w-64 h-64 md:w-80 md:h-80">
+                      <div className="w-48 h-48 md:w-64 md:h-64">
                         <AnimatedLogo3D />
                       </div>
                     </div>
