@@ -148,53 +148,40 @@ export default function About() {
         <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] mr-[50vw] bg-[#E5E7EB] py-24 mb-20 overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
           <div className="container mx-auto px-4 md:px-6 relative text-left">
-            <div className="grid md:grid-cols-5 gap-12 items-center max-w-4xl mx-auto">
-              {/* Left: Logo/Photo Card */}
+            <div className="max-w-5xl mx-auto">
               <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
-                className="md:col-span-2"
               >
                 <div className="relative group">
                   <div className="absolute -inset-4 bg-primary/5 rounded-[2rem] blur-2xl group-hover:bg-primary/10 transition-colors duration-500" />
-                  <div className="relative bg-white/40 backdrop-blur-sm p-8 rounded-[2rem] border border-white/50 shadow-xl flex flex-col items-center">
-                    <div className="relative">
+                  <div className="relative bg-white/40 backdrop-blur-sm p-8 md:p-12 rounded-[2rem] border border-white/50 shadow-xl flex flex-col md:flex-row items-center gap-12">
+                    <div className="relative shrink-0">
                       <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse" />
-                      <AnimatedLogo3D />
+                      <div className="w-48 h-48 md:w-64 md:h-64">
+                        <AnimatedLogo3D />
+                      </div>
                     </div>
-                    <div className="text-center mt-8 space-y-1">
-                      <h3 className="text-2xl font-bold tracking-tight text-gray-900">Gabriel B. Fronza</h3>
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="h-[1px] w-4 bg-primary/50" />
-                        <p className="text-sm font-semibold uppercase tracking-wider text-primary">Founder</p>
-                        <div className="h-[1px] w-4 bg-primary/50" />
+                    <div className="flex-grow space-y-6">
+                      <div className="space-y-1">
+                        <h3 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900">Gabriel B. Fronza</h3>
+                        <div className="flex items-center gap-2">
+                          <div className="h-[1px] w-4 bg-primary/50" />
+                          <p className="text-sm font-semibold uppercase tracking-wider text-primary">Founder</p>
+                          <div className="h-[1px] w-4 bg-primary/50" />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-6">
+                        <p className="text-xl text-gray-800 font-medium leading-relaxed italic border-l-4 border-primary/30 pl-6">
+                          "I kept seeing the same problem, businesses stuck wasting their money on more ads instead of waking up the leads they already paid for."
+                        </p>
+                        <p className="text-lg text-gray-600 leading-relaxed font-light">Lead Awaker is the result of 10+ years building production software, 5 years obsessing over data and automation systems, 4 years running a business with wife Danique.</p>
                       </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-
-              {/* Right: Short story */}
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                className="md:col-span-3 space-y-8"
-              >
-                <div className="space-y-6">
-                  <p className="text-xl text-gray-800 font-medium leading-relaxed italic border-l-4 border-primary/30 pl-6 text-left">
-                    "I kept seeing the same problem, businesses stuck wasting their money on more ads instead of waking up the leads they already paid for."
-                  </p>
-                  <p className="text-lg text-gray-600 leading-relaxed font-light text-left">Lead Awaker is the result of 10+ years building production software, 5 years obsessing over data and automation systems, 4 years running a business with wife Danique.</p>
-                </div>
-                
-                <div className="pt-4 flex gap-4">
-                  <div className="h-1 w-12 bg-primary rounded-full" />
-                  <div className="h-1 w-4 bg-primary/30 rounded-full" />
-                  <div className="h-1 w-2 bg-primary/10 rounded-full" />
                 </div>
               </motion.div>
             </div>
