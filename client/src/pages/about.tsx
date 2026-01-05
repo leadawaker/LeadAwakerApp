@@ -124,7 +124,7 @@ export default function About() {
         <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] mr-[50vw] bg-[#E5E7EB] py-24 mb-20 overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
           <div className="container mx-auto px-4 md:px-6 relative">
-            <div className="grid md:grid-cols-5 gap-12 items-center max-w-5xl mx-auto">
+            <div className="grid md:grid-cols-5 gap-12 items-center max-w-4xl mx-auto">
               {/* Left: Logo/Photo Card */}
               <motion.div
                 initial={{ opacity: 0, x: -30 }}
@@ -185,12 +185,11 @@ export default function About() {
           <hr className="border-border mb-20" />
         </div>
 
-        {/* 5. FAQ Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-3xl mx-auto mb-24"
+          className="max-w-4xl mx-auto mb-24"
         >
           <div className="bg-card/50 border border-border rounded-3xl p-8 md:p-12">
             <h2 className="text-3xl font-bold mb-10 text-left">Frequently Asked Questions</h2>
