@@ -76,9 +76,7 @@ export default function About() {
           <p className="text-xs font-semibold tracking-[0.2em] text-primary mb-3 uppercase">
             About Lead Awaker
           </p>
-          <h1 className="text-4xl md:text-6xl font-bold mb-8 tracking-tight">
-            What we are about
-          </h1>
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mt-[10px] mb-[10px]">What we care about</h1>
           
           <div className="mb-12">
             <LeadReactivationAnimation />
