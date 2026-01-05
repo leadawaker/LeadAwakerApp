@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -52,9 +52,10 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-8">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 font-medium h-9 px-2 hover:opacity-80 transition-opacity focus:outline-none" data-testid="button-language-selector">
+              <button className="flex items-center gap-1.5 font-medium h-9 px-2 hover:opacity-80 transition-opacity focus:outline-none" data-testid="button-language-selector">
                 <img src={currentLang.flag} alt={currentLang.code} className="h-4 w-4 rounded-full object-cover shadow-sm -translate-y-[1px]" />
-                <span className="text-sm font-semibold tracking-wide text-muted-foreground">{currentLang.code}</span>
+                <span className="text-sm font-bold tracking-wide text-muted-foreground uppercase">{currentLang.code}</span>
+                <ChevronDown className="w-3 h-3 text-muted-foreground/60" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40 p-1">
@@ -81,7 +82,7 @@ export function Navbar() {
             <Link 
               key={link.href} 
               href={link.href}
-              className={`text-sm font-medium transition-colors hover:text-primary ${
+              className={`text-sm font-bold transition-colors hover:text-primary ${
                 location === link.href ? "text-primary" : "text-muted-foreground"
               }`}
             >
@@ -89,12 +90,12 @@ export function Navbar() {
             </Link>
           ))}
           <Link href="/login">
-            <Button variant="ghost" className="font-heading font-semibold">
+            <Button variant="ghost" className="font-heading font-bold">
               Login
             </Button>
           </Link>
           <Link href="/book-demo">
-            <Button className="font-heading font-semibold bg-primary hover:bg-yellow-400 hover:text-black text-white shadow-lg shadow-primary/20 hover:shadow-yellow-400/35 transition-all">
+            <Button className="font-heading font-bold bg-primary hover:bg-yellow-400 hover:text-black text-white shadow-lg shadow-primary/20 hover:shadow-yellow-400/35 transition-all">
               Book a Demo
             </Button>
           </Link>
