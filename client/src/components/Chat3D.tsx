@@ -27,6 +27,23 @@ export default function Chat3D() {
     }),
   };
 
+  const [visibleMessages, setVisibleMessages] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (showEngagement) {
+      let currentIdx = 0;
+      const interval = setInterval(() => {
+        if (currentIdx < engagementMessages.length) {
+          setVisibleMessages(prev => [...prev, currentIdx]);
+          currentIdx++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 1500);
+      return () => clearInterval(interval);
+    }
+  }, [showEngagement]);
+
   const engagementMessages = [
     { type: 'jack', text: "Honestly a bit of all three. I need something that looks pro but doesn't take forever or cost a fortune.", time: "15:06" },
     { type: 'sophie', text: "Perfect, that's exactly what we specialize in. We've since added templates that cut delivery from 8 weeks to 3 while keeping the custom feel. Want me to send over 3 options that match your coaching niche with rough timelines and pricing? Or hop on a quick 15-min call tomorrow to walk through?", time: "15:08" },
@@ -191,54 +208,61 @@ export default function Chat3D() {
                 ) : (
                   <>
                     {engagementMessages.map((msg, idx) => (
-                      <div key={idx} className="space-y-4">
-                        <motion.div 
-                          className={`flex ${msg.type === 'sophie' ? 'justify-end' : 'justify-start'}`}
-                          custom={idx}
-                          initial="hidden"
-                          animate="visible"
-                          variants={messageVariants}
-                        >
-                          <div className={`flex flex-col ${msg.type === 'sophie' ? 'items-end' : 'items-start'} gap-1`}>
-                            <div 
-                              className={`rounded-2xl px-4 py-3 max-w-[95%] shadow-sm text-sm ${
-                                msg.type === 'sophie' 
-                                  ? 'text-white rounded-tr-sm' 
-                                  : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'
-                              }`}
-                              style={msg.type === 'sophie' ? { backgroundColor: "#2563EB" } : {}}
+                      <AnimatePresence key={idx}>
+                        {visibleMessages.includes(idx) && (
+                          <div className="space-y-4">
+                            <motion.div 
+                              className={`flex ${msg.type === 'sophie' ? 'justify-end' : 'justify-start'}`}
+                              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              transition={{ duration: 0.4 }}
                             >
-                              {msg.text}
-                            </div>
-                            <span className={`text-xs text-slate-400 ${msg.type === 'sophie' ? 'pr-2' : 'pl-2'}`}>{msg.time}</span>
-                          </div>
-                        </motion.div>
+                              <div className={`flex flex-col ${msg.type === 'sophie' ? 'items-end' : 'items-start'} gap-1`}>
+                                <div 
+                                  className={`rounded-2xl px-4 py-3 max-w-[95%] shadow-sm text-sm ${
+                                    msg.type === 'sophie' 
+                                      ? 'text-white rounded-tr-sm' 
+                                      : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'
+                                  }`}
+                                  style={msg.type === 'sophie' ? { backgroundColor: "#2563EB" } : {}}
+                                >
+                                  {msg.text}
+                                </div>
+                                <span className={`text-xs text-slate-400 ${msg.type === 'sophie' ? 'pr-2' : 'pl-2'}`}>{msg.time}</span>
+                              </div>
+                            </motion.div>
 
-                        {msg.text.includes("The 15-min call tomorrow works great!") && (
-                          <motion.div 
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="flex flex-col items-center gap-2 py-2"
-                          >
-                            <div className="h-[1px] w-full bg-slate-200" />
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Qualified</span>
-                          </motion.div>
+                            {msg.text.includes("The 15-min call tomorrow works great!") && (
+                              <motion.div 
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="flex flex-col items-center gap-2 py-2"
+                              >
+                                <div className="h-[1px] w-full bg-slate-200" />
+                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Qualified</span>
+                              </motion.div>
+                            )}
+                          </div>
                         )}
-                      </div>
+                      </AnimatePresence>
                     ))}
                     
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 1 }}
-                      className="flex flex-col items-center gap-2 py-4"
-                    >
-                      <div className="h-[1px] w-full bg-slate-200" />
-                      <div className="flex flex-col items-center bg-slate-50 px-3 -mt-3.5">
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Call Booked 🗓️</span>
-                        <span className="text-[8px] font-medium text-slate-400 uppercase tracking-widest mt-1">Sent to Client</span>
-                      </div>
-                    </motion.div>
+                    <AnimatePresence>
+                      {visibleMessages.length === engagementMessages.length && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.5 }}
+                          className="flex flex-col items-center gap-2 py-4"
+                        >
+                          <div className="h-[1px] w-full bg-slate-200" />
+                          <div className="flex flex-col items-center bg-slate-50 px-3 -mt-3.5">
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Call Booked 🗓️</span>
+                            <span className="text-[8px] font-medium text-slate-400 uppercase tracking-widest mt-1">Sent to Client</span>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </>
                 )}
               </AnimatePresence>
