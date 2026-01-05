@@ -119,7 +119,7 @@
                       setHasReachedEnd(true);
                       setTimeout(() => setAnimationComplete(true), 1500);
                     }
-                  }, 1400);
+                  }, 1800);
                 }, cursor.delay);
               });
             }, [hasStarted]);
@@ -318,7 +318,7 @@
                 jitterY:
                   (isFirstFew ? (Math.random() - 0.5) * 8 : (Math.random() - 0.5) * 5) *
                   jitterMultiplier,
-                duration: isSlow ? baseDuration * 1.3 : baseDuration,
+                duration: isSlow ? baseDuration * 1.56 : baseDuration * 1.2,
                 delay: Math.random() * 0.2,
                 pathType: Math.floor(Math.random() * 4),
                 halfwayOffset: {
@@ -372,7 +372,7 @@
               );
               const disappearingTimer = setTimeout(
                 () => setPhase('disappearing'),
-                randomConfig.duration * 1000 + 300
+                randomConfig.duration * 1000 + 500
               );
 
               return () => {
