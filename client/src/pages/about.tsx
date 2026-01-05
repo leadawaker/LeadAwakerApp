@@ -125,7 +125,10 @@ export default function About() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-4xl mx-auto mb-16"
         >
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mt-[10px] mb-0 text-center">What we care about</h1>
+          <div className="space-y-2 mb-8">
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mt-[10px] mb-0 text-center">What we care about</h1>
+            <p className="text-xl md:text-2xl font-medium text-primary/80 italic">In essence:</p>
+          </div>
           
           <div className="mb-0 p-0 flex justify-center">
             <LeadReactivationAnimation />
