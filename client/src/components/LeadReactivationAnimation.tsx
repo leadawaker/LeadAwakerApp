@@ -18,23 +18,38 @@ const LeadReactivationAnimation = () => {
   const [forceWhite, setForceWhite] = useState(false);
   const [clickScale, setClickScale] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
+  const [showSparkles, setShowSparkles] = useState(false); // NEW: Track sparkle visibility
   const containerRef = React.useRef<HTMLDivElement>(null);
 
-  // Force white text once bright enough
   useEffect(() => {
     if (brightness > 80) {
       setForceWhite(true);
     }
   }, [brightness]);
 
-  // Grow button per click (0.75 spread over 30 clicks)
   useEffect(() => {
     if (activeClickCount > 0 && !hasReachedEnd) {
       setClickScale(prev => Math.min(prev + 0.75 / 30, 0.75));
     }
   }, [activeClickCount, hasReachedEnd]);
 
-  // Start animation when in view
+  // NEW: Sparkle sync with shimmer every 7s (only after animation complete)
+  useEffect(() => {
+    if (!(brightness >= 100 || hasReachedEnd)) return;
+
+    const syncSparkles = () => {
+      setShowSparkles(true);
+      setTimeout(() => setShowSparkles(false), 1500); // Sync with 1.5s shimmer duration
+    };
+
+    const sparkleInterval = setInterval(syncSparkles, 7000); // Every 7s
+
+    // Show immediately on first load
+    syncSparkles();
+
+    return () => clearInterval(sparkleInterval);
+  }, [brightness, hasReachedEnd]);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -53,7 +68,6 @@ const LeadReactivationAnimation = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Cursor sequence and brightness buildup
   useEffect(() => {
     if (!hasStarted) return;
 
@@ -156,7 +170,6 @@ const LeadReactivationAnimation = () => {
             startX={cursor.startX}
             startY={cursor.startY}
             onHover={isClicking => {
-              // increase while clicking, decrease when leaving
               setActiveClickCount(prev =>
                 isClicking ? prev + 1 : Math.max(0, prev - 1)
               );
@@ -210,6 +223,7 @@ const LeadReactivationAnimation = () => {
       >
         <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-50 pointer-events-none" />
 
+        {/* UPDATED: Shimmer every 7s (1.5s sweep + 5.5s pause) */}
         <motion.div
           animate={{
             left: ['-100%', '200%']
@@ -217,7 +231,7 @@ const LeadReactivationAnimation = () => {
           transition={{
             duration: 1.5,
             repeat: Infinity,
-            repeatDelay: 1.5,
+            repeatDelay: 5.5, // Changed from 1.5 to 5.5 = 7s total cycle
             ease: 'easeInOut'
           }}
           className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 pointer-events-none z-20"
@@ -228,17 +242,18 @@ const LeadReactivationAnimation = () => {
         </span>
       </motion.button>
 
-      {(brightness >= 100 || hasReachedEnd) && (
+      {/* UPDATED: Sparkles sync with shimmer (show/hide controlled by state) */}
+      {(brightness >= 100 || hasReachedEnd) && showSparkles && (
         <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
           <div className="relative w-[400px] h-[150px]">
             {[
               { x: 0, y: 20, d: 0 },
-              { x: 15, y: 80, d: 0.2 },
-              { x: 45, y: 40, d: 0.4 },
-              { x: 75, y: 60, d: 0.6 },
-              { x: 100, y: 30, d: 0.8 },
-              { x: 25, y: 10, d: 1.0 },
-              { x: 85, y: 90, d: 1.2 }
+              { x: 15, y: 80, d: 0.1 },
+              { x: 45, y: 40, d: 0.2 },
+              { x: 75, y: 60, d: 0.3 },
+              { x: 100, y: 30, d: 0.4 },
+              { x: 25, y: 10, d: 0.5 },
+              { x: 85, y: 90, d: 0.6 }
             ].map((config, i) => (
               <svg
                 key={i}
@@ -262,6 +277,7 @@ const LeadReactivationAnimation = () => {
   );
 };
 
+// Cursor component unchanged...
 const Cursor = ({
   startX,
   startY,
