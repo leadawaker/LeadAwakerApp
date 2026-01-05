@@ -127,7 +127,7 @@ export default function About() {
         >
           <div className="space-y-6 mb-16">
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight mt-[10px] mb-6 text-center text-slate-900">What we care about</h1>
-            <p className="text-xl text-slate-600">In essence:</p>
+            <p className="text-xl text-slate-600">Shown instead of told: from overlooked to impossible to ignore.</p>
           </div>
           
           <div className="mb-0 p-0 flex justify-center">
