@@ -161,10 +161,6 @@ export default function About() {
                 className="md:col-span-3 space-y-8"
               >
                 <div className="space-y-6">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/50 border border-white/80 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                    The Mission
-                  </div>
                   <p className="text-xl text-gray-800 font-medium leading-relaxed italic border-l-4 border-primary/30 pl-6 text-left">
                     "I kept seeing the same problem, businesses stuck wasting their money on more ads instead of waking up the leads they already paid for."
                   </p>
