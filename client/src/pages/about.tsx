@@ -76,25 +76,25 @@ export default function About() {
           <p className="text-xs font-semibold tracking-[0.2em] text-primary mb-3 uppercase">
             About Lead Awaker
           </p>
-          <h1 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight">
-            Turning sleeping leads into your easiest wins
+          <h1 className="text-4xl md:text-6xl font-bold mb-8 tracking-tight">
+            Our Mission
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-            Built for teams sitting on a goldmine of past inquiries and quotes, but not enough time to follow up personally with every single one.
-          </p>
+          
+          <div className="mb-12">
+            <LeadReactivationAnimation />
+          </div>
+
+          <div className="space-y-6">
+            <p className="text-xl text-muted-foreground leading-relaxed">
+              Most businesses sit on a goldmine of sleeping leads. You paid for them, they showed interest, then life got in the way.
+            </p>
+            <p className="text-xl text-muted-foreground leading-relaxed">
+              At Lead Awaker, the mission is to wake up those dormant leads with <strong>personalized, caring conversations</strong> that make your brand look like the hero, so you grow without endlessly buying more clicks.
+            </p>
+          </div>
         </motion.div>
 
-        {/* 2. Animation Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="max-w-4xl mx-auto mb-20"
-        >
-          <LeadReactivationAnimation />
-        </motion.div>
-
-        {/* 3. Meet the Founder */}
+        {/* 2. Meet the Founder */}
         <div className="grid md:grid-cols-3 gap-12 items-start mb-20">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -137,24 +137,6 @@ export default function About() {
         <div className="max-w-4xl mx-auto">
           <hr className="border-border mb-20" />
         </div>
-
-        {/* 4. Mission Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="max-w-3xl mx-auto mb-24 text-center"
-        >
-          <h2 className="text-4xl font-bold mb-6">Our Mission</h2>
-          <div className="space-y-6">
-            <p className="text-xl text-muted-foreground leading-relaxed">
-              Most businesses sit on a goldmine of sleeping leads. You paid for them, they showed interest, then life got in the way.
-            </p>
-            <p className="text-xl text-muted-foreground leading-relaxed">
-              At Lead Awaker, the mission is to wake up those dormant leads with <strong>personalized, caring conversations</strong> that make your brand look like the hero, so you grow without endlessly buying more clicks.
-            </p>
-          </div>
-        </motion.div>
 
         {/* 5. FAQ Section */}
         <motion.div
