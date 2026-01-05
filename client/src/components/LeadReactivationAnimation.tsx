@@ -105,9 +105,10 @@
               ];
 
               cursorSequence.forEach((cursor, index) => {
+                const delayedDelay = cursor.delay * 1.25; // Increase overall sequence duration by 25% (offsetting the previous 20% reduction and adding more)
                 setTimeout(() => {
                   const cursorId = Date.now() + index;
-                  setCursors(prev => [...prev, { ...cursor, id: cursorId }]);
+                  setCursors(prev => [...prev, { ...cursor, id: cursorId, delay: delayedDelay }]);
 
                   setTimeout(() => {
                     setCursors(prev => prev.filter(c => c.id !== cursorId));
@@ -115,10 +116,10 @@
 
                     if (index === cursorSequence.length - 1) {
                       setHasReachedEnd(true);
-                      setTimeout(() => setAnimationComplete(true), 1200);
+                      setTimeout(() => setAnimationComplete(true), 1500);
                     }
-                  }, 1120);
-                }, cursor.delay);
+                  }, 1400); // Restore slightly longer hold time
+                }, delayedDelay);
               });
             }, [hasStarted]);
 
