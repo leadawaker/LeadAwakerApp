@@ -86,16 +86,13 @@ export default function About() {
 
           <div className="space-y-6 max-w-4xl mx-auto text-left">
             <p className="text-xl text-muted-foreground leading-relaxed">
-              You spend time, money, and effort building your business so you can help people in your own particular way. Yet you still end up pouring huge amounts of energy just trying to get your clients' attention back on your brand.
-            </p>
-            <p className="text-xl text-muted-foreground leading-relaxed">
-              They showed interest, then life got in the way. All that energy gets diluted as their attention drifts somewhere else.
+              You spend time, money, and effort building your business, yet so much of that energy goes into just getting your clients' attention back. They showed interest, then life got in the way.
             </p>
             <p className="text-xl text-muted-foreground leading-relaxed">
               At Lead Awaker, the belief is that your energy should go into what you excel at: delivering the quality service you already provide. The job here is to help you harness the power of attention.
             </p>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              For your brand to mean something valuable to a lead, that person has to be treated as an individual first, not as a line in a spreadsheet. When they are approached in a way that respects their timing, context, and preferences, they feel understood, and when they feel understood, they are finally in the right place to understand you.
+              For your brand to mean something valuable to a lead, that person has to be treated as an individual first, not as a line in a spreadsheet. When they are approached in a way that respects their timing, context, and preferences, they feel understood, and when they feel understood, they are finally awake to understand you.
             </p>
           </div>
         </motion.div>
