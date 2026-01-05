@@ -173,9 +173,7 @@ export default function About() {
                       </div>
                       
                       <div className="space-y-6">
-                        <p className="text-xl text-gray-800 font-medium leading-relaxed italic border-l-4 border-primary/30 pl-6">
-                          "I kept seeing the same problem, businesses stuck wasting their money on more ads instead of waking up the leads they already paid for."
-                        </p>
+                        <p className="text-gray-800 font-medium italic border-l-4 border-primary/30 pl-6 text-[19px]">"I first noticed it in my parents’ health clinic, and then everywhere else. Patients would book consultations, show real interest, then go quiet while the clinic kept paying for ads to get new ones."</p>
                         <p className="text-lg text-gray-600 leading-relaxed font-light">Lead Awaker is the result of 10+ years building production software, 5 years obsessing over data and automation systems, 4 years running a business with wife Danique.</p>
                       </div>
                     </div>
