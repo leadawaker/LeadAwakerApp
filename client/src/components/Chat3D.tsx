@@ -12,6 +12,8 @@ export default function Chat3D() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const [showEngagement, setShowEngagement] = useState(false);
+
   const messageVariants = {
     hidden: { opacity: 0, y: 20, scale: 0.95 },
     visible: (i: number) => ({
@@ -24,6 +26,13 @@ export default function Chat3D() {
       },
     }),
   };
+
+  const engagementMessages = [
+    { type: 'jack', text: "Honestly a bit of all three. I need something that looks pro but doesn't take forever or cost a fortune.", time: "15:06" },
+    { type: 'sophie', text: "Perfect, that's exactly what we specialize in. We've since added templates that cut delivery from 8 weeks to 3 while keeping the custom feel. Want me to send over 3 options that match your coaching niche with rough timelines and pricing? Or hop on a quick 15-min call tomorrow to walk through?", time: "15:08" },
+    { type: 'jack', text: "The 15-min call tomorrow works great! What times do you have?", time: "15:09" },
+    { type: 'sophie', text: "Awesome! Here's my Calendly for tomorrow: [link]\nI'll send a recap of our chat there too so you have it handy. Talk soon Jack! 🚀", time: "15:10" }
+  ];
 
   return (
     <div className="relative perspective-container">
@@ -73,7 +82,7 @@ export default function Chat3D() {
           </div>
 
           {/* Chat Messages */}
-          <div className="p-6 space-y-4 bg-slate-50 min-h-[400px] relative overflow-hidden">
+          <div className="p-6 space-y-4 bg-slate-50 min-h-[400px] max-h-[500px] overflow-y-auto relative scrollbar-hide">
             {/* Overlay effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-slate-100/20 via-transparent to-slate-100/20 pointer-events-none" />
             
@@ -116,14 +125,69 @@ export default function Chat3D() {
                 </div>
               </motion.div>
 
-              {/* Typing Indicator */}
-              <motion.div className="flex justify-start" custom={4} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-typing">
-                <div className="bg-slate-200 text-slate-500 rounded-full px-4 py-2 shadow-sm flex items-center justify-center gap-2">
-                  <motion.span className="text-4xl font-black" animate={{ y: [0, -8, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0 }}>·</motion.span>
-                  <motion.span className="text-4xl font-black" animate={{ y: [0, -8, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.2 }}>·</motion.span>
-                  <motion.span className="text-4xl font-black" animate={{ y: [0, -8, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.4 }}>·</motion.span>
-                </div>
-              </motion.div>
+              <AnimatePresence>
+                {!showEngagement ? (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="flex justify-center pt-4"
+                  >
+                    <button 
+                      onClick={() => setShowEngagement(true)}
+                      className="bg-primary text-white px-6 py-2 rounded-full font-bold shadow-lg hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 text-sm"
+                    >
+                      Continue
+                    </button>
+                  </motion.div>
+                ) : (
+                  <>
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex flex-col items-center gap-2 py-4"
+                    >
+                      <div className="h-[1px] w-full bg-slate-200" />
+                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Engaged</span>
+                    </motion.div>
+                    
+                    {engagementMessages.map((msg, idx) => (
+                      <motion.div 
+                        key={idx}
+                        className={`flex ${msg.type === 'sophie' ? 'justify-end' : 'justify-start'}`}
+                        custom={idx}
+                        initial="hidden"
+                        animate="visible"
+                        variants={messageVariants}
+                      >
+                        <div className={`flex flex-col ${msg.type === 'sophie' ? 'items-end' : 'items-start'} gap-1`}>
+                          <div 
+                            className={`rounded-2xl px-4 py-3 max-w-[95%] shadow-sm text-sm ${
+                              msg.type === 'sophie' 
+                                ? 'text-white rounded-tr-sm' 
+                                : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'
+                            }`}
+                            style={msg.type === 'sophie' ? { backgroundColor: "#2563EB" } : {}}
+                          >
+                            {msg.text}
+                          </div>
+                          <span className={`text-xs text-slate-400 ${msg.type === 'sophie' ? 'pr-2' : 'pl-2'}`}>{msg.time}</span>
+                        </div>
+                      </motion.div>
+                    ))}
+                    
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1 }}
+                      className="flex flex-col items-center gap-2 py-4"
+                    >
+                      <div className="h-[1px] w-full bg-slate-200" />
+                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary bg-slate-50 px-3 -mt-3.5">Call Booked 🗓️</span>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
