@@ -190,9 +190,9 @@
                 </AnimatePresence>
                 <motion.button
                   id="lead-button"
-                  initial={{ scale: 0.45, opacity: 0 }}
+                  initial={{ scale: 0.58, opacity: 0 }}
                   animate={{
-                    scale: (brightness >= 100 || hasReachedEnd ? 1.0 : 0.25 + clickScale) * hoverScaleBoost,
+                    scale: (brightness >= 100 || hasReachedEnd ? 1.0 : 0.325 + clickScale) * hoverScaleBoost,
                     opacity: 1
                   }}
                   transition={{
