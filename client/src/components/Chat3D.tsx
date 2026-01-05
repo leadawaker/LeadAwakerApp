@@ -223,7 +223,7 @@ export default function Chat3D() {
                           </div>
                         </motion.div>
 
-                        {msg.text.includes("15-min call tomorrow") && (
+                        {msg.text.includes("The 15-min call tomorrow works great!") && (
                           <motion.div 
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
