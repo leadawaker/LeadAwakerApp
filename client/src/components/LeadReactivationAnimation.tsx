@@ -111,6 +111,15 @@ const LeadReactivationAnimation = () => {
 
   return (
     <div className="relative w-full h-[60vh] bg-white flex items-center justify-center overflow-hidden font-sans rounded-2xl border border-border shadow-sm mb-12">
+      <style>{`
+        @keyframes sparkle {
+          0%, 100% { transform: scale(0); opacity: 0; }
+          50% { transform: scale(var(--s, 1)); opacity: 1; }
+        }
+        .animate-sparkle {
+          animation: sparkle 0.75s both;
+        }
+      `}</style>
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none mix-blend-multiply"></div>
 
       <AnimatePresence>
@@ -196,6 +205,7 @@ const LeadReactivationAnimation = () => {
                 style={{
                   left: `${config.x}%`,
                   top: `${config.y}%`,
+                  '--s': 1,
                   animationDelay: `${config.d}s`,
                 } as any}
               >
