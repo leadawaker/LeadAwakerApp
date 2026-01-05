@@ -37,7 +37,7 @@ export default function AnimatedLogo3D() {
       style={containerStyle}
     >
       <div style={wrapperStyle}>
-        {/* AWAKER Photo - Circular with Smooth Animation */}
+        {/* AWAKER Photo - Just the Photo with Smooth Animation */}
         <motion.div
           initial={{ opacity: 0, rotationX: 90, scale: 0.8 }}
           animate={isInView ? { opacity: 1, rotationX: 0, scale: 1 } : { opacity: 0, rotationX: 90, scale: 0.8 }}
@@ -49,7 +49,7 @@ export default function AnimatedLogo3D() {
           <img
             src={profileImg}
             alt="My Photo"
-            className="w-64 h-64 rounded-full object-cover border-4 border-primary/20 shadow-[0_20px_50px_rgba(0,0,0,0.2)]"
+            className="w-full h-full object-contain"
           />
         </motion.div>
       </div>
