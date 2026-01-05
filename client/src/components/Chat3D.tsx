@@ -62,7 +62,13 @@ export default function Chat3D() {
           
           {/* Chat Header */}
           <div className="p-4 flex items-center gap-3" style={{ backgroundColor: "#2563EB" }}>
-            <div className="rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ width: "44px", height: "44px", backgroundColor: "#6B6B6B" }} data-testid="chat-avatar">J</div>
+            <div className="rounded-full overflow-hidden border-2 border-white/20 shadow-sm" style={{ width: "44px", height: "44px" }} data-testid="chat-avatar">
+              <img 
+                src="/attached_assets/Project_(20260105031558)_1767637071196.jpg" 
+                alt="Jack Johnson" 
+                className="w-full h-full object-cover"
+              />
+            </div>
             <div>
               <h3 className="text-white font-medium text-sm" data-testid="chat-name">Jack Johnson</h3>
               <p className="text-xs flex items-center gap-1" style={{ color: "#FCC700" }} data-testid="chat-status">
