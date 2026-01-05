@@ -10,9 +10,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const languages = [
-  { code: "EN", label: "ENGLISH", flag: "🇬🇧" },
-  { code: "PT", label: "PORTUGUÊS", flag: "🇧🇷" },
-  { code: "NL", label: "NEDERLANDS", flag: "🇳🇱" },
+  { code: "EN", label: "ENGLISH", flag: "https://flagcdn.com/w20/gb.png" },
+  { code: "PT", label: "PORTUGEUÊS", flag: "https://flagcdn.com/w20/br.png" },
+  { code: "NL", label: "NEDERLANDS", flag: "https://flagcdn.com/w20/nl.png" },
 ];
 
 export function Navbar() {
@@ -53,7 +53,7 @@ export function Navbar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 font-medium h-9 px-2 hover:opacity-80 transition-opacity focus:outline-none" data-testid="button-language-selector">
-                <span className="text-base leading-none">{currentLang.flag}</span>
+                <img src={currentLang.flag} alt={currentLang.code} className="w-5 h-auto rounded-sm object-cover" />
                 <span className="text-sm font-semibold tracking-wide text-muted-foreground">{currentLang.code}</span>
               </button>
             </DropdownMenuTrigger>
@@ -66,7 +66,7 @@ export function Navbar() {
                   data-testid={`menu-item-lang-${lang.code}`}
                 >
                   <span className="flex items-center gap-3">
-                    <span className="text-lg">{lang.flag}</span>
+                    <img src={lang.flag} alt={lang.label} className="w-5 h-auto rounded-sm object-cover" />
                     {lang.label}
                   </span>
                   {currentLang.code === lang.code && (
