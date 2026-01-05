@@ -99,15 +99,15 @@ export default function About() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-3xl mx-auto text-center mb-16"
+          className="max-w-4xl mx-auto text-center mb-16"
         >
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mt-[10px] mb-[10px]">What we care about</h1>
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mt-[10px] mb-0">What we care about</h1>
           
-          <div className="mb-0">
+          <div className="mb-0 p-0">
             <LeadReactivationAnimation />
           </div>
 
-          <div className="space-y-6 max-w-4xl mx-auto text-left mt-0">
+          <div className="space-y-6 w-full text-left mt-0 p-0">
             <p className="text-xl text-muted-foreground leading-relaxed">
               You spend time, money, and effort building your business, yet so much of that energy goes into just getting your clients' attention back. They showed interest, then life got in the way.
             </p>
