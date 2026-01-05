@@ -59,15 +59,20 @@ export default function AnimatedLogo3D() {
         />
 
         {/* AWAKER SVG - Appears Below */}
-        <motion.img
-          src="/Awaker.svg"
-          alt="Awaker"
+        <motion.div
           initial={{ opacity: 0, rotationX: 90 }}
           animate={isInView ? { opacity: 1, rotationX: 0 } : { opacity: 0, rotationX: 90 }}
           transition={{ delay: 1, duration: 0.8, type: "spring", stiffness: 100, damping: 15 }}
           style={logoStyle}
           data-testid="animated-logo-awaker"
-        />
+          className="flex items-center justify-center"
+        >
+          <img
+            src="/attached_assets/Gemini_Generated_Image_j212wcj212wcj212_1767283699067.png"
+            alt="My Photo"
+            className="w-48 h-48 rounded-full object-cover border-4 border-primary/20 shadow-2xl"
+          />
+        </motion.div>
       </div>
     </motion.div>
   );
