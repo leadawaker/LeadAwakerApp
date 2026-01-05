@@ -222,13 +222,15 @@ const LeadReactivationAnimation = () => {
       >
         <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-50 pointer-events-none" />
 
-        {/* UPDATED: Shimmer sweeps only when showSparkles is true */}
+        {/* UPDATED: Shimmer sweeps only when showSparkles is true, and resets without animating back */}
         <motion.div
           initial={{ left: '-100%' }}
           animate={showSparkles ? { left: '200%' } : { left: '-100%' }}
           transition={{
-            duration: 1.5,
-            ease: 'easeInOut'
+            left: {
+              duration: showSparkles ? 1.5 : 0,
+              ease: 'easeInOut'
+            }
           }}
           className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 pointer-events-none z-20"
         />
