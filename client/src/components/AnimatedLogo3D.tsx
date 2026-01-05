@@ -36,41 +36,19 @@ export default function AnimatedLogo3D() {
       style={containerStyle}
     >
       <div style={wrapperStyle}>
-        {/* Top Logo SVG - Grows from behind */}
-        <motion.img
-          src="/top logo.svg"
-          alt="Top Logo"
-          initial={{ opacity: 0, scale: 0 }}
-          animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
-          transition={{ delay: 1.2, duration: 0.1, type: "spring", stiffness: 200, damping: 15 }}
-          style={logoStyle}
-          data-testid="animated-logo-top"
-        />
-
-        {/* LEAD SVG - Appears First */}
-        <motion.img
-          src="/LEAD.svg"
-          alt="LEAD"
-          initial={{ opacity: 0, rotationX: 90 }}
-          animate={isInView ? { opacity: 1, rotationX: 0 } : { opacity: 0, rotationX: 90 }}
-          transition={{ delay: 0.3, duration: 0.8, type: "spring", stiffness: 100, damping: 15 }}
-          style={logoStyle}
-          data-testid="animated-logo-lead"
-        />
-
-        {/* AWAKER SVG - Appears Below */}
+        {/* AWAKER Photo - Circular with Smooth Animation */}
         <motion.div
-          initial={{ opacity: 0, rotationX: 90 }}
-          animate={isInView ? { opacity: 1, rotationX: 0 } : { opacity: 0, rotationX: 90 }}
-          transition={{ delay: 1, duration: 0.8, type: "spring", stiffness: 100, damping: 15 }}
+          initial={{ opacity: 0, rotationX: 90, scale: 0.8 }}
+          animate={isInView ? { opacity: 1, rotationX: 0, scale: 1 } : { opacity: 0, rotationX: 90, scale: 0.8 }}
+          transition={{ delay: 0.3, duration: 1, type: "spring", stiffness: 100, damping: 15 }}
           style={logoStyle}
           data-testid="animated-logo-awaker"
           className="flex items-center justify-center"
         >
           <img
-            src="/attached_assets/Gemini_Generated_Image_j212wcj212wcj212_1767283699067.png"
+            src="/attached_assets/file_000000005598722f9a3a4459e83712e7_(1)_1766322203145.png"
             alt="My Photo"
-            className="w-48 h-48 rounded-full object-cover border-4 border-primary/20 shadow-2xl"
+            className="w-64 h-64 rounded-full object-cover border-4 border-primary/20 shadow-[0_20px_50px_rgba(0,0,0,0.2)]"
           />
         </motion.div>
       </div>
