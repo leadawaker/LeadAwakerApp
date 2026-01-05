@@ -92,7 +92,7 @@ export default function PipelineChart() {
     if (!isInView) return;
     const interval = setInterval(() => {
       moveRandomLead();
-    }, 3000);
+    }, 1500);
     return () => clearInterval(interval);
   }, [leads, isInView]);
 
