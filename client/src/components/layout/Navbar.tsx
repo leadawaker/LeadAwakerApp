@@ -53,7 +53,7 @@ export function Navbar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-1.5 font-medium h-9 px-2 hover:opacity-80 transition-opacity focus:outline-none" data-testid="button-language-selector">
-                <img src={currentLang.flag} alt={currentLang.code} className="h-3.5 w-6 rounded-none object-cover shadow-sm -translate-y-[1px]" />
+                <img src={currentLang.flag} alt={currentLang.code} className="h-4 w-[1.35rem] rounded-none object-cover shadow-sm -translate-y-[1px]" />
                 <span className="text-sm font-bold tracking-wide text-muted-foreground uppercase">{currentLang.code}</span>
                 <ChevronDown className="w-3 h-3 text-muted-foreground/60" />
               </button>
@@ -67,7 +67,7 @@ export function Navbar() {
                   data-testid={`menu-item-lang-${lang.code}`}
                 >
                   <span className="flex items-center gap-3">
-                    <img src={lang.flag} alt={lang.label} className="h-3.5 w-6 rounded-none object-cover shadow-sm -translate-y-[1px]" />
+                    <img src={lang.flag} alt={lang.label} className="h-4 w-[1.35rem] rounded-none object-cover shadow-sm -translate-y-[1px]" />
                     {lang.label}
                   </span>
                   {currentLang.code === lang.code && (
