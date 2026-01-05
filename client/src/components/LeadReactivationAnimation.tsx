@@ -188,15 +188,7 @@ const LeadReactivationAnimation = () => {
 
       {(brightness >= 100 || hasReachedEnd) && (
         <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
-          <motion.div 
-            className="relative w-[400px] h-[150px]"
-            initial={{ opacity: 0 }}
-            whileHover={{ opacity: 1 }}
-            style={{ 
-              opacity: animationComplete ? 0 : 1,
-              transition: 'opacity 0.5s ease-in-out'
-            }}
-          >
+          <div className="relative w-[400px] h-[150px]">
             {[
               { x: 0, y: 20, d: 0 },
               { x: 15, y: 80, d: 0.2 },
@@ -220,42 +212,7 @@ const LeadReactivationAnimation = () => {
                 <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
               </svg>
             ))}
-          </motion.div>
-          {animationComplete && (
-            <motion.div 
-              className="absolute pointer-events-none"
-              initial={{ opacity: 0 }}
-              whileHover={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              style={{ width: '400px', height: '150px' }}
-            >
-              {[
-                { x: 10, y: 30, d: 0, s: 0.8 },
-                { x: 80, y: 20, d: 1, s: 1.1 },
-                { x: 30, y: 70, d: 2, s: 0.9 },
-                { x: 60, y: 80, d: 3, s: 1.2 },
-                { x: 90, y: 60, d: 4, s: 0.7 },
-                { x: 20, y: 10, d: 5, s: 1.0 },
-                { x: 70, y: 40, d: 6, s: 0.8 },
-              ].map((config, i) => (
-                <svg
-                  key={`hover-${i}`}
-                  viewBox="0 0 24 24"
-                  className="absolute w-5 h-5 fill-white opacity-0 animate-sparkle"
-                  style={{
-                    left: `${config.x}%`,
-                    top: `${config.y}%`,
-                    '--s': config.s,
-                    animationDelay: `${config.d}s`,
-                    animationDuration: '4s',
-                    animationIterationCount: 'infinite'
-                  } as any}
-                >
-                  <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
-                </svg>
-              ))}
-            </motion.div>
-          )}
+          </div>
         </div>
       )}
     </div>
