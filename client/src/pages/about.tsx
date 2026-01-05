@@ -136,9 +136,7 @@ export default function About() {
 
           <div className="space-y-6 w-full text-left mt-0 p-0">
             <p className="text-xl text-muted-foreground leading-relaxed text-left">You pour time, money, and heart into building your business, yet so much of that energy gets burned getting new clients' through the door. They showed interest but life gets in their way, and the spark disappears.</p>
-            <p className="text-xl text-muted-foreground leading-relaxed text-left">
-              At Lead Awaker, the belief is that your energy should go into what you excel at: delivering the quality service you already provide. The job here is to help you harness the power of attention.
-            </p>
+            <p className="text-xl text-muted-foreground leading-relaxed text-left">At Lead Awaker, the belief is that your energy should go into what you excel at: delivering the quality service you already provide. Our job is to help you harness the power of attention.</p>
             <p className="text-xl text-muted-foreground leading-relaxed text-left">
               For your brand to mean something valuable to a lead, that person has to be treated as an individual first, not as a line in a spreadsheet. When they are approached in a way that respects their timing, context, and preferences, they feel understood, and when they feel understood, they are finally awake to understand <span className="text-primary font-bold">you</span><CyclingWord words={[".", "r company.", "r brand.", "r services.", "r products.", "r story.", "r values."]} />
             </p>
