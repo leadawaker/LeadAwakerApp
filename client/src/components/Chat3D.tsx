@@ -164,21 +164,21 @@ export default function Chat3D() {
                     exit={{ opacity: 0, scale: 0.95 }}
                     className="relative flex justify-center items-center pt-4 pb-2"
                   >
-                    <div className="absolute left-0 flex items-center gap-1 bg-white border border-slate-100 px-3 py-2 rounded-2xl rounded-bl-sm shadow-sm scale-90">
+                    <div className="absolute left-0 flex items-center gap-1 bg-white border border-slate-100 px-3 py-3 rounded-2xl rounded-bl-sm shadow-sm scale-90">
                       <motion.span 
                         animate={{ opacity: [0.4, 1, 0.4] }} 
                         transition={{ repeat: Infinity, duration: 1.4, delay: 0 }}
-                        className="w-1.5 h-1.5 bg-slate-400 rounded-full" 
+                        className="w-2 h-2 bg-slate-400 rounded-full" 
                       />
                       <motion.span 
                         animate={{ opacity: [0.4, 1, 0.4] }} 
                         transition={{ repeat: Infinity, duration: 1.4, delay: 0.2 }}
-                        className="w-1.5 h-1.5 bg-slate-400 rounded-full" 
+                        className="w-2 h-2 bg-slate-400 rounded-full" 
                       />
                       <motion.span 
                         animate={{ opacity: [0.4, 1, 0.4] }} 
                         transition={{ repeat: Infinity, duration: 1.4, delay: 0.4 }}
-                        className="w-1.5 h-1.5 bg-slate-400 rounded-full" 
+                        className="w-2 h-2 bg-slate-400 rounded-full" 
                       />
                     </div>
                     <button 
