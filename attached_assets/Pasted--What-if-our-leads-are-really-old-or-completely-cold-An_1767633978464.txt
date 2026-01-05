@@ -1,0 +1,33 @@
+"What if our leads are really old or completely cold?"
+Answer: Age isn't the main factor; relevance is. Leads from 6 months or even 2 years ago can still convert if the original pain point remains and the outreach feels personal. The system identifies who's still in market based on engagement signals, not just database age.
+​
+
+"Will this work with our industry/niche?"
+Answer: Lead Awaker is built channel-agnostic and adapts to your specific sales process, whether you're in life insurance, fitness coaching, legal services, or B2B consulting. The AI learns your terminology, objections, and conversion patterns during setup.
+
+"How do you avoid coming across as spam or pushy?"
+Answer: Every message is personalized based on where the lead left off in your funnel, uses natural language (not robotic templates), and respects opt-out signals immediately. The goal is to feel like a helpful follow-up from your team, not a blast campaign.
+​
+
+"Do we need to provide scripts or does the AI write everything?"
+Answer: You provide examples of your best-performing conversations and key talking points; the AI adapts those into natural, individualized messages. You approve the tone during setup, and the system learns what converts over time.
+​
+
+"What channels do you use to re-engage leads?"
+Answer: Email, SMS, WhatsApp, and Telegram depending on your audience and compliance requirements. SMS often gets 98% open rates vs. 15-25% for email, so the system prioritizes the channel most likely to get attention without being intrusive.
+​
+
+"How do you handle compliance (GDPR, CAN-SPAM, CCPA)?"
+Answer: All outreach respects existing opt-in records, includes clear unsubscribe options, and logs consent by channel. If a lead opted into email but not SMS, they're only contacted via email. Compliance is built into the workflow, not bolted on.
+​
+
+"What happens when a lead responds?"
+Answer: The AI qualifies their interest level and either books a call directly into your calendar, hands off to your sales team with context, or continues nurturing based on readiness signals. You define the handoff criteria during setup.
+​
+
+"Can we pause or adjust campaigns mid-run?"
+Answer: Yes. You can pause outreach, update messaging, or adjust targeting rules anytime through the dashboard. Changes take effect immediately without losing progress on active conversations.
+​
+
+"What results can we realistically expect?"
+Answer: Most clients see 8-15% of dormant leads re-engage within the first 30 days, with 20-40% of those converting into booked calls or purchases. Results depend on list quality, offer fit, and how long leads have been dormant, but even a 5% reactivation rate pays for itself quickly.

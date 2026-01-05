@@ -78,16 +78,40 @@ export default function About() {
 
   const faqs = [
     {
-      q: "What's the setup time?",
-      a: "Most setups take 2–5 days depending on your CRM and list size. You keep running your business; the team handles the integrations and workflows for you."
+      q: "What if our leads are really old or completely cold?",
+      a: "Age isn't the main factor; relevance is. Leads from 6 months or even 2 years ago can still convert if the original pain point remains and the outreach feels personal. The system identifies who's still in market based on engagement signals, not just database age."
     },
     {
-      q: "Do you support our CRM?",
-      a: "We integrate with Salesforce, HubSpot, Pipedrive, Close, and custom APIs. If it has an API, we can connect to it."
+      q: "Will this work with our industry/niche?",
+      a: "Lead Awaker is built channel-agnostic and adapts to your specific sales process, whether you're in life insurance, fitness coaching, legal services, or B2B consulting. The AI learns your terminology, objections, and conversion patterns during setup."
     },
     {
-      q: "How much does it cost?",
-      a: "Pricing starts from a simple, custom quote. Most clients choose a performance‑based model tied to reactivated revenue, with no upfront setup fees."
+      q: "How do you avoid coming across as spam or pushy?",
+      a: "Every message is personalized based on where the lead left off in your funnel, uses natural language (not robotic templates), and respects opt-out signals immediately. The goal is to feel like a helpful follow-up from your team, not a blast campaign."
+    },
+    {
+      q: "Do we need to provide scripts or does the AI write everything?",
+      a: "You provide examples of your best-performing conversations and key talking points; the AI adapts those into natural, individualized messages. You approve the tone during setup, and the system learns what converts over time."
+    },
+    {
+      q: "What channels do you use to re-engage leads?",
+      a: "Email, SMS, WhatsApp, and Telegram depending on your audience and compliance requirements. SMS often gets 98% open rates vs. 15-25% for email, so the system prioritizes the channel most likely to get attention without being intrusive."
+    },
+    {
+      q: "How do you handle compliance (GDPR, CAN-SPAM, CCPA)?",
+      a: "All outreach respects existing opt-in records, includes clear unsubscribe options, and logs consent by channel. If a lead opted into email but not SMS, they're only contacted via email. Compliance is built into the workflow, not bolted on."
+    },
+    {
+      q: "What happens when a lead responds?",
+      a: "The AI qualifies their interest level and either books a call directly into your calendar, hands off to your sales team with context, or continues nurturing based on readiness signals. You define the handoff criteria during setup."
+    },
+    {
+      q: "Can we pause or adjust campaigns mid-run?",
+      a: "Yes. You can pause outreach, update messaging, or adjust targeting rules anytime through the dashboard. Changes take effect immediately without losing progress on active conversations."
+    },
+    {
+      q: "What results can we realistically expect?",
+      a: "Most clients see 8-15% of dormant leads re-engage within the first 30 days, with 20-40% of those converting into booked calls or purchases. Results depend on list quality, offer fit, and how long leads have been dormant, but even a 5% reactivation rate pays for itself quickly."
     }
   ];
 
@@ -164,7 +188,7 @@ export default function About() {
                   <p className="text-xl text-gray-800 font-medium leading-relaxed italic border-l-4 border-primary/30 pl-6 text-left">
                     "I kept seeing the same problem, businesses stuck wasting their money on more ads instead of waking up the leads they already paid for."
                   </p>
-                  <p className="text-lg text-gray-600 leading-relaxed font-light text-left">Lead Awaker is the result of 10+ years building production software, 5 years obsessing over data and automation systems, 4 years running a business with wife.</p>
+                  <p className="text-lg text-gray-600 leading-relaxed font-light text-left">Lead Awaker is the result of 10+ years building production software, 5 years obsessing over data and automation systems, 4 years running a business with wife Danique.</p>
                 </div>
                 
                 <div className="pt-4 flex gap-4">
