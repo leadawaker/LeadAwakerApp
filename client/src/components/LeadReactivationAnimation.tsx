@@ -37,17 +37,16 @@ const LeadReactivationAnimation = () => {
   useEffect(() => {
     if (!(brightness >= 100 || hasReachedEnd)) return;
 
-    const syncSparkles = () => {
+    // We use a single timer to trigger both sparkles and shimmer sweeps
+    const triggerEffect = () => {
       setShowSparkles(true);
-      setTimeout(() => setShowSparkles(false), 1500); // Sync with 1.5s shimmer duration
+      setTimeout(() => setShowSparkles(false), 1500); 
     };
 
-    const sparkleInterval = setInterval(syncSparkles, 7000); // Every 7s
+    const interval = setInterval(triggerEffect, 7000);
+    triggerEffect(); // Initial trigger
 
-    // Show immediately on first load
-    syncSparkles();
-
-    return () => clearInterval(sparkleInterval);
+    return () => clearInterval(interval);
   }, [brightness, hasReachedEnd]);
 
   useEffect(() => {
@@ -212,26 +211,23 @@ const LeadReactivationAnimation = () => {
           background: `linear-gradient(135deg, rgb(${currentC1.r}, ${currentC1.g}, ${currentC1.b}), rgb(${currentC2.r}, ${currentC2.g}, ${currentC2.b}))`,
           boxShadow:
             brightness >= 100 || hasReachedEnd
-              ? '0 15px 35px -12px rgba(251, 191, 36, 0.4), 0 8px 15px -6px rgba(251, 146, 60, 0.2), inset 0 1px 1px rgba(255,255,255,0.4)'
-              : `0 4px 12px -4px rgba(0,0,0,0.1), 0 ${
-                  brightness * 0.1
-                }px ${brightness * 0.4}px rgba(251, 191, 36, ${
-                  brightness * 0.003 + 0.05
+              ? '0 20px 40px -12px rgba(251, 191, 36, 0.5), 0 12px 20px -8px rgba(251, 146, 60, 0.3), inset 0 1px 1px rgba(255,255,255,0.4)'
+              : `0 8px 24px -6px rgba(0,0,0,0.2), 0 ${
+                  brightness * 0.15
+                }px ${brightness * 0.5}px rgba(251, 191, 36, ${
+                  brightness * 0.004 + 0.1
                 }), inset 0 1px 1px rgba(255,255,255,0.2)`,
           color: isWordHighlight ? '#ffffff' : '#1e293b'
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-50 pointer-events-none" />
 
-        {/* UPDATED: Shimmer every 7s (1.5s sweep + 5.5s pause) */}
+        {/* UPDATED: Shimmer sweeps only when showSparkles is true */}
         <motion.div
-          animate={{
-            left: ['-100%', '200%']
-          }}
+          initial={{ left: '-100%' }}
+          animate={showSparkles ? { left: '200%' } : { left: '-100%' }}
           transition={{
             duration: 1.5,
-            repeat: Infinity,
-            repeatDelay: 5.5, // Changed from 1.5 to 5.5 = 7s total cycle
             ease: 'easeInOut'
           }}
           className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 pointer-events-none z-20"
