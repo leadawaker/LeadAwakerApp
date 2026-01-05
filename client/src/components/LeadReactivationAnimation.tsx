@@ -17,44 +17,30 @@ const LeadReactivationAnimation = () => {
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
   const [forceWhite, setForceWhite] = useState(false);
   const [clickScale, setClickScale] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (brightness > 80) {
-      setForceWhite(true);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setHasStarted(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
     }
-  }, [brightness]);
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
-    if (activeClickCount > 0) {
-      setClickScale(prev => Math.min(prev + (0.75 / 30), 0.75)); 
-    }
-  }, [activeClickCount]);
+    if (!hasStarted) return;
 
-  const isWordHighlight = activeClickCount > 0 || animationComplete || hasReachedEnd || forceWhite;
-
-  const startColor1 = { r: 59, g: 130, b: 246 };
-  const startColor2 = { r: 13, g: 148, b: 136 };
-  const endColor1 = { r: 251, g: 191, b: 36 };
-  const endColor2 = { r: 251, g: 146, b: 60 };
-
-  const currentC1 = {
-    r: startColor1.r + (endColor1.r - startColor1.r) * (brightness / 100),
-    g: startColor1.g + (endColor1.g - startColor1.g) * (brightness / 100),
-    b: startColor1.b + (endColor1.b - startColor1.b) * (brightness / 100)
-  };
-
-  const currentC2 = {
-    r: startColor2.r + (endColor2.r - startColor2.r) * (brightness / 100),
-    g: startColor2.g + (endColor2.g - startColor2.g) * (brightness / 100),
-    b: startColor2.b + (endColor2.b - startColor2.b) * (brightness / 100)
-  };
-
-  const arrowX = 5.5;
-  const arrowY = 3.21;
-  const handX = 16.15;
-  const handY = 0.15;
-
-  useEffect(() => {
     const cursorSequence: CursorData[] = [
       { delay: 500, startX: 20, startY: 20 },
       { delay: 2000, startX: 80, startY: 30 },
@@ -107,10 +93,13 @@ const LeadReactivationAnimation = () => {
         }, 1400);
       }, cursor.delay);
     });
-  }, []);
+  }, [hasStarted]);
 
   return (
-    <div className="relative w-full h-[60vh] bg-white flex items-center justify-center overflow-hidden font-sans rounded-2xl border border-border shadow-sm mb-12">
+    <div 
+      ref={containerRef}
+      className="relative w-full h-[60vh] bg-white flex items-center justify-center overflow-hidden font-sans rounded-2xl border border-border shadow-sm mb-12"
+    >
       <style>{`
         @keyframes sparkle {
           0%, 100% { transform: scale(0); opacity: 0; }
