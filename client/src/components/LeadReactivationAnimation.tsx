@@ -256,13 +256,8 @@
                     className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 pointer-events-none z-20"
                   />
 
-                  <span className="relative z-10 tracking-tight text-[1.44em] flex items-center justify-center">
+                  <span className="relative z-10 tracking-tight text-[1.44em]">
                     Your Brand
-                    <span className="ml-3 mt-1 inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-500/10 border border-blue-500/20">
-                      <svg viewBox="0 0 24 24" className="w-4 h-4 fill-blue-500">
-                        <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
-                      </svg>
-                    </span>
                   </span>
                 </motion.button>
 
