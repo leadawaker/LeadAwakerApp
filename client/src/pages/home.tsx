@@ -99,9 +99,7 @@ export default function Home() {
                   </Button>
                 </Link>
                 <Link href="/services">
-                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 hover:text-blue-500 hover:border-blue-500 transition-all">
-                    See Services
-                  </Button>
+                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 hover:text-blue-500 hover:border-blue-500 transition-all">See Use Cases</Button>
                 </Link>
               </div>
             </motion.div>
