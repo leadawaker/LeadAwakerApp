@@ -82,7 +82,7 @@ export default function Chat3D() {
               <motion.div className="flex justify-end" custom={0} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-1">
                 <div className="flex flex-col items-end gap-1">
                   <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
-                    Hi, this is Sophie from Sterling Finance, is this Jack who wanted to check if they were owed a refund on their car finance?
+                    Hi Jack, this is Sophie from Peak Creative checking in. You reached out back in July about getting a new website that converts better for your coaching business. Did that timing work out, or should we circle back? 😊
                   </div>
                   <span className="text-xs text-slate-400 pr-2">14:35</span>
                 </div>
@@ -92,7 +92,7 @@ export default function Chat3D() {
               <motion.div className="flex justify-end" custom={1} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-2">
                 <div className="flex flex-col items-end gap-1">
                   <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
-                    just bumping this up in case you got busy before :)
+                    Just bumping this up in case you got busy over the holidays! Still on your radar?
                   </div>
                   <span className="text-xs text-slate-400 pr-2">14:55</span>
                 </div>
@@ -101,35 +101,25 @@ export default function Chat3D() {
               {/* Message 3 - Jack */}
               <motion.div className="flex justify-start" custom={2} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-jack-1">
                 <div className="flex flex-col items-start gap-1">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[95%] shadow-sm text-sm whitespace-nowrap">
-                    Hi, yes
+                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[95%] shadow-sm text-sm">
+                    Hi Sophie! Yes sorry, summer was crazy with client launches. The website is definitely still something I need.
                   </div>
-                  <span className="text-xs text-slate-400 pl-2">15:00</span>
+                  <span className="text-xs text-slate-400 pl-2">15:02</span>
                 </div>
               </motion.div>
 
-              {/* Message 4 - Jack */}
-              <motion.div className="flex justify-start" custom={3} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-jack-2">
-                <div className="flex flex-col items-start gap-1">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] shadow-sm text-sm">
-                    I would like to check. I had 2 cars on finance 5 years ago
-                  </div>
-                  <span className="text-xs text-slate-400 pl-2">15:01</span>
-                </div>
-              </motion.div>
-
-              {/* Message 5 - Sophie */}
-              <motion.div className="flex justify-end" custom={4} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-3">
+              {/* Message 4 - Sophie */}
+              <motion.div className="flex justify-end" custom={3} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-3">
                 <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#3B82F6" }}>
-                    That's great Jack! Do you happen to have your vehicle finance agreement documents handy for those cars?
+                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
+                    No worries at all Jack, I totally get it! Quick question — what was the main blocker that kept it on hold? (Budget, timeline, or just other fires?)
                   </div>
-                  <span className="text-xs text-slate-400 pr-2">15:04</span>
+                  <span className="text-xs text-slate-400 pr-2">15:03</span>
                 </div>
               </motion.div>
 
               {/* Typing Indicator */}
-              <motion.div className="flex justify-start" custom={5} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-typing">
+              <motion.div className="flex justify-start" custom={4} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-typing">
                 <div className="bg-slate-200 text-slate-500 rounded-full px-4 py-2 shadow-sm flex items-center justify-center gap-2">
                   <motion.span className="text-4xl font-black" animate={{ y: [0, -8, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0 }}>·</motion.span>
                   <motion.span className="text-4xl font-black" animate={{ y: [0, -8, 0] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.2 }}>·</motion.span>
