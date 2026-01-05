@@ -2,11 +2,24 @@ import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const languages = [
+  { code: "EN", label: "ENGLISH", flag: "🇬🇧" },
+  { code: "PT", label: "PORTUGUESE", flag: "🇧🇷" },
+  { code: "NL", label: "DUTCH", flag: "🇳🇱" },
+];
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [location] = useLocation();
+  const [currentLang, setCurrentLang] = useState(languages[0]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,6 +50,33 @@ export function Navbar() {
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="flex items-center gap-2 font-medium h-9 px-3 hover:bg-muted/50 transition-colors" data-testid="button-language-selector">
+                <span className="text-base leading-none">{currentLang.flag}</span>
+                <span className="text-sm font-semibold tracking-wide text-muted-foreground">{currentLang.code}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40 p-1">
+              {languages.map((lang) => (
+                <DropdownMenuItem
+                  key={lang.code}
+                  onClick={() => setCurrentLang(lang)}
+                  className="cursor-pointer flex items-center justify-between px-3 py-2 text-sm font-medium focus:bg-primary focus:text-white rounded-md transition-all"
+                  data-testid={`menu-item-lang-${lang.code}`}
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="text-lg">{lang.flag}</span>
+                    {lang.label}
+                  </span>
+                  {currentLang.code === lang.code && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {navLinks.map((link) => (
             <Link 
               key={link.href} 
