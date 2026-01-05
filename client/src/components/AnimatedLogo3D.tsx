@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef, CSSProperties } from "react";
-import profileImg from "@/assets/profile.png";
+import profileImg from "@/assets/profile_v2.png";
 
 export default function AnimatedLogo3D() {
   const ref = useRef<HTMLDivElement>(null);
