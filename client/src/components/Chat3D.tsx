@@ -82,7 +82,7 @@ export default function Chat3D() {
           </div>
 
           {/* Chat Messages */}
-          <div className="p-6 space-y-4 bg-slate-50 min-h-[580px] max-h-[650px] overflow-y-auto relative scrollbar-hide">
+          <div className="p-6 space-y-4 bg-slate-50 min-h-[700px] max-h-[800px] overflow-y-auto relative scrollbar-hide">
             {/* Overlay effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-slate-100/20 via-transparent to-slate-100/20 pointer-events-none" />
             
