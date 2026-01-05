@@ -54,42 +54,42 @@ const LeadReactivationAnimation = () => {
   const handX = 16.15;
   const handY = 0.15;
 
+  const [sparkleKey, setSparkleKey] = useState(0);
+
   useEffect(() => {
-    const cursorSequence: CursorData[] = [
-      { delay: 500, startX: 20, startY: 20 },
-      { delay: 2000, startX: 80, startY: 30 },
-      { delay: 3500, startX: 15, startY: 70 },
-      { delay: 5000, startX: 40, startY: 10 },
-      { delay: 5300, startX: 60, startY: 15 },
-      { delay: 5600, startX: 25, startY: 50 },
-      { delay: 5900, startX: 75, startY: 60 },
-      { delay: 6200, startX: 35, startY: 80 },
-      { delay: 6400, startX: 55, startY: 25 },
-      { delay: 6600, startX: 10, startY: 40 },
-      { delay: 6800, startX: 85, startY: 45 },
-      { delay: 7000, startX: 30, startY: 65 },
-      { delay: 7100, startX: 70, startY: 75 },
-      { delay: 7200, startX: 45, startY: 35 },
-      { delay: 7300, startX: 65, startY: 85 },
-      { delay: 7400, startX: 20, startY: 55 },
-      { delay: 7500, startX: 80, startY: 20 },
-      { delay: 7600, startX: 50, startY: 90 },
-      { delay: 7700, startX: 15, startY: 25 },
-      { delay: 7800, startX: 75, startY: 40 },
-      { delay: 7900, startX: 35, startY: 15 },
-      { delay: 8000, startX: 60, startY: 70 },
-      { delay: 8100, startX: 25, startY: 85 },
-      { delay: 8200, startX: 85, startY: 30 },
-      { delay: 8300, startX: 40, startY: 60 },
-      { delay: 8400, startX: 70, startY: 50 },
-      { delay: 8500, startX: 30, startY: 35 },
-      { delay: 8600, startX: 55, startY: 80 },
-      { delay: 8700, startX: 10, startY: 65 },
-      { delay: 8800, startX: 90, startY: 55 },
-      { delay: 8900, startX: 50, startY: 45 },
-      { delay: 9000, startX: 65, startY: 20 },
-      { delay: 9100, startX: 22, startY: 75 }
-    ];
+    const totalCursors = 30;
+    const cursorSequence: CursorData[] = Array.from({ length: totalCursors }).map((_, index) => {
+      // Determine which edge to spawn from (0: top, 1: right, 2: bottom, 3: left)
+      const edge = Math.floor(Math.random() * 4);
+      let startX, startY;
+      
+      switch(edge) {
+        case 0: // Top
+          startX = Math.random() * 100;
+          startY = -10;
+          break;
+        case 1: // Right
+          startX = 110;
+          startY = Math.random() * 100;
+          break;
+        case 2: // Bottom
+          startX = Math.random() * 100;
+          startY = 110;
+          break;
+        case 3: // Left
+        default:
+          startX = -10;
+          startY = Math.random() * 100;
+          break;
+      }
+
+      return {
+        id: Date.now() + index,
+        startX,
+        startY,
+        delay: index * 250 // Staggered entry
+      };
+    });
 
     cursorSequence.forEach((cursor, index) => {
       setTimeout(() => {
@@ -181,13 +181,18 @@ const LeadReactivationAnimation = () => {
             ease: "easeInOut"
           }}
           className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 pointer-events-none z-20"
+          onAnimationIteration={() => {
+            if (brightness >= 100 || hasReachedEnd) {
+              setSparkleKey(prev => prev + 1);
+            }
+          }}
         />
 
         <span className="relative z-10 tracking-tight text-[1.44em]">Your Brand</span>
       </motion.button>
 
       {(brightness >= 100 || hasReachedEnd) && (
-        <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
+        <div key={sparkleKey} className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
           <div className="relative w-[400px] h-[150px]">
             {[
               { x: 0, y: 20, d: 0 },
