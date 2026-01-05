@@ -145,7 +145,7 @@ export default function About() {
         </motion.div>
 
         {/* 2. Meet the Founder */}
-        <div className="w-full bg-[#E5E7EB] py-24 mb-20 overflow-hidden">
+        <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] mr-[50vw] bg-[#E5E7EB] py-24 mb-20 overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
           <div className="container mx-auto px-4 md:px-6 relative text-left">
             <div className="max-w-4xl mx-auto">
