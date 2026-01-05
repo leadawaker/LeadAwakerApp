@@ -45,6 +45,7 @@ export default function Chat3D() {
   }, [showEngagement]);
 
   const engagementMessages = [
+    { type: 'jack', text: "Honestly a bit of all three. I need something that looks pro but doesn't take forever or cost a fortune.", time: "15:06" },
     { type: 'sophie', text: "Perfect, that's exactly what we specialize in. We've since added templates that cut delivery from 8 weeks to 3 while keeping the custom feel. Want me to send over 3 options that match your coaching niche with rough timelines and pricing? Or hop on a quick 15-min call tomorrow to walk through?", time: "15:08" },
     { type: 'jack', text: "The 15-min call tomorrow works great! What times do you have?", time: "15:09" },
     { type: 'sophie', text: "Awesome! Here's my Calendly for tomorrow: [link]\nI'll send a recap of our chat there too so you have it handy. Talk soon Jack! 🚀", time: "15:10" }
@@ -85,7 +86,7 @@ export default function Chat3D() {
           <div className="absolute inset-0 pointer-events-none" style={{
             background: "radial-gradient(circle at 20% 50%, rgba(37,99,235,0.05) 0%, transparent 40%)",
           }} />
-          
+
           {/* Chat Header */}
           <div className="p-4 flex items-center gap-3" style={{ backgroundColor: "#2563EB" }}>
             <div className="rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ width: "44px", height: "44px", backgroundColor: "#6B6B6B" }} data-testid="chat-avatar">J</div>
@@ -102,7 +103,7 @@ export default function Chat3D() {
           <div className="p-6 pb-2 space-y-4 bg-slate-50 min-h-[700px] max-h-[800px] overflow-y-auto relative scrollbar-hide">
             {/* Overlay effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-slate-100/20 via-transparent to-slate-100/20 pointer-events-none" />
-            
+
             <div className="relative z-10 space-y-4">
               {/* Message 1 - Sophie */}
               <motion.div className="flex justify-end" custom={0} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-1">
@@ -169,16 +170,6 @@ export default function Chat3D() {
                 <div className="flex flex-col items-end gap-1">
                   <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>No worries at all Jack, I totally get it! Quick question: what was the main blocker that kept it on hold? (Budget, timeline, or just other fires?)</div>
                   <span className="text-xs text-slate-400 pr-2">15:03</span>
-                </div>
-              </motion.div>
-
-              {/* Message 5 - Jack (moved here) */}
-              <motion.div className="flex justify-start" custom={4} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-jack-2">
-                <div className="flex flex-col items-start gap-1">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[95%] shadow-sm text-sm">
-                    Honestly a bit of all three. I need something that looks pro but doesn't take forever or cost a fortune.
-                  </div>
-                  <span className="text-xs text-slate-400 pl-2">15:06</span>
                 </div>
               </motion.div>
 
@@ -255,7 +246,7 @@ export default function Chat3D() {
                         )}
                       </AnimatePresence>
                     ))}
-                    
+
                     <AnimatePresence>
                       {visibleMessages.length === engagementMessages.length && (
                         <motion.div 
