@@ -168,7 +168,7 @@ export default function About() {
                   <p className="text-xl text-gray-800 font-medium leading-relaxed italic border-l-4 border-primary/30 pl-6 text-left">
                     "I kept seeing the same problem, businesses stuck wasting their money on more ads instead of waking up the leads they already paid for."
                   </p>
-                  <p className="text-lg text-gray-600 leading-relaxed font-light">Lead Awaker is the result of 10+ years building production software, 5 years obsessing over data and automation systems, 4 years running a business with wife.</p>
+                  <p className="text-lg text-gray-600 leading-relaxed font-light text-left">Lead Awaker is the result of 10+ years building production software, 5 years obsessing over data and automation systems, 4 years running a business with wife.</p>
                 </div>
                 
                 <div className="pt-4 flex gap-4">
