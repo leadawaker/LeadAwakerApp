@@ -11,7 +11,7 @@ import {
 
 const languages = [
   { code: "EN", label: "ENGLISH", flag: "https://flagcdn.com/w40/gb.png" },
-  { code: "PT", label: "PORTUGEUÊS", flag: "https://flagcdn.com/w40/br.png" },
+  { code: "PT", label: "PORTUGUÊS", flag: "https://flagcdn.com/w40/br.png" },
   { code: "NL", label: "NEDERLANDS", flag: "https://flagcdn.com/w40/nl.png" },
 ];
 
@@ -70,9 +70,6 @@ export function Navbar() {
                     <img src={lang.flag} alt={lang.label} className="h-4 w-[1.35rem] rounded-none object-cover shadow-sm -translate-y-[1px]" />
                     {lang.label}
                   </span>
-                  {currentLang.code === lang.code && (
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  )}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
