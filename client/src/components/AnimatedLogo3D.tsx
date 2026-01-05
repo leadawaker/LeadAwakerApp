@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef, CSSProperties } from "react";
+import profileImg from "@/assets/profile.png";
 
 export default function AnimatedLogo3D() {
   const ref = useRef<HTMLDivElement>(null);
@@ -46,7 +47,7 @@ export default function AnimatedLogo3D() {
           className="flex items-center justify-center"
         >
           <img
-            src="/attached_assets/file_000000005598722f9a3a4459e83712e7_(1)_1766322203145.png"
+            src={profileImg}
             alt="My Photo"
             className="w-64 h-64 rounded-full object-cover border-4 border-primary/20 shadow-[0_20px_50px_rgba(0,0,0,0.2)]"
           />
