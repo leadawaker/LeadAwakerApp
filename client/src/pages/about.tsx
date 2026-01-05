@@ -212,7 +212,7 @@ export default function About() {
                     onClick={() => setOpenFAQ(openFAQ === i ? null : i)}
                     className="w-full flex items-center justify-between p-6 hover:bg-muted/50 transition-colors group"
                   >
-                    <h3 className="text-lg font-bold text-left group-hover:text-primary transition-colors">{faq.q}</h3>
+                    <h3 className="text-lg font-medium text-left group-hover:text-primary transition-colors">{faq.q}</h3>
                     <ChevronDown
                       className={`w-5 h-5 text-primary transition-transform duration-300 ${
                         openFAQ === i ? "rotate-180" : ""
@@ -224,7 +224,7 @@ export default function About() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="px-6 pb-6 text-muted-foreground border-t border-border pt-4"
+                      className="px-6 pb-6 text-muted-foreground border-t border-border pt-4 text-left"
                     >
                       <p className="text-base leading-relaxed">{faq.a}</p>
                     </motion.div>
