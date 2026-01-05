@@ -20,6 +20,21 @@ const LeadReactivationAnimation = () => {
   const [hasStarted, setHasStarted] = useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
+  // Force white text once bright enough
+  useEffect(() => {
+    if (brightness > 80) {
+      setForceWhite(true);
+    }
+  }, [brightness]);
+
+  // Grow button per click (0.75 spread over 30 clicks)
+  useEffect(() => {
+    if (activeClickCount > 0 && !hasReachedEnd) {
+      setClickScale(prev => Math.min(prev + 0.75 / 30, 0.75));
+    }
+  }, [activeClickCount, hasReachedEnd]);
+
+  // Start animation when in view
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -38,6 +53,7 @@ const LeadReactivationAnimation = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Cursor sequence and brightness buildup
   useEffect(() => {
     if (!hasStarted) return;
 
@@ -84,7 +100,7 @@ const LeadReactivationAnimation = () => {
 
         setTimeout(() => {
           setCursors(prev => prev.filter(c => c.id !== cursorId));
-          setBrightness(prev => Math.min(prev + (100 / 30), 100));
+          setBrightness(prev => Math.min(prev + 100 / 30, 100));
 
           if (index === cursorSequence.length - 1) {
             setHasReachedEnd(true);
@@ -95,29 +111,31 @@ const LeadReactivationAnimation = () => {
     });
   }, [hasStarted]);
 
-  const interpolateColor = (c1: {r: number, g: number, b: number}, c2: {r: number, g: number, b: number}, factor: number) => {
-    return {
-      r: Math.round(c1.r + (c2.r - c1.r) * factor),
-      g: Math.round(c1.g + (c2.g - c1.g) * factor),
-      b: Math.round(c1.b + (c2.b - c1.b) * factor),
-    };
-  };
+  const interpolateColor = (
+    c1: { r: number; g: number; b: number },
+    c2: { r: number; g: number; b: number },
+    factor: number
+  ) => ({
+    r: Math.round(c1.r + (c2.r - c1.r) * factor),
+    g: Math.round(c1.g + (c2.g - c1.g) * factor),
+    b: Math.round(c1.b + (c2.b - c1.b) * factor)
+  });
 
   const startC1 = { r: 241, g: 245, b: 249 };
   const startC2 = { r: 255, g: 255, b: 255 };
   const activeC1 = { r: 252, g: 211, b: 77 };
   const activeC2 = { r: 251, g: 146, b: 60 };
-  
+
   const factor = Math.min(brightness / 100, 1);
   const currentC1 = interpolateColor(startC1, activeC1, factor);
   const currentC2 = interpolateColor(startC2, activeC2, factor);
-  
-  const isWordHighlight = brightness >= 100 || hasReachedEnd;
+
+  const isWordHighlight = brightness >= 100 || hasReachedEnd || forceWhite;
 
   return (
-    <div 
+    <div
       ref={containerRef}
-      className="relative w-full h-[60vh] bg-white flex items-center justify-center overflow-hidden font-sans rounded-2xl border border-border shadow-sm mb-12"
+      className="relative w-full h-[45vh] bg-white flex items-center justify-center overflow-hidden font-sans rounded-2xl border border-border shadow-sm mb-12"
     >
       <style>{`
         @keyframes sparkle {
@@ -128,16 +146,20 @@ const LeadReactivationAnimation = () => {
           animation: sparkle 0.75s both;
         }
       `}</style>
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none mix-blend-multiply"></div>
+
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none mix-blend-multiply" />
 
       <AnimatePresence>
-        {cursors.map((cursor) => (
-          <Cursor 
-            key={cursor.id} 
-            startX={cursor.startX} 
+        {cursors.map(cursor => (
+          <Cursor
+            key={cursor.id}
+            startX={cursor.startX}
             startY={cursor.startY}
-            onHover={(isClicking) => {
-              setActiveClickCount(prev => isClicking ? prev + 1 : Math.max(0, prev - 1));
+            onHover={isClicking => {
+              // increase while clicking, decrease when leaving
+              setActiveClickCount(prev =>
+                isClicking ? prev + 1 : Math.max(0, prev - 1)
+              );
             }}
           />
         ))}
@@ -146,48 +168,64 @@ const LeadReactivationAnimation = () => {
       <motion.button
         id="lead-button"
         initial={{ scale: 0.45, opacity: 0 }}
-        animate={{ 
-          scale: (brightness >= 100 || hasReachedEnd) 
-            ? 1.0 
-            : 0.25 + clickScale, 
-          opacity: 1 
+        animate={{
+          scale:
+            brightness >= 100 || hasReachedEnd
+              ? 1.0
+              : 0.25 + clickScale,
+          opacity: 1
         }}
-        transition={{ 
-          type: "spring",
-          stiffness: (activeClickCount > 0 || hasReachedEnd) ? 1200 : 400,
-          damping: (activeClickCount > 0 || hasReachedEnd) ? 20 : 25,
+        transition={{
+          type: 'spring',
+          stiffness: activeClickCount > 0 || hasReachedEnd ? 1200 : 400,
+          damping: activeClickCount > 0 || hasReachedEnd ? 20 : 25,
           mass: 0.5
         }}
-        whileHover={(brightness >= 100 || hasReachedEnd) ? { 
-          scale: 1.05,
-          rotate: [0, -1, 1, -1, 0],
-          transition: { duration: 0.3, repeat: Infinity, repeatType: "reverse" }
-        } : {}}
+        whileHover={
+          brightness >= 100 || hasReachedEnd
+            ? {
+                scale: 1.05,
+                rotate: [0, -1, 1, -1, 0],
+                transition: {
+                  duration: 0.3,
+                  repeat: Infinity,
+                  repeatType: 'reverse'
+                }
+              }
+            : {}
+        }
         className="relative px-12 py-6 text-2xl font-bold rounded-2xl transition-all duration-200 z-10 select-none overflow-hidden group border border-black/10"
         style={{
           background: `linear-gradient(135deg, rgb(${currentC1.r}, ${currentC1.g}, ${currentC1.b}), rgb(${currentC2.r}, ${currentC2.g}, ${currentC2.b}))`,
-          boxShadow: (brightness >= 100 || hasReachedEnd)
-            ? `0 15px 35px -12px rgba(251, 191, 36, 0.4), 0 8px 15px -6px rgba(251, 146, 60, 0.2), inset 0 1px 1px rgba(255,255,255,0.4)`
-            : `0 4px 12px -4px rgba(0,0,0,0.1), 0 ${brightness * 0.1}px ${brightness * 0.4}px rgba(251, 191, 36, ${brightness * 0.003 + 0.05}), inset 0 1px 1px rgba(255,255,255,0.2)`,
-          color: isWordHighlight ? '#ffffff' : '#1e293b',
+          boxShadow:
+            brightness >= 100 || hasReachedEnd
+              ? '0 15px 35px -12px rgba(251, 191, 36, 0.4), 0 8px 15px -6px rgba(251, 146, 60, 0.2), inset 0 1px 1px rgba(255,255,255,0.4)'
+              : `0 4px 12px -4px rgba(0,0,0,0.1), 0 ${
+                  brightness * 0.1
+                }px ${brightness * 0.4}px rgba(251, 191, 36, ${
+                  brightness * 0.003 + 0.05
+                }), inset 0 1px 1px rgba(255,255,255,0.2)`,
+          color: isWordHighlight ? '#ffffff' : '#1e293b'
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-50 pointer-events-none" />
 
         <motion.div
           animate={{
-            left: ['-100%', '200%'],
+            left: ['-100%', '200%']
           }}
           transition={{
             duration: 1.5,
             repeat: Infinity,
-            repeatDelay: 8.5,
-            ease: "easeInOut"
+            repeatDelay: 1.5,
+            ease: 'easeInOut'
           }}
           className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 pointer-events-none z-20"
         />
 
-        <span className="relative z-10 tracking-tight text-[1.44em]">Your Brand</span>
+        <span className="relative z-10 tracking-tight text-[1.44em]">
+          Your Brand
+        </span>
       </motion.button>
 
       {(brightness >= 100 || hasReachedEnd) && (
@@ -200,7 +238,7 @@ const LeadReactivationAnimation = () => {
               { x: 75, y: 60, d: 0.6 },
               { x: 100, y: 30, d: 0.8 },
               { x: 25, y: 10, d: 1.0 },
-              { x: 85, y: 90, d: 1.2 },
+              { x: 85, y: 90, d: 1.2 }
             ].map((config, i) => (
               <svg
                 key={i}
@@ -209,9 +247,10 @@ const LeadReactivationAnimation = () => {
                 style={{
                   left: `${config.x}%`,
                   top: `${config.y}%`,
+                  // @ts-expect-error custom CSS variable
                   '--s': 1,
-                  animationDelay: `${config.d}s`,
-                } as any}
+                  animationDelay: `${config.d}s`
+                }}
               >
                 <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
               </svg>
@@ -223,8 +262,18 @@ const LeadReactivationAnimation = () => {
   );
 };
 
-const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, onHover?: (isClicking: boolean) => void }) => {
-  const [phase, setPhase] = useState<'idle' | 'moving' | 'hovering' | 'clicking' | 'disappearing'>('idle');
+const Cursor = ({
+  startX,
+  startY,
+  onHover
+}: {
+  startX: number;
+  startY: number;
+  onHover?: (isClicking: boolean) => void;
+}) => {
+  const [phase, setPhase] = useState<
+    'idle' | 'moving' | 'hovering' | 'clicking' | 'disappearing'
+  >('idle');
   const [buttonScale, setButtonScale] = useState(1);
   const [offsets] = useState(() => ({
     x: (Math.random() - 0.5) * 6,
@@ -236,12 +285,16 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, o
   const [currentPos, setCurrentPos] = useState({ x: startX, y: startY });
   const [randomConfig] = useState(() => {
     const isFirstFew = Math.random() > 0.5;
-    const isSlow = Math.random() < (5 / 30);
+    const isSlow = Math.random() < 5 / 30;
     const baseDuration = 0.5 + Math.random() * 0.6;
     const jitterMultiplier = isFirstFew ? 1.2 : 0.8;
     return {
-      jitterX: (isFirstFew ? (Math.random() - 0.5) * 8 : (Math.random() - 0.5) * 5) * jitterMultiplier,
-      jitterY: (isFirstFew ? (Math.random() - 0.5) * 8 : (Math.random() - 0.5) * 5) * jitterMultiplier,
+      jitterX:
+        (isFirstFew ? (Math.random() - 0.5) * 8 : (Math.random() - 0.5) * 5) *
+        jitterMultiplier,
+      jitterY:
+        (isFirstFew ? (Math.random() - 0.5) * 8 : (Math.random() - 0.5) * 5) *
+        jitterMultiplier,
       duration: isSlow ? baseDuration * 1.3 : baseDuration,
       delay: Math.random() * 0.2,
       pathType: Math.floor(Math.random() * 4),
@@ -260,16 +313,19 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, o
 
     const checkInterval = setInterval(() => {
       const buttonElement = document.getElementById('lead-button');
-      const buttonRect = buttonElement?.getBoundingClientRect();
-      const cursorElement = document.getElementById(`cursor-${startX}-${startY}`);
+      if (!buttonElement) return;
+
+      const buttonRect = buttonElement.getBoundingClientRect();
+      const cursorElement = document.getElementById(
+        `cursor-${startX}-${startY}`
+      );
 
       if (buttonRect && cursorElement) {
-        const style = window.getComputedStyle(buttonElement!);
+        const style = window.getComputedStyle(buttonElement);
         const matrix = new DOMMatrixReadOnly(style.transform);
         setButtonScale(matrix.a);
 
         const cursorRect = cursorElement.getBoundingClientRect();
-        // Adding 4px buffer for more reliable detection
         const isOverlapping = !(
           cursorRect.right < buttonRect.left - 4 ||
           cursorRect.left > buttonRect.right + 4 ||
@@ -278,15 +334,23 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, o
         );
 
         if (isOverlapping) {
-          setPhase(prev => (prev === 'moving' || prev === 'idle') ? 'hovering' : prev);
+          setPhase(prev =>
+            prev === 'moving' || prev === 'idle' ? 'hovering' : prev
+          );
         } else {
-          setPhase(prev => (prev === 'hovering') ? 'moving' : prev);
+          setPhase(prev => (prev === 'hovering' ? 'moving' : prev));
         }
       }
     }, 16);
 
-    const clickTimer = setTimeout(() => setPhase('clicking'), randomConfig.duration * 1000 + 100);
-    const disappearingTimer = setTimeout(() => setPhase('disappearing'), randomConfig.duration * 1000 + 300);
+    const clickTimer = setTimeout(
+      () => setPhase('clicking'),
+      randomConfig.duration * 1000 + 100
+    );
+    const disappearingTimer = setTimeout(
+      () => setPhase('disappearing'),
+      randomConfig.duration * 1000 + 300
+    );
 
     return () => {
       clearTimeout(idleTimer);
@@ -296,15 +360,16 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, o
     };
   }, [buttonCenterX, buttonCenterY, startX, startY, randomConfig]);
 
-    useEffect(() => {
-      if (phase === 'clicking') {
-        onHover?.(true);
-        return () => onHover?.(false);
-      }
-    }, [phase, onHover]);
+  useEffect(() => {
+    if (phase === 'clicking') {
+      onHover?.(true);
+      return () => onHover?.(false);
+    }
+  }, [phase, onHover]);
 
   const isPointer = phase === 'idle' || phase === 'moving';
-  const isHand = phase === 'hovering' || phase === 'clicking' || phase === 'disappearing';
+  const isHand =
+    phase === 'hovering' || phase === 'clicking' || phase === 'disappearing';
   const isClicking = phase === 'clicking';
   const isDisappearing = phase === 'disappearing';
 
@@ -315,26 +380,26 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, o
     const halfwayX = randomConfig.halfwayOffset.x;
     const halfwayY = randomConfig.halfwayOffset.y;
 
-    switch(randomConfig.pathType) {
+    switch (randomConfig.pathType) {
       case 1:
         return {
           x: [0, halfwayX, randomConfig.jitterX, 0],
-          y: [0, halfwayY, randomConfig.jitterY, 0],
+          y: [0, halfwayY, randomConfig.jitterY, 0]
         };
       case 2:
         return {
           x: [0, halfwayX, -randomConfig.jitterX * 0.8, randomConfig.jitterX, 0],
-          y: [0, -halfwayY * 0.5, randomConfig.jitterY, -randomConfig.jitterY * 0.3, 0],
+          y: [0, -halfwayY * 0.5, randomConfig.jitterY, -randomConfig.jitterY * 0.3, 0]
         };
       case 3:
         return {
           x: [0, halfwayX * 1.5, -randomConfig.jitterX, randomConfig.jitterX * 0.5, 0],
-          y: [0, -halfwayY, randomConfig.jitterY * 1.2, 0],
+          y: [0, -halfwayY, randomConfig.jitterY * 1.2, 0]
         };
       default:
         return {
           x: [0, halfwayX * 0.2, randomConfig.jitterX, 0],
-          y: [0, halfwayY * 0.2, randomConfig.jitterY, 0],
+          y: [0, halfwayY * 0.2, randomConfig.jitterY, 0]
         };
     }
   };
@@ -348,24 +413,34 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, o
         top: `${currentPos.y}%`,
         transformOrigin: 'center center',
         opacity: isDisappearing ? 0 : 1,
-        transition: (phase === 'moving' || phase === 'hovering' || phase === 'clicking' || phase === 'disappearing') 
-          ? `left ${randomConfig.duration}s cubic-bezier(0.34, 1.56, 0.64, 1), top ${randomConfig.duration}s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease-out` 
-          : 'none'
+        transition:
+          phase === 'moving' ||
+          phase === 'hovering' ||
+          phase === 'clicking' ||
+          phase === 'disappearing'
+            ? `left ${randomConfig.duration}s cubic-bezier(0.34, 1.56, 0.64, 1), top ${randomConfig.duration}s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease-out`
+            : 'none'
       }}
-      animate={{ 
+      animate={{
         ...getKeyframes(),
         x: (getKeyframes() as any).x * buttonScale,
-        y: (getKeyframes() as any).y * buttonScale,
+        y: (getKeyframes() as any).y * buttonScale
       }}
-      transition={{ 
-        duration: isClicking ? 0.05 : (0.1 + Math.random() * 0.2),
-        ease: isClicking ? "easeOut" : "linear",
+      transition={{
+        duration: isClicking ? 0.05 : 0.1 + Math.random() * 0.2,
+        ease: isClicking ? 'easeOut' : 'linear',
         repeat: isClicking ? 0 : 2,
-        repeatType: "reverse"
+        repeatType: 'reverse'
       }}
     >
       {isPointer && (
-        <svg width="45" height="45" viewBox="0 -1 32 26" fill="none" className="drop-shadow-xl">
+        <svg
+          width="45"
+          height="45"
+          viewBox="0 -1 32 26"
+          fill="none"
+          className="drop-shadow-xl"
+        >
           <path
             d="M1 3h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v1h1v2H9v1h1v2h1v2h-1v1H8v-1H7v-2H6v-2H5v1H4v1H3v1H1v-17z"
             fill="white"
@@ -376,8 +451,12 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, o
         </svg>
       )}
       {isHand && (
-        <svg 
-          width="45" height="45" viewBox="0 0 32 24" fill="none" className="drop-shadow-xl overflow-visible"
+        <svg
+          width="45"
+          height="45"
+          viewBox="0 0 32 24"
+          fill="none"
+          className="drop-shadow-xl overflow-visible"
           style={{
             marginLeft: `${(1 - 19) * (45 / 32)}px`,
             marginTop: `${(3 - 1) * (45 / 24)}px`,
@@ -403,16 +482,35 @@ const Cursor = ({ startX, startY, onHover }: { startX: number, startY: number, o
                 initial={{ opacity: 0, scale: 0.8, y: 8 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 1.1 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
-                style={{ 
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                style={{
                   zIndex: 100,
                   position: 'relative'
                 }}
               >
-                {/* 3 angled stroke lines - YELLOW MATCHING BUTTON GLOW */}
-                <path d="M12 -8 L6 -18" stroke="#fbbf24" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                <path d="M21 -12 L21 -24" stroke="#fbbf24" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                <path d="M30 -8 L36 -18" stroke="#fbbf24" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                <path
+                  d="M12 -8 L6 -18"
+                  stroke="#fbbf24"
+                  strokeWidth="4.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+                <path
+                  d="M21 -12 L21 -24"
+                  stroke="#fbbf24"
+                  strokeWidth="4.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+                <path
+                  d="M30 -8 L36 -18"
+                  stroke="#fbbf24"
+                  strokeWidth="4.5"
+                  strokeLinecap="round"
+                  fill="none"
+                />
               </motion.g>
             )}
           </AnimatePresence>
