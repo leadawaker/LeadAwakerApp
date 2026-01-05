@@ -219,7 +219,7 @@
                   }
                   onHoverStart={() => setIsButtonHovered(true)}
                   onHoverEnd={() => setIsButtonHovered(false)}
-                  className="relative px-12 py-6 text-2xl font-bold rounded-2xl transition-all duration-200 z-10 select-none overflow-hidden group border border-black/10"
+                  className="relative px-12 py-6 text-2xl font-bold rounded-2xl transition-all duration-200 z-10 select-none overflow-hidden group border border-black/20"
                   style={{
                     // NEW: Apply brightness boost to colors
                     background: `linear-gradient(135deg, 
