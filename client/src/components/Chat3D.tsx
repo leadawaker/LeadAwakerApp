@@ -33,7 +33,7 @@ export default function Chat3D() {
     { type: 'sophie', text: "Our team will speak to you tomorrow at 3:30pm. If you have any questions or need to rebook in the meantime, just let me know", time: "15:12" },
     { type: 'jack', text: "Im ok, thanks Sophie", time: "15:13" },
     { type: 'sophie', text: "Lovely, have a great day", time: "15:14" },
-    { type: 'tag', text: "---chat closed---" }
+    { type: 'tag', text: "chat closed" }
   ];
 
   useEffect(() => {
@@ -278,7 +278,7 @@ export default function Chat3D() {
                             >
                               <div className={`flex flex-col ${msg.type === 'sophie' ? 'items-end' : 'items-start'} gap-1`}>
                                 <div 
-                                  className={`rounded-2xl px-4 py-3 max-w-[95%] shadow-sm text-sm ${
+                                  className={`rounded-2xl px-4 py-3 max-w-[95%] shadow-sm text-sm whitespace-nowrap ${
                                     msg.type === 'sophie' 
                                       ? 'text-white rounded-tr-sm' 
                                       : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'
