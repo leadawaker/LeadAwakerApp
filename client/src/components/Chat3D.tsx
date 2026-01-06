@@ -27,7 +27,7 @@ export default function Chat3D() {
       setVisibleMessages([]);
 
       // First message immediately
-      setTimeout(() => setVisibleMessages([0]), 0);
+      setVisibleMessages([0]);
 
       let nextIdx = 1;
       const interval = setInterval(() => {
@@ -37,7 +37,7 @@ export default function Chat3D() {
         } else {
           clearInterval(interval);
         }
-      }, 1500);
+      }, 2000);
       return () => clearInterval(interval);
     }
   }, [showEngagement]);
