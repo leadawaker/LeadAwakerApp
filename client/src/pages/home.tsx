@@ -346,7 +346,7 @@ export default function Home() {
             <h2 className="md:text-4xl lg:text-5xl font-bold mb-4 text-white tracking-tight text-[40px] leading-tight">
               See AI Work in Your World, Not Just Talk
             </h2>
-            <p className="md:text-2xl mb-12 text-[#FEB800] font-medium opacity-90 italic text-[18px]">
+            <p className="md:text-2xl mb-12 text-[#FEB800] font-medium opacity-90 italic text-[20px]">
               If a picture is worth a thousand words, a live demo is worth a thousand pictures.
             </p>
             
