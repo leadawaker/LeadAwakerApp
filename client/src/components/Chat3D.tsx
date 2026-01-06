@@ -28,12 +28,12 @@ export default function Chat3D() {
     { type: 'jack', text: "Honestly a bit of all three. I need something that looks pro but doesn't take forever or cost a fortune.", time: "15:06" },
     { type: 'sophie', text: "Got it, pro look, reasonable timeline, and smart budget. That combo requires a bit of strategy to pull off right. Let me get you booked with one of our website strategists for a quick 15-min call tomorrow. They'll walk through your setup, answer all your questions, and you'll know exactly what your next step is.", time: "15:08" },
     { type: 'jack', text: "The 15-min call tomorrow works great! What times do you have?", time: "15:09" },
-    { type: 'sophie', text: "Perfect! Grab a time here: [link]\nI'll pass along our conversation notes so the team has everything prepped. They'll take great care of you, Jack!", time: "15:10" },
+    { type: 'sophie', text: "You can select a time in our calendar page: [link]", time: "15:10" },
     { type: 'tag', text: "Call Booked 🗓️", subtext: "Sent to Client" },
-    { type: 'sophie', text: "Our team will speak to you tomorrow at 3:30pm. If you have any questions or need to rebook in the meantime, just let me know", time: "15:12" },
-    { type: 'jack', text: "Im ok, thanks Sophie", time: "15:13" },
-    { type: 'sophie', text: "Lovely, have a great day", time: "15:14" },
-    { type: 'tag', text: "---chat closed---" }
+    { type: 'sophie', text: "Your call is booked for tomorrow at 3:30pm, I'll pass our conversation notes so our team has everything prepped. You are in good hands Jack! If you have any questions or need to re-schedule, just let me know 😊", time: "15:12" },
+    { type: 'jack', text: "I am good, thanks for reaching out :)", time: "15:13" },
+    { type: 'sophie', text: "You are welcome, have a great day", time: "15:14" },
+    { type: 'tag', text: "Chat closed" }
   ];
 
   useEffect(() => {
@@ -42,33 +42,24 @@ export default function Chat3D() {
 
       const timeouts: NodeJS.Timeout[] = [];
       let currentDelay = 0;
-      
+
       engagementMessages.forEach((msg, index) => {
-        // Base delay is 6000ms
         let msgDelay = 6000;
-        
-        // Custom timing logic
+
         if (index === 1) {
-          msgDelay = 6000 * 1.2; // Sophie's "Perfect" message
-        } else if (msg.type === 'tag' && msg.text === "Call Booked 🗓️") {
-          msgDelay = 2000; // Tag itself doesn't need long, but user asked for 2s extra for this to appear
-          // Actually, "Make that tag take 2s extra to appear" means the wait before it appears
+          msgDelay = 6000 * 1.2;
         }
 
         const timeout = setTimeout(() => {
           setVisibleMessages(prev => [...prev, index]);
         }, currentDelay);
         timeouts.push(timeout);
-        
-        // Add extra 2s if the NEXT message is the "Call Booked" tag? 
-        // Or if this tag itself should wait longer. 
-        // User said: "Make that tag take 2s extra to appear"
-        // I will add 2000ms to the delay BEFORE showing the tag.
-        
-        const nextMsg = engagementMessages[index + 1];
+
+        // Add 1.5s extra delay after "Call Booked" tag
+        const currentMsg = engagementMessages[index];
         let extraWait = 0;
-        if (nextMsg?.type === 'tag' && nextMsg.text === "Call Booked 🗓️") {
-          extraWait = 2000;
+        if (currentMsg?.type === 'tag' && currentMsg.text === "Call Booked 🗓️") {
+          extraWait = 1500;
         }
 
         currentDelay += msgDelay + extraWait;
@@ -278,9 +269,9 @@ export default function Chat3D() {
                             >
                               <div className={`flex flex-col ${msg.type === 'sophie' ? 'items-end' : 'items-start'} gap-1`}>
                                 <div 
-                                  className={`rounded-2xl px-4 py-3 max-w-[95%] shadow-sm text-sm ${
+                                  className={`rounded-2xl px-4 py-3 shadow-sm text-sm ${
                                     msg.type === 'sophie' 
-                                      ? 'text-white rounded-tr-sm' 
+                                      ? 'text-white rounded-tr-sm max-w-[90%]' 
                                       : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'
                                   }`}
                                   style={msg.type === 'sophie' ? { backgroundColor: "#2563EB" } : {}}
