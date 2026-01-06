@@ -29,9 +29,11 @@ export default function Chat3D() {
     { type: 'sophie', text: "Got it, pro look, reasonable timeline, and smart budget. That combo requires a bit of strategy to pull off right. Let me get you booked with one of our website strategists for a quick 15-min call tomorrow. They'll walk through your setup, answer all your questions, and you'll know exactly what your next step is.", time: "15:08" },
     { type: 'jack', text: "The 15-min call tomorrow works great! What times do you have?", time: "15:09" },
     { type: 'sophie', text: "Perfect! Grab a time here: [link]\nI'll pass along our conversation notes so the team has everything prepped. They'll take great care of you, Jack!", time: "15:10" },
-    { type: 'sophie', text: "Your call is booked for tomorrow Jack, if you have any further questions or need to rebook, just let me know", time: "15:12" },
-    { type: 'jack', text: "I am good, thanks!", time: "15:13" },
-    { type: 'sophie', text: "Lovely, have a great day!", time: "15:14" }
+    { type: 'tag', text: "Call Booked 🗓️", subtext: "Sent to Client" },
+    { type: 'sophie', text: "Our team will speak to you tomorrow at 3:30pm. If you have any questions or need to rebook in the meantime, just let me know", time: "15:12" },
+    { type: 'jack', text: "Im ok, thanks Sophie", time: "15:13" },
+    { type: 'sophie', text: "Lovely, have a great day", time: "15:14" },
+    { type: 'tag', text: "---chat closed---" }
   ];
 
   useEffect(() => {
@@ -42,14 +44,34 @@ export default function Chat3D() {
       let currentDelay = 0;
       
       engagementMessages.forEach((msg, index) => {
+        // Base delay is 6000ms
+        let msgDelay = 6000;
+        
+        // Custom timing logic
+        if (index === 1) {
+          msgDelay = 6000 * 1.2; // Sophie's "Perfect" message
+        } else if (msg.type === 'tag' && msg.text === "Call Booked 🗓️") {
+          msgDelay = 2000; // Tag itself doesn't need long, but user asked for 2s extra for this to appear
+          // Actually, "Make that tag take 2s extra to appear" means the wait before it appears
+        }
+
         const timeout = setTimeout(() => {
           setVisibleMessages(prev => [...prev, index]);
         }, currentDelay);
         timeouts.push(timeout);
         
-        // Base delay is 6000ms, but for the "Perfect" message (index 1), make it 1.2x longer
-        const msgDelay = index === 1 ? 6000 * 1.2 : 6000;
-        currentDelay += msgDelay;
+        // Add extra 2s if the NEXT message is the "Call Booked" tag? 
+        // Or if this tag itself should wait longer. 
+        // User said: "Make that tag take 2s extra to appear"
+        // I will add 2000ms to the delay BEFORE showing the tag.
+        
+        const nextMsg = engagementMessages[index + 1];
+        let extraWait = 0;
+        if (nextMsg?.type === 'tag' && nextMsg.text === "Call Booked 🗓️") {
+          extraWait = 2000;
+        }
+
+        currentDelay += msgDelay + extraWait;
       });
 
       return () => timeouts.forEach(t => clearTimeout(t));
@@ -223,6 +245,29 @@ export default function Chat3D() {
                       .filter(msgIdx => msgIdx < engagementMessages.length)
                       .map((msgIdx) => {
                         const msg = engagementMessages[msgIdx];
+                        if (msg.type === 'tag') {
+                          return (
+                            <motion.div 
+                              key={`tag-${msgIdx}`}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="flex flex-col items-center gap-2 py-4"
+                            >
+                              <div className="h-[1px] w-full bg-slate-200" />
+                              <div className="flex flex-col items-center bg-slate-50 px-3 -mt-3.5">
+                                <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${msg.text.includes('closed') ? 'text-slate-400' : 'text-primary'}`}>
+                                  {msg.text}
+                                </span>
+                                {msg.subtext && (
+                                  <span className="text-[8px] font-medium text-slate-400 uppercase tracking-widest mt-1">
+                                    {msg.subtext}
+                                  </span>
+                                )}
+                              </div>
+                            </motion.div>
+                          );
+                        }
+
                         return (
                           <div key={`message-${msgIdx}`}>
                             <motion.div 
@@ -240,7 +285,7 @@ export default function Chat3D() {
                                   }`}
                                   style={msg.type === 'sophie' ? { backgroundColor: "#2563EB" } : {}}
                                 >
-                                  {msg.text.includes("[link]") ? (
+                                  {msg.text && msg.text.includes("[link]") ? (
                                   <>
                                     {msg.text.split("[link]")[0]}
                                     <span className="font-bold underline cursor-pointer">[link]</span>
@@ -252,7 +297,7 @@ export default function Chat3D() {
                               </div>
                             </motion.div>
 
-                            {msg.text.includes("The 15-min call tomorrow works great!") && (
+                            {msg.text && msg.text.includes("The 15-min call tomorrow works great!") && (
                               <motion.div 
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -272,40 +317,28 @@ export default function Chat3D() {
                         animate={{ opacity: 1, y: 0 }}
                         className={`relative flex items-center pt-4 pb-2 ${engagementMessages[visibleMessages.length]?.type === 'sophie' ? 'justify-end' : 'justify-start'}`}
                       >
-                        <div className={`flex items-center gap-1 bg-white border border-slate-100 px-3 py-4 rounded-2xl shadow-sm scale-90 ${engagementMessages[visibleMessages.length]?.type === 'sophie' ? 'rounded-br-sm' : 'rounded-bl-sm'}`}>
-                          <motion.span 
-                            animate={{ opacity: [0.4, 1, 0.4] }} 
-                            transition={{ repeat: Infinity, duration: 1.4, delay: 0 }}
-                            className="w-2 h-2 bg-slate-400 rounded-full" 
-                          />
-                          <motion.span 
-                            animate={{ opacity: [0.4, 1, 0.4] }} 
-                            transition={{ repeat: Infinity, duration: 1.4, delay: 0.2 }}
-                            className="w-2 h-2 bg-slate-400 rounded-full" 
-                          />
-                          <motion.span 
-                            animate={{ opacity: [0.4, 1, 0.4] }} 
-                            transition={{ repeat: Infinity, duration: 1.4, delay: 0.4 }}
-                            className="w-2 h-2 bg-slate-400 rounded-full" 
-                          />
-                        </div>
+                        {engagementMessages[visibleMessages.length]?.type !== 'tag' && (
+                          <div className={`flex items-center gap-1 bg-white border border-slate-100 px-3 py-4 rounded-2xl shadow-sm scale-90 ${engagementMessages[visibleMessages.length]?.type === 'sophie' ? 'rounded-br-sm' : 'rounded-bl-sm'}`}>
+                            <motion.span 
+                              animate={{ opacity: [0.4, 1, 0.4] }} 
+                              transition={{ repeat: Infinity, duration: 1.4, delay: 0 }}
+                              className="w-2 h-2 bg-slate-400 rounded-full" 
+                            />
+                            <motion.span 
+                              animate={{ opacity: [0.4, 1, 0.4] }} 
+                              transition={{ repeat: Infinity, duration: 1.4, delay: 0.2 }}
+                              className="w-2 h-2 bg-slate-400 rounded-full" 
+                            />
+                            <motion.span 
+                              animate={{ opacity: [0.4, 1, 0.4] }} 
+                              transition={{ repeat: Infinity, duration: 1.4, delay: 0.4 }}
+                              className="w-2 h-2 bg-slate-400 rounded-full" 
+                            />
+                          </div>
+                        )}
                       </motion.div>
                     )}
 
-                    {visibleMessages.length === engagementMessages.length && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5 }}
-                        className="flex flex-col items-center gap-2 py-4"
-                      >
-                        <div className="h-[1px] w-full bg-slate-200" />
-                        <div className="flex flex-col items-center bg-slate-50 px-3 -mt-3.5">
-                          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Call Booked 🗓️</span>
-                          <span className="text-[8px] font-medium text-slate-400 uppercase tracking-widest mt-1">Sent to Client</span>
-                        </div>
-                      </motion.div>
-                    )}
                   </>
                 )}
               </AnimatePresence>
