@@ -13,6 +13,36 @@ export default function Chat3D() {
   }, []);
 
   const [showEngagement, setShowEngagement] = useState(false);
+  const [visibleMessages, setVisibleMessages] = useState<number[]>([]);
+
+  const engagementMessages = [
+    { type: 'jack', text: "Honestly a bit of all three. I need something that looks pro but doesn't take forever or cost a fortune.", time: "15:06" },
+    { type: 'sophie', text: "Perfect, that's exactly what we specialize in. We've since added templates that cut delivery from 8 weeks to 3 while keeping the custom feel. Want me to send over 3 options that match your coaching niche with rough timelines and pricing? Or hop on a quick 15-min call tomorrow to walk through?", time: "15:08" },
+    { type: 'jack', text: "The 15-min call tomorrow works great! What times do you have?", time: "15:09" },
+    { type: 'sophie', text: "Awesome! Here's my Calendly for tomorrow: [link]\nI'll send a recap of our chat there too so you have it handy. Talk soon Jack! 🚀", time: "15:10" }
+  ];
+
+  useEffect(() => {
+    if (showEngagement) {
+      // Clear before starting to be sure
+      setVisibleMessages([]);
+      
+      let currentIdx = 0;
+      // Immediate first message
+      setVisibleMessages([0]);
+      currentIdx = 1;
+
+      const interval = setInterval(() => {
+        if (currentIdx < engagementMessages.length) {
+          setVisibleMessages(prev => [...prev, currentIdx]);
+          currentIdx++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 1500);
+      return () => clearInterval(interval);
+    }
+  }, [showEngagement]);
 
   const messageVariants = {
     hidden: { opacity: 0, y: 20, scale: 0.95 },
@@ -26,30 +56,6 @@ export default function Chat3D() {
       },
     }),
   };
-
-  const [visibleMessages, setVisibleMessages] = useState<number[]>([]);
-
-  useEffect(() => {
-    if (showEngagement) {
-      let currentIdx = 0;
-      const interval = setInterval(() => {
-        if (currentIdx < engagementMessages.length) {
-          setVisibleMessages(prev => [...prev, currentIdx]);
-          currentIdx++;
-        } else {
-          clearInterval(interval);
-        }
-      }, 1500);
-      return () => clearInterval(interval);
-    }
-  }, [showEngagement]);
-
-  const engagementMessages = [
-    { type: 'jack', text: "Honestly a bit of all three. I need something that looks pro but doesn't take forever or cost a fortune.", time: "15:06" },
-    { type: 'sophie', text: "Perfect, that's exactly what we specialize in. We've since added templates that cut delivery from 8 weeks to 3 while keeping the custom feel. Want me to send over 3 options that match your coaching niche with rough timelines and pricing? Or hop on a quick 15-min call tomorrow to walk through?", time: "15:08" },
-    { type: 'jack', text: "The 15-min call tomorrow works great! What times do you have?", time: "15:09" },
-    { type: 'sophie', text: "Awesome! Here's my Calendly for tomorrow: [link]\nI'll send a recap of our chat there too so you have it handy. Talk soon Jack! 🚀", time: "15:10" }
-  ];
 
   return (
     <div className="relative perspective-container">
