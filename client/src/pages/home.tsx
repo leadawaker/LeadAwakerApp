@@ -273,7 +273,7 @@ export default function Home() {
                     animate={isFinished ? { opacity: 0.8, y: 0 } : { opacity: 0, y: 10 }}
                     transition={{ duration: 0.8, delay: 0.6 }}
                   >
-                    30-Day guarante
+                    30-Day guarantee
                   </motion.span>
                 </div>
               </div>

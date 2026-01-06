@@ -44,7 +44,21 @@ export default function ChatCard2D({ messages, themeColor = "#2563EB" }: { messa
 
   const chatMessages = messages || defaultMessages;
 
-  const headerName = chatMessages.find(msg => msg.type === 'user')?.sender?.split(' ')[0] || "Augusto";
+  const headerName = chatMessages.find(msg => msg.type === 'user')?.sender || "Augusto";
+
+  const getFullName = (firstName: string) => {
+    const fullNames: Record<string, string> = {
+      "Jack": "Jack Johnson",
+      "Vito": "Vito Corleone",
+      "Steve": "Steve Martin",
+      "Gabriel": "Gabriel Barbosa",
+      "Augusto": "Augusto Hoffman",
+      "Kado": "Kado da Silva"
+    };
+    return fullNames[firstName] || firstName;
+  };
+
+  const displayName = getFullName(headerName.split(' ')[0]);
 
   const isAtBottom = useCallback(() => {
     if (!scrollRef.current) return false;
@@ -137,7 +151,7 @@ export default function ChatCard2D({ messages, themeColor = "#2563EB" }: { messa
             {headerName[0]}
           </div>
           <div>
-            <h3 className="text-white font-medium text-sm">{headerName}</h3>
+            <h3 className="text-white font-medium text-sm">{displayName}</h3>
             <p className="text-xs flex items-center gap-1" style={{ color: "#FCC700" }}>
               <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#FCC700" }} />
               Online
