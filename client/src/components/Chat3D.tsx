@@ -37,7 +37,7 @@ export default function Chat3D() {
         } else {
           clearInterval(interval);
         }
-      }, 1500);
+      }, 3000);
       return () => clearInterval(interval);
     }
   }, [showEngagement]);
