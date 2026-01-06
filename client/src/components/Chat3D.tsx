@@ -28,7 +28,7 @@ export default function Chat3D() {
     { type: 'jack', text: "Honestly a bit of all three. I need something that looks pro but doesn't take forever or cost a fortune.", time: "15:06" },
     { type: 'jack', text: "I've seen some of your portfolio work and I really like the style, just a bit concerned about the investment side of things.", time: "15:06" },
     { type: 'sophie', text: "I completely hear you Jack. We actually specialize in high-impact builds that balance that 'pro' look with efficiency. That's exactly why I'd love for you to have a quick call with one of our strategists. They can look at your specific needs and show you how we can make the budget work without compromising on quality.", time: "15:08" },
-    { type: 'jack', text: "That sounds fair. For me, that quick call would work great tomorrow. What times do you have?", time: "15:09" },
+    { type: 'jack', text: "Yes that works, for me that call would work great tomorrow. What times do you have?", time: "15:09" },
     { type: 'sophie', text: "You can select a time in our calendar page: [link]. I'll pass our conversation notes so our team has everything prepped. You will be in good hands Jack!", time: "15:10" },
     { type: 'tag', text: "Call Booked 🗓️", subtext: "Sent to Client" },
     { type: 'sophie', text: "Your call is booked for tomorrow at 3:30pm, if you have any questions or need to re-schedule, just let me know 😊", time: "15:12" },
@@ -289,7 +289,7 @@ export default function Chat3D() {
                               </div>
                             </motion.div>
 
-                            {msg.text && msg.text.includes("quick call would work great tomorrow") && (
+                            {msg.text && msg.text.includes("call would work great tomorrow") && (
                               <motion.div 
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
