@@ -35,14 +35,18 @@ export default function Chat3D() {
     if (showEngagement) {
       setVisibleMessages([]);
 
-      // Sequence with explicit delays
       const timeouts: NodeJS.Timeout[] = [];
+      let currentDelay = 0;
       
-      engagementMessages.forEach((_, index) => {
+      engagementMessages.forEach((msg, index) => {
         const timeout = setTimeout(() => {
           setVisibleMessages(prev => [...prev, index]);
-        }, index * 6000);
+        }, currentDelay);
         timeouts.push(timeout);
+        
+        // Base delay is 6000ms, but for the "Perfect" message (index 1), make it 1.2x longer
+        const msgDelay = index === 1 ? 6000 * 1.2 : 6000;
+        currentDelay += msgDelay;
       });
 
       return () => timeouts.forEach(t => clearTimeout(t));
@@ -258,6 +262,32 @@ export default function Chat3D() {
                           </div>
                         );
                       })}
+
+                    {showEngagement && visibleMessages.length < engagementMessages.length && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`flex ${engagementMessages[visibleMessages.length]?.type === 'sophie' ? 'justify-end' : 'justify-start'} pt-2`}
+                      >
+                        <div className="bg-white border border-slate-100 px-3 py-2 rounded-2xl shadow-sm flex gap-1 items-center">
+                          <motion.span 
+                            animate={{ opacity: [0.4, 1, 0.4] }} 
+                            transition={{ repeat: Infinity, duration: 1.2, delay: 0 }}
+                            className="w-1.5 h-1.5 bg-slate-400 rounded-full" 
+                          />
+                          <motion.span 
+                            animate={{ opacity: [0.4, 1, 0.4] }} 
+                            transition={{ repeat: Infinity, duration: 1.2, delay: 0.2 }}
+                            className="w-1.5 h-1.5 bg-slate-400 rounded-full" 
+                          />
+                          <motion.span 
+                            animate={{ opacity: [0.4, 1, 0.4] }} 
+                            transition={{ repeat: Infinity, duration: 1.2, delay: 0.4 }}
+                            className="w-1.5 h-1.5 bg-slate-400 rounded-full" 
+                          />
+                        </div>
+                      </motion.div>
+                    )}
 
                     {visibleMessages.length === engagementMessages.length && (
                       <motion.div 
