@@ -41,7 +41,7 @@ export default function Chat3D() {
       engagementMessages.forEach((_, index) => {
         const timeout = setTimeout(() => {
           setVisibleMessages(prev => [...prev, index]);
-        }, index * 2000);
+        }, index * 6000);
         timeouts.push(timeout);
       });
 
