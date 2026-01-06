@@ -265,25 +265,25 @@ export default function Chat3D() {
 
                     {showEngagement && visibleMessages.length < engagementMessages.length && (
                       <motion.div 
-                        initial={{ opacity: 0, y: 5 }}
+                        initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className={`flex ${engagementMessages[visibleMessages.length]?.type === 'sophie' ? 'justify-end' : 'justify-start'} pt-2`}
+                        className={`relative flex items-center pt-4 pb-2 ${engagementMessages[visibleMessages.length]?.type === 'sophie' ? 'justify-end' : 'justify-start'}`}
                       >
-                        <div className="bg-white border border-slate-100 px-3 py-2 rounded-2xl shadow-sm flex gap-1 items-center">
+                        <div className={`flex items-center gap-1 bg-white border border-slate-100 px-3 py-4 rounded-2xl shadow-sm scale-90 ${engagementMessages[visibleMessages.length]?.type === 'sophie' ? 'rounded-br-sm' : 'rounded-bl-sm'}`}>
                           <motion.span 
                             animate={{ opacity: [0.4, 1, 0.4] }} 
-                            transition={{ repeat: Infinity, duration: 1.2, delay: 0 }}
-                            className="w-1.5 h-1.5 bg-slate-400 rounded-full" 
+                            transition={{ repeat: Infinity, duration: 1.4, delay: 0 }}
+                            className="w-2 h-2 bg-slate-400 rounded-full" 
                           />
                           <motion.span 
                             animate={{ opacity: [0.4, 1, 0.4] }} 
-                            transition={{ repeat: Infinity, duration: 1.2, delay: 0.2 }}
-                            className="w-1.5 h-1.5 bg-slate-400 rounded-full" 
+                            transition={{ repeat: Infinity, duration: 1.4, delay: 0.2 }}
+                            className="w-2 h-2 bg-slate-400 rounded-full" 
                           />
                           <motion.span 
                             animate={{ opacity: [0.4, 1, 0.4] }} 
-                            transition={{ repeat: Infinity, duration: 1.2, delay: 0.4 }}
-                            className="w-1.5 h-1.5 bg-slate-400 rounded-full" 
+                            transition={{ repeat: Infinity, duration: 1.4, delay: 0.4 }}
+                            className="w-2 h-2 bg-slate-400 rounded-full" 
                           />
                         </div>
                       </motion.div>
