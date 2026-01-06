@@ -26,19 +26,17 @@ export default function Chat3D() {
     if (showEngagement) {
       setVisibleMessages([]);
 
-      // First message immediately
-      setVisibleMessages([0]);
+      // Sequence with explicit delays
+      const timeouts: NodeJS.Timeout[] = [];
+      
+      engagementMessages.forEach((_, index) => {
+        const timeout = setTimeout(() => {
+          setVisibleMessages(prev => [...prev, index]);
+        }, index * 2000);
+        timeouts.push(timeout);
+      });
 
-      let nextIdx = 1;
-      const interval = setInterval(() => {
-        if (nextIdx < engagementMessages.length) {
-          setVisibleMessages(prev => [...prev, nextIdx]);
-          nextIdx++;
-        } else {
-          clearInterval(interval);
-        }
-      }, 2000);
-      return () => clearInterval(interval);
+      return () => timeouts.forEach(t => clearTimeout(t));
     }
   }, [showEngagement]);
 
