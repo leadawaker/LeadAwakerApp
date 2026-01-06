@@ -26,7 +26,7 @@ export default function Chat3D() {
 
   const engagementMessages = [
     { type: 'jack', text: "Honestly a bit of all three. I need something that looks pro but doesn't take forever or cost a fortune.", time: "15:06" },
-    { type: 'sophie', text: "Perfect, that's exactly what we specialize in. We've since added templates that cut delivery from 8 weeks to 3 while keeping the custom feel. Want me to send over 3 options that match your coaching niche with rough timelines and pricing? Or hop on a quick 15-min call tomorrow to walk through?", time: "15:08" },
+    { type: 'sophie', text: "Got it, pro look, reasonable timeline, and smart budget. That combo requires a bit of strategy to pull off right. Let me get you booked with one of our website strategists for a quick 15-min call tomorrow. They'll walk through your setup, answer all your questions, and you'll know exactly what your next step is.", time: "15:08" },
     { type: 'jack', text: "The 15-min call tomorrow works great! What times do you have?", time: "15:09" },
     { type: 'sophie', text: "Awesome! Here's my Calendly for tomorrow: [link]\nI'll send a recap of our chat there too so you have it handy. Talk soon Jack! 🚀", time: "15:10" }
   ];
