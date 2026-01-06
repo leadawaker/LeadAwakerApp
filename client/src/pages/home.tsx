@@ -343,10 +343,14 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="text-center max-w-4xl mx-auto"
           >
-            <h2 className="md:text-4xl lg:text-5xl font-bold mb-4 text-white tracking-tight text-[40px] leading-tight">See AI Work, Not Just Talk</h2>
-            <p className="md:text-2xl mb-12 text-[#FEB800] font-medium opacity-90 italic text-[20px]">
-              If a picture is worth a thousand words, a live demo is worth a thousand pictures.
-            </p>
+            <h2 className="md:text-4xl lg:text-5xl font-bold mb-8 text-white tracking-tight text-[40px] leading-tight">See AI Work in Your World, Not Just Talk</h2>
+            <div className="max-w-3xl mx-auto mb-12">
+              <div className="relative pl-6 py-1 border-l-4 border-[#FEB800] text-left">
+                <p className="md:text-2xl text-[#FEB800] font-medium opacity-90 text-[20px]">
+                  If a picture is worth a thousand words, a live demo is worth a thousand pictures.
+                </p>
+              </div>
+            </div>
             
             <div className="space-y-8 leading-relaxed mb-12 text-center max-w-3xl mx-auto">
               <p className="text-lg md:text-xl opacity-90 text-justify">
