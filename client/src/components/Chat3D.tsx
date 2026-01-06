@@ -45,10 +45,10 @@ export default function Chat3D() {
       let currentDelay = 0;
 
       engagementMessages.forEach((msg, index) => {
-        let msgDelay = 6000;
+        let msgDelay = 9000;
 
         if (index === 1) {
-          msgDelay = 6000 * 1.2;
+          msgDelay = 9000 * 1.2;
         }
 
         const timeout = setTimeout(() => {
@@ -56,11 +56,11 @@ export default function Chat3D() {
         }, currentDelay);
         timeouts.push(timeout);
 
-        // Add 1.5s extra delay after "Call Booked" tag
+        // Add 2.25s extra delay after "Call Booked" tag
         const currentMsg = engagementMessages[index];
         let extraWait = 0;
         if (currentMsg?.type === 'tag' && currentMsg.text === "Call Booked 🗓️") {
-          extraWait = 1500;
+          extraWait = 2250;
         }
 
         currentDelay += msgDelay + extraWait;
