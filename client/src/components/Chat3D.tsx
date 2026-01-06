@@ -27,7 +27,7 @@ export default function Chat3D() {
       setVisibleMessages([]);
 
       // First message immediately
-      setVisibleMessages([0]);
+      setTimeout(() => setVisibleMessages([0]), 0);
 
       let nextIdx = 1;
       const interval = setInterval(() => {
@@ -37,7 +37,7 @@ export default function Chat3D() {
         } else {
           clearInterval(interval);
         }
-      }, 3000);
+      }, 1500);
       return () => clearInterval(interval);
     }
   }, [showEngagement]);
@@ -202,45 +202,46 @@ export default function Chat3D() {
                   </motion.div>
                 ) : (
                   <>
-                    {visibleMessages.map((msgIdx) => {
-                      const msg = engagementMessages[msgIdx];
-                      if (!msg) return null;
-                      return (
-                        <div key={`message-${msgIdx}`}>
-                          <motion.div 
-                            className={`flex ${msg.type === 'sophie' ? 'justify-end' : 'justify-start'}`}
-                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            transition={{ duration: 0.4 }}
-                          >
-                            <div className={`flex flex-col ${msg.type === 'sophie' ? 'items-end' : 'items-start'} gap-1`}>
-                              <div 
-                                className={`rounded-2xl px-4 py-3 max-w-[95%] shadow-sm text-sm ${
-                                  msg.type === 'sophie' 
-                                    ? 'text-white rounded-tr-sm' 
-                                    : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'
-                                }`}
-                                style={msg.type === 'sophie' ? { backgroundColor: "#2563EB" } : {}}
-                              >
-                                {msg.text}
-                              </div>
-                              <span className={`text-xs text-slate-400 ${msg.type === 'sophie' ? 'pr-2' : 'pl-2'}`}>{msg.time}</span>
-                            </div>
-                          </motion.div>
-
-                          {msg.text.includes("The 15-min call tomorrow works great!") && (
+                    {visibleMessages
+                      .filter(msgIdx => msgIdx < engagementMessages.length)
+                      .map((msgIdx) => {
+                        const msg = engagementMessages[msgIdx];
+                        return (
+                          <div key={`message-${msgIdx}`}>
                             <motion.div 
-                              initial={{ opacity: 0, scale: 0.9 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              className="flex flex-col items-center gap-2 py-2"
+                              className={`flex ${msg.type === 'sophie' ? 'justify-end' : 'justify-start'}`}
+                              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              transition={{ duration: 0.4 }}
                             >
-                              <div className="h-[1px] w-full bg-slate-200" />
-                              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Qualified</span>
+                              <div className={`flex flex-col ${msg.type === 'sophie' ? 'items-end' : 'items-start'} gap-1`}>
+                                <div 
+                                  className={`rounded-2xl px-4 py-3 max-w-[95%] shadow-sm text-sm ${
+                                    msg.type === 'sophie' 
+                                      ? 'text-white rounded-tr-sm' 
+                                      : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'
+                                  }`}
+                                  style={msg.type === 'sophie' ? { backgroundColor: "#2563EB" } : {}}
+                                >
+                                  {msg.text}
+                                </div>
+                                <span className={`text-xs text-slate-400 ${msg.type === 'sophie' ? 'pr-2' : 'pl-2'}`}>{msg.time}</span>
+                              </div>
                             </motion.div>
-                          )}
-                        </div>
-                      );
-                    })}
+
+                            {msg.text.includes("The 15-min call tomorrow works great!") && (
+                              <motion.div 
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="flex flex-col items-center gap-2 py-2"
+                              >
+                                <div className="h-[1px] w-full bg-slate-200" />
+                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Qualified</span>
+                              </motion.div>
+                            )}
+                          </div>
+                        );
+                      })}
 
                     {visibleMessages.length === engagementMessages.length && (
                       <motion.div 
