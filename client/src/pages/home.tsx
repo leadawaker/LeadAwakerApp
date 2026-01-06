@@ -351,7 +351,7 @@ export default function Home() {
             </p>
             
             <div className="space-y-8 leading-relaxed mb-12 text-center max-w-3xl mx-auto">
-              <p className="text-lg md:text-xl opacity-90">
+              <p className="text-lg md:text-xl opacity-90 text-left">
                 Before you do anything else, experience how AI handles real conversations as if it were your own business agent, programmed specifically for your niche. You'll see it respond naturally to your customers while managing the repetitive work your team shouldn't have to.
               </p>
 
