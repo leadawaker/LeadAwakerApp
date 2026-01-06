@@ -1,8 +1,18 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function Chat3D() {
   const [scrollY, setScrollY] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }, [visibleMessages, showEngagement]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -98,7 +108,10 @@ export default function Chat3D() {
             </div>
           </div>
 
-          <div className="p-6 pb-2 space-y-4 bg-slate-50 min-h-[700px] max-h-[800px] overflow-y-auto relative scrollbar-hide">
+          <div 
+            ref={scrollContainerRef}
+            className="p-6 pb-2 space-y-4 bg-slate-50 min-h-[700px] max-h-[800px] overflow-y-auto relative scrollbar-hide"
+          >
             <div className="absolute inset-0 bg-gradient-to-br from-slate-100/20 via-transparent to-slate-100/20 pointer-events-none" />
 
             <div className="relative z-10 space-y-4">
