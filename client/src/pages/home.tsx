@@ -268,18 +268,10 @@ export default function Home() {
                     We solve problems not create them
                   </motion.span>
                   <motion.span 
-                    className="leading-relaxed mb-2"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={isFinished ? { opacity: 0.8, y: 0 } : { opacity: 0, y: 10 }}
-                    transition={{ duration: 0.8, delay: 0.6 }}
-                  >
-                    Results first payment second
-                  </motion.span>
-                  <motion.span 
                     className="leading-relaxed"
                     initial={{ opacity: 0, y: 10 }}
                     animate={isFinished ? { opacity: 0.8, y: 0 } : { opacity: 0, y: 10 }}
-                    transition={{ duration: 0.8, delay: 0.9 }}
+                    transition={{ duration: 0.8, delay: 0.6 }}
                   >
                     30-Day guarante
                   </motion.span>
