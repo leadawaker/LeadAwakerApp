@@ -353,9 +353,7 @@ export default function Home() {
                 Before you do anything else, experience how AI handles real conversations as if it were your own business agent, programmed specifically for your niche. You'll see it respond naturally to your customers while managing the repetitive work your team shouldn't have to.
               </p>
 
-              <p className="text-lg md:text-xl opacity-90 text-justify">
-                By automating what drains your time, AI frees your team to focus on what actually moves the needle: strategy, growth, and the work you enjoy. In just a few minutes, you'll see how smarter automation transforms your ROI and your day-to-day operations.
-              </p>
+              <p className="text-lg md:text-xl opacity-90 text-justify">By automating what consumes your time, your team gets back what matters: focusing on strategy, scaling your business, and doing the work that actually energizes them. In just a few minutes, you'll see how intelligent automation improves both your ROI and your daily workflow.</p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
