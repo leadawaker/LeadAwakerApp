@@ -204,6 +204,7 @@ export default function Chat3D() {
                   <>
                     {visibleMessages.map((msgIdx) => {
                       const msg = engagementMessages[msgIdx];
+                      if (!msg) return null;
                       return (
                         <div key={`message-${msgIdx}`}>
                           <motion.div 
