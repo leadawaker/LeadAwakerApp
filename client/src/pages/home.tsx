@@ -341,16 +341,16 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="max-w-4xl mx-auto"
+            className="text-center max-w-4xl mx-auto"
           >
-            <h2 className="md:text-4xl lg:text-5xl font-bold mb-4 text-white tracking-tight text-[40px] leading-tight text-left">
-              See AI Work, Not Just Talk
+            <h2 className="md:text-4xl lg:text-5xl font-bold mb-4 text-white tracking-tight text-[40px] leading-tight">
+              See AI Work in Your World, Not Just Talk
             </h2>
-            <p className="md:text-2xl mb-12 text-[#FEB800] font-medium opacity-90 text-[18px] text-left">
+            <p className="md:text-2xl mb-12 text-[#FEB800] font-medium opacity-90 italic text-[18px]">
               If a picture is worth a thousand words, a live demo is worth a thousand pictures.
             </p>
             
-            <div className="space-y-8 leading-relaxed mb-12 max-w-3xl">
+            <div className="space-y-8 leading-relaxed mb-12 text-center max-w-3xl mx-auto">
               <p className="text-lg md:text-xl opacity-90 text-left">
                 Before you do anything else, experience how AI handles real conversations as if it were your own business agent, programmed specifically for your niche. You'll see it respond naturally to your customers while managing the repetitive work your team shouldn't have to.
               </p>
@@ -360,7 +360,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-6 justify-start">
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link href="/book-demo">
                 <Button size="lg" className="h-14 px-10 text-lg rounded-full shadow-xl shadow-primary/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all font-bold">
                   Book a Demo
