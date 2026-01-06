@@ -3,6 +3,8 @@ import { useEffect, useState, useRef } from "react";
 
 export default function Chat3D() {
   const [scrollY, setScrollY] = useState(0);
+  const [showEngagement, setShowEngagement] = useState(false);
+  const [visibleMessages, setVisibleMessages] = useState<number[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -21,9 +23,6 @@ export default function Chat3D() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const [showEngagement, setShowEngagement] = useState(false);
-  const [visibleMessages, setVisibleMessages] = useState<number[]>([]);
 
   const engagementMessages = [
     { type: 'jack', text: "Honestly a bit of all three. I need something that looks pro but doesn't take forever or cost a fortune.", time: "15:06" },
