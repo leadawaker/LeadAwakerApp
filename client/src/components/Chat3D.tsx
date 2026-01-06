@@ -24,18 +24,16 @@ export default function Chat3D() {
 
   useEffect(() => {
     if (showEngagement) {
-      // Clear before starting to be sure
       setVisibleMessages([]);
       
-      let currentIdx = 0;
-      // Immediate first message
+      // First message immediately
       setVisibleMessages([0]);
-      currentIdx = 1;
-
+      
+      let nextIdx = 1;
       const interval = setInterval(() => {
-        if (currentIdx < engagementMessages.length) {
-          setVisibleMessages(prev => [...prev, currentIdx]);
-          currentIdx++;
+        if (nextIdx < engagementMessages.length) {
+          setVisibleMessages(prev => [...prev, nextIdx]);
+          nextIdx++;
         } else {
           clearInterval(interval);
         }
@@ -78,7 +76,6 @@ export default function Chat3D() {
           transition: "transform 0.1s ease-out",
           marginTop: "50px"
         }}>
-        {/* The Chat Card */}
         <div 
           className="bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden relative"
           style={{
@@ -88,12 +85,10 @@ export default function Chat3D() {
           }}
           data-testid="chat-3d-card"
         >
-          {/* Cool glow effect */}
           <div className="absolute inset-0 pointer-events-none" style={{
             background: "radial-gradient(circle at 20% 50%, rgba(37,99,235,0.05) 0%, transparent 40%)",
           }} />
 
-          {/* Chat Header */}
           <div className="p-4 flex items-center gap-3" style={{ backgroundColor: "#2563EB" }}>
             <div className="rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ width: "44px", height: "44px", backgroundColor: "#6B6B6B" }} data-testid="chat-avatar">J</div>
             <div>
@@ -105,13 +100,10 @@ export default function Chat3D() {
             </div>
           </div>
 
-          {/* Chat Messages */}
           <div className="p-6 pb-2 space-y-4 bg-slate-50 min-h-[700px] max-h-[800px] overflow-y-auto relative scrollbar-hide">
-            {/* Overlay effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-slate-100/20 via-transparent to-slate-100/20 pointer-events-none" />
 
             <div className="relative z-10 space-y-4">
-              {/* Message 1 - Sophie */}
               <motion.div className="flex justify-end" custom={0} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-1">
                 <div className="flex flex-col items-end gap-1">
                   <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
@@ -131,7 +123,6 @@ export default function Chat3D() {
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Engaged</span>
               </motion.div>
 
-              {/* Message 2 - Sophie */}
               <motion.div className="flex justify-end" custom={1} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-2">
                 <div className="flex flex-col items-end gap-1">
                   <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
@@ -151,7 +142,6 @@ export default function Chat3D() {
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Follow up sent</span>
               </motion.div>
 
-              {/* Message 3 - Jack */}
               <motion.div className="flex justify-start" custom={2} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-jack-1">
                 <div className="flex flex-col items-start gap-1">
                   <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[95%] shadow-sm text-sm">
@@ -171,7 +161,6 @@ export default function Chat3D() {
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Replied</span>
               </motion.div>
 
-              {/* Message 4 - Sophie */}
               <motion.div className="flex justify-end" custom={3} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-3">
                 <div className="flex flex-col items-end gap-1">
                   <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>No worries at all Jack, I totally get it! Quick question: what was the main blocker that kept it on hold? (Budget, timeline, or just other fires?)</div>
@@ -275,7 +264,6 @@ export default function Chat3D() {
             </div>
           </div>
         </div>
-
         </div>
       </motion.div>
     </div>
