@@ -24,9 +24,10 @@ export default function Chat3D() {
 
   useEffect(() => {
     if (showEngagement) {
-      // Direct assignment for the first message to ensure it appears immediately
+      // Step 1: Show Jack's first message IMMEDIATELY
       setVisibleMessages([0]);
       
+      // Step 2: Sequence the rest with a 1.5s delay between each
       let nextIdx = 1;
       const interval = setInterval(() => {
         if (nextIdx < engagementMessages.length) {
@@ -77,6 +78,7 @@ export default function Chat3D() {
           >
             <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(circle at 20% 50%, rgba(37,99,235,0.05) 0%, transparent 40%)" }} />
 
+            {/* Header */}
             <div className="p-4 flex items-center gap-3" style={{ backgroundColor: "#2563EB" }}>
               <div className="rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ width: "44px", height: "44px", backgroundColor: "#6B6B6B" }}>J</div>
               <div>
@@ -87,9 +89,11 @@ export default function Chat3D() {
               </div>
             </div>
 
+            {/* Chat Body */}
             <div className="p-6 pb-2 space-y-4 bg-slate-50 min-h-[700px] max-h-[800px] overflow-y-auto relative scrollbar-hide">
               <div className="relative z-10 space-y-4">
-                <motion.div className="flex justify-end" custom={0} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true }}>
+                {/* Static Messages (Before Continue) */}
+                <motion.div className="flex justify-end" custom={0} initial="hidden" animate="visible" variants={messageVariants}>
                   <div className="flex flex-col items-end gap-1">
                     <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
                       Hi Jack, this is Sophie from Peak Creative checking in. You reached out back in July about getting a new website that converts better for your coaching business. Did that timing work out, or should we circle back? 😊
@@ -103,7 +107,7 @@ export default function Chat3D() {
                   <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Engaged</span>
                 </div>
 
-                <motion.div className="flex justify-end" custom={1} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true }}>
+                <motion.div className="flex justify-end" custom={1} initial="hidden" animate="visible" variants={messageVariants}>
                   <div className="flex flex-col items-end gap-1">
                     <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
                       Just bumping this up in case you got busy over the holidays! Still on your radar?
@@ -117,7 +121,7 @@ export default function Chat3D() {
                   <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Follow up sent</span>
                 </div>
 
-                <motion.div className="flex justify-start" custom={2} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true }}>
+                <motion.div className="flex justify-start" custom={2} initial="hidden" animate="visible" variants={messageVariants}>
                   <div className="flex flex-col items-start gap-1">
                     <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[95%] shadow-sm text-sm">
                       Hi Sophie! Yes sorry, summer was crazy with client launches. The website is definitely still something I need.
@@ -131,7 +135,7 @@ export default function Chat3D() {
                   <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Replied</span>
                 </div>
 
-                <motion.div className="flex justify-end" custom={3} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true }}>
+                <motion.div className="flex justify-end" custom={3} initial="hidden" animate="visible" variants={messageVariants}>
                   <div className="flex flex-col items-end gap-1">
                     <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
                       No worries at all Jack, I totally get it! Quick question: what was the main blocker that kept it on hold? (Budget, timeline, or just other fires?)
@@ -140,6 +144,7 @@ export default function Chat3D() {
                   </div>
                 </motion.div>
 
+                {/* Interactive Messages (After Continue) */}
                 <AnimatePresence>
                   {!showEngagement ? (
                     <motion.div 
@@ -160,9 +165,9 @@ export default function Chat3D() {
                   ) : (
                     <>
                       {engagementMessages.map((msg, idx) => (
-                        <AnimatePresence key={idx}>
+                        <AnimatePresence key={`engagement-${idx}`}>
                           {visibleMessages.includes(idx) && (
-                            <div className="space-y-4">
+                            <div className="space-y-4 py-2">
                               <motion.div 
                                 className={`flex ${msg.type === 'sophie' ? 'justify-end' : 'justify-start'}`}
                                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -184,6 +189,7 @@ export default function Chat3D() {
                                 </div>
                               </motion.div>
 
+                              {/* Lead Qualified Tag */}
                               {msg.text.includes("The 15-min call tomorrow works great!") && (
                                 <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-2 py-2">
                                   <div className="h-[1px] w-full bg-slate-200" />
@@ -195,6 +201,7 @@ export default function Chat3D() {
                         </AnimatePresence>
                       ))}
 
+                      {/* Final Call Booked Tag */}
                       <AnimatePresence>
                         {visibleMessages.length === engagementMessages.length && (
                           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="flex flex-col items-center gap-2 py-4">
