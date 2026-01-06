@@ -221,7 +221,13 @@ export default function Chat3D() {
                                   }`}
                                   style={msg.type === 'sophie' ? { backgroundColor: "#2563EB" } : {}}
                                 >
-                                  {msg.text}
+                                  {msg.text.includes("[link]") ? (
+                                  <>
+                                    {msg.text.split("[link]")[0]}
+                                    <span className="font-bold underline cursor-pointer">[link]</span>
+                                    {msg.text.split("[link]")[1]}
+                                  </>
+                                ) : msg.text}
                                 </div>
                                 <span className={`text-xs text-slate-400 ${msg.type === 'sophie' ? 'pr-2' : 'pl-2'}`}>{msg.time}</span>
                               </div>
