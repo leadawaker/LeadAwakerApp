@@ -236,20 +236,19 @@ Conversations shaped by Challenger & SPIN selling to uncover needs and handle ob
     },
     {
       number: "3",
-      cardTitle: "3. Automated Appointment Booking",
-      cardDescription: "Turn reactivation into revenue.",
+      cardTitle: "3. Automated Appointment Booking and Reporting",
+      cardDescription: "Reactivation → Revenue",
       overlayTitle: "",
       overlayDescription: "",
       image: dailyLeadsImg,
       icon: <TrendingUp className="w-8 h-8 text-yellow-500" />,
       align: "left" as const,
       cardImage: appointmentBookingImg,
-      leftText: `One-click Google Calendar, Calendly integration
-Smart reminders slash no-shows and cancellations
-On-demand campaign reports with lead interaction details
-Direct bookings (appointments, reservations, cart closures) for faster sales
-Sales rep calls for high-ticket niches
-Weekly optimization reviews for continuous results`
+      leftText: `Syncs with Google Calendar, Calendly, or whatever you use. Dialer-ready for instant calls
+Support for sales calls and direct bookings (appointments, reservations, cart closures)
+
+Live dashboard shows campaign reports and lead interaction details
+Weekly optimization reviews for continuous performance improvements`
     }
   ];
 
