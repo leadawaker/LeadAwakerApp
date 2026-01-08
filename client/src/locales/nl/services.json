@@ -1,0 +1,111 @@
+{
+  "hero": {
+    "title": "Zie Het In Actie",
+    "subtitle": "Echte AI-gesprekken. Echte resultaten."
+  },
+  "industries": {
+    "title": "Ontdek Toepassingen per Sector",
+    "solar": "Zonnepanelen",
+    "gym": "Sportscholen",
+    "restaurant": "Restaurants",
+    "realEstate": "Vastgoed",
+    "healthClinic": "Gezondheidsklinieken",
+    "lawFirm": "Advocatenkantoren"
+  },
+  "cases": {
+    "solar": {
+      "title": "Zonnepaneel Installatie",
+      "desc": "Hoe AI een lead reactiveert die maanden geleden een offerte aanvroeg maar stil bleef.",
+      "messages": {
+        "m1": "Hoi James, dit is Ana van Eclipse Solar.\n\nJe vroeg een paar maanden geleden om een offerte—ik wilde even checken of zonne-energie nog op je radar staat of dat je het even hebt laten liggen?",
+        "m2": "ja, ik ben nog aan het zoeken",
+        "m3": "Geweldig!\n\nJe nam voor het eerst contact met ons op ongeveer 6 maanden geleden. Sindsdien zijn de energieprijzen gestegen en is er een solide 30% belastingkorting beschikbaar voor nieuwe installaties.\n\nIk help je graag om opnieuw te kijken. Past een kort telefoontje deze week?",
+        "m4": "oh dat wist ik niet",
+        "m5": "Heel begrijpelijk—het is lastig om alle veranderingen bij te houden.\n\nHet goede nieuws is dat de belastingkorting nog steeds beschikbaar is en de voorafkosten echt kan compenseren. Wil je dat ik in een kort gesprek uitleg hoe dat werkt?",
+        "m6": "ik snap het, klinkt logisch",
+        "m7": "Mooi! Fijn dat het klikt.\n\nLaten we een 15-minuten gesprek inplannen zodat we samen het potentieel van je dak en de cijfers kunnen bekijken.\n\nPast donderdag om 10 uur?",
+        "m8": "ja, dat past",
+        "m9": "Ingepland! Ik stuur je zo een bevestiging met de gesprekslink.\n\nTot snel, James!"
+      }
+    },
+    "gym": {
+      "title": "Sportschool Lidmaatschap",
+      "desc": "Hoe AI een ex-lid betrekt wiens abonnement 3 maanden geleden verlopen is.",
+      "messages": {
+        "m1": "Hey Mark! Dit is Lisa van FitZone.\n\nIk zag dat het even geleden is dat je hier was. Alles goed? Ik wilde checken of er iets is dat je tegenhoudt om weer naar de gym te komen.",
+        "m2": "ja, het is een beetje een patroon bij mij, ik begin gemotiveerd maar dan zakt het weg",
+        "m3": "Ik snap je Mark.\n\nWe doen een maandelijkse check-in zodat je vooruitgang duidelijk kunt zien, en we passen het plan snel aan.\n\nVoordat ik de beste volgende stap voorstel, wat is nu de grootste belemmering: tijd, energie of motivatie?",
+        "m4": "tijd, ik heb net een baby gekregen",
+        "m5": "Gefeliciteerd met je baby! 🎉\n\nDat is precies wanneer een simpel plan het meest helpt.\n\nLaten we een snelle personal trainer afspraak boeken zodat jij en de PT een realistische routine kunnen uitstippelen. Klinkt goed?",
+        "m6": "ja, klinkt goed",
+        "m7": "Top! Ik heb openingen op dinsdag om 17 uur of vrijdag om 10 uur. Welke past het beste?",
+        "m8": "vrijdag past",
+        "m9": "Perfect! Je bent geboekt voor vrijdag om 10 uur met Coach Jake.\n\nIk stuur je een herinnering de dag ervoor. Tot dan, Mark!"
+      }
+    },
+    "restaurant": {
+      "title": "Restaurant Reservering",
+      "desc": "Hoe AI een eerdere gast aanmoedigt om opnieuw te reserveren.",
+      "messages": {
+        "m1": "Hoi Sophie! Dit is Jennifer van The Garden Table.\n\nWe merkten dat het even geleden is sinds je laatste bezoek. We hebben recent ons menu vernieuwd en dachten aan jou!\n\nWil je een tafel reserveren voor dit weekend?",
+        "m2": "Klinkt leuk, is vrijdag volgeboekt?",
+        "m3": "We hebben nog een paar tafels beschikbaar op vrijdagavond. Welke tijd dacht je aan?",
+        "m4": "ergens rond 19-20 uur, we zijn met 6 personen",
+        "m5": "Perfect, dank je.\n\nIs dit voor een speciale gelegenheid of een gewoon diner?",
+        "m6": "de verjaardag van mijn dochter",
+        "m7": "Wat leuk! Gefeliciteerd met haar!\n\nWe kunnen een klein verjaardagstintje doen, zoals een dessert met een kaarsje. Zou je dat leuk vinden?",
+        "m8": "dat zou geweldig zijn, dank je",
+        "m9": "Geregeld! Je bent gereserveerd voor 6 personen om 19:30 op vrijdag. Ik maak een notitie over de verjaardagsverrassing.\n\nTot dan, Sophie!"
+      }
+    },
+    "realEstate": {
+      "title": "Vastgoed Aanvraag",
+      "desc": "Hoe AI opvolgt met een koper die interesse toonde maar nooit een bezichtiging plande.",
+      "messages": {
+        "m1": "Hoi Liam, dit is Mia van Coastal Properties.\n\nJe vroeg een paar weken geleden naar strandhuizen. Ik wilde even checken—ben je nog aan het zoeken, of is er iets veranderd?",
+        "m2": "sorry ik ben super druk geweest en had geen tijd om te kijken",
+        "m3": "Even terugkomen omdat ik niet wilde dat je aanvraag door de mazen valt. Ben je nog steeds op zoek naar een woning aan het strand?",
+        "m4": "ja, ik ben nog steeds geïnteresseerd, moest gewoon bijkomen",
+        "m5": "Geen probleem! Dingen worden druk.\n\nWe hebben een paar nieuwe woningen die perfect voor je kunnen zijn. Wil je dat ik wat opties stuur, of heb je liever een kort gesprek om te filteren?",
+        "m6": "stuur me eerst wat opties alsjeblieft",
+        "m7": "Komt voor elkaar! Ik stel een shortlist samen van onze beste strandwoningen en mail ze vandaag naar je.\n\nAls je hebt gekeken, kunnen we bezichtigingen plannen voor degene die je leuk vindt. Goed?",
+        "m8": "kijk ernaar uit",
+        "m9": "Tot snel!"
+      }
+    },
+    "healthClinic": {
+      "title": "Gezondheidsklinieken Afspraak",
+      "desc": "Hoe AI contact opneemt met een patiënt die informeerde naar een dienst maar nooit boekte.",
+      "messages": {
+        "m1": "Hoi Daniel, dit is Marcia van Vida Natural Clinic.\n\nJe nam een tijdje geleden contact op over onze voedingsadvies. Ik wilde checken—heb je nog interesse in het plannen van een consult?",
+        "m2": "ja, ik heb nog steeds wat spijsverteringsproblemen maar wist niet zeker of jullie konden helpen",
+        "m3": "Ik begrijp het—spijsverteringsproblemen kunnen lastig zijn.\n\nOnze voedingsdeskundige is gespecialiseerd in darmgezondheid en heeft veel patiënten met vergelijkbare klachten geholpen. Ze kan je situatie beoordelen en een plan op maat voorstellen.\n\nWil je een consult boeken?",
+        "m4": "wat voor tests bieden jullie aan?",
+        "m5": "Ja, we bieden testopties aan.\n\nJe voedingsdeskundige zal uitleggen wat zinvol is voor jouw symptomen en of het beter is om te testen voor of na het eerste consult.",
+        "m6": "ok laten we boeken",
+        "m7": "Mooi! Ik heb beschikbaarheid deze donderdag om 14 uur of volgende maandag om 10 uur. Welke past beter?",
+        "m8": "Donderdag is goed",
+        "m9": "Even checken Daniel, wil je dat ik de boekingslink stuur?",
+        "m10": "perfect dank je",
+        "m11": "Graag gedaan en fijne dag 🙂"
+      }
+    },
+    "lawFirm": {
+      "title": "Advocatenkantoor Consult",
+      "desc": "Hoe AI opvolgt met een potentiële cliënt die informeerde naar juridische diensten.",
+      "messages": {
+        "m1": "Hoi Rebecca, dit is Michael van Sterling Law Associates.\n\nJe nam contact met ons op over een arbeidskwestie. Ik wilde opvolgen—ben je nog op zoek naar juridisch advies hierover?",
+        "m2": "ja, maar ik wist niet zeker of mijn zaak sterk genoeg was",
+        "m3": "Ik begrijp die zorg. Veel cliënten voelen zich in het begin onzeker.\n\nOnze advocaten bieden een gratis eerste consult om je situatie te beoordelen en eerlijke feedback te geven over je opties. Vrijblijvend.\n\nWil je er een plannen?",
+        "m4": "ok, wat moet ik meenemen?",
+        "m5": "Voor het eerste gesprek, neem gewoon relevante documenten mee—emails, contracten of schriftelijke communicatie gerelateerd aan je zaak.\n\nWe bekijken ze samen en bespreken vervolgstappen.\n\nPast donderdag om 15 uur?",
+        "m6": "dat past",
+        "m7": "Je staat gepland voor donderdag om 15 uur met Advocaat Sarah Chen.\n\nIk stuur je een bevestigingsmail met de vergaderlink en een checklist van documenten om te verzamelen.\n\nTot dan, Rebecca!"
+      }
+    }
+  },
+  "cta": {
+    "heading": "Wil je zien hoe dit werkt voor jouw bedrijf?",
+    "button": "Demo Boeken"
+  }
+}

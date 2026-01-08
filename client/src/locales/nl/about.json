@@ -1,0 +1,29 @@
+{
+  "hero": {
+    "title": "Over Lead Awaker",
+    "subtitle": "Wij helpen bedrijven slapende leads te transformeren naar actieve kansen door intelligente AI-gesprekken."
+  },
+  "mission": {
+    "title": "Onze Missie",
+    "description": "Het revolutioneren van hoe bedrijven opnieuw contact leggen met hun leads door AI te bieden die menselijk aanvoelt, vertrouwen opbouwt en echte resultaten levert."
+  },
+  "values": {
+    "title": "Onze Waarden",
+    "authenticity": {
+      "title": "Authenticiteit",
+      "desc": "Elk gesprek klinkt natuurlijk, empathisch en oprecht behulpzaam."
+    },
+    "results": {
+      "title": "Resultaatgericht",
+      "desc": "We meten succes aan geboekte gesprekken en gesloten deals, niet alleen statistieken."
+    },
+    "partnership": {
+      "title": "Partnerschap",
+      "desc": "We stemmen ons succes af op dat van jou door prestatiegerichte prijzen."
+    }
+  },
+  "cta": {
+    "heading": "Klaar om je leads wakker te maken?",
+    "button": "Demo Boeken"
+  }
+}

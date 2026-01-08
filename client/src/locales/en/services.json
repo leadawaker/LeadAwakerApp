@@ -1,0 +1,111 @@
+{
+  "hero": {
+    "title": "See It In Action",
+    "subtitle": "Real AI conversations. Real results."
+  },
+  "industries": {
+    "title": "Explore Use Cases by Industry",
+    "solar": "Solar Panels",
+    "gym": "Gyms",
+    "restaurant": "Restaurants",
+    "realEstate": "Real Estate",
+    "healthClinic": "Health Clinic",
+    "lawFirm": "Law Firms"
+  },
+  "cases": {
+    "solar": {
+      "title": "Solar Panel Installation",
+      "desc": "How AI reactivates a lead who requested a solar quote months ago but went quiet.",
+      "messages": {
+        "m1": "Hi James, this is Ana from Eclipse Solar.\n\nYou asked for a quote a few months back—just checking if solar is still on your radar or something you've set aside for now?",
+        "m2": "yes, I am still looking",
+        "m3": "Awesome!\n\nYou first reached out to us about 6 months ago. Since then, energy prices have been climbing, and there's a solid 30% tax credit available for new installs.\n\nI'd love to help you take a fresh look. Would a quick call this week work for you?",
+        "m4": "oh I didnt know that",
+        "m5": "Totally fair—it can be hard to keep track of all the changes.\n\nThe good news is the tax credit is still available and can really offset upfront costs. Want me to walk you through how that works on a short call?",
+        "m6": "I see, it does make sense",
+        "m7": "Great! I'm glad it clicked.\n\nLet's set up a 15-minute call so we can review your roof's potential and the numbers together.\n\nWould Thursday at 10 AM work for you?",
+        "m8": "yes, that works",
+        "m9": "Booked it in! I'll send over a confirmation with the call link shortly.\n\nTalk soon, James!"
+      }
+    },
+    "gym": {
+      "title": "Gym Membership",
+      "desc": "How AI re-engages an ex-member whose subscription lapsed 3 months ago.",
+      "messages": {
+        "m1": "Hey Mark! This is Lisa from FitZone.\n\nI noticed it's been a bit since you were here. Everything okay? I wanted to check if there's anything holding you back from hitting the gym again.",
+        "m2": "yes, it is sort of a pattern with me, I start motivated but then it fizzles out",
+        "m3": "I hear you Mark.\n\nWe do a monthly check-in so you can see progress clearly, and we adjust the plan fast.\n\nBefore I suggest the best next step, what is the biggest constraint right now: time, energy, or motivation?",
+        "m4": "time, I just had a baby",
+        "m5": "Congrats on your baby! 🎉\n\nThat's exactly when a simple plan helps most.\n\nLet's book a quick personal trainer plan appointment so you and the PT can map out a realistic routine. Sound good?",
+        "m6": "sure, sounds good",
+        "m7": "Great! I have openings Tuesday at 5 PM or Friday at 10 AM. Which works best for you?",
+        "m8": "friday works",
+        "m9": "Perfect! You're booked for Friday at 10 AM with Coach Jake.\n\nI'll send you a reminder the day before. See you then, Mark!"
+      }
+    },
+    "restaurant": {
+      "title": "Restaurant Reservation",
+      "desc": "How AI encourages a past guest to book again.",
+      "messages": {
+        "m1": "Hi Sophie! This is Jennifer from The Garden Table.\n\nWe noticed it's been a while since your last visit. We recently updated our menu and thought of you!\n\nWould you like to book a table for this weekend?",
+        "m2": "Sounds nice, is friday booked?",
+        "m3": "We have a few tables open on Friday evening. What time were you thinking?",
+        "m4": "sometime around 7-8pm, will be 6 people",
+        "m5": "Perfect, thanks.\n\nIs this for a special occasion, or a normal dinner?",
+        "m6": "my daughters birthday",
+        "m7": "Lovely! Happy birthday to her!\n\nWe can do a small birthday touch, like dessert with a candle. Would you like that?",
+        "m8": "that would be great, thanks",
+        "m9": "Done! You're booked for 6 at 7:30 PM on Friday. I'll make a note about the birthday surprise.\n\nSee you then, Sophie!"
+      }
+    },
+    "realEstate": {
+      "title": "Real Estate Inquiry",
+      "desc": "How AI follows up with a buyer who showed interest but never scheduled a viewing.",
+      "messages": {
+        "m1": "Hi Liam, this is Mia from Coastal Properties.\n\nYou inquired about beachfront homes a few weeks back. I wanted to check in—are you still looking, or has anything changed?",
+        "m2": "sorry I have been super busy and haven't had time to even look",
+        "m3": "Just circling back because I didn't want your request to fall through the cracks. Are you still looking to buy in the beach area?",
+        "m4": "yes, I am still interested, just needed to catch up",
+        "m5": "No problem at all! Things get busy. \n\nWe have a few new listings that might be perfect for you. Want me to send over some options, or would you prefer a quick call to narrow things down?",
+        "m6": "send me some options first please",
+        "m7": "Will do! I'll put together a shortlist of our best beachfront properties and email them to you today.\n\nOnce you've had a look, we can set up viewings for the ones you like. Sound good?",
+        "m8": "looking forward to it",
+        "m9": "Talk soon!"
+      }
+    },
+    "healthClinic": {
+      "title": "Health Clinic Appointment",
+      "desc": "How AI reaches out to a patient who inquired about a service but never booked.",
+      "messages": {
+        "m1": "Hi Daniel, this is Marcia from Vida Natural Clinic.\n\nYou reached out a while back about our nutritional counseling. I wanted to check in—are you still interested in scheduling a consultation?",
+        "m2": "yes, I still have some digestion issues but wasn't sure if you could help",
+        "m3": "I understand—digestive issues can be tricky.\n\nOur nutritionist specializes in gut health and has helped many patients with similar concerns. She can assess your situation and suggest a plan tailored to you.\n\nWould you like to book a consultation?",
+        "m4": "what kind of tests do you offer?",
+        "m5": "Yes, we do offer testing options.\n\nYour Nutritionist will explain what makes sense for your symptoms and whether it is better to test before or after the first consult.",
+        "m6": "ok let's book it",
+        "m7": "Great! I have availability this Thursday at 2 PM or next Monday at 10 AM. Which works better for you?",
+        "m8": "Thursday is good",
+        "m9": "Just checking in Daniel, do you want me to send the booking link?",
+        "m10": "perfect thanks",
+        "m11": "You are welcome and have a good day 🙂"
+      }
+    },
+    "lawFirm": {
+      "title": "Law Firm Consultation",
+      "desc": "How AI follows up with a potential client who inquired about legal services.",
+      "messages": {
+        "m1": "Hi Rebecca, this is Michael from Sterling Law Associates.\n\nYou contacted us regarding an employment matter. I wanted to follow up—are you still looking for legal advice on this?",
+        "m2": "yes, but I wasn't sure if my case was strong enough",
+        "m3": "I understand that concern. Many clients feel unsure at first.\n\nOur attorneys offer a free initial consultation to assess your situation and give you honest feedback on your options. No obligation.\n\nWould you like to schedule one?",
+        "m4": "ok, what do I need to bring?",
+        "m5": "For the initial call, just bring any relevant documents—emails, contracts, or written communications related to your case.\n\nWe'll review them together and discuss next steps.\n\nDoes Thursday at 3 PM work for you?",
+        "m6": "that works",
+        "m7": "You're all set for Thursday at 3 PM with Attorney Sarah Chen.\n\nI'll send you a confirmation email with the meeting link and a checklist of documents to gather.\n\nSee you then, Rebecca!"
+      }
+    }
+  },
+  "cta": {
+    "heading": "Want to see this working for your business?",
+    "button": "Book a Demo"
+  }
+}

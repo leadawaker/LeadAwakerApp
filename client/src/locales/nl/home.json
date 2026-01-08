@@ -1,0 +1,38 @@
+{
+  "hero": {
+    "title1": "Transformeer slapende leads naar",
+    "title2": "geboekte gesprekken",
+    "title3": "automatisch.",
+    "subtitle1": "AI regelt het eerste contact tot CRM-overdracht.",
+    "subtitle2": "Focus op groei en sluiten, niet op achtervolgen.",
+    "ctaBook": "Bel Boeken",
+    "ctaUseCases": "Bekijk Toepassingen"
+  },
+  "results": {
+    "heading": "En wat je krijgt",
+    "subheading": "Van chaos naar zekerheid in 30 dagen",
+    "replyRates": "Reactiepercentages",
+    "vsIndustry": "vs sector 5-10%",
+    "leadsReactivated": "Leads Gereactiveerd",
+    "intoLive": "naar actief",
+    "hoursSaved": "Uren Bespaard",
+    "perRepMonth": "per verkoper/maand",
+    "upfrontCost": "Voorafkosten",
+    "performancePartnership": "Prestatiepartnerschap",
+    "solveProblems": "Wij lossen problemen op, niet creëren",
+    "guarantee": "30 dagen garantie"
+  },
+  "security": {
+    "heading": "Compliance en Reputatie Ingebouwd",
+    "gdprTitle": "AVG & CCPA Conform",
+    "gdprDesc": "Alle workflows respecteren opt-out voorkeuren, uitschrijflinks en gegevenslocatie-eisen. Volledig conform met wereldwijde privacystandaarden.",
+    "brandTitle": "Merkbescherming",
+    "brandDesc": "Realtime monitoring zorgt ervoor dat elke interactie on-topic, professioneel en perfect afgestemd blijft op de stem en richtlijnen van je merk."
+  },
+  "cta": {
+    "heading": "Zie AI Werken, Niet Alleen Praten.",
+    "quote": "Als een foto duizend woorden waard is, is een live demo duizend foto's waard.",
+    "description": "Voordat je iets anders doet, ervaar hoe AI echte gesprekken afhandelt alsof het je eigen bedrijfsagent is, specifiek geprogrammeerd voor jouw niche. In slechts een paar minuten zie je het natuurlijk reageren op je klanten terwijl het zorgt voor het repetitieve werk dat je team niet zou moeten doen.",
+    "button": "Demo Boeken"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "nav": {
+    "home": "Início",
+    "services": "Casos de Uso",
+    "about": "Sobre",
+    "login": "Entrar",
+    "bookDemo": "Agendar Demo"
+  },
+  "footer": {
+    "rights": "Todos os direitos reservados.",
+    "privacy": "Política de Privacidade",
+    "terms": "Termos de Serviço"
+  },
+  "cta": {
+    "bookDemo": "Agendar Demo",
+    "learnMore": "Saiba Mais",
+    "getStarted": "Começar",
+    "contactUs": "Fale Conosco"
+  }
+}

@@ -8,18 +8,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "react-i18next";
 
 const languages = [
-  { code: "EN", label: "English", flag: "https://flagcdn.com/w40/gb.png" },
-  { code: "PT", label: "Português", flag: "https://flagcdn.com/w40/br.png" },
-  { code: "NL", label: "Nederlands", flag: "https://flagcdn.com/w40/nl.png" },
+  { code: "en", label: "English", flag: "https://flagcdn.com/w40/gb.png", display: "EN" },
+  { code: "pt", label: "Português", flag: "https://flagcdn.com/w40/br.png", display: "PT" },
+  { code: "nl", label: "Nederlands", flag: "https://flagcdn.com/w40/nl.png", display: "NL" },
 ];
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [location] = useLocation();
-  const [currentLang, setCurrentLang] = useState(languages[0]);
+  const { t, i18n } = useTranslation("common");
+  
+  const currentLang = languages.find(l => l.code === i18n.language) || languages[0];
+  
+  const changeLanguage = (lang: typeof languages[0]) => {
+    i18n.changeLanguage(lang.code);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,9 +37,9 @@ export function Navbar() {
   }, []);
 
   const navLinks = [
-    { href: "/", label: "Home" },
-    { href: "/services", label: "Use Cases" },
-    { href: "/about", label: "About" },
+    { href: "/", label: t("nav.home") },
+    { href: "/services", label: t("nav.services") },
+    { href: "/about", label: t("nav.about") },
   ];
 
   return (
@@ -53,8 +60,8 @@ export function Navbar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-1.5 font-medium h-9 px-2 hover:opacity-80 transition-opacity focus:outline-none" data-testid="button-language-selector">
-                <img src={currentLang.flag} alt={currentLang.code} className="h-4 w-[1.35rem] rounded-none object-cover shadow-sm -translate-y-[1px]" />
-                <span className="text-[15px] font-bold tracking-wide text-muted-foreground uppercase">{currentLang.code}</span>
+                <img src={currentLang.flag} alt={currentLang.display} className="h-4 w-[1.35rem] rounded-none object-cover shadow-sm -translate-y-[1px]" />
+                <span className="text-[15px] font-bold tracking-wide text-muted-foreground uppercase">{currentLang.display}</span>
                 <ChevronDown className="w-3 h-3 text-muted-foreground/60" />
               </button>
             </DropdownMenuTrigger>
@@ -62,7 +69,7 @@ export function Navbar() {
               {languages.map((lang) => (
                 <DropdownMenuItem
                   key={lang.code}
-                  onClick={() => setCurrentLang(lang)}
+                  onClick={() => changeLanguage(lang)}
                   className="cursor-pointer flex items-center justify-between px-3 py-2 text-[15px] font-medium focus:bg-primary focus:text-white rounded-md transition-all"
                   data-testid={`menu-item-lang-${lang.code}`}
                 >
@@ -88,12 +95,12 @@ export function Navbar() {
           ))}
           <Link href="/login">
             <Button variant="ghost" className="font-heading font-bold text-[15px]">
-              Login
+              {t("nav.login")}
             </Button>
           </Link>
           <Link href="/book-demo">
             <Button className="font-heading font-bold bg-primary hover:bg-yellow-400 hover:text-black text-white shadow-lg shadow-primary/20 hover:shadow-yellow-400/35 transition-all text-[15px]">
-              Book a Demo
+              {t("nav.bookDemo")}
             </Button>
           </Link>
         </div>
@@ -122,12 +129,12 @@ export function Navbar() {
           ))}
           <Link href="/login" onClick={() => setIsOpen(false)}>
             <Button variant="ghost" className="w-full mt-2">
-              Login
+              {t("nav.login")}
             </Button>
           </Link>
           <Link href="/book-demo">
             <Button className="w-full mt-2 hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all" onClick={() => setIsOpen(false)}>
-              Book a Demo
+              {t("nav.bookDemo")}
             </Button>
           </Link>
         </div>

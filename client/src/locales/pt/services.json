@@ -1,0 +1,111 @@
+{
+  "hero": {
+    "title": "Veja em Ação",
+    "subtitle": "Conversas reais com IA. Resultados reais."
+  },
+  "industries": {
+    "title": "Explore Casos de Uso por Indústria",
+    "solar": "Painéis Solares",
+    "gym": "Academias",
+    "restaurant": "Restaurantes",
+    "realEstate": "Imóveis",
+    "healthClinic": "Clínica de Saúde",
+    "lawFirm": "Escritórios de Advocacia"
+  },
+  "cases": {
+    "solar": {
+      "title": "Instalação de Painéis Solares",
+      "desc": "Como a IA reativa um lead que pediu um orçamento de energia solar há meses, mas ficou em silêncio.",
+      "messages": {
+        "m1": "Olá James, aqui é a Ana da Eclipse Solar.\n\nVocê pediu um orçamento há alguns meses—só querendo saber se energia solar ainda está nos seus planos ou se você deixou de lado por enquanto?",
+        "m2": "sim, ainda estou procurando",
+        "m3": "Ótimo!\n\nVocê nos contatou pela primeira vez há cerca de 6 meses. Desde então, os preços de energia subiram e há um crédito fiscal de 30% disponível para novas instalações.\n\nAdoraria ajudá-lo a dar uma nova olhada. Uma ligação rápida esta semana funcionaria?",
+        "m4": "ah eu não sabia disso",
+        "m5": "Totalmente justo—pode ser difícil acompanhar todas as mudanças.\n\nA boa notícia é que o crédito fiscal ainda está disponível e pode realmente compensar os custos iniciais. Quer que eu explique como funciona em uma ligação rápida?",
+        "m6": "entendi, faz sentido",
+        "m7": "Ótimo! Fico feliz que fez sentido.\n\nVamos marcar uma ligação de 15 minutos para revisar o potencial do seu telhado e os números juntos.\n\nQuinta às 10h funciona para você?",
+        "m8": "sim, funciona",
+        "m9": "Agendado! Vou enviar uma confirmação com o link da chamada em breve.\n\nAté logo, James!"
+      }
+    },
+    "gym": {
+      "title": "Matrícula em Academia",
+      "desc": "Como a IA reengaja um ex-membro cuja assinatura expirou há 3 meses.",
+      "messages": {
+        "m1": "Oi Mark! Aqui é a Lisa da FitZone.\n\nNotei que faz um tempo desde que você esteve aqui. Está tudo bem? Queria verificar se há algo te impedindo de voltar à academia.",
+        "m2": "sim, é meio que um padrão comigo, começo motivado mas depois perde a força",
+        "m3": "Eu te entendo Mark.\n\nFazemos um check-in mensal para que você possa ver o progresso claramente, e ajustamos o plano rapidamente.\n\nAntes de sugerir o próximo melhor passo, qual é a maior restrição agora: tempo, energia ou motivação?",
+        "m4": "tempo, acabei de ter um bebê",
+        "m5": "Parabéns pelo bebê! 🎉\n\nÉ exatamente quando um plano simples ajuda mais.\n\nVamos agendar uma consulta rápida com personal trainer para que você e o PT possam montar uma rotina realista. Tudo bem?",
+        "m6": "claro, parece bom",
+        "m7": "Ótimo! Tenho horários na terça às 17h ou sexta às 10h. Qual funciona melhor?",
+        "m8": "sexta funciona",
+        "m9": "Perfeito! Você está agendado para sexta às 10h com o Treinador Jake.\n\nVou enviar um lembrete no dia anterior. Até lá, Mark!"
+      }
+    },
+    "restaurant": {
+      "title": "Reserva de Restaurante",
+      "desc": "Como a IA incentiva um cliente anterior a reservar novamente.",
+      "messages": {
+        "m1": "Oi Sophie! Aqui é a Jennifer do The Garden Table.\n\nNotamos que faz um tempo desde sua última visita. Recentemente atualizamos nosso cardápio e pensamos em você!\n\nGostaria de reservar uma mesa para este fim de semana?",
+        "m2": "Parece ótimo, sexta está reservada?",
+        "m3": "Temos algumas mesas disponíveis na sexta à noite. Que horário você estava pensando?",
+        "m4": "algo por volta das 19-20h, seremos 6 pessoas",
+        "m5": "Perfeito, obrigada.\n\nÉ para uma ocasião especial ou um jantar normal?",
+        "m6": "aniversário da minha filha",
+        "m7": "Que lindo! Feliz aniversário para ela!\n\nPodemos fazer um toque especial de aniversário, como sobremesa com vela. Gostaria disso?",
+        "m8": "isso seria ótimo, obrigada",
+        "m9": "Feito! Você está reservado para 6 pessoas às 19:30 na sexta. Vou anotar sobre a surpresa de aniversário.\n\nAté lá, Sophie!"
+      }
+    },
+    "realEstate": {
+      "title": "Consulta Imobiliária",
+      "desc": "Como a IA faz follow-up com um comprador que mostrou interesse mas nunca agendou uma visita.",
+      "messages": {
+        "m1": "Oi Liam, aqui é a Mia da Coastal Properties.\n\nVocê perguntou sobre casas à beira-mar há algumas semanas. Queria saber—ainda está procurando, ou algo mudou?",
+        "m2": "desculpa, estive super ocupado e nem tive tempo de olhar",
+        "m3": "Só voltando porque não queria que seu pedido caísse no esquecimento. Você ainda está procurando comprar na área de praia?",
+        "m4": "sim, ainda estou interessado, só precisava me organizar",
+        "m5": "Sem problema! As coisas ficam corridas.\n\nTemos algumas novas listagens que podem ser perfeitas para você. Quer que eu envie algumas opções, ou prefere uma ligação rápida para filtrar?",
+        "m6": "me mande algumas opções primeiro por favor",
+        "m7": "Vou fazer! Vou preparar uma lista das nossas melhores propriedades à beira-mar e enviar por email hoje.\n\nDepois que você olhar, podemos agendar visitas para as que gostar. Tudo bem?",
+        "m8": "estou ansioso",
+        "m9": "Até breve!"
+      }
+    },
+    "healthClinic": {
+      "title": "Consulta em Clínica de Saúde",
+      "desc": "Como a IA entra em contato com um paciente que perguntou sobre um serviço mas nunca agendou.",
+      "messages": {
+        "m1": "Oi Daniel, aqui é a Marcia da Clínica Vida Natural.\n\nVocê nos procurou há um tempo sobre nosso aconselhamento nutricional. Queria saber—ainda está interessado em agendar uma consulta?",
+        "m2": "sim, ainda tenho alguns problemas de digestão mas não tinha certeza se vocês poderiam ajudar",
+        "m3": "Eu entendo—problemas digestivos podem ser complicados.\n\nNossa nutricionista é especializada em saúde intestinal e já ajudou muitos pacientes com preocupações semelhantes. Ela pode avaliar sua situação e sugerir um plano personalizado para você.\n\nGostaria de agendar uma consulta?",
+        "m4": "que tipo de exames vocês oferecem?",
+        "m5": "Sim, oferecemos opções de exames.\n\nSua Nutricionista explicará o que faz sentido para seus sintomas e se é melhor fazer os exames antes ou depois da primeira consulta.",
+        "m6": "ok vamos agendar",
+        "m7": "Ótimo! Tenho disponibilidade nesta quinta às 14h ou segunda que vem às 10h. Qual funciona melhor?",
+        "m8": "Quinta está bom",
+        "m9": "Só verificando Daniel, quer que eu envie o link de agendamento?",
+        "m10": "perfeito obrigado",
+        "m11": "De nada e tenha um bom dia 🙂"
+      }
+    },
+    "lawFirm": {
+      "title": "Consulta Jurídica",
+      "desc": "Como a IA faz follow-up com um potencial cliente que perguntou sobre serviços jurídicos.",
+      "messages": {
+        "m1": "Oi Rebecca, aqui é o Michael da Sterling Law Associates.\n\nVocê nos contatou sobre uma questão trabalhista. Queria fazer um acompanhamento—ainda está procurando aconselhamento jurídico sobre isso?",
+        "m2": "sim, mas eu não tinha certeza se meu caso era forte o suficiente",
+        "m3": "Eu entendo essa preocupação. Muitos clientes se sentem inseguros no início.\n\nNossos advogados oferecem uma consulta inicial gratuita para avaliar sua situação e dar um feedback honesto sobre suas opções. Sem compromisso.\n\nGostaria de agendar uma?",
+        "m4": "ok, o que preciso trazer?",
+        "m5": "Para a ligação inicial, apenas traga qualquer documento relevante—emails, contratos ou comunicações escritas relacionadas ao seu caso.\n\nVamos revisar juntos e discutir os próximos passos.\n\nQuinta às 15h funciona para você?",
+        "m6": "funciona",
+        "m7": "Você está agendada para quinta às 15h com a Advogada Sarah Chen.\n\nVou enviar um email de confirmação com o link da reunião e uma lista de documentos para reunir.\n\nAté lá, Rebecca!"
+      }
+    }
+  },
+  "cta": {
+    "heading": "Quer ver isso funcionando para o seu negócio?",
+    "button": "Agendar Demo"
+  }
+}

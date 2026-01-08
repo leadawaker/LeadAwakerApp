@@ -1,0 +1,29 @@
+{
+  "hero": {
+    "title": "Sobre Lead Awaker",
+    "subtitle": "Ajudamos empresas a transformar leads dormentes em oportunidades ativas através de conversas inteligentes com IA."
+  },
+  "mission": {
+    "title": "Nossa Missão",
+    "description": "Revolucionar como as empresas se reconectam com seus leads, fornecendo IA que parece humana, constrói confiança e entrega resultados reais."
+  },
+  "values": {
+    "title": "Nossos Valores",
+    "authenticity": {
+      "title": "Autenticidade",
+      "desc": "Cada conversa soa natural, empática e genuinamente útil."
+    },
+    "results": {
+      "title": "Orientado a Resultados",
+      "desc": "Medimos o sucesso por chamadas agendadas e negócios fechados, não apenas métricas."
+    },
+    "partnership": {
+      "title": "Parceria",
+      "desc": "Alinhamos nosso sucesso com o seu através de preços baseados em performance."
+    }
+  },
+  "cta": {
+    "heading": "Pronto para despertar seus leads?",
+    "button": "Agendar Demo"
+  }
+}

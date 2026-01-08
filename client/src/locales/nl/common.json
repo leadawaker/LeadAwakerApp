@@ -1,0 +1,20 @@
+{
+  "nav": {
+    "home": "Home",
+    "services": "Toepassingen",
+    "about": "Over Ons",
+    "login": "Inloggen",
+    "bookDemo": "Demo Boeken"
+  },
+  "footer": {
+    "rights": "Alle rechten voorbehouden.",
+    "privacy": "Privacybeleid",
+    "terms": "Servicevoorwaarden"
+  },
+  "cta": {
+    "bookDemo": "Demo Boeken",
+    "learnMore": "Meer Weten",
+    "getStarted": "Aan de slag",
+    "contactUs": "Neem Contact Op"
+  }
+}
