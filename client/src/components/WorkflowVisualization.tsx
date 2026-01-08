@@ -62,7 +62,8 @@ export default function WorkflowVisualization() {
       ];
       for (const t of checks) {
         setGuardrailsStatus(t);
-        await new Promise(r => setTimeout(r, 920));
+        const delay = t === 'On-topic sales' ? 1920 : 920;
+        await new Promise(r => setTimeout(r, delay));
       }
       
       setGuardrailsStatus('...');
