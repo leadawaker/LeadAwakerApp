@@ -246,9 +246,8 @@ Conversations shaped by Challenger & SPIN selling to uncover needs and handle ob
       cardImage: appointmentBookingImg,
       leftText: `Syncs with Google Calendar, Calendly, or whatever you use. Dialer-ready for instant calls
 Support for sales calls and direct bookings (appointments, reservations, cart closures)
-
-Live dashboard shows campaign reports and lead interaction details
-Weekly optimization reviews for continuous performance improvements`
+Weekly optimization reviews for continuous performance improvements
+Live dashboard shows campaign reports and lead interaction details`
     }
   ];
 
