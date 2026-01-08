@@ -7,14 +7,14 @@ import ChatCard2D from "@/components/ChatCard2D";
 
 const CASES = [
   {
-    id: 1,
+    id: 6,
     title: "Law Firm",
     color: "#2563EB", // Blue
     darkColor: "#1E40AF", // Darker Blue
     icon: <Briefcase className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 1 - <span style={{ color: "#1E40AF" }}>Law Firm</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 6 - <span style={{ color: "#1E40AF" }}>Law Firm</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Watch this real conversation unfold: Our <strong>Lead Awaker AI</strong> sends an initial SMS to cold leads checking car finance refunds. When Jack responds, the AI instantly qualifies him, handles his objection about missing documents, and guides him to complete a DSAR (Data Subject Access Request).
         </p>
@@ -158,14 +158,14 @@ const CASES = [
     ]
   },
   {
-    id: 4,
+    id: 1,
     title: "Solar Panel",
     color: "#10B981", // Emerald
     darkColor: "#047857", // Darker Emerald
     icon: <Sun className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 4 - <span style={{ color: "#047857" }}>Solar Panel Installation</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 1 - <span style={{ color: "#047857" }}>Solar Panel Installation</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Watch this real conversation unfold: Our <strong>Eco-Response AI</strong> re-engages Gabriel, a homeowner who received a quote months ago. The AI handles his technical concerns about his north-facing roof with expert-level reassurance.
         </p>
@@ -214,14 +214,14 @@ const CASES = [
     ]
   },
   {
-    id: 5,
+    id: 4,
     title: "Real Estate",
     color: "#6366F1", // Indigo
     darkColor: "#4338CA", // Darker Indigo
     icon: <Building2 className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 5 - <span style={{ color: "#4338CA" }}>Real Estate</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 4 - <span style={{ color: "#4338CA" }}>Real Estate</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Nurturing long-term buyer and seller leads. Our AI identifies "motivated" behavior patterns and automatically offers virtual tours or instant valuation reports.
         </p>
@@ -267,14 +267,14 @@ const CASES = [
     ]
   },
   {
-    id: 6,
+    id: 5,
     title: "Health Clinic",
     color: "#E11D48", // Rose/Red
     darkColor: "#BE123C", // Darker Rose
     icon: <Globe className="w-6 h-6" />,
     description: (
       <>
-        <h2 className="text-3xl font-bold mb-6">Case 6 - <span style={{ color: "#BE123C" }}>Health Clinic</span></h2>
+        <h2 className="text-3xl font-bold mb-6">Case 5 - <span style={{ color: "#BE123C" }}>Health Clinic</span></h2>
         <p className="text-muted-foreground text-base mb-6 leading-relaxed">
           Watch our <strong>Lead Awaker AI</strong> handle a sensitive medical inquiry. The AI re-engages a lead seeking relief for severe chronic symptoms, empathizes with their situation, and qualifies their specific needs before securing an in-person specialist consultation.
         </p>
@@ -310,7 +310,7 @@ const CASES = [
       { type: "system", content: "Closed - Consultation Booked", id: "hc-3" }
     ]
   }
-];
+].sort((a, b) => a.id - b.id);
 
 export default function Services() {
   const [activeCase, setActiveCase] = useState(0);
