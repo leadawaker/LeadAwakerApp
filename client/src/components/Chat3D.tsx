@@ -56,7 +56,6 @@ export default function Chat3D() {
         }, currentDelay);
         timeouts.push(timeout);
 
-        // Add 2.25s extra delay after "Call Booked" tag
         const currentMsg = engagementMessages[index];
         let extraWait = 0;
         if (currentMsg?.type === 'tag' && currentMsg.text === "Call Booked 🗓️") {
@@ -138,7 +137,7 @@ export default function Chat3D() {
               <motion.div className="flex justify-end" custom={0} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-1">
                 <div className="flex flex-col items-end gap-1">
                   <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
-                    Hi Jack, this is Sophie from Peak Creative checking in. You reached out back in July about getting a new website that converts better for your coaching business. Did that timing work out, or should we circle back? 😊
+                    Hey Jack, it's Sophie from Peak Creative. You made a website upgrade inquiry last July. Ready to move forward? 😊
                   </div>
                   <span className="text-xs text-slate-400 pr-2">14:35</span>
                 </div>
@@ -156,8 +155,8 @@ export default function Chat3D() {
 
               <motion.div className="flex justify-end" custom={1} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-2">
                 <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
-                    Just bumping this up in case you got busy over the holidays! Still on your radar?
+                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm inline-block" style={{ backgroundColor: "#2563EB", whiteSpace: "nowrap" }}>
+                    Still on your radar? 😊
                   </div>
                   <span className="text-xs text-slate-400 pr-2">14:55</span>
                 </div>
@@ -175,7 +174,7 @@ export default function Chat3D() {
 
               <motion.div className="flex justify-start" custom={2} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-jack-1">
                 <div className="flex flex-col items-start gap-1">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[95%] shadow-sm text-sm">
+                  <div className="bg-gray-100 text-slate-700 border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[95%] shadow-sm text-sm">
                     Hi Sophie! Yes sorry, summer was crazy with client launches. The website is definitely still something I need.
                   </div>
                   <span className="text-xs text-slate-400 pl-2">15:02</span>
@@ -194,7 +193,9 @@ export default function Chat3D() {
 
               <motion.div className="flex justify-end" custom={3} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-3">
                 <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>No worries at all Jack, I totally get it! Quick question: what was the main blocker that kept it on hold? (Budget, timeline, or just other fires?)</div>
+                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
+                    No worries, life happens! What was the main blocker? Budget, timeline, or other fires?
+                  </div>
                   <span className="text-xs text-slate-400 pr-2">15:03</span>
                 </div>
               </motion.div>
@@ -207,7 +208,7 @@ export default function Chat3D() {
                     exit={{ opacity: 0, scale: 0.95 }}
                     className="relative flex justify-center items-center pt-4 pb-2"
                   >
-                    <div className="absolute left-0 flex items-center gap-1 bg-white border border-slate-100 px-3 py-4 rounded-2xl rounded-bl-sm shadow-sm scale-90">
+                    <div className="absolute left-0 flex items-center gap-1 bg-gray-100 border border-gray-200 px-3 py-4 rounded-2xl rounded-bl-sm shadow-sm scale-90">
                       <motion.span 
                         animate={{ opacity: [0.4, 1, 0.4] }} 
                         transition={{ repeat: Infinity, duration: 1.4, delay: 0 }}
@@ -273,7 +274,7 @@ export default function Chat3D() {
                                   className={`rounded-2xl px-4 py-3 shadow-sm text-sm ${
                                     msg.type === 'sophie' 
                                       ? 'text-white rounded-tr-sm max-w-[90%]' 
-                                      : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'
+                                      : 'bg-gray-100 text-slate-700 border border-gray-200 rounded-tl-sm'
                                   }`}
                                   style={msg.type === 'sophie' ? { backgroundColor: "#2563EB" } : {}}
                                 >
@@ -310,7 +311,7 @@ export default function Chat3D() {
                         className={`relative flex items-center pt-4 pb-2 ${engagementMessages[visibleMessages.length]?.type === 'sophie' ? 'justify-end' : 'justify-start'}`}
                       >
                         {engagementMessages[visibleMessages.length]?.type !== 'tag' && (
-                          <div className={`flex items-center gap-1 bg-white border border-slate-100 px-3 py-4 rounded-2xl shadow-sm scale-90 ${engagementMessages[visibleMessages.length]?.type === 'sophie' ? 'rounded-br-sm' : 'rounded-bl-sm'}`}>
+                          <div className={`flex items-center gap-1 ${engagementMessages[visibleMessages.length]?.type === 'jack' ? 'bg-gray-100 border-gray-200' : 'bg-white border-slate-100'} border px-3 py-4 rounded-2xl shadow-sm scale-90 ${engagementMessages[visibleMessages.length]?.type === 'sophie' ? 'rounded-br-sm' : 'rounded-bl-sm'}`}>
                             <motion.span 
                               animate={{ opacity: [0.4, 1, 0.4] }} 
                               transition={{ repeat: Infinity, duration: 1.4, delay: 0 }}
