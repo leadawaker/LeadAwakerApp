@@ -138,7 +138,7 @@ const CASES: CaseItem[] = [
           This reactivation flow is built like a real sales conversation, not a generic “come back” text.
           The AI starts with a low-friction identity check, uses a natural excuse to re-open the conversation,
           then runs SPIN-style discovery to diagnose churn and build a plan. It handles a second lifestyle objection
-          (new baby), then converts intent into a personal trainer plan appointment. [web:97][web:95]
+          (new baby), then converts intent into a personal trainer plan appointment.
         </p>
 
         <h3 className="font-semibold text-lg mb-4">Key Metrics:</h3>
@@ -240,10 +240,10 @@ const CASES: CaseItem[] = [
         time: "10:52 AM",
       },
 
+
+
+      { type: "user", sender: "Mark", content: "yes, sounds like a plan!", time: "10:58 AM" },
       { type: "system", content: "Lead qualified", id: "gym-3" },
-
-      { type: "user", sender: "Mark", content: "yes ok", time: "10:58 AM" },
-
       { type: "agent", sender: "Sara", content: "Great.\n\nHere’s the booking link: https://calendar.app.google/uvWx5JWm7SLZSCqz7", time: "10:59 AM" },
 
       { type: "system", content: "Appointment booked 📅", id: "gym-4" },
@@ -312,7 +312,7 @@ const CASES: CaseItem[] = [
       { type: "user", sender: "Steve", content: "Yes that was me", time: "11:05 AM" },
       { type: "user", sender: "Steve", content: "it was about 2 weeks ago I think", time: "11:05 AM" },
       { type: "system", content: "Lead replied", id: "rb-2" },
-      { type: "agent", sender: "Jennifer", content: "Perfect, thanks.\n\nIs this for a special occasion, or a normal dinner?", time: "11:06 AM" },
+      { type: "agent", sender: "Jennifer", content: "Nice, is this for a special occasion, or a normal dinner?", time: "11:06 AM" },
       { type: "user", sender: "Steve", content: "wifes birthday is coming up", time: "11:15 AM" },
       { type: "user", sender: "Steve", content: "thought your venue could be nice", time: "11:15 AM" },
       { type: "agent", sender: "Jennifer", content: "That’s lovely 🙂\n\nWhat day were you thinking, and how many people?", time: "11:16 AM" },
@@ -326,7 +326,7 @@ const CASES: CaseItem[] = [
       { type: "agent", sender: "Jennifer", content: "Great, you’re confirmed.\n\nAnything else you want us to know, like allergies or a quieter table?", time: "11:46 AM" },
       { type: "user", sender: "Steve", content: "no thats all thanks", time: "12:00 PM" },
       { type: "user", sender: "Steve", content: "oh by the way", time: "12:10 PM" },
-      { type: "user", sender: "Steve", content: "I have to pick up my kid at that time. can I book another time?", time: "12:10 PM" },
+      { type: "user", sender: "Steve", content: "I remember that I have to pick up my kid at that time. can I book another time?", time: "12:10 PM" },
       { type: "system", content: "Handling reschedule", id: "rb-5" },
       { type: "agent", sender: "Jennifer", content: "Of course, no problem.\n\nWhat time on Thursday works better?", time: "12:11 PM" },
       { type: "user", sender: "Steve", content: "5pm works", time: "12:20 PM" },
@@ -545,7 +545,7 @@ const CASES: CaseItem[] = [
         type: "agent",
         sender: "Mia",
         content:
-          "Hi Liam, Mia from HomeHaven Realty here. Quick check—are you the Liam who inquired a while back about beach-area properties? 🙂",
+          "Hi Liam, Mia from HomeHaven Realty here. Quick check: are you the Liam who inquired a while back about beach-area properties? 🙂",
         time: "10:00 AM",
       },
       { type: "system", content: "Lead engaged", id: "re-1" },
@@ -587,20 +587,20 @@ const CASES: CaseItem[] = [
 
       { type: "agent", sender: "Mia", content: "That’s a good place to be.\n\nTo avoid a costly mistake, the next step is a short call with our real agent to compare fees, recent sales nearby, and negotiation room.\n\nWant to book that comparison call now?", time: "11:01 AM" },
 
-      { type: "system", content: "Lead qualified", id: "re-4" },
 
       { type: "user", sender: "Liam", content: "yes please", time: "11:10 AM" },
+      { type: "system", content: "Lead qualified", id: "re-4" },
 
       { type: "agent", sender: "Mia", content: "Perfect.\n\nBook a slot here: https://calendar.app.google/uvWx5JWm7SLZSCqz7", time: "11:11 AM" },
 
       { type: "system", content: "Appointment booked 📅", id: "re-5" },
 
-      { type: "agent", sender: "Mia", content: "Great Liam, you’re booked for Wednesday at 16:00 ✅\n\nYour agent will be John Mayer. He’s friendly and very strong on beach-area pricing, negotiation, and spotting hidden costs like HOA fees.\n\nSee you Wednesday 🙂", time: "11:20 AM" },
+      { type: "agent", sender: "Mia", content: "Great Liam, you’re booked for Wednesday at 16:00 ✅\n\nYour agent will be John Mayer. He’s friendly and very strong on beach-area pricing, negotiation, and spotting hidden costs like HOA fees.", time: "11:20 AM" },
 
       { type: "user", sender: "Liam", content: "awesome thanks", time: "11:25 AM" },
       { type: "user", sender: "Liam", content: "looking forward to it", time: "11:25 AM" },
 
-      { type: "agent", sender: "Mia", content: "Talk soon!", time: "11:26 AM" },
+      { type: "agent", sender: "Mia", content: "Talk soon! 🙂", time: "11:26 AM" },
       { type: "system", content: "Closed", id: "re-6" },
     ],
   },
@@ -655,7 +655,7 @@ const CASES: CaseItem[] = [
       { type: "agent", sender: "Marcia", content: "Thanks.\n\nWhat is the main issue you want help with right now?", time: "02:06 PM" },
       { type: "user", sender: "Daniel", content: "severe heartburn", time: "02:15 PM" },
       { type: "user", sender: "Daniel", content: "im done with it", time: "02:15 PM" },
-      { type: "agent", sender: "Marcia", content: "That sounds really uncomfortable.\n\nQuick check: how long has it been going on, and any trouble swallowing or vomiting?", time: "02:16 PM" },
+      { type: "agent", sender: "Marcia", content: "That sounds really uncomfortable.\n\nHow long has it been going on, and any trouble swallowing or vomiting?", time: "02:16 PM" },
       { type: "user", sender: "Daniel", content: "long time", time: "02:25 PM" },
       { type: "user", sender: "Daniel", content: "no vomiting", time: "02:25 PM" },
       { type: "agent", sender: "Marcia", content: "Ok.\n\nHave you noticed food triggers, and have you tried anything that helped?", time: "02:26 PM" },
