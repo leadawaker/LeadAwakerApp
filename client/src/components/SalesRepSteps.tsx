@@ -36,12 +36,12 @@ const Plane = ({ startTrigger }: { startTrigger: boolean }) => {
   return (
     <motion.div
       initial={{
-        top: "15%",
+        top: "35%",
         left: "105%",
         rotate: -5
       }}
       animate={startTrigger ? {
-        top: "65%",
+        top: "75%",
         left: "-10%",
         rotate: -15
       } : {}}
