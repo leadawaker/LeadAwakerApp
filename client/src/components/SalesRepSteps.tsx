@@ -630,10 +630,10 @@ export const SalesRepSteps = () => {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-24"
           >
             {[
-              { icon: <Box className="w-8 h-8" strokeWidth={1.5} />, title: "Bloated CRMs with 1000s of \"dead\" contacts you already paid for" },
-              { icon: <Copy className="w-8 h-8" strokeWidth={1.5} />, title: "Reps waste 20-40 hrs/week on soul-crushing copy-paste outreach" },
-              { icon: <TrendingDown className="w-8 h-8" strokeWidth={1.5} />, title: "5-10% reply rates → zero ROI" },
-              { icon: <Mail className="w-8 h-8" strokeWidth={1.5} />, title: "Generic blasts → ignored or straight to spam folder" }
+              { icon: <Box className="w-8 h-8" strokeWidth={1.5} />, title: "Bloated CRMs\n1,000s unresponsive contacts\n→ Already paid for" },
+              { icon: <Copy className="w-8 h-8" strokeWidth={1.5} />, title: "Reps waste 20-40 hrs/week\n→ Soul-crushing copy-paste work" },
+              { icon: <TrendingDown className="w-8 h-8" strokeWidth={1.5} />, title: "5-10% reply rates\n→ zero ROI" },
+              { icon: <Mail className="w-8 h-8" strokeWidth={1.5} />, title: "Spray-and-pray\n→ Mass emails end up on spam or trash" }
             ].map((pain, i) => (
               <motion.div
                 key={i}
@@ -664,7 +664,7 @@ export const SalesRepSteps = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/0 group-hover:from-orange-500/5 group-hover:to-orange-500/10 transition-all duration-400" style={{ background: 'linear-gradient(135deg, transparent 0%, transparent 100%)' }} />
                 <div className="relative z-10">
                   <div className="text-primary mb-4 transform group-hover:scale-125 transition-all duration-400 inline-flex items-center justify-center" style={{ color: 'rgb(59, 130, 246)' }} data-testid="pain-icon">{pain.icon}</div>
-                  <p className="text-sm font-semibold text-white transition-all duration-400 leading-relaxed">{pain.title}</p>
+                  <p className="text-sm font-semibold text-white transition-all duration-400 leading-relaxed whitespace-pre-line">{pain.title}</p>
                 </div>
               </motion.div>
             ))}
