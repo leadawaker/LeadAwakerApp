@@ -630,10 +630,10 @@ export const SalesRepSteps = () => {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-24"
           >
             {[
-              { icon: <Box className="w-8 h-8" strokeWidth={1.5} />, title: "Bloated CRMs\n1,000s unresponsive contacts" },
-              { icon: <Copy className="w-8 h-8" strokeWidth={1.5} />, title: "Reps waste 20-40 hrs/week\n→ Soul-crushing copy-paste work" },
+              { icon: <Box className="w-8 h-8" strokeWidth={1.5} />, title: "Bloated CRMs with\n1,000s of forgotten contacts" },
+              { icon: <Copy className="w-8 h-8" strokeWidth={1.5} />, title: "Reps waste 20-40 hrs/week on\nsoul-crushing copy-paste work" },
               { icon: <TrendingDown className="w-8 h-8" strokeWidth={1.5} />, title: "5-10% reply rates\n→ zero ROI" },
-              { icon: <Mail className="w-8 h-8" strokeWidth={1.5} />, title: "Spray-and-pray\n→ Mass emails end up on spam or trash" }
+              { icon: <Mail className="w-8 h-8" strokeWidth={1.5} />, title: "Spray-and-pray campaigns\nBulk emails straight to spam" }
             ].map((pain, i) => (
               <motion.div
                 key={i}
