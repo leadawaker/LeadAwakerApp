@@ -138,7 +138,7 @@ export default function Chat3D() {
               <motion.div className="flex justify-end" custom={0} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-1">
                 <div className="flex flex-col items-end gap-1">
                   <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
-                    Hi Jack, this is Sophie from Peak Creative checking in. You reached out back in July about getting a new website that converts better for your coaching business. Did that timing work out, or should we circle back? 😊
+                    Hey Jack, it's Sophie from Peak Creative. You made a website upgrade inquiry last July. Ready to move forward?
                   </div>
                   <span className="text-xs text-slate-400 pr-2">14:35</span>
                 </div>
@@ -157,7 +157,7 @@ export default function Chat3D() {
               <motion.div className="flex justify-end" custom={1} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-2">
                 <div className="flex flex-col items-end gap-1">
                   <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
-                    Just bumping this up in case you got busy over the holidays! Still on your radar?
+                    Still on your radar? 😊
                   </div>
                   <span className="text-xs text-slate-400 pr-2">14:55</span>
                 </div>
@@ -175,7 +175,7 @@ export default function Chat3D() {
 
               <motion.div className="flex justify-start" custom={2} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-jack-1">
                 <div className="flex flex-col items-start gap-1">
-                  <div className="bg-white text-slate-700 border border-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[95%] shadow-sm text-sm">
+                  <div className="bg-slate-100 text-slate-700 border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[95%] shadow-sm text-sm">
                     Hi Sophie! Yes sorry, summer was crazy with client launches. The website is definitely still something I need.
                   </div>
                   <span className="text-xs text-slate-400 pl-2">15:02</span>
@@ -194,7 +194,7 @@ export default function Chat3D() {
 
               <motion.div className="flex justify-end" custom={3} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-3">
                 <div className="flex flex-col items-end gap-1">
-                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>No worries at all Jack, I totally get it! Quick question: what was the main blocker that kept it on hold? (Budget, timeline, or just other fires?)</div>
+                  <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>No worries, life happens! Main blocker was budget, timeline, or other priorities?</div>
                   <span className="text-xs text-slate-400 pr-2">15:03</span>
                 </div>
               </motion.div>
@@ -273,7 +273,7 @@ export default function Chat3D() {
                                   className={`rounded-2xl px-4 py-3 shadow-sm text-sm ${
                                     msg.type === 'sophie' 
                                       ? 'text-white rounded-tr-sm max-w-[90%]' 
-                                      : 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm'
+                                      : 'bg-slate-100 text-slate-700 border border-slate-200 rounded-tl-sm'
                                   }`}
                                   style={msg.type === 'sophie' ? { backgroundColor: "#2563EB" } : {}}
                                 >
