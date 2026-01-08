@@ -413,7 +413,7 @@ export default function Services() {
           <Link href="/book-demo">
             <Button 
               size="lg" 
-              className="h-14 px-10 text-lg rounded-full shadow-xl transition-transform hover:scale-105"
+              className="h-20 px-12 text-lg rounded-2xl shadow-xl transition-transform hover:scale-105"
               style={{ 
                 backgroundColor: CASES[activeCase].color,
                 boxShadow: `0 10px 15px -3px ${CASES[activeCase].color}40`
