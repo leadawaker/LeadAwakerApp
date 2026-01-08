@@ -86,8 +86,8 @@ export default function Home() {
                 </span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed">
-                AI handles first contact, follow-ups, and qualification to your CRM,<br />
-                so you focus on growth and closing, not chasing.
+                AI handles first contact to CRM handoff.<br />
+                Focus on growth and closing, not chasing.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 relative z-10">
                 <Link href="/book-demo">
