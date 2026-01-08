@@ -33,20 +33,15 @@ interface StepProps {
 }
 
 const Plane = ({ startTrigger }: { startTrigger: boolean }) => {
-  const planeRef = useRef<HTMLDivElement>(null);
-  const isInView = useInView(planeRef, { once: true, amount: 0.1 });
-  const shouldAnimate = startTrigger && isInView;
-  
   return (
     <motion.div
-      ref={planeRef}
       initial={{
-        top: "calc(35% - 100px)",
+        top: "15%",
         left: "105%",
         rotate: -5
       }}
-      animate={shouldAnimate ? {
-        top: "calc(75% - 100px)",
+      animate={startTrigger ? {
+        top: "65%",
         left: "-10%",
         rotate: -15
       } : {}}
