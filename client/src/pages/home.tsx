@@ -338,16 +338,14 @@ export default function Home() {
             <h2 className="md:text-4xl lg:text-5xl font-bold mb-8 text-white tracking-tight text-[40px] leading-tight">See AI Work, Not Just Talk.</h2>
             <div className="max-w-3xl mx-auto mb-12">
               <div className="relative pl-6 py-1 border-l-4 border-[#FEB800] text-left">
-                <p className="md:text-2xl text-[#FEB800] font-medium opacity-90 text-[21px] text-justify">If a picture is worth a 1000 words, a live demo is worth a 1000 pictures.</p>
+                <p className="md:text-[18px] text-[#FEB800] font-medium opacity-90 text-[18px] text-justify">If a picture is worth a 1000 words, a live demo is worth a 1000 pictures.</p>
               </div>
             </div>
             
-            <div className="space-y-8 leading-relaxed mb-12 text-center max-w-3xl mx-auto">
+            <div className="leading-relaxed mb-12 text-center max-w-3xl mx-auto">
               <p className="text-lg md:text-xl opacity-90 text-justify">
-                Before you do anything else, experience how AI handles real conversations as if it were your own business agent, programmed specifically for your niche. You'll see it respond naturally to your customers while managing the repetitive work your team shouldn't have to.
+                Before you do anything else, experience how AI handles real conversations as if it were your own business agent, programmed specifically for your niche. In just a few minutes, you'll see it respond naturally to your customers while taking care of the repetitive work your team shouldn't have to do.
               </p>
-
-              <p className="text-lg md:text-xl opacity-90 text-justify">By automating what consumes your time, your team gets back what matters: focusing on strategy, scaling your business, and doing the work that actually energizes them. In just a few minutes, you'll see how intelligent automation improves both your ROI and your daily workflow.</p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
