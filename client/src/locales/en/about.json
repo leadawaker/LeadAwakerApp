@@ -1,32 +1,130 @@
 {
-  "header": {
-    "name": "Jack Johnson",
-    "status": "Online"
+  "intro": {
+    "title": "What we care about",
+    "paragraph1": "At Lead Awaker, the belief is that your energy should go into what you excel at: delivering the quality service you already provide. Our job is to help you harness the power of attention.",
+    "paragraph2": "For your brand to mean something valuable to a lead, that person has to be treated as an individual first, not as a line in a spreadsheet. When they are approached in a way that respects their timing, context, and preferences, they feel understood, and when they feel understood, they are finally awake to understand",
+    "you": "you",
+    "cyclingWords": [".", "r company.", "r brand.", "r services.", "r products.", "r story.", "r values."]
   },
-  "messages": {
-    "sophie1": "Hey Jack, it's Sophie from Peak Creative. You made a website upgrade inquiry last July. Ready to move forward?",
-    "sophie2": "Still on your radar? 😊",
-    "sophie3": "No worries, life happens! What was the main blocker? Budget, timeline, or other fires?",
-    "jack1": "Hi Sophie! Yes sorry, summer was crazy with client launches. The website is definitely still something I need.",
-    "jack2": "Honestly a bit of all three. I need something that looks pro but doesn't take forever or cost a fortune.",
-    "jack3": "I've seen some of your portfolio work and I really like the style, just a bit concerned about the investment side of things.",
-    "jack4": "Yes that works, for me that call would work great tomorrow. What times do you have?",
-    "jack5": "I am good, thanks for reaching out :)",
-    "sophie4": "I completely hear you Jack. We actually specialize in high-impact builds that balance that 'pro' look with efficiency. That's exactly why I'd love for you to have a quick call with one of our strategists. They can look at your specific needs and show you how we can make the budget work without compromising on quality.",
-    "sophie5": "You can select a time in our calendar page: [link]. I'll pass our conversation notes so our team has everything prepped. You will be in good hands Jack!",
-    "sophie6": "Your call is booked for tomorrow at 3:30pm, if you have any questions or need to re-schedule, just let me know 😊",
-    "sophie7": "You are welcome, have a great day"
+  "sections": [
+    {
+      "title": "Reliable technical backbone",
+      "items": [
+        "10+ years shipping production software across games and film",
+        "Experience at Framestore, Sega, New World Interactive",
+        "Knows how to keep complex systems simple and stable for non-technical teams"
+      ]
+    },
+    {
+      "title": "Performance-obsessed problem solving",
+      "items": [
+        "5 years data analysis & trading mastery",
+        "Built custom AI tools for trading performance",
+        "Live coaching and feedback systems",
+        "Custom TradingView code for data automation"
+      ]
+    },
+    {
+      "title": "Done-for-you automation, not more tools",
+      "items": [
+        "Built complete AI agency infrastructure",
+        "Lead enrichment systems for HubSpot clients",
+        "Developed scraping tools and business automation",
+        "Combined automation with data analysis expertise"
+      ]
+    },
+    {
+      "title": "Where Lead Awaker is going next",
+      "items": [
+        "Founded TA Monks (4 years) with wife Danique",
+        "Transitioned to building Lead Awaker",
+        "Goal: Scale to $100M ARR"
+      ]
+    }
+  ],
+  "founder": {
+    "name": "Gabriel B. Fronza",
+    "title": "Founder",
+    "quote": "\"I first noticed it in my parents' health clinic, and then everywhere else. Patients would book consultations, show real interest, then go quiet while the clinic kept paying for ads to get new ones.\"",
+    "description": "Lead Awaker comes from 10+ years shipping production software, 5 years building data-driven automation, and 4 years running a real business alongside my wife Danique."
   },
-  "tags": {
-    "leadEngaged": "Lead Engaged",
-    "followedUp": "Followed up",
-    "leadReplied": "Lead Replied",
-    "leadQualified": "Lead Qualified",
-    "callBooked": "Call Booked 🗓️",
-    "sentToClient": "Sent to Client",
-    "chatClosed": "Chat closed"
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "items": [
+      {
+        "q": "What if our leads are really old or completely cold?",
+        "a": "Age isn't the main factor; relevance is. Leads from 6 months or even 2 years ago can still convert if the original pain point remains and the outreach feels personal. The system identifies who's still in market based on engagement signals, not just database age."
+      },
+      {
+        "q": "Will this work with our industry/niche?",
+        "a": "Lead Awaker is built channel-agnostic and adapts to your specific sales process, whether you're in life insurance, fitness coaching, legal services, or B2B consulting. The AI learns your terminology, objections, and conversion patterns during setup."
+      },
+      {
+        "q": "How do you avoid coming across as spam or pushy?",
+        "a": "Every message is personalized based on where the lead left off in your funnel, uses natural language (not robotic templates), and respects opt-out signals immediately. The goal is to feel like a helpful follow-up from your team, not a blast campaign."
+      },
+      {
+        "q": "Do we need to provide scripts or does the AI write everything?",
+        "a": "You provide examples of your best-performing conversations and key talking points; the AI adapts those into natural, individualized messages. You approve the tone during setup, and the system learns what converts over time."
+      },
+      {
+        "q": "What channels do you use to re-engage leads?",
+        "a": "Email, SMS, WhatsApp, and Telegram depending on your audience and compliance requirements. SMS often gets 98% open rates vs. 15-25% for email, so the system prioritizes the channel most likely to get attention without being intrusive."
+      },
+      {
+        "q": "How do you handle compliance (GDPR, CAN-SPAM, CCPA)?",
+        "a": "All outreach respects existing opt-in records, includes clear unsubscribe options, and logs consent by channel. If a lead opted into email but not SMS, they're only contacted via email. Compliance is built into the workflow, not bolted on."
+      },
+      {
+        "q": "What happens when a lead responds?",
+        "a": "The AI qualifies their interest level and either books a call directly into your calendar, hands off to your sales team with context, or continues nurturing based on readiness signals. You define the handoff criteria during setup."
+      },
+      {
+        "q": "Can we pause or adjust campaigns mid-run?",
+        "a": "Yes. You can pause outreach, update messaging, or adjust targeting rules anytime through the dashboard. Changes take effect immediately without losing progress on active conversations."
+      },
+      {
+        "q": "What results can we realistically expect?",
+        "a": "Most clients see 8-15% of dormant leads re-engage within the first 30 days, with 20-40% of those converting into booked calls or purchases. Results depend on list quality, offer fit, and how long leads have been dormant, but even a 5% reactivation rate pays for itself quickly."
+      }
+    ]
   },
-  "button": {
-    "continue": "Continue"
-  }
+  "faqs": [
+    {
+      "q": "What if our leads are really old or completely cold?",
+      "a": "Age isn't the main factor; relevance is. Leads from 6 months or even 2 years ago can still convert if the original pain point remains and the outreach feels personal. The system identifies who's still in market based on engagement signals, not just database age."
+    },
+    {
+      "q": "Will this work with our industry/niche?",
+      "a": "Lead Awaker is built channel-agnostic and adapts to your specific sales process, whether you're in life insurance, fitness coaching, legal services, or B2B consulting. The AI learns your terminology, objections, and conversion patterns during setup."
+    },
+    {
+      "q": "How do you avoid coming across as spam or pushy?",
+      "a": "Every message is personalized based on where the lead left off in your funnel, uses natural language (not robotic templates), and respects opt-out signals immediately. The goal is to feel like a helpful follow-up from your team, not a blast campaign."
+    },
+    {
+      "q": "Do we need to provide scripts or does the AI write everything?",
+      "a": "You provide examples of your best-performing conversations and key talking points; the AI adapts those into natural, individualized messages. You approve the tone during setup, and the system learns what converts over time."
+    },
+    {
+      "q": "What channels do you use to re-engage leads?",
+      "a": "Email, SMS, WhatsApp, and Telegram depending on your audience and compliance requirements. SMS often gets 98% open rates vs. 15-25% for email, so the system prioritizes the channel most likely to get attention without being intrusive."
+    },
+    {
+      "q": "How do you handle compliance (GDPR, CAN-SPAM, CCPA)?",
+      "a": "All outreach respects existing opt-in records, includes clear unsubscribe options, and logs consent by channel. If a lead opted into email but not SMS, they're only contacted via email. Compliance is built into the workflow, not bolted on."
+    },
+    {
+      "q": "What happens when a lead responds?",
+      "a": "The AI qualifies their interest level and either books a call directly into your calendar, hands off to your sales team with context, or continues nurturing based on readiness signals. You define the handoff criteria during setup."
+    },
+    {
+      "q": "Can we pause or adjust campaigns mid-run?",
+      "a": "Yes. You can pause outreach, update messaging, or adjust targeting rules anytime through the dashboard. Changes take effect immediately without losing progress on active conversations."
+    },
+    {
+      "q": "What results can we realistically expect?",
+      "a": "Most clients see 8-15% of dormant leads re-engage within the first 30 days, with 20-40% of those converting into booked calls or purchases. Results depend on list quality, offer fit, and how long leads have been dormant, but even a 5% reactivation rate pays for itself quickly."
+    }
+  ]
 }

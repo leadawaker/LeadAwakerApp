@@ -1,0 +1,34 @@
+{
+  "title": "Privacy Policy",
+  "lastUpdated": "Last updated: January 2026",
+  "section1": {
+    "title": "1. Introduction",
+    "content": "Welcome to Lead Awaker. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our services."
+  },
+  "section2": {
+    "title": "2. Information We Collect",
+    "content": "[Placeholder: Describe the types of personal information collected, such as name, email, phone number, company information, etc.]"
+  },
+  "section3": {
+    "title": "3. How We Use Your Information",
+    "content": "[Placeholder: Explain how the collected information is used, such as providing services, improving user experience, marketing communications, etc.]"
+  },
+  "section4": {
+    "title": "4. Information Sharing",
+    "content": "[Placeholder: Describe circumstances under which information may be shared with third parties.]"
+  },
+  "section5": {
+    "title": "5. Data Security",
+    "content": "[Placeholder: Explain the security measures in place to protect user data.]"
+  },
+  "section6": {
+    "title": "6. Your Rights",
+    "content": "[Placeholder: Describe user rights regarding their data, such as access, correction, deletion, etc.]"
+  },
+  "section7": {
+    "title": "7. Contact Us",
+    "content": "If you have questions about this Privacy Policy, please contact us at:",
+    "email": "Email: leadawaker@gmail.com",
+    "address": "Address: Christiaan Huygensweg 32, s'Hertogenbosch, NL"
+  }
+}

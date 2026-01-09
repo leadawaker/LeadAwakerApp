@@ -1,57 +1,61 @@
+import { useTranslation } from 'react-i18next';
+
 export default function TermsOfService() {
+  const { t } = useTranslation('termsOfService');
+
   return (
     <div className="min-h-screen pt-24 pb-20 bg-slate-50">
       <div className="container mx-auto px-4 md:px-6 max-w-4xl">
-        <h1 className="text-4xl font-bold mb-8 text-slate-900">Terms of Service</h1>
-        
+        <h1 className="text-4xl font-bold mb-8 text-slate-900">{t('title')}</h1>
+
         <div className="prose prose-slate max-w-none">
-          <p className="text-muted-foreground mb-6">Last updated: January 2026</p>
-          
-          <h2 className="text-2xl font-semibold mt-8 mb-4">1. Acceptance of Terms</h2>
+          <p className="text-muted-foreground mb-6">{t('lastUpdated')}</p>
+
+          <h2 className="text-2xl font-semibold mt-8 mb-4">{t('section1.title')}</h2>
           <p className="text-muted-foreground mb-4">
-            [Placeholder: Explain that by using the service, users agree to these terms.]
+            {t('section1.content')}
           </p>
-          
-          <h2 className="text-2xl font-semibold mt-8 mb-4">2. Description of Service</h2>
+
+          <h2 className="text-2xl font-semibold mt-8 mb-4">{t('section2.title')}</h2>
           <p className="text-muted-foreground mb-4">
-            [Placeholder: Describe what Lead Awaker provides—AI-powered lead reactivation services, etc.]
+            {t('section2.content')}
           </p>
-          
-          <h2 className="text-2xl font-semibold mt-8 mb-4">3. User Responsibilities</h2>
+
+          <h2 className="text-2xl font-semibold mt-8 mb-4">{t('section3.title')}</h2>
           <p className="text-muted-foreground mb-4">
-            [Placeholder: Outline user obligations, acceptable use policies, etc.]
+            {t('section3.content')}
           </p>
-          
-          <h2 className="text-2xl font-semibold mt-8 mb-4">4. Payment Terms</h2>
+
+          <h2 className="text-2xl font-semibold mt-8 mb-4">{t('section4.title')}</h2>
           <p className="text-muted-foreground mb-4">
-            [Placeholder: Describe pricing, billing cycles, refund policies, etc.]
+            {t('section4.content')}
           </p>
-          
-          <h2 className="text-2xl font-semibold mt-8 mb-4">5. Intellectual Property</h2>
+
+          <h2 className="text-2xl font-semibold mt-8 mb-4">{t('section5.title')}</h2>
           <p className="text-muted-foreground mb-4">
-            [Placeholder: Explain ownership of content, trademarks, and intellectual property rights.]
+            {t('section5.content')}
           </p>
-          
-          <h2 className="text-2xl font-semibold mt-8 mb-4">6. Limitation of Liability</h2>
+
+          <h2 className="text-2xl font-semibold mt-8 mb-4">{t('section6.title')}</h2>
           <p className="text-muted-foreground mb-4">
-            [Placeholder: Describe limitations on liability and disclaimers.]
+            {t('section6.content')}
           </p>
-          
-          <h2 className="text-2xl font-semibold mt-8 mb-4">7. Termination</h2>
+
+          <h2 className="text-2xl font-semibold mt-8 mb-4">{t('section7.title')}</h2>
           <p className="text-muted-foreground mb-4">
-            [Placeholder: Explain conditions under which the service or user account may be terminated.]
+            {t('section7.content')}
           </p>
-          
-          <h2 className="text-2xl font-semibold mt-8 mb-4">8. Governing Law</h2>
+
+          <h2 className="text-2xl font-semibold mt-8 mb-4">{t('section8.title')}</h2>
           <p className="text-muted-foreground mb-4">
-            [Placeholder: Specify the jurisdiction and governing law.]
+            {t('section8.content')}
           </p>
-          
-          <h2 className="text-2xl font-semibold mt-8 mb-4">9. Contact Us</h2>
+
+          <h2 className="text-2xl font-semibold mt-8 mb-4">{t('section9.title')}</h2>
           <p className="text-muted-foreground mb-4">
-            If you have questions about these Terms of Service, please contact us at:<br />
-            Email: leadawaker@gmail.com<br />
-            Address: Christiaan Huygensweg 32, s'Hertogenbosch, NL
+            {t('section9.intro')}<br />
+            {t('section9.email')}<br />
+            {t('section9.address')}
           </p>
         </div>
       </div>
