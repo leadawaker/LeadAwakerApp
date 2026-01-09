@@ -113,20 +113,7 @@
      id="g1"
      inkscape:groupmode="layer"
      inkscape:label="1">
-    <g
-       id="g2">
-      <path
-         id="path2"
-         d="M 0,0 H 500 V 500 H 0 Z"
-         style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none" />
-    </g>
-    <g
-       id="g3">
-      <path
-         id="path3"
-         d="M 0,0 H 500 V 500 H 0 Z"
-         style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none" />
-    </g>
+
     <g
        id="g5"
        clip-path="url(#clipPath6)">
