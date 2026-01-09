@@ -602,6 +602,7 @@ export const SalesRepSteps = () => {
               <span 
                 className={`hologram-glitch ${glitchAnimating ? 'animate' : ''}`}
                 data-testid="text-broken"
+                data-text={t('painPoints.titleBroken')}
               >
                 {t('painPoints.titleBroken')}
               </span>
