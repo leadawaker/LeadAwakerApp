@@ -116,9 +116,7 @@ export function Navbar() {
 
       {/* Mobile Nav */}
       {isOpen && (
-        <>
-          <div className="md:hidden fixed inset-0 top-[64px] bg-black/40 backdrop-blur-md z-40" onClick={() => setIsOpen(false)} />
-          <div className="md:hidden fixed top-[64px] left-0 right-0 bg-background border-b border-border p-4 flex flex-col gap-4 shadow-xl z-50">
+        <div className="md:hidden absolute top-full left-0 right-0 bg-background/80 backdrop-blur-md border-b border-border p-4 flex flex-col gap-4 shadow-xl z-50">
           {/* Language Selector - Mobile */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -168,7 +166,6 @@ export function Navbar() {
             </Link>
           </div>
         </div>
-        </>
       )}
     </nav>
   );
