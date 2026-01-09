@@ -21,7 +21,7 @@ function LogoAnimation() {
             src="/Logo-Lead.svg"
             alt=""
             className="absolute inset-0 w-full h-full object-contain"
-            style={{ mixBlendMode: 'multiply' }}
+            
             initial={{ opacity: 0 }}
             animate={inView ? { opacity: 1 } : { opacity: 0 }}
             transition={{ duration: 0.8 }}
@@ -30,7 +30,7 @@ function LogoAnimation() {
             src="/Logo-Awaker.svg"
             alt=""
             className="absolute inset-0 w-full h-full object-contain"
-            style={{ mixBlendMode: 'multiply' }}
+            
             initial={{ opacity: 0, y: 20 }}
             animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ delay: 0.5, duration: 0.8 }}
@@ -39,7 +39,7 @@ function LogoAnimation() {
             src="/Logo-Rooster.svg"
             alt=""
             className="absolute inset-0 w-full h-full object-contain"
-            style={{ mixBlendMode: 'multiply' }}
+            
             initial={{ opacity: 0, scale: 0.8 }}
             animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
             transition={{ delay: 1.0, duration: 0.8 }}
@@ -48,7 +48,7 @@ function LogoAnimation() {
             src="/Logo-Top.svg"
             alt=""
             className="absolute inset-0 w-full h-full object-contain"
-            style={{ mixBlendMode: 'multiply' }}
+            
             initial={{ opacity: 0, scale: 1.2 }}
             animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.2 }}
             transition={{ delay: 1.3, duration: 0.8 }}
