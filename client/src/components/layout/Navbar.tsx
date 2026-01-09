@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "react-i18next";
+import logoSrc from "@/assets/SIDE LOGO Minus Top.svg";
 
 const languages = [
   { code: "en", label: "English", flag: "https://flagcdn.com/w40/gb.png", display: "EN" },
@@ -53,7 +54,7 @@ export function Navbar() {
       >
         <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
           <Link href="/" className="flex items-center">
-            <img src="/SIDE LOGO Minus Top.svg" alt="Lead Awaker Logo" className="h-5 object-contain" />
+            <img src={logoSrc} alt="Lead Awaker Logo" className="h-5 object-contain" />
           </Link>
 
           {/* Desktop Nav */}
