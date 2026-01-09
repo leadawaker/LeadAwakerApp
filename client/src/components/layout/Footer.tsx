@@ -11,16 +11,15 @@ function LogoAnimation() {
     <motion.div
       ref={ref}
       className="pointer-events-none z-20"
-      style={{ backgroundColor: 'transparent' }}
       initial={{ opacity: 0 }}
       animate={inView ? { opacity: 1 } : { opacity: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 md:w-[28rem] md:h-[28rem] lg:w-[32rem] lg:h-[32rem] -translate-y-40 md:-translate-y-48 lg:-translate-y-56">
-        <div className="relative w-full h-full" style={{ backgroundColor: 'transparent' }}>
+      <div className="absolute bottom-16 right-8 md:right-16 lg:right-24 w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96">
+        <div className="relative w-full h-full">
           <motion.img
             src="/Logo-Lead.svg"
-            alt="Lead"
+            alt=""
             className="absolute inset-0 w-full h-full object-contain"
             style={{ mixBlendMode: 'multiply' }}
             initial={{ opacity: 0 }}
@@ -29,7 +28,7 @@ function LogoAnimation() {
           />
           <motion.img
             src="/Logo-Awaker.svg"
-            alt="Awaker"
+            alt=""
             className="absolute inset-0 w-full h-full object-contain"
             style={{ mixBlendMode: 'multiply' }}
             initial={{ opacity: 0, y: 20 }}
@@ -38,7 +37,7 @@ function LogoAnimation() {
           />
           <motion.img
             src="/Logo-Rooster.svg"
-            alt="Rooster"
+            alt=""
             className="absolute inset-0 w-full h-full object-contain"
             style={{ mixBlendMode: 'multiply' }}
             initial={{ opacity: 0, scale: 0.8 }}
@@ -47,7 +46,7 @@ function LogoAnimation() {
           />
           <motion.img
             src="/Logo-Top.svg"
-            alt="Top"
+            alt=""
             className="absolute inset-0 w-full h-full object-contain"
             style={{ mixBlendMode: 'multiply' }}
             initial={{ opacity: 0, scale: 1.2 }}
@@ -64,7 +63,7 @@ export function Footer() {
   const { t } = useTranslation("common");
 
   return (
-    <footer className="bg-muted/30 pt-20 pb-10 border-t border-border relative">
+    <footer className="bg-muted/30 pt-20 pb-10 border-t border-border relative overflow-hidden">
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16 relative z-10">
           <div>
