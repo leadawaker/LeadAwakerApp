@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { User, Bot, CheckCircle2, Shield } from 'lucide-react';
 import { useInView } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 export default function WorkflowVisualization() {
+  const { t } = useTranslation('workflowVisualization');
   const [activeNode, setActiveNode] = useState('contact');
   const [visitedNodes, setVisitedNodes] = useState(new Set(['contact']));
   const [isGlowing1, setIsGlowing1] = useState(false);
@@ -29,7 +31,7 @@ export default function WorkflowVisualization() {
       await new Promise(r => setTimeout(r, 3000));
       setVisitedNodes(prev => new Set(prev).add('engaging'));
       setIsEngaging(true);
-      
+
       await new Promise(r => setTimeout(r, 1000));
       setIsGlowing1(true);
       await new Promise(r => setTimeout(r, 400));
@@ -37,12 +39,12 @@ export default function WorkflowVisualization() {
       setIsFadingBack1(true);
       setActiveNode('agent');
       setVisitedNodes(prev => new Set(prev).add('agent'));
-      
+
       await new Promise(r => setTimeout(r, 1500));
       setAgentStatus('msg1');
       await new Promise(r => setTimeout(r, 2000));
       setAgentStatus('msg2');
-      
+
       await new Promise(r => setTimeout(r, 2000));
       setIsGlowing2(true);
       await new Promise(r => setTimeout(r, 400));
@@ -51,32 +53,24 @@ export default function WorkflowVisualization() {
       setActiveNode('guardrails');
       setVisitedNodes(prev => new Set(prev).add('guardrails'));
 
-      const checks = [
-        'On-topic sales', 
-        'Clean content', 
-        'Clean language',
-        'No personal data', 
-        'No credentials',
-        'No unauthorized links',
-        'No Data Leakage'
-      ];
-      for (const t of checks) {
-        setGuardrailsStatus(t);
-        const delay = t === 'On-topic sales' ? 1920 : 920;
+      const checks = t('guardrails.checks', { returnObjects: true }) as string[];
+      for (let i = 0; i < checks.length; i++) {
+        setGuardrailsStatus(checks[i]);
+        const delay = i === 0 ? 1920 : 920;
         await new Promise(r => setTimeout(r, delay));
       }
-      
+
       setGuardrailsStatus('...');
       await new Promise(r => setTimeout(r, 1500));
-      
-      setGuardrailsStatus('No violations');
+
+      setGuardrailsStatus(t('guardrails.noViolations'));
       await new Promise(r => setTimeout(r, 1000));
-      
-      setGuardrailsStatus('Message Sent');
+
+      setGuardrailsStatus(t('guardrails.messageSent'));
       setIsApproved(true);
       setIsEngaging(false);
       await new Promise(r => setTimeout(r, 11500));
-      
+
       setActiveNode('contact');
       setVisitedNodes(new Set(['contact']));
       setIsFadingBack1(false);
@@ -88,12 +82,25 @@ export default function WorkflowVisualization() {
       sequence();
     };
     sequence();
-  }, [hasStarted]);
+  }, [hasStarted, t]);
 
   const getStatusColor = (node: string, activeClass: string, visitedClass: string, defaultClass: string) => {
     if (activeNode === node) return activeClass;
     if (visitedNodes.has(node)) return visitedClass;
     return defaultClass;
+  };
+
+  const getAgentOutput = () => {
+    if (!visitedNodes.has('agent')) return '';
+    if (agentStatus === 'thinking') return '...';
+    if (agentStatus === 'msg1') return t('agent.message1');
+    return t('agent.message2');
+  };
+
+  const getContactStatus = () => {
+    if (isApproved) return t('contact.statusEngaged');
+    if (isEngaging) return t('contact.statusEngaging');
+    return t('contact.statusNotEngaged');
   };
 
   return (
@@ -141,7 +148,7 @@ export default function WorkflowVisualization() {
           transition: background 0.5s ease;
           mix-blend-mode: plus-lighter;
         }
-        
+
         .connector-dot {
           width: 12px;
           height: 12px;
@@ -210,10 +217,9 @@ export default function WorkflowVisualization() {
           .connector-wrapper { height: 100%; display: flex; align-items: center; }
         }
       `}</style>
-      
+
       <div className="relative w-[calc(100vw-4rem)] md:w-[1200px] h-auto md:h-[400px] bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300/50 rounded-3xl overflow-visible shadow-lg flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 px-12 py-12 md:py-0 space-y-24 md:space-y-0 -mx-4 md:mx-0">
         <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
-          {/* Vertical lines for mobile, horizontal for desktop */}
           <line x1="50%" y1="calc(12.5% + 64px)" x2="50%" y2="calc(50% - 64px)" stroke="#d1d5db" strokeWidth="2" className={`md:hidden ${isGlowing1 ? 'line-quick-glow' : ''} ${isFadingBack1 ? 'line-fade-back' : ''}`} />
           <line x1="50%" y1="calc(50% + 64px)" x2="50%" y2="calc(87.5% - 64px)" stroke="#d1d5db" strokeWidth="2" className={`md:hidden ${isGlowing2 ? 'line-quick-glow' : ''} ${isFadingBack2 ? 'line-fade-back' : ''}`} />
           <line 
@@ -250,11 +256,11 @@ export default function WorkflowVisualization() {
               <div className={`p-2 rounded-lg transition-colors duration-300 ${activeNode === 'contact' ? 'bg-amber-100' : 'bg-amber-50/50'}`}>
                 <User className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'contact' ? 'text-amber-600' : 'text-amber-400/60'}`} />
               </div>
-              <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'contact' ? 'text-gray-900' : 'text-gray-400'}`}>Lead #315</h3><p className="text-[10px] text-gray-400 text-left font-semibold uppercase tracking-wider">Jack Johnson</p></div>
+              <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'contact' ? 'text-gray-900' : 'text-gray-400'}`}>{t('contact.title')}</h3><p className="text-[10px] text-gray-400 text-left font-semibold uppercase tracking-wider">{t('contact.name')}</p></div>
             </div>
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] font-mono flex items-center justify-between">
-              <span className={`font-semibold transition-colors duration-300 ${activeNode === 'contact' ? 'text-amber-600' : 'text-amber-400/60'}`}>Status</span>
-              <span className={`transition-colors duration-300 ${activeNode === 'contact' ? 'text-gray-700' : 'text-gray-400'}`}>{isApproved ? 'Lead Engaged' : (isEngaging ? 'Engaging Lead' : 'Not Engaged')}</span>
+              <span className={`font-semibold transition-colors duration-300 ${activeNode === 'contact' ? 'text-amber-600' : 'text-amber-400/60'}`}>{t('contact.statusLabel')}</span>
+              <span className={`transition-colors duration-300 ${activeNode === 'contact' ? 'text-gray-700' : 'text-gray-400'}`}>{getContactStatus()}</span>
             </div>
           </div>
         </div>
@@ -274,12 +280,12 @@ export default function WorkflowVisualization() {
               <div className={`p-2 rounded-lg transition-colors duration-300 ${activeNode === 'agent' ? 'bg-purple-100' : (visitedNodes.has('agent') ? 'bg-purple-50/50' : 'bg-gray-50/50')}`}>
                 <Bot className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'agent' ? 'text-purple-600' : (visitedNodes.has('agent') ? 'text-purple-400/60' : 'text-gray-400/60')}`} />
               </div>
-              <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'agent' ? 'text-gray-900' : 'text-gray-400'}`}>AI Agent</h3><p className="text-[10px] text-gray-400 text-left font-semibold uppercase tracking-wider">GPT-5.2</p></div>
+              <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'agent' ? 'text-gray-900' : 'text-gray-400'}`}>{t('agent.title')}</h3><p className="text-[10px] text-gray-400 text-left font-semibold uppercase tracking-wider">{t('agent.model')}</p></div>
             </div>
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center overflow-hidden justify-between">
-              <span className={`font-semibold font-mono transition-colors duration-300 ${activeNode === 'agent' ? 'text-purple-600' : (visitedNodes.has('agent') ? 'text-purple-400/60' : 'text-gray-400/60')}`}>Output</span>
+              <span className={`font-semibold font-mono transition-colors duration-300 ${activeNode === 'agent' ? 'text-purple-600' : (visitedNodes.has('agent') ? 'text-purple-400/60' : 'text-gray-400/60')}`}>{t('agent.outputLabel')}</span>
               <span className={`truncate font-mono transition-colors duration-300 ${activeNode === 'agent' ? 'text-gray-700' : 'text-gray-400'}`}>
-                {visitedNodes.has('agent') ? (agentStatus === 'thinking' ? '...' : (agentStatus === 'msg1' ? 'Good morning :)' : 'Is this Jack?')) : ''}
+                {getAgentOutput()}
               </span>
             </div>
           </div>
@@ -302,10 +308,10 @@ export default function WorkflowVisualization() {
                   <Shield className={`w-5 h-5 transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-[#526fff]' : 'text-gray-400/60'}`} />
                 }
               </div>
-              <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-gray-900' : 'text-gray-400'}`}>Guardrails</h3><p className="text-[10px] text-gray-400 text-left font-semibold uppercase tracking-wider">SECURITY</p></div>
+              <div><h3 className={`font-bold text-sm transition-colors duration-300 ${activeNode === 'guardrails' ? 'text-gray-900' : 'text-gray-400'}`}>{t('guardrails.title')}</h3><p className="text-[10px] text-gray-400 text-left font-semibold uppercase tracking-wider">{t('guardrails.subtitle')}</p></div>
             </div>
             <div className="bg-gray-50 rounded-lg p-2 border border-gray-300 text-[10px] h-[34px] flex items-center justify-between">
-              <span className={`font-semibold font-mono transition-colors duration-300 ${(activeNode === 'guardrails' || isApproved) ? (isApproved ? 'text-emerald-600' : 'text-[#526fff]') : 'text-gray-400/60'}`}>Status</span>
+              <span className={`font-semibold font-mono transition-colors duration-300 ${(activeNode === 'guardrails' || isApproved) ? (isApproved ? 'text-emerald-600' : 'text-[#526fff]') : 'text-gray-400/60'}`}>{t('guardrails.statusLabel')}</span>
               <span className={`truncate font-mono transition-colors duration-300 ${(activeNode === 'guardrails' || isApproved) ? 'text-gray-700' : 'text-gray-400'}`}>{guardrailsStatus}</span>
             </div>
           </div>

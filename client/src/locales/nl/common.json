@@ -7,6 +7,9 @@
     "bookDemo": "Demo Boeken"
   },
   "footer": {
+    "company": "Bedrijf",
+    "contact": "Contact",
+    "copyright": "© {{year}} Lead Awaker. Alle rechten voorbehouden.",
     "rights": "Alle rechten voorbehouden.",
     "privacy": "Privacybeleid",
     "terms": "Servicevoorwaarden"

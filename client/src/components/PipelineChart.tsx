@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { User, MessageSquare, CheckCircle, CalendarCheck, MoreHorizontal } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,47 +25,6 @@ interface Stage {
   customTextStyle?: React.CSSProperties;
 }
 
-const STAGES: Stage[] = [
-  {
-    id: "engaged",
-    title: "Lead Engaged",
-    icon: <User className="w-5 h-5" />,
-    colorClass: "border-slate-300 text-slate-50",
-    headerClass: "text-slate-100",
-    textColorClass: "text-slate-100",
-    customStyle: { backgroundColor: "#1a3a6f" },
-    customTextStyle: { color: "#1a3a6f" },
-  },
-  {
-    id: "replied",
-    title: "Lead Replied",
-    icon: <MessageSquare className="w-5 h-5" />,
-    colorClass: "border-slate-300 text-slate-50",
-    headerClass: "text-slate-100",
-    textColorClass: "text-slate-100",
-    customStyle: { backgroundColor: "#2d5aa8" },
-    customTextStyle: { color: "#2d5aa8" },
-  },
-  {
-    id: "qualified",
-    title: "Lead Qualified",
-    icon: <CheckCircle className="w-5 h-5" />,
-    colorClass: "border-slate-300 text-slate-50",
-    headerClass: "text-black",
-    textColorClass: "text-slate-100",
-    customStyle: { backgroundColor: "#1E90FF" },
-    customTextStyle: { color: "#1E90FF" },
-  },
-  {
-    id: "booked",
-    title: "Lead Booked",
-    icon: <CalendarCheck className="w-5 h-5" />,
-    colorClass: "bg-yellow-400 border-yellow-300 text-yellow-900",
-    headerClass: "bg-yellow-500/40 text-yellow-800 dark:text-yellow-200",
-    textColorClass: "text-yellow-600 dark:text-yellow-500",
-  },
-];
-
 const INITIAL_LEADS: Record<StageId, Lead[]> = {
   engaged: [
     { id: "l1", name: "Alice Chen", lastContacted: Date.now() - 300000, phone: "+1 123-4567" },
@@ -83,10 +43,52 @@ const INITIAL_LEADS: Record<StageId, Lead[]> = {
 };
 
 export default function PipelineChart() {
+  const { t } = useTranslation("pipelineChart");
   const [leads, setLeads] = useState(INITIAL_LEADS);
   const [, setTick] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: false, amount: 0.1 });
+
+  const STAGES: Stage[] = [
+    {
+      id: "engaged",
+      title: t("stages.engaged"),
+      icon: <User className="w-5 h-5" />,
+      colorClass: "border-slate-300 text-slate-50",
+      headerClass: "text-slate-100",
+      textColorClass: "text-slate-100",
+      customStyle: { backgroundColor: "#1a3a6f" },
+      customTextStyle: { color: "#1a3a6f" },
+    },
+    {
+      id: "replied",
+      title: t("stages.replied"),
+      icon: <MessageSquare className="w-5 h-5" />,
+      colorClass: "border-slate-300 text-slate-50",
+      headerClass: "text-slate-100",
+      textColorClass: "text-slate-100",
+      customStyle: { backgroundColor: "#2d5aa8" },
+      customTextStyle: { color: "#2d5aa8" },
+    },
+    {
+      id: "qualified",
+      title: t("stages.qualified"),
+      icon: <CheckCircle className="w-5 h-5" />,
+      colorClass: "border-slate-300 text-slate-50",
+      headerClass: "text-black",
+      textColorClass: "text-slate-100",
+      customStyle: { backgroundColor: "#1E90FF" },
+      customTextStyle: { color: "#1E90FF" },
+    },
+    {
+      id: "booked",
+      title: t("stages.booked"),
+      icon: <CalendarCheck className="w-5 h-5" />,
+      colorClass: "bg-yellow-400 border-yellow-300 text-yellow-900",
+      headerClass: "bg-yellow-500/40 text-yellow-800 dark:text-yellow-200",
+      textColorClass: "text-yellow-600 dark:text-yellow-500",
+    },
+  ];
 
   useEffect(() => {
     if (!isInView) return;
@@ -108,10 +110,10 @@ export default function PipelineChart() {
     const elapsedMs = (Date.now() - timestamp) * 1200;
     const elapsedSeconds = Math.floor(elapsedMs / 1000);
     const hours = Math.floor(elapsedSeconds / 3600);
-    
-    if (hours > 3) return "3h ago";
-    if (hours === 0) return "0h ago";
-    return `${hours}h ago`;
+
+    if (hours > 3) return t("timeAgo.hoursAgo", { hours: 3 });
+    if (hours === 0) return t("timeAgo.hoursAgo", { hours: 0 });
+    return t("timeAgo.hoursAgo", { hours });
   };
 
   const moveRandomLead = () => {
@@ -121,14 +123,14 @@ export default function PipelineChart() {
       { from: "engaged", to: "replied" },
     ];
     const possibleMoves = moves.filter(m => leads[m.from].length > 0);
-    
+
     if (possibleMoves.length === 0) return;
     const move = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
-    
+
     setLeads(prev => {
       const fromLeads = [...prev[move.from]];
       const leadToMove = fromLeads.shift();
-      
+
       if (!leadToMove) return prev;
       return {
         ...prev,
@@ -148,8 +150,12 @@ export default function PipelineChart() {
       className="w-full space-y-8"
     >
       <div className="text-center space-y-2">
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 dark:text-white">What you see</h2>
-        <p className="text-slate-500 dark:text-slate-400 text-[18px] pt-[20px] pb-[20px]">A real-time view of leads becoming customers through our conversion pipeline display</p>
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 dark:text-white">
+          {t("header.title")}
+        </h2>
+        <p className="text-slate-500 dark:text-slate-400 text-[18px] pt-[20px] pb-[20px]">
+          {t("header.subtitle")}
+        </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full items-start">
         {STAGES.map((stage) => (
@@ -207,7 +213,7 @@ export default function PipelineChart() {
                   </Card>
                 </motion.div>
               ))}
-              
+
               {leads[stage.id].length === 0 && (
                 <motion.div 
                   initial={{ opacity: 0 }}
@@ -215,7 +221,7 @@ export default function PipelineChart() {
                   className="flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-slate-400 text-xs italic bg-slate-50 dark:bg-slate-900 p-3" 
                   data-testid={`empty-stage-${stage.id}`}
                 >
-                  No leads in this stage
+                  {t("emptyStage")}
                 </motion.div>
               )}
             </div>

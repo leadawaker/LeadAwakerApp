@@ -1,0 +1,16 @@
+{
+  "header": {
+    "title": "What you see",
+    "subtitle": "A real-time view of leads becoming customers through our conversion pipeline display"
+  },
+  "stages": {
+    "engaged": "Lead Engaged",
+    "replied": "Lead Replied",
+    "qualified": "Lead Qualified",
+    "booked": "Lead Booked"
+  },
+  "timeAgo": {
+    "hoursAgo": "{{hours}}h ago"
+  },
+  "emptyStage": "No leads in this stage"
+}

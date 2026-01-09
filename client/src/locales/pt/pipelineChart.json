@@ -1,0 +1,16 @@
+{
+  "header": {
+    "title": "O que você vê",
+    "subtitle": "Uma visão em tempo real de leads se tornando clientes através do nosso painel de conversão"
+  },
+  "stages": {
+    "engaged": "Lead Engajado",
+    "replied": "Lead Respondeu",
+    "qualified": "Lead Qualificado",
+    "booked": "Lead Agendado"
+  },
+  "timeAgo": {
+    "hoursAgo": "{{hours}}h atrás"
+  },
+  "emptyStage": "Nenhum lead nesta etapa"
+}

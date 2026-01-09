@@ -12,6 +12,8 @@ import Services from "@/pages/services";
 import BookDemo from "@/pages/book-demo";
 import Login from "@/pages/login";
 import Canvas from "@/pages/canvas";
+import PrivacyPolicy from "@/pages/privacy-policy";
+import TermsOfService from "@/pages/terms-of-service";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -27,6 +29,8 @@ function Router() {
           <Route path="/book-demo" component={BookDemo} />
           <Route path="/login" component={Login} />
           <Route path="/canvas" component={Canvas} />
+          <Route path="/privacy-policy" component={PrivacyPolicy} />
+          <Route path="/terms-of-service" component={TermsOfService} />
           <Route component={NotFound} />
         </Switch>
       </main>

@@ -10,6 +10,9 @@ import enAbout from "./locales/en/about.json";
 import enBookDemo from "./locales/en/bookDemo.json";
 import enChat3d from "./locales/en/chat3d.json";
 import enSalesRepSteps from "./locales/en/salesRepSteps.json";
+import enPipelineChart from "./locales/en/pipelineChart.json";
+import enWorkflowVisualization from "./locales/en/workflowVisualization.json";
+import enLogin from "./locales/en/login.json";
 
 import ptCommon from "./locales/pt/common.json";
 import ptHome from "./locales/pt/home.json";
@@ -18,6 +21,9 @@ import ptAbout from "./locales/pt/about.json";
 import ptBookDemo from "./locales/pt/bookDemo.json";
 import ptChat3d from "./locales/pt/chat3d.json";
 import ptSalesRepSteps from "./locales/pt/salesRepSteps.json";
+import ptPipelineChart from "./locales/pt/pipelineChart.json";
+import ptWorkflowVisualization from "./locales/pt/workflowVisualization.json";
+import ptLogin from "./locales/pt/login.json";
 
 import nlCommon from "./locales/nl/common.json";
 import nlHome from "./locales/nl/home.json";
@@ -26,6 +32,9 @@ import nlAbout from "./locales/nl/about.json";
 import nlBookDemo from "./locales/nl/bookDemo.json";
 import nlChat3d from "./locales/nl/chat3d.json";
 import nlSalesRepSteps from "./locales/nl/salesRepSteps.json";
+import nlPipelineChart from "./locales/nl/pipelineChart.json";
+import nlWorkflowVisualization from "./locales/nl/workflowVisualization.json";
+import nlLogin from "./locales/nl/login.json";
 
 const resources = {
   en: {
@@ -36,6 +45,9 @@ const resources = {
     bookDemo: enBookDemo,
     chat3d: enChat3d,
     salesRepSteps: enSalesRepSteps,
+    pipelineChart: enPipelineChart,
+    workflowVisualization: enWorkflowVisualization,
+    login: enLogin,
   },
   pt: {
     common: ptCommon,
@@ -45,6 +57,9 @@ const resources = {
     bookDemo: ptBookDemo,
     chat3d: ptChat3d,
     salesRepSteps: ptSalesRepSteps,
+    pipelineChart: ptPipelineChart,
+    workflowVisualization: ptWorkflowVisualization,
+    login: ptLogin,
   },
   nl: {
     common: nlCommon,
@@ -54,6 +69,9 @@ const resources = {
     bookDemo: nlBookDemo,
     chat3d: nlChat3d,
     salesRepSteps: nlSalesRepSteps,
+    pipelineChart: nlPipelineChart,
+    workflowVisualization: nlWorkflowVisualization,
+    login: nlLogin,
   },
 };
 
@@ -64,7 +82,7 @@ i18n
     resources,
     fallbackLng: "en",
     defaultNS: "common",
-    ns: ["common", "home", "services", "about", "bookDemo", "chat3d", "salesRepSteps"],
+    ns: ["common", "home", "services", "about", "bookDemo", "chat3d", "salesRepSteps", "pipelineChart", "workflowVisualization", "login"],
     interpolation: {
       escapeValue: false,
     },

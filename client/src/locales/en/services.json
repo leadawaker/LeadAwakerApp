@@ -8,7 +8,7 @@
     "solarPanel": {
       "title": "Solar Panel",
       "heading": "Case {{caseNumber}} - <colored>Solar Panel Installation</colored>",
-      "description": "This flow demonstrates how Lead Awaker reactivates quote-history leads and turns "maybe later" into a concrete next step. The AI starts with a low-friction identity check, then immediately guides the conversation into directed discovery (no easy opt-out). It quantifies the current pain, surfaces the technical constraint (north-facing roof), then positions the call as the fastest way to get a realistic payback range and design options.",
+      "description": "This flow demonstrates how Lead Awaker reactivates quote-history leads and turns \"maybe later\" into a concrete next step. The AI starts with a low-friction identity check, then immediately guides the conversation into directed discovery (no easy opt-out). It quantifies the current pain, surfaces the technical constraint (north-facing roof), then positions the call as the fastest way to get a realistic payback range and design options.",
       "metricsTitle": "Key Performance Indicators:",
       "metrics": [
         "<strong>12.5% Appointment rate</strong> from cold quote history",
@@ -33,7 +33,7 @@
         { "type": "user", "sender": "James", "content": "north facing", "time": "10:05 AM" },
         { "type": "user", "sender": "James", "content": "so I doubt it pays back", "time": "10:05 AM" },
         { "type": "system", "content": "Handling objection", "id": "sol-3" },
-        { "type": "agent", "sender": "Michael", "content": "Totally fair.\n\nMost people assume north-facing means "no," but pitch, shading, usable roof area, and whether we can use east or west sections can change the math.", "time": "10:06 AM" },
+        { "type": "agent", "sender": "Michael", "content": "Totally fair.\n\nMost people assume north-facing means \"no,\" but pitch, shading, usable roof area, and whether we can use east or west sections can change the math.", "time": "10:06 AM" },
         { "type": "user", "sender": "James", "content": "oh I didnt know that", "time": "10:10 AM" },
         { "type": "agent", "sender": "Michael", "content": "What we're really good at is personalization—matching panel layout and assumptions to your exact roof and usage so the payback estimate is realistic.\n\nIf we could confirm in 10 minutes whether you can hit a payback you feel good about, would that be worth it?", "time": "10:07 AM" },
         { "type": "user", "sender": "James", "content": "maybe", "time": "10:15 AM" },
@@ -52,13 +52,13 @@
     "gym": {
       "title": "Gym Membership",
       "heading": "Case {{caseNumber}} - <colored>Gym Membership</colored>",
-      "description": "This reactivation flow is built like a real sales conversation, not a generic "come back" text. The AI starts with a low-friction identity check, uses a natural excuse to re-open the conversation, then runs SPIN-style discovery to diagnose churn and build a plan. It handles a second lifestyle objection (new baby), then converts intent into a personal trainer plan appointment.",
+      "description": "This reactivation flow is built like a real sales conversation, not a generic \"come back\" text. The AI starts with a low-friction identity check, uses a natural excuse to re-open the conversation, then runs SPIN-style discovery to diagnose churn and build a plan. It handles a second lifestyle objection (new baby), then converts intent into a personal trainer plan appointment.",
       "metricsTitle": "Key Metrics:",
       "metrics": [
         "<strong>15% Re-signup rate</strong> within 48 hours",
         "<strong>Automated booking</strong> for PT plan sessions"
       ],
-      "additionalUseCases": "<strong>Additional use cases for this niche:</strong> Automated "missed workout" follow-ups, cancellation save sequences, reactivation offers triggered by time away, PT lead nurturing, and membership renewal reminders.",
+      "additionalUseCases": "<strong>Additional use cases for this niche:</strong> Automated \"missed workout\" follow-ups, cancellation save sequences, reactivation offers triggered by time away, PT lead nurturing, and membership renewal reminders.",
       "agentProfile": "<strong>Agent Speech Profile:</strong> Motivational coach. High empathy, high energy, and keeps momentum toward a next step.",
       "messages": [
         { "type": "agent", "sender": "Sara", "content": "Hi Mark, it's Sara from IronPulse Fitness Club here. Is this the same Mark who used to be a member with us a while back? 🙂", "time": "10:00 AM" },
@@ -91,13 +91,13 @@
     "restaurant": {
       "title": "Restaurant Booking",
       "heading": "Case {{caseNumber}} - <colored>Restaurant Booking</colored>",
-      "description": "This flow shows "reactivation + conversion" in a fast-moving niche. The AI restarts an abandoned inquiry, captures the key booking details, confirms special requests, and then handles rescheduling instantly when plans change. It keeps the guest experience friendly while protecting staff time and reducing missed reservations.",
+      "description": "This flow shows \"reactivation + conversion\" in a fast-moving niche. The AI restarts an abandoned inquiry, captures the key booking details, confirms special requests, and then handles rescheduling instantly when plans change. It keeps the guest experience friendly while protecting staff time and reducing missed reservations.",
       "metricsTitle": "Key Metrics:",
       "metrics": [
         "<strong>28% Conversion rate</strong> on abandoned inquiries",
         "<strong>100% Automated</strong> handling of re-scheduling and special requests"
       ],
-      "additionalUseCases": "<strong>Additional use cases for this niche:</strong> Dietary preference capture, deposit links for peak nights, no-show reduction sequences, waitlist automation, post-visit review requests, and "VIP guest" tagging.",
+      "additionalUseCases": "<strong>Additional use cases for this niche:</strong> Dietary preference capture, deposit links for peak nights, no-show reduction sequences, waitlist automation, post-visit review requests, and \"VIP guest\" tagging.",
       "agentProfile": "<strong>Agent Speech Profile:</strong> Warm host. Polite, fast, detail-oriented, and service-first.",
       "messages": [
         { "type": "agent", "sender": "Jennifer", "content": "Hi Steve, Jennifer from Dragon Wok Kitchen here.\n\nYou emailed us recently about booking a table. Are you still looking to reserve?", "time": "11:00 AM" },
@@ -133,7 +133,7 @@
     "realEstate": {
       "title": "Real Estate",
       "heading": "Case {{caseNumber}} - <colored>Real Estate</colored>",
-      "description": "Real estate leads often stall because the buyer can't tell what is "normal" pricing and what is a bad deal. This AI flow restarts the conversation with a low-friction identity check, uses a natural excuse to re-open the thread, then qualifies the buyer's timeline, criteria, and budget. It shares matching listings immediately, and escalates to a real agent once the buyer is comparing options.",
+      "description": "Real estate leads often stall because the buyer can't tell what is \"normal\" pricing and what is a bad deal. This AI flow restarts the conversation with a low-friction identity check, uses a natural excuse to re-open the thread, then qualifies the buyer's timeline, criteria, and budget. It shares matching listings immediately, and escalates to a real agent once the buyer is comparing options.",
       "metricsTitle": "Key Metrics:",
       "metrics": [
         "<strong>22% Engagement increase</strong> for 12+ month leads",
@@ -217,7 +217,7 @@
     "lawFirm": {
       "title": "Law Firm",
       "heading": "Case {{caseNumber}} - <colored>Law Firm</colored>",
-      "description": "Our <strong>Lead Awaker AI</strong> reactivates cold leads for car finance refunds and quickly moves them into the only step that matters: getting the agreement documents. It qualifies eligibility, handles the "I don't have the paperwork" blocker, then guides the lead through a DSAR (Data Subject Access Request) so your team only touches cases that are ready.",
+      "description": "Our <strong>Lead Awaker AI</strong> reactivates cold leads for car finance refunds and quickly moves them into the only step that matters: getting the agreement documents. It qualifies eligibility, handles the \"I don't have the paperwork\" blocker, then guides the lead through a DSAR (Data Subject Access Request) so your team only touches cases that are ready.",
       "descriptionExtra": "<strong>What happens next:</strong> The DSAR compels car finance companies to send the agreement documents. A <strong>law firm clerk</strong> reviews them for mis-sold commission hidden in payments, and if found, the client can claim a refund (often £1,000-£3,000).",
       "metricsTitle": "Real Results from 935 leads:",
       "metrics": [
@@ -225,7 +225,7 @@
         "<strong>20.4% DSAR completion rate</strong>",
         "<strong>Cost per DSAR: $21</strong> (fully automated, no calls, no salespeople)"
       ],
-      "additionalUseCases": "<strong>Additional use cases for this niche:</strong> DSAR completion reminders, "30 working day" status updates, auto-escalation to a clerk when documents arrive, and reactivation campaigns for leads that started but did not finish.",
+      "additionalUseCases": "<strong>Additional use cases for this niche:</strong> DSAR completion reminders, \"30 working day\" status updates, auto-escalation to a clerk when documents arrive, and reactivation campaigns for leads that started but did not finish.",
       "agentProfile": "<strong>Agent Speech Profile:</strong> Compliance-first admin. Clear, process-led, and low-pressure.",
       "messages": [
         { "type": "agent", "sender": "Sophie", "content": "Hi, this is Sophie from Sterling Finance. Is this Oliver who wanted to check whether they were owed a refund on their car finance?", "time": "14:35" },

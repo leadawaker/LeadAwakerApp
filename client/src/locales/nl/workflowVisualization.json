@@ -1,0 +1,33 @@
+{
+  "contact": {
+    "title": "Lead #315",
+    "name": "Jack Johnson",
+    "statusLabel": "Status",
+    "statusNotEngaged": "Niet Betrokken",
+    "statusEngaging": "Lead Betrekken",
+    "statusEngaged": "Lead Betrokken"
+  },
+  "agent": {
+    "title": "AI Agent",
+    "model": "GPT-5.2",
+    "outputLabel": "Output",
+    "message1": "Goedemorgen :)",
+    "message2": "Is dit Jack?"
+  },
+  "guardrails": {
+    "title": "Guardrails",
+    "subtitle": "BEVEILIGING",
+    "statusLabel": "Status",
+    "checks": [
+      "Verkoopgerelateerd",
+      "Schone inhoud",
+      "Schone taal",
+      "Geen persoonlijke gegevens",
+      "Geen inloggegevens",
+      "Geen ongeautoriseerde links",
+      "Geen gegevenslekkage"
+    ],
+    "noViolations": "Geen overtredingen",
+    "messageSent": "Bericht Verzonden"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "contact": {
+    "title": "Lead #315",
+    "name": "Jack Johnson",
+    "statusLabel": "Status",
+    "statusNotEngaged": "Não Engajado",
+    "statusEngaging": "Engajando Lead",
+    "statusEngaged": "Lead Engajado"
+  },
+  "agent": {
+    "title": "Agente IA",
+    "model": "GPT-5.2",
+    "outputLabel": "Saída",
+    "message1": "Bom dia :)",
+    "message2": "É o Jack?"
+  },
+  "guardrails": {
+    "title": "Guardrails",
+    "subtitle": "SEGURANÇA",
+    "statusLabel": "Status",
+    "checks": [
+      "Vendas no tópico",
+      "Conteúdo limpo",
+      "Linguagem limpa",
+      "Sem dados pessoais",
+      "Sem credenciais",
+      "Sem links não autorizados",
+      "Sem vazamento de dados"
+    ],
+    "noViolations": "Sem violações",
+    "messageSent": "Mensagem Enviada"
+  }
+}

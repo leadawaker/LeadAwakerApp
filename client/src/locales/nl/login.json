@@ -1,0 +1,30 @@
+{
+  "title": "Toegang Tot Uw Account",
+  "subtitle": "Log in op uw Lead Awaker account om campagnes te beheren, resultaten te bekijken en uw lead follow-up te automatiseren.",
+  "features": {
+    "secureAccess": {
+      "title": "Beveiligde Toegang",
+      "description": "Uw inloggegevens zijn versleuteld en beveiligd."
+    },
+    "twoFactor": {
+      "title": "Twee-Factor Authenticatie",
+      "description": "Extra beveiligingslaag voor de bescherming van uw account."
+    }
+  },
+  "form": {
+    "heading": "Inloggen",
+    "email": {
+      "label": "E-mailadres",
+      "placeholder": "jij@voorbeeld.nl"
+    },
+    "password": {
+      "label": "Wachtwoord",
+      "placeholder": "••••••••"
+    },
+    "rememberMe": "Onthoud mij",
+    "forgotPassword": "Wachtwoord vergeten?",
+    "submitButton": "Inloggen",
+    "noAccount": "Heeft u geen account?",
+    "scheduleDemo": "Plan een demo"
+  }
+}

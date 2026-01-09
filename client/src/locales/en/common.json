@@ -7,6 +7,9 @@
     "bookDemo": "Book a Demo"
   },
   "footer": {
+    "company": "Company",
+    "contact": "Contact",
+    "copyright": "© {{year}} Lead Awaker. All rights reserved.",
     "rights": "All rights reserved.",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service"
@@ -21,5 +24,3 @@
     "yourBrand": "Your Brand"
   }
 }
-
-

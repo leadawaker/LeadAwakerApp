@@ -1,0 +1,30 @@
+{
+  "title": "Acesse Sua Conta",
+  "subtitle": "Entre na sua conta Lead Awaker para gerenciar campanhas, visualizar resultados e automatizar o acompanhamento de leads.",
+  "features": {
+    "secureAccess": {
+      "title": "Acesso Seguro",
+      "description": "Suas credenciais são criptografadas e seguras."
+    },
+    "twoFactor": {
+      "title": "Autenticação de Dois Fatores",
+      "description": "Camada adicional de segurança para proteção da sua conta."
+    }
+  },
+  "form": {
+    "heading": "Entrar",
+    "email": {
+      "label": "Endereço de Email",
+      "placeholder": "voce@exemplo.com"
+    },
+    "password": {
+      "label": "Senha",
+      "placeholder": "••••••••"
+    },
+    "rememberMe": "Lembrar de mim",
+    "forgotPassword": "Esqueceu a senha?",
+    "submitButton": "Entrar",
+    "noAccount": "Não tem uma conta?",
+    "scheduleDemo": "Agendar uma demonstração"
+  }
+}
