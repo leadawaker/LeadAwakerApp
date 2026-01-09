@@ -64,7 +64,7 @@ i18n
     resources,
     fallbackLng: "en",
     defaultNS: "common",
-    ns: ["common", "home", "services", "about", "bookDemo", "chat3d","salesRepSteps"],
+    ns: ["common", "home", "services", "about", "bookDemo", "chat3d", "salesRepSteps"],
     interpolation: {
       escapeValue: false,
     },
