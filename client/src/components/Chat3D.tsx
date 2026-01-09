@@ -103,7 +103,7 @@ export default function Chat3D() {
 
 
   return (
-    <div className="relative perspective-container">
+    <div className="relative perspective-container" style={{ filter: 'none', WebkitFilter: 'none' }}>
       <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ 
@@ -115,13 +115,17 @@ export default function Chat3D() {
         style={{ 
           perspective: "2000px",
           transformStyle: "preserve-3d",
+          filter: 'none',
+          WebkitFilter: 'none',
         }}
       >
         <div style={{ 
           transform: `rotateY(${Math.min(-10.5 + scrollY * 0.05, 0)}deg) rotateX(${Math.max(10.5 - scrollY * 0.05, 0)}deg)`, 
           transformStyle: "preserve-3d",
           transition: "transform 0.1s ease-out",
-          marginTop: "50px"
+          marginTop: "50px",
+          filter: 'none',
+          WebkitFilter: 'none',
         }}>
         <div 
           className="bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden relative"

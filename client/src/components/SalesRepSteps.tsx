@@ -261,6 +261,41 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
 
                       {/* Bullet points and media */}
                       <div className="pt-6 border-t border-white/10">
+                        {/* Navigation - Between image and text */}
+                        <div className="flex justify-center items-center gap-5 mb-6">
+                          <button
+                            onClick={handlePrev}
+                            data-testid="button-prev-step-card"
+                            className="p-2 text-blue-500 hover:text-yellow-500 transition-colors duration-200 flex items-center justify-center"
+                            aria-label={t('common.prevStep')}
+                          >
+                            <ChevronLeft className="w-10 h-10 md:w-12 md:h-12" />
+                          </button>
+                          <div className="flex gap-3">
+                            {steps.map((_, i) => (
+                              <button
+                                key={i}
+                                onClick={() => setCurrentStep(i)}
+                                data-testid={`dot-step-card-${i}`}
+                                className={`rounded-full transition-all duration-300 ${
+                                  i === currentStep
+                                    ? 'bg-blue-500 w-8 h-3 md:w-10 md:h-4'
+                                    : 'bg-blue-500/30 hover:bg-blue-500/50 w-3 h-3 md:w-4 md:h-4'
+                                }`}
+                                aria-label={t('common.goToStep', { number: i + 1 })}
+                              />
+                            ))}
+                          </div>
+                          <button
+                            onClick={handleNext}
+                            data-testid="button-next-step-card"
+                            className="p-2 text-blue-500 hover:text-yellow-500 transition-colors duration-200 flex items-center justify-center"
+                            aria-label={t('common.nextStep')}
+                          >
+                            <ChevronRight className="w-10 h-10 md:w-12 md:h-12" />
+                          </button>
+                        </div>
+
                         {step.cardImage && step.number === "1" ? (
                           <div className="relative mb-6 rounded-lg overflow-hidden group">
                             <img src={step.cardImage} alt="Step illustration" className="w-full h-auto object-cover rounded-lg" />
@@ -366,41 +401,6 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
               );
             })}
 
-          </div>
-
-          {/* Arrow Navigation - Below cards, next to dots */}
-          <div className="flex justify-center items-center gap-4 mt-6">
-            <button
-              onClick={handlePrev}
-              data-testid="button-prev-step"
-              className="p-2 text-blue-500 hover:text-yellow-500 transition-colors duration-200 flex items-center justify-center pointer-events-auto"
-              aria-label={t('common.prevStep')}
-            >
-              <ChevronLeft className="w-8 h-8" />
-            </button>
-            <div className="flex gap-2">
-              {steps.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentStep(i)}
-                  data-testid={`dot-step-external-${i}`}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                    i === currentStep
-                      ? 'bg-blue-500 w-6'
-                      : 'bg-blue-500/30 hover:bg-blue-500/50'
-                  }`}
-                  aria-label={t('common.goToStep', { number: i + 1 })}
-                />
-              ))}
-            </div>
-            <button
-              onClick={handleNext}
-              data-testid="button-next-step"
-              className="p-2 text-blue-500 hover:text-yellow-500 transition-colors duration-200 flex items-center justify-center pointer-events-auto"
-              aria-label={t('common.nextStep')}
-            >
-              <ChevronRight className="w-8 h-8" />
-            </button>
           </div>
         </div>
       </div>
