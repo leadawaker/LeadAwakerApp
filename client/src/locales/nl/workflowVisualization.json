@@ -1,7 +1,7 @@
 {
   "contact": {
     "title": "Lead #315",
-    "name": "Jack Johnson",
+    "name": "Jan de Vries",
     "statusLabel": "Status",
     "statusNotEngaged": "Niet Betrokken",
     "statusEngaging": "Lead Betrekken",
@@ -12,7 +12,7 @@
     "model": "GPT-5.2",
     "outputLabel": "Output",
     "message1": "Goedemorgen :)",
-    "message2": "Is dit Jack?"
+    "message2": "Is dit Jan?"
   },
   "guardrails": {
     "title": "Guardrails",

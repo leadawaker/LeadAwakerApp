@@ -347,7 +347,7 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
                           transition={{ duration: 0.4 }}
                           className="overflow-hidden"
                         >
-                          <div className="grid grid-cols-2 gap-4 pb-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4">
                             {step.leftText && step.leftText.split('\n').map((line: string, i: number) => (
                               <div key={i} className="flex items-start gap-3">
                                 <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500 mt-2" />
@@ -387,7 +387,7 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
             })}
 
             {/* Side Navigation Buttons - Fixed Position relative to container */}
-            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between items-center z-30 pointer-events-none">
+            <div className="absolute inset-x-0 top-[30%] md:top-1/2 -translate-y-1/2 flex justify-between items-center z-30 pointer-events-none">
               <div className="w-full max-w-5xl mx-auto px-4 flex justify-between items-center">
                 <button
                   onClick={handlePrev}
@@ -575,11 +575,7 @@ export const SalesRepSteps = () => {
             className="text-center max-w-4xl mx-auto mb-24"
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 drop-shadow-lg">
-              <span style={{ 
-                backgroundImage: 'linear-gradient(to right, #FFFFFF 0%, #FFFFFF 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
+              <span className="text-white" style={{ 
                 display: 'inline-block',
                 filter: 'drop-shadow(4px 0px 15px rgba(128, 128, 128, 0.15)) drop-shadow(2px 0px 5px rgba(128, 128, 128, 0.1))',
                 textShadow: '3px 0px 6px rgba(128, 128, 128, 0.12)'
@@ -695,15 +691,15 @@ export const SalesRepSteps = () => {
       </section>
 
       {/* Intro Section */}
-      <section className="flex items-center justify-center relative overflow-hidden mb-12" style={{ height: '12vh' }}>
+      <section className="flex items-center justify-center relative overflow-hidden mb-12 py-8 md:py-0" style={{ minHeight: '12vh' }}>
         <motion.div 
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center relative z-10"
+          className="text-center relative z-10 px-4"
           data-testid="sales-rep-intro"
         >
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-0 text-white drop-shadow-lg">
+          <h1 className="text-3xl md:text-6xl font-extrabold tracking-tight mb-0 text-white drop-shadow-lg leading-tight">
             {t('intro.title')}
           </h1>
         </motion.div>

@@ -1,7 +1,7 @@
 {
   "contact": {
     "title": "Lead #315",
-    "name": "Jack Johnson",
+    "name": "João Silva",
     "statusLabel": "Status",
     "statusNotEngaged": "Não Engajado",
     "statusEngaging": "Engajando Lead",
@@ -12,7 +12,7 @@
     "model": "GPT-5.2",
     "outputLabel": "Saída",
     "message1": "Bom dia :)",
-    "message2": "É o Jack?"
+    "message2": "É o João?"
   },
   "guardrails": {
     "title": "Guardrails",

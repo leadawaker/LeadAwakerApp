@@ -12,5 +12,13 @@
   "timeAgo": {
     "hoursAgo": "{{hours}}h atrás"
   },
-  "emptyStage": "Nenhum lead nesta etapa"
+  "emptyStage": "Nenhum lead nesta etapa",
+  "leads": {
+    "l1": "Ana Santos",
+    "l2": "Bruno Oliveira",
+    "l3": "Carla Souza",
+    "l4": "Diego Pereira",
+    "l5": "Eduarda Lima",
+    "l6": "Fernando Costa"
+  }
 }

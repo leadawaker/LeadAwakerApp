@@ -25,26 +25,26 @@ interface Stage {
   customTextStyle?: React.CSSProperties;
 }
 
-const INITIAL_LEADS: Record<StageId, Lead[]> = {
+const getInitialLeads = (t: (key: string) => string): Record<StageId, Lead[]> => ({
   engaged: [
-    { id: "l1", name: "Alice Chen", lastContacted: Date.now() - 300000, phone: "+1 123-4567" },
-    { id: "l2", name: "Bob Smith", lastContacted: Date.now() - 600000, phone: "+1 234-5678" },
-    { id: "l3", name: "Carol Wu", lastContacted: Date.now() - 900000, phone: "+1 345-6789" },
+    { id: "l1", name: t("leads.l1"), lastContacted: Date.now() - 300000, phone: "+1 123-4567" },
+    { id: "l2", name: t("leads.l2"), lastContacted: Date.now() - 600000, phone: "+1 234-5678" },
+    { id: "l3", name: t("leads.l3"), lastContacted: Date.now() - 900000, phone: "+1 345-6789" },
   ],
   replied: [
-    { id: "l4", name: "David Miller", lastContacted: Date.now() - 1200000, phone: "+1 456-7890" },
+    { id: "l4", name: t("leads.l4"), lastContacted: Date.now() - 1200000, phone: "+1 456-7890" },
   ],
   qualified: [
-    { id: "l5", name: "Eva Green", lastContacted: Date.now() - 1500000, phone: "+1 567-8901" },
+    { id: "l5", name: t("leads.l5"), lastContacted: Date.now() - 1500000, phone: "+1 567-8901" },
   ],
   booked: [
-    { id: "l6", name: "Frank Wright", lastContacted: Date.now() - 1800000, phone: "+1 678-9012" },
+    { id: "l6", name: t("leads.l6"), lastContacted: Date.now() - 1800000, phone: "+1 678-9012" },
   ],
-};
+});
 
 export default function PipelineChart() {
-  const { t } = useTranslation("pipelineChart");
-  const [leads, setLeads] = useState(INITIAL_LEADS);
+  const { t, i18n } = useTranslation("pipelineChart");
+  const [leads, setLeads] = useState(() => getInitialLeads(t));
   const [, setTick] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: false, amount: 0.1 });
@@ -89,6 +89,10 @@ export default function PipelineChart() {
       textColorClass: "text-yellow-600 dark:text-yellow-500",
     },
   ];
+
+  useEffect(() => {
+    setLeads(getInitialLeads(t));
+  }, [i18n.language, t]);
 
   useEffect(() => {
     if (!isInView) return;

@@ -97,7 +97,7 @@ export default function About() {
                       </div>
                     </div>
                     <div className="flex-grow space-y-4">
-                      <div className="space-y-1">
+                      <div className="space-y-1 text-center md:text-left mt-4 md:mt-0">
                         <h3 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900">
                           {t("founder.name")}
                         </h3>

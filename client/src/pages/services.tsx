@@ -238,7 +238,7 @@ export default function Services() {
                 </div>
               </div>
 
-              <div className="order-2 max-w-md mx-auto lg:mx-0 w-full lg:sticky lg:top-8">
+              <div className="order-2 w-full max-w-full md:max-w-md mx-auto lg:mx-0 lg:sticky lg:top-8">
                 <div className="relative">
                   <div
                     className="absolute -inset-4 rounded-[2.5rem] blur-2xl -z-10"

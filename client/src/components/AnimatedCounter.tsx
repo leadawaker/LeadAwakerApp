@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, animate, useMotionValue, useInView, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 interface AnimatedCounterProps {
   start?: number;
@@ -20,6 +21,7 @@ export default function AnimatedCounter({
   suffixAtEnd = false,
   onFinishedChange
 }: AnimatedCounterProps) {
+  const { t } = useTranslation("home");
   const count = useMotionValue(start);
   const [displayValue, setDisplayValue] = useState(format(start) + (suffix && !suffixAtEnd ? suffix : ""));
   const [showSuffix, setShowSuffix] = useState(suffix && !suffixAtEnd);
@@ -75,10 +77,10 @@ export default function AnimatedCounter({
             className="absolute inset-0 flex items-center justify-center whitespace-nowrap text-[63px]"
             data-testid="text-zero-overlay"
           >
-            <div className="flex flex-col items-center leading-none mt-16">
-              <span className="uppercase tracking-tighter text-white text-[63px] font-bold">Absolute</span>
-              <span className="font-black uppercase tracking-tighter text-white text-[82px]">
-                ZERO
+            <div className="flex flex-col items-center leading-none mt-8 md:mt-16">
+              <span className="uppercase tracking-tighter text-white text-[40px] md:text-[63px] font-bold">{t("results.absoluteZero.absolute")}</span>
+              <span className="font-black uppercase tracking-tighter text-white text-[52px] md:text-[82px] mt-1 md:mt-0">
+                {t("results.absoluteZero.zero")}
               </span>
             </div>
           </motion.div>

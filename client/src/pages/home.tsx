@@ -58,7 +58,7 @@ export default function Home() {
                   <motion.span 
                     className="absolute top-0 bottom-0 -z-10" 
                     style={{ 
-                      background: 'linear-gradient(to right, transparent 0%, transparent 35%, #FEB800 50%, #FEB800 55%, transparent 75%, transparent 100%)',
+                      background: 'linear-gradient(to right, transparent 0%, #FEB800 25%, #FEB800 75%, transparent 100%)',
                       left: 'calc(50% - 200vw)', 
                       width: '400vw',
                       originX: 0.5 
@@ -254,7 +254,7 @@ export default function Home() {
                 <motion.h3
                   animate={{ y: isFinished ? -8 : 60 }}
                   transition={{ duration: 0.6, delay: 0.1 }}
-                  className={`mb-2 font-heading mt-12 transition-colors duration-500 text-[39px] font-bold ${isFinished ? 'text-white' : 'text-black'}`}
+                  className={`mb-2 font-heading mt-8 md:mt-12 transition-colors duration-500 text-[28px] md:text-[39px] font-bold ${isFinished ? 'text-white' : 'text-black'}`}
                 >
                   {t("results.upfrontCost.title")}
                 </motion.h3>

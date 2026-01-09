@@ -12,5 +12,13 @@
   "timeAgo": {
     "hoursAgo": "{{hours}}h ago"
   },
-  "emptyStage": "No leads in this stage"
+  "emptyStage": "No leads in this stage",
+  "leads": {
+    "l1": "Alice Chen",
+    "l2": "Bob Smith",
+    "l3": "Carol Wu",
+    "l4": "David Miller",
+    "l5": "Eva Green",
+    "l6": "Frank Wright"
+  }
 }

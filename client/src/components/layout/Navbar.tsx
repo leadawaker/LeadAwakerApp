@@ -116,12 +116,38 @@ export function Navbar() {
 
       {/* Mobile Nav */}
       {isOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-background border-b border-border p-4 flex flex-col gap-4 shadow-xl">
+        <div className="md:hidden absolute top-full left-0 right-0 bg-background/80 backdrop-blur-md border-b border-border p-4 flex flex-col gap-4 shadow-xl">
+          {/* Language Selector - Mobile */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center justify-end gap-1.5 font-medium h-9 px-2 hover:opacity-80 transition-opacity focus:outline-none w-full" data-testid="button-language-selector-mobile">
+                <img src={currentLang.flag} alt={currentLang.display} className="h-4 w-[1.35rem] rounded-none object-cover shadow-sm -translate-y-[1px]" />
+                <span className="text-[15px] font-bold tracking-wide text-muted-foreground uppercase">{currentLang.display}</span>
+                <ChevronDown className="w-3 h-3 text-muted-foreground/60" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40 p-1">
+              {languages.map((lang) => (
+                <DropdownMenuItem
+                  key={lang.code}
+                  onClick={() => changeLanguage(lang)}
+                  className="cursor-pointer flex items-center justify-between px-3 py-2 text-[15px] font-medium focus:bg-primary focus:text-white rounded-md transition-all"
+                  data-testid={`menu-item-lang-mobile-${lang.code}`}
+                >
+                  <span className="flex items-center gap-3">
+                    <img src={lang.flag} alt={lang.label} className="h-4 w-[1.35rem] rounded-none object-cover shadow-sm -translate-y-[1px]" />
+                    {lang.label}
+                  </span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
           {navLinks.map((link) => (
             <Link 
               key={link.href} 
               href={link.href}
-              className="text-lg font-medium p-2 hover:bg-muted rounded-md"
+              className="text-lg font-medium p-2 hover:bg-muted rounded-md text-right"
               onClick={() => setIsOpen(false)}
             >
               {link.label}

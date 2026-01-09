@@ -12,5 +12,13 @@
   "timeAgo": {
     "hoursAgo": "{{hours}}u geleden"
   },
-  "emptyStage": "Geen leads in deze fase"
+  "emptyStage": "Geen leads in deze fase",
+  "leads": {
+    "l1": "Anna Bakker",
+    "l2": "Bram Jansen",
+    "l3": "Carlijn Smit",
+    "l4": "Daan van Dijk",
+    "l5": "Emma de Boer",
+    "l6": "Floris Visser"
+  }
 }

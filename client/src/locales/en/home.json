@@ -32,10 +32,14 @@
       }
     },
     "upfrontCost": {
-      "title": "Upfront Cost",
+      "title": "Initial Cost",
       "partnership": "Performance Partnership",
       "mission": "We solve problems not create them",
       "guarantee": "30-Day guarantee"
+    },
+    "absoluteZero": {
+      "absolute": "Absolute",
+      "zero": "ZERO"
     }
   },
   "compliance": {

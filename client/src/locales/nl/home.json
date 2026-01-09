@@ -32,10 +32,14 @@
       }
     },
     "upfrontCost": {
-      "title": "Vooruitbetaling",
+      "title": "Initiële Kosten",
       "partnership": "Performance Partnerschap",
       "mission": "We lossen problemen op, we creëren ze niet",
       "guarantee": "30-dagen garantie"
+    },
+    "absoluteZero": {
+      "absolute": "Absoluut",
+      "zero": "NUL"
     }
   },
   "compliance": {
