@@ -92,7 +92,7 @@ export default function About() {
                   <div className="absolute -inset-4 bg-primary/5 rounded-[2rem] blur-2xl group-hover:bg-primary/10 transition-colors duration-500" />
                   <div className="relative bg-white/40 backdrop-blur-sm p-8 md:p-12 rounded-[2rem] border border-white/50 shadow-xl flex flex-col md:flex-row items-center gap-12">
                     <div className="relative shrink-0">
-                      <div className="w-48 h-48 md:w-64 md:h-64">
+                      <div className="w-56 h-56 md:w-64 md:h-64">
                         <AnimatedLogo3D />
                       </div>
                     </div>

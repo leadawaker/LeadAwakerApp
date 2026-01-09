@@ -359,26 +359,6 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
                           </div>
                         </motion.div>
 
-                        {/* Pagination dots within card */}
-                        <div className="flex justify-center gap-2 mt-4 pb-2 relative z-[70]">
-                          {steps.map((_, i) => (
-                            <button
-                              key={i}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setCurrentStep(i);
-                              }}
-                              data-testid={`dot-step-internal-${i}`}
-                              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer pointer-events-auto ${
-                                i === currentStep
-                                  ? 'bg-blue-500 w-6'
-                                  : 'bg-blue-500/20 hover:bg-blue-500/40'
-                                }`}
-                              aria-label={t('common.goToStep', { number: i + 1 })}
-                            />
-                          ))}
-                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -386,30 +366,42 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
               );
             })}
 
-            {/* Side Navigation Buttons - Fixed Position relative to container */}
-            <div className="absolute inset-x-0 top-[30%] md:top-1/2 -translate-y-1/2 flex justify-between items-center z-30 pointer-events-none">
-              <div className="w-full max-w-5xl mx-auto px-4 flex justify-between items-center">
-                <button
-                  onClick={handlePrev}
-                  data-testid="button-prev-step"
-                  className="p-3 rounded-full bg-white/10 border border-white text-white hover:bg-white/20 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(255,255,255,0.4),0_0_20px_rgba(234,179,8,0.5)] translate-x-12"
-                  aria-label={t('common.prevStep')}
-                >
-                  <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform text-white" />
-                </button>
-                <button
-                  onClick={handleNext}
-                  data-testid="button-next-step"
-                  className="p-3 rounded-full bg-white/10 border border-white text-white hover:bg-white/20 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(255,255,255,0.4),0_0_20px_rgba(234,179,8,0.5)] -translate-x-12"
-                  aria-label={t('common.nextStep')}
-                >
-                  <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform text-white" />
-                </button>
-              </div>
-            </div>
           </div>
 
-          {/* External pagination dots removed as they are now inside cards */}
+          {/* Arrow Navigation - Below cards, next to dots */}
+          <div className="flex justify-center items-center gap-4 mt-6">
+            <button
+              onClick={handlePrev}
+              data-testid="button-prev-step"
+              className="p-2 text-blue-500 hover:text-yellow-500 transition-colors duration-200 flex items-center justify-center pointer-events-auto"
+              aria-label={t('common.prevStep')}
+            >
+              <ChevronLeft className="w-8 h-8" />
+            </button>
+            <div className="flex gap-2">
+              {steps.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentStep(i)}
+                  data-testid={`dot-step-external-${i}`}
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                    i === currentStep
+                      ? 'bg-blue-500 w-6'
+                      : 'bg-blue-500/30 hover:bg-blue-500/50'
+                  }`}
+                  aria-label={t('common.goToStep', { number: i + 1 })}
+                />
+              ))}
+            </div>
+            <button
+              onClick={handleNext}
+              data-testid="button-next-step"
+              className="p-2 text-blue-500 hover:text-yellow-500 transition-colors duration-200 flex items-center justify-center pointer-events-auto"
+              aria-label={t('common.nextStep')}
+            >
+              <ChevronRight className="w-8 h-8" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

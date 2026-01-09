@@ -58,7 +58,7 @@ export default function Home() {
                   <motion.span 
                     className="absolute top-0 bottom-0 -z-10" 
                     style={{ 
-                      background: 'linear-gradient(to right, transparent 0%, #FEB800 25%, #FEB800 75%, transparent 100%)',
+                      background: 'linear-gradient(to right, transparent 0%, #FEB800 15%, #FEB800 70%, rgba(255,255,255,0.6) 85%, transparent 100%)',
                       left: 'calc(50% - 200vw)', 
                       width: '400vw',
                       originX: 0.5 
@@ -199,8 +199,8 @@ export default function Home() {
                       />
                     ) : (
                       <AnimatedCounter 
-                        start={result.startMetric}
-                        end={result.metric} 
+                        start={result.startMetric ?? 0}
+                        end={result.metric ?? 0} 
                         duration={result.duration}
                         format={(v: number) => Math.round(v).toString()}
                         suffix={result.suffix}

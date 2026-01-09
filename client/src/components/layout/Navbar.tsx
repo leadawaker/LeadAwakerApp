@@ -116,7 +116,7 @@ export function Navbar() {
 
       {/* Mobile Nav */}
       {isOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-background/80 backdrop-blur-md border-b border-border p-4 flex flex-col gap-4 shadow-xl">
+        <div className="md:hidden fixed top-[64px] left-0 right-0 bg-background/90 backdrop-blur-xl border-b border-border p-4 flex flex-col gap-4 shadow-xl z-50">
           {/* Language Selector - Mobile */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -153,16 +153,18 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
-          <Link href="/login" onClick={() => setIsOpen(false)}>
-            <Button variant="ghost" className="w-full mt-2">
-              {t("nav.login")}
-            </Button>
-          </Link>
-          <Link href="/book-demo">
-            <Button className="w-full mt-2 hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all" onClick={() => setIsOpen(false)}>
-              {t("nav.bookDemo")}
-            </Button>
-          </Link>
+          <div className="flex flex-col items-end gap-2 mt-2">
+            <Link href="/login" onClick={() => setIsOpen(false)}>
+              <Button variant="ghost" className="w-32 text-center">
+                {t("nav.login")}
+              </Button>
+            </Link>
+            <Link href="/book-demo">
+              <Button className="w-32 text-center hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all" onClick={() => setIsOpen(false)}>
+                {t("nav.bookDemo")}
+              </Button>
+            </Link>
+          </div>
         </div>
       )}
     </nav>
