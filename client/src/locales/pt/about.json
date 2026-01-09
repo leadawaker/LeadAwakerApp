@@ -1,29 +1,92 @@
 {
-  "hero": {
-    "title": "Sobre Lead Awaker",
-    "subtitle": "Ajudamos empresas a transformar leads dormentes em oportunidades ativas através de conversas inteligentes com IA."
+  "intro": {
+    "title": "O que nos importa",
+    "paragraph1": "Na Lead Awaker, acreditamos que sua energia deve ir para o que você faz melhor: entregar o serviço de qualidade que você já oferece. Nosso trabalho é ajudá-lo a aproveitar o poder da atenção.",
+    "paragraph2": "Para que sua marca signifique algo valioso para um lead, essa pessoa precisa ser tratada como um indivíduo primeiro, não como uma linha em uma planilha. Quando eles são abordados de uma forma que respeita seu tempo, contexto e preferências, eles se sentem compreendidos, e quando se sentem compreendidos, eles finalmente despertam para entender",
+    "you": "você",
+    "cyclingWords": [".", "a sua empresa.", "a sua marca.", "os seus serviços.", "os seus produtos.", "a sua história.", "os seus valores."]
   },
-  "mission": {
-    "title": "Nossa Missão",
-    "description": "Revolucionar como as empresas se reconectam com seus leads, fornecendo IA que parece humana, constrói confiança e entrega resultados reais."
-  },
-  "values": {
-    "title": "Nossos Valores",
-    "authenticity": {
-      "title": "Autenticidade",
-      "desc": "Cada conversa soa natural, empática e genuinamente útil."
+  "sections": [
+    {
+      "title": "Base técnica confiável",
+      "items": [
+        "Mais de 10 anos desenvolvendo software de produção em jogos e cinema",
+        "Experiência na Framestore, Sega, New World Interactive",
+        "Sabe como manter sistemas complexos simples e estáveis para equipes não técnicas"
+      ]
     },
-    "results": {
-      "title": "Orientado a Resultados",
-      "desc": "Medimos o sucesso por chamadas agendadas e negócios fechados, não apenas métricas."
+    {
+      "title": "Resolução de problemas focada em desempenho",
+      "items": [
+        "5 anos de domínio em análise de dados e trading",
+        "Desenvolveu ferramentas de IA personalizadas para desempenho de trading",
+        "Sistemas de coaching e feedback ao vivo",
+        "Código TradingView personalizado para automação de dados"
+      ]
     },
-    "partnership": {
-      "title": "Parceria",
-      "desc": "Alinhamos nosso sucesso com o seu através de preços baseados em performance."
+    {
+      "title": "Automação pronta para você, não mais ferramentas",
+      "items": [
+        "Construiu infraestrutura completa de agência de IA",
+        "Sistemas de enriquecimento de leads para clientes HubSpot",
+        "Desenvolveu ferramentas de scraping e automação de negócios",
+        "Combinação de automação com expertise em análise de dados"
+      ]
+    },
+    {
+      "title": "Para onde a Lead Awaker vai em seguida",
+      "items": [
+        "Fundou a TA Monks (4 anos) com a esposa Danique",
+        "Transição para construir a Lead Awaker",
+        "Meta: Escalar para $100M ARR"
+      ]
     }
+  ],
+  "founder": {
+    "name": "Gabriel B. Fronza",
+    "title": "Fundador",
+    "quote": "\"Percebi isso primeiro na clínica de saúde dos meus pais e depois em todos os lugares. Os pacientes agendavam consultas, mostravam interesse real, depois ficavam em silêncio enquanto a clínica continuava pagando por anúncios para conseguir novos.\"",
+    "description": "Lead Awaker vem de mais de 10 anos desenvolvendo software de produção, 5 anos construindo automação orientada por dados e 4 anos administrando um negócio real ao lado da minha esposa Danique."
   },
-  "cta": {
-    "heading": "Pronto para despertar seus leads?",
-    "button": "Agendar Demo"
-  }
+  "faq": {
+    "title": "Perguntas Frequentes"
+  },
+  "faqs": [
+    {
+      "q": "E se nossos leads forem muito antigos ou completamente frios?",
+      "a": "A idade não é o fator principal; relevância é. Leads de 6 meses ou até 2 anos atrás ainda podem converter se o ponto de dor original permanecer e a abordagem parecer pessoal. O sistema identifica quem ainda está no mercado com base em sinais de engajamento, não apenas na idade do banco de dados."
+    },
+    {
+      "q": "Isso funcionará com nossa indústria/nicho?",
+      "a": "Lead Awaker é construído de forma agnóstica a canais e se adapta ao seu processo de vendas específico, seja você de seguros de vida, coaching fitness, serviços jurídicos ou consultoria B2B. A IA aprende sua terminologia, objeções e padrões de conversão durante a configuração."
+    },
+    {
+      "q": "Como você evita parecer spam ou insistente?",
+      "a": "Cada mensagem é personalizada com base em onde o lead parou no seu funil, usa linguagem natural (não modelos robóticos) e respeita sinais de opt-out imediatamente. O objetivo é parecer um acompanhamento útil da sua equipe, não uma campanha em massa."
+    },
+    {
+      "q": "Precisamos fornecer scripts ou a IA escreve tudo?",
+      "a": "Você fornece exemplos de suas melhores conversas e pontos-chave de discussão; a IA adapta isso em mensagens naturais e individualizadas. Você aprova o tom durante a configuração, e o sistema aprende o que converte ao longo do tempo."
+    },
+    {
+      "q": "Quais canais vocês usam para reengajar leads?",
+      "a": "Email, SMS, WhatsApp e Telegram dependendo do seu público e requisitos de conformidade. SMS frequentemente obtém 98% de taxas de abertura vs. 15-25% para email, então o sistema prioriza o canal com maior probabilidade de obter atenção sem ser intrusivo."
+    },
+    {
+      "q": "Como vocês lidam com conformidade (GDPR, CAN-SPAM, CCPA)?",
+      "a": "Toda abordagem respeita registros de opt-in existentes, inclui opções claras de cancelamento de inscrição e registra consentimento por canal. Se um lead optou por email mas não SMS, eles são contatados apenas por email. A conformidade é integrada ao fluxo de trabalho, não adicionada depois."
+    },
+    {
+      "q": "O que acontece quando um lead responde?",
+      "a": "A IA qualifica o nível de interesse e ou agenda uma chamada diretamente no seu calendário, passa para sua equipe de vendas com contexto, ou continua nutrindo com base em sinais de prontidão. Você define os critérios de transferência durante a configuração."
+    },
+    {
+      "q": "Podemos pausar ou ajustar campanhas no meio da execução?",
+      "a": "Sim. Você pode pausar abordagens, atualizar mensagens ou ajustar regras de segmentação a qualquer momento através do painel. As mudanças entram em vigor imediatamente sem perder o progresso em conversas ativas."
+    },
+    {
+      "q": "Quais resultados podemos realisticamente esperar?",
+      "a": "A maioria dos clientes vê 8-15% dos leads inativos reengajarem nos primeiros 30 dias, com 20-40% desses convertendo em chamadas agendadas ou compras. Os resultados dependem da qualidade da lista, adequação da oferta e há quanto tempo os leads estão inativos, mas mesmo uma taxa de reativação de 5% se paga rapidamente."
+    }
+  ]
 }

@@ -1,0 +1,57 @@
+{
+  "painPoints": {
+    "title": "Manual reactivation",
+    "titleIs": "is",
+    "titleBroken": "broken",
+    "subtitle": "You have already invested <strong>THOUSANDS</strong> to acquire these leads, but you are leaving <strong>MILLIONS</strong> on the table because reactivation is painful and ineffective.",
+    "bloatedCrm": "Bloated CRMs with\n1,000s of forgotten contacts",
+    "wastedTime": "Reps waste 20-40 hrs/week on\nsoul-crushing copy-paste work",
+    "lowReplyRates": "5-10% reply rates\n→ zero ROI",
+    "spamCampaigns": "Spray-and-pray campaigns\nBulk emails straight to spam"
+  },
+  "intro": {
+    "title": "Your Expert Sales Rep in 3 Steps."
+  },
+  "steps": {
+    "step1": {
+      "number": "1",
+      "cardTitle": "1. Upload your database",
+      "cardDescription": "Send a CSV or connect your CRM. Is that simple.",
+      "bulletPoints": {
+        "reawaken": "We reawaken dormant leads who inquired months ago but never bought - even leads who your sales team has dialed to death",
+        "segment": "Auto segment contacts based on past interactions"
+      }
+    },
+    "step2": {
+      "number": "2",
+      "cardTitle": "2. We start real conversations",
+      "cardDescription": "Our AI agents use the latest language models to read intent and craft tailored engagement offers for your niche.",
+      "overlayTitle": "24/7 Response capability",
+      "overlayDescription": "Natural language processing for human-like chat • Seamless hand-off to human staff when needed",
+      "bulletPoints": {
+        "response": "24/7 responses across SMS, WhatsApp, and email",
+        "followUp": "Smart follow-up re-engage unresponsive leads automatically",
+        "languages": "Speaks customers' languages and can sound formal or casual",
+        "humanTakeover": "Human takeover whenever needed",
+        "selling": "Conversations shaped by Challenger & SPIN selling to uncover needs and handle objections"
+      }
+    },
+    "step3": {
+      "number": "3",
+      "cardTitle": "3. Automated Appointment Booking and Reporting",
+      "cardDescription": "Reactivation → Revenue",
+      "bulletPoints": {
+        "calendar": "Syncs with Google Calendar, Calendly, or whatever you use. Dialer-ready for instant calls",
+        "support": "Support for sales calls and direct bookings (appointments, reservations, cart closures)",
+        "optimization": "Weekly optimization reviews for continuous performance improvements",
+        "dashboard": "Live dashboard shows campaign reports and lead interaction details"
+      }
+    }
+  },
+  "common": {
+    "stepDetails": "Step {{number}} Details",
+    "prevStep": "Previous step",
+    "nextStep": "Next step",
+    "goToStep": "Go to step {{number}}"
+  }
+}

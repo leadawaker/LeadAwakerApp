@@ -1,0 +1,21 @@
+{
+  "hero": {
+    "title": "Vamos Reativar Seus Leads",
+    "subtitle": "Agende uma demonstração de 15 minutos para ver como podemos agendar compromissos automaticamente a partir do seu banco de dados existente."
+  },
+  "benefits": {
+    "opportunity": {
+      "title": "Revise Sua Oportunidade",
+      "description": "Vamos analisar o tamanho do seu banco de dados de leads e estimar o potencial de receita."
+    },
+    "demo": {
+      "title": "Demonstração Ao Vivo",
+      "description": "Veja exatamente como as conversas com IA funcionam e lidam com objeções."
+    }
+  },
+  "quickCheck": {
+    "title": "Verificação Rápida:",
+    "question": "Você já tem um link de agendamento?",
+    "buttonText": "Sim, me leve ao calendário"
+  }
+}

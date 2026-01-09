@@ -1,38 +1,58 @@
 {
   "hero": {
-    "title1": "Transformeer slapende leads naar",
-    "title2": "geboekte gesprekken",
-    "title3": "automatisch.",
-    "subtitle1": "AI regelt het eerste contact tot CRM-overdracht.",
-    "subtitle2": "Focus op groei en sluiten, niet op achtervolgen.",
-    "ctaBook": "Bel Boeken",
-    "ctaUseCases": "Bekijk Toepassingen"
+    "title": {
+      "line1": "Maak slapende leads wakker in",
+      "highlight": "geboekte gesprekken",
+      "line2": "automatisch."
+    },
+    "subtitle": {
+      "line1": "AI regelt van eerste contact tot CRM overdracht.",
+      "line2": "Focus op groei en closing, niet op achtervolgen."
+    },
+    "cta": {
+      "primary": "Gesprek Boeken",
+      "secondary": "Bekijk Gebruiksvoorbeelden"
+    }
   },
   "results": {
-    "heading": "En wat je krijgt",
-    "subheading": "Van chaos naar zekerheid in 30 dagen",
-    "replyRates": "Reactiepercentages",
-    "vsIndustry": "vs sector 5-10%",
-    "leadsReactivated": "Leads Gereactiveerd",
-    "intoLive": "naar actief",
-    "hoursSaved": "Uren Bespaard",
-    "perRepMonth": "per verkoper/maand",
-    "upfrontCost": "Voorafkosten",
-    "performancePartnership": "Prestatiepartnerschap",
-    "solveProblems": "Wij lossen problemen op, niet creëren",
-    "guarantee": "30 dagen garantie"
+    "title": "En wat u krijgt",
+    "subtitle": "Van chaos naar zekerheid in 30 dagen",
+    "metrics": {
+      "replyRates": {
+        "label": "Reactiepercentages",
+        "subtext": "vs industrie 5-10%"
+      },
+      "leadsReactivated": {
+        "label": "Leads Gereactiveerd",
+        "subtext": "in actieve gesprekken"
+      },
+      "hoursSaved": {
+        "label": "Uren Bespaard",
+        "subtext": "per rep/maand"
+      }
+    },
+    "upfrontCost": {
+      "title": "Vooruitbetaling",
+      "partnership": "Performance Partnerschap",
+      "mission": "We lossen problemen op, we creëren ze niet",
+      "guarantee": "30-dagen garantie"
+    }
   },
-  "security": {
-    "heading": "Compliance en Reputatie Ingebouwd",
-    "gdprTitle": "AVG & CCPA Conform",
-    "gdprDesc": "Alle workflows respecteren opt-out voorkeuren, uitschrijflinks en gegevenslocatie-eisen. Volledig conform met wereldwijde privacystandaarden.",
-    "brandTitle": "Merkbescherming",
-    "brandDesc": "Realtime monitoring zorgt ervoor dat elke interactie on-topic, professioneel en perfect afgestemd blijft op de stem en richtlijnen van je merk."
+  "compliance": {
+    "title": "Naleving en Reputatie Ingebouwd",
+    "gdpr": {
+      "title": "GDPR & CCPA Conform",
+      "description": "Alle workflows respecteren opt-out voorkeuren, uitschrijflinks en dataresidentie-eisen. We zijn volledig conform met wereldwijde privacystandaarden."
+    },
+    "brand": {
+      "title": "Merkveiligheid",
+      "description": "Real-time monitoring zorgt ervoor dat elke interactie on-topic, professioneel en perfect afgestemd blijft op uw merkidentiteit en richtlijnen."
+    }
   },
-  "cta": {
-    "heading": "Zie AI Werken, Niet Alleen Praten.",
-    "quote": "Als een foto duizend woorden waard is, is een live demo duizend foto's waard.",
-    "description": "Voordat je iets anders doet, ervaar hoe AI echte gesprekken afhandelt alsof het je eigen bedrijfsagent is, specifiek geprogrammeerd voor jouw niche. In slechts een paar minuten zie je het natuurlijk reageren op je klanten terwijl het zorgt voor het repetitieve werk dat je team niet zou moeten doen.",
-    "button": "Demo Boeken"
+  "bottomCta": {
+    "title": "Zie AI Werken, Niet Alleen Praten.",
+    "quote": "Als een plaatje duizend woorden waard is, is een live demo duizend plaatjes waard.",
+    "description": "Voordat u iets anders doet, ervaar hoe AI echte gesprekken afhandelt alsof het uw eigen zakelijke agent is, specifiek geprogrammeerd voor uw niche. In slechts een paar minuten ziet u hoe het natuurlijk reageert op uw klanten terwijl het het repetitieve werk afhandelt dat uw team niet zou moeten doen.",
+    "button": "Boek een Demo"
   }
 }

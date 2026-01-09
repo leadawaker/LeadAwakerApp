@@ -1,38 +1,58 @@
 {
   "hero": {
-    "title1": "Transforme leads dormentes em",
-    "title2": "chamadas agendadas",
-    "title3": "automaticamente.",
-    "subtitle1": "A IA cuida do primeiro contato até a integração com CRM.",
-    "subtitle2": "Foque em crescimento e fechamento, não em perseguir leads.",
-    "ctaBook": "Agendar Chamada",
-    "ctaUseCases": "Ver Casos de Uso"
+    "title": {
+      "line1": "Transforme leads inativos em",
+      "highlight": "agendamentos confirmados",
+      "line2": "automaticamente."
+    },
+    "subtitle": {
+      "line1": "IA gerencia do primeiro contato até o CRM.",
+      "line2": "Foque em crescimento e fechamento, não em perseguir leads."
+    },
+    "cta": {
+      "primary": "Agendar uma Ligação",
+      "secondary": "Ver Casos de Uso"
+    }
   },
   "results": {
-    "heading": "E o que você ganha",
-    "subheading": "Do caos à certeza em 30 dias",
-    "replyRates": "Taxas de Resposta",
-    "vsIndustry": "vs média de 5-10%",
-    "leadsReactivated": "Leads Reativados",
-    "intoLive": "em ativos",
-    "hoursSaved": "Horas Economizadas",
-    "perRepMonth": "por vendedor/mês",
-    "upfrontCost": "Custo Inicial",
-    "performancePartnership": "Parceria de Performance",
-    "solveProblems": "Resolvemos problemas, não criamos",
-    "guarantee": "Garantia de 30 dias"
+    "title": "E o que você obtém",
+    "subtitle": "Do caos à certeza em 30 dias",
+    "metrics": {
+      "replyRates": {
+        "label": "Taxa de Resposta",
+        "subtext": "vs indústria 5-10%"
+      },
+      "leadsReactivated": {
+        "label": "Leads Reativados",
+        "subtext": "em conversas ativas"
+      },
+      "hoursSaved": {
+        "label": "Horas Economizadas",
+        "subtext": "por rep/mês"
+      }
+    },
+    "upfrontCost": {
+      "title": "Custo Inicial",
+      "partnership": "Parceria de Performance",
+      "mission": "Nós resolvemos problemas, não os criamos",
+      "guarantee": "Garantia de 30 dias"
+    }
   },
-  "security": {
-    "heading": "Conformidade e Reputação Integradas",
-    "gdprTitle": "Compatível com LGPD e GDPR",
-    "gdprDesc": "Todos os fluxos respeitam preferências de opt-out, links de descadastro e requisitos de residência de dados. Totalmente compatível com padrões globais de privacidade.",
-    "brandTitle": "Proteção de Marca",
-    "brandDesc": "Monitoramento em tempo real garante que cada interação permaneça no tema, profissional e perfeitamente alinhada com a voz e diretrizes da sua marca."
+  "compliance": {
+    "title": "Conformidade e Reputação Integradas",
+    "gdpr": {
+      "title": "Conformidade GDPR & CCPA",
+      "description": "Todos os fluxos de trabalho respeitam preferências de opt-out, links de cancelamento de inscrição e requisitos de residência de dados. Estamos totalmente em conformidade com os padrões globais de privacidade."
+    },
+    "brand": {
+      "title": "Proteção da Marca",
+      "description": "Monitoramento em tempo real garante que cada interação permaneça no tópico, profissional e perfeitamente alinhada com a voz e diretrizes da sua marca."
+    }
   },
-  "cta": {
-    "heading": "Veja a IA Trabalhar, Não Apenas Falar.",
+  "bottomCta": {
+    "title": "Veja a IA Funcionar, Não Apenas Falar.",
     "quote": "Se uma imagem vale mil palavras, uma demonstração ao vivo vale mil imagens.",
-    "description": "Antes de qualquer coisa, experimente como a IA lida com conversas reais como se fosse seu próprio agente de negócios, programado especificamente para o seu nicho. Em poucos minutos, você verá ela responder naturalmente aos seus clientes enquanto cuida do trabalho repetitivo que sua equipe não deveria ter que fazer.",
-    "button": "Agendar Demo"
+    "description": "Antes de fazer qualquer outra coisa, experimente como a IA lida com conversas reais como se fosse o agente do seu próprio negócio, programado especificamente para o seu nicho. Em poucos minutos, você verá ela responder naturalmente aos seus clientes enquanto cuida do trabalho repetitivo que sua equipe não deveria ter que fazer.",
+    "button": "Agendar uma Demo"
   }
 }

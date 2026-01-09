@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Rocket, Target, Code2, TrendingUp, Briefcase, ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import AnimatedLogo3D from "@/components/AnimatedLogo3D";
 import LeadReactivationAnimation from "@/components/LeadReactivationAnimation";
 
@@ -33,108 +34,45 @@ const CyclingWord = ({ words, duration = 3000 }: { words: string[], duration?: n
 };
 
 export default function About() {
+  const { t } = useTranslation("about");
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
 
-  const sections = [
-    {
-      icon: <Code2 className="w-6 h-6 text-primary" />,
-      title: "Reliable technical backbone",
-      items: [
-        "10+ years shipping production software across games and film",
-        "Experience at Framestore, Sega, New World Interactive",
-        "Knows how to keep complex systems simple and stable for non-technical teams"
-      ]
-    },
-    {
-      icon: <TrendingUp className="w-6 h-6 text-primary" />,
-      title: "Performance-obsessed problem solving",
-      items: [
-        "5 years data analysis & trading mastery",
-        "Built custom AI tools for trading performance",
-        "Live coaching and feedback systems",
-        "Custom TradingView code for data automation"
-      ]
-    },
-    {
-      icon: <Briefcase className="w-6 h-6 text-primary" />,
-      title: "Done-for-you automation, not more tools",
-      items: [
-        "Built complete AI agency infrastructure",
-        "Lead enrichment systems for HubSpot clients",
-        "Developed scraping tools and business automation",
-        "Combined automation with data analysis expertise"
-      ]
-    },
-    {
-      icon: <Rocket className="w-6 h-6 text-accent" />,
-      title: "Where Lead Awaker is going next",
-      items: [
-        "Founded TA Monks (4 years) with wife Danique",
-        "Transitioned to building Lead Awaker",
-        "Goal: Scale to $100M ARR"
-      ]
-    }
-  ];
 
-  const faqs = [
-    {
-      q: "What if our leads are really old or completely cold?",
-      a: "Age isn't the main factor; relevance is. Leads from 6 months or even 2 years ago can still convert if the original pain point remains and the outreach feels personal. The system identifies who's still in market based on engagement signals, not just database age."
-    },
-    {
-      q: "Will this work with our industry/niche?",
-      a: "Lead Awaker is built channel-agnostic and adapts to your specific sales process, whether you're in life insurance, fitness coaching, legal services, or B2B consulting. The AI learns your terminology, objections, and conversion patterns during setup."
-    },
-    {
-      q: "How do you avoid coming across as spam or pushy?",
-      a: "Every message is personalized based on where the lead left off in your funnel, uses natural language (not robotic templates), and respects opt-out signals immediately. The goal is to feel like a helpful follow-up from your team, not a blast campaign."
-    },
-    {
-      q: "Do we need to provide scripts or does the AI write everything?",
-      a: "You provide examples of your best-performing conversations and key talking points; the AI adapts those into natural, individualized messages. You approve the tone during setup, and the system learns what converts over time."
-    },
-    {
-      q: "What channels do you use to re-engage leads?",
-      a: "Email, SMS, WhatsApp, and Telegram depending on your audience and compliance requirements. SMS often gets 98% open rates vs. 15-25% for email, so the system prioritizes the channel most likely to get attention without being intrusive."
-    },
-    {
-      q: "How do you handle compliance (GDPR, CAN-SPAM, CCPA)?",
-      a: "All outreach respects existing opt-in records, includes clear unsubscribe options, and logs consent by channel. If a lead opted into email but not SMS, they're only contacted via email. Compliance is built into the workflow, not bolted on."
-    },
-    {
-      q: "What happens when a lead responds?",
-      a: "The AI qualifies their interest level and either books a call directly into your calendar, hands off to your sales team with context, or continues nurturing based on readiness signals. You define the handoff criteria during setup."
-    },
-    {
-      q: "Can we pause or adjust campaigns mid-run?",
-      a: "Yes. You can pause outreach, update messaging, or adjust targeting rules anytime through the dashboard. Changes take effect immediately without losing progress on active conversations."
-    },
-    {
-      q: "What results can we realistically expect?",
-      a: "Most clients see 8-15% of dormant leads re-engage within the first 30 days, with 20-40% of those converting into booked calls or purchases. Results depend on list quality, offer fit, and how long leads have been dormant, but even a 5% reactivation rate pays for itself quickly."
-    }
-  ];
+
+  // AFTER (fixed):
+  const cyclingWords = (t("intro.cyclingWords", { returnObjects: true }) as string[]) || [];
+  const faqs = (t("faqs", { returnObjects: true }) as Array<{ q: string; a: string }>) || [];
+
 
   return (
     <div className="min-h-screen pt-24 pb-20 text-center">
       <div className="container mx-auto px-4 md:px-6">
-        
+
         {/* 1. Intro Section */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="max-w-4xl mx-auto mb-16"
         >
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-center text-slate-900">What we care about</h1>
-          
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-center text-slate-900">
+            {t("intro.title")}
+          </h1>
+
           <div className="flex justify-center">
             <LeadReactivationAnimation />
           </div>
 
           <div className="space-y-6 w-full text-left">
-            <p className="text-xl text-muted-foreground leading-relaxed text-left">At Lead Awaker, the belief is that your energy should go into what you excel at: delivering the quality service you already provide. Our job is to help you harness the power of attention.</p>
             <p className="text-xl text-muted-foreground leading-relaxed text-left">
-              For your brand to mean something valuable to a lead, that person has to be treated as an individual first, not as a line in a spreadsheet. When they are approached in a way that respects their timing, context, and preferences, they feel understood, and when they feel understood, they are finally awake to understand <span className="text-primary font-bold">you</span><CyclingWord words={[".", "r company.", "r brand.", "r services.", "r products.", "r story.", "r values."]} />
+              {t("intro.paragraph1")}
+            </p>
+            <p className="text-xl text-muted-foreground leading-relaxed text-left">
+              {t("intro.paragraph2")} <span className="text-primary font-bold">{t("intro.you")}</span>
+
+
+
+            {cyclingWords.length > 0 && <CyclingWord words={cyclingWords} />}
+
             </p>
           </div>
         </motion.div>
@@ -160,13 +98,21 @@ export default function About() {
                     </div>
                     <div className="flex-grow space-y-4">
                       <div className="space-y-1">
-                        <h3 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900">Gabriel B. Fronza</h3>
-                        <p className="text-sm font-semibold uppercase tracking-wider text-primary">Founder</p>
+                        <h3 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900">
+                          {t("founder.name")}
+                        </h3>
+                        <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+                          {t("founder.title")}
+                        </p>
                       </div>
-                      
+
                       <div className="space-y-4">
-                        <p className="text-gray-800 font-medium italic border-l-4 border-primary/30 pl-6 text-[19px] leading-snug">"I first noticed it in my parents’ health clinic, and then everywhere else. Patients would book consultations, show real interest, then go quiet while the clinic kept paying for ads to get new ones."</p>
-                        <p className="text-lg text-gray-600 leading-relaxed font-light">Lead Awaker comes from 10+ years shipping production software, 5 years building data-driven automation, and 4 years running a real business alongside my wife Danique.</p>
+                        <p className="text-gray-800 font-medium italic border-l-4 border-primary/30 pl-6 text-[19px] leading-snug">
+                          {t("founder.quote")}
+                        </p>
+                        <p className="text-lg text-gray-600 leading-relaxed font-light">
+                          {t("founder.description")}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -187,9 +133,11 @@ export default function About() {
           className="max-w-4xl mx-auto mb-24"
         >
           <div className="bg-card/50 border border-border rounded-3xl p-8 md:p-12">
-            <h2 className="text-3xl font-bold mb-10 text-left">Frequently Asked Questions</h2>
+            <h2 className="text-3xl font-bold mb-10 text-left">{t("faq.title")}</h2>
             <div className="space-y-4">
-              {faqs.map((faq, i) => (
+
+              {Array.isArray(faqs) && faqs.map((faq, i) => (
+
                 <div
                   key={i}
                   className="border border-border rounded-2xl overflow-hidden bg-background"
@@ -198,7 +146,9 @@ export default function About() {
                     onClick={() => setOpenFAQ(openFAQ === i ? null : i)}
                     className="w-full flex items-center justify-between p-6 hover:bg-muted/50 transition-colors group"
                   >
-                    <h3 className="text-lg font-medium text-left group-hover:text-primary transition-colors">{faq.q}</h3>
+                    <h3 className="text-lg font-medium text-left group-hover:text-primary transition-colors">
+                      {faq.q}
+                    </h3>
                     <ChevronDown
                       className={`w-5 h-5 text-primary transition-transform duration-300 ${
                         openFAQ === i ? "rotate-180" : ""

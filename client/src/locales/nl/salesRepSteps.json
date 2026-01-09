@@ -1,0 +1,57 @@
+{
+  "painPoints": {
+    "title": "Handmatige reactivering",
+    "titleIs": "is",
+    "titleBroken": "kapot",
+    "subtitle": "Je hebt al <strong>DUIZENDEN</strong> geïnvesteerd om deze leads te verwerven, maar je laat <strong>MILJOENEN</strong> liggen omdat reactivering pijnlijk en ineffectief is.",
+    "bloatedCrm": "Opgeblazen CRM's met\nduizenden vergeten contacten",
+    "wastedTime": "Verkopers verspillen 20-40 uur/week aan\nzielsverpletterd kopieer-en-plakwerk",
+    "lowReplyRates": "5-10% responspercentage\n→ nul ROI",
+    "spamCampaigns": "Spray-and-pray campagnes\nBulk e-mails direct naar spam"
+  },
+  "intro": {
+    "title": "Jouw Expert Verkoper in 3 Stappen."
+  },
+  "steps": {
+    "step1": {
+      "number": "1",
+      "cardTitle": "1. Upload je database",
+      "cardDescription": "Stuur een CSV of koppel je CRM. Zo simpel is het.",
+      "bulletPoints": {
+        "reawaken": "We wekken slapende leads die maanden geleden informeerden maar nooit kochten - zelfs leads die je verkoopteam dood heeft gebeld",
+        "segment": "Automatisch segmenteren van contacten op basis van eerdere interacties"
+      }
+    },
+    "step2": {
+      "number": "2",
+      "cardTitle": "2. We starten echte gesprekken",
+      "cardDescription": "Onze AI-agenten gebruiken de nieuwste taalmodellen om intentie te lezen en gepersonaliseerde betrokkenheidsaanbiedingen voor jouw niche te creëren.",
+      "overlayTitle": "24/7 Reactiecapaciteit",
+      "overlayDescription": "Natuurlijke taalverwerking voor menselijke gesprekken • Naadloze overdracht naar menselijk personeel wanneer nodig",
+      "bulletPoints": {
+        "response": "24/7 reacties via SMS, WhatsApp en e-mail",
+        "followUp": "Slimme opvolging activeert niet-reagerende leads automatisch opnieuw",
+        "languages": "Spreekt de taal van klanten en kan formeel of casual klinken",
+        "humanTakeover": "Menselijke overname wanneer nodig",
+        "selling": "Gesprekken gevormd door Challenger & SPIN-verkoop om behoeften te ontdekken en bezwaren te behandelen"
+      }
+    },
+    "step3": {
+      "number": "3",
+      "cardTitle": "3. Geautomatiseerde Afspraakplanning en Rapportage",
+      "cardDescription": "Reactivering → Omzet",
+      "bulletPoints": {
+        "calendar": "Synchroniseert met Google Agenda, Calendly of wat je ook gebruikt. Beller-klaar voor directe gesprekken",
+        "support": "Ondersteuning voor verkoopgesprekken en directe boekingen (afspraken, reserveringen, winkelwagen-afsluitingen)",
+        "optimization": "Wekelijkse optimalisatiebeoordelingen voor continue prestatieverbetering",
+        "dashboard": "Live dashboard toont campagnerapporten en lead-interactiedetails"
+      }
+    }
+  },
+  "common": {
+    "stepDetails": "Stap {{number}} Details",
+    "prevStep": "Vorige stap",
+    "nextStep": "Volgende stap",
+    "goToStep": "Ga naar stap {{number}}"
+  }
+}

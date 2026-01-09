@@ -1,7 +1,9 @@
           'use client';
           import React, { useState, useEffect } from 'react';
           import { motion, AnimatePresence } from 'framer-motion';
-
+          import { useTranslation } from 'react-i18next'; // ADD THIS
+          
+         
           interface CursorData {
             delay: number;
             startX: number;
@@ -10,6 +12,7 @@
           }
 
           const LeadReactivationAnimation = () => {
+            const { t } = useTranslation('common'); // ADD THIS
             const [brightness, setBrightness] = useState(0);
             const [cursors, setCursors] = useState<CursorData[]>([]);
             const [animationComplete, setAnimationComplete] = useState(false);
@@ -254,8 +257,9 @@
                   />
 
                   <span className="relative z-10 tracking-tight text-[1.44em]">
-                    Your Brand
+                    {t('animation.yourBrand')}
                   </span>
+
                 </motion.button>
                 {(brightness >= 100 || hasReachedEnd) && showSparkles && (
                   <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">

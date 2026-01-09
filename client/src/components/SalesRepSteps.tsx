@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Database, MessageSquare, TrendingUp, Box, Copy, TrendingDown, Mail, ChevronLeft, ChevronRight } from "lucide-react";
@@ -93,6 +94,7 @@ const FullscreenStep = ({
   onInView,
   leftText,
 }: StepProps) => {
+  const { t } = useTranslation('salesRepSteps');
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, amount: 0.3 });
 
@@ -186,7 +188,7 @@ const FullscreenStep = ({
                 className="absolute inset-0 bg-blue-950/50 backdrop-blur-[2px] flex flex-col items-center justify-center p-8 text-center"
               >
                 <motion.div style={{ y: overlayTextY }}>
-                  <span className="text-accent font-mono text-sm uppercase tracking-wider mb-2 block">Step {number} Details</span>
+                  <span className="text-accent font-mono text-sm uppercase tracking-wider mb-2 block">{t('common.stepDetails', { number })}</span>
                   <h4 className="text-3xl font-bold text-white mb-4">{overlayTitle}</h4>
                   <p className="text-gray-200 text-[16px] max-w-md mx-auto leading-relaxed">
                     {overlayDescription}
@@ -201,55 +203,9 @@ const FullscreenStep = ({
   );
 };
 
-const StepCarousel = ({ onStepInView }: { onStepInView: () => void }) => {
+const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () => void }) => {
+  const { t } = useTranslation('salesRepSteps');
   const [currentStep, setCurrentStep] = useState(0);
-
-  const steps = [
-    {
-      number: "1",
-      cardTitle: "1. Upload your database",
-      cardDescription: "Send a CSV or connect your CRM. Is that simple.",
-      overlayTitle: "",
-      overlayDescription: "",
-      image: leadsDbImg,
-      icon: <Database className="w-8 h-8 text-yellow-500" />,
-      align: "left" as const,
-      cardImage: uploadDatabaseImg,
-      leftText: `We reawaken dormant leads who inquired months ago but never bought - even leads who your sales team has dialed to death
-Auto segment contacts based on past interactions`
-    },
-    {
-      number: "2",
-      cardTitle: "2. We start real conversations",
-      cardDescription: "Our AI agents use the latest language models to read intent and craft tailored engagement offers for your niche.",
-      overlayTitle: "24/7 Response capability",
-      overlayDescription: "Natural language processing for human-like chat • Seamless hand-off to human staff when needed",
-      image: conversationImg,
-      icon: <MessageSquare className="w-8 h-8 text-yellow-500" />,
-      align: "right" as const,
-      cardImage: conversationCardImg,
-      leftText: `24/7 responses across SMS, WhatsApp, and email
-Smart follow-up re-engage unresponsive leads automatically
-Speaks customers' languages and can sound formal or casual
-Human takeover whenever needed
-Conversations shaped by Challenger & SPIN selling to uncover needs and handle objections`
-    },
-    {
-      number: "3",
-      cardTitle: "3. Automated Appointment Booking and Reporting",
-      cardDescription: "Reactivation → Revenue",
-      overlayTitle: "",
-      overlayDescription: "",
-      image: dailyLeadsImg,
-      icon: <TrendingUp className="w-8 h-8 text-yellow-500" />,
-      align: "left" as const,
-      cardImage: appointmentBookingImg,
-      leftText: `Syncs with Google Calendar, Calendly, or whatever you use. Dialer-ready for instant calls
-Support for sales calls and direct bookings (appointments, reservations, cart closures)
-Weekly optimization reviews for continuous performance improvements
-Live dashboard shows campaign reports and lead interaction details`
-    }
-  ];
 
   const handlePrev = () => {
     setCurrentStep((prev) => (prev - 1 + steps.length) % steps.length);
@@ -308,7 +264,7 @@ Live dashboard shows campaign reports and lead interaction details`
                         {step.cardImage && step.number === "1" ? (
                           <div className="relative mb-6 rounded-lg overflow-hidden group">
                             <img src={step.cardImage} alt="Step illustration" className="w-full h-auto object-cover rounded-lg" />
-                            
+
                             {/* CRM Logos Carousel overlaying the image */}
                             <motion.div
                               initial={false}
@@ -392,7 +348,7 @@ Live dashboard shows campaign reports and lead interaction details`
                           className="overflow-hidden"
                         >
                           <div className="grid grid-cols-2 gap-4 pb-4">
-                            {step.leftText.split('\n').map((line, i) => (
+                            {step.leftText && step.leftText.split('\n').map((line: string, i: number) => (
                               <div key={i} className="flex items-start gap-3">
                                 <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500 mt-2" />
                                 <div className="font-medium text-gray-600 text-[16px]">
@@ -419,7 +375,7 @@ Live dashboard shows campaign reports and lead interaction details`
                                   ? 'bg-blue-500 w-6'
                                   : 'bg-blue-500/20 hover:bg-blue-500/40'
                                 }`}
-                              aria-label={`Go to step ${i + 1}`}
+                              aria-label={t('common.goToStep', { number: i + 1 })}
                             />
                           ))}
                         </div>
@@ -437,7 +393,7 @@ Live dashboard shows campaign reports and lead interaction details`
                   onClick={handlePrev}
                   data-testid="button-prev-step"
                   className="p-3 rounded-full bg-white/10 border border-white text-white hover:bg-white/20 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(255,255,255,0.4),0_0_20px_rgba(234,179,8,0.5)] translate-x-12"
-                  aria-label="Previous step"
+                  aria-label={t('common.prevStep')}
                 >
                   <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform text-white" />
                 </button>
@@ -445,7 +401,7 @@ Live dashboard shows campaign reports and lead interaction details`
                   onClick={handleNext}
                   data-testid="button-next-step"
                   className="p-3 rounded-full bg-white/10 border border-white text-white hover:bg-white/20 transition-all duration-300 flex items-center justify-center group pointer-events-auto shadow-[0_0_15px_rgba(255,255,255,0.4),0_0_20px_rgba(234,179,8,0.5)] -translate-x-12"
-                  aria-label="Next step"
+                  aria-label={t('common.nextStep')}
                 >
                   <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform text-white" />
                 </button>
@@ -461,17 +417,18 @@ Live dashboard shows campaign reports and lead interaction details`
 };
 
 export const SalesRepSteps = () => {
+  const { t } = useTranslation('salesRepSteps');
   const scrollRef = useRef(null);
   const [glitchAnimating, setGlitchAnimating] = useState(false);
   const [planeStarted, setPlaneStarted] = useState(false);
-  
+
   useEffect(() => {
     // Proactively start the plane animation shortly after mount
     const timer = setTimeout(() => setPlaneStarted(true), 1000);
-    
+
     // Trigger glitch animation much earlier
     const glitchTimer = setTimeout(() => setGlitchAnimating(true), 500);
-    
+
     return () => {
       clearTimeout(timer);
       clearTimeout(glitchTimer);
@@ -482,6 +439,52 @@ export const SalesRepSteps = () => {
     offset: ["start start", "end end"]
   });
   const cloudY = useTransform(scrollYProgress, [0, 1], [0, 50]);
+
+  const steps = [
+    {
+      number: t('steps.step1.number'),
+      cardTitle: t('steps.step1.cardTitle'),
+      cardDescription: t('steps.step1.cardDescription'),
+      overlayTitle: "",
+      overlayDescription: "",
+      image: leadsDbImg,
+      icon: <Database className="w-8 h-8 text-yellow-500" />,
+      align: "left" as const,
+      cardImage: uploadDatabaseImg,
+      leftText: `${t('steps.step1.bulletPoints.reawaken')}\n${t('steps.step1.bulletPoints.segment')}`
+    },
+    {
+      number: t('steps.step2.number'),
+      cardTitle: t('steps.step2.cardTitle'),
+      cardDescription: t('steps.step2.cardDescription'),
+      overlayTitle: t('steps.step2.overlayTitle'),
+      overlayDescription: t('steps.step2.overlayDescription'),
+      image: conversationImg,
+      icon: <MessageSquare className="w-8 h-8 text-yellow-500" />,
+      align: "right" as const,
+      cardImage: conversationCardImg,
+      leftText: `${t('steps.step2.bulletPoints.response')}\n${t('steps.step2.bulletPoints.followUp')}\n${t('steps.step2.bulletPoints.languages')}\n${t('steps.step2.bulletPoints.humanTakeover')}\n${t('steps.step2.bulletPoints.selling')}`
+    },
+    {
+      number: t('steps.step3.number'),
+      cardTitle: t('steps.step3.cardTitle'),
+      cardDescription: t('steps.step3.cardDescription'),
+      overlayTitle: "",
+      overlayDescription: "",
+      image: dailyLeadsImg,
+      icon: <TrendingUp className="w-8 h-8 text-yellow-500" />,
+      align: "left" as const,
+      cardImage: appointmentBookingImg,
+      leftText: `${t('steps.step3.bulletPoints.calendar')}\n${t('steps.step3.bulletPoints.support')}\n${t('steps.step3.bulletPoints.optimization')}\n${t('steps.step3.bulletPoints.dashboard')}`
+    }
+  ];
+
+  const painPoints = [
+    { icon: <Box className="w-8 h-8" strokeWidth={1.5} />, title: t('painPoints.bloatedCrm') },
+    { icon: <Copy className="w-8 h-8" strokeWidth={1.5} />, title: t('painPoints.wastedTime') },
+    { icon: <TrendingDown className="w-8 h-8" strokeWidth={1.5} />, title: t('painPoints.lowReplyRates') },
+    { icon: <Mail className="w-8 h-8" strokeWidth={1.5} />, title: t('painPoints.spamCampaigns') }
+  ];
 
   return (
     <div 
@@ -581,7 +584,7 @@ export const SalesRepSteps = () => {
                 filter: 'drop-shadow(4px 0px 15px rgba(128, 128, 128, 0.15)) drop-shadow(2px 0px 5px rgba(128, 128, 128, 0.1))',
                 textShadow: '3px 0px 6px rgba(128, 128, 128, 0.12)'
               }}>
-                Manual reactivation
+                {t('painPoints.title')}
               </span>
               {' '}
               <span style={{ 
@@ -594,14 +597,15 @@ export const SalesRepSteps = () => {
                 filter: 'drop-shadow(2.4px 0px 9px rgba(147, 197, 253, 0.18)) drop-shadow(1.2px 0px 3px rgba(147, 197, 253, 0.135))',
                 textShadow: '1.8px 0px 3.6px rgba(147, 197, 253, 0.15)'
               }}>
-                is
+                {t('painPoints.titleIs')}
               </span>
               <span 
                 className={`hologram-glitch ${glitchAnimating ? 'animate' : ''}`}
                 data-testid="text-broken"
               >
-                bro<span className="flicker-letter">k</span>en
+                {t('painPoints.titleBroken')}
               </span>
+
               <span style={{ 
                 color: '#E0F2FE',
                 filter: 'drop-shadow(3px 0px 12px rgba(147, 197, 253, 0.225)) drop-shadow(1.5px 0px 3px rgba(147, 197, 253, 0.18))',
@@ -627,12 +631,7 @@ export const SalesRepSteps = () => {
             }}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-24"
           >
-            {[
-              { icon: <Box className="w-8 h-8" strokeWidth={1.5} />, title: "Bloated CRMs with\n1,000s of forgotten contacts" },
-              { icon: <Copy className="w-8 h-8" strokeWidth={1.5} />, title: "Reps waste 20-40 hrs/week on\nsoul-crushing copy-paste work" },
-              { icon: <TrendingDown className="w-8 h-8" strokeWidth={1.5} />, title: "5-10% reply rates\n→ zero ROI" },
-              { icon: <Mail className="w-8 h-8" strokeWidth={1.5} />, title: "Spray-and-pray campaigns\nBulk emails straight to spam" }
-            ].map((pain, i) => (
+            {painPoints.map((pain, i) => (
               <motion.div
                 key={i}
                 variants={{
@@ -675,9 +674,16 @@ export const SalesRepSteps = () => {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="text-center max-w-2xl mx-auto"
           >
-            <p className="text-xl font-medium tracking-wide text-[#bfbfbf]">
-              You have already invested <span className="font-bold text-white inline-block">THOUSANDS</span> to acquire these leads, but you are leaving <span className="font-bold text-white inline-block text-[18px]">MILLIONS</span> on the table because reactivation is painful and ineffective.
-            </p>
+            <p 
+              className="text-xl font-medium tracking-wide text-[#bfbfbf]"
+              dangerouslySetInnerHTML={{ 
+                __html: t('painPoints.subtitle')
+                  .replace('<strong>', '<span class="font-bold text-white inline-block">')
+                  .replace('</strong>', '</span>')
+                  .replace('<strong>', '<span class="font-bold text-white inline-block text-[18px]">')
+                  .replace('</strong>', '</span>')
+              }}
+            />
           </motion.div>
         </div>
       </section>
@@ -697,14 +703,14 @@ export const SalesRepSteps = () => {
           data-testid="sales-rep-intro"
         >
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-0 text-white drop-shadow-lg">
-            Your Expert Sales Rep in 3 Steps.
+            {t('intro.title')}
           </h1>
         </motion.div>
       </section>
 
       {/* Step Carousel */}
       <section className="relative py-0">
-        <StepCarousel onStepInView={() => setPlaneStarted(true)} />
+        <StepCarousel steps={steps} onStepInView={() => setPlaneStarted(true)} />
       </section>
 
       </div>

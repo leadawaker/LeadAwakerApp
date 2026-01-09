@@ -1,0 +1,21 @@
+{
+  "hero": {
+    "title": "Let's Reactivate Your Leads",
+    "subtitle": "Schedule a 15-minute demo to see how we can automatically book appointments from your existing database."
+  },
+  "benefits": {
+    "opportunity": {
+      "title": "Review Your Opportunity",
+      "description": "We'll look at your current lead database size and estimate potential revenue."
+    },
+    "demo": {
+      "title": "Live Demo",
+      "description": "See exactly how the AI conversations work and handle objections."
+    }
+  },
+  "quickCheck": {
+    "title": "Quick Check:",
+    "question": "Do you already have a booking link?",
+    "buttonText": "Yes, take me to calendar"
+  }
+}

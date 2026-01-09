@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { 
   ArrowRight, 
@@ -26,6 +27,7 @@ import SalesRepSteps from "@/components/SalesRepSteps";
 import WorkflowVisualization from "@/components/WorkflowVisualization";
 
 export default function Home() {
+  const { t } = useTranslation("home");
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [isFinished, setIsFinished] = useState(false);
 
@@ -34,7 +36,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative overflow-hidden pb-20 md:pb-32">
         <div className="absolute top-0 right-0 -z-10 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent blur-3xl opacity-50" />
-        
+
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center mb-20 relative">
             <motion.div
@@ -43,7 +45,7 @@ export default function Home() {
               transition={{ duration: 0.6 }}
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] mb-6 text-foreground relative">
-                Wake dormant leads into<br />
+                {t("hero.title.line1")}<br />
                 <motion.span 
                   className="relative block w-full"
                   initial="hidden"
@@ -78,26 +80,28 @@ export default function Home() {
                     }}
                     transition={{ color: { delay: 1.5, duration: 0 }, textShadow: { delay: 1.5, duration: 0 } }}
                   >
-                    booked calls
+                    {t("hero.title.highlight")}
                   </motion.span>
                 </motion.span>
                 <span className="relative block w-full">
-                  <span className="relative inline-block font-bold z-10 text-foreground">automatically.</span>
+                  <span className="relative inline-block font-bold z-10 text-foreground">{t("hero.title.line2")}</span>
                 </span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed">
-                AI handles first contact to CRM handoff.<br />
-                Focus on growth and closing, not chasing.
+                {t("hero.subtitle.line1")}<br />
+                {t("hero.subtitle.line2")}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 relative z-10">
                 <Link href="/book-demo">
                   <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20 bg-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 text-white transition-all">
-                    Book a Call
+                    {t("hero.cta.primary")}
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
                 <Link href="/services">
-                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 hover:text-blue-500 hover:border-blue-500 transition-all">See Use Cases</Button>
+                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-2 hover:text-blue-500 hover:border-blue-500 transition-all">
+                    {t("hero.cta.secondary")}
+                  </Button>
                 </Link>
               </div>
             </motion.div>
@@ -106,12 +110,13 @@ export default function Home() {
           </div>
         </div>
       </section>
+
       {/* Sales Rep Steps Section */}
       <SalesRepSteps />
+
       {/* Conversion Pipeline */}
       <section className="py-48 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6">
-          {/* New Pipeline Component */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -122,6 +127,7 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
       {/* Results/Metrics Section */}
       <section className="pb-48 pt-16 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6">
@@ -131,8 +137,12 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center max-w-3xl mx-auto mb-16"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">And what you get</h2>
-            <p className="text-lg md:text-xl mt-4 text-[#3c50d6]">From chaos to certainty in 30 days</p>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
+              {t("results.title")}
+            </h2>
+            <p className="text-lg md:text-xl mt-4 text-[#3c50d6]">
+              {t("results.subtitle")}
+            </p>
           </motion.div>
 
           <div className="flex flex-col md:flex-row gap-8 mb-12 items-stretch max-w-4xl mx-auto">
@@ -146,24 +156,24 @@ export default function Home() {
                   finalStart: 40,
                   finalEnd: 60,
                   suffix: "%",
-                  label: "Reply Rates",
-                  subtext: "vs industry 5-10%",
+                  label: t("results.metrics.replyRates.label"),
+                  subtext: t("results.metrics.replyRates.subtext"),
                   duration: 2
                 },
                 {
                   metric: 25,
                   startMetric: 12,
                   suffix: "%",
-                  label: "Leads Reactivated",
-                  subtext: "into live",
+                  label: t("results.metrics.leadsReactivated.label"),
+                  subtext: t("results.metrics.leadsReactivated.subtext"),
                   duration: 3
                 },
                 {
                   metric: 40,
                   startMetric: 0,
                   suffix: "+",
-                  label: "Hours Saved",
-                  subtext: "per rep/month",
+                  label: t("results.metrics.hoursSaved.label"),
+                  subtext: t("results.metrics.hoursSaved.subtext"),
                   duration: 4,
                   suffixAtEnd: true
                 }
@@ -246,7 +256,7 @@ export default function Home() {
                   transition={{ duration: 0.6, delay: 0.1 }}
                   className={`mb-2 font-heading mt-12 transition-colors duration-500 text-[39px] font-bold ${isFinished ? 'text-white' : 'text-black'}`}
                 >
-                  Upfront Cost
+                  {t("results.upfrontCost.title")}
                 </motion.h3>
                 <div className={`text-lg font-medium flex flex-col items-center text-center pt-8 ${isFinished ? '' : 'pointer-events-none'}`}>
                   <motion.span 
@@ -255,7 +265,7 @@ export default function Home() {
                     animate={isFinished ? { opacity: 0.8, y: 0 } : { opacity: 0, y: 10 }}
                     transition={{ duration: 0.8, delay: 0 }}
                   >
-                    Performance Partnership
+                    {t("results.upfrontCost.partnership")}
                   </motion.span>
                   <motion.span 
                     className="leading-relaxed mb-2"
@@ -263,7 +273,7 @@ export default function Home() {
                     animate={isFinished ? { opacity: 0.8, y: 0 } : { opacity: 0, y: 10 }}
                     transition={{ duration: 0.8, delay: 0.3 }}
                   >
-                    We solve problems not create them
+                    {t("results.upfrontCost.mission")}
                   </motion.span>
                   <motion.span 
                     className="leading-relaxed"
@@ -271,7 +281,7 @@ export default function Home() {
                     animate={isFinished ? { opacity: 0.8, y: 0 } : { opacity: 0, y: 10 }}
                     transition={{ duration: 0.8, delay: 0.6 }}
                   >
-                    30-Day guarantee
+                    {t("results.upfrontCost.guarantee")}
                   </motion.span>
                 </div>
               </div>
@@ -279,6 +289,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+
       {/* Security & AI Guardrails Section */}
       <section className="py-48 border-t border-border">
         <div className="container mx-auto px-4 md:px-6">
@@ -288,7 +299,9 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center max-w-4xl mx-auto mb-16"
           >
-            <h2 className="font-bold mt-[3px] mb-[3px] text-[58px]">Compliance and Reputation Built In</h2>
+            <h2 className="font-bold mt-[3px] mb-[3px] text-[58px]">
+              {t("compliance.title")}
+            </h2>
           </motion.div>
 
           <WorkflowVisualization />
@@ -304,25 +317,26 @@ export default function Home() {
               <div className="space-y-3">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2 text-[18px]">
                   <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                  GDPR & CCPA Compliant
+                  {t("compliance.gdpr.title")}
                 </h3>
                 <p className="text-gray-600 text-[16px]">
-                  All workflows respect opt-out preferences, unsubscribe links, and data residency requirements. We're fully compliant with global privacy standards.
+                  {t("compliance.gdpr.description")}
                 </p>
               </div>
               <div className="space-y-3 md:pl-8 pt-8 md:pt-0">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2 text-[18px]">
                   <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  Brand Protection
+                  {t("compliance.brand.title")}
                 </h3>
                 <p className="text-gray-600 text-[16px]">
-                  Real-time monitoring ensures every interaction stays on-topic, professional, and perfectly aligned with your brand's voice and guidelines.
+                  {t("compliance.brand.description")}
                 </p>
               </div>
             </div>
           </motion.div>
         </div>
       </section>
+
       {/* Bottom Demo CTA Section */}
       <section className="py-32 bg-primary text-primary-foreground relative overflow-hidden">
         <div className="container mx-auto px-4 md:px-6 relative z-10">
@@ -333,23 +347,27 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="text-center max-w-4xl mx-auto"
           >
-            <h2 className="md:text-4xl lg:text-5xl font-bold mb-4 text-white tracking-tight text-[40px] leading-tight">See AI Work, Not Just Talk.</h2>
+            <h2 className="md:text-4xl lg:text-5xl font-bold mb-4 text-white tracking-tight text-[40px] leading-tight">
+              {t("bottomCta.title")}
+            </h2>
             <div className="max-w-3xl mx-auto mb-10">
               <div className="relative pl-6 py-1 border-l-4 border-[#FEB800] text-left">
-                <p className="md:text-[18px] text-[#FEB800] font-medium opacity-90 text-justify text-[20px]">If a picture is worth a thousand words, a live demo is worth a thousand pictures.</p>
+                <p className="md:text-[18px] text-[#FEB800] font-medium opacity-90 text-justify text-[20px]">
+                  {t("bottomCta.quote")}
+                </p>
               </div>
             </div>
-            
+
             <div className="leading-relaxed mb-12 text-center max-w-3xl mx-auto">
               <p className="text-lg md:text-xl opacity-90 text-justify">
-                Before you do anything else, experience how AI handles real conversations as if it were your own business agent, programmed specifically for your niche. In just a few minutes, you'll see it respond naturally to your customers while taking care of the repetitive work your team shouldn't have to do.
+                {t("bottomCta.description")}
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link href="/book-demo">
                 <Button size="lg" className="h-14 px-10 text-lg rounded-full shadow-xl shadow-primary/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all font-bold">
-                  Book a Demo
+                  {t("bottomCta.button")}
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>

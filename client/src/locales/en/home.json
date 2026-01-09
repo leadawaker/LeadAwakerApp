@@ -1,36 +1,56 @@
 {
   "hero": {
-    "title1": "Wake dormant leads into",
-    "title2": "booked calls",
-    "title3": "automatically.",
-    "subtitle1": "AI handles first contact to CRM handoff.",
-    "subtitle2": "Focus on growth and closing, not chasing.",
-    "ctaBook": "Book a Call",
-    "ctaUseCases": "See Use Cases"
+    "title": {
+      "line1": "Wake dormant leads into",
+      "highlight": "booked calls",
+      "line2": "automatically."
+    },
+    "subtitle": {
+      "line1": "AI handles first contact to CRM handoff.",
+      "line2": "Focus on growth and closing, not chasing."
+    },
+    "cta": {
+      "primary": "Book a Call",
+      "secondary": "See Use Cases"
+    }
   },
   "results": {
-    "heading": "And what you get",
-    "subheading": "From chaos to certainty in 30 days",
-    "replyRates": "Reply Rates",
-    "vsIndustry": "vs industry 5-10%",
-    "leadsReactivated": "Leads Reactivated",
-    "intoLive": "into live",
-    "hoursSaved": "Hours Saved",
-    "perRepMonth": "per rep/month",
-    "upfrontCost": "Upfront Cost",
-    "performancePartnership": "Performance Partnership",
-    "solveProblems": "We solve problems not create them",
-    "guarantee": "30-Day guarantee"
+    "title": "And what you get",
+    "subtitle": "From chaos to certainty in 30 days",
+    "metrics": {
+      "replyRates": {
+        "label": "Reply Rates",
+        "subtext": "vs industry 5-10%"
+      },
+      "leadsReactivated": {
+        "label": "Leads Reactivated",
+        "subtext": "into live"
+      },
+      "hoursSaved": {
+        "label": "Hours Saved",
+        "subtext": "per rep/month"
+      }
+    },
+    "upfrontCost": {
+      "title": "Upfront Cost",
+      "partnership": "Performance Partnership",
+      "mission": "We solve problems not create them",
+      "guarantee": "30-Day guarantee"
+    }
   },
-  "security": {
-    "heading": "Compliance and Reputation Built In",
-    "gdprTitle": "GDPR & CCPA Compliant",
-    "gdprDesc": "All workflows respect opt-out preferences, unsubscribe links, and data residency requirements. We're fully compliant with global privacy standards.",
-    "brandTitle": "Brand Protection",
-    "brandDesc": "Real-time monitoring ensures every interaction stays on-topic, professional, and perfectly aligned with your brand's voice and guidelines."
+  "compliance": {
+    "title": "Compliance and Reputation Built In",
+    "gdpr": {
+      "title": "GDPR & CCPA Compliant",
+      "description": "All workflows respect opt-out preferences, unsubscribe links, and data residency requirements. We're fully compliant with global privacy standards."
+    },
+    "brand": {
+      "title": "Brand Protection",
+      "description": "Real-time monitoring ensures every interaction stays on-topic, professional, and perfectly aligned with your brand's voice and guidelines."
+    }
   },
-  "cta": {
-    "heading": "See AI Work, Not Just Talk.",
+  "bottomCta": {
+    "title": "See AI Work, Not Just Talk.",
     "quote": "If a picture is worth a thousand words, a live demo is worth a thousand pictures.",
     "description": "Before you do anything else, experience how AI handles real conversations as if it were your own business agent, programmed specifically for your niche. In just a few minutes, you'll see it respond naturally to your customers while taking care of the repetitive work your team shouldn't have to do.",
     "button": "Book a Demo"

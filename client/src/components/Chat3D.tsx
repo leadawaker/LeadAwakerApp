@@ -1,7 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function Chat3D() {
+  const { t } = useTranslation('chat3d');
   const [scrollY, setScrollY] = useState(0);
   const [showEngagement, setShowEngagement] = useState(false);
   const [visibleMessages, setVisibleMessages] = useState<number[]>([]);
@@ -24,22 +26,23 @@ export default function Chat3D() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const engagementMessages = [
-    { type: 'jack', text: "Honestly a bit of all three. I need something that looks pro but doesn't take forever or cost a fortune.", time: "15:06" },
-    { type: 'jack', text: "I've seen some of your portfolio work and I really like the style, just a bit concerned about the investment side of things.", time: "15:06" },
-    { type: 'sophie', text: "I completely hear you Jack. We actually specialize in high-impact builds that balance that 'pro' look with efficiency. That's exactly why I'd love for you to have a quick call with one of our strategists. They can look at your specific needs and show you how we can make the budget work without compromising on quality.", time: "15:08" },
-    { type: 'jack', text: "Yes that works, for me that call would work great tomorrow. What times do you have?", time: "15:09" },
-    { type: 'sophie', text: "You can select a time in our calendar page: [link]. I'll pass our conversation notes so our team has everything prepped. You will be in good hands Jack!", time: "15:10" },
-    { type: 'tag', text: "Call Booked 🗓️", subtext: "Sent to Client" },
-    { type: 'sophie', text: "Your call is booked for tomorrow at 3:30pm, if you have any questions or need to re-schedule, just let me know 😊", time: "15:12" },
-    { type: 'jack', text: "I am good, thanks for reaching out :)", time: "15:13" },
-    { type: 'sophie', text: "You are welcome, have a great day", time: "15:14" },
-    { type: 'tag', text: "Chat closed" }
-  ];
-
+  // Move engagementMessages INSIDE the useEffect
   useEffect(() => {
     if (showEngagement) {
       setVisibleMessages([]);
+
+      const engagementMessages = [
+        { type: 'jack', text: t('messages.jack2'), time: "15:06" },
+        { type: 'jack', text: t('messages.jack3'), time: "15:06" },
+        { type: 'sophie', text: t('messages.sophie4'), time: "15:08" },
+        { type: 'jack', text: t('messages.jack4'), time: "15:09" },
+        { type: 'sophie', text: t('messages.sophie5'), time: "15:10" },
+        { type: 'tag', text: t('tags.callBooked'), subtext: t('tags.sentToClient') },
+        { type: 'sophie', text: t('messages.sophie6'), time: "15:12" },
+        { type: 'jack', text: t('messages.jack5'), time: "15:13" },
+        { type: 'sophie', text: t('messages.sophie7'), time: "15:14" },
+        { type: 'tag', text: t('tags.chatClosed') }
+      ];
 
       const timeouts: NodeJS.Timeout[] = [];
       let currentDelay = 0;
@@ -58,7 +61,7 @@ export default function Chat3D() {
 
         const currentMsg = engagementMessages[index];
         let extraWait = 0;
-        if (currentMsg?.type === 'tag' && currentMsg.text === "Call Booked 🗓️") {
+        if (currentMsg?.type === 'tag' && currentMsg.text.includes(t('tags.callBooked').split(' ')[0])) {
           extraWait = 2250;
         }
 
@@ -67,7 +70,21 @@ export default function Chat3D() {
 
       return () => timeouts.forEach(t => clearTimeout(t));
     }
-  }, [showEngagement]);
+  }, [showEngagement, t]); // Add 't' to dependencies
+
+  // Create engagementMessages for rendering
+  const engagementMessages = [
+    { type: 'jack', text: t('messages.jack2'), time: "15:06" },
+    { type: 'jack', text: t('messages.jack3'), time: "15:06" },
+    { type: 'sophie', text: t('messages.sophie4'), time: "15:08" },
+    { type: 'jack', text: t('messages.jack4'), time: "15:09" },
+    { type: 'sophie', text: t('messages.sophie5'), time: "15:10" },
+    { type: 'tag', text: t('tags.callBooked'), subtext: t('tags.sentToClient') },
+    { type: 'sophie', text: t('messages.sophie6'), time: "15:12" },
+    { type: 'jack', text: t('messages.jack5'), time: "15:13" },
+    { type: 'sophie', text: t('messages.sophie7'), time: "15:14" },
+    { type: 'tag', text: t('tags.chatClosed') }
+  ];
 
   const messageVariants = {
     hidden: { opacity: 0, y: 20, scale: 0.95 },
@@ -81,6 +98,9 @@ export default function Chat3D() {
       },
     }),
   };
+
+  // ... rest of your component JSX remains the same
+
 
   return (
     <div className="relative perspective-container">
@@ -119,10 +139,10 @@ export default function Chat3D() {
           <div className="p-4 flex items-center gap-3" style={{ backgroundColor: "#2563EB" }}>
             <div className="rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ width: "44px", height: "44px", backgroundColor: "#6B6B6B" }} data-testid="chat-avatar">J</div>
             <div>
-              <h3 className="text-white font-medium text-sm" data-testid="chat-name">Jack Johnson</h3>
+              <h3 className="text-white font-medium text-sm" data-testid="chat-name">{t('header.name')}</h3>
               <p className="text-xs flex items-center gap-1" style={{ color: "#FCC700" }} data-testid="chat-status">
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#FCC700" }} />
-                Online
+                {t('header.status')}
               </p>
             </div>
           </div>
@@ -137,7 +157,7 @@ export default function Chat3D() {
               <motion.div className="flex justify-end" custom={0} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-1">
                 <div className="flex flex-col items-end gap-1">
                   <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
-                    Hey Jack, it's Sophie from Peak Creative. You made a website upgrade inquiry last July. Ready to move forward? 😊
+                    {t('messages.sophie1')}
                   </div>
                   <span className="text-xs text-slate-400 pr-2">14:35</span>
                 </div>
@@ -150,13 +170,13 @@ export default function Chat3D() {
                 className="flex flex-col items-center gap-2 py-2"
               >
                 <div className="h-[1px] w-full bg-slate-200" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Engaged</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">{t('tags.leadEngaged')}</span>
               </motion.div>
 
               <motion.div className="flex justify-end" custom={1} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-2">
                 <div className="flex flex-col items-end gap-1">
                   <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm text-sm inline-block" style={{ backgroundColor: "#2563EB", whiteSpace: "nowrap" }}>
-                    Still on your radar? 😊
+                    {t('messages.sophie2')}
                   </div>
                   <span className="text-xs text-slate-400 pr-2">14:55</span>
                 </div>
@@ -169,13 +189,13 @@ export default function Chat3D() {
                 className="flex flex-col items-center gap-2 py-2"
               >
                 <div className="h-[1px] w-full bg-slate-200" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Followed up</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">{t('tags.followedUp')}</span>
               </motion.div>
 
               <motion.div className="flex justify-start" custom={2} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-jack-1">
                 <div className="flex flex-col items-start gap-1">
                   <div className="bg-gray-100 text-slate-700 border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[95%] shadow-sm text-sm">
-                    Hi Sophie! Yes sorry, summer was crazy with client launches. The website is definitely still something I need.
+                    {t('messages.jack1')}
                   </div>
                   <span className="text-xs text-slate-400 pl-2">15:02</span>
                 </div>
@@ -188,13 +208,13 @@ export default function Chat3D() {
                 className="flex flex-col items-center gap-2 py-2"
               >
                 <div className="h-[1px] w-full bg-slate-200" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Replied</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">{t('tags.leadReplied')}</span>
               </motion.div>
 
               <motion.div className="flex justify-end" custom={3} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-3">
                 <div className="flex flex-col items-end gap-1">
                   <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>
-                    No worries, life happens! What was the main blocker? Budget, timeline, or other fires?
+                    {t('messages.sophie3')}
                   </div>
                   <span className="text-xs text-slate-400 pr-2">15:03</span>
                 </div>
@@ -229,7 +249,7 @@ export default function Chat3D() {
                       onClick={() => setShowEngagement(true)}
                       className="bg-primary text-white px-8 py-4 rounded-full font-bold shadow-lg hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 text-sm z-10"
                     >
-                      Continue
+                      {t('button.continue')}
                     </button>
                   </motion.div>
                 ) : (
@@ -248,7 +268,7 @@ export default function Chat3D() {
                             >
                               <div className="h-[1px] w-full bg-slate-200" />
                               <div className="flex flex-col items-center bg-slate-50 px-3 -mt-3.5">
-                                <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${msg.text.includes('closed') ? 'text-slate-400' : 'text-primary'}`}>
+                                <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${msg.text.includes(t('tags.chatClosed')) ? 'text-slate-400' : 'text-primary'}`}>
                                   {msg.text}
                                 </span>
                                 {msg.subtext && (
@@ -290,14 +310,14 @@ export default function Chat3D() {
                               </div>
                             </motion.div>
 
-                            {msg.text && msg.text.includes("call would work great tomorrow") && (
+                            {msg.text && msg.text.includes(t('messages.jack4').split('.')[0]) && (
                               <motion.div 
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 className="flex flex-col items-center gap-2 py-2"
                               >
                                 <div className="h-[1px] w-full bg-slate-200" />
-                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">Lead Qualified</span>
+                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 bg-slate-50 px-3 -mt-3.5">{t('tags.leadQualified')}</span>
                               </motion.div>
                             )}
                           </div>
