@@ -110,10 +110,8 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* Sales Rep Steps Section */}
       <SalesRepSteps />
-
       {/* Conversion Pipeline */}
       <section className="py-48 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6">
@@ -127,7 +125,6 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
-
       {/* Results/Metrics Section */}
       <section className="pb-48 pt-16 bg-muted/30">
         <div className="container mx-auto px-4 md:px-6">
@@ -289,7 +286,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* Security & AI Guardrails Section */}
       <section className="py-48">
         <div className="container mx-auto px-4 md:px-6">
@@ -336,9 +332,8 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
-
       {/* Bottom Demo CTA Section */}
-      <section className="py-32 bg-primary text-primary-foreground relative overflow-hidden">
+      <section className="py-32 text-primary-foreground relative overflow-hidden bg-[#4662eb]">
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -352,7 +347,7 @@ export default function Home() {
             </h2>
             <div className="max-w-3xl mx-auto mb-10">
               <div className="relative pl-6 py-1 border-l-4 border-[#FEB800] text-left">
-                <p className="md:text-[18px] text-[#FEB800] font-medium opacity-90 text-justify text-[20px]">
+                <p className="md:text-[18px] text-[#FEB8800] font-medium opacity-90 text-justify text-[20px]">
                   {t("bottomCta.quote")}
                 </p>
               </div>
