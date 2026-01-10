@@ -7,7 +7,7 @@
     },
     "subtitle": {
       "line1": "IA gerencia do primeiro contato até o CRM.",
-      "line2": "Foque em crescimento e fechamento, não em perseguir leads."
+      "line2": "Foque em crescimento e fechamento, não em correr atrás."
     },
     "cta": {
       "primary": "Agendar uma Ligação",
@@ -15,12 +15,12 @@
     }
   },
   "results": {
-    "title": "E o que você obtém",
+    "title": "E o que você ganha",
     "subtitle": "Do caos à certeza em 30 dias",
     "metrics": {
       "replyRates": {
         "label": "Taxa de Resposta",
-        "subtext": "vs indústria 5-10%"
+        "subtext": "vs mercado 5-10%"
       },
       "leadsReactivated": {
         "label": "Leads Reativados",
@@ -28,7 +28,7 @@
       },
       "hoursSaved": {
         "label": "Horas Economizadas",
-        "subtext": "por rep/mês"
+        "subtext": "por vendedor/mês"
       }
     },
     "upfrontCost": {
@@ -45,18 +45,20 @@
   "compliance": {
     "title": "Conformidade e Reputação Integradas",
     "gdpr": {
-      "title": "Conformidade GDPR & CCPA",
-      "description": "Todos os fluxos de trabalho respeitam preferências de opt-out, links de cancelamento de inscrição e requisitos de residência de dados. Estamos totalmente em conformidade com os padrões globais de privacidade."
+      "title": "Conforme LGPD e GDPR",
+      "description": "Todos os fluxos respeitam preferências de opt-out, links de cancelamento de inscrição e requisitos de residência de dados. Estamos totalmente em conformidade com os padrões globais de privacidade."
     },
     "brand": {
       "title": "Proteção da Marca",
       "description": "Monitoramento em tempo real garante que cada interação permaneça no tópico, profissional e perfeitamente alinhada com a voz e diretrizes da sua marca."
     }
   },
+
   "bottomCta": {
-    "title": "Veja a IA Funcionar, Não Apenas Falar.",
-    "quote": "Se uma imagem vale mil palavras, uma demonstração ao vivo vale mil imagens.",
-    "description": "Antes de fazer qualquer outra coisa, experimente como a IA lida com conversas reais como se fosse o agente do seu próprio negócio, programado especificamente para o seu nicho. Em poucos minutos, você verá ela responder naturalmente aos seus clientes enquanto cuida do trabalho repetitivo que sua equipe não deveria ter que fazer.",
+    "title": "IA na Prática",
+    "quote": "Veja ao vivo a nossa IA atendendo como um agente do seu negócio, para que seu time foque no que importa.",
+    "meta": "Duração: de 10 a 30 minutos\nSem compromisso",
     "button": "Agendar uma Demo"
   }
 }
+

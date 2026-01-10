@@ -10,7 +10,7 @@
   "agent": {
     "title": "Agente IA",
     "model": "GPT-5.2",
-    "outputLabel": "Saída",
+    "outputLabel": "Output",
     "message1": "Bom dia :)",
     "message2": "É o João?"
   },

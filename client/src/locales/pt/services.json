@@ -1,253 +1,506 @@
 {
-  "pageTitle": "Casos de Uso Reais",
-  "pageSubtitle": "Selecione um estudo de caso abaixo para ver como nossa IA lida com diferentes indústrias.",
+  "pageTitle": "Casos de Uso",
+  "pageSubtitle": "Selecione um caso abaixo para ver como nossa IA lida com diferentes setores e situações.",
   "caseLabel": "Caso {{number}}",
-  "footnote": "Nota: Esta interação é gerida 100% pela IA Lead Awaker. Nenhuma intervenção humana é necessária até que a intenção seja confirmada.",
-  "ctaButton": "Aplique ao Seu Negócio",
+  "footnote": "Obs.: Esta interação é conduzida 100% pela IA da Lead Awaker. Nenhuma intervenção humana é necessária até a intenção ser confirmada.",
+  "ctaButton": "Aplicar no seu Negócio",
   "cases": {
     "solarPanel": {
-      "title": "Painel Solar",
-      "heading": "Caso {{caseNumber}} - <colored>Instalação de Painéis Solares</colored>",
-      "description": "Este fluxo demonstra como o Lead Awaker reativa leads com histórico de orçamentos e transforma \"talvez depois\" em um próximo passo concreto. A IA começa com uma verificação de identidade de baixa fricção, depois guia imediatamente a conversa para uma descoberta direcionada (sem saída fácil). Quantifica a dor atual, identifica a restrição técnica (telhado voltado para o norte), e posiciona a chamada como a forma mais rápida de obter uma estimativa realista de retorno.",
-      "metricsTitle": "Indicadores-Chave de Desempenho:",
+      "title": "Energia Solar",
+      "heading": "Caso {{caseNumber}} - <colored>Instalação de Energia Solar</colored>",
+      "description": "Este fluxo mostra como a Lead Awaker reativa leads de orçamentos antigos e transforma o \"talvez mais pra frente\" em um próximo passo concreto. A IA começa com uma verificação de identidade simples, e em seguida conduz a conversa para uma descoberta direcionada (sem uma saída fácil). Ela quantifica a dor atual, traz à tona a restrição técnica (telhado voltado para o sul) e posiciona a ligação como o jeito mais rápido de chegar a uma estimativa realista de retorno e opções de projeto.",
+      "metricsTitle": "Indicadores-chave:",
       "metrics": [
-        "<strong>12,5% de taxa de agendamento</strong> de histórico de orçamentos frios",
-        "<strong>Zero intervenção manual</strong> até a chamada com o especialista",
-        "<strong>Sincronização de calendário integrada</strong> para agendamento instantâneo"
+        "<strong>12,5% de taxa de agendamento</strong> a partir de histórico de orçamentos frios",
+        "<strong>Zero intervenção manual</strong> até a ligação com o especialista",
+        "<strong>Sincronização com agenda integrada</strong> para agendar na hora"
       ],
-      "additionalUseCases": "<strong>Casos de uso adicionais para este nicho:</strong> Coleta de fotos do telhado e medidor, verificações de elegibilidade para subsídios, questionários pré-vistoria automatizados, lembretes para reduzir chamadas perdidas e follow-ups pós-chamada com próximos passos personalizados.",
-      "agentProfile": "<strong>Perfil de Fala do Agente:</strong> Consultor técnico calmo. Direto, entusiasmado e mantém o impulso em direção a uma avaliação agendada.",
+      "additionalUseCases": "<strong>Casos extras para este nicho:</strong> Coleta de fotos do telhado e do medidor, checagem de elegibilidade para incentivos, questionários automáticos de pré-visita, lembretes para reduzir faltas na ligação e follow-ups pós-ligação com próximos passos personalizados.",
+      "agentProfile": "<strong>Perfil de fala do agente:</strong> Consultor técnico calmo. Direto, entusiasmado e mantém o ritmo até o diagnóstico ficar agendado.",
       "messages": [
-        { "type": "agent", "sender": "Miguel", "content": "Olá Tiago, aqui é o Miguel da Aviax Solar. Verificação rápida: você é o Tiago que nos pediu um orçamento de energia solar há um tempo? 🙂", "time": "09:15 AM" },
+        {
+          "type": "agent",
+          "sender": "Rafael",
+          "content": "Oi! Aqui é o Rafael da Aviax Energia Solar. Rapidinho, você é o Thiago que pediu um orçamento de solar com a gente há um tempo? 🙂",
+          "time": "09:15 AM"
+        },
         { "type": "system", "content": "Lead engajado", "id": "sol-1" },
-        { "type": "user", "sender": "Tiago", "content": "Sim, sou eu Tiago", "time": "09:22 AM" },
+        { "type": "user", "sender": "Thiago", "content": "Sim, fui eu mesmo, oi", "time": "09:22 AM" },
         { "type": "system", "content": "Lead respondeu", "id": "sol-2" },
-        { "type": "agent", "sender": "Miguel", "content": "Obrigado Tiago. Meu gerente me pediu para fazer follow-up, mas não queria te enviar spam.\n\nVocê ainda está buscando reduzir seu custo mensal de eletricidade este ano?", "time": "09:23 AM" },
-        { "type": "user", "sender": "Tiago", "content": "sim, ainda estou procurando", "time": "09:35 AM" },
-        { "type": "agent", "sender": "Miguel", "content": "Perfeito.\n\nAproximadamente quanto você está pagando por mês agora, e aumentou no último ano?", "time": "09:36 AM" },
-        { "type": "user", "sender": "Tiago", "content": "cerca de R$800", "time": "09:42 AM" },
-        { "type": "user", "sender": "Tiago", "content": "sim, subiu", "time": "09:42 AM" },
-        { "type": "agent", "sender": "Miguel", "content": "Isso acumula rápido.\n\nSe as tarifas continuarem subindo, o que acontece com seus custos nos próximos 2 a 3 anos se nada mudar?", "time": "09:43 AM" },
-        { "type": "user", "sender": "Tiago", "content": "provavelmente vai piorar", "time": "09:55 AM" },
-        { "type": "agent", "sender": "Miguel", "content": "Exatamente.\n\nUm detalhe técnico decide se a energia solar funciona no seu caso. Sua seção principal do telhado é voltada para o norte, sul ou mista?", "time": "09:56 AM" },
-        { "type": "user", "sender": "Tiago", "content": "voltado para o norte", "time": "10:05 AM" },
-        { "type": "user", "sender": "Tiago", "content": "então duvido que tenha retorno", "time": "10:05 AM" },
+        {
+          "type": "agent",
+          "sender": "Rafael",
+          "content": "Valeu, Thiago. Meu gerente me pediu pra fazer um acompanhamento, mas eu não queria te encher de mensagens.\n\nVocê ainda está buscando reduzir sua conta de luz este ano?",
+          "time": "09:23 AM"
+        },
+        { "type": "user", "sender": "Thiago", "content": "Sim, ainda estou olhando isso", "time": "09:35 AM" },
+        {
+          "type": "agent",
+          "sender": "Rafael",
+          "content": "Entendi. Em média, quanto você está pagando por mês hoje, e aumentou no último ano?",
+          "time": "09:36 AM"
+        },
+        { "type": "user", "sender": "Thiago", "content": "uns R$ 650", "time": "09:42 AM" },
+        { "type": "user", "sender": "Thiago", "content": "sim, aumentou", "time": "09:42 AM" },
+        {
+          "type": "agent",
+          "sender": "Rafael",
+          "content": "R$ 650/mês é um belo motivo, isso dá R$ 7.800 por ano. Do jeito atual você aluga a sua energia sem controle sobre o preço. Isso parece sustentável, ou faria mais sentido ter o sistema que é só seu?",
+          "time": "09:43 AM"
+        },
+        { "type": "user", "sender": "Thiago", "content": "ter o sistema faz mais sentido pensando assim", "time": "09:55 AM" },
+        {
+          "type": "user",
+          "sender": "Thiago",
+          "content": "mas eu fico preocupado porque meu telhado principal é voltado para o north, ouvi dizer que não é o ideal",
+          "time": "09:56 AM"
+        },
         { "type": "system", "content": "Tratando objeção", "id": "sol-3" },
-        { "type": "agent", "sender": "Miguel", "content": "Totalmente justo.\n\nA maioria das pessoas assume que voltado para o norte significa \"não\", mas inclinação, sombreamento, área útil do telhado e se podemos usar seções leste ou oeste podem mudar o cálculo.", "time": "10:06 AM" },
-        { "type": "user", "sender": "Tiago", "content": "ah eu não sabia disso", "time": "10:10 AM" },
-        { "type": "agent", "sender": "Miguel", "content": "No que somos muito bons é personalização—combinar layout de painéis e suposições com seu telhado exato e uso para que a estimativa de retorno seja realista.\n\nSe pudéssemos confirmar em 10 minutos se você pode atingir um retorno que te satisfaça, valeria a pena?", "time": "10:07 AM" },
-        { "type": "user", "sender": "Tiago", "content": "talvez", "time": "10:15 AM" },
-        { "type": "user", "sender": "Tiago", "content": "você pode garantir que o retorno é em menos de 10 anos?", "time": "10:15 AM" },
-        { "type": "agent", "sender": "Miguel", "content": "Boa pergunta.\n\nNão posso prometer responsavelmente um número no chat sem modelar seu telhado e tarifa, mas nosso especialista pode te dar uma faixa realista e dizer se menos de 10 anos é alcançável para sua configuração.\n\nVocê tem 10 minutos para uma ligação para revisar seu telhado e uso rapidamente?", "time": "10:16 AM" },
+        {
+          "type": "agent",
+          "sender": "Rafael",
+          "content": "Essa é uma preocupação bem comum.\n\nMuita gente acha que telhado voltado para o norte é um \"não\" na hora, mas inclinação, sombra, área útil e a possibilidade de usar partes a leste ou oeste podem mudar totalmente a conta. Em casos parecidos com o seu, é comum ver retorno em 7 a 9 anos.",
+          "time": "09:57 AM"
+        },
+        { "type": "user", "sender": "Thiago", "content": "ah, não sabia disso", "time": "10:05 AM" },
+        {
+          "type": "agent",
+          "sender": "Rafael",
+          "content": "O nosso foco é personalização. A gente ajusta layout e premissas para o seu telhado e o seu consumo, para a estimativa de retorno ser realista.\n\nValeria a pena fazermos uma ligação rápida para a gente confirmar se dá para chegar num retorno que você considere bom?",
+          "time": "10:06 AM"
+        },
+        { "type": "user", "sender": "Thiago", "content": "talvez", "time": "10:15 AM" },
+        {
+          "type": "user",
+          "sender": "Thiago",
+          "content": "vocês têm exemplos de instalações com telhado voltado para o norte que deram certo?",
+          "time": "10:15 AM"
+        },
+        {
+          "type": "agent",
+          "sender": "Rafael",
+          "content": "Com certeza.\n\nJá fizemos dezenas na sua região. O especialista pode te mostrar projetos semelhantes com dados reais de retorno e, se você quiser, até colocar você em contato com um cliente de referência. Uma ligação rápida para ver esses exemplos funciona pra você?",
+          "time": "10:16 AM"
+        },
+        { "type": "user", "sender": "Thiago", "content": "Nesse caso vamos fazer sim", "time": "10:25 AM" },
         { "type": "system", "content": "Lead qualificado", "id": "sol-4" },
-        { "type": "user", "sender": "Tiago", "content": "Entendo, faz sentido", "time": "10:25 AM" },
-        { "type": "agent", "sender": "Miguel", "content": "Ótimo.\n\nAqui está o link de agendamento: https://calendar.app.google/uvWx5JWm7SLZSCqz7", "time": "10:26 AM" },
-        { "type": "system", "content": "Consulta agendada 📅", "id": "sol-5" },
-        { "type": "agent", "sender": "Miguel", "content": "Perfeito Tiago, você está agendado para segunda às 11:00 ✅\n\nNosso especialista vai te ligar para analisar o retorno e seu telhado voltado para o norte.", "time": "10:35 AM" },
-        { "type": "user", "sender": "Tiago", "content": "Obrigado Miguel", "time": "10:40 AM" },
-        { "type": "agent", "sender": "Miguel", "content": "De nada e tenha um bom dia 🙂", "time": "10:41 AM" },
-        { "type": "system", "content": "Fechado", "id": "sol-6" }
+        {
+          "type": "agent",
+          "sender": "Rafael",
+          "content": "Aqui está o link para agendar: https://calendar.app.google/uvWx5JWm7SLZSCqz7",
+          "time": "10:26 AM"
+        },
+        { "type": "system", "content": "Agendamento confirmado 📅", "id": "sol-5" },
+        {
+          "type": "agent",
+          "sender": "Rafael",
+          "content": "Perfeito, Thiago. Ficou agendado para segunda-feira às 11:00 ✅\n\nNosso especialista vai te ligar nesse horário para falar de retorno e do seu telhado voltado para o norte.",
+          "time": "10:35 AM"
+        },
+        { "type": "user", "sender": "Thiago", "content": "Valeu, Rafael", "time": "10:40 AM" },
+        { "type": "agent", "sender": "Rafael", "content": "Por nada. Tenha um ótimo dia 🙂", "time": "10:41 AM" },
+        { "type": "system", "content": "Encerrado", "id": "sol-6" }
       ]
     },
     "gym": {
       "title": "Academia",
-      "heading": "Caso {{caseNumber}} - <colored>Assinatura de Academia</colored>",
-      "description": "Este fluxo de reativação é construído como uma conversa de vendas real, não uma mensagem genérica de \"volte\". A IA começa com uma verificação de identidade de baixa fricção, usa uma desculpa natural para reabrir a conversa, depois executa descoberta estilo SPIN para diagnosticar churn e construir um plano. Ela lida com uma segunda objeção de estilo de vida (bebê recém-nascido), depois converte intenção em um agendamento de plano de personal trainer.",
-      "metricsTitle": "Métricas-Chave:",
+      "heading": "Caso {{caseNumber}} - <colored>Plano de Academia</colored>",
+      "description": "Este fluxo de reativação é construído como uma conversa real de vendas, não como um \"volta pra cá\" genérico. A IA começa com uma checagem simples de identidade, usa um motivo natural para retomar o contato e depois faz uma descoberta no estilo SPIN para entender o motivo do abandono e montar um plano. Ela lida com a objeção de estilo de vida (bebê recém-nascido) e converte a intenção em um agendamento de avaliação para plano com personal.",
+      "metricsTitle": "Métricas principais:",
       "metrics": [
-        "<strong>15% de taxa de re-inscrição</strong> dentro de 48 horas",
-        "<strong>Agendamento automatizado</strong> para sessões de plano de PT"
+        "<strong>15% de taxa de reativação</strong> em até 48 horas",
+        "<strong>Agendamento automatizado</strong> para sessões de plano com personal"
       ],
-      "additionalUseCases": "<strong>Casos de uso adicionais para este nicho:</strong> Follow-ups automatizados de \"treino perdido\", sequências de retenção de cancelamento, ofertas de reativação acionadas por tempo ausente, nutrição de leads de PT e lembretes de renovação de assinatura.",
-      "agentProfile": "<strong>Perfil de Fala do Agente:</strong> Coach motivacional. Alta empatia, alta energia e mantém o impulso em direção ao próximo passo.",
+      "additionalUseCases": "<strong>Casos extras para este nicho:</strong> Follow-ups automáticos de \"treino perdido\", sequências para evitar cancelamento, ofertas de reativação disparadas pelo tempo sem vir, nutrição de leads para personal e lembretes de renovação do plano.",
+      "agentProfile": "<strong>Perfil de fala do agente:</strong> Coach motivacional. Muita empatia, muita energia e mantém o ritmo até o próximo passo.",
       "messages": [
-        { "type": "agent", "sender": "Sara", "content": "Olá Marcos, aqui é a Sara do Academia Força Total. Você é o mesmo Marcos que era membro conosco há um tempo? 🙂", "time": "10:00 AM" },
+        {
+          "type": "agent",
+          "sender": "Sara",
+          "content": "Olá! Aqui é a Sara da Academia IronPulse. Você é o Marcos que treinava com a gente um tempo atrás? 🙂",
+          "time": "10:00 AM"
+        },
         { "type": "system", "content": "Lead engajado", "id": "gym-1" },
-        { "type": "user", "sender": "Marcos", "content": "sim sou eu", "time": "10:12 AM" },
+        { "type": "user", "sender": "Marcos", "content": "sim, sou eu", "time": "10:12 AM" },
         { "type": "system", "content": "Lead respondeu", "id": "gym-2" },
-        { "type": "agent", "sender": "Sara", "content": "Legal. Meu calendário me lembrou de fazer follow-up, mas não queria te enviar spam.\n\nVocê ainda está querendo voltar a treinar?", "time": "10:13 AM" },
-        { "type": "user", "sender": "Marcos", "content": "sim mas não tenho certeza", "time": "10:18 AM" },
-        { "type": "agent", "sender": "Sara", "content": "Totalmente justo.\n\nQuando você treinava conosco, qual era o objetivo principal que mais te importava? Força, perda de gordura ou apenas consistência?", "time": "10:19 AM" },
+        {
+          "type": "agent",
+          "sender": "Sara",
+          "content": "Boa. Meu calendário me avisou pra chamar você, mas eu não queria incomodar.\n\nVocê ainda está com vontade de voltar a treinar?",
+          "time": "10:13 AM"
+        },
+        {
+          "type": "user",
+          "sender": "Marcos",
+          "content": "eu queria muito, mas acabei de ter um bebê e o tempo está curto",
+          "time": "10:18 AM"
+        },
+        { "type": "system", "content": "Tratando objeção", "id": "gym-3" },
+        {
+          "type": "agent",
+          "sender": "Sara",
+          "content": "Parabéns pelo bebê! 🎉\n\nSinceramente, pais recentes que treinam de forma inteligente costumam manter melhor porque precisam desse boost de energia. Quando você treinava com a gente, qual era seu objetivo principal?",
+          "time": "10:19 AM"
+        },
         { "type": "user", "sender": "Marcos", "content": "força e consistência", "time": "10:26 AM" },
-        { "type": "agent", "sender": "Sara", "content": "Entendi.\n\nO que te fez parar de vir da última vez? Foi tempo, motivação ou você não estava vendo progresso rápido o suficiente?", "time": "10:27 AM" },
+        {
+          "type": "agent",
+          "sender": "Sara",
+          "content": "Boa! O que te fez parar da última vez? Foi falta de progresso, motivação ou a vida mesmo que atropelou (acontence)?",
+          "time": "10:27 AM"
+        },
         { "type": "user", "sender": "Marcos", "content": "progresso", "time": "10:34 AM" },
-        { "type": "user", "sender": "Marcos", "content": "não conseguia saber se estava melhorando", "time": "10:34 AM" },
-        { "type": "agent", "sender": "Sara", "content": "Isso é o pior, porque então parece esforço sem recompensa.\n\nSe você tivesse prova clara todo mês de que está melhorando, seria mais fácil manter a consistência?", "time": "10:35 AM" },
-        { "type": "user", "sender": "Marcos", "content": "sim, é meio que um padrão comigo, começo motivado mas depois perde força", "time": "10:42 AM" },
-        { "type": "agent", "sender": "Sara", "content": "Te entendo Marcos.\n\nFazemos um check-in mensal para você ver o progresso claramente, e ajustamos o plano rápido.\n\nAntes de sugerir o melhor próximo passo, qual é a maior restrição agora: tempo, energia ou motivação?", "time": "10:43 AM" },
-        { "type": "user", "sender": "Marcos", "content": "tempo está apertado", "time": "10:50 AM" },
-        { "type": "user", "sender": "Marcos", "content": "acabamos de ter um bebê então é imprevisível", "time": "10:51 AM" },
-        { "type": "agent", "sender": "Sara", "content": "Parabéns pelo bebê! 🎉\n\nÉ exatamente quando um plano simples mais ajuda.\n\nVamos agendar uma consulta rápida de plano de personal trainer para você e o PT traçarem uma rotina realista. Topa?", "time": "10:52 AM" },
-        { "type": "user", "sender": "Marcos", "content": "sim, parece um plano!", "time": "10:58 AM" },
-        { "type": "system", "content": "Lead qualificado", "id": "gym-3" },
-        { "type": "agent", "sender": "Sara", "content": "Ótimo.\n\nAqui está o link de agendamento: https://calendar.app.google/uvWx5JWm7SLZSCqz7", "time": "10:59 AM" },
-        { "type": "system", "content": "Consulta agendada 📅", "id": "gym-4" },
-        { "type": "agent", "sender": "Sara", "content": "Perfeito, você está agendado para segunda às 16h ✅\n\nSeu personal trainer vai te ligar para montar um plano que se encaixe na sua agenda.\n\nSe algo mudar, responda aqui e reagendaremos.", "time": "11:05 AM" },
-        { "type": "user", "sender": "Marcos", "content": "perfeito obrigado", "time": "11:10 AM" },
-        { "type": "agent", "sender": "Sara", "content": "De nada, tenha um bom dia 🙂", "time": "11:11 AM" },
-        { "type": "system", "content": "Fechado", "id": "gym-5" }
+        { "type": "user", "sender": "Marcos", "content": "eu não conseguia saber se estava melhorando", "time": "10:34 AM" },
+        {
+          "type": "agent",
+          "sender": "Sara",
+          "content": "Isso é o pior, porque parece esforço sem recompensa.\n\nSe você tivesse uma prova clara todo mês de que está evoluindo, seria mais fácil manter o ritmo?",
+          "time": "10:35 AM"
+        },
+        {
+          "type": "user",
+          "sender": "Marcos",
+          "content": "sim, isso é meio um padrão meu, eu começo motivado e depois vai esfriando",
+          "time": "10:42 AM"
+        },
+        {
+          "type": "agent",
+          "sender": "Sara",
+          "content": "Entendi, Marcos. A gente faz um check-in mensal para você enxergar o progresso com clareza e ajusta o plano rápido.\n\nVamos agendar uma avaliação rápida de plano com personal para você e ele desenharem uma rotina realista. Pode ser?",
+          "time": "10:52 AM"
+        },
+        { "type": "user", "sender": "Marcos", "content": "sim, fechou!", "time": "10:58 AM" },
+        { "type": "system", "content": "Lead qualificado", "id": "gym-4" },
+        {
+          "type": "agent",
+          "sender": "Sara",
+          "content": "Ótimo. Aqui está o link para agendar: https://calendar.app.google/uvWx5JWm7SLZSCqz7",
+          "time": "10:59 AM"
+        },
+        { "type": "system", "content": "Agendamento confirmado 📅", "id": "gym-5" },
+        {
+          "type": "agent",
+          "sender": "Sara",
+          "content": "Show, ficou agendado para segunda-feira às 16:00 ✅\n\nO Caio vai te ligar nesse horário. Ele é o nosso cara para sistemas de hábito e planos de progresso, especialmente para quem acabou de virar papai.\n\nSe precisar remarcar, é só responder por aqui.",
+          "time": "10:58 AM"
+        },
+        { "type": "user", "sender": "Marcos", "content": "tá ótimo, obrigado", "time": "11:10 AM" },
+        { "type": "agent", "sender": "Sara", "content": "Por nada. Tenha um ótimo dia 🙂", "time": "11:11 AM" },
+        { "type": "system", "content": "Encerrado", "id": "gym-6" }
       ]
     },
     "restaurant": {
-      "title": "Reserva de Restaurante",
-      "heading": "Caso {{caseNumber}} - <colored>Reserva de Restaurante</colored>",
-      "description": "Este fluxo mostra \"reativação + conversão\" em um nicho de ritmo acelerado. A IA reinicia uma consulta abandonada, captura os detalhes-chave da reserva, confirma pedidos especiais e lida com reagendamento instantaneamente quando os planos mudam. Mantém a experiência do cliente amigável enquanto protege o tempo da equipe e reduz reservas perdidas.",
-      "metricsTitle": "Métricas-Chave:",
+      "title": "Reserva em Restaurante",
+      "heading": "Caso {{caseNumber}} - <colored>Reserva em Restaurante</colored>",
+      "description": "Este fluxo mostra \"reativação + conversão\" em um nicho rápido. A IA retoma um pedido abandonado, coleta os detalhes essenciais da reserva, confirma pedidos especiais e, quando os planos mudam, resolve o reagendamento na hora. Ela mantém a experiência do cliente leve, enquanto protege o tempo da equipe e reduz reservas perdidas.",
+      "metricsTitle": "Métricas principais:",
       "metrics": [
-        "<strong>28% de taxa de conversão</strong> em consultas abandonadas",
-        "<strong>100% Automatizado</strong> tratamento de reagendamento e pedidos especiais"
+        "<strong>28% de taxa de conversão</strong> em pedidos abandonados",
+        "<strong>100% automatizado</strong> para reagendamento e pedidos especiais"
       ],
-      "additionalUseCases": "<strong>Casos de uso adicionais para este nicho:</strong> Captura de preferências alimentares, links de depósito para noites de pico, sequências de redução de no-show, automação de lista de espera, solicitações de avaliação pós-visita e marcação de \"cliente VIP\".",
-      "agentProfile": "<strong>Perfil de Fala do Agente:</strong> Anfitrião caloroso. Educado, rápido, atento aos detalhes e focado no serviço.",
+      "additionalUseCases": "<strong>Casos extras para este nicho:</strong> Captura de preferências alimentares, links de sinal para noites concorridas, sequências para reduzir no-show, automação de lista de espera, pedidos de avaliação pós-visita e marcação de \"cliente VIP\".",
+      "agentProfile": "<strong>Perfil de fala do agente:</strong> Host acolhedor. Educado, rápido, atento aos detalhes e focado em atendimento.",
       "messages": [
-        { "type": "agent", "sender": "Jéssica", "content": "Olá Rogério, aqui é a Jéssica do Cozinha Wok do Dragão.\n\nVocê nos enviou um e-mail recentemente sobre reservar uma mesa. Ainda está querendo reservar?", "time": "11:00 AM" },
+        {
+          "type": "agent",
+          "sender": "Juliana",
+          "content": "Bom dia, aqui é a Juliana do Dragon Wok Cozinha Asiática.\n\nVocê mandou um e-mail recentemente para reservar uma mesa. Ainda quer fazer a reserva?",
+          "time": "11:00 AM"
+        },
         { "type": "system", "content": "Lead engajado", "id": "rb-1" },
-        { "type": "user", "sender": "Rogério", "content": "Sim era eu", "time": "11:05 AM" },
-        { "type": "user", "sender": "Rogério", "content": "foi há umas 2 semanas eu acho", "time": "11:05 AM" },
+        { "type": "user", "sender": "Bruno", "content": "É mesmo, eu esqueci!", "time": "11:05 AM" },
+        { "type": "user", "sender": "Bruno", "content": "acho que foi faz umas 2 semanas", "time": "11:05 AM" },
         { "type": "system", "content": "Lead respondeu", "id": "rb-2" },
-        { "type": "agent", "sender": "Jéssica", "content": "Legal, é para uma ocasião especial ou um jantar normal?", "time": "11:06 AM" },
-        { "type": "user", "sender": "Rogério", "content": "aniversário da esposa está chegando", "time": "11:15 AM" },
-        { "type": "user", "sender": "Rogério", "content": "achei que seu espaço poderia ser legal", "time": "11:15 AM" },
-        { "type": "agent", "sender": "Jéssica", "content": "Que lindo 🙂\n\nQue dia você está pensando, e quantas pessoas?", "time": "11:16 AM" },
-        { "type": "user", "sender": "Rogério", "content": "Quinta", "time": "11:25 AM" },
-        { "type": "user", "sender": "Rogério", "content": "só nós dois", "time": "11:25 AM" },
-        { "type": "agent", "sender": "Jéssica", "content": "Perfeito.\n\nPodemos fazer um toque de aniversário, como sobremesa com uma vela. Você gostaria?", "time": "11:26 AM" },
-        { "type": "user", "sender": "Rogério", "content": "sim por favor", "time": "11:35 AM" },
+        { "type": "agent", "sender": "Juliana", "content": "Tudo bem. É para uma ocasião especial ou um jantar normal?", "time": "11:06 AM" },
+        { "type": "user", "sender": "Bruno", "content": "aniversário da minha esposa está chegando", "time": "11:15 AM" },
+        { "type": "user", "sender": "Bruno", "content": "pensei que aí no seu restaurante seria top", "time": "11:15 AM" },
+        { "type": "agent", "sender": "Juliana", "content": "Que ótimo 🙂\n\nQual dia você estava pensando e para quantas pessoas?", "time": "11:16 AM" },
+        { "type": "user", "sender": "Bruno", "content": "quinta-feira", "time": "11:25 AM" },
+        { "type": "user", "sender": "Bruno", "content": "só nós dois", "time": "11:25 AM" },
+        {
+          "type": "agent",
+          "sender": "Juliana",
+          "content": "Top, a gente pode fazer uma surpresa tipo uma sobremesa com velinha. Você gostaria?",
+          "time": "11:26 AM"
+        },
+        { "type": "user", "sender": "Bruno", "content": "sim, acho que ela vai amar", "time": "11:35 AM" },
         { "type": "system", "content": "Lead qualificado", "id": "rb-3" },
-        { "type": "agent", "sender": "Jéssica", "content": "Pronto.\n\nAqui está o link de reserva para escolher seu horário: https://calendar.app.google/uvWx5JWm7SLZSCqz7", "time": "11:36 AM" },
-        { "type": "system", "content": "Consulta agendada 📅", "id": "rb-4" },
-        { "type": "agent", "sender": "Jéssica", "content": "Ótimo, você está confirmado.\n\nMais alguma coisa que quer que saibamos, como alergias ou uma mesa mais tranquila?", "time": "11:46 AM" },
-        { "type": "user", "sender": "Rogério", "content": "não é só isso obrigado", "time": "12:00 PM" },
-        { "type": "user", "sender": "Rogério", "content": "ah a propósito", "time": "12:10 PM" },
-        { "type": "user", "sender": "Rogério", "content": "lembrei que tenho que buscar meu filho nesse horário. posso marcar outro horário?", "time": "12:10 PM" },
+        {
+          "type": "agent",
+          "sender": "Juliana",
+          "content": "Combinado então Bruno, aqui está o link para escolher o horário da sua reserva: https://calendar.app.google/uvWx5JWm7SLZSCqz7",
+          "time": "11:36 AM"
+        },
+        { "type": "system", "content": "Agendamento confirmado 📅", "id": "rb-4" },
+        {
+          "type": "agent",
+          "sender": "Juliana",
+          "content": "Perfeito, reserva confirmada para as 16h. Mais alguma coisa que você queira que a gente saiba, como alergias ou preferência por mesa mais tranquila?",
+          "time": "11:46 AM"
+        },
+        { "type": "user", "sender": "Bruno", "content": "não, é isso, obrigado", "time": "12:00 PM" },
+        { "type": "user", "sender": "Bruno", "content": "ah, aliás", "time": "12:10 PM" },
+        {
+          "type": "user",
+          "sender": "Bruno",
+          "content": "Ish, lembrei agora que eu tenho que buscar meu filho na escola nesse horário. posso remarcar?",
+          "time": "12:10 PM"
+        },
         { "type": "system", "content": "Tratando reagendamento", "id": "rb-5" },
-        { "type": "agent", "sender": "Jéssica", "content": "Claro, sem problema.\n\nQue horário na quinta funciona melhor?", "time": "12:11 PM" },
-        { "type": "user", "sender": "Rogério", "content": "17h funciona", "time": "12:20 PM" },
-        { "type": "agent", "sender": "Jéssica", "content": "Perfeito, mudei para 17:00.\n\nSe algo mudar novamente, é só me mandar mensagem aqui.", "time": "12:21 PM" },
-        { "type": "system", "content": "Consulta agendada 📅", "id": "rb-6" },
-        { "type": "user", "sender": "Rogério", "content": "obrigado pela flexibilidade", "time": "12:30 PM" },
-        { "type": "agent", "sender": "Jéssica", "content": "Foi um prazer, Rogério. Até breve!", "time": "12:31 PM" },
-        { "type": "system", "content": "Fechado", "id": "rb-7" }
+        { "type": "agent", "sender": "Juliana", "content": "Claro, sem problema.\n\nQual horário na quinta funciona melhor?", "time": "12:11 PM" },
+        { "type": "user", "sender": "Bruno", "content": "17h funciona", "time": "12:20 PM" },
+        {
+          "type": "agent",
+          "sender": "Juliana",
+          "content": "Perfeito, mudei para 17:00.\n\nQualquer coisa, é só me chamar por aqui.",
+          "time": "12:21 PM"
+        },
+        { "type": "system", "content": "Agendamento atualizado 📅", "id": "rb-6" },
+        { "type": "user", "sender": "Bruno", "content": "valeu pela flexibilidade!", "time": "12:30 PM" },
+        { "type": "agent", "sender": "Juliana", "content": "Imagina, Bruno. Até mais!", "time": "12:31 PM" },
+        { "type": "system", "content": "Encerrado", "id": "rb-7" }
       ]
     },
     "realEstate": {
-      "title": "Imobiliário",
-      "heading": "Caso {{caseNumber}} - <colored>Imobiliário</colored>",
-      "description": "Leads imobiliários frequentemente estagnam porque o comprador não consegue distinguir preços \"normais\" de um mau negócio. Este fluxo de IA reinicia a conversa com uma verificação de identidade de baixa fricção, usa uma desculpa natural para reabrir o thread, qualifica o cronograma, critérios e orçamento do comprador. Compartilha listagens compatíveis imediatamente e escala para um agente real quando o comprador está comparando opções.",
-      "metricsTitle": "Métricas-Chave:",
+      "title": "Imóveis",
+      "heading": "Caso {{caseNumber}} - <colored>Imóveis</colored>",
+      "description": "Leads de imóveis muitas vezes travam porque o comprador não consegue diferenciar o que é preço \"normal\" do que é uma oferta ruim. Este fluxo de IA retoma a conversa com uma checagem simples de identidade, usa um motivo natural para reabrir o contato e qualifica prazo, critérios e orçamento. Ela envia opções compatíveis na hora e conectar a interação para um corretor quando o comprador começa a comparar alternativas.",
+      "metricsTitle": "Métricas principais:",
       "metrics": [
-        "<strong>22% de aumento de engajamento</strong> para leads de 12+ meses",
-        "<strong>Agendamentos de avaliação automatizados</strong> sincronizados com apps de agentes"
+        "<strong>22% de aumento no engajamento</strong> em leads com 12+ meses",
+        "<strong>Agendamentos automáticos de avaliação</strong> sincronizados com apps do corretor"
       ],
-      "additionalUseCases": "<strong>Casos de uso adicionais para este nicho:</strong> Agendamento automatizado de visitas, compartilhamento automatizado de contratos e documentos, alertas de listagens quando novas correspondências aparecem, notificações de queda de preço e follow-ups que se adaptam a mudanças de cronograma.",
-      "agentProfile": "<strong>Perfil de Fala do Agente:</strong> Guia de mercado paciente. Calmo, direto e focado em mover o comprador de navegação para decisão.",
+      "additionalUseCases": "<strong>Casos extras para este nicho:</strong> Agendamento automático de visitas, compartilhamento automatizado de contrato e documentos, alertas de novos imóveis quando aparecerem matches, notificações de queda de preço e follow-ups que se adaptam quando o prazo muda.",
+      "agentProfile": "<strong>Perfil de fala do agente:</strong> Guia paciente do mercado. Calmo, direto e focado em levar o comprador de \"só olhando\" até a decisão.",
       "messages": [
-        { "type": "agent", "sender": "Mia", "content": "Olá Lucas, Mia da Lar Feliz Imóveis aqui. Verificação rápida: você é o Lucas que perguntou há um tempo sobre propriedades na área da praia? 🙂", "time": "10:00 AM" },
+        {
+          "type": "agent",
+          "sender": "Camila",
+          "content": "Oi! Aqui é a Camila da Imobiliária CasaHaven. Rapidinho: você é o Lucas que pediu informações há um tempo sobre imóveis próximos ao mar? 🙂",
+          "time": "10:00 AM"
+        },
         { "type": "system", "content": "Lead engajado", "id": "re-1" },
-        { "type": "user", "sender": "Lucas", "content": "sim sou eu", "time": "10:10 AM" },
+        { "type": "user", "sender": "Lucas", "content": "sim fui eu, tudo certo?", "time": "10:10 AM" },
         { "type": "system", "content": "Lead respondeu", "id": "re-2" },
-        { "type": "agent", "sender": "Mia", "content": "Só voltando porque não queria que seu pedido se perdesse. Você ainda está querendo comprar na área da praia?", "time": "10:11 AM" },
-        { "type": "user", "sender": "Lucas", "content": "ainda procurando mas com cuidado", "time": "10:20 AM" },
-        { "type": "agent", "sender": "Mia", "content": "Entendi.\n\nPara agilizar, você está querendo comprar dentro de 6 meses, ou o prazo é flexível?", "time": "10:21 AM" },
-        { "type": "user", "sender": "Lucas", "content": "dentro de 6 meses idealmente", "time": "10:30 AM" },
-        { "type": "agent", "sender": "Mia", "content": "Ótimo.\n\nQuais são suas 3 principais prioridades? Por exemplo: distância da praia, quartos e segurança.", "time": "10:31 AM" },
+        {
+          "type": "agent",
+          "sender": "Camila",
+          "content": "Tudo! Só retomando porque eu não queria que seu pedido se perdesse. Você ainda está atrás desse imóvel?",
+          "time": "10:11 AM"
+        },
+        { "type": "user", "sender": "Lucas", "content": "ainda estou olhando, mas com calma", "time": "10:20 AM" },
+        {
+          "type": "agent",
+          "sender": "Camila",
+          "content": "Entendi.\n\nPara afunilar rápido: você quer comprar em até 6 meses ou o prazo é mais flexível?",
+          "time": "10:21 AM"
+        },
+        { "type": "user", "sender": "Lucas", "content": "o ideal para mim é em até 6 meses", "time": "10:30 AM" },
+        {
+          "type": "agent",
+          "sender": "Camila",
+          "content": "Certinho e quais são seus 3 itens obrigatórios? Por exemplo: distância da praia, número de quartos e segurança.",
+          "time": "10:31 AM"
+        },
         { "type": "user", "sender": "Lucas", "content": "perto da praia", "time": "10:40 AM" },
         { "type": "user", "sender": "Lucas", "content": "2 quartos", "time": "10:40 AM" },
         { "type": "user", "sender": "Lucas", "content": "boa segurança", "time": "10:40 AM" },
-        { "type": "agent", "sender": "Mia", "content": "Perfeito.\n\nQual orçamento você está pensando para não perdermos tempo com listagens que não vão servir?", "time": "10:41 AM" },
-        { "type": "user", "sender": "Lucas", "content": "cerca de R$1 milhão", "time": "10:50 AM" },
-        { "type": "user", "sender": "Lucas", "content": "mas não quero pagar demais", "time": "10:50 AM" },
-        { "type": "system", "content": "Tratando objeção", "id": "re-3" },
-        { "type": "agent", "sender": "Mia", "content": "Faz sentido.\n\nAqui está uma lista curta de listagens atuais que combinam com seus critérios para você ver opções reais:\nhttps://larfeliz.example/imoveis?praia=perto&quartos=2&seguranca=alta&max=1000000", "time": "10:51 AM" },
-        { "type": "user", "sender": "Lucas", "content": "ok estou vendo elas", "time": "11:00 AM" },
-        { "type": "user", "sender": "Lucas", "content": "estou em dúvida entre Vista Marina e Residencial Praia Dourada", "time": "11:00 AM" },
-        { "type": "agent", "sender": "Mia", "content": "Esse é um bom lugar para estar.\n\nPara evitar um erro caro, o próximo passo é uma ligação curta com nosso corretor para comparar taxas, vendas recentes próximas e margem de negociação.\n\nQuer agendar essa ligação de comparação agora?", "time": "11:01 AM" },
-        { "type": "user", "sender": "Lucas", "content": "sim por favor", "time": "11:10 AM" },
-        { "type": "system", "content": "Lead qualificado", "id": "re-4" },
-        { "type": "agent", "sender": "Mia", "content": "Perfeito.\n\nReserve um horário aqui: https://calendar.app.google/uvWx5JWm7SLZSCqz7", "time": "11:11 AM" },
-        { "type": "system", "content": "Consulta agendada 📅", "id": "re-5" },
-        { "type": "agent", "sender": "Mia", "content": "Ótimo Lucas, você está agendado para quarta às 16:00 ✅\n\nSeu corretor será João Marcos. Ele é amigável e muito forte em preços de área de praia, negociação e identificação de custos ocultos como taxas de condomínio.", "time": "11:20 AM" },
-        { "type": "user", "sender": "Lucas", "content": "incrível obrigado", "time": "11:25 AM" },
-        { "type": "user", "sender": "Lucas", "content": "ansioso por isso", "time": "11:25 AM" },
-        { "type": "agent", "sender": "Mia", "content": "Falamos em breve! 🙂", "time": "11:26 AM" },
-        { "type": "system", "content": "Fechado", "id": "re-6" }
+        {
+          "type": "agent",
+          "sender": "Camila",
+          "content": "Ótimo.\n\nQual faixa de orçamento você está mirando para a gente não perder tempo com imóveis fora do que cabe?",
+          "time": "10:41 AM"
+        },
+        { "type": "user", "sender": "Lucas", "content": "meu orçamento é em torno de R$ 1.200.000", "time": "10:50 AM" },
+        { "type": "user", "sender": "Lucas", "content": "mas isso é realmente o máximo", "time": "10:50 AM" },
+        { "type": "system", "content": "Qualificado para lista de imóveis", "id": "re-3" },
+        {
+          "type": "agent",
+          "sender": "Camila",
+          "content": "Entendido, vamos manter até R$ 1.200.000.\n\nVou puxar opções atuais que batem com seus critérios: perto da praia, 2 quartos, boa segurança e dentro do orçamento.",
+          "time": "10:51 AM"
+        },
+        {
+          "type": "agent",
+          "sender": "Camila",
+          "content": "Aqui está, dá uma olhadinha nesse link:\nhttps://homehaven.example/listings?near=beach&beds=2&security=high&max=1200000",
+          "time": "10:52 AM"
+        },
+        { "type": "user", "sender": "Lucas", "content": "ok, estou vendo", "time": "11:00 AM" },
+        {
+          "type": "user",
+          "sender": "Lucas",
+          "content": "O Marina View e o Residencial Sandgate me chamaram a atenção",
+          "time": "11:02 AM"
+        },
+        {
+          "type": "agent",
+          "sender": "Camila",
+          "content": "Boa escolha Lucas, são mesmo top. Os dois são bem localizados, mas preço, condomínio e comparativos recentes vão mostrar qual é o melhor negócio de verdade. Quer uma ligação rápida com nosso corretor para comparar os dois e ver qual é a margem de negociação?",
+          "time": "11:04 AM"
+        },
+        { "type": "user", "sender": "Lucas", "content": "sim bora lá por favor", "time": "11:10 AM" },
+        { "type": "system", "content": "Qualificado para ligação", "id": "re-4" },
+        {
+          "type": "agent",
+          "sender": "Camila",
+          "content": "Só agendar um horário aqui: https://calendar.app.google/uvWx5JWm7SLZSCqz7",
+          "time": "11:11 AM"
+        },
+        { "type": "system", "content": "Agendamento confirmado 📅", "id": "re-5" },
+        {
+          "type": "agent",
+          "sender": "Camila",
+          "content": "Perfeito, Lucas. Ficou confirmado para amanhã às 16:00 ✅\n\nSeu corretor Murilo vai te ligar. Ele é excelente com comparativos na área da praia, estratégia de negociação e em identificar taxas que muitos compradores deixam passar.",
+          "time": "11:20 AM"
+        },
+        { "type": "user", "sender": "Lucas", "content": "show, obrigado", "time": "11:25 AM" },
+        { "type": "user", "sender": "Lucas", "content": "ansioso pela ligação", "time": "11:25 AM" },
+        { "type": "agent", "sender": "Camila", "content": "Até mais então 🙂", "time": "11:26 AM" },
+        { "type": "system", "content": "Encerrado", "id": "re-6" }
       ]
     },
     "healthClinic": {
       "title": "Clínica de Saúde",
       "heading": "Caso {{caseNumber}} - <colored>Clínica de Saúde</colored>",
-      "description": "Na área de saúde, leads desistem porque parece avassalador e pessoal. Este fluxo de IA reativa o lead gentilmente, coleta contexto suficiente para encaminhá-los corretamente, responde uma pergunta final sobre serviços e fecha a consulta. Define expectativas de que o especialista avaliará nutrição primeiro e também verificará se outros cuidados integrativos são necessários.",
-      "metricsTitle": "Métricas-Chave:",
+      "description": "Na saúde, leads somem porque o assunto é muitas vezes pesado e muito pessoal. Este fluxo de IA reativa o lead com cuidado, coleta só o contexto necessário para direcionar corretamente, responde uma última dúvida sobre serviços e confirma a consulta. Ele deixa claro que o especialista vai avaliar primeiro a parte nutricional e também checar se existe necessidade de outro cuidado integrativo.",
+      "metricsTitle": "Métricas principais:",
       "metrics": [
         "<strong>31% de taxa de agendamento</strong> para leads com sintomas crônicos",
-        "<strong>100% Automatizado</strong> qualificação e triagem de sintomas"
+        "<strong>100% automatizado</strong> na qualificação de sintomas e triagem"
       ],
-      "additionalUseCases": "<strong>Casos de uso adicionais para este nicho:</strong> Formulários de entrada, sequências de lembretes, instruções pré-visita, follow-ups pós-visita, check-ins de plano de cuidados e encaminhamento de sintomas urgentes para caminhos de atendimento mais rápidos.",
-      "agentProfile": "<strong>Perfil de Fala do Agente:</strong> Coordenador clínico calmo. Caloroso, mínimo e focado em levar o paciente ao profissional certo.",
+      "additionalUseCases": "<strong>Casos extras para este nicho:</strong> Formulários de anamnese, sequências de lembretes, instruções pré-consulta, follow-ups pós-consulta, check-ins de plano de cuidado e direcionamento de sintomas urgentes para fluxos mais rápidos de atendimento.",
+      "agentProfile": "<strong>Perfil de fala do agente:</strong> Coordenadora clínica calma. Acolhedora, objetiva e focada em levar o paciente ao profissional certo.",
       "messages": [
-        { "type": "agent", "sender": "Marcia", "content": "Olá Daniel, Marcia do Holistica Balance Center aqui 🙂\n\nFico feliz em reconectar. Você ainda está procurando apoio com a consulta que perguntou?", "time": "02:00 PM" },
+        {
+          "type": "agent",
+          "sender": "Márcia",
+          "content": "Olá, Daniel. Aqui é a Márcia do Centro Holístico Equilíbrio 🙂\n\nVocê ainda está buscando ajuda com a consulta que você perguntou pelo nosso Instagram?",
+          "time": "02:00 PM"
+        },
         { "type": "system", "content": "Lead engajado", "id": "hc-1" },
-        { "type": "user", "sender": "Daniel", "content": "sim com certeza", "time": "02:05 PM" },
+        { "type": "user", "sender": "Daniel", "content": "sim, com certeza", "time": "02:05 PM" },
         { "type": "system", "content": "Lead respondeu", "id": "hc-2" },
-        { "type": "agent", "sender": "Marcia", "content": "Obrigada.\n\nQual é o principal problema com o qual você quer ajuda agora?", "time": "02:06 PM" },
-        { "type": "user", "sender": "Daniel", "content": "azia severa", "time": "02:15 PM" },
-        { "type": "user", "sender": "Daniel", "content": "estou cansado disso", "time": "02:15 PM" },
-        { "type": "agent", "sender": "Marcia", "content": "Isso parece muito desconfortável.\n\nHá quanto tempo isso acontece, e tem dificuldade para engolir ou vômitos?", "time": "02:16 PM" },
-        { "type": "user", "sender": "Daniel", "content": "muito tempo", "time": "02:25 PM" },
-        { "type": "user", "sender": "Daniel", "content": "sem vômito", "time": "02:25 PM" },
-        { "type": "agent", "sender": "Marcia", "content": "Ok.\n\nVocê notou gatilhos alimentares, e já tentou algo que ajudou?", "time": "02:26 PM" },
+        { "type": "agent", "sender": "Márcia", "content": "Obrigada.\n\nComo podemos lhe ajudar?", "time": "02:06 PM" },
+        { "type": "user", "sender": "Daniel", "content": "Então, estou com uma azia muito forte", "time": "02:15 PM" },
+        { "type": "user", "sender": "Daniel", "content": "to tomando bastante remédio mas quero parar", "time": "02:15 PM" },
+        {
+          "type": "agent",
+          "sender": "Márcia",
+          "content": "Entendo, azia crônica é muito desgastante.\n\nHá quanto tempo isso acontece e você teve alguma dificuldade para engolir ou episódios de vômito?",
+          "time": "02:16 PM"
+        },
+        { "type": "user", "sender": "Daniel", "content": "faz muito tempo", "time": "02:25 PM" },
+        { "type": "user", "sender": "Daniel", "content": "não vomito", "time": "02:25 PM" },
+        { "type": "agent", "sender": "Márcia", "content": "Certo.\n\nVocê percebeu algum alimento que piora e já tentou algo que ajudou?", "time": "02:26 PM" },
         { "type": "user", "sender": "Daniel", "content": "acho que são FODMAPs", "time": "02:35 PM" },
-        { "type": "user", "sender": "Daniel", "content": "evitar ajuda mas ainda acontece", "time": "02:35 PM" },
-        { "type": "agent", "sender": "Marcia", "content": "Entendi.\n\nVocê gostaria de agendar uma consulta presencial para que nossa Nutricionista especialista possa revisar seu caso e definir um plano? Ela também avaliará se você precisa de outros cuidados integrativos.", "time": "02:36 PM" },
-        { "type": "system", "content": "Conversa acompanhada", "id": "hc-followup-1" },
-        { "type": "agent", "sender": "Marcia", "content": "Só verificando Daniel, quer que eu envie o link de agendamento?", "time": "03:36 PM" },
-        { "type": "user", "sender": "Daniel", "content": "desculpa fiquei ocupado", "time": "02:55 PM" },
-        { "type": "user", "sender": "Daniel", "content": "sim vamos fazer", "time": "02:55 PM" },
+        { "type": "user", "sender": "Daniel", "content": "evitar ajuda, mas ainda acontece", "time": "02:35 PM" },
+        {
+          "type": "agent",
+          "sender": "Márcia",
+          "content": "Ótimo que você está observando os gatilhos.\n\nVamos te encaminhar com a nossa nutricionista para ela analisar melhor seus padrões e montar um plano de verdade. Ela também pode avaliar se algum exame faria sentido. Pode ser?",
+          "time": "02:36 PM"
+        },
+        { "type": "user", "sender": "Daniel", "content": "sim, isso ajudaria", "time": "02:45 PM" },
         { "type": "system", "content": "Lead qualificado", "id": "hc-3" },
-        { "type": "agent", "sender": "Marcia", "content": "Perfeito.\n\nAgende aqui: https://calendar.app.google/uvWx5JWm7SLZSCqz7", "time": "02:56 PM" },
-        { "type": "system", "content": "Consulta agendada 📅", "id": "hc-4" },
-        { "type": "agent", "sender": "Marcia", "content": "Tudo certo Daniel, você está agendado para segunda às 16:00 ✅\n\nPergunta rápida antes de ir: vocês oferecem testes de intolerância alimentar, ou é só orientação nutricional?", "time": "03:05 PM" },
-        { "type": "user", "sender": "Daniel", "content": "sim era isso que eu queria perguntar", "time": "03:10 PM" },
-        { "type": "agent", "sender": "Marcia", "content": "Sim, oferecemos opções de testes.\n\nSua Nutricionista vai explicar o que faz sentido para seus sintomas e se é melhor testar antes ou depois da primeira consulta.", "time": "03:11 PM" },
-        { "type": "user", "sender": "Daniel", "content": "perfeito obrigado", "time": "03:12 PM" },
-        { "type": "agent", "sender": "Marcia", "content": "De nada e tenha um bom dia 🙂", "time": "03:13 PM" },
-        { "type": "system", "content": "Fechado", "id": "hc-5" }
+        {
+          "type": "agent",
+          "sender": "Márcia",
+          "content": "Perfeito.\n\nAqui está o link para agendar: https://calendar.app.google/uvWx5JWm7SLZSCqz7",
+          "time": "02:46 PM"
+        },
+        { "type": "system", "content": "Follow-up enviado", "id": "hc-followup-1" },
+        { "type": "agent", "sender": "Márcia", "content": "Passando só para confirmar, Daniel: você conseguiu agendar?", "time": "03:46 PM" },
+        { "type": "user", "sender": "Daniel", "content": "desculpa, fiquei ocupado, vou agendar agora", "time": "03:50 PM" },
+        { "type": "system", "content": "Agendamento confirmado 📅", "id": "hc-4" },
+        {
+          "type": "agent",
+          "sender": "Márcia",
+          "content": "Daniel, ficou agendado para segunda-feira às 16:00 ✅\n\nA nutricionista vai revisar seus sintomas e criar um plano personalizado. Se tiver dúvidas antes, pode responder por aqui.",
+          "time": "03:55 PM"
+        },
+        {
+          "type": "user",
+          "sender": "Daniel",
+          "content": "só uma dúvidazinha, vocês oferecem testes de intolerância alimentar ou só orientação nutricional?",
+          "time": "04:00 PM"
+        },
+        {
+          "type": "agent",
+          "sender": "Márcia",
+          "content": "Sim, oferecemos testes.\n\nNa consulta, a nutricionista vai avaliar se faz sentido para o seu caso e explicar as opções.",
+          "time": "04:01 PM"
+        },
+        { "type": "user", "sender": "Daniel", "content": "tá otimo, obrigado", "time": "04:05 PM" },
+        { "type": "agent", "sender": "Márcia", "content": "Por nada. Tenha um ótimo dia 🙂", "time": "04:06 PM" },
+        { "type": "system", "content": "Chat Encerrado", "id": "hc-5" }
       ]
     },
     "lawFirm": {
       "title": "Escritório de Advocacia",
       "heading": "Caso {{caseNumber}} - <colored>Escritório de Advocacia</colored>",
-      "description": "Nossa <strong>IA Lead Awaker</strong> reativa leads frios para reembolsos de financiamento de carros e rapidamente os move para o único passo que importa: obter os documentos do contrato. Qualifica elegibilidade, lida com o bloqueio \"não tenho a papelada\", depois guia o lead através de um DSAR (Solicitação de Acesso a Dados Pessoais) para que sua equipe só toque em casos que estão prontos.",
-      "descriptionExtra": "<strong>O que acontece depois:</strong> O DSAR obriga as financiadoras de carros a enviar os documentos do contrato. Um <strong>funcionário do escritório de advocacia</strong> os revisa em busca de comissão indevidamente vendida escondida nos pagamentos, e se encontrada, o cliente pode pedir reembolso (frequentemente £1.000-£3.000).",
-      "metricsTitle": "Resultados Reais de 935 leads:",
+      "description": "A <strong>Lead Awaker AI</strong> reativa leads frios de reembolso de financiamento de veículo e leva rápido para o único passo que importa: conseguir os documentos do contrato. Ela qualifica a elegibilidade, lida com o bloqueio do \"não tenho a papelada\" e orienta o lead a fazer uma Solicitação de Acesso aos Dados (LGPD), para que seu time só encoste nos casos que já estão prontos.",
+      "descriptionExtra": "<strong>O que acontece depois:</strong> A solicitação obriga a financeira a enviar os documentos do contrato. Um <strong>assistente jurídico</strong> revisa em busca de comissão indevida embutida nas parcelas e, se existir, o cliente pode pedir um reembolso (muitas vezes entre R$ 6.000 e R$ 18.000).",
+      "metricsTitle": "Resultados de 935 leads:",
       "metrics": [
-        "<strong>42% de taxa de resposta</strong> (vs 20% da indústria)",
-        "<strong>20,4% de taxa de conclusão de DSAR</strong>",
-        "<strong>Custo por DSAR: $21</strong> (totalmente automatizado, sem ligações, sem vendedores)"
+        "<strong>42% de taxa de resposta</strong> (vs 20% do mercado)",
+        "<strong>20,4% de taxa de conclusão</strong> da solicitação",
+        "<strong>Custo por solicitação: $21</strong> (totalmente automatizado, sem ligações, sem vendedores)"
       ],
-      "additionalUseCases": "<strong>Casos de uso adicionais para este nicho:</strong> Lembretes de conclusão de DSAR, atualizações de status de \"30 dias úteis\", escalonamento automático para funcionário quando documentos chegam, e campanhas de reativação para leads que começaram mas não terminaram.",
-      "agentProfile": "<strong>Perfil de Fala do Agente:</strong> Admin focado em compliance. Claro, orientado por processo e baixa pressão.",
+      "additionalUseCases": "<strong>Casos extras para este nicho:</strong> Lembretes para concluir a solicitação, atualizações de status de \"30 dias úteis\", escalonamento automático para um assistente quando os documentos chegarem e campanhas de reativação para leads que começaram mas não terminaram.",
+      "agentProfile": "<strong>Perfil de fala do agente:</strong> Administrativo focado em conformidade. Claro, guiado por processo e sem pressão.",
       "messages": [
-        { "type": "agent", "sender": "Sophie", "content": "Olá, aqui é a Sophie da Sterling Finance. É o Oliver que queria verificar se tinha direito a reembolso no financiamento do carro?", "time": "14:35" },
+        {
+          "type": "agent",
+          "sender": "Sofia",
+          "content": "Oi, aqui é a Sofia da Sterling Advocacia Financeira. Você é o Otávio que queria verificar se tinha direito a reembolso no financiamento do seu carro?",
+          "time": "14:35"
+        },
         { "type": "system", "content": "Lead engajado", "id": "lf-1" },
-        { "type": "agent", "sender": "Sophie", "content": "Só subindo isso caso você tenha ficado ocupado antes :)", "time": "14:55" },
-        { "type": "user", "sender": "Oliver", "content": "Oi, sim", "time": "15:00" },
+        { "type": "agent", "sender": "Sofia", "content": "Só dando um toque aqui caso você tenha ficado ocupado antes :)", "time": "14:55" },
+        { "type": "user", "sender": "Otávio", "content": "Oi, sim", "time": "15:00" },
         { "type": "system", "content": "Lead respondeu", "id": "lf-2" },
-        { "type": "user", "sender": "Oliver", "content": "Gostaria de verificar. Tive 2 carros financiados há 5 anos", "time": "15:01" },
+        { "type": "user", "sender": "Otávio", "content": "Quero verificar sim. Eu tive 2 carros financiados entre 2016 e 2019", "time": "15:01" },
         { "type": "system", "content": "Lead qualificado", "id": "lf-3" },
-        { "type": "agent", "sender": "Sophie", "content": "Ótimo, Oliver. Você tem os documentos do contrato de financiamento do veículo à mão para esses carros?", "time": "15:04" },
-        { "type": "user", "sender": "Oliver", "content": "Não desculpa", "time": "15:05" },
-        { "type": "user", "sender": "Oliver", "content": "Não tenho à mão", "time": "15:05" },
-        { "type": "agent", "sender": "Sophie", "content": "Sem problema. Podemos enviar uma Solicitação de Acesso a Dados Pessoais (DSAR) em seu nome para recuperar esses documentos.\n\nPoderia completar este formulário curto de DSAR clicando neste URL? https://www.dsarform.com/lead315", "time": "15:09" },
-        { "type": "user", "sender": "Oliver", "content": "Qual é o processo daqui?", "time": "15:20" },
-        { "type": "user", "sender": "Oliver", "content": "Vocês me avisam se sou elegível depois que recuperarem os docs e aí eu confirmo que quero prosseguir?", "time": "15:20" },
-        { "type": "agent", "sender": "Sophie", "content": "Absolutamente.\n\nDepois que você completar o formulário DSAR, solicitamos seu contrato e o revisamos. Se descobrirmos que você é elegível para uma reclamação, entraremos em contato para discutir os próximos passos.\n\nNormalmente leva cerca de 30 dias úteis para receber e revisar os documentos. Operamos na base de não ganhou, não paga, então não há risco para você.\n\nLink do formulário: https://www.dsarform.com/lead315", "time": "15:22" },
-        { "type": "user", "sender": "Oliver", "content": "Obrigado.", "time": "15:24" },
-        { "type": "system", "content": "Consulta agendada 📅", "id": "lf-4" },
-        { "type": "agent", "sender": "Sophie", "content": "Obrigada por completar o formulário. Você terá notícias nossas em breve. Se tiver alguma dúvida, fique à vontade para perguntar 🙂", "time": "15:39" },
-        { "type": "user", "sender": "Oliver", "content": "Não, é só isso da minha parte", "time": "15:40" },
-        { "type": "system", "content": "Fechado", "id": "lf-5" },
-        { "type": "agent", "sender": "Sophie", "content": "Ok Oliver, tenha um ótimo dia :)", "time": "15:41" }
+        {
+          "type": "agent",
+          "sender": "Sofia",
+          "content": "Perfeito, Otávio. Você tem por aí os documentos do contrato de financiamento desses carros?",
+          "time": "15:04"
+        },
+        { "type": "user", "sender": "Otávio", "content": "não, desculpa", "time": "15:05" },
+        { "type": "user", "sender": "Otávio", "content": "não tenho aqui comigo", "time": "15:05" },
+        {
+          "type": "agent",
+          "sender": "Sofia",
+          "content": "Sem problemas. A gente pode solicitar esses documentos para a financeira por meio de uma Solicitação de Acesso aos Dados (LGPD).\n\nVocê pode preencher este formulário curto clicando neste link? https://www.dsarform.com/lead315",
+          "time": "15:09"
+        },
+        { "type": "user", "sender": "Otávio", "content": "como é o processo daqui pra frente?", "time": "15:20" },
+        {
+          "type": "user",
+          "sender": "Otávio",
+          "content": "vocês me avisam se eu sou elegível quando pegarem os docs e aí eu confirmo se quero seguir?",
+          "time": "15:20"
+          
+        },        { "type": "system", "content": "Lidando com Objeção", "id": "lf-3" },
+        {
+          "type": "agent",
+          "sender": "Sofia",
+          "content": "Exatamente.\n\nAssim que você preencher o formulário, solicitamos os documentos e fazemos a análise. Se encontrarmos que você é elegível para entrar com o pedido, a gente entra em contato para combinar os próximos passos.\n\nNormalmente leva em torno de 30 dias úteis para receber e revisar os documentos. Trabalhamos no modelo de êxito (só cobramos se você ganhar), então não há risco para você.\n\nLink do formulário: https://www.dsarform.com/lead315",
+          "time": "15:22"
+        },
+        { "type": "user", "sender": "Otávio", "content": "obrigado.", "time": "15:24" },
+        { "type": "system", "content": "Formulário enviado ✅", "id": "lf-5" },
+        {
+          "type": "agent",
+          "sender": "Sofia",
+          "content": "Obrigada por preencher o formulário. Em breve você terá notícias. Se tiver qualquer dúvida, pode perguntar 🙂",
+          "time": "15:39"
+        },
+        { "type": "user", "sender": "Otávio", "content": "legal, torcendo que de certo", "time": "15:40" },
+        { "type": "agent", "sender": "Sofia", "content": "Vai dar Otávio, tenha um ótimo dia :)", "time": "15:41" },
+        { "type": "system", "content": "Encerrado", "id": "lf-5" }
       ]
     }
   }
