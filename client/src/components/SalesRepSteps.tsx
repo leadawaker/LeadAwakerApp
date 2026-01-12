@@ -2,18 +2,15 @@ import React, { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+
 import { Database, MessageSquare, TrendingUp, Box, Copy, TrendingDown, Mail, ChevronLeft, ChevronRight } from "lucide-react";
-import databaseIntegrationImg from "@assets/generated_images/database_upload_and_crm_integration.png";
+
 import leadsDbImg from "../assets/step-1-main.png";
 import conversationImg from "@assets/Gemini_Generated_Image_j212wcj212wcj212_1766858918533.png";
 import dailyLeadsImg from "../assets/step-3-main.jpg";
-import calendarImg from "@assets/Gemini_Generated_Image_a2dvda2dvda2dvda_1766862327268.png";
+
 import appointmentBookingImg from "../assets/step-3-appointment-booking.jpg";
 import uploadDatabaseImg from "../assets/step-1-upload-database.png";
-import databaseImageImg from "@assets/Gemini_Generated_Image_toqbi0toqbi0toqb_1766862950610.png";
-import cloudTexture from "@assets/generated_images/cloud-bottom-bar.jpg";
-import cloudsOverlay from "@assets/Project_(20251227103213)_1766828113842.jpg";
 import { MeteorContainer } from "./Meteor";
 
 import excelLogo from "@assets/Microsoft_Office_Excel_(2019–2025).svg_1767283614696.png";
@@ -564,7 +561,7 @@ export const SalesRepSteps = () => {
             }}
             viewport={{ once: true, margin: "0px" }}
             transition={{ duration: 0.3 }}
-            className="text-center max-w-4xl mx-auto mb-24"
+            className="text-center max-w-6xl mx-auto mb-24"
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 drop-shadow-lg">
               <span className="text-white" style={{ 
@@ -683,7 +680,7 @@ export const SalesRepSteps = () => {
       </section>
 
       {/* Intro Section */}
-      <section className="flex items-center justify-center relative overflow-hidden mb-12 py-8 md:py-0" style={{ minHeight: '12vh' }}>
+      <section className="flex items-center justify-center relative overflow-hidden mb-24 py-8 md:py-0" style={{ minHeight: '12vh' }}>
         <motion.div 
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -694,6 +691,11 @@ export const SalesRepSteps = () => {
           <h1 className="text-3xl md:text-6xl font-extrabold tracking-tight mb-0 text-white drop-shadow-lg leading-tight">
             {t('intro.title')}
           </h1>
+          {/* Subtítulo Adicionado */}
+          <p className="text-xl md:text-2xl text-slate-300 font-medium max-w-2xl mx-auto leading-relaxed">
+            {/* Você pode usar uma chave de tradução nova ou texto direto se preferir testar agora */}
+            {t('intro.subtitle') || "Reativação completa e humanizada em 3 etapas simples."}
+          </p>
         </motion.div>
       </section>
 

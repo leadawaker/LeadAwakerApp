@@ -58,21 +58,27 @@ export default function About() {
             {t("intro.title")}
           </h1>
 
-          <div className="flex justify-center">
+          <div className="flex justify-center mt-0 mb-0">
             <LeadReactivationAnimation />
           </div>
 
-          <div className="space-y-6 w-full text-left">
-            <p className="text-xl text-muted-foreground leading-relaxed text-left">
+          <div className="space-y-2 mt-1 w-full text-center"> {/* space-y-8 for more breathing room */}
+            {/* Paragraph 1 */}
+            <p className="-mt-10 text-xl text-muted-foreground leading-relaxed">
               {t("intro.paragraph1")}
             </p>
-            <p className="text-xl text-muted-foreground leading-relaxed text-left">
-              {t("intro.paragraph2")} <span className="text-primary font-bold">{t("intro.you")}</span>
 
+            {/* Paragraph 2 */}
+            <p className="text-xl text-muted-foreground leading-relaxed text-justify">
+              {t("intro.paragraph2")}
+            </p>
 
-
-            {cyclingWords.length > 0 && <CyclingWord words={cyclingWords} />}
-
+            {/* Paragraph 3 with cycling animation - SIMPLIFIED */}
+            <p className="text-xl text-muted-foreground leading-relaxed">
+              {t("intro.paragraph3")}{' '}
+              <span className="text-primary font-bold inline-block">
+                {cyclingWords.length > 0 && <CyclingWord words={cyclingWords} />}
+              </span>
             </p>
           </div>
         </motion.div>

@@ -1,10 +1,10 @@
 {
   "intro": {
-    "title": "Waar wij om geven",
-    "paragraph1": "Bij Lead Awaker geloven we dat uw energie moet gaan naar waar u goed in bent: het leveren van de kwaliteitsservice die u al biedt. Ons werk is u helpen de kracht van aandacht te benutten.",
-    "paragraph2": "Om uw merk iets waardevols te laten betekenen voor een lead, moet die persoon eerst als individu worden behandeld, niet als een regel in een spreadsheet. Wanneer ze op een manier worden benaderd die hun timing, context en voorkeuren respecteert, voelen ze zich begrepen, en wanneer ze zich begrepen voelen, worden ze eindelijk wakker om te begrijpen",
-    "you": "u",
-    "cyclingWords": [".", "w bedrijf.", "w merk.", "w diensten.", "w producten.", "w verhaal.", "w waarden."]
+    "title": "Wat ons motiveert",
+    "paragraph1": "Wij geloven dat je tijd en energie horen te gaan naar waar je passie ligt: je klanten helpen.",
+    "paragraph2": "Wij helpen je hun aandacht te winnen door elke lead als persoon te behandelen, niet als regel in een spreadsheet.",
+    "paragraph3": "Wanneer je benadering rekening houdt met timing, voorkeuren en context voelen mensen zich begrepen. Dan maak je het gesprek weer wakker en reageren ze sneller op jou. ",
+    "cyclingWords": ["Jouw bedrijf.", "Jouw merk.", "Jouw diensten.", "Jouw producten.", "Jouw verhaal.", "Jouw waarden."]
   },
   "sections": [
     {
@@ -45,8 +45,8 @@
   "founder": {
     "name": "Gabriel B. Fronza",
     "title": "Oprichter",
-    "quote": "\"Ik merkte het eerst in de gezondheidskliniek van mijn ouders, en daarna overal. Patiënten boekten consultaties, toonden echte interesse, en werden vervolgens stil terwijl de kliniek bleef betalen voor advertenties om nieuwe te krijgen.\"",
-    "description": "Lead Awaker komt voort uit 10+ jaar productiesoftware leveren, 5 jaar data-gedreven automatisering bouwen, en 4 jaar een echt bedrijf runnen samen met mijn vrouw Danique."
+    "quote": "\"Bij de kliniek van mijn ouders zag ik hetzelfde patroon steeds weer: oprechte interesse, geboekte consultaties en dan... stilte. Toen leerde ik dat leadverlies geen marketingfout is; het is een signaal om opnieuw te verbinden\"",
+    "description": "10+ jaar software leveren. 5 jaar data-gedreven automatisering. 4 jaar een echt bedrijf runnen met mijn vrouw Danique. Dat is Lead Awaker."
   },
   "faq": {
     "title": "Veelgestelde Vragen"

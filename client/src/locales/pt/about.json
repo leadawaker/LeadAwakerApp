@@ -1,10 +1,10 @@
 {
   "intro": {
     "title": "O que nos importa",
-    "paragraph1": "Na Lead Awaker, acreditamos que sua energia deve ir para o que você faz melhor: entregar o serviço de qualidade que você já oferece. Nosso trabalho é ajudá-lo a aproveitar o poder da atenção.",
-    "paragraph2": "Para que sua marca signifique algo valioso para um lead, essa pessoa precisa ser tratada como um indivíduo primeiro, não como uma linha em uma planilha. Quando eles são abordados de uma forma que respeita seu tempo, contexto e preferências, eles se sentem compreendidos, e quando se sentem compreendidos, eles finalmente despertam para entender",
-    "you": "você",
-    "cyclingWords": [".", "a sua empresa.", "a sua marca.", "os seus serviços.", "os seus produtos.", "a sua história.", "os seus valores."]
+    "paragraph1": "Acreditamos que sua energia deve estar onde está seu coração: servindo seus clientes.",
+    "paragraph2": "Ajudamos você a conquistar a atenção deles tratando cada lead como uma pessoa, não uma linha em planilha.",
+    "paragraph3": "Quando o outreach respeita timing, preferências e contexto, as pessoas se sentem compreendidas. É só assim que elas acordam e respondem a",
+    "cyclingWords": ["você.", "sua empresa.", "sua marca.", "seus serviços.", "seus produtos.", "sua história.", "seus valores."]
   },
   "sections": [
     {
@@ -45,8 +45,8 @@
   "founder": {
     "name": "Gabriel B. Fronza",
     "title": "Fundador",
-    "quote": "\"Percebi isso primeiro na clínica de saúde dos meus pais e depois em todos os lugares. Os pacientes agendavam consultas, mostravam interesse real, depois ficavam em silêncio enquanto a clínica continuava pagando por anúncios para conseguir novos.\"",
-    "description": "Lead Awaker vem de mais de 10 anos desenvolvendo software de produção, 5 anos construindo automação orientada por dados e 4 anos administrando um negócio real ao lado da minha esposa Danique."
+    "quote": "\"Na clínica dos meus pais, vi o mesmo padrão repetidas vezes: interesse genuíno, consultas agendadas e depois... silêncio. Foi quando aprendi que a perda de leads não é falha de marketing; é um sinal para reconectar.\"",
+    "description": "10+ anos lançando software. 5 anos de automação data-driven. 4 anos gerindo um negócio real com minha esposa Danique. Isso é Lead Awaker."
   },
   "faq": {
     "title": "Perguntas Frequentes"

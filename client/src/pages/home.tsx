@@ -38,7 +38,7 @@ export default function Home() {
         <div className="absolute top-0 right-0 -z-10 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent blur-3xl opacity-50" />
 
         <div className="container mx-auto px-4 md:px-6">
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center mb-20 relative">
+          <div className="grid md:grid-cols-[1.3fr_0.7fr] gap-8 md:gap-12 items-center mb-20 relative">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -87,7 +87,7 @@ export default function Home() {
                   <span className="relative inline-block font-bold z-10 text-foreground">{t("hero.title.line2")}</span>
                 </span>
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed">
+                <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-lg md:max-w-xl lg:max-w-2xl leading-relaxed">
                 {t("hero.subtitle.line1")}<br />
                 {t("hero.subtitle.line2")}
               </p>

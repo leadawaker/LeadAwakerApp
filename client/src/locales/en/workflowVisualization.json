@@ -11,8 +11,8 @@
     "title": "AI Agent",
     "model": "GPT-5.2",
     "outputLabel": "Output",
-    "message1": "Good morning :)",
-    "message2": "Is this Jack?"
+    "message1": "Good morning Peter :)",
+    "message2": "Shall we get started?"
   },
   "guardrails": {
     "title": "Guardrails",

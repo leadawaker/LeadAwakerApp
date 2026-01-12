@@ -7,7 +7,7 @@
     },
     "subtitle": {
       "line1": "IA gerencia do primeiro contato até o CRM.",
-      "line2": "Foque em crescimento e fechamento, não em correr atrás."
+      "line2": "Foque em crescimento e fechamento, não em correr atrás de leads."
     },
     "cta": {
       "primary": "Agendar uma Ligação",
@@ -34,7 +34,7 @@
     "upfrontCost": {
       "title": "Custo Inicial",
       "partnership": "Parceria de Performance",
-      "mission": "Nós resolvemos problemas, não os criamos",
+      "mission": "Nossa vitória é o seu sucesso",
       "guarantee": "Garantia de 30 dias"
     },
     "absoluteZero": {
@@ -43,7 +43,7 @@
     }
   },
   "compliance": {
-    "title": "Conformidade e Reputação Integradas",
+    "title": "Conformidade e Reputação",
     "gdpr": {
       "title": "Conforme LGPD e GDPR",
       "description": "Todos os fluxos respeitam preferências de opt-out, links de cancelamento de inscrição e requisitos de residência de dados. Estamos totalmente em conformidade com os padrões globais de privacidade."

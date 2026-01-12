@@ -1,16 +1,17 @@
 {
   "painPoints": {
-    "title": "Reativação manual",
+    "title": "A reativação manual",
     "titleIs": "está",
     "titleBroken": "quebrada",
-    "subtitle": "Você já investiu <strong>MILHARES</strong> para adquirir esses leads, mas está deixando <strong>MILHÕES</strong> na mesa porque a reativação é dolorosa e ineficaz.",
-    "bloatedCrm": "CRMs inchados com\nmilhares de contatos esquecidos",
-    "wastedTime": "Vendedores desperdiçam 20-40 hrs/semana em\ntrabalho desgastante de copiar e colar",
-    "lowReplyRates": "5-10% de taxa de resposta\n→ ROI zero",
-    "spamCampaigns": "Campanhas de disparos em massa\nE-mails direto para o spam"
+    "subtitle": "Você já gastou <strong>MILHARES</strong> para adquirir esses leads, mas está abrindo mão de <strong>MILHÕES</strong> porque reativar é lento, doloroso e ineficiente. Soa familiar?",
+    "bloatedCrm": "CRMs inchados com\nmilhares de contatos esquecidos.",
+    "wastedTime": "Vendedores perdem 20-40 hrs/semana em\ntrabalho desgastante de copiar e colar.",
+    "lowReplyRates": "5-10% de taxa de resposta\n→ Nada de ROI",
+    "spamCampaigns": "Emails em massa sem personalização.\n→ Direto para o spam."
   },
   "intro": {
-    "title": "Seu Vendedor Especialista em 3 Etapas."
+    "title": "O seu novo Agente de Reativação Autônoma",
+      "subtitle": "em 3 simples etapas"
   },
   "steps": {
     "step1": {
@@ -25,14 +26,14 @@
     "step2": {
       "number": "2",
       "cardTitle": "2. Iniciamos conversas reais",
-      "cardDescription": "Nossos agentes de IA usam os modelos de linguagem mais avançados para entender a intenção e criar ofertas de engajamento personalizadas para seu nicho.",
+      "cardDescription": "Nossos agentes de IA usam os modelos de linguagem mais avançados para entender a intenção do seu lead e geram interações personalizadas para seu nicho.",
       "overlayTitle": "Capacidade de resposta 24/7",
       "overlayDescription": "Processamento de linguagem natural para conversas humanizadas • Transferência perfeita para equipe humana quando necessário",
       "bulletPoints": {
         "response": "Respostas 24/7 via SMS, WhatsApp e e-mail",
         "followUp": "Follow-up inteligente reengaja leads não responsivos automaticamente",
         "languages": "Fala a língua dos clientes e pode soar formal ou casual",
-        "humanTakeover": "Transferência para humanos quando necessário",
+        "humanTakeover": "Possíbilidade de takeover manual se necessário",
         "selling": "Conversas moldadas por metodologias Challenger & SPIN para descobrir necessidades e lidar com objeções"
       }
     },
@@ -42,7 +43,7 @@
       "cardDescription": "Reativação → Receita",
       "bulletPoints": {
         "calendar": "Sincroniza com Google Calendar, Calendly ou o que você usar. Pronto para ligações instantâneas",
-        "support": "Suporte para chamadas de vendas e agendamentos diretos (consultas, reservas, fechamentos de carrinho)",
+        "support": "Suporte tanto para chamadas de vendas como para agendamentos diretos (consultas, reservas, fechamentos de carrinho)",
         "optimization": "Revisões semanais de otimização para melhorias contínuas de desempenho",
         "dashboard": "Painel ao vivo mostra relatórios de campanha e detalhes de interação com leads"
       }
