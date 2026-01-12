@@ -127,7 +127,7 @@ const FullscreenStep = ({
                 <div className="mb-6 p-3 bg-slate-200 w-fit rounded-xl text-gray-600 flex items-center justify-center min-w-[56px] min-h-[56px]" data-testid={`step-icon-${number}`}>
                   {icon}
                 </div>
-                <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-black" data-testid={`step-title-${number}`}>{cardTitle}</h3>
+                <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-foreground" data-testid={`step-title-${number}`}>{cardTitle}</h3>
                 <p className="text-muted-foreground text-lg leading-relaxed" data-testid={`step-description-${number}`}>
                   {cardDescription.split('\n\n').map((line, i) => (
                     <span key={i}>
@@ -249,7 +249,7 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
                       <div className="mb-6 p-3 w-fit rounded-xl text-gray-600 flex items-center justify-center min-w-[56px] min-h-[56px] bg-[#fff7e0]" data-testid={`step-icon-${step.number}`}>
                         {step.icon}
                       </div>
-                      <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-black" data-testid={`step-title-${step.number}`}>
+                      <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-foreground" data-testid={`step-title-${step.number}`}>
                         {step.cardTitle}
                       </h3>
                       <p className="text-muted-foreground text-lg leading-relaxed mb-6" data-testid={`step-description-${step.number}`}>
@@ -572,18 +572,14 @@ export const SalesRepSteps = () => {
                 {t('painPoints.title')}
               </span>
               {' '}
-              <span style={{ 
-                backgroundImage: 'linear-gradient(to right, #FFFFFF 0%, #E0F2FE 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                display: 'inline-block',
-                marginRight: '0.24em',
-                filter: 'drop-shadow(2.4px 0px 9px rgba(147, 197, 253, 0.18)) drop-shadow(1.2px 0px 3px rgba(147, 197, 253, 0.135))',
-                textShadow: '1.8px 0px 3.6px rgba(147, 197, 253, 0.15)'
-              }}>
-                {t('painPoints.titleIs')}
-              </span>
+                <span style={{ 
+                  color: '#E0F2FE',
+                  display: 'inline-block',
+                  marginRight: '0.24em'
+                }}>
+                  {t('painPoints.titleIs')}
+                </span>
+             
               <span 
                 className={`hologram-glitch ${glitchAnimating ? 'animate' : ''}`}
                 data-testid="text-broken"
