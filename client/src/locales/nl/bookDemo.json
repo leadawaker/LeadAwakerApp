@@ -1,12 +1,12 @@
 {
   "hero": {
-    "title": "Laten We Uw Leads Reactiveren",
-    "subtitle": "Plan een demo van 15 minuten om te zien hoe we automatisch afspraken kunnen boeken vanuit uw bestaande database."
+    "title": "Klaar om je leads te heractiveren?",
+    "subtitle": "Plan een demo van 15 minuten om te zien hoe we automatisch afspraken kunnen boeken vanuit jouw bestaande database."
   },
   "benefits": {
     "opportunity": {
-      "title": "Bekijk Uw Kans",
-      "description": "We bekijken de grootte van uw lead database en schatten de potentiële omzet in."
+      "title": "Bekijk jouw Kans",
+      "description": "We bekijken de grootte van jouw lead database en schatten de potentiële omzet in."
     },
     "demo": {
       "title": "Live Demo",
@@ -15,7 +15,7 @@
   },
   "quickCheck": {
     "title": "Snelle Check:",
-    "question": "Heeft u al een boekingslink?",
+    "question": "Heeft je al een boekingslink?",
     "buttonText": "Ja, breng me naar de kalender"
   }
 }

@@ -11,8 +11,8 @@
     "title": "AI Agent",
     "model": "GPT-5.2",
     "outputLabel": "Output",
-    "message1": "Goedemorgen, Peter :)",
-    "message2": "Zal ik info sturen?"
+    "message1": "Goedemorgen Peter :)",
+    "message2": "Nog geïnteresseerd?"
   },
   "guardrails": {
     "title": "Guardrails",
@@ -25,7 +25,7 @@
       "Geen persoonlijke gegevens",
       "Geen inloggegevens",
       "Geen ongeautoriseerde links",
-      "Geen gegevenslekkage"
+      "Geen datalekken"
     ],
     "noViolations": "Geen overtredingen",
     "messageSent": "Bericht Verzonden"

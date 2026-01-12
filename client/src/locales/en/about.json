@@ -1,52 +1,16 @@
 {
   "intro": {
     "title": "What we care about",
-    "paragraph1": "We believe your energy belongs where your heart is, serving your customers. ",
-    "paragraph2": "We help you earn their attention by treating every lead like a person, not a line in a spreadsheet.",
-    "paragraph3": "When outreach respects timing, preferences, and context, people feel understood. And that's when they wake up and respond to",
+    "paragraph1": "We believe your energy belongs where your heart is: serving your customers. ",
+    "paragraph2": "We help you earn their attention by treating every lead like a person, not a mere line in a spreadsheet.",
+    "paragraph3": "When outreach respects timing, preferences, and context, people feel understood. It's only then that they wake up and respond to ",
     "cyclingWords": ["you.", "your company.", "your brand.", "your services.", "your products.", "your story.", "your values."]
   },
-  "sections": [
-    {
-      "title": "Reliable technical backbone",
-      "items": [
-        "10+ years shipping production software across games and film",
-        "Experience at Framestore, Sega, New World Interactive",
-        "Knows how to keep complex systems simple and stable for non-technical teams"
-      ]
-    },
-    {
-      "title": "Performance-obsessed problem solving",
-      "items": [
-        "5 years data analysis & trading mastery",
-        "Built custom AI tools for trading performance",
-        "Live coaching and feedback systems",
-        "Custom TradingView code for data automation"
-      ]
-    },
-    {
-      "title": "Done-for-you automation, not more tools",
-      "items": [
-        "Built complete AI agency infrastructure",
-        "Lead enrichment systems for HubSpot clients",
-        "Developed scraping tools and business automation",
-        "Combined automation with data analysis expertise"
-      ]
-    },
-    {
-      "title": "Where Lead Awaker is going next",
-      "items": [
-        "Founded TA Monks (4 years) with wife Danique",
-        "Transitioned to building Lead Awaker",
-        "Goal: Scale to $100M ARR"
-      ]
-    }
-  ],
   "founder": {
     "name": "Gabriel B. Fronza",
     "title": "Founder",
     "quote": "\"At my parents’ clinic, I saw the same pattern again and again: genuine interest, booked consultations then... silence. That’s when I learned lead loss isn’t a marketing failure; it’s a signal to reconnect.\"",
-    "description": "10+ years shipping software. 5 years data-driven automation. 4 years running a real business with my wife Danique. That's Lead Awaker."
+    "description": "10+ years shipping software. 5 years data-driven automation. 4 years running a real business with my wife Danique. That's what defines Lead Awaker."
   },
 
 

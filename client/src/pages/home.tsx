@@ -297,7 +297,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center max-w-4xl mx-auto mb-16"
+            className="text-center max-w-5xl mx-auto mb-16"
           >
             <h2 className="font-bold mt-[3px] mb-[3px] text-[58px]">
               {t("compliance.title")}

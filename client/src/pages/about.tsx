@@ -37,22 +37,20 @@ export default function About() {
   const { t } = useTranslation("about");
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
 
-
-
   // AFTER (fixed):
   const cyclingWords = (t("intro.cyclingWords", { returnObjects: true }) as string[]) || [];
   const faqs = (t("faqs", { returnObjects: true }) as Array<{ q: string; a: string }>) || [];
 
-
   return (
     <div className="min-h-screen pt-24 pb-20 text-center">
-      <div className="container mx-auto px-4 md:px-6">
+      {/* Extra wide main container for full screen */}
+      <div className="container mx-auto px-8 md:px-12 lg:px-16 xl:px-20 2xl:px-24">
 
-        {/* 1. Intro Section */}
+        {/* 1. Intro Section - Extra wide */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-4xl mx-auto mb-16"
+          className="max-w-5xl mx-auto mb-16"
         >
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-center text-slate-900">
             {t("intro.title")}
@@ -62,14 +60,14 @@ export default function About() {
             <LeadReactivationAnimation />
           </div>
 
-          <div className="space-y-2 mt-1 w-full text-center"> {/* space-y-8 for more breathing room */}
+          <div className="space-y-2 mt-1 w-full text-left"> {/* space-y-8 for more breathing room */}
             {/* Paragraph 1 */}
             <p className="-mt-10 text-xl text-muted-foreground leading-relaxed">
               {t("intro.paragraph1")}
             </p>
 
             {/* Paragraph 2 */}
-            <p className="text-xl text-muted-foreground leading-relaxed text-justify">
+            <p className="text-xl text-muted-foreground leading-relaxed">
               {t("intro.paragraph2")}
             </p>
 
@@ -83,11 +81,11 @@ export default function About() {
           </div>
         </motion.div>
 
-        {/* 2. Meet the Founder */}
+        {/* 2. Meet the Founder - Full width background unchanged */}
         <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] mr-[50vw] bg-[#E5E7EB] py-24 mb-20 overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
-          <div className="container mx-auto px-4 md:px-6 relative text-left">
-            <div className="max-w-4xl mx-auto">
+          <div className="container mx-auto px-4 md:px-8 lg:px-12 xl:px-16 2xl:px-20 relative text-left">
+            <div className="max-w-5xl mx-auto">
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -128,15 +126,17 @@ export default function About() {
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto">
+        {/* Divider - Extra wide */}
+        <div className="max-w-5xl mx-auto">
           <hr className="border-border mb-20" />
         </div>
 
+        {/* FAQ - Extra wide */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-4xl mx-auto mb-24"
+          className="max-w-5xl mx-auto mb-24"
         >
           <div className="bg-card/50 border border-border rounded-3xl p-8 md:p-12">
             <h2 className="text-3xl font-bold mb-10 text-left">{t("faq.title")}</h2>

@@ -10,8 +10,8 @@
     "spamCampaigns": "Emails em massa sem personalização.\n→ Direto para o spam."
   },
   "intro": {
-    "title": "O seu novo Agente de Reativação Autônoma",
-      "subtitle": "em 3 simples etapas"
+    "title": "Reative leads no automático",
+      "subtitle": "em 3 simples passos"
   },
   "steps": {
     "step1": {
@@ -20,7 +20,7 @@
       "cardDescription": "Envie um CSV ou conecte seu CRM. É simples assim.",
       "bulletPoints": {
         "reawaken": "Reativamos leads inativos que pediram informações há meses mas nunca compraram - até leads que sua equipe já ligou exaustivamente",
-        "segment": "Segmentação automática de contatos baseada em interações passadas"
+        "segment": "Nosso sistema realiza segmentação automática de contatos baseada em interações passadas"
       }
     },
     "step2": {

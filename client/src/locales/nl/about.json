@@ -3,90 +3,54 @@
     "title": "Wat ons motiveert",
     "paragraph1": "Wij geloven dat je tijd en energie horen te gaan naar waar je passie ligt: je klanten helpen.",
     "paragraph2": "Wij helpen je hun aandacht te winnen door elke lead als persoon te behandelen, niet als regel in een spreadsheet.",
-    "paragraph3": "Wanneer je benadering rekening houdt met timing, voorkeuren en context voelen mensen zich begrepen. Dan maak je het gesprek weer wakker en reageren ze sneller op jou. ",
-    "cyclingWords": ["Jouw bedrijf.", "Jouw merk.", "Jouw diensten.", "Jouw producten.", "Jouw verhaal.", "Jouw waarden."]
+    "paragraph3": "Wanneer je benadering rekening houdt met timing, voorkeuren en context voelen mensen zich begrepen. Zo maak je het gesprek weer wakker en reageren ze sneller op ",
+    "cyclingWords": ["jouw bedrijf.", "jouw merk.", "jouw diensten.", "jouw producten.", "jouw verhaal.", "jouw waarden."]
   },
-  "sections": [
-    {
-      "title": "Betrouwbare technische basis",
-      "items": [
-        "10+ jaar productiesoftware leveren in games en film",
-        "Ervaring bij Framestore, Sega, New World Interactive",
-        "Weet hoe complexe systemen eenvoudig en stabiel te houden voor niet-technische teams"
-      ]
-    },
-    {
-      "title": "Op prestaties gerichte probleemoplossing",
-      "items": [
-        "5 jaar data-analyse & trading beheersing",
-        "Aangepaste AI-tools gebouwd voor trading prestaties",
-        "Live coaching en feedback systemen",
-        "Aangepaste TradingView code voor data-automatisering"
-      ]
-    },
-    {
-      "title": "Kant-en-klare automatisering, geen extra tools",
-      "items": [
-        "Volledige AI-bureau infrastructuur gebouwd",
-        "Lead verrijkingssystemen voor HubSpot klanten",
-        "Scraping tools en bedrijfsautomatisering ontwikkeld",
-        "Automatisering gecombineerd met data-analyse expertise"
-      ]
-    },
-    {
-      "title": "Waar Lead Awaker naartoe gaat",
-      "items": [
-        "TA Monks opgericht (4 jaar) met vrouw Danique",
-        "Overgestapt naar het bouwen van Lead Awaker",
-        "Doel: Opschalen naar $100M ARR"
-      ]
-    }
-  ],
   "founder": {
     "name": "Gabriel B. Fronza",
     "title": "Oprichter",
-    "quote": "\"Bij de kliniek van mijn ouders zag ik hetzelfde patroon steeds weer: oprechte interesse, geboekte consultaties en dan... stilte. Toen leerde ik dat leadverlies geen marketingfout is; het is een signaal om opnieuw te verbinden\"",
-    "description": "10+ jaar software leveren. 5 jaar data-gedreven automatisering. 4 jaar een echt bedrijf runnen met mijn vrouw Danique. Dat is Lead Awaker."
+    "quote": "\"Bij de kliniek van mijn ouders zag ik hetzelfde patroon steeds weer: oprechte interesse, geboekte consultaties en dan... stilte. Het leerde me dat het verlies van leads geen marketingfout is; het is een signaal om opnieuw te verbinden\"",
+    "description": "10+ jaar software productie. 5 jaar data-gedreven automatisering. 4 jaar samen met mijn vrouw Danique een bedrijf opgebouwd. Dat is wat Lead Awaker defineert."
   },
   "faq": {
     "title": "Veelgestelde Vragen"
   },
   "faqs": [
     {
-      "q": "Wat als onze leads echt oud of volledig koud zijn?",
-      "a": "Leeftijd is niet de belangrijkste factor; relevantie wel. Leads van 6 maanden of zelfs 2 jaar geleden kunnen nog steeds converteren als het oorspronkelijke pijnpunt blijft bestaan en de outreach persoonlijk aanvoelt. Het systeem identificeert wie nog in de markt is op basis van betrokkenheidssignalen, niet alleen database leeftijd."
+      "q": "Wat als onze leads heel oud of helemaal afgekoeld zijn?",
+      "a": "Leeftijd is niet de belangrijkste factor, relevantie wel. Leads van 6 maanden of zelfs 2 jaar geleden kunnen nog steeds converteren als het oorspronkelijke pijnpunt nog speelt en het contact persoonlijk aanvoelt. Het systeem bepaalt wie nog steeds interesse heeft op basis van betrokkenheidssignalen, niet alleen op basis van hoe lang ze in de database staan."
     },
     {
-      "q": "Zal dit werken met onze industrie/niche?",
-      "a": "Lead Awaker is kanaal-agnostisch gebouwd en past zich aan uw specifieke verkoopproces aan, of u nu actief bent in levensverzekeringen, fitness coaching, juridische diensten of B2B consulting. De AI leert uw terminologie, bezwaren en conversiepatronen tijdens de setup."
+      "q": "Werkt dit ook voor onze branche?",
+      "a": "Lead Awaker werkt voor elk kanaal en past zich aan jouw specifieke verkoopproces aan, of je nu werkt in levensverzekeringen, fitness coaching, juridische diensten, hondenuitlaatservice of B2B consulting. De AI leert jouw terminologie, diensten, gangbare bezwaren en conversiepatronen tijdens de setup."
     },
     {
-      "q": "Hoe voorkom je dat het als spam of opdringerig overkomt?",
-      "a": "Elk bericht is gepersonaliseerd op basis van waar de lead stopte in uw funnel, gebruikt natuurlijke taal (geen robotachtige sjablonen) en respecteert opt-out signalen onmiddellijk. Het doel is om aan te voelen als een nuttige follow-up van uw team, niet als een massa campagne."
+      "q": "Hoe voorkom je dat berichten als spam of opdringerig overkomen?",
+      "a": "Elk bericht wordt gepersonaliseerd op basis van waar de lead is gestopt in je funnel, gebruikt natuurlijke taal (geen robotachtige sjablonen) en respecteert direct afmeldverzoeken. Het voelt aan als een nuttige follow-up van je team, niet als een massa campagne."
     },
     {
-      "q": "Moeten we scripts aanleveren of schrijft de AI alles?",
-      "a": "U levert voorbeelden van uw best presterende gesprekken en belangrijke gespreksonderwerpen; de AI past deze aan tot natuurlijke, geïndividualiseerde berichten. U keurt de toon goed tijdens de setup, en het systeem leert wat converteert in de loop van de tijd."
+      "q": "Moeten wij scripts aanleveren of schrijft de AI alles zelf?",
+      "a": "Het is niet verplicht, maar je kunt als je wilt voorbeelden geven van je best presterende gesprekken en belangrijke gespreksonderwerpen. De AI past deze aan tot natuurlijke, gepersonaliseerde berichten. Je keurt de toon goed tijdens de setup en het systeem leert in de loop der tijd wat het beste werkt."
     },
     {
-      "q": "Welke kanalen gebruiken jullie om leads opnieuw te betrekken?",
-      "a": "Email, SMS, WhatsApp en Telegram afhankelijk van uw publiek en compliance vereisten. SMS krijgt vaak 98% openingspercentages vs. 15-25% voor email, dus het systeem geeft prioriteit aan het kanaal dat het meest waarschijnlijk aandacht krijgt zonder opdringerig te zijn."
+      "q": "Via welke kanalen benader je leads opnieuw?",
+      "a": "Email, SMS, WhatsApp en Telegram, afhankelijk van je doelgroep en compliance-eisen. SMS haalt vaak 90-99% openingspercentages tegenover 20-30% voor email, dus het systeem geeft prioriteit aan het kanaal dat het best de aandacht trekt zonder opdringerig te zijn."
     },
     {
-      "q": "Hoe gaan jullie om met compliance (GDPR, CAN-SPAM, CCPA)?",
-      "a": "Alle outreach respecteert bestaande opt-in records, bevat duidelijke afmeldopties en registreert toestemming per kanaal. Als een lead zich aanmeldde voor email maar niet voor SMS, worden ze alleen via email gecontacteerd. Compliance is ingebouwd in de workflow, niet achteraf toegevoegd."
+      "q": "Hoe gaan jullie om met privacyregels (AVG, CAN-SPAM, CCPA)?",
+      "a": "Alle communicatie respecteert bestaande toestemmingen, bevat duidelijke afmeldmogelijkheden en registreert toestemming per kanaal. Als een lead alleen toestemming heeft gegeven voor email maar niet voor SMS, wordt alleen email gebruikt. Compliance is ingebouwd in het systeem, niet er achteraf aan toegevoegd."
     },
     {
-      "q": "Wat gebeurt er wanneer een lead reageert?",
-      "a": "De AI kwalificeert hun interesseniveau en boekt ofwel direct een gesprek in uw agenda, draagt over aan uw verkoopteam met context, of blijft nurturing op basis van gereedheidsignalen. U definieert de overdracht criteria tijdens de setup."
+      "q": "Wat gebeurt er als een lead reageert?",
+      "a": "De AI bepaalt hun interesseniveau en doet daarna één van drie dingen: direct een afspraak inplannen in je agenda, overdragen aan je sales team met alle context, of zorgen voor verdere opvolging op basis van hun koopbereidheid. Je stelt de overdrachtcriteria in tijdens de setup."
     },
     {
       "q": "Kunnen we campagnes halverwege pauzeren of aanpassen?",
-      "a": "Ja. U kunt outreach pauzeren, berichten bijwerken of targeting regels aanpassen via het dashboard wanneer u maar wilt. Wijzigingen worden onmiddellijk van kracht zonder voortgang op actieve gesprekken te verliezen."
+      "a": "Ja. Je kunt op elk moment de communicatie pauzeren, berichten aanpassen of targeting-regels wijzigen. Wijzigingen worden direct doorgevoerd zonder dat je voortgang verliest bij actieve gesprekken."
     },
     {
       "q": "Welke resultaten kunnen we realistisch verwachten?",
-      "a": "De meeste klanten zien 8-15% van inactieve leads opnieuw betrokken raken binnen de eerste 30 dagen, met 20-40% daarvan converterend naar geboekte gesprekken of aankopen. Resultaten hangen af van lijstkwaliteit, aanbod fit en hoe lang leads inactief zijn geweest, maar zelfs een 5% reactivatie percentage betaalt zichzelf snel terug."
+      "a": "De meeste klanten zien dat 8–15% van inactieve leads binnen de eerste 30 dagen weer reageert, en dat 20–40% daarvan leidt tot geboekte gesprekken of aankopen. Resultaten hangen af van lijstkwaliteit, hoe goed je aanbod aansluit en hoe lang leads inactief zijn geweest, maar zelfs een 5% reactivatie percentage betaalt zichzelf snel terug."
     }
   ]
 }

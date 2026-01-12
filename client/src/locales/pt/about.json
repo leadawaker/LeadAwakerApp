@@ -2,51 +2,15 @@
   "intro": {
     "title": "O que nos importa",
     "paragraph1": "Acreditamos que sua energia deve estar onde está seu coração: servindo seus clientes.",
-    "paragraph2": "Ajudamos você a conquistar a atenção deles tratando cada lead como uma pessoa, não uma linha em planilha.",
+    "paragraph2": "Ajudamos você a conquistar a atenção deles tratando cada lead como uma pessoa, não só um contanto numa planilha.",
     "paragraph3": "Quando o outreach respeita timing, preferências e contexto, as pessoas se sentem compreendidas. É só assim que elas acordam e respondem a",
     "cyclingWords": ["você.", "sua empresa.", "sua marca.", "seus serviços.", "seus produtos.", "sua história.", "seus valores."]
   },
-  "sections": [
-    {
-      "title": "Base técnica confiável",
-      "items": [
-        "Mais de 10 anos desenvolvendo software de produção em jogos e cinema",
-        "Experiência na Framestore, Sega, New World Interactive",
-        "Sabe como manter sistemas complexos simples e estáveis para equipes não técnicas"
-      ]
-    },
-    {
-      "title": "Resolução de problemas focada em desempenho",
-      "items": [
-        "5 anos de domínio em análise de dados e trading",
-        "Desenvolveu ferramentas de IA personalizadas para desempenho de trading",
-        "Sistemas de coaching e feedback ao vivo",
-        "Código TradingView personalizado para automação de dados"
-      ]
-    },
-    {
-      "title": "Automação pronta para você, não mais ferramentas",
-      "items": [
-        "Construiu infraestrutura completa de agência de IA",
-        "Sistemas de enriquecimento de leads para clientes HubSpot",
-        "Desenvolveu ferramentas de scraping e automação de negócios",
-        "Combinação de automação com expertise em análise de dados"
-      ]
-    },
-    {
-      "title": "Para onde a Lead Awaker vai em seguida",
-      "items": [
-        "Fundou a TA Monks (4 anos) com a esposa Danique",
-        "Transição para construir a Lead Awaker",
-        "Meta: Escalar para $100M ARR"
-      ]
-    }
-  ],
   "founder": {
     "name": "Gabriel B. Fronza",
     "title": "Fundador",
     "quote": "\"Na clínica dos meus pais, vi o mesmo padrão repetidas vezes: interesse genuíno, consultas agendadas e depois... silêncio. Foi quando aprendi que a perda de leads não é falha de marketing; é um sinal para reconectar.\"",
-    "description": "10+ anos lançando software. 5 anos de automação data-driven. 4 anos gerindo um negócio real com minha esposa Danique. Isso é Lead Awaker."
+    "description": "10+ anos lançando software. 5 anos de automação data-driven. 4 anos gerindo um negócio real com minha esposa Danique. Isso é o que define o Lead Awaker."
   },
   "faq": {
     "title": "Perguntas Frequentes"
@@ -58,7 +22,7 @@
     },
     {
       "q": "Isso funcionará com nossa indústria/nicho?",
-      "a": "Lead Awaker é construído de forma agnóstica a canais e se adapta ao seu processo de vendas específico, seja você de seguros de vida, coaching fitness, serviços jurídicos ou consultoria B2B. A IA aprende sua terminologia, objeções e padrões de conversão durante a configuração."
+      "a": "Lead Awaker é construído de forma agnóstica a canais e se adapta ao seu processo de vendas específico, seja você de seguros de vida, coaching fitness, serviços jurídicos, petshop ou consultoria B2B. A IA aprende sua terminologia, objeções e padrões de conversão durante a configuração."
     },
     {
       "q": "Como você evita parecer spam ou insistente?",
@@ -66,14 +30,14 @@
     },
     {
       "q": "Precisamos fornecer scripts ou a IA escreve tudo?",
-      "a": "Você fornece exemplos de suas melhores conversas e pontos-chave de discussão; a IA adapta isso em mensagens naturais e individualizadas. Você aprova o tom durante a configuração, e o sistema aprende o que converte ao longo do tempo."
+      "a": "Não é necessário mas você pode fornecer exemplos de suas melhores conversas e pontos-chave de discussão; a IA adapta isso em mensagens naturais e individualizadas. Você aprova o tom durante a configuração, e o sistema aprende o que converte ao longo do tempo."
     },
     {
       "q": "Quais canais vocês usam para reengajar leads?",
-      "a": "Email, SMS, WhatsApp e Telegram dependendo do seu público e requisitos de conformidade. SMS frequentemente obtém 98% de taxas de abertura vs. 15-25% para email, então o sistema prioriza o canal com maior probabilidade de obter atenção sem ser intrusivo."
+      "a": "Email, SMS, WhatsApp e Telegram dependendo do seu público e requisitos de conformidade. SMS frequentemente obtém 98% de taxas de abertura vs. 15-25% para email (padrão da indústria), então o sistema prioriza o canal com maior probabilidade de obter atenção sem ser intrusivo."
     },
     {
-      "q": "Como vocês lidam com conformidade (GDPR, CAN-SPAM, CCPA)?",
+      "q": "Como vocês lidam com conformidade ( LGPD e GDPR, CCPA)?",
       "a": "Toda abordagem respeita registros de opt-in existentes, inclui opções claras de cancelamento de inscrição e registra consentimento por canal. Se um lead optou por email mas não SMS, eles são contatados apenas por email. A conformidade é integrada ao fluxo de trabalho, não adicionada depois."
     },
     {

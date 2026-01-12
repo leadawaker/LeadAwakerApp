@@ -1,21 +1,21 @@
 {
   "hero": {
     "title": {
-      "line1": "Maak slapende leads wakker in",
-      "highlight": "geboekte gesprekken",
+      "line1": "Heractiveer slapende leads naar",
+      "highlight": "geboekte gesprekken,",
       "line2": "automatisch."
     },
     "subtitle": {
-      "line1": "AI regelt van eerste contact tot CRM overdracht.",
-      "line2": "Focus op groei en closing, niet op achtervolgen."
+      "line1": "Van eerste bericht tot CRM-overdracht: de AI regelt het.",
+      "line2": "Jij kan focussen op groei en deals sluiten, niet op achter leads aanzitten."
     },
     "cta": {
       "primary": "Gesprek Boeken",
-      "secondary": "Bekijk Gebruiksvoorbeelden"
+      "secondary": "Bekijk Use Cases"
     }
   },
   "results": {
-    "title": "En wat u krijgt",
+    "title": "En wat je krijgt",
     "subtitle": "Van chaos naar zekerheid in 30 dagen",
     "metrics": {
       "replyRates": {
@@ -33,7 +33,7 @@
     },
     "upfrontCost": {
       "title": "Initiële Kosten",
-      "partnership": "Performance Partnerschap",
+      "partnership": "Performance Samenwerking",
       "mission": "We lossen problemen op, we creëren ze niet",
       "guarantee": "30-dagen garantie"
     },
@@ -43,14 +43,14 @@
     }
   },
   "compliance": {
-    "title": "Naleving en Reputatie Ingebouwd",
+    "title": "Ingebouwde Compliance en Reputatie",
     "gdpr": {
       "title": "AVG (GDPR) & CCPA Conform",
       "description": "Alle workflows respecteren opt-out voorkeuren, uitschrijflinks en dataresidentie-eisen. We zijn volledig conform met wereldwijde privacystandaarden."
     },
     "brand": {
       "title": "Merkveiligheid",
-      "description": "Real-time monitoring zorgt ervoor dat elke interactie on-topic, professioneel en perfect afgestemd blijft op uw merkidentiteit en richtlijnen."
+      "description": "Real-time monitoring zorgt ervoor dat elk gesprek on-topic, professioneel en perfect afgestemd blijft op de merkidentiteit en richtlijnen."
     }
   },
   "bottomCta": {

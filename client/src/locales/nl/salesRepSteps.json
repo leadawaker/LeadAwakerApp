@@ -3,14 +3,15 @@
     "title": "Handmatige reactivering",
     "titleIs": "is",
     "titleBroken": "kapot",
-    "subtitle": "Je hebt al <strong>DUIZENDEN</strong> geïnvesteerd om deze leads te verwerven, maar je laat <strong>MILJOENEN</strong> liggen omdat reactivering pijnlijk en ineffectief is.",
+    "subtitle": "Je hebt al <strong>DUIZENDEN</strong> geïnvesteerd om deze leads binnen te halen, maar je laat <strong>MILJOENEN</strong> liggen omdat reactivering pijnlijk en ineffectief is. Klinkt bekend?",
     "bloatedCrm": "Opgeblazen CRM's met\nduizenden vergeten contacten",
-    "wastedTime": "Verkopers verspillen 20-40 uur/week aan\nzielsverpletterd kopieer-en-plakwerk",
+    "wastedTime": "Verkopers verspillen 20-40 uur/week aan\ngeestdodend kopieer-en-plakwerk",
     "lowReplyRates": "5-10% responspercentage\n→ nul ROI",
     "spamCampaigns": "Spray-and-pray campagnes\nBulk e-mails direct naar spam"
   },
   "intro": {
-    "title": "Jouw Expert Verkoper in 3 Stappen."
+    "title": "Je autonome leadmanager",
+    "subtitle": "in 3 stappen"
   },
   "steps": {
     "step1": {
@@ -18,7 +19,7 @@
       "cardTitle": "1. Upload je database",
       "cardDescription": "Stuur een CSV of koppel je CRM. Zo simpel is het.",
       "bulletPoints": {
-        "reawaken": "We wekken slapende leads die maanden geleden informeerden maar nooit kochten - zelfs leads die je verkoopteam dood heeft gebeld",
+        "reawaken": "We maken slapende leads wakker die maanden geleden interesse toonden, maar nooit kochten, ook de leads die je salesteam al tig keer heeft gebeld.",
         "segment": "Automatisch segmenteren van contacten op basis van eerdere interacties"
       }
     },
@@ -33,7 +34,7 @@
         "followUp": "Slimme opvolging activeert niet-reagerende leads automatisch opnieuw",
         "languages": "Spreekt de taal van klanten en kan formeel of casual klinken",
         "humanTakeover": "Menselijke overname wanneer nodig",
-        "selling": "Gesprekken gevormd door Challenger & SPIN-verkoop om behoeften te ontdekken en bezwaren te behandelen"
+        "selling": "Gesprekken gebaseerd op de verkoopmethodes SPIN en Challenger om behoeften boven tafel te krijgen en bezwaren te behandelen."
       }
     },
     "step3": {
@@ -42,7 +43,7 @@
       "cardDescription": "Reactivering → Omzet",
       "bulletPoints": {
         "calendar": "Synchroniseert met Google Agenda, Calendly of wat je ook gebruikt. Beller-klaar voor directe gesprekken",
-        "support": "Ondersteuning voor verkoopgesprekken en directe boekingen (afspraken, reserveringen, winkelwagen-afsluitingen)",
+        "support": "Ondersteuning voor salesgesprekken en directe boekingen (afspraken, reserveringen, afgeronde winkelwagens).",
         "optimization": "Wekelijkse optimalisatiebeoordelingen voor continue prestatieverbetering",
         "dashboard": "Live dashboard toont campagnerapporten en lead-interactiedetails"
       }
