@@ -16,6 +16,8 @@ import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsOfService from "@/pages/terms-of-service";
 import NotFound from "@/pages/not-found";
 
+
+
 function Router() {
   return (
     <div className="flex flex-col min-h-screen">

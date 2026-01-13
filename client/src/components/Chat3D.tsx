@@ -99,7 +99,6 @@ export default function Chat3D() {
     }),
   };
 
-  // ... rest of your component JSX remains the same
 
 
   return (

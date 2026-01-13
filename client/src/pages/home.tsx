@@ -19,7 +19,6 @@ import {
   Users
 } from "lucide-react";
 import Chat3D from "@/components/Chat3D";
-import AnimatedLogo3D from "@/components/AnimatedLogo3D";
 import PipelineChart from "@/components/PipelineChart";
 import AnimatedCounter from "@/components/AnimatedCounter";
 import AnimatedRangeCounter from "@/components/AnimatedRangeCounter";
@@ -38,13 +37,13 @@ export default function Home() {
         <div className="absolute top-0 right-0 -z-10 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent blur-3xl opacity-50" />
 
         <div className="container mx-auto px-4 md:px-6">
-          <div className="grid md:grid-cols-[1.3fr_0.7fr] gap-8 md:gap-12 items-center mb-20 relative">
+          <div className="grid lg:grid-cols-[1fr_minmax(450px,0.7fr)] gap-8 lg:gap-12 items-center mb-20 relative md:ml-auto lg:w-11/12">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] mb-6 text-foreground relative">
+              <h1 className="text-7xl md:text-5xl lg:text-6xl font-bold leading-[1.1] mb-6 text-foreground relative">
                 {t("hero.title.line1")}<br />
                 <motion.span 
                   className="relative block w-full"
