@@ -1,7 +1,9 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { motion, useInView } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
+
+/* -------------------- Logo Animation (unchanged) -------------------- */
 
 function LogoAnimation() {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -9,8 +11,9 @@ function LogoAnimation() {
 
   const [topWaveKey, setTopWaveKey] = useState(0);
   const [showTopWave, setShowTopWave] = useState(false);
+
   const replayTopWave = () => {
-    setTopWaveKey(prev => prev + 1);
+    setTopWaveKey((prev) => prev + 1);
   };
 
   useEffect(() => {
@@ -19,7 +22,7 @@ function LogoAnimation() {
     const timeout = setTimeout(() => {
       setShowTopWave(true);
       replayTopWave();
-    }, 2600); // 2.5s (Awaker) + 0.5s
+    }, 2600);
 
     return () => clearTimeout(timeout);
   }, [inView]);
@@ -36,7 +39,6 @@ function LogoAnimation() {
     >
       <div className="w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96">
         <div className="relative w-full h-full">
-          {/* Lead */}
           <motion.img
             src="/Logo-Lead.svg"
             alt=""
@@ -46,7 +48,6 @@ function LogoAnimation() {
             transition={{ duration: 0.6, delay: 0.2 }}
           />
 
-          {/* Awaker */}
           <motion.img
             src="/Logo-Awaker.svg"
             alt=""
@@ -56,7 +57,6 @@ function LogoAnimation() {
             transition={{ delay: 1.2, duration: 0.8 }}
           />
 
-          {/* Rooster */}
           <motion.img
             src="/Logo-Rooster.svg"
             alt=""
@@ -66,7 +66,6 @@ function LogoAnimation() {
             transition={{ delay: 2.2, duration: 0.4 }}
           />
 
-          {/* Sound wave / Top */}
           {showTopWave && (
             <motion.img
               key={topWaveKey}
@@ -75,27 +74,14 @@ function LogoAnimation() {
               className="absolute inset-0 w-full h-full object-contain"
               initial={{ opacity: 0, scale: 0.25, x: 0, y: 0 }}
               animate={{
-                // index: 0   1   2   3   4   5   6   7
-                opacity: [0,  1,  0,  1,  0,  0,  1,  1],
-
-                // scale stays small through fade-out, jumps while invisible
-                scale:   [0.6,0.6,0.6,0.6,0.6,1,  1.07,  1],
-
-                x:       [15, 15, 15, 15, 15, 0,  0,  0],
-                y:       [-25,-25,-25,-25,-25,0,  0,  0],
+                opacity: [0, 1, 0, 1, 0, 0, 1, 1],
+                scale: [0.6, 0.6, 0.6, 0.6, 0.6, 1, 1.07, 1],
+                x: [15, 15, 15, 15, 15, 0, 0, 0],
+                y: [-25, -25, -25, -25, -25, 0, 0, 0],
               }}
               transition={{
                 duration: 2.0,
-                times: [
-                  0.0,  // invisible
-                  0.15, // pop 1 on
-                  0.25, // pop 1 off
-                  0.4,  // pop 2 on
-                  0.5,  // pop 2 off
-                  0.75,  // invisible, SCALE JUMP happens here
-                  0.85,  // FINAL pop on (full size)
-                  1.0,  // hold final
-                ],
+                times: [0, 0.15, 0.25, 0.4, 0.5, 0.75, 0.85, 1],
                 ease: "linear",
               }}
             />
@@ -106,57 +92,123 @@ function LogoAnimation() {
   );
 }
 
-export default LogoAnimation;
+/* -------------------- Footer -------------------- */
+
+const SUPPORTED_LANGS = ["en", "pt", "nl"] as const;
+type Lang = (typeof SUPPORTED_LANGS)[number];
 
 export function Footer() {
   const { t } = useTranslation("common");
+  const [location] = useLocation();
+
+  /**
+   * Detect language from URL
+   */
+  const currentLang = useMemo<Lang>(() => {
+    const firstSegment = location.split("/").filter(Boolean)[0];
+    return SUPPORTED_LANGS.includes(firstSegment as Lang)
+      ? (firstSegment as Lang)
+      : "en";
+  }, [location]);
+
+  /**
+   * Build language-aware links
+   */
+  const withLang = (path: string) => {
+    if (currentLang === "en") return path;
+    return `/${currentLang}${path === "/" ? "" : path}`;
+  };
 
   return (
     <footer className="bg-muted/30 pt-20 pb-10 border-t border-border relative overflow-hidden">
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-4 md:mb-16 relative z-10">
           <div>
-            <h4 className="font-heading font-bold mb-4">{t("footer.company")}</h4>
+            <h4 className="font-heading font-bold mb-4">
+              {t("footer.company")}
+            </h4>
             <ul className="space-y-3">
-              <li><Link href="/" className="text-muted-foreground hover:text-primary transition-colors">{t("nav.home")}</Link></li>
-              <li><Link href="/about" className="text-muted-foreground hover:text-primary transition-colors">{t("nav.about")}</Link></li>
-              <li><Link href="/services" className="text-muted-foreground hover:text-primary transition-colors">{t("nav.services")}</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-heading font-bold mb-4">{t("footer.contact")}</h4>
-            <ul className="space-y-3">
-              <li><Link href="/book-demo" className="text-muted-foreground hover:text-primary transition-colors">{t("nav.bookDemo")}</Link></li>
-              <li className="text-muted-foreground">leadawaker@gmail.com</li>
-              <li className="text-muted-foreground text-sm">
-                Christiaan Huygensweg 32,<br />
-                s'Hertogenbosch, NL
+              <li>
+                <Link
+                  href={withLang("/")}
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {t("nav.home")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href={withLang("/about")}
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {t("nav.about")}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href={withLang("/services")}
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {t("nav.services")}
+                </Link>
               </li>
             </ul>
           </div>
 
-          {/* Desktop Logo Container - relative positioned for absolute child */}
+          <div>
+            <h4 className="font-heading font-bold mb-4">
+              {t("footer.contact")}
+            </h4>
+            <ul className="space-y-3">
+              <li>
+                <Link
+                  href={withLang("/book-demo")}
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {t("nav.bookDemo")}
+                </Link>
+              </li>
+              <li className="text-muted-foreground">
+                leadawaker@gmail.com
+              </li>
+              <li className="text-muted-foreground text-sm">
+                Christiaan Huygensweg 32,
+                <br />
+                s&apos;Hertogenbosch, NL
+              </li>
+            </ul>
+          </div>
+
           <div className="hidden md:block relative">
             <LogoAnimation />
           </div>
         </div>
 
-        {/* Mobile Logo - Static version with minimal top margin */}
+        {/* Mobile Logo */}
         <div className="flex justify-center items-center mt-1 mb-2 md:hidden">
           <div className="relative w-[346px] h-[346px] -ml-2">
-            <img src="/Logo-Lead.svg" alt="Lead Awaker Logo" className="absolute inset-0 w-full h-full object-contain" />
-            <img src="/Logo-Awaker.svg" alt="" className="absolute inset-0 w-full h-full object-contain" />
-            <img src="/Logo-Rooster.svg" alt="" className="absolute inset-0 w-full h-full object-contain" />
-            <img src="/Logo-Top.svg" alt="" className="absolute inset-0 w-full h-full object-contain" />
+            <img src="/Logo-Lead.svg" className="absolute inset-0 w-full h-full object-contain" />
+            <img src="/Logo-Awaker.svg" className="absolute inset-0 w-full h-full object-contain" />
+            <img src="/Logo-Rooster.svg" className="absolute inset-0 w-full h-full object-contain" />
+            <img src="/Logo-Top.svg" className="absolute inset-0 w-full h-full object-contain" />
           </div>
         </div>
 
         <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center gap-1 text-sm text-muted-foreground relative z-10">
           <p>{t("footer.copyright", { year: new Date().getFullYear() })}</p>
           <div className="flex gap-6">
-            <Link href="/privacy-policy" className="hover:text-primary transition-colors">{t("footer.privacy")}</Link>
-            <Link href="/terms-of-service" className="hover:text-primary transition-colors">{t("footer.terms")}</Link>
+            <Link
+              href={withLang("/privacy-policy")}
+              className="hover:text-primary transition-colors"
+            >
+              {t("footer.privacy")}
+            </Link>
+            <Link
+              href={withLang("/terms-of-service")}
+              className="hover:text-primary transition-colors"
+            >
+              {t("footer.terms")}
+            </Link>
           </div>
         </div>
       </div>

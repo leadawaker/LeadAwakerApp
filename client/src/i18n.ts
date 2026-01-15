@@ -92,16 +92,39 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
+
     fallbackLng: "en",
+
     defaultNS: "common",
-    ns: ["common", "home", "services", "about", "bookDemo", "chat3d", "salesRepSteps", "pipelineChart", "workflowVisualization", "login", "termsOfService", "privacyPolicy"],
+    ns: [
+      "common",
+      "home",
+      "services",
+      "about",
+      "bookDemo",
+      "chat3d",
+      "salesRepSteps",
+      "pipelineChart",
+      "workflowVisualization",
+      "login",
+      "termsOfService",
+      "privacyPolicy",
+    ],
+
     interpolation: {
       escapeValue: false,
     },
+
+    /**
+     * IMPORTANT:
+     * URL is the source of truth.
+     * We disable localStorage to avoid language desync
+     * when using /pt and /nl routing.
+     */
     detection: {
-      order: ["path", "localStorage", "navigator"],
+      order: ["path"],
       lookupFromPathIndex: 0,
-      caches: ["localStorage"],
+      caches: [],
     },
   });
 
