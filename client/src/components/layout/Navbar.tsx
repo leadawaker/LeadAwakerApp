@@ -51,17 +51,19 @@ export function Navbar() {
             : "bg-transparent py-6"
         }`}
       >
-        <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="flex items-center justify-between md:ml-auto lg:w-11/12">
           <Link 
             href="/" 
             className="flex items-center group relative z-10"
             aria-label="Lead Awaker Home"
           >
-            <div className="p-1 hover:opacity-80 focus:opacity-80 transition-all group-hover:scale-[1.02]">
+            <div className="hover:opacity-80 focus:opacity-80 transition-all group-hover:scale-[1.02]">
               <img 
                 src="/4.SideLogo.svg" 
                 alt="Lead Awaker Logo" 
-                className="h-7 w-auto object-contain cursor-pointer pointer-events-auto block"
+                className="h-7 w-auto object-contain cursor-pointer pointer-events-auto block -ml-[12px]"
+              
               />
             </div>
           </Link>
@@ -124,6 +126,8 @@ export function Navbar() {
             {isOpen ? <X /> : <Menu />}
           </button>
         </div>
+          </div>
+        
       </nav>
 
       {/* Mobile Nav - MOVED OUTSIDE */}
