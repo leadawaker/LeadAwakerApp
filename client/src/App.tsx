@@ -22,16 +22,12 @@ const SUPPORTED_LANGS = ["en", "pt", "nl"];
 
 function LanguageSync({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
-
-  // pega o primeiro segmento da URL
   const lang = location.split("/")[1];
 
-  // se não tiver idioma válido → redireciona
   if (!SUPPORTED_LANGS.includes(lang)) {
     return <Redirect to="/en" />;
   }
 
-  // sincroniza i18n com a URL
   if (i18n.language !== lang) {
     i18n.changeLanguage(lang);
   }
