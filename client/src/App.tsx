@@ -119,19 +119,19 @@ function LanguageRouter({ lang }: { lang: Lang }) {
 
 function Router() {
   const [location, setLocation] = useLocation();
-  
-  const [, params] = useRoute("/:lang");
-  const [, paramsWithRest] = useRoute("/:lang/:rest*");
 
-  const lang =
-    (params?.lang || paramsWithRest?.lang) as Lang | undefined;
+  // Get first path segment
+  const firstSegment = location.split("/").filter(Boolean)[0] as
+    | Lang
+    | undefined;
 
+  const lang = SUPPORTED_LANGS.includes(firstSegment as Lang)
+    ? (firstSegment as Lang)
+    : undefined;
+
+  /* -------- Auto-redirect on homepage only -------- */
   useEffect(() => {
-    // Only act on homepage
     if (location !== "/") return;
-
-    // If URL already has language, do nothing
-    if (params?.lang) return;
 
     // 1️⃣ Stored preference
     const storedLang = getStoredLang();
@@ -140,13 +140,14 @@ function Router() {
       return;
     }
 
-    // 2️⃣ Browser language (first visit only)
+    // 2️⃣ Browser language (first visit)
     const browserLang = getBrowserLang();
     if (browserLang && browserLang !== "en") {
       storeLang(browserLang);
       setLocation(`/${browserLang}`);
     }
-  }, [location, params, setLocation]);
+  }, [location, setLocation]);
+
   /* -------- Static redirect: /en -> / -------- */
   useEffect(() => {
     const redirect = stripEnPrefix(location);
@@ -155,23 +156,17 @@ function Router() {
     }
   }, [location, setLocation]);
 
-
   return (
     <div className="flex flex-col min-h-screen">
       <ScrollToTop />
       <Navbar />
 
       <main className="flex-grow">
-        {/* Default English (no prefix) */}
+        {/* English routes (no prefix) */}
         {!lang && <AppRoutes />}
 
         {/* Language-prefixed routes */}
-        {lang && SUPPORTED_LANGS.includes(lang) && (
-          <LanguageRouter lang={lang} />
-        )}
-
-        {/* Invalid language */}
-        {lang && !SUPPORTED_LANGS.includes(lang) && <NotFound />}
+        {lang && <LanguageRouter lang={lang} />}
       </main>
 
       <Footer />
