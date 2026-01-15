@@ -2,7 +2,7 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 
-// EN
+// Import translation files
 import enCommon from "./locales/en/common.json";
 import enHome from "./locales/en/home.json";
 import enServices from "./locales/en/services.json";
@@ -16,7 +16,6 @@ import enLogin from "./locales/en/login.json";
 import enTermsOfService from "./locales/en/termsOfService.json";
 import enPrivacyPolicy from "./locales/en/privacyPolicy.json";
 
-// PT
 import ptCommon from "./locales/pt/common.json";
 import ptHome from "./locales/pt/home.json";
 import ptServices from "./locales/pt/services.json";
@@ -30,7 +29,6 @@ import ptLogin from "./locales/pt/login.json";
 import ptTermsOfService from "./locales/pt/termsOfService.json";
 import ptPrivacyPolicy from "./locales/pt/privacyPolicy.json";
 
-// NL
 import nlCommon from "./locales/nl/common.json";
 import nlHome from "./locales/nl/home.json";
 import nlServices from "./locales/nl/services.json";
@@ -96,27 +94,14 @@ i18n
     resources,
     fallbackLng: "en",
     defaultNS: "common",
-    ns: [
-      "common",
-      "home",
-      "services",
-      "about",
-      "bookDemo",
-      "chat3d",
-      "salesRepSteps",
-      "pipelineChart",
-      "workflowVisualization",
-      "login",
-      "termsOfService",
-      "privacyPolicy",
-    ],
+    ns: ["common", "home", "services", "about", "bookDemo", "chat3d", "salesRepSteps", "pipelineChart", "workflowVisualization", "login", "termsOfService", "privacyPolicy"],
     interpolation: {
       escapeValue: false,
     },
     detection: {
-      // ✅ URL TEM PRIORIDADE ABSOLUTA
-      order: ["path", "navigator"],
+      order: ["path", "localStorage", "navigator"],
       lookupFromPathIndex: 0,
+      caches: ["localStorage"],
     },
   });
 

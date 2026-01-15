@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import {
-  ArrowRight
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
+
 import Chat3D from "@/components/Chat3D";
 import PipelineChart from "@/components/PipelineChart";
 import AnimatedCounter from "@/components/AnimatedCounter";
@@ -18,7 +17,7 @@ export default function Home() {
   const [isFinished, setIsFinished] = useState(false);
 
   return (
-    <div className="min-h-screen pt-24 overflow-x-hidden">
+    <div className="min-h-screen pt-24">
       {/* Hero Section */}
       <section className="relative overflow-hidden pb-20 md:pb-32">
         <div className="absolute top-0 right-0 -z-10 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent blur-3xl opacity-50" />
@@ -56,16 +55,15 @@ export default function Home() {
                 <br />
 
                 {/* Highlighted line */}
-                <motion.span className="relative block">
-                  {/* Desktop-only background sweep */}
+                <motion.span className="relative block w-full">
+                  {/* Background sweep (mobile + desktop) */}
                   <motion.span
-                    className="absolute inset-y-0 -z-10 hidden md:block"
+                    className="absolute inset-y-0 -z-10 opacity-80 md:opacity-100"
                     style={{
                       background:
                         "linear-gradient(to right, transparent 0%, #FEB800 15%, #FEB800 70%, rgba(255,255,255,0.6) 85%, transparent 100%)",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      width: "120vw",
+                      left: "calc(50% - 200vw)",
+                      width: "400vw",
                       originX: 0.5
                     }}
                     initial={{ scaleX: 0 }}
@@ -83,7 +81,7 @@ export default function Home() {
                     animate={{
                       color: "#ffffff",
                       textShadow:
-                        "0 10px 20px rgba(81,112,255,0.2)"
+                        "0 8px 16px rgba(81,112,255,0.18)"
                     }}
                     transition={{
                       delay: 1.5,
