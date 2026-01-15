@@ -76,8 +76,8 @@ export default function About() {
             </h1>
 
             {/* CHATBOX — MOBILE FULL WIDTH */}
-            <div className="flex justify-center mt-0 mb-0">
-              <div className="w-full md:w-auto">
+            <div className="mt-0 mb-0">
+              <div className="w-full max-w-5xl mx-auto">
                 <LeadReactivationAnimation />
               </div>
             </div>
