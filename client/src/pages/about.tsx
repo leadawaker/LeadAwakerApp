@@ -4,6 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AnimatedLogo3D from "@/components/AnimatedLogo3D";
 import LeadReactivationAnimation from "@/components/LeadReactivationAnimation";
+import Seo from "@/Seo";
 
 const CyclingWord = ({
   words,
@@ -51,147 +52,155 @@ export default function About() {
     [];
 
   return (
-    <div className="min-h-screen pt-24 pb-20 text-center overflow-x-hidden">
-      <div className="container mx-auto px-6 md:px-12 lg:px-16 xl:px-20 2xl:px-24">
+    <>
+      {/* SEO / hreflang hook */}
+      <Seo path="/about" />
 
-        {/* Intro Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="
-            w-full
-            max-w-none
-            md:max-w-5xl
-            mx-auto
-            mb-16
-          "
-        >
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-slate-900">
-            {t("intro.title")}
-          </h1>
+      <div className="min-h-screen pt-24 pb-20 text-center overflow-x-hidden">
+        <div className="container mx-auto px-6 md:px-12 lg:px-16 xl:px-20 2xl:px-24">
 
-          {/* CHATBOX — MOBILE FULL WIDTH */}
-          <div className="flex justify-center mt-0 mb-0">
-            <div className="w-full md:w-auto">
-              <LeadReactivationAnimation />
+          {/* Intro Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="
+              w-full
+              max-w-none
+              md:max-w-5xl
+              mx-auto
+              mb-16
+            "
+          >
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-slate-900">
+              {t("intro.title")}
+            </h1>
+
+            {/* CHATBOX — MOBILE FULL WIDTH */}
+            <div className="flex justify-center mt-0 mb-0">
+              <div className="w-full md:w-auto">
+                <LeadReactivationAnimation />
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-2 mt-1 w-full text-left">
-            <p className="-mt-10 text-xl text-muted-foreground leading-relaxed">
-              {t("intro.paragraph1")}
-            </p>
+            <div className="space-y-2 mt-1 w-full text-left">
+              <p className="-mt-10 text-xl text-muted-foreground leading-relaxed">
+                {t("intro.paragraph1")}
+              </p>
 
-            <p className="text-xl text-muted-foreground leading-relaxed">
-              {t("intro.paragraph2")}
-            </p>
+              <p className="text-xl text-muted-foreground leading-relaxed">
+                {t("intro.paragraph2")}
+              </p>
 
-            <p className="text-xl text-muted-foreground leading-relaxed">
-              {t("intro.paragraph3")}{" "}
-              <span className="text-primary font-bold inline-block">
-                {cyclingWords.length > 0 && (
-                  <CyclingWord words={cyclingWords} />
-                )}
-              </span>
-            </p>
-          </div>
-        </motion.div>
+              <p className="text-xl text-muted-foreground leading-relaxed">
+                {t("intro.paragraph3")}{" "}
+                <span className="text-primary font-bold inline-block">
+                  {cyclingWords.length > 0 && (
+                    <CyclingWord words={cyclingWords} />
+                  )}
+                </span>
+              </p>
+            </div>
+          </motion.div>
 
-        {/* Meet the Founder */}
-        <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] mr-[50vw] bg-[#E5E7EB] py-24 mb-20 overflow-hidden">
-          <div className="absolute inset-0 opacity-[0.03]" style={{
-            backgroundImage:
-              "radial-gradient(#000 1px, transparent 1px)",
-            backgroundSize: "20px 20px",
-          }} />
-          <div className="container mx-auto px-4 md:px-8 lg:px-12 xl:px-16 2xl:px-20 relative text-left">
-            <div className="max-w-5xl mx-auto">
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8 }}
-              >
-                <div className="relative bg-white/40 backdrop-blur-sm p-8 md:p-12 rounded-[2rem] border shadow-xl flex flex-col md:flex-row items-center gap-12">
-                  <div
-                    className="
-                      w-56
-                      h-72
-                      md:w-64
-                      md:h-64
-                      shrink-0
-                      relative
-                      flex
-                      items-center
-                      justify-center
-                    "
-                  >
-                    <div className="translate-y-6 md:translate-y-0">
-                      <AnimatedLogo3D />
+          {/* Meet the Founder */}
+          <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] mr-[50vw] bg-[#E5E7EB] py-24 mb-20 overflow-hidden">
+            <div
+              className="absolute inset-0 opacity-[0.03]"
+              style={{
+                backgroundImage:
+                  "radial-gradient(#000 1px, transparent 1px)",
+                backgroundSize: "20px 20px",
+              }}
+            />
+            <div className="container mx-auto px-4 md:px-8 lg:px-12 xl:px-16 2xl:px-20 relative text-left">
+              <div className="max-w-5xl mx-auto">
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8 }}
+                >
+                  <div className="relative bg-white/40 backdrop-blur-sm p-8 md:p-12 rounded-[2rem] border shadow-xl flex flex-col md:flex-row items-center gap-12">
+                    <div
+                      className="
+                        w-56
+                        h-72
+                        md:w-64
+                        md:h-64
+                        shrink-0
+                        relative
+                        flex
+                        items-center
+                        justify-center
+                      "
+                    >
+                      <div className="translate-y-6 md:translate-y-0">
+                        <AnimatedLogo3D />
+                      </div>
+                    </div>
+                    <div className="flex-grow space-y-4">
+                      <h3 className="text-3xl md:text-4xl font-bold text-gray-900 text-center md:text-left">
+                        {t("founder.name")}
+                      </h3>
+                      <p className="text-sm font-semibold uppercase tracking-wider text-primary text-center md:text-left">
+                        {t("founder.title")}
+                      </p>
+                      <p className="italic border-l-4 border-primary/30 pl-6 text-[19px]">
+                        {t("founder.quote")}
+                      </p>
+                      <p className="text-lg text-gray-600">
+                        {t("founder.description")}
+                      </p>
                     </div>
                   </div>
-                  <div className="flex-grow space-y-4">
-                    <h3 className="text-3xl md:text-4xl font-bold text-gray-900  text-center md:text-left">
-                      {t("founder.name")}
-                    </h3>
-                    <p className="text-sm font-semibold uppercase tracking-wider text-primary text-center md:text-left">
-                      {t("founder.title")}
-                    </p>
-                    <p className="italic border-l-4 border-primary/30 pl-6 text-[19px]">
-                      {t("founder.quote")}
-                    </p>
-                    <p className="text-lg text-gray-600">
-                      {t("founder.description")}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
+                </motion.div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* FAQ */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="max-w-5xl mx-auto mb-24"
-        >
-          <div className="bg-card/50 border rounded-3xl p-8 md:p-12">
-            <h2 className="text-3xl font-bold mb-10 text-left">
-              {t("faq.title")}
-            </h2>
+          {/* FAQ */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-5xl mx-auto mb-24"
+          >
+            <div className="bg-card/50 border rounded-3xl p-8 md:p-12">
+              <h2 className="text-3xl font-bold mb-10 text-left">
+                {t("faq.title")}
+              </h2>
 
-            <div className="space-y-4">
-              {faqs.map((faq, i) => (
-                <div
-                  key={i}
-                  className="border rounded-2xl bg-background overflow-hidden"
-                >
-                  <button
-                    onClick={() =>
-                      setOpenFAQ(openFAQ === i ? null : i)
-                    }
-                    className="w-full flex justify-between p-6"
+              <div className="space-y-4">
+                {faqs.map((faq, i) => (
+                  <div
+                    key={i}
+                    className="border rounded-2xl bg-background overflow-hidden"
                   >
-                    <h3 className="text-lg text-left">{faq.q}</h3>
-                    <ChevronDown
-                      className={`w-5 h-5 transition-transform ${
-                        openFAQ === i ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-                  {openFAQ === i && (
-                    <motion.div className="px-6 pb-6 text-left">
-                      {faq.a}
-                    </motion.div>
-                  )}
-                </div>
-              ))}
+                    <button
+                      onClick={() =>
+                        setOpenFAQ(openFAQ === i ? null : i)
+                      }
+                      className="w-full flex justify-between p-6"
+                    >
+                      <h3 className="text-lg text-left">{faq.q}</h3>
+                      <ChevronDown
+                        className={`w-5 h-5 transition-transform ${
+                          openFAQ === i ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                    {openFAQ === i && (
+                      <motion.div className="px-6 pb-6 text-left">
+                        {faq.a}
+                      </motion.div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

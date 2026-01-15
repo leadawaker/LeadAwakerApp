@@ -20,6 +20,10 @@
     "getStarted": "Get Started",
     "contactUs": "Contact Us"
   },
+    "seo": {
+      "defaultTitle": "Lead Awaker – Wake Up Your Sales Pipeline",
+      "defaultDescription": "Lead Awaker helps B2B companies reactivate cold leads and close more deals using AI-powered outreach."
+  },
   "animation": {
     "yourBrand": "Your Brand"
   }

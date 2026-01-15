@@ -138,9 +138,9 @@ function Router() {
 
     // 1️⃣ Stored preference
     const storedLang = getStoredLang();
-    if (storedLang && storedLang !== "en") {
-      setLocation(`/${storedLang}`);
-      return;
+    if (!storedLang && browserLang && browserLang !== "en") {
+      storeLang(browserLang);
+      setLocation(`/${browserLang}`);
     }
 
     // 2️⃣ Browser language (first visit)

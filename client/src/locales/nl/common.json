@@ -20,7 +20,11 @@
     "getStarted": "Aan de slag",
     "contactUs": "Neem Contact Op"
   },
-  "animation": {
+  "seo": {
+      "defaultTitle": "Lead Awaker – Activeer Uw Verkoop Pipeline",
+      "defaultDescription": "Lead Awaker helpt B2B-bedrijven koude leads opnieuw te activeren met AI."
+    },
+    "animation": {
     "yourBrand": "Jouw Merk"
   }
 }
