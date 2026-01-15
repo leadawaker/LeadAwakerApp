@@ -24,9 +24,6 @@ import NotFound from "@/pages/not-found";
 /* Language setup                                                      */
 /* ------------------------------------------------------------------ */
 
-
-
-
 const SUPPORTED_LANGS = ["en", "pt", "nl"] as const;
 type Lang = (typeof SUPPORTED_LANGS)[number];
 
@@ -40,27 +37,45 @@ function stripEnPrefix(path: string): string | null {
   if (path.startsWith("/en/")) return path.replace(/^\/en/, "");
   return null;
 }
+const LANG_STORAGE_KEY = "leadawaker_lang";
 
+function getStoredLang(): Lang | null {
+  const lang = localStorage.getItem(LANG_STORAGE_KEY);
+  return SUPPORTED_LANGS.includes(lang as Lang) ? (lang as Lang) : null;
+}
+
+function storeLang(lang: Lang) {
+  localStorage.setItem(LANG_STORAGE_KEY, lang);
+}
+
+function getBrowserLang(): Lang | null {
+  const navLang = navigator.language.split("-")[0];
+  return SUPPORTED_LANGS.includes(navLang as Lang)
+    ? (navLang as Lang)
+    : null;
+}
 /**
  * Keep i18n language in sync with URL
  */
-function useSyncLanguage(lang?: string) {
+function useSyncLanguage(lang: Lang) {
   useEffect(() => {
-    const nextLang: Lang = SUPPORTED_LANGS.includes(lang as Lang)
-      ? (lang as Lang)
-      : "en";
-
-    if (i18n.language !== nextLang) {
-      i18n.changeLanguage(nextLang);
+    if (i18n.language !== lang) {
+      i18n.changeLanguage(lang);
     }
+
+    storeLang(lang);
   }, [lang]);
 }
 
+
+
 /* ------------------------------------------------------------------ */
-/* Routes (language-agnostic)                                          */
+/* Routes (English, no prefix)                                         */
 /* ------------------------------------------------------------------ */
 
 function AppRoutes() {
+  useSyncLanguage("en");
+
   return (
     <Switch>
       <Route path="/" component={Home} />
@@ -86,7 +101,6 @@ function LanguageRouter({ lang }: { lang: Lang }) {
   return (
     <Switch>
       <Route path={`/${lang}`} component={Home} />
-
       <Route path={`/${lang}/about`} component={About} />
       <Route path={`/${lang}/services`} component={Services} />
       <Route path={`/${lang}/book-demo`} component={BookDemo} />
@@ -94,7 +108,6 @@ function LanguageRouter({ lang }: { lang: Lang }) {
       <Route path={`/${lang}/canvas`} component={Canvas} />
       <Route path={`/${lang}/privacy-policy`} component={PrivacyPolicy} />
       <Route path={`/${lang}/terms-of-service`} component={TermsOfService} />
-
       <Route component={NotFound} />
     </Switch>
   );
@@ -106,8 +119,30 @@ function LanguageRouter({ lang }: { lang: Lang }) {
 
 function Router() {
   const [location, setLocation] = useLocation();
+  
   const [, params] = useRoute("/:lang/:rest*");
 
+  useEffect(() => {
+    // Only act on homepage
+    if (location !== "/") return;
+
+    // If URL already has language, do nothing
+    if (params?.lang) return;
+
+    // 1️⃣ Stored preference
+    const storedLang = getStoredLang();
+    if (storedLang && storedLang !== "en") {
+      setLocation(`/${storedLang}`);
+      return;
+    }
+
+    // 2️⃣ Browser language (first visit only)
+    const browserLang = getBrowserLang();
+    if (browserLang && browserLang !== "en") {
+      storeLang(browserLang);
+      setLocation(`/${browserLang}`);
+    }
+  }, [location, params, setLocation]);
   /* -------- Static redirect: /en -> / -------- */
   useEffect(() => {
     const redirect = stripEnPrefix(location);
@@ -125,12 +160,7 @@ function Router() {
 
       <main className="flex-grow">
         {/* Default English (no prefix) */}
-        {!lang && (
-          <>
-            {useSyncLanguage("en")}
-            <AppRoutes />
-          </>
-        )}
+        {!lang && <AppRoutes />}
 
         {/* Language-prefixed routes */}
         {lang && SUPPORTED_LANGS.includes(lang) && (
@@ -154,9 +184,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        <Seo />
         <Toaster />
         <Router />
-        <Seo />
       </TooltipProvider>
     </QueryClientProvider>
   );
