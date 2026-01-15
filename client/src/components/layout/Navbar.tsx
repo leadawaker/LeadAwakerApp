@@ -51,21 +51,9 @@ export function Navbar() {
             : "bg-transparent py-6"
         }`}
       >
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="flex items-center justify-between md:ml-auto lg:w-11/12">
-          <Link 
-            href="/" 
-            className="flex items-center group relative z-10"
-            aria-label="Lead Awaker Home"
-          >
-            <div className="hover:opacity-80 focus:opacity-80 transition-all group-hover:scale-[1.02]">
-              <img 
-                src="/4.SideLogo.svg" 
-                alt="Lead Awaker Logo" 
-                className="h-7 w-auto object-contain cursor-pointer pointer-events-auto block -ml-[12px]"
-              
-              />
-            </div>
+        <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
+          <Link href="/" className="flex items-center">
+            <img src="/4.SideLogo.svg" alt="Lead Awaker Logo" className="h-7 object-contain" />
           </Link>
 
           {/* Desktop Nav */}
@@ -87,7 +75,7 @@ export function Navbar() {
                     data-testid={`menu-item-lang-${lang.code}`}
                   >
                     <span className="flex items-center gap-3">
-                      <img src={lang.flag} alt={lang.label} className="h-4 w-[1.35rem] rounded-none object-cover shadow-sm -translalogote-y-[1px]" />
+                      <img src={lang.flag} alt={lang.label} className="h-4 w-[1.35rem] rounded-none object-cover shadow-sm -translate-y-[1px]" />
                       {lang.label}
                     </span>
                   </DropdownMenuItem>
@@ -126,8 +114,6 @@ export function Navbar() {
             {isOpen ? <X /> : <Menu />}
           </button>
         </div>
-          </div>
-        
       </nav>
 
       {/* Mobile Nav - MOVED OUTSIDE */}

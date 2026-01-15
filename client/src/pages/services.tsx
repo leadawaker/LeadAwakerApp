@@ -238,28 +238,32 @@ export default function Services() {
                 </div>
               </div>
 
-              <div className="order-2 w-full lg:flex-shrink-0 lg:min-w-[28rem] lg:sticky lg:top-8">
+              <div className="order-2 w-full max-w-full md:max-w-md lg:flex-shrink-0 lg:min-w-[28rem] px-0 md:px-4 lg:px-0 lg:sticky lg:top-8">
 
-                {/* REMOVE padding lateral do card branco no MOBILE */}
-                <div className="-mx-8 md:mx-0">
+                {/* MOBILE: edge-to-edge */}
+                <div className="md:hidden -mx-8">
+                  <ChatCard2D
+                    messages={CASES[activeCase].messages}
+                    themeColor={CASES[activeCase].color}
+                    leadFullName={CASES[activeCase].leadFullName}
+                  />
+                </div>
 
-                  {/* mantém controle de largura só a partir do md */}
-                  <div className="w-full md:max-w-md md:mx-auto lg:mx-0 relative">
-
+                {/* DESKTOP / TABLET: original clean layout */}
+                <div className="hidden md:block w-full max-w-full md:max-w-md mx-auto lg:mx-0">
+                  <div className="relative">
                     <div
-                      className="absolute -inset-4 rounded-[2.5rem] blur-2xl -z-10 hidden md:block"
+                      className="absolute -inset-4 rounded-[2.5rem] blur-2xl -z-10"
                       style={{ backgroundColor: `${CASES[activeCase].color}10` }}
                     />
-
                     <ChatCard2D
                       messages={CASES[activeCase].messages}
                       themeColor={CASES[activeCase].color}
-                      // @ts-ignore
                       leadFullName={CASES[activeCase].leadFullName}
                     />
-
                   </div>
                 </div>
+
               </div>
             </motion.div>
           </AnimatePresence>
