@@ -100,7 +100,6 @@ function LanguageRouter({ lang }: { lang: Lang }) {
 
   return (
     <Switch>
-      <Route path={`/${lang}`} component={Home} />
       <Route path={`/${lang}/about`} component={About} />
       <Route path={`/${lang}/services`} component={Services} />
       <Route path={`/${lang}/book-demo`} component={BookDemo} />
@@ -108,6 +107,10 @@ function LanguageRouter({ lang }: { lang: Lang }) {
       <Route path={`/${lang}/canvas`} component={Canvas} />
       <Route path={`/${lang}/privacy-policy`} component={PrivacyPolicy} />
       <Route path={`/${lang}/terms-of-service`} component={TermsOfService} />
+
+      {/* Home MUST be last */}
+      <Route path={`/${lang}`} component={Home} />
+
       <Route component={NotFound} />
     </Switch>
   );
