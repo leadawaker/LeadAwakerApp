@@ -120,7 +120,11 @@ function LanguageRouter({ lang }: { lang: Lang }) {
 function Router() {
   const [location, setLocation] = useLocation();
   
-  const [, params] = useRoute("/:lang/:rest*");
+  const [, params] = useRoute("/:lang");
+  const [, paramsWithRest] = useRoute("/:lang/:rest*");
+
+  const lang =
+    (params?.lang || paramsWithRest?.lang) as Lang | undefined;
 
   useEffect(() => {
     // Only act on homepage
@@ -151,7 +155,6 @@ function Router() {
     }
   }, [location, setLocation]);
 
-  const lang = params?.lang as Lang | undefined;
 
   return (
     <div className="flex flex-col min-h-screen">
