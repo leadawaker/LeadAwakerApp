@@ -39,13 +39,15 @@ export default function Home() {
         <div className="container mx-auto px-4 md:px-6">
           <div className="grid gap-10 lg:grid-cols-[1fr_minmax(450px,0.7fr)] lg:gap-12 items-center mb-20 relative md:ml-auto lg:w-11/12">
 
-            {/* TEXT BLOCK */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-center md:text-left"
-            >
+          {/* TEXT BLOCK */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center md:text-left lg:-translate-x-20 xl:-translate-x-12 2xl:translate-x-0"
+          >
+
+
               <h1 className="
                 font-bold leading-[1.1] mb-6 text-foreground relative
                 text-[42px] sm:text-[48px] md:text-5xl lg:text-6xl
