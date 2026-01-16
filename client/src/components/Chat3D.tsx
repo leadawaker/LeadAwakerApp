@@ -47,25 +47,36 @@ export default function Chat3D() {
       const timeouts: NodeJS.Timeout[] = [];
       let currentDelay = 0;
 
+      // tuning values
+      const BASE_DELAY = 3700;        // delay for first message
+      const MS_PER_CHAR = 90;        // delay per character
+      const MIN_DELAY = 1000;
+      const MAX_DELAY = 10000;
+
       engagementMessages.forEach((msg, index) => {
-        let msgDelay = 9000;
-
-        if (index === 1) {
-          msgDelay = 9000 * 1.2;
-        }
-
         const timeout = setTimeout(() => {
           setVisibleMessages(prev => [...prev, index]);
         }, currentDelay);
+
         timeouts.push(timeout);
 
-        const currentMsg = engagementMessages[index];
-        let extraWait = 0;
-        if (currentMsg?.type === 'tag' && currentMsg.text.includes(t('tags.callBooked').split(' ')[0])) {
-          extraWait = 2250;
+        const previousMsg = engagementMessages[index - 1];
+
+        // TAGS should appear immediately after their related balloon
+        if (msg.type === 'tag') {
+          currentDelay += 400; // small pause so it feels intentional
+          return;
         }
 
-        currentDelay += msgDelay + extraWait;
+        // Balloons get typing-based delay
+        let msgDelay = BASE_DELAY;
+
+        if (previousMsg?.type !== 'tag' && previousMsg?.text) {
+          msgDelay = previousMsg.text.length * MS_PER_CHAR;
+        }
+
+        msgDelay = Math.min(Math.max(msgDelay, MIN_DELAY), MAX_DELAY);
+        currentDelay += msgDelay;
       });
 
       return () => timeouts.forEach(t => clearTimeout(t));
@@ -152,11 +163,11 @@ export default function Chat3D() {
 
           <div 
             ref={scrollContainerRef}
-            className="p-6 pb-2 space-y-4 bg-slate-50 min-h-[700px] max-h-[800px] overflow-y-auto relative scrollbar-hide"
+             className="p-6 pb-2 space-y-1 bg-slate-50 min-h-[650px] max-h-[650px] overflow-y-auto relative scrollbar-hide"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-slate-100/20 via-transparent to-slate-100/20 pointer-events-none" />
 
-            <div className="relative z-10 space-y-4">
+            <div className="relative z-10 space-y-2">
               <motion.div className="flex justify-end" custom={0} initial="hidden" whileInView="visible" variants={messageVariants} viewport={{ once: true, margin: "-100px" }} data-testid="message-sophie-1">
                 <div className="flex flex-col items-end gap-1">
                   <div className="text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] shadow-sm text-sm" style={{ backgroundColor: "#2563EB" }}>

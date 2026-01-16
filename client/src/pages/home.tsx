@@ -26,7 +26,9 @@ import SalesRepSteps from "@/components/SalesRepSteps";
 import WorkflowVisualization from "@/components/WorkflowVisualization";
 
 export default function Home() {
-  const { t } = useTranslation("home");
+  const { t, i18n } = useTranslation("home");
+  const lang = i18n.language;
+  const isDefaultLang = lang === "en";
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [isFinished, setIsFinished] = useState(false);
 
@@ -37,15 +39,19 @@ export default function Home() {
         <div className="absolute top-0 right-0 -z-10 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent blur-3xl opacity-50" />
 
         <div className="container mx-auto px-4 md:px-6">
-          <div className="grid gap-10 lg:grid-cols-[1fr_minmax(450px,0.7fr)] lg:gap-12 items-center mb-20 relative md:ml-auto lg:w-11/12">
+          <div className="grid gap-10 lg:grid-cols-[1fr_minmax(400px,0.7fr)] lg:gap-8 items-center mb-20 relative md:ml-auto lg:w-full">
 
           {/* TEXT BLOCK */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-center md:text-left lg:-translate-x-20 xl:-translate-x-12 2xl:translate-x-0"
+            className="text-center md:text-left lg:min-w-[580px] lg:-translate-x-2 xl:-translate-x-2 2xl:translate-x-4"
           >
+
+
+
+
 
 
               <h1 className="
@@ -93,26 +99,31 @@ export default function Home() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                <Link href="/book-demo">
+                <Link href={isDefaultLang ? "/book-demo" : `/${lang}/book-demo`}>
                   <Button size="lg" className="h-14 px-8 text-lg rounded-full">
                     {t("hero.cta.primary")}
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
 
-                <Link href="/services">
-                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full">
+                <Link href={isDefaultLang ? "/services" : `/${lang}/services`}>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-14 px-8 text-lg rounded-full"
+                  >
                     {t("hero.cta.secondary")}
                   </Button>
                 </Link>
               </div>
             </motion.div>
 
-            {/* CHAT 3D — MOBILE SCALE FIX */}
+            {/* CHAT 3D */}
             <div className="
               relative flex justify-center
               scale-[1] sm:scale-90 md:scale-100
               sm:-translate-x-2 md:translate-x-0
+              lg:translate-x-[-20px] xl:translate-x-[-12px]
               origin-center
             ">
               <Chat3D />
@@ -375,8 +386,11 @@ export default function Home() {
 
 
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Link href="/book-demo">
-                <Button size="lg" className="h-14 px-10 text-lg rounded-full shadow-xl shadow-primary/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all font-bold">
+              <Link href={isDefaultLang ? "/book-demo" : `/${lang}/book-demo`}>
+                <Button
+                  size="lg"
+                  className="h-14 px-10 text-lg rounded-full shadow-xl shadow-primary/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all font-bold"
+                >
                   {t("bottomCta.button")}
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>

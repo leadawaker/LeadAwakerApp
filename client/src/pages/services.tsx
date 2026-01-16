@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import ChatCard2D from "@/components/ChatCard2D";
+import i18n from "@/i18n";
 
 type MessageItem = {
   type: "agent" | "user" | "system";
@@ -84,6 +85,8 @@ const CASE_CONFIGS: CaseConfig[] = [
 
 export default function Services() {
   const { t } = useTranslation("services");
+  const lang = i18n.language;
+  const isDefaultLang = lang === "en";
   const [activeCase, setActiveCase] = useState(0);
 
   const CASES = CASE_CONFIGS.map((config) => ({
@@ -270,7 +273,7 @@ export default function Services() {
         </div>
 
         <div className="mt-24 text-center">
-          <Link href="/book-demo">
+          <Link href={isDefaultLang ? "/book-demo" : `/${lang}/book-demo`}>
             <Button
               size="lg"
               className="h-20 px-12 text-lg rounded-2xl shadow-xl transition-transform hover:scale-105"
