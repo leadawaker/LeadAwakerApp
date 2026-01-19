@@ -214,7 +214,9 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
 
   return (
     <div className="relative w-full pt-12 pb-48">
-      <div className="container mx-auto px-4 sm:px-6 md:px-12 relative z-10">
+        <div className="mx-auto relative z-10">
+
+
         {/* Stacked Cards Container */}
         <div className="relative h-[850px] flex flex-col items-center justify-center">
           <div className="relative w-full h-[650px] flex items-center justify-center">
@@ -495,7 +497,7 @@ export const SalesRepSteps = () => {
                             radial-gradient(circle at 30% 80%, white 0.7px, transparent 0.7px),
                             radial-gradient(circle at 70% 90%, white 0.6px, transparent 0.6px)`,
           backgroundRepeat: 'repeat',
-          backgroundSize: '1300px 1100px',
+          backgroundSize: 'max(1300px, 200vw) max(1100px, 200vh)',
           willChange: 'transform',
           backfaceVisibility: 'hidden',
           perspective: '1000px',
@@ -511,7 +513,7 @@ export const SalesRepSteps = () => {
           backgroundImage: `radial-gradient(circle at 67% 42%, #e8e8e8 1.0px, transparent 1.0px),
                             radial-gradient(circle at 15% 15%, white 0.8px, transparent 0.8px)`,
           backgroundRepeat: 'repeat',
-          backgroundSize: '1700px 1400px',
+          backgroundSize: 'max(1700px, 200vw) max(1400px, 200vh)',
           filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
           animation: 'twinkle-fast-offset-1 1s ease-in-out infinite',
           animationDelay: '0.5s',
@@ -524,7 +526,7 @@ export const SalesRepSteps = () => {
           backgroundImage: `radial-gradient(circle at 39% 79%, white 0.6px, transparent 0.6px),
                             radial-gradient(circle at 83% 33%, #f0f0f0 1.4px, transparent 1.4px)`,
           backgroundRepeat: 'repeat',
-          backgroundSize: '2100px 1800px',
+          backgroundSize: 'max(2100px, 200vw) max(1800px, 200vh)',
           filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6)) drop-shadow(0 0 6px rgba(255,255,255,0.4))',
           animation: 'twinkle-fast-offset-2 0.9s ease-in-out infinite',
           animationDelay: '1.2s',
@@ -559,7 +561,7 @@ export const SalesRepSteps = () => {
             onViewportEnter={() => {
               setGlitchAnimating(true);
             }}
-            viewport={{ once: true, margin: "0px" }}
+            viewport={{ once: true, margin: "-20% 0px -20% 0px" }}
             transition={{ duration: 0.3 }}
             className="text-center max-w-6xl mx-auto mb-24"
           >
@@ -676,7 +678,7 @@ export const SalesRepSteps = () => {
       </section>
 
       {/* Intro Section */}
-      <section className="flex items-center justify-center relative overflow-hidden mb-15 py-8 md:py-0" style={{ minHeight: '12vh' }}>
+      <section className="flex items-center justify-center relative overflow-hidden mb-2 py-8 md:py-0" style={{ minHeight: '12vh' }}>
         <motion.div 
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}

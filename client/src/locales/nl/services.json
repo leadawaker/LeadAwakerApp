@@ -87,7 +87,7 @@
         {
           "type": "agent",
           "sender": "Michiel",
-          "content": "Hier is de boekingslink: https://calendar.app.google/uvWx5JWm7SLZSCqz7",
+          "content": "Hier is de boekingslink: https://calendar.app.google",
           "time": "10:26 AM"
         },
         { "type": "system", "content": "Afspraak ingepland 📅", "id": "sol-5" },
@@ -174,7 +174,7 @@
         {
           "type": "agent",
           "sender": "Sara",
-          "content": "Top. Hier is de boekingslink: https://calendar.app.google/uvWx5JWm7SLZSCqz7",
+          "content": "Top. Hier is de boekingslink: https://calendar.app.google",
           "time": "10:59 AM"
         },
         { "type": "system", "content": "Afspraak ingepland 📅", "id": "gym-5" },
@@ -233,7 +233,7 @@
         {
           "type": "agent",
           "sender": "Sanne",
-          "content": "Geregeld.\n\nHier is de boekingslink om je tijd te kiezen: https://calendar.app.google/uvWx5JWm7SLZSCqz7",
+          "content": "Geregeld.\n\nHier is de boekingslink om je tijd te kiezen: https://calendar.app.google",
           "time": "11:36 AM"
         },
         { "type": "system", "content": "Afspraak ingepland 📅", "id": "rb-4" },
@@ -333,7 +333,7 @@
         {
           "type": "agent",
           "sender": "Mia",
-          "content": "Hier is je shortlist:\nhttps://homehaven.example/listings?near=beach&beds=2&security=high&max=200000",
+          "content": "Hier is je shortlist: homehaven.com/listings",
           "time": "10:52 AM"
         },
         { "type": "user", "sender": "Liam", "content": "oké ik zie ze", "time": "11:00 AM" },
@@ -354,7 +354,7 @@
         {
           "type": "agent",
           "sender": "Mia",
-          "content": "Perfect. Boek een slot hier: https://calendar.app.google/uvWx5JWm7SLZSCqz7",
+          "content": "Perfect. Boek een slot hier: https://calendar.app.google",
           "time": "11:11 AM"
         },
         { "type": "system", "content": "Afspraak ingepland 📅", "id": "re-5" },
@@ -421,7 +421,7 @@
         {
           "type": "agent",
           "sender": "Monique",
-          "content": "Perfect.\n\nHier is de boekingslink: https://calendar.app.google/uvWx5JWm7SLZSCqz7",
+          "content": "Perfect.\n\nHier is de boekingslink: https://calendar.app.google",
           "time": "02:46 PM"
         },
         { "type": "system", "content": "Follow-up gesprek", "id": "hc-followup-1" },
@@ -488,7 +488,7 @@
         {
           "type": "agent",
           "sender": "Sophie",
-          "content": "Geen probleem. We kunnen een AVG-verzoek (gegevenstoegang) namens jou indienen om die documenten op te halen.\n\nKun je dit korte AVG-formulier invullen via deze link? https://www.dsarform.com/lead315",
+          "content": "Geen probleem. We kunnen een AVG-verzoek (gegevenstoegang) namens jou indienen om die documenten op te halen.\n\nKun je dit korte AVG-formulier invullen via deze link? https://www.dsarform.com",
           "time": "15:09"
         },
         { "type": "user", "sender": "Oliver", "content": "Hoe gaat het proces hierna?", "time": "15:20" },
@@ -501,7 +501,7 @@
         {
           "type": "agent",
           "sender": "Sophie",
-          "content": "Absoluut.\n\nZodra je het AVG-formulier invult, vragen we je overeenkomst op en beoordelen deze. Als we denken dat je in aanmerking komt voor een claim, nemen we contact op om de vervolgstappen te bespreken.\n\nHet duurt normaal gesproken rond de 30 werkdagen om de documenten te ontvangen en te beoordelen. We werken op basis van geen resultaat, geen kosten, dus er is geen risico voor jou.\n\nFormulier link: https://www.dsarform.com/lead315",
+          "content": "Absoluut.\n\nZodra je het AVG-formulier invult, vragen we je overeenkomst op en beoordelen deze. Als we denken dat je in aanmerking komt voor een claim, nemen we contact op om de vervolgstappen te bespreken.\n\nHet duurt normaal gesproken rond de 30 werkdagen om de documenten te ontvangen en te beoordelen. We werken op basis van geen resultaat, geen kosten, dus er is geen risico voor jou.\n\nFormulier link: https://www.dsarform.com/",
           "time": "15:22"
         },
         { "type": "user", "sender": "Oliver", "content": "Bedankt.", "time": "15:24" },
