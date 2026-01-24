@@ -5,7 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useTranslation } from "react-i18next";
 
 export default function BookDemo() {
-  const { t } = useTranslation("bookDemo");
+  const { t, i18n } = useTranslation("bookDemo");
+
+  // Get current language and create calendar URL with language parameter
+  const currentLanguage = i18n.language.split('-')[0]; // Gets 'pt' from 'pt-BR'
+  const calendarUrl = `https://calendar.app.google/uvWx5JWm7SLZSCqz7?hl=${currentLanguage}`;
 
   return (
     <div className="min-h-screen pt-24 pb-20">
@@ -49,7 +53,7 @@ export default function BookDemo() {
                  <h4 className="font-bold mb-4">{t("quickCheck.title")}</h4>
                  <p className="mb-4">{t("quickCheck.question")}</p>
                  <a 
-                   href="https://calendar.app.google/uvWx5JWm7SLZSCqz7" 
+                   href={calendarUrl}
                    target="_blank" 
                    rel="noopener noreferrer"
                    className="inline-block"
@@ -71,7 +75,7 @@ export default function BookDemo() {
           >
             <div className="relative w-full h-[600px] bg-white rounded-2xl overflow-hidden">
               <iframe 
-                src="https://calendar.app.google/uvWx5JWm7SLZSCqz7" 
+                src={calendarUrl}
                 style={{border: 0}} 
                 width="100%" 
                 height="100%" 

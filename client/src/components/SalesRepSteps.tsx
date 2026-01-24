@@ -247,155 +247,239 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
                   className="absolute w-full max-w-5xl left-1/2 -translate-x-1/2"
                 >
                   <Card className="bg-card backdrop-blur-sm border-white/10 group hover:border-primary/50 transition-colors duration-500 shadow-2xl">
-                    <CardContent className="p-8">
-                      <div className="mb-6 p-3 w-fit rounded-xl text-gray-600 flex items-center justify-center min-w-[56px] min-h-[56px] bg-[#fff7e0]" data-testid={`step-icon-${step.number}`}>
-                        {step.icon}
-                      </div>
-                      <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-foreground" data-testid={`step-title-${step.number}`}>
-                        {step.cardTitle}
-                      </h3>
-                      <p className="text-muted-foreground text-lg leading-relaxed mb-6" data-testid={`step-description-${step.number}`}>
-                        {step.cardDescription}
-                      </p>
+  <CardContent className="p-8">
+    <div className="mb-6 p-3 bg-[#fff7e0] w-fit rounded-xl text-gray-600 flex items-center justify-center min-w-[56px] min-h-[56px]" data-testid={`step-icon-${step.number}`}>
+      {step.icon}
+    </div>
+    <h3 className="text-2xl md:text-3xl font-bold mb-3 tracking-tight text-foreground" data-testid={`step-title-${step.number}`}>
+      {step.cardTitle}
+    </h3>
+    <p className="text-muted-foreground text-lg leading-relaxed mb-6" data-testid={`step-description-${step.number}`}>
+      {step.cardDescription}
+    </p>
 
-                      {/* Bullet points and media */}
-                      <div className="pt-6 border-t border-white/10">
-                        {step.cardImage && step.number === "1" ? (
-                          <div className="relative mb-6 rounded-lg overflow-hidden group">
-                            <img src={step.cardImage} alt="Step illustration" className="w-full h-auto object-cover rounded-lg" />
+    {/* Bullet points and media */}
+    <div className="border-t border-white/10">
+      {step.cardImage && step.number === "1" ? (
+        <div className="relative mb-6 rounded-lg overflow-hidden group">
+          <img src={step.cardImage} alt="Step illustration" className="w-full h-auto object-cover rounded-lg" />
 
-                            {/* CRM Logos Carousel overlaying the image */}
-                            <motion.div
-                              initial={false}
-                              animate={{ opacity: isActive ? 1 : 0 }}
-                              transition={{ duration: 0.3 }}
-                              className="absolute top-[5%] left-0 right-0 h-1/4 flex items-center px-4 pt-4 z-10"
-                              style={{
-                                maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
-                                WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)'
-                              }}
-                            >
-                              <style>{`
-                                @keyframes crmScroll {
-                                  0% { transform: translateX(0); }
-                                  100% { transform: translateX(-50%); }
-                                }
-                                .crm-carousel-track {
-                                  animation: crmScroll 52.3s linear infinite;
-                                  display: flex;
-                                  gap: 1rem;
-                                  width: max-content;
-                                }
-                                .crm-carousel-track:hover {
-                                  animation-play-state: paused;
-                                }
-                                .crm-logo-item {
-                                  flex-shrink: 0;
-                                  display: flex;
-                                  align-items: center;
-                                  gap: 0.5rem;
-                                  padding: 0.375rem 0.75rem;
-                                  background: rgba(255, 255, 255, 0.35);
-                                  border-radius: 0.375rem;
-                                  border: 1px solid rgba(226, 232, 240, 0.3);
-                                  backdrop-filter: blur(4px);
-                                  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                                }
-                              `}</style>
-                              <div className="crm-carousel-track">
-                                {[
-                                  { name: 'Salesforce', url: 'https://www.vectorlogo.zone/logos/salesforce/salesforce-icon.svg' },
-                                  { name: 'HubSpot', url: 'https://www.vectorlogo.zone/logos/hubspot/hubspot-icon.svg' },
-                                  { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
-                                  { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
-                                  { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
-                                  { name: 'Excel', url: excelLogo },
-                                  { name: 'Supabase', url: 'https://www.vectorlogo.zone/logos/supabase/supabase-icon.svg' },
-                                  { name: 'Airtable', url: 'https://www.vectorlogo.zone/logos/airtable/airtable-icon.svg' },
-                                  { name: 'API', url: null },
-                                  // Duplicate for seamless loop
-                                  { name: 'Salesforce', url: 'https://www.vectorlogo.zone/logos/salesforce/salesforce-icon.svg' },
-                                  { name: 'HubSpot', url: 'https://www.vectorlogo.zone/logos/hubspot/hubspot-icon.svg' },
-                                  { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
-                                  { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
-                                  { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
-                                  { name: 'Excel', url: excelLogo },
-                                  { name: 'Supabase', url: 'https://www.vectorlogo.zone/logos/supabase/supabase-icon.svg' },
-                                  { name: 'Airtable', url: 'https://www.vectorlogo.zone/logos/airtable/airtable-icon.svg' },
-                                  { name: 'API', url: null }
-                                ].map((crm, i) => (
-                                  <div key={i} className="crm-logo-item">
-                                    {crm.url ? <img src={crm.url} alt={crm.name} className="w-6 h-6 object-contain" /> : <span className="text-blue-600 font-mono font-bold text-sm">&lt;/&gt;</span>}
-                                    <span className="text-[12px] font-bold text-slate-700 uppercase tracking-wider">{crm.name}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </motion.div>
-                          </div>
-                        ) : step.cardImage ? (
-                          <div className="mb-4 rounded-lg overflow-hidden">
-                            <img src={step.cardImage} alt="Step illustration" className="w-full h-auto object-cover rounded-lg" />
-                          </div>
-                        ) : null}
+          {/* CRM Logos Carousel overlaying the image */}
+          <motion.div
+            initial={false}
+            animate={{ opacity: isActive ? 1 : 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute top-[5%] left-0 right-0 h-1/4 flex items-center px-4 pt-4 z-10"
+            style={{
+              maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
+              WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)'
+            }}
+          >
+            <style>{`
+              @keyframes crmScroll {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(-50%); }
+              }
+              .crm-carousel-track {
+                animation: crmScroll 52.3s linear infinite;
+                display: flex;
+                gap: 1rem;
+                width: max-content;
+              }
+              .crm-carousel-track:hover {
+                animation-play-state: paused;
+              }
+              .crm-logo-item {
+                flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.375rem 0.75rem;
+                background: rgba(255, 255, 255, 0.35);
+                border-radius: 0.375rem;
+                border: 1px solid rgba(226, 232, 240, 0.3);
+                backdrop-filter: blur(4px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+              }
+            `}</style>
+            <div className="crm-carousel-track">
+              {[
+                { name: 'Salesforce', url: 'https://www.vectorlogo.zone/logos/salesforce/salesforce-icon.svg' },
+                { name: 'HubSpot', url: 'https://www.vectorlogo.zone/logos/hubspot/hubspot-icon.svg' },
+                { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
+                { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
+                { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
+                { name: 'Excel', url: excelLogo },
+                { name: 'Supabase', url: 'https://www.vectorlogo.zone/logos/supabase/supabase-icon.svg' },
+                { name: 'Airtable', url: 'https://www.vectorlogo.zone/logos/airtable/airtable-icon.svg' },
+                { name: 'API', url: null },
+                // Duplicate for seamless loop
+                { name: 'Salesforce', url: 'https://www.vectorlogo.zone/logos/salesforce/salesforce-icon.svg' },
+                { name: 'HubSpot', url: 'https://www.vectorlogo.zone/logos/hubspot/hubspot-icon.svg' },
+                { name: 'GoHighLevel', url: 'https://www.google.com/s2/favicons?domain=gohighlevel.com&sz=128' },
+                { name: 'Pipedrive', url: 'https://cdn.worldvectorlogo.com/logos/pipedrive.svg' },
+                { name: 'Sheets', url: 'https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png' },
+                { name: 'Excel', url: excelLogo },
+                { name: 'Supabase', url: 'https://www.vectorlogo.zone/logos/supabase/supabase-icon.svg' },
+                { name: 'Airtable', url: 'https://www.vectorlogo.zone/logos/airtable/airtable-icon.svg' },
+                { name: 'API', url: null }
+              ].map((crm, i) => (
+                <div key={i} className="crm-logo-item">
+                  {crm.url ? <img src={crm.url} alt={crm.name} className="w-6 h-6 object-contain" /> : <span className="text-blue-600 font-mono font-bold text-sm">&lt;/&gt;</span>}
+                  <span className="text-[12px] font-bold text-slate-700 uppercase tracking-wider">{crm.name}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
 
-                        {/* Navigation - Below image */}
-                        <div className="flex justify-center items-center gap-5 mb-4">
-                          <button
-                            onClick={handlePrev}
-                            data-testid="button-prev-step-card"
-                            className="p-2 text-blue-500 hover:text-yellow-500 transition-colors duration-200 flex items-center justify-center"
-                            aria-label={t('common.prevStep')}
-                          >
-                            <ChevronLeft className="w-10 h-10 md:w-12 md:h-12" />
-                          </button>
-                          <div className="flex gap-3">
-                            {steps.map((_, i) => (
-                              <button
-                                key={i}
-                                onClick={() => setCurrentStep(i)}
-                                data-testid={`dot-step-card-${i}`}
-                                className={`rounded-full transition-all duration-300 ${
-                                  i === currentStep
-                                    ? 'bg-blue-500 w-8 h-3 md:w-10 md:h-4'
-                                    : 'bg-blue-500/30 hover:bg-blue-500/50 w-3 h-3 md:w-4 md:h-4'
-                                }`}
-                                aria-label={t('common.goToStep', { number: i + 1 })}
-                              />
-                            ))}
-                          </div>
-                          <button
-                            onClick={handleNext}
-                            data-testid="button-next-step-card"
-                            className="p-2 text-blue-500 hover:text-yellow-500 transition-colors duration-200 flex items-center justify-center"
-                            aria-label={t('common.nextStep')}
-                          >
-                            <ChevronRight className="w-10 h-10 md:w-12 md:h-12" />
-                          </button>
-                        </div>
+          {/* Navigation Controls - On top of image for desktop, hidden on mobile */}
+          <div className="hidden md:flex absolute bottom-4 left-0 right-0 z-20 items-center justify-center gap-4">
+            {/* Left Arrow */}
+            <button
+              onClick={handlePrev}
+              data-testid="button-prev-step-card"
+              className="p-2 text-white hover:text-blue-500 transition-colors duration-200 flex items-center justify-center bg-black/30 rounded-full backdrop-blur-sm"
+              aria-label={t('common.prevStep')}
+            >
+              <ChevronLeft className="w-8 h-8 md:w-10 md:h-10" />
+            </button>
 
-                        <motion.div
-                          animate={{ 
-                            height: isActive ? "auto" : 0,
-                            opacity: isActive ? 1 : 0
-                          }}
-                          transition={{ duration: 0.4 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4">
-                            {step.leftText && step.leftText.split('\n').map((line: string, i: number) => (
-                              <div key={i} className="flex items-start gap-3">
-                                <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500 mt-2" />
-                                <div className="font-medium text-gray-600 text-[16px]">
-                                  {line}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </motion.div>
+            {/* Dots */}
+            <div className="flex gap-2">
+              {steps.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentStep(i)}
+                  data-testid={`dot-step-card-${i}`}
+                  className={`rounded-full transition-all duration-300 ${
+                    i === currentStep
+                      ? 'bg-blue-500 w-8 h-3 md:w-10 md:h-4'
+                      : 'bg-blue-300 hover:bg-blue-400 w-3 h-3 md:w-4 md:h-4'
+                  }`}
+                  aria-label={t('common.goToStep', { number: i + 1 })}
+                />
+              ))}
+            </div>
 
-                      </div>
-                    </CardContent>
-                  </Card>
+            {/* Right Arrow */}
+            <button
+              onClick={handleNext}
+              data-testid="button-next-step-card"
+              className="p-2 text-white hover:text-blue-500 transition-colors duration-200 flex items-center justify-center bg-black/30 rounded-full backdrop-blur-sm"
+              aria-label={t('common.nextStep')}
+            >
+              <ChevronRight className="w-8 h-8 md:w-10 md:h-10" />
+            </button>
+          </div>
+        </div>
+      ) : step.cardImage ? (
+        <div className="mb-4 rounded-lg overflow-hidden relative">
+          <img src={step.cardImage} alt="Step illustration" className="w-full h-auto object-cover rounded-lg" />
+
+          {/* Navigation Controls - On top of image for desktop, hidden on mobile */}
+          <div className="hidden md:flex absolute bottom-4 left-0 right-0 z-20 items-center justify-center gap-4">
+            {/* Left Arrow */}
+            <button
+              onClick={handlePrev}
+              data-testid="button-prev-step-card"
+              className="p-2 text-white hover:text-blue-500 transition-colors duration-200 flex items-center justify-center bg-black/30 rounded-full backdrop-blur-sm"
+              aria-label={t('common.prevStep')}
+            >
+              <ChevronLeft className="w-8 h-8 md:w-10 md:h-10" />
+            </button>
+
+            {/* Dots */}
+            <div className="flex gap-2">
+              {steps.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentStep(i)}
+                  data-testid={`dot-step-card-${i}`}
+                  className={`rounded-full transition-all duration-300 ${
+                    i === currentStep
+                      ? 'bg-blue-500 w-8 h-3 md:w-10 md:h-4'
+                      : 'bg-blue-300 hover:bg-blue-400 w-3 h-3 md:w-4 md:h-4'
+                  }`}
+                  aria-label={t('common.goToStep', { number: i + 1 })}
+                />
+              ))}
+            </div>
+
+            {/* Right Arrow */}
+            <button
+              onClick={handleNext}
+              data-testid="button-next-step-card"
+              className="p-2 text-white hover:text-blue-500 transition-colors duration-200 flex items-center justify-center bg-black/30 rounded-full backdrop-blur-sm"
+              aria-label={t('common.nextStep')}
+            >
+              <ChevronRight className="w-8 h-8 md:w-10 md:h-10" />
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Navigation Controls - Below Image for mobile only */}
+      <div className="flex md:hidden items-center justify-center gap-4 mb-6">
+        {/* Left Arrow */}
+        <button
+          onClick={handlePrev}
+          data-testid="button-prev-step-card-mobile"
+          className="p-2 text-gray-600 hover:text-blue-500 transition-colors duration-200 flex items-center justify-center bg-gray-100 rounded-full"
+          aria-label={t('common.prevStep')}
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+
+        {/* Dots */}
+        <div className="flex gap-2">
+          {steps.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentStep(i)}
+              data-testid={`dot-step-card-mobile-${i}`}
+              className={`rounded-full transition-all duration-300 ${
+                i === currentStep
+                  ? 'bg-blue-500 w-8 h-3'
+                  : 'bg-blue-300 hover:bg-blue-400 w-3 h-3'
+              }`}
+              aria-label={t('common.goToStep', { number: i + 1 })}
+            />
+          ))}
+        </div>
+
+        {/* Right Arrow */}
+        <button
+          onClick={handleNext}
+          data-testid="button-next-step-card-mobile"
+          className="p-2 text-gray-600 hover:text-blue-500 transition-colors duration-200 flex items-center justify-center bg-gray-100 rounded-full"
+          aria-label={t('common.nextStep')}
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+      </div>
+
+      <motion.div
+        animate={{ 
+          height: isActive ? "auto" : 0,
+          opacity: isActive ? 1 : 0
+        }}
+        transition={{ duration: 0.4 }}
+        className="overflow-hidden"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4">
+          {step.leftText && step.leftText.split('\n').map((line: string, i: number) => (
+            <div key={i} className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500 mt-2" />
+              <div className="font-medium text-gray-600 text-[16px]">
+                {line}
+              </div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  </CardContent>
+</Card>
                 </motion.div>
               );
             })}
@@ -677,25 +761,23 @@ export const SalesRepSteps = () => {
         <MeteorContainer />
       </section>
 
-      {/* Intro Section */}
-      <section className="flex items-center justify-center relative overflow-hidden mb-2 py-8 md:py-0" style={{ minHeight: '12vh' }}>
-        <motion.div 
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center relative z-10 px-4"
-          data-testid="sales-rep-intro"
-        >
-          <h1 className="text-3xl md:text-6xl font-extrabold tracking-tight mb-0 text-white drop-shadow-lg leading-tight">
-            {t('intro.title')}
-          </h1>
-          {/* Subtítulo Adicionado */}
-          <p className="text-xl md:text-2xl text-slate-300 font-medium max-w-2xl mx-auto leading-relaxed">
-            {/* Você pode usar uma chave de tradução nova ou texto direto se preferir testar agora */}
-            {t('intro.subtitle') || "Reativação completa e humanizada em 3 etapas simples."}
-          </p>
-        </motion.div>
-      </section>
+        {/* Intro Section */}
+        <section className="flex items-start justify-center relative overflow-hidden mb-2 py-8 md:py-9 md:pt-12" style={{ minHeight: '12vh' }}>
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center relative z-10 px-4 w-full max-w-4xl"
+            data-testid="sales-rep-intro"
+          >
+            <h1 className="text-3xl md:text-6xl font-extrabold tracking-tight mb-2 md:mb-4 text-white drop-shadow-lg leading-tight">
+              {t('intro.title')}
+            </h1>
+            <p className="text-xl md:text-2xl text-slate-300 font-medium max-w-2xl mx-auto leading-relaxed">
+              {t('intro.subtitle') || "Reativação completa e humanizada em 3 etapas simples."}
+            </p>
+          </motion.div>
+        </section>
 
       {/* Step Carousel */}
       <section className="relative py-0">

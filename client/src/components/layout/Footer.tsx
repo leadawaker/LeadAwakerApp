@@ -30,7 +30,7 @@ function LogoAnimation() {
   return (
     <motion.div
       ref={ref}
-      className="absolute -bottom-27 left-1/2 -translate-x-1/2 z-20 pointer-events-auto cursor-pointer"
+      className="absolute -bottom-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto cursor-pointer"
       initial={{ opacity: 0 }}
       animate={inView ? { opacity: 1 } : { opacity: 0 }}
       transition={{ duration: 0.5 }}
@@ -168,13 +168,35 @@ export function Footer() {
                   {t("nav.bookDemo")}
                 </Link>
               </li>
-              <li className="text-muted-foreground">
-                leadawaker@gmail.com
+              <li>
+                <a
+                  href="https://wa.me/5547974002162"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  WhatsApp
+                </a>
               </li>
-              <li className="text-muted-foreground text-sm">
-                Christiaan Huygensweg 32,
-                <br />
-                s&apos;Hertogenbosch, NL
+              <li>
+                <a
+                  href="mailto:leadawaker@gmail.com"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  leadawaker@gmail.com
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.google.com/maps/place/Christiaan+Huygensweg+32,+5223+BH+'s-Hertogenbosch,+Netherlands/@51.691872,5.2869323,17z/data=!3m1!4b1!4m6!3m5!1s0x47c6ee626d6e2827:0xc7dfbebc0d865c02!8m2!3d51.691872!4d5.2895072!16s%2Fg%2F11c2fk8jcj?entry=ttu&g_ep=EgoyMDI2MDEyMS4wIKXMDSoASAFQAw%3D%3D"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-primary transition-colors text-sm"
+                >
+                  Christiaan Huygensweg 32,
+                  <br />
+                  s&apos;Hertogenbosch, NL
+                </a>
               </li>
             </ul>
           </div>
