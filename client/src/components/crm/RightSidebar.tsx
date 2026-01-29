@@ -19,18 +19,12 @@ import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
-const navItems = [
-  { href: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard, testId: "nav-dashboard" },
-  { href: "/app/contacts", label: "Contacts", icon: BookUser, testId: "nav-contacts" },
-  { href: "/app/conversations", label: "Conversations", icon: MessageSquare, testId: "nav-conversations" },
-  { href: "/app/campaigns", label: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
-  { href: "/app/calendar", label: "Calendar", icon: Calendar, testId: "nav-calendar" },
-  { href: "/app/accounts", label: "Accounts", icon: Building2, testId: "nav-accounts", agencyOnly: true },
-  { href: "/app/automation-logs", label: "Automation Logs", icon: ScrollText, testId: "nav-automation-logs" },
-  { href: "/app/users", label: "Users", icon: Users, testId: "nav-users" },
-  { href: "/app/tags", label: "Tags", icon: Tag, testId: "nav-tags" },
-  { href: "/app/prompt-library", label: "Prompt Library", icon: BookOpen, testId: "nav-prompt-library" },
-  { href: "/app/settings", label: "Settings", icon: Settings, testId: "nav-settings" },
+const navItems = []; // Moved inside component for dynamic prefixing
+
+const accountsList = [
+  { id: 1, label: "LeadAwaker Agency" },
+  { id: 2, label: "FitnessGym ABC" },
+  { id: 3, label: "LawFirm XYZ" },
 ];
 
 export function RightSidebar() {
@@ -39,14 +33,31 @@ export function RightSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [openSwitcher, setOpenSwitcher] = useState(false);
 
-  const accounts = useMemo(
-    () => [
-      { id: 1, label: "LeadAwaker Agency" },
-      { id: 2, label: "FitnessGym ABC" },
-      { id: 3, label: "LawFirm XYZ" },
-    ],
-    [],
-  );
+  const prefix = isAgencyView ? "/agency" : "/subaccount";
+  const navItems = [
+    { href: `${prefix}/dashboard`, label: "Dashboard", icon: LayoutDashboard, testId: "nav-dashboard" },
+    { href: `${prefix}/contacts`, label: "Contacts", icon: BookUser, testId: "nav-contacts" },
+    { href: `${prefix}/conversations`, label: "Conversations", icon: MessageSquare, testId: "nav-conversations" },
+    { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
+    { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "nav-calendar" },
+    { href: `${prefix}/accounts`, label: "Accounts", icon: Building2, testId: "nav-accounts", agencyOnly: true },
+    { href: `${prefix}/automation-logs`, label: "Automation Logs", icon: ScrollText, testId: "nav-automation-logs" },
+    { href: `${prefix}/users`, label: "Users", icon: Users, testId: "nav-users" },
+    { href: `${prefix}/tags`, label: "Tags", icon: Tag, testId: "nav-tags" },
+    { href: `${prefix}/prompt-library`, label: "Prompt Library", icon: BookOpen, testId: "nav-prompt-library" },
+    { href: `${prefix}/settings`, label: "Settings", icon: Settings, testId: "nav-settings" },
+  ];
+
+  const handleAccountSelect = (id: number) => {
+    setCurrentAccountId(id);
+    setOpenSwitcher(false);
+    
+    // Switch between agency and subaccount while preserving page
+    const isTargetAgency = id === 1;
+    const currentPath = location.split('/').slice(2).join('/'); // get everything after /agency or /subaccount
+    const newBase = isTargetAgency ? "/agency" : "/subaccount";
+    window.location.href = `${newBase}/${currentPath || 'dashboard'}`;
+  };
 
   return (
     <aside
@@ -96,14 +107,11 @@ export function RightSidebar() {
         {!collapsed && openSwitcher && (
           <div className="px-3 pt-3" data-testid="menu-workspace">
             <div className="rounded-2xl border border-border bg-background overflow-hidden">
-              {accounts.map((a) => (
+              {accountsList.map((a) => (
                 <button
                   key={a.id}
                   type="button"
-                  onClick={() => {
-                    setCurrentAccountId(a.id);
-                    setOpenSwitcher(false);
-                  }}
+                  onClick={() => handleAccountSelect(a.id)}
                   className={cn(
                     "w-full px-3 py-2 text-left text-sm hover:bg-muted/30",
                     currentAccountId === a.id && (isAgencyView ? "bg-blue-600/10" : "bg-yellow-400/15"),

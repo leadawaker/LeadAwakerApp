@@ -1,4 +1,4 @@
-import { Switch, Route, useRoute, useLocation } from "wouter";
+import { Switch, Route, useRoute, useLocation, Redirect } from "wouter";
 import { useEffect } from "react";
 import i18n from "./i18n";
 import { queryClient } from "./lib/queryClient";
@@ -88,6 +88,8 @@ function AppRoutes() {
       <Route path="/agency/:rest*" component={AppArea} />
       <Route path="/subaccount" component={AppArea} />
       <Route path="/subaccount/:rest*" component={AppArea} />
+      <Route path="/app/agency" component={() => <Redirect to="/agency/dashboard" />} />
+      <Route path="/app/subaccount" component={() => <Redirect to="/subaccount/dashboard" />} />
       <Route path="/canvas" component={Canvas} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />

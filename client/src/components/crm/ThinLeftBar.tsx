@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import {
   Search,
   Bell,
@@ -63,6 +64,7 @@ export function ThinLeftBar({
   onGoHome: () => void;
   notificationsCount?: number;
 }) {
+  const [location] = useLocation();
   const [dark, setDark] = useState(false);
   const count = notificationsCount ?? 0;
   const { isAgencyView } = useWorkspace();
@@ -91,23 +93,26 @@ export function ThinLeftBar({
       </button>
 
       <div className="mt-4 flex flex-col gap-2" data-testid="group-leftbar-actions">
-        <IconButton label="Search" testId="button-global-search" onClick={onOpenSearch}>
+        <IconButton label="Search" testId="button-global-search" onClick={onOpenSearch} active={false}>
           <Search className="h-5 w-5" />
         </IconButton>
         <div className="relative" data-testid="wrap-notifications">
-          <IconButton label="Notifications" testId="button-notifications" onClick={onOpenNotifications}>
+          <IconButton label="Notifications" testId="button-notifications" onClick={onOpenNotifications} active={false}>
             <Bell className="h-5 w-5" />
           </IconButton>
           {count > 0 ? (
             <div
-              className="absolute -top-1 -right-1 h-5 min-w-5 px-1 rounded-full bg-blue-600 text-white text-[11px] font-bold grid place-items-center"
+              className={cn(
+            "h-5 min-w-5 px-1 rounded-full text-white text-[11px] font-bold grid place-items-center",
+            isAgencyView ? "bg-blue-600" : "bg-yellow-500 text-black"
+          )}
               data-testid="badge-notifications"
             >
               {count}
             </div>
           ) : null}
         </div>
-        <IconButton label="Settings" testId="button-settings" onClick={onOpenEdgeSettings}>
+        <IconButton label="Settings" testId="button-settings" onClick={onOpenEdgeSettings} active={location.includes('/settings')}>
           <Settings className="h-5 w-5" />
         </IconButton>
         <IconButton
@@ -121,13 +126,13 @@ export function ThinLeftBar({
         >
           <Moon className="h-5 w-5" />
         </IconButton>
-        <IconButton label="Help" testId="button-help" onClick={onToggleHelp}>
+        <IconButton label="Help" testId="button-help" onClick={onToggleHelp} active={false}>
           <HelpCircle className="h-5 w-5" />
         </IconButton>
       </div>
 
       <div className="mt-auto pb-2" data-testid="group-leftbar-support">
-        <IconButton label="Customer Support" onClick={onOpenSupport} testId="button-support">
+        <IconButton label="Customer Support" onClick={onOpenSupport} testId="button-support" active={false}>
           <Headphones className="h-5 w-5" />
         </IconButton>
       </div>
