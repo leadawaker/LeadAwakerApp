@@ -1,55 +1,68 @@
-import { Topbar } from "@/components/crm/Topbar";
-import { Sidebar } from "@/components/crm/Sidebar";
-import { accounts } from "@/data/mocks";
+import { useMemo, useState } from "react";
+import { CrmShell } from "@/components/crm/CrmShell";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { accounts, campaigns, leads, interactions } from "@/data/mocks";
 
 export default function AppAccounts() {
-  const a = accounts[0];
+  const { isAgencyView } = useWorkspace();
+  const rows = useMemo(() => {
+    const clients = accounts.filter((a) => a.id !== 1);
+    return clients.map((a) => {
+      const leadsCount = leads.filter((l) => l.account_id === a.id).length;
+      const campaignsActive = campaigns.filter((c) => c.account_id === a.id && c.status === "Active").length;
+      const last = interactions
+        .filter((i) => i.account_id === a.id)
+        .sort((x, y) => y.created_at.localeCompare(x.created_at))[0];
+      return {
+        account: a,
+        leadsCount,
+        campaignsActive,
+        lastInteraction: last?.created_at ?? null,
+      };
+    });
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-muted/20 to-background" data-testid="page-app-accounts">
-      <Topbar />
-      <div className="mx-auto max-w-[1440px] px-4 md:px-6 py-6 flex gap-6">
-        <Sidebar />
-        <div className="flex-1 min-w-0">
-          <div className="mb-6">
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight" data-testid="text-accounts-title">
-              Accounts
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground" data-testid="text-accounts-subtitle">
-              Agency prototype: hardcoded account_id=1.
-            </p>
+    <CrmShell>
+      <div className="px-6 py-6" data-testid="page-accounts">
+        <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Accounts</h1>
+        <p className="text-sm text-muted-foreground" data-testid="text-subtitle">
+          {isAgencyView ? "Agency view: manage client accounts." : "Client view: your own account."}
+        </p>
+
+        <div className="mt-4 rounded-2xl border border-border bg-background overflow-hidden" data-testid="table-accounts">
+          <div className="grid grid-cols-[1.2fr_140px_160px_220px] text-xs font-semibold text-muted-foreground bg-muted/20 border-b border-border px-4 py-3">
+            <div>name</div>
+            <div>leads_count</div>
+            <div>campaigns_active</div>
+            <div>last_interaction</div>
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" data-testid="grid-accounts">
-            <div className="rounded-2xl border border-border bg-background p-4" data-testid="card-account-1">
-              <div className="text-xs text-muted-foreground" data-testid="text-account-field-id">id</div>
-              <div className="font-semibold" data-testid="text-account-id">{a.id}</div>
-
-              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <div className="text-xs text-muted-foreground" data-testid="text-account-field-name">name</div>
-                  <div className="font-semibold" data-testid="text-account-name">{a.name}</div>
+          <div className="divide-y divide-border">
+            {rows.map((r) => (
+              <div key={r.account.id} className="grid grid-cols-[1.2fr_140px_160px_220px] px-4 py-3 text-sm" data-testid={`row-account-${r.account.id}`}>
+                <div className="min-w-0">
+                  <div className="font-semibold truncate" data-testid={`text-account-name-${r.account.id}`}>{r.account.name}</div>
+                  <div className="text-xs text-muted-foreground" data-testid={`text-account-meta-${r.account.id}`}>
+                    type={r.account.type} • status={r.account.status} • owner={r.account.owner_email}
+                  </div>
+                  <div className="text-xs text-muted-foreground" data-testid={`text-account-twilio-${r.account.id}`}>
+                    twilio_sid={r.account.twilio_account_sid}
+                  </div>
                 </div>
-                <div>
-                  <div className="text-xs text-muted-foreground" data-testid="text-account-field-type">type</div>
-                  <div className="font-semibold" data-testid="text-account-type">{a.type}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground" data-testid="text-account-field-status">status</div>
-                  <div className="font-semibold" data-testid="text-account-status">{a.status}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground" data-testid="text-account-field-timezone">timezone</div>
-                  <div className="font-semibold" data-testid="text-account-timezone">{a.timezone}</div>
+                <div className="text-muted-foreground" data-testid={`text-account-leads-${r.account.id}`}>{r.leadsCount}</div>
+                <div className="text-muted-foreground" data-testid={`text-account-campaigns-${r.account.id}`}>{r.campaignsActive}</div>
+                <div className="text-muted-foreground" data-testid={`text-account-last-${r.account.id}`}>
+                  {r.lastInteraction ? new Date(r.lastInteraction).toLocaleString() : "—"}
                 </div>
               </div>
-
-              <div className="mt-4 text-xs text-muted-foreground" data-testid="text-account-real-comment">
-                REAL: fetch from NocoDB Accounts table
-              </div>
-            </div>
+            ))}
           </div>
         </div>
+
+        <div className="mt-3 text-xs text-muted-foreground" data-testid="text-real">
+          REAL: useSWR(`${import.meta.env.VITE_NOCODB_URL}/api/v1/db/data/nocodb/Accounts`)
+        </div>
       </div>
-    </div>
+    </CrmShell>
   );
 }

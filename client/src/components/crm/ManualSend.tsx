@@ -28,7 +28,7 @@ export function ManualSend({ disabled }: { disabled: boolean }) {
           // REAL: POST -> NocoDB Interactions table
           setValue("");
         }}
-        data-testid="button-send-message"
+        data-testid="button-manual-send"
       >
         <Send className="h-4 w-4" />
         Send

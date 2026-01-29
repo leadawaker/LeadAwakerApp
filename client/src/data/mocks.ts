@@ -99,6 +99,7 @@ export type Lead = {
   custom_field_1: string;
   custom_field_2: string;
   custom_field_3: string;
+  tags: string[];
 };
 
 export type Interaction = {
@@ -123,6 +124,41 @@ export type Interaction = {
   ai_response: string;
 };
 
+export type AutomationLog = {
+  id: number;
+  account_id: number;
+  campaign_id: number;
+  lead_id: number;
+  created_at: string;
+  status: "success" | "error" | "skipped" | "running";
+  error_message: string;
+  execution_time_ms: number;
+  stage: string;
+};
+
+export type AppUser = {
+  id: number;
+  account_id: number;
+  email: string;
+  role: "Admin" | "Manager" | "Agent";
+  last_login_at: string;
+};
+
+export type TagItem = {
+  id: number;
+  account_id: number;
+  name: string;
+};
+
+export type PromptItem = {
+  id: number;
+  account_id: number;
+  name: string;
+  use_case: string;
+  model: string;
+  performance_score: number;
+};
+
 export const MOCK_AGENCY_USER = {
   id: 1,
   account_id: 1,
@@ -136,7 +172,7 @@ export const accounts: Account[] = [
     id: 1,
     created_at: "2026-01-01T10:00:00Z",
     updated_at: "2026-01-29T10:00:00Z",
-    name: "LeadAwaker",
+    name: "LeadAwaker Agency",
     slug: "leadawaker",
     type: "Agency",
     status: "Active",
@@ -152,12 +188,52 @@ export const accounts: Account[] = [
     ai_model_default: "gpt-4",
     owner_email: "leadawaker@gmail.com",
   },
+  {
+    id: 2,
+    created_at: "2026-01-02T10:00:00Z",
+    updated_at: "2026-01-29T10:00:00Z",
+    name: "FitnessGym ABC",
+    slug: "fitnessgym-abc",
+    type: "Enterprise",
+    status: "Active",
+    timezone: "Europe/Amsterdam",
+    notes: "Mock client account.",
+    twilio_account_sid: "ACfitnessgymxxxxxxxxxxxxxxxxxxxxxx",
+    twilio_auth_token: "********************************",
+    twilio_messaging_service_sid: "MGfitnessgymxxxxxxxxxxxxxxxxxxxxxx",
+    twilio_default_from_number: "+31670000001",
+    business_hours_start: "08:00",
+    business_hours_end: "18:00",
+    max_daily_sends: 250,
+    ai_model_default: "gpt-4",
+    owner_email: "owner@fitnessgymabc.com",
+  },
+  {
+    id: 3,
+    created_at: "2026-01-03T10:00:00Z",
+    updated_at: "2026-01-29T10:00:00Z",
+    name: "LawFirm XYZ",
+    slug: "lawfirm-xyz",
+    type: "Enterprise",
+    status: "Active",
+    timezone: "Europe/Amsterdam",
+    notes: "Mock client account.",
+    twilio_account_sid: "AClawfirmxxxxxxxxxxxxxxxxxxxxxxxxx",
+    twilio_auth_token: "********************************",
+    twilio_messaging_service_sid: "MGlawfirmxxxxxxxxxxxxxxxxxxxxxxxxx",
+    twilio_default_from_number: "+31670000002",
+    business_hours_start: "09:00",
+    business_hours_end: "17:00",
+    max_daily_sends: 250,
+    ai_model_default: "gpt-4",
+    owner_email: "owner@lawfirmxyz.com",
+  },
 ];
 
 export const campaigns: Campaign[] = [
   {
-    id: 1,
-    account_id: 1,
+    id: 11,
+    account_id: 2,
     created_at: "2026-01-05T09:00:00Z",
     updated_at: "2026-01-29T09:00:00Z",
     name: "Gym Reactivation - January",
@@ -167,11 +243,11 @@ export const campaigns: Campaign[] = [
     start_date: "2026-01-10",
     end_date: "2026-02-10",
     n8n_workflow_id: "n8n_workflow_001",
-    ai_prompt_template: "You are a helpful sales rep...",
+    ai_prompt_template: "You are a helpful sales rep. Qualify the lead, answer questions, and push to book a call.",
     total_cost: 127.35,
-    first_message_template: "Hey {{first_name}}, quick question...",
-    bump_1_template: "Just bumping this up...",
-    bump_2_template: "No worries if now isn't the time...",
+    first_message_template: "Hey {{first_name}}, quick question — still looking to get back to training?",
+    bump_1_template: "Just bumping this up — want me to send available times?",
+    bump_2_template: "No worries if now isn't the time. Want to pause outreach?",
     bump_3_template: "Last ping — should I close your file?",
     bump_1_delay_hours: 24,
     bump_2_delay_hours: 24,
@@ -180,10 +256,109 @@ export const campaigns: Campaign[] = [
     message_interval_minutes: 2,
     active_hours_start: "09:00",
     active_hours_end: "17:00",
-    calendar_link: "https://cal.example.com/leadawaker",
-    webhook_url: "https://n8n.example.com/webhook/leadawaker",
+    calendar_link: "https://cal.example.com/fitnessgym",
+    webhook_url: "https://n8n.example.com/webhook/fitnessgym",
     ai_model: "gpt-4",
     ai_temperature: 0.7,
+    use_ai_bumps: true,
+    max_bumps: 3,
+    stop_on_response: true,
+  },
+  {
+    id: 12,
+    account_id: 2,
+    created_at: "2026-01-06T09:00:00Z",
+    updated_at: "2026-01-29T09:00:00Z",
+    name: "PT Upsell - Winter",
+    status: "Active",
+    type: "Follow-up",
+    description: "Upsell personal training packages to recent signups.",
+    start_date: "2026-01-12",
+    end_date: "2026-02-20",
+    n8n_workflow_id: "n8n_workflow_002",
+    ai_prompt_template: "Be concise, friendly, and ask qualifying questions. Offer a booking link.",
+    total_cost: 64.22,
+    first_message_template: "Hey {{first_name}} — want a quick plan review call this week?",
+    bump_1_template: "Quick bump — morning or afternoon works better?",
+    bump_2_template: "If you'd like, I can send the calendar link.",
+    bump_3_template: "Closing this out unless you reply.",
+    bump_1_delay_hours: 24,
+    bump_2_delay_hours: 24,
+    bump_3_delay_hours: 24,
+    daily_lead_limit: 80,
+    message_interval_minutes: 3,
+    active_hours_start: "09:00",
+    active_hours_end: "17:00",
+    calendar_link: "https://cal.example.com/fitnessgym",
+    webhook_url: "https://n8n.example.com/webhook/fitnessgym2",
+    ai_model: "gpt-4",
+    ai_temperature: 0.7,
+    use_ai_bumps: true,
+    max_bumps: 3,
+    stop_on_response: true,
+  },
+  {
+    id: 21,
+    account_id: 3,
+    created_at: "2026-01-07T09:00:00Z",
+    updated_at: "2026-01-29T09:00:00Z",
+    name: "Case Intake - January",
+    status: "Active",
+    type: "Cold Outreach",
+    description: "Qualify inbound legal inquiries and book a consultation.",
+    start_date: "2026-01-11",
+    end_date: "2026-02-15",
+    n8n_workflow_id: "n8n_workflow_003",
+    ai_prompt_template: "You are an intake assistant. Ask the right questions, qualify, and schedule a consultation.",
+    total_cost: 98.7,
+    first_message_template: "Hi {{first_name}} — thanks for reaching out. What’s the best time to talk?",
+    bump_1_template: "Just checking — do you want to schedule a consult?",
+    bump_2_template: "If you prefer, I can send the calendar link.",
+    bump_3_template: "Last ping — closing your request unless you reply.",
+    bump_1_delay_hours: 24,
+    bump_2_delay_hours: 24,
+    bump_3_delay_hours: 24,
+    daily_lead_limit: 120,
+    message_interval_minutes: 2,
+    active_hours_start: "09:00",
+    active_hours_end: "17:00",
+    calendar_link: "https://cal.example.com/lawfirm",
+    webhook_url: "https://n8n.example.com/webhook/lawfirm",
+    ai_model: "gpt-4",
+    ai_temperature: 0.6,
+    use_ai_bumps: true,
+    max_bumps: 3,
+    stop_on_response: true,
+  },
+  {
+    id: 22,
+    account_id: 3,
+    created_at: "2026-01-08T09:00:00Z",
+    updated_at: "2026-01-29T09:00:00Z",
+    name: "Re-engage Old Leads",
+    status: "Active",
+    type: "Re-engagement",
+    description: "Re-open conversations with old legal leads.",
+    start_date: "2026-01-14",
+    end_date: "2026-02-28",
+    n8n_workflow_id: "n8n_workflow_004",
+    ai_prompt_template: "Be professional. Verify need, then offer consult booking.",
+    total_cost: 55.35,
+    first_message_template: "Hi {{first_name}} — still need help with your case?",
+    bump_1_template: "Quick follow-up — want to chat this week?",
+    bump_2_template: "I can send a consultation calendar link.",
+    bump_3_template: "Closing this thread unless you reply.",
+    bump_1_delay_hours: 24,
+    bump_2_delay_hours: 24,
+    bump_3_delay_hours: 24,
+    daily_lead_limit: 60,
+    message_interval_minutes: 4,
+    active_hours_start: "09:00",
+    active_hours_end: "17:00",
+    calendar_link: "https://cal.example.com/lawfirm",
+    webhook_url: "https://n8n.example.com/webhook/lawfirm2",
+    ai_model: "gpt-4",
+    ai_temperature: 0.6,
     use_ai_bumps: true,
     max_bumps: 3,
     stop_on_response: true,
@@ -209,13 +384,18 @@ const leadFirst = [
   "Cameron",
   "Avery",
   "Parker",
+  "Sam",
+  "Drew",
+  "Kris",
+  "Robin",
 ];
-const leadLast = ["Smith", "Johnson", "Brown", "Miller", "Davis", "Wilson", "Moore", "Clark"];
+const leadLast = ["Smith", "Johnson", "Brown", "Miller", "Davis", "Wilson", "Moore", "Clark", "Lewis"];
 
 const statuses: Lead["conversion_status"][] = [
   "New",
   "Contacted",
   "Responded",
+  "Multiple Responses",
   "Qualified",
   "Booked",
   "Lost",
@@ -227,11 +407,25 @@ const priorities: Lead["priority"][] = ["Low", "Medium", "High", "Urgent"];
 const sources: Lead["source"][] = ["Manual Upload", "Facebook", "Google", "Referral", "API", "Import"];
 const automation: Lead["automation_status"][] = ["queued", "active", "paused", "completed", "dnd", "error"];
 
-export const leads: Lead[] = Array.from({ length: 20 }).map((_, idx) => {
+const tagPool = [
+  "New",
+  "Hot",
+  "Follow-up",
+  "Pricing",
+  "Booked",
+  "No-show risk",
+  "High intent",
+  "Needs details",
+];
+
+export const leads: Lead[] = Array.from({ length: 50 }).map((_, idx) => {
   const id = idx + 1;
+  const account_id = idx < 25 ? 2 : 3;
+  const campaign_id = account_id === 2 ? pick([11, 12], idx) : pick([21, 22], idx);
+
   const first_name = pick(leadFirst, idx);
-  const last_name = pick(leadLast, idx);
-  const created = new Date(Date.now() - (18 - idx) * 24 * 3600 * 1000);
+  const last_name = pick(leadLast, idx + 2);
+  const created = new Date(Date.now() - (60 - idx) * 24 * 3600 * 1000);
   const updated = new Date(created.getTime() + 6 * 3600 * 1000);
 
   const phone = `+31 6 ${String(1200 + idx).padStart(4, "0")} ${String(5600 + idx).padStart(4, "0")}`;
@@ -240,10 +434,17 @@ export const leads: Lead[] = Array.from({ length: 20 }).map((_, idx) => {
   const conversion_status = pick(statuses, idx);
   const hasRecentInbound = conversion_status === "Responded" || conversion_status === "Multiple Responses";
 
+  const booked_call_date =
+    conversion_status === "Booked" ? iso(new Date(Date.now() + ((idx % 10) + 1) * 24 * 3600 * 1000)) : null;
+
+  const tags = Array.from(new Set([pick(tagPool, idx), idx % 4 === 0 ? "Pricing" : "Follow-up"]))
+    .filter(Boolean)
+    .slice(0, 4);
+
   return {
     id,
-    account_id: 1,
-    campaign_id: 1,
+    account_id,
+    campaign_id,
     created_at: iso(created),
     updated_at: iso(updated),
     first_name,
@@ -256,7 +457,7 @@ export const leads: Lead[] = Array.from({ length: 20 }).map((_, idx) => {
     source: pick(sources, idx),
     last_interaction_at: iso(new Date(Date.now() - (5 - (idx % 5)) * 3600 * 1000)),
     notes: idx % 4 === 0 ? "Asked about pricing" : idx % 4 === 1 ? "Prefer mornings" : "",
-    booked_call_date: conversion_status === "Booked" ? iso(new Date(Date.now() + 2 * 24 * 3600 * 1000)) : null,
+    booked_call_date,
     automation_status: pick(automation, idx),
     last_message_sent_at: iso(new Date(Date.now() - (idx % 6) * 3600 * 1000)),
     last_message_received_at: hasRecentInbound ? iso(new Date(Date.now() - ((idx % 4) + 1) * 3600 * 1000)) : null,
@@ -278,19 +479,20 @@ export const leads: Lead[] = Array.from({ length: 20 }).map((_, idx) => {
     custom_field_1: idx % 2 === 0 ? "facebook_ad_12" : "",
     custom_field_2: idx % 3 === 0 ? "variant_a" : "",
     custom_field_3: "",
+    tags,
   };
 });
 
 const interactionTypes: Interaction["type"][] = ["SMS", "WhatsApp", "Email", "Call", "Note"];
 const interactionStatus: Interaction["status"][] = ["queued", "sending", "sent", "delivered", "failed", "read"];
 
-export const interactions: Interaction[] = Array.from({ length: 50 }).map((_, idx) => {
+export const interactions: Interaction[] = Array.from({ length: 120 }).map((_, idx) => {
   const id = idx + 1;
-  const lead_id = (idx % 20) + 1;
-  const direction: Interaction["direction"] = idx % 3 === 0 ? "Inbound" : "Outbound";
-  const created = new Date(Date.now() - (50 - idx) * 30 * 60 * 1000);
-
+  const lead_id = (idx % 50) + 1;
   const lead = leads[lead_id - 1];
+  const direction: Interaction["direction"] = idx % 3 === 0 ? "Inbound" : "Outbound";
+  const created = new Date(Date.now() - (120 - idx) * 25 * 60 * 1000);
+
   const content =
     direction === "Outbound"
       ? pick(
@@ -316,8 +518,8 @@ export const interactions: Interaction[] = Array.from({ length: 50 }).map((_, id
 
   return {
     id,
-    account_id: 1,
-    campaign_id: 1,
+    account_id: lead.account_id,
+    campaign_id: lead.campaign_id,
     lead_id,
     user_id: 1,
     created_at: iso(created),
@@ -329,10 +531,51 @@ export const interactions: Interaction[] = Array.from({ length: 50 }).map((_, id
     twilio_message_sid: `SM${String(100000 + idx)}`,
     from_number: direction === "Outbound" ? "+31612345678" : lead.phone,
     to_number: direction === "Outbound" ? lead.phone : "+31612345678",
-    metadata: JSON.stringify({ campaign: 1, lead_id }),
+    metadata: JSON.stringify({ campaign_id: lead.campaign_id, lead_id }),
     ai_generated: direction === "Outbound" && idx % 2 === 0,
     ai_model: direction === "Outbound" ? "gpt-4" : "",
     ai_prompt: direction === "Outbound" ? "Generate a friendly follow up" : "",
     ai_response: direction === "Outbound" ? "(mock)" : "",
   };
 });
+
+export const automationLogs: AutomationLog[] = Array.from({ length: 40 }).map((_, idx) => {
+  const lead = leads[(idx % leads.length)];
+  const created = new Date(Date.now() - (idx + 1) * 2 * 60 * 60 * 1000);
+  const status = pick<AutomationLog["status"]>(["success", "error", "skipped", "running"], idx);
+  return {
+    id: idx + 1,
+    account_id: lead.account_id,
+    campaign_id: lead.campaign_id,
+    lead_id: lead.id,
+    created_at: iso(created),
+    status,
+    error_message: status === "error" ? "Twilio delivery failed (mock)" : "",
+    execution_time_ms: 250 + (idx % 900),
+    stage: pick(["first_message", "bump_1", "bump_2", "handoff"], idx),
+  };
+});
+
+export const users: AppUser[] = [
+  { id: 1, account_id: 1, email: "leadawaker@gmail.com", role: "Admin", last_login_at: iso(new Date(Date.now() - 2 * 60 * 60 * 1000)) },
+  { id: 2, account_id: 2, email: "owner@fitnessgymabc.com", role: "Admin", last_login_at: iso(new Date(Date.now() - 5 * 60 * 60 * 1000)) },
+  { id: 3, account_id: 3, email: "owner@lawfirmxyz.com", role: "Admin", last_login_at: iso(new Date(Date.now() - 7 * 60 * 60 * 1000)) },
+];
+
+export const tags: TagItem[] = [
+  { id: 1, account_id: 2, name: "New" },
+  { id: 2, account_id: 2, name: "Hot" },
+  { id: 3, account_id: 2, name: "Follow-up" },
+  { id: 4, account_id: 2, name: "Pricing" },
+  { id: 5, account_id: 3, name: "New" },
+  { id: 6, account_id: 3, name: "Follow-up" },
+  { id: 7, account_id: 3, name: "High intent" },
+  { id: 8, account_id: 3, name: "Needs details" },
+];
+
+export const promptLibrary: PromptItem[] = [
+  { id: 1, account_id: 2, name: "Gym reactivation - friendly", use_case: "Re-engagement", model: "gpt-4", performance_score: 0.86 },
+  { id: 2, account_id: 2, name: "PT upsell - concise", use_case: "Follow-up", model: "gpt-4", performance_score: 0.81 },
+  { id: 3, account_id: 3, name: "Legal intake - qualifying", use_case: "Cold outreach", model: "gpt-4", performance_score: 0.83 },
+  { id: 4, account_id: 3, name: "Re-engage old legal leads", use_case: "Re-engagement", model: "gpt-4", performance_score: 0.78 },
+];
