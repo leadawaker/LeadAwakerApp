@@ -8,6 +8,7 @@ import {
   Headphones,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 function IconButton({
   label,
@@ -64,20 +65,29 @@ export function ThinLeftBar({
 }) {
   const [dark, setDark] = useState(false);
   const count = notificationsCount ?? 0;
+  const { isAgencyView } = useWorkspace();
 
   return (
     <aside
-      className="fixed left-0 top-0 bottom-0 w-[48px] border-r border-border bg-muted/40 z-50 flex flex-col items-center py-3 dark:bg-muted/20"
+      className={cn(
+        "fixed left-0 top-0 bottom-0 w-[48px] border-r z-50 flex flex-col items-center py-3 transition-colors duration-300",
+        isAgencyView 
+          ? "bg-blue-600/10 border-blue-500/20" 
+          : "bg-yellow-500/10 border-yellow-500/20"
+      )}
       data-testid="bar-thin-left"
     >
       <button
         type="button"
         onClick={onGoHome}
-        className="grid place-items-center"
+        className={cn(
+          "h-8 w-8 rounded-lg flex items-center justify-center transition-colors duration-300",
+          isAgencyView ? "bg-blue-600" : "bg-yellow-500"
+        )}
         data-testid="button-leftbar-home"
         aria-label="Go to home"
       >
-        <img src="/6. Favicon.svg" alt="LeadAwaker" className="h-6 w-6" data-testid="img-leftbar-favicon" />
+        <span className="text-[10px] font-bold text-white">LA</span>
       </button>
 
       <div className="mt-4 flex flex-col gap-2" data-testid="group-leftbar-actions">

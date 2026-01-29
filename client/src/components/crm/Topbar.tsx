@@ -1,30 +1,82 @@
 import { Link } from "wouter";
-import { Bell, Search, User } from "lucide-react";
+import { Bell, Search, User, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { accounts } from "@/data/mocks";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 export function Topbar() {
+  const { currentAccount, setCurrentAccountId, isAgencyView } = useWorkspace();
+
   return (
     <header
-      className="sticky top-0 z-40 bg-background/70 backdrop-blur-xl border-b border-border"
+      className={cn(
+        "sticky top-0 z-40 backdrop-blur-xl border-b transition-colors duration-300",
+        isAgencyView 
+          ? "bg-blue-600/10 border-blue-500/20" 
+          : "bg-yellow-500/10 border-yellow-500/20"
+      )}
       data-testid="header-crm-topbar"
     >
       <div className="h-14 px-4 md:px-6 flex items-center gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div
-            className="h-9 w-9 rounded-xl bg-primary/10 border border-primary/15 flex items-center justify-center"
-            data-testid="badge-account"
-          >
-            <span className="font-heading font-extrabold text-primary">LA</span>
-          </div>
-          <div className="min-w-0">
-            <div className="text-sm font-semibold leading-tight truncate" data-testid="text-account-name">
-              LeadAwaker (Agency)
-            </div>
-            <div className="text-xs text-muted-foreground leading-tight" data-testid="text-account-sub">
-              account_id=1 • isAgency=true
-            </div>
-          </div>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="flex items-center gap-3 px-2 h-10 hover:bg-muted/50 rounded-xl transition-all" data-testid="button-account-selector">
+              <div
+                className={cn(
+                  "h-9 w-9 rounded-xl border flex items-center justify-center transition-colors",
+                  isAgencyView 
+                    ? "bg-blue-600 text-white border-blue-400" 
+                    : "bg-yellow-500 text-black border-yellow-400"
+                )}
+              >
+                <span className="font-heading font-extrabold text-xs">
+                  {currentAccount.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                </span>
+              </div>
+              <div className="min-w-0 text-left hidden sm:block">
+                <div className="text-sm font-semibold leading-tight truncate">
+                  {currentAccount.name}
+                </div>
+                <div className="text-[10px] text-muted-foreground leading-tight flex items-center gap-1">
+                  ID: {currentAccount.id} • {currentAccount.type}
+                  <ChevronDown className="h-3 w-3" />
+                </div>
+              </div>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-64 rounded-xl">
+            <DropdownMenuLabel>Switch Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {accounts.map((acc) => (
+              <DropdownMenuItem
+                key={acc.id}
+                onClick={() => setCurrentAccountId(acc.id)}
+                className={cn(
+                  "flex items-center gap-2 cursor-pointer",
+                  currentAccount.id === acc.id && "bg-muted font-bold"
+                )}
+              >
+                <div className={cn(
+                  "h-6 w-6 rounded-md flex items-center justify-center text-[10px] text-white font-bold",
+                  acc.id === 1 ? "bg-blue-600" : "bg-yellow-500 text-black"
+                )}>
+                  {acc.name[0]}
+                </div>
+                {acc.name}
+                {acc.id === 1 && <span className="ml-auto text-[10px] bg-blue-100 text-blue-700 px-1 rounded">Agency</span>}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <div className="flex-1" />
 
