@@ -51,7 +51,7 @@ export function RightSidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-[48px] top-0 bottom-0 border-r border-border bg-muted/20 z-40 transition-all dark:bg-muted/10",
+        "fixed left-[48px] top-0 bottom-0 border-r border-border bg-muted/20 z-40 duration-0 dark:bg-muted/10",
         collapsed ? "w-[64px]" : "w-[225px]",
       )}
       data-testid="sidebar-left"

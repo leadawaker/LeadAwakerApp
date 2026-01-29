@@ -70,7 +70,7 @@ export function ThinLeftBar({
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 bottom-0 w-[48px] border-r z-50 flex flex-col items-center py-3",
+        "fixed left-0 top-0 bottom-0 w-[48px] border-r z-50 flex flex-col items-center py-3 duration-0",
         isAgencyView 
           ? "bg-blue-600/10 border-blue-500/20" 
           : "bg-yellow-500/10 border-yellow-500/20"
@@ -81,7 +81,7 @@ export function ThinLeftBar({
         type="button"
         onClick={onGoHome}
         className={cn(
-          "h-8 w-8 rounded-lg flex items-center justify-center",
+          "h-8 w-8 rounded-lg flex items-center justify-center duration-0",
           isAgencyView ? "bg-blue-600" : "bg-yellow-500"
         )}
         data-testid="button-leftbar-home"

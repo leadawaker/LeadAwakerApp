@@ -17,14 +17,14 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "hidden lg:flex w-64 shrink-0 border-r transition-colors duration-300",
+        "hidden lg:flex w-64 shrink-0 border-r duration-0",
         isAgencyView ? "bg-blue-600/5 border-blue-500/10" : "bg-yellow-500/5 border-yellow-500/10"
       )}
       data-testid="sidebar-crm"
     >
       <div className="p-4 w-full flex flex-col gap-4">
         <div className={cn(
-          "rounded-2xl border p-4 transition-all duration-300 relative group",
+          "rounded-2xl border p-4 duration-0 relative group",
           isAgencyView 
             ? "border-blue-500/20 bg-blue-600/10" 
             : "border-yellow-500/20 bg-yellow-500/10"
