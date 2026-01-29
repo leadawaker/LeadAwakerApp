@@ -15,14 +15,6 @@ export default function AppDashboard() {
             <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">
               Dashboard
             </h1>
-            <p className="text-sm text-muted-foreground" data-testid="text-subtitle">
-              {isAgencyView
-                ? "Agency mode: task/project overview (MOCK)."
-                : `Subaccount mode: funnel + stats for ${currentAccount.name} (MOCK).`}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground" data-testid="text-real">
-              REAL: useSWR(`${import.meta.env.VITE_NOCODB_URL}/api/v1/db/data/nocodb/...`)
-            </p>
           </div>
         </div>
 
@@ -161,14 +153,13 @@ function SubaccountDashboard({ accountId }: { accountId: number }) {
   const [isBookedReportOpen, setIsBookedReportOpen] = useState(false);
 
   const stagePalette = [
-    { id: "New" as const, label: "New", fill: "#1a3a6f" },
-    { id: "Contacted" as const, label: "Contacted", fill: "#2d5aa8" },
-    { id: "Responded" as const, label: "Responded", fill: "#1E90FF" },
-    { id: "Multiple Responses" as const, label: "Multiple Responses", fill: "#22c55e" },
-    { id: "Qualified" as const, label: "Qualified", fill: "#a855f7" },
-    { id: "Booked" as const, label: "Booked", fill: "#facc15" },
-    { id: "Lost" as const, label: "Lost", fill: "#94a3b8" },
-    { id: "DND" as const, label: "DND", fill: "#ef4444" },
+    { id: "New" as const, label: "New", fill: "#374151", textColor: "white" as const },
+    { id: "Contacted" as const, label: "Contacted", fill: "#1f2937", textColor: "white" as const },
+    { id: "Responded" as const, label: "Responded", fill: "#1E90FF", textColor: "white" as const },
+    { id: "Multiple Responses" as const, label: "Multiple Responses", fill: "#60a5fa", textColor: "black" as const },
+    { id: "Qualified" as const, label: "Qualified", fill: "#93c5fd", textColor: "black" as const },
+    { id: "Booked" as const, label: "Booked", fill: "#facc15", textColor: "black" as const },
+    { id: "DND" as const, label: "DND", fill: "#ffffff", textColor: "black" as const },
   ];
 
   const funnel = useMemo(() => {
@@ -183,11 +174,12 @@ function SubaccountDashboard({ accountId }: { accountId: number }) {
       "Multiple Responses": accountLeads.filter((l) => l.conversion_status === "Multiple Responses").length,
       Qualified: accountLeads.filter((l) => l.conversion_status === "Qualified").length,
       Booked: accountLeads.filter((l) => l.conversion_status === "Booked").length,
-      Lost: accountLeads.filter((l) => l.conversion_status === "Lost").length,
       DND: accountLeads.filter((l) => l.conversion_status === "DND").length,
     };
 
-    return stagePalette.map((s) => ({ name: s.label, value: counts[s.id], fill: s.fill }));
+    return stagePalette
+      .filter((s) => s.id !== "DND")
+      .map((s) => ({ name: s.label, value: counts[s.id], fill: s.fill }));
   }, [accountId, selectedCampaignId]);
 
   const stats = useMemo(() => {
@@ -241,43 +233,43 @@ function SubaccountDashboard({ accountId }: { accountId: number }) {
           <div className="ml-auto text-xs text-muted-foreground" data-testid="text-campaign-block-sub">Funnel + KPIs (MOCK)</div>
         </div>
 
-        <div className="px-4 py-3 grid grid-cols-1 lg:grid-cols-[520px_1fr] gap-4" data-testid="campaign-body">
+        <div className="px-4 py-3 grid grid-cols-1 lg:grid-cols-[460px_1fr] gap-4" data-testid="campaign-body">
           <div className="rounded-2xl border border-border bg-background p-4" data-testid="card-funnel">
             <div className="flex items-start justify-between gap-3" data-testid="funnel-head">
               <div className="min-w-0" data-testid="wrap-funnel-title">
-                <div className="text-sm font-semibold" data-testid="text-funnel-title">Conversion Funnel</div>
-                <div className="mt-0.5 text-xs text-muted-foreground truncate" data-testid="text-funnel-hint">
-                  New → Contacted → Responded → Multiple Responses → Qualified → Booked → Lost → DND
+                <div className="text-xs font-semibold text-muted-foreground" data-testid="text-funnel-total">
+                  All contacts: <span className="text-foreground font-extrabold">{stats.totalLeads}</span>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={() => setIsBookedReportOpen(true)}
-                className="h-9 w-9 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors grid place-items-center text-muted-foreground"
+                className="h-8 w-8 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors grid place-items-center text-muted-foreground"
                 data-testid="button-booked-report"
                 aria-label="Booked report"
               >
                 <span className="text-sm font-black">!</span>
               </button>
             </div>
-            <div className="mt-3 h-[220px]" data-testid="chart-funnel">
+            <div className="mt-2 h-[140px]" data-testid="chart-funnel">
               <ResponsiveContainer width="100%" height="100%">
                 <FunnelChart>
                   <Tooltip />
                   <Funnel dataKey="value" data={funnel} isAnimationActive>
-                    <LabelList position="right" fill="hsl(var(--foreground))" stroke="none" dataKey="name" />
+                    <LabelList
+                      position="left"
+                      fill="hsl(var(--foreground))"
+                      stroke="none"
+                      dataKey="name"
+                      formatter={(value: unknown, entry: any) => {
+                        const v = typeof entry?.value === "number" ? entry.value : 0;
+                        return `${String(value)}  ${v}`;
+                      }}
+                    />
                   </Funnel>
                 </FunnelChart>
               </ResponsiveContainer>
-            </div>
-            <div className="mt-2 grid grid-cols-2 gap-2" data-testid="legend-funnel">
-              {stagePalette.map((s) => (
-                <div key={s.id} className="flex items-center gap-2 text-xs text-muted-foreground" data-testid={`legend-${s.id}`}>
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: s.fill }} />
-                  <span>{s.label}</span>
-                </div>
-              ))}
             </div>
           </div>
 
@@ -379,7 +371,7 @@ function SubaccountDashboard({ accountId }: { accountId: number }) {
       <section className="rounded-2xl border border-border bg-background p-4" data-testid="section-pipeline">
         <div className="text-sm font-semibold" data-testid="text-pipeline-title">Pipeline</div>
         <div className="mt-1 text-xs text-muted-foreground" data-testid="text-pipeline-sub">Kanban-style stages (MOCK)</div>
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4" data-testid="grid-pipeline">
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-8 gap-3" data-testid="grid-pipeline">
           {stagePalette.map((s) => (
             <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
           ))}
@@ -422,7 +414,7 @@ function PipelineCol({
   accountId,
   campaignId,
 }: {
-  stage: { id: string; label: string; fill: string };
+  stage: { id: string; label: string; fill: string; textColor: "black" | "white" };
   accountId: number;
   campaignId: number | "all";
 }) {
@@ -440,27 +432,47 @@ function PipelineCol({
     <div className="rounded-2xl border border-border bg-background overflow-hidden" data-testid={`col-${stage.id}`}>
       <div
         className="px-3 py-2 border-b border-border flex items-center justify-between"
-        style={{ backgroundColor: stage.fill + "1A" }}
+        style={{ backgroundColor: stage.fill }}
         data-testid={`col-head-${stage.id}`}
       >
         <div className="flex items-center gap-2 min-w-0">
           <div
             className="text-sm font-semibold truncate"
-            style={{ color: stage.fill }}
+            style={{ color: stage.textColor === "white" ? "#ffffff" : "#0b1220" }}
             data-testid={`col-title-${stage.id}`}
           >
             {stage.label}
           </div>
         </div>
-        <div className="text-xs font-semibold" style={{ color: stage.fill }} data-testid={`col-count-${stage.id}`}>
+        <div
+          className="text-xs font-semibold"
+          style={{ color: stage.textColor === "white" ? "#ffffff" : "#0b1220" }}
+          data-testid={`col-count-${stage.id}`}
+        >
           {items.length}
         </div>
       </div>
       <div className="p-3 space-y-2" data-testid={`col-body-${stage.id}`}>
         {items.slice(0, 8).map((l) => (
           <div key={l.id} className="rounded-xl border border-border bg-muted/10 p-3" data-testid={`card-pipe-${stage.id}-${l.id}`}>
-            <div className="font-semibold text-sm truncate" data-testid={`text-pipe-name-${stage.id}-${l.id}`}>{l.full_name}</div>
-            <div className="mt-0.5 text-xs text-muted-foreground truncate" data-testid={`text-pipe-phone-${stage.id}-${l.id}`}>{l.phone}</div>
+            <div className="flex items-center gap-2" data-testid={`row-pipe-lead-${stage.id}-${l.id}`}>
+              <div
+                className="h-7 w-7 rounded-full grid place-items-center text-[11px] font-bold"
+                style={{ backgroundColor: stage.fill, color: stage.textColor === "white" ? "#ffffff" : "#0b1220" }}
+                data-testid={`avatar-pipe-${stage.id}-${l.id}`}
+              >
+                {(l.full_name || "?")
+                  .split(" ")
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .map((p) => p[0]?.toUpperCase())
+                  .join("")}
+              </div>
+              <div className="min-w-0">
+                <div className="font-semibold text-sm truncate" data-testid={`text-pipe-name-${stage.id}-${l.id}`}>{l.full_name}</div>
+                <div className="mt-0.5 text-xs text-muted-foreground truncate" data-testid={`text-pipe-phone-${stage.id}-${l.id}`}>{l.phone}</div>
+              </div>
+            </div>
           </div>
         ))}
         {items.length === 0 ? (
