@@ -28,7 +28,7 @@ const accountsList = [
 ];
 
 export function RightSidebar() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { currentAccountId, setCurrentAccountId, currentAccount, isAgencyView } = useWorkspace();
   const [collapsed, setCollapsed] = useState(false);
   const [openSwitcher, setOpenSwitcher] = useState(false);
