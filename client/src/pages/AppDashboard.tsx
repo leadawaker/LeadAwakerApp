@@ -204,30 +204,40 @@ function SubaccountDashboard({ accountId }: { accountId: number }) {
   return (
     <div className="mt-6 space-y-6" data-testid="subaccount-dashboard">
       <section className="rounded-2xl border border-border bg-background overflow-hidden" data-testid="section-campaign-selector">
-        <div className="p-4 border-b border-border flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3" data-testid="campaign-head">
-          <div>
-            <div className="text-sm font-semibold" data-testid="text-campaign-block-title">Campaign performance</div>
-            <div className="text-xs text-muted-foreground" data-testid="text-campaign-block-sub">Funnel + KPIs (MOCK)</div>
-          </div>
-          <div className="flex items-center gap-2" data-testid="wrap-campaign-select">
-            <div className="text-xs text-muted-foreground" data-testid="label-campaign">Campaign</div>
-            <select
-              value={selectedCampaignId}
-              onChange={(e) => setSelectedCampaignId(e.target.value === "all" ? "all" : Number(e.target.value))}
-              className="h-10 rounded-xl border border-border bg-muted/20 px-3 text-sm"
-              data-testid="select-dashboard-campaign"
-            >
-              <option value="all">All campaigns</option>
-              {campaignOptions.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+        <div className="px-4 py-3 border-b border-border flex flex-col gap-3" data-testid="campaign-head">
+          <div className="flex items-center justify-between gap-3" data-testid="row-campaign-title">
+            <div className="min-w-0" data-testid="wrap-campaign-title">
+              <div className="text-sm font-semibold truncate" data-testid="text-campaign-block-title">Campaign performance</div>
+              <div className="mt-0.5 text-xs text-muted-foreground" data-testid="text-campaign-block-sub">Funnel + KPIs (MOCK)</div>
+            </div>
+
+            <div className="flex items-center gap-2" data-testid="wrap-campaign-select">
+              <div className="text-xs text-muted-foreground" data-testid="label-campaign">Campaign</div>
+              <div className="relative" data-testid="wrap-campaign-select-inner">
+                <select
+                  value={selectedCampaignId}
+                  onChange={(e) => setSelectedCampaignId(e.target.value === "all" ? "all" : Number(e.target.value))}
+                  className="h-9 rounded-xl border border-border bg-muted/20 pl-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                  data-testid="select-dashboard-campaign"
+                >
+                  <option value="all">All campaigns</option>
+                  {campaignOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" data-testid="icon-campaign-chevron">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="p-4 grid grid-cols-1 lg:grid-cols-[520px_1fr] gap-6" data-testid="campaign-body">
+        <div className="p-4 grid grid-cols-1 lg:grid-cols-[520px_1fr] gap-4" data-testid="campaign-body">
           <div className="rounded-2xl border border-border bg-background p-4" data-testid="card-funnel">
             <div className="flex items-center justify-between" data-testid="funnel-head">
               <div className="text-sm font-semibold" data-testid="text-funnel-title">Conversion Funnel</div>
@@ -253,7 +263,7 @@ function SubaccountDashboard({ accountId }: { accountId: number }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 xl:grid-cols-4 gap-4" data-testid="grid-stats">
+          <div className="grid grid-cols-2 gap-4" data-testid="grid-stats">
             <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" tone="blue" />
             <Stat label="Active Campaigns" value={String(stats.activeCampaigns)} testId="stat-active" tone="indigo" />
             <Stat label="Bookings/Mo" value={String(stats.bookingsMo)} testId="stat-bookings" tone="yellow" />
