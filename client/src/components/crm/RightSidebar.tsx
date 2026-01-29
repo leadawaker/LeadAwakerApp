@@ -130,7 +130,9 @@ export function RightSidebar() {
                   "flex items-center gap-3 rounded-xl border border-transparent transition-colors",
                   collapsed ? "h-11 justify-center" : "px-3 py-2.5",
                   active
-                    ? "bg-yellow-400 text-yellow-950"
+                    ? isAgencyView
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                      : "bg-yellow-400 text-yellow-950 shadow-lg shadow-yellow-500/20"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
                 )}
                 data-testid={`link-${it.testId}`}
