@@ -74,8 +74,8 @@ export function ThinLeftBar({
       className={cn(
         "fixed left-0 top-0 bottom-0 w-[48px] border-r z-50 flex flex-col items-center py-3 duration-0",
         isAgencyView 
-          ? "bg-blue-600/10 border-blue-500/20" 
-          : "bg-yellow-500/10 border-yellow-500/20"
+          ? "bg-blue-600/20 border-blue-500/30 shadow-[4px_0_24px_-4px_rgba(37,99,235,0.1)]" 
+          : "bg-yellow-500/20 border-yellow-500/30 shadow-[4px_0_24px_-4px_rgba(234,179,8,0.1)]"
       )}
       data-testid="bar-thin-left"
     >

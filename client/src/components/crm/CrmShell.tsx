@@ -25,11 +25,11 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [helpOpen]);
 
-  const { isAgencyView } = useWorkspace();
+  const { isAgencyView, currentAccountId } = useWorkspace();
   const settingsPath = isAgencyView ? "/agency/settings" : "/subaccount/settings";
 
   return (
-    <div className="min-h-screen bg-background" data-testid="shell-crm" key={isAgencyView ? "agency" : "subaccount"}>
+    <div className="min-h-screen bg-background" data-testid="shell-crm" key={`${currentAccountId}-${isAgencyView}`}>
       <ThinLeftBar
         onOpenSupport={() => setSupportOpen(true)}
         onOpenSearch={() => setSearchOpen(true)}

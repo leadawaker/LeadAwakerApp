@@ -21,7 +21,7 @@ export function Sidebar() {
     <aside
       className={cn(
         "hidden lg:flex w-64 shrink-0 border-r duration-0",
-        isAgencyView ? "bg-blue-600/5 border-blue-500/10" : "bg-yellow-500/5 border-yellow-500/10"
+        isAgencyView ? "bg-blue-600/10 border-blue-500/20" : "bg-yellow-500/10 border-yellow-500/20"
       )}
       data-testid="sidebar-crm"
     >
