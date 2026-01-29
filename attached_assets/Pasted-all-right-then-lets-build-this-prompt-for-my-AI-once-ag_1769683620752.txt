@@ -1,0 +1,1110 @@
+all right, then lets build this prompt for my AI once again in replit. These are the tables that I currently have (I have added more fields to each but what I am sharing now will probably be enough for the prompt). 
+
+📊 TABLE 1: ACCOUNTS
+Field Name
+Type
+Config
+Description
+id
+Auto Number
+PK
+Unique identifier
+created_at
+DateTime
+Auto now
+Creation timestamp
+updated_at
+DateTime
+Auto update
+Last modification
+name
+Single Line Text
+Required
+Company/Account name
+slug
+Single Line Text
+Unique
+URL-friendly identifier
+type
+Single Select
+Agency, Enterprise, Starter
+Account tier
+status
+Single Select
+Active, Inactive, Suspended, Trial
+Account status
+timezone
+Single Select
+All timezones
+Default timezone
+notes
+Long Text
+
+
+Internal notes
+twilio_account_sid
+Single Line Text
+
+
+Twilio Account SID
+twilio_auth_token
+Single Line Text
+
+
+Twilio Auth Token
+twilio_messaging_service_sid
+Single Line Text
+
+
+Twilio Messaging Service
+twilio_default_from_number
+Phone Number
+
+
+Default sending number
+business_hours_start
+Time
+Default: 09
+Business start time
+business_hours_end
+Time
+Default: 17
+Business end time
+max_daily_sends
+Number
+Default: 500
+Max messages per day
+ai_model_default
+Single Select
+gpt-4, gpt-3.5-turbo, claude-3
+Default AI model
+owner_email
+Email
+
+
+Primary contact
+
+Relationships:
+Has Many → Campaigns
+Has Many → Leads
+Has Many → Interactions
+Has Many → Users
+Has Many → Tags
+
+📊 TABLE 2: CAMPAIGNS
+Field Name
+Type
+Config
+Description
+id
+Auto Number
+PK
+Unique identifier
+account_id
+Link → accounts
+Many
+, Required
+Parent account
+created_at
+DateTime
+Auto now
+Creation timestamp
+updated_at
+DateTime
+Auto update
+Last update
+name
+Single Line Text
+Required
+Campaign name
+status
+Single Select
+Draft, Active, Paused, Completed, Archived
+Campaign status
+type
+Single Select
+Cold Outreach, Re-engagement, Follow-up, Event
+Campaign type
+description
+Long Text
+
+
+Campaign description
+start_date
+Date
+
+
+Campaign start
+end_date
+Date
+
+
+Campaign end
+n8n_workflow_id
+Single Line Text
+
+
+N8N workflow reference
+ai_prompt_template
+Long Text
+Required
+Base AI instruction
+total_cost
+Currency
+Default: 0
+Total campaign cost
+first_message_template
+Long Text
+Required
+Initial outreach message
+bump_1_template
+Long Text
+Required
+First follow-up
+bump_2_template
+Long Text
+Required
+Second follow-up
+bump_3_template
+Long Text
+Required
+Third follow-up
+bump_1_delay_hours
+Number
+Default: 24
+Hours before Bump 1
+bump_2_delay_hours
+Number
+Default: 24
+Hours before Bump 2
+bump_3_delay_hours
+Number
+Default: 24
+Hours before Bump 3
+daily_lead_limit
+Number
+Default: 100
+Max leads contacted/day
+message_interval_minutes
+Number
+Default: 2
+Minutes between messages
+active_hours_start
+Time
+Default: 09
+Daily sending start
+active_hours_end
+Time
+Default: 17
+Daily sending end
+calendar_link
+URL
+
+
+Booking calendar URL
+webhook_url
+URL
+
+
+N8N webhook endpoint
+ai_model
+Single Select
+gpt-4, gpt-3.5-turbo, claude-3
+AI model for campaign
+ai_temperature
+Number
+Default: 0.7, Range: 0-1
+AI creativity level
+use_ai_bumps
+Checkbox
+Default: true
+Enable AI bumps
+max_bumps
+Number
+Default: 3
+Maximum follow-ups
+stop_on_response
+Checkbox
+Default: true
+Stop bumps on reply
+
+Relationships:
+Belongs To → Accounts
+Has Many → Leads
+Has Many → Interactions
+
+📊 TABLE 3: LEADS
+Field Name
+Type
+Config
+Description
+id
+Auto Number
+PK
+Unique identifier
+account_id
+Link → accounts
+Many
+, Required
+Parent account
+campaign_id
+Link → campaigns
+Many
+Associated campaign
+created_at
+DateTime
+Auto now
+Creation timestamp
+updated_at
+DateTime
+Auto update
+Last update
+first_name
+Single Line Text
+
+
+First name
+last_name
+Single Line Text
+
+
+Last name
+full_name
+Formula
+{first_name} & " " & {last_name}
+Concatenated name
+phone
+Phone Number
+Required, Unique per account
+Contact number
+phone_normalized
+Single Line Text
+
+
+E.164 format
+email
+Email
+
+
+Email address
+conversion_status
+Single Select
+New, Contacted, Responded, Multiple Responses, Qualified, Booked, Lost, DND
+Lead stage
+source
+Single Select
+Manual Upload, Facebook, Google, Referral, API, Import
+Lead source
+last_interaction_at
+DateTime
+
+
+Last contact timestamp
+notes
+Long Text
+
+
+Internal notes
+booked_call_date
+DateTime
+
+
+Scheduled appointment
+automation_status
+Single Select
+queued, active, paused, completed, dnd, error
+Workflow state
+last_message_sent_at
+DateTime
+
+
+Last outbound message
+last_message_received_at
+DateTime
+
+
+Last inbound message
+message_count_sent
+Number
+Default: 0
+Total sent messages
+message_count_received
+Number
+Default: 0
+Total received messages
+ai_memory
+Long Text (JSON)
+
+
+Conversation context
+bump_1_sent_at
+DateTime
+
+
+Bump 1 timestamp
+bump_2_sent_at
+DateTime
+
+
+Bump 2 timestamp
+bump_3_sent_at
+DateTime
+
+
+Bump 3 timestamp
+first_message_sent_at
+DateTime
+
+
+Initial message timestamp
+current_bump_stage
+Number
+Default: 0
+0=none, 1-3=bump number
+next_action_at
+DateTime
+
+
+Scheduled next contact
+timezone
+Single Select
+All timezones
+Lead's timezone
+opted_out
+Checkbox
+Default: false
+SMS opt-out status
+ai_sentiment
+Single Select
+Positive, Neutral, Negative, Unknown
+AI sentiment
+priority
+Single Select
+Low, Medium, High, Urgent
+Lead priority
+manual_takeover
+Checkbox
+Default: false
+Human override
+dnc_reason
+Single Line Text
+
+
+Do Not Contact reason
+custom_field_1
+Single Line Text
+
+
+Flexible field
+custom_field_2
+Single Line Text
+
+
+Flexible field
+custom_field_3
+Single Line Text
+
+
+Flexible field
+
+Relationships:
+Belongs To → Accounts
+Belongs To → Campaigns
+Has Many → Interactions
+Has Many → Lead_Tags (through junction)
+
+📊 TABLE 4: INTERACTIONS
+Field Name
+Type
+Config
+Description
+id
+Auto Number
+PK
+Unique identifier
+account_id
+Link → accounts
+Many
+, Required
+Parent account
+campaign_id
+Link → campaigns
+Many
+Associated campaign
+lead_id
+Link → leads
+Many
+, Required
+Associated lead
+user_id
+Link → users
+Many
+Human agent
+created_at
+DateTime
+Auto now
+Creation timestamp
+updated_at
+DateTime
+Auto update
+Last update
+type
+Single Select
+SMS, WhatsApp, Email, Call, Note
+Interaction type
+direction
+Single Select
+Inbound, Outbound
+Message direction
+content
+Long Text
+Required
+Message content
+status
+Single Select
+queued, sending, sent, delivered, failed, read
+Message status
+twilio_message_sid
+Single Line Text
+Unique
+Twilio message ID
+from_number
+Phone Number
+Required
+Sender number
+to_number
+Phone Number
+Required
+Recipient number
+metadata
+Long Text (JSON)
+
+
+Additional data
+ai_generated
+Checkbox
+Default: false
+AI-created message
+ai_model
+Single Line Text
+
+
+AI model used
+ai_prompt
+Long Text
+
+
+Prompt sent to AI
+ai_response
+Long Text
+
+
+Raw AI response
+ai_prompt_tokens
+Number
+
+
+Input tokens
+ai_completion_tokens
+Number
+
+
+Output tokens
+ai_total_tokens
+Number
+
+
+Total tokens
+ai_cost
+Currency
+
+
+AI API cost
+sent_at
+DateTime
+
+
+Message sent time
+delivered_at
+DateTime
+
+
+Delivery confirmation
+read_at
+DateTime
+
+
+Read receipt
+failed_at
+DateTime
+
+
+Failure timestamp
+error_message
+Long Text
+
+
+Error details
+bump_number
+Number
+
+
+Which bump (0-3)
+is_bump
+Checkbox
+Default: false
+Is bump message
+triggered_by
+Single Select
+Manual, Automation, AI, Webhook
+Trigger source
+reply_to_interaction_id
+Link → interactions
+Self-reference
+Parent message
+attachments
+Attachment
+
+
+Media files
+sentiment_score
+Number
+Range: -1 to 1
+Sentiment analysis
+
+Relationships:
+Belongs To → Accounts
+Belongs To → Campaigns
+Belongs To → Leads
+Belongs To → Users
+Belongs To → Interactions (self-reference for replies)
+
+📊 TABLE 5: USERS
+Field Name
+Type
+Config
+Description
+id
+Auto Number
+PK
+Unique identifier
+account_id
+Link → accounts
+Many
+Parent account
+created_at
+DateTime
+Auto now
+Creation timestamp
+updated_at
+DateTime
+Auto update
+Last update
+email
+Email
+Required, Unique
+User email
+full_name
+Single Line Text
+Required
+User's name
+role
+Single Select
+Admin, Manager, Agent, Viewer
+User role
+status
+Single Select
+Active, Inactive, Suspended
+Account status
+phone
+Phone Number
+
+
+Contact number
+timezone
+Single Select
+All timezones
+User's timezone
+avatar_url
+URL
+
+
+Profile picture
+last_login_at
+DateTime
+
+
+Last login
+n8n_webhook_url
+URL
+
+
+Personal webhook
+notification_email
+Checkbox
+Default: true
+Email notifications
+notification_sms
+Checkbox
+Default: false
+SMS notifications
+
+Relationships:
+Belongs To → Accounts
+Has Many → Interactions
+
+📊 TABLE 6: TAGS
+Field Name
+Type
+Config
+Description
+id
+Auto Number
+PK
+Unique identifier
+account_id
+Link → accounts
+Many
+Parent account
+name
+Single Line Text
+Required, Unique
+Tag name
+slug
+Single Line Text
+Auto-generate
+URL-safe version
+category
+Single Select
+Status, Source, Priority, Automation, Behavior, Outcome
+Tag category
+color
+Single Select
+red, blue, green, yellow, orange, purple, gray
+Display color
+description
+Long Text
+
+
+Tag purpose
+auto_applied
+Checkbox
+Default: false
+Applied by automation
+created_at
+DateTime
+Auto now
+Creation timestamp
+
+Category Options:
+Status (11 tags): bump 1 reply, bump 2 reply, bump 3 reply, bump response, first message, second message, follow-up, lead, multiple messages, qualify, responded
+Source (3 tags): dbr android, fb lead, sleeping beauty android optin
+Priority (2 tags): high priority, warm lead
+Automation (6 tags): ai stop, bump 1.1, bump 2.1, no bump, reply generating
+Behavior (2 tags): dnd, manual takeover
+Outcome (4 tags): appointment booked, goodbye, no response, schedule
+Relationships:
+Belongs To → Accounts
+Has Many → Lead_Tags (through junction)
+
+📊 TABLE 7: LEAD_TAGS (Junction Table)
+Field Name
+Type
+Config
+Description
+id
+Auto Number
+PK
+Unique identifier
+lead_id
+Link → leads
+Many
+, Required
+Associated lead
+tag_id
+Link → tags
+Many
+, Required
+Associated tag
+applied_at
+DateTime
+Auto now
+When tag added
+applied_by
+Single Select
+Automation, Manual, AI
+How tag was added
+applied_by_user
+Link → users
+Many
+Which user added
+workflow_id
+Single Line Text
+
+
+N8N workflow ID
+workflow_step
+Single Line Text
+
+
+Which step added it
+removed_at
+DateTime
+
+
+When tag removed
+removed_by
+Single Select
+Automation, Manual
+How removed
+notes
+Long Text
+
+
+Why added/removed
+
+Relationships:
+Belongs To → Leads
+Belongs To → Tags
+Belongs To → Users (applied_by_user)
+
+📊 TABLE 8: AUTOMATION_LOGS
+Field Name
+Type
+Config
+Description
+id
+Auto Number
+PK
+Unique identifier
+lead_id
+Link → leads
+Many
+Associated lead
+campaign_id
+Link → campaigns
+Many
+Associated campaign
+account_id
+Link → accounts
+Many
+, Required
+Parent account
+workflow_name
+Single Line Text
+Required
+Workflow identifier
+workflow_execution_id
+Single Line Text
+
+
+N8N execution ID
+step_name
+Single Line Text
+Required
+Step description
+step_number
+Number
+
+
+Sequential order
+status
+Single Select
+started, success, failed, skipped, waiting, retrying
+Step status
+error_message
+Long Text
+
+
+Error details
+error_code
+Single Line Text
+
+
+Error type code
+input_data
+Long Text (JSON)
+
+
+JSON input
+output_data
+Long Text (JSON)
+
+
+JSON output
+execution_time_ms
+Number
+Default: 0
+Duration in ms
+retry_count
+Number
+Default: 0
+Retry attempts
+created_at
+DateTime
+Auto now
+Log timestamp
+updated_at
+DateTime
+Auto update
+Last update
+parent_log_id
+Link → automation_logs
+Self-reference
+Previous step
+metadata
+Long Text (JSON)
+
+
+Extra context
+
+Relationships:
+Belongs To → Leads
+Belongs To → Campaigns
+Belongs To → Accounts
+Belongs To → Automation_Logs (self-reference for parent)
+
+
+📊 TABLE 10: AI_PROMPT_LIBRARY (Optional but Recommended)
+Field Name
+Type
+Config
+Description
+id
+Auto Number
+PK
+Unique identifier
+account_id
+Link → accounts
+Many
+Parent account
+name
+Single Line Text
+Required
+Prompt name
+version
+Single Line Text
+Default: 1.0
+Version number
+prompt_text
+Long Text
+Required
+Full prompt
+use_case
+Single Select
+First Message, Reply, Bump, Qualification
+Prompt purpose
+model
+Single Select
+gpt-4, gpt-3.5-turbo, claude-3
+Target AI model
+temperature
+Number
+Default: 0.7
+Creativity setting
+max_tokens
+Number
+Default: 150
+Max response length
+system_message
+Long Text
+
+
+System context
+status
+Single Select
+Draft, Active, Archived
+Prompt status
+performance_score
+Number
+Range: 0-100
+Effectiveness rating
+created_at
+DateTime
+Auto now
+Creation timestamp
+
+Relationships:
+Belongs To → Accounts
+
+🎯 Database Relationships Summary
+Copy
+ACCOUNTS (1)
+├── Has Many → CAMPAIGNS
+├── Has Many → LEADS
+├── Has Many → INTERACTIONS
+├── Has Many → USERS
+├── Has Many → TAGS
+├── Has Many → MESSAGE_TEMPLATES
+└── Has Many → AI_PROMPT_LIBRARY
+
+CAMPAIGNS (1)
+├── Belongs To → ACCOUNTS
+├── Has Many → LEADS
+└── Has Many → INTERACTIONS
+
+LEADS (1)
+├── Belongs To → ACCOUNTS
+├── Belongs To → CAMPAIGNS
+├── Has Many → INTERACTIONS
+└── Has Many → LEAD_TAGS
+
+TAGS (1)
+├── Belongs To → ACCOUNTS
+└── Has Many → LEAD_TAGS
+
+LEAD_TAGS (Junction)
+├── Belongs To → LEADS
+├── Belongs To → TAGS
+└── Belongs To → USERS
+
+INTERACTIONS (1)
+├── Belongs To → ACCOUNTS
+├── Belongs To → CAMPAIGNS
+├── Belongs To → LEADS
+├── Belongs To → USERS
+└── Belongs To → INTERACTIONS (self)
+
+AUTOMATION_LOGS (1)
+├── Belongs To → ACCOUNTS
+├── Belongs To → CAMPAIGNS
+├── Belongs To → LEADS
+└── Belongs To → AUTOMATION_LOGS (self)
+
+USERS (1)
+├── Belongs To → ACCOUNTS
+├── Has Many → INTERACTIONS
+└── Has Many → LEAD_TAGS
+
+Build a production-ready **LeadAwaker CRM Dashboard** in **React + Tailwind CSS** (static mode for Replit), emulating **GoHighLevel agency/subaccount UX**. Use **MOCK DATA first** matching my exact NocoDB schema, with clear comments to swap for real `/api/v1` calls later. Make it **agency-focused** (full access) but role‑aware for future clients.
+
+## CORE SPECS
+- **Static hosting**: `npm run build` → serve `/build` folder.  
+- **Responsive**: Mobile/desktop, dark mode ready.  
+- **Auth mock**: Hardcode agency login (`localStorage` JWT/user). Later: real `/Users` API.  
+- **Multi‑tenant**: Agency sees all (`isAgency=true`); filter by `account_id` for clients.  
+- **Router**: React Router for sidebar nav.  
+- **Data**: useSWR or useState for mocks → API swap.  
+- **Styling**: Tailwind (GHL blue `#1e40af` accents, clean cards).  
+
+## MOCK DATA (Exact Schema Match)
+Hardcode realistic data for **1 agency account** + **2 client accounts** + **20 leads** + **50 interactions** + etc. Use my exact field names/types:
+
+**Accounts** (3):  
+- `{id:1, name:"LeadAwaker (Agency)", slug:"leadawaker", type:"Agency", status:"Active", twilio_account_sid:"ACxxx", ...}`  
+- Client1: `{id:2, name:"FitnessGym ABC", ...}`  
+- Client2: `{id:3, name:"LawFirm XYZ", ...}`  
+
+**Users** (you + 2): `{id:1, account_id:1, email:"you@leadawaker.com", role:"Admin", isAgency:true}`  
+
+**Campaigns** (5): `{id:1, account_id:1, name:"Reactivation Sequence", status:"Active", ai_prompt_template:"...", bump_1_template:"Hi {full_name}...", ...}`  
+
+**Leads** (20): `{id:1, account_id:2, campaign_id:1, full_name:"John Doe", phone:"+5511999999999", conversion_status:"Responded", tags:["warm-lead"], ai_sentiment:"Positive", current_bump_stage:1, ...}`  
+
+**Interactions** (50): `{id:1, lead_id:1, direction:"Outbound", type:"SMS", content:"Hi John...", ai_generated:true, status:"delivered", ...}`  
+
+**Tags** (15): `{id:1, account_id:1, name:"warm-lead", color:"blue", category:"Behavior"}` + junction **Lead_Tags**.  
+
+**Automation_Logs** (10): `{id:1, lead_id:1, status:"success", workflow_name:"bump1", execution_time_ms:2500}`  
+
+**Prompt_Library** (5): `{id:1, account_id:1, name:"First Outreach", prompt_text:"Personalize message for {full_name}...", use_case:"First Message"}`
+
+## LAYOUT (GHL‑Style)
+```
+TOPBAR (fixed): Logo | Account Switcher (agency dropdown: Accounts) | Global Search (Leads) | Notifications (bell, Interactions) | Avatar (user.full_name)
+
+SIDEBAR (collapsible left, role‑based):
+AGENCY VIEW:
+- Dashboard ✨
+- Accounts 📊
+- All Leads 📈
+- Campaigns 🚀
+- Interactions 💬
+- Automation Logs ⚙️
+- Tags 🏷️
+- Prompt Library 🤖
+- Settings ⚙️
+
+CLIENT VIEW (filter account_id):
+- Dashboard ✨
+- Leads 📈
+- Campaigns 🚀
+- Interactions 💬
+- Prompt Library 🤖
+- Settings ⚙️
+
+MAIN CONTENT:
+DASHBOARD (default):
+Row1: KPI Cards (5):
+- Active Campaigns: 3 (Campaigns where status="Active")
+- Pipeline Leads: 12 (Leads where conversion_status IN ["Contacted","Responded","Qualified"])
+- Interactions Today: 8 (Interactions where created_at=today)
+- Bookings This Week: 2 (Leads where booked_call_date=this week)
+- AI Cost Last 30d: $12.45 (Interactions.ai_cost SUM)
+
+Row2: Leads Pipeline Table/Kanban (sortable):
+Columns: full_name, phone, conversion_status (badge), campaign.name, ai_sentiment (emoji), current_bump_stage, last_interaction_at, priority (icon), manual_takeover (switch)
+Row click → selectLead → populate RIGHT PANEL
+
+Row3: Recent Activity (split):
+Left: Interactions feed (chat bubbles, newest top)
+Right: Automation Logs (table, status badges)
+
+RIGHT PANEL (Lead selected, 300px wide):
+1. Lead Header: full_name, phone, email, conversion_status badge, priority, source
+2. Campaign: campaign.name, status, next_action_at
+3. Quick Stats: message_count_sent/recv, ai_sentiment, current_bump_stage progress
+4. Tags: Colored pills (from Lead_Tags → Tags.name/color)
+5. Interactions Chat: Reverse chrono bubbles (direction icon, content snippet, timestamp, ai_generated badge)
+6. Manual Takeover: Textarea | "Send SMS" btn (POST mock Interaction + n8n webhook)
+
+OTHER PAGES:
+- Accounts: DataTable (name,type,status,twilio_account_sid,owner_email)
+- Campaigns: Cards (name,status,type,total_cost,ai_model,daily_lead_limit)
+- Tags: Grid (name,color,category,leads_count)
+```
+
+## TECH IMPLEMENTATION
+```
+App.tsx:
+- AuthProvider (mock: localStorage.user = {id:1,account_id:1,isAgency:true})
+- Router: /dashboard, /leads, /accounts, /campaigns
+- Layout: Topbar + Sidebar + Outlet + RightPanel
+
+Dashboard.tsx:
+- KPIs: useMemo from mockLeads, mockInteractions
+- LeadsTable: DataTable (TanStack/react-table) with row selection
+- RecentActivity: Virtualized list
+- RightPanel: LeadCard + InteractionsChat + ManualSendForm
+
+Hooks:
+const useLeads = () => useState(mockLeads) // LATER: useSWR(`/api/v1/db/data/nocodb/Leads?where=(account_id,eq,${currentAccountId || ''})`)
+
+API SWAP COMMENTS (everywhere):
+// MOCK: const leads = mockLeads
+// REAL:
+const {data: leads} = useSWR(`/api/v1/db/data/nocodb/Leads`, fetcher, {
+  params: {where: isAgency ? undefined : `(account_id,eq,${currentAccountId})`}
+});
+const fetcher = (url, {params}) => fetch(`${NOCODB_URL}${url}`, {
+  headers: {'xc-token': process.env.NOCODB_TOKEN}
+}).then(r=>r.json().list);
+```
+
+## OUTPUT FILES
+1. `package.json`: React 18, React Router 6, Tailwind 3, @tanstack/react-table, use-swr, lucide-react (icons)  
+2. `tailwind.config.js`: GHL colors (`blue: {500: '#1e40af'}`)  
+3. `App.tsx` + `index.css`  
+4. `components/Layout/Topbar.tsx`, `Sidebar.tsx`  
+5. `pages/Dashboard.tsx`  
+6. `components/LeadsTable.tsx`, `LeadCard.tsx`, `InteractionsChat.tsx`, `ManualSendForm.tsx`  
+7. `hooks/useAuth.ts`, `useLeads.ts`, `useInteractions.ts`  
+8. `data/mocks.js` (all mock data)  
+9. `.env.example`: `NOCODB_URL=`, `NOCODB_TOKEN=`  
+10. `replit.nix` or `.replit` for static build.
+
+**Make it pixel‑perfect, copy‑paste ready, zero config needed.** Generate **full working code**! 🚀
+
+Citations:
+[1] 1000106004.jpg https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/images/132508724/eeeaebc6-73a7-4718-86ab-582f868b6108/1000106004.jpg
+[2] 1000106003.jpg https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/images/132508724/86d25ce3-0bac-4b71-9f93-70b8e1e7b375/1000106003.jpg
