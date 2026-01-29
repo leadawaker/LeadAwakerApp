@@ -155,7 +155,7 @@ export default function AppLeads() {
 
                   <div className="min-w-0" data-testid={`cell-name-${l.id}`}>
                     <Link
-                      href={`/app/lead/${l.id}`}
+                      href={`/app/contacts/${l.id}`}
                       className="font-semibold truncate hover:underline block"
                       data-testid={`link-contact-${l.id}`}
                     >

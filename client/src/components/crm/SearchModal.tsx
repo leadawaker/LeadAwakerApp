@@ -87,7 +87,7 @@ export function SearchModal({ open, onOpenChange }: { open: boolean; onOpenChang
                   {results.map((r) => (
                     <Link
                       key={r.leadId}
-                      href={`/app/lead/${r.leadId}`}
+                      href={`/app/contacts/${r.leadId}`}
                       onClick={() => onOpenChange(false)}
                       className="block p-4 hover:bg-muted/20"
                       data-testid={`row-search-${r.leadId}`}

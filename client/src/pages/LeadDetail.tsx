@@ -7,7 +7,7 @@ import { ManualSend } from "@/components/crm/ManualSend";
 import { cn } from "@/lib/utils";
 
 export default function LeadDetailPage() {
-  const [, params] = useRoute("/app/lead/:id");
+  const [, params] = useRoute("/app/contacts/:id");
   const id = Number(params?.id);
 
   const lead = useMemo(() => {

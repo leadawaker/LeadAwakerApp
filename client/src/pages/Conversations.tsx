@@ -155,7 +155,7 @@ export default function ConversationsPage() {
                 </div>
                 {selected ? (
                   <Link
-                    href={`/app/lead/${selected.lead.id}`}
+                    href={`/app/contacts/${selected.lead.id}`}
                     className="text-xs font-semibold text-primary hover:underline"
                     data-testid="link-open-contact"
                   >
@@ -289,7 +289,7 @@ export default function ConversationsPage() {
 
                   <div className="pt-2" data-testid="block-contact-actions">
                     <Link
-                      href={`/app/lead/${selected.lead.id}`}
+                      href={`/app/contacts/${selected.lead.id}`}
                       className="block text-center h-11 leading-[44px] rounded-xl border border-border bg-background hover:bg-muted/20 font-semibold"
                       data-testid="button-view-full"
                     >

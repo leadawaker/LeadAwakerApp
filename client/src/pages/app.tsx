@@ -33,7 +33,8 @@ export default function AppArea() {
         <Route path="/app/contacts" component={AppLeads} />
         <Route path="/app/leads" component={AppLeads} />
         <Route path="/app/conversations" component={ConversationsPage} />
-        <Route path="/app/lead/:id" component={LeadDetailPage} />
+        <Route path="/app/contacts/:id" component={LeadDetailPage} />
+        <Route path="/app/lead/:id" component={() => <Redirect to="/app/contacts" />} />
         <Route path="/app/campaigns" component={AppCampaigns} />
         <Route path="/app/accounts" component={AppAccounts} />
         <Route path="/app/calendar" component={CalendarPage} />
