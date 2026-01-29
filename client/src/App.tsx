@@ -161,10 +161,12 @@ function Router() {
     }
   }, [location, setLocation]);
 
+  const isAppArea = location.startsWith("/app");
+
   return (
     <div className="flex flex-col min-h-screen">
       <ScrollToTop />
-      <Navbar />
+      {!isAppArea && <Navbar />}
 
       <main className="flex-grow">
         {/* English routes (no prefix) */}
@@ -174,7 +176,7 @@ function Router() {
         {lang && <LanguageRouter lang={lang} />}
       </main>
 
-      <Footer />
+      {!isAppArea && <Footer />}
     </div>
   );
 }
