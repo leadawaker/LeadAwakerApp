@@ -24,8 +24,8 @@ const navItems = [
   { href: "/app/contacts", label: "Contacts", icon: BookUser, testId: "nav-contacts" },
   { href: "/app/conversations", label: "Conversations", icon: MessageSquare, testId: "nav-conversations" },
   { href: "/app/campaigns", label: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
-  { href: "/app/accounts", label: "Accounts", icon: Building2, testId: "nav-accounts" },
   { href: "/app/calendar", label: "Calendar", icon: Calendar, testId: "nav-calendar" },
+  { href: "/app/accounts", label: "Accounts", icon: Building2, testId: "nav-accounts", agencyOnly: true },
   { href: "/app/automation-logs", label: "Automation Logs", icon: ScrollText, testId: "nav-automation-logs" },
   { href: "/app/users", label: "Users", icon: Users, testId: "nav-users" },
   { href: "/app/tags", label: "Tags", icon: Tag, testId: "nav-tags" },
@@ -120,6 +120,7 @@ export function RightSidebar() {
 
         <nav className={cn("p-3 space-y-1", collapsed && "px-2")} data-testid="nav-right">
           {navItems.map((it) => {
+            if (it.agencyOnly && !isAgencyView) return null;
             const active = location === it.href;
             const Icon = it.icon;
             return (

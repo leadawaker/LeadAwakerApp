@@ -6,19 +6,94 @@ import { Funnel, FunnelChart, LabelList, ResponsiveContainer, Tooltip } from "re
 
 export default function AppDashboard() {
   const { currentAccountId, isAgencyView, currentAccount } = useWorkspace();
+  const [selectedCampaignId, setSelectedCampaignId] = useState<number | "all">("all");
+  const [isBookedReportOpen, setIsBookedReportOpen] = useState(false);
+
+  const stagePalette = useMemo(() => [
+    { id: "New" as const, label: "🆕 New", fill: "#0b2a5b", textColor: "white" as const },
+    { id: "Contacted" as const, label: "📩 Contacted", fill: "#103a75", textColor: "white" as const },
+    { id: "Responded" as const, label: "💬 Responded", fill: "#16509d", textColor: "white" as const },
+    { id: "Multiple Responses" as const, label: "🔁 Multiple", fill: "#1E90FF", textColor: "white" as const },
+    { id: "Qualified" as const, label: "✅ Qualified", fill: "#3b82f6", textColor: "white" as const },
+    { id: "Booked" as const, label: "📅 Booked", fill: "#facc15", textColor: "black" as const },
+    { id: "DND" as const, label: "⛔️ DND", fill: "#ffffff", textColor: "black" as const },
+  ], []);
+
+  const funnel = useMemo(() => {
+    const accountLeads = leads
+      .filter((l) => l.account_id === currentAccountId)
+      .filter((l) => (selectedCampaignId === "all" ? true : l.campaign_id === selectedCampaignId));
+
+    const counts: Record<string, number> = {
+      New: accountLeads.filter((l) => l.conversion_status === "New").length,
+      Contacted: accountLeads.filter((l) => l.conversion_status === "Contacted").length,
+      Responded: accountLeads.filter((l) => l.conversion_status === "Responded").length,
+      "Multiple Responses": accountLeads.filter((l) => l.conversion_status === "Multiple Responses").length,
+      Qualified: accountLeads.filter((l) => l.conversion_status === "Qualified").length,
+      Booked: accountLeads.filter((l) => l.conversion_status === "Booked").length,
+      DND: accountLeads.filter((l) => l.conversion_status === "DND").length,
+    };
+
+    return stagePalette
+      .filter((s) => s.id !== "DND")
+      .map((s) => ({ name: s.label, value: counts[s.id], fill: s.fill }));
+  }, [currentAccountId, selectedCampaignId, stagePalette]);
+
+  const stats = useMemo(() => {
+    const accountLeads = leads
+      .filter((l) => l.account_id === currentAccountId)
+      .filter((l) => (selectedCampaignId === "all" ? true : l.campaign_id === selectedCampaignId));
+
+    const accountCampaigns = campaigns.filter((c) => c.account_id === currentAccountId);
+    const bookingsMo = accountLeads.filter((l) => l.conversion_status === "Booked").length;
+    const aiCost = accountCampaigns.reduce((sum, c) => sum + c.total_cost, 0);
+    return {
+      totalLeads: accountLeads.length,
+      activeCampaigns: accountCampaigns.filter((c) => c.status === "Active").length,
+      bookingsMo,
+      aiCost,
+    };
+  }, [currentAccountId, selectedCampaignId]);
+
+  const campaignOptions = useMemo(() => {
+    return campaigns.filter((c) => c.account_id === currentAccountId);
+  }, [currentAccountId]);
 
   return (
     <CrmShell>
       <div className="px-6 py-6" data-testid="page-dashboard">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">
-              Dashboard
-            </h1>
-          </div>
+        <div className="flex items-center gap-4 mb-6">
+          <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">
+            Dashboard
+          </h1>
+          
+          {!isAgencyView && (
+            <div className="flex items-center gap-2 ml-2" data-testid="wrap-campaign-select">
+              <div className="relative" data-testid="wrap-campaign-select-inner">
+                <select
+                  value={selectedCampaignId}
+                  onChange={(e) => setSelectedCampaignId(e.target.value === "all" ? "all" : Number(e.target.value))}
+                  className="h-9 rounded-xl border border-border bg-muted/20 pl-3 pr-8 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-sky-500/30 appearance-none min-w-[160px]"
+                  data-testid="select-dashboard-campaign"
+                >
+                  <option value="all">All Campaigns</option>
+                  {campaignOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" data-testid="icon-campaign-chevron">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        {isAgencyView ? <AgencyDashboard /> : <SubaccountDashboard accountId={currentAccountId} />}
+        {isAgencyView ? <AgencyDashboard /> : <SubaccountDashboard accountId={currentAccountId} selectedCampaignId={selectedCampaignId} setSelectedCampaignId={setSelectedCampaignId} campaignOptions={campaignOptions} stats={stats} funnel={funnel} stagePalette={stagePalette} isBookedReportOpen={isBookedReportOpen} setIsBookedReportOpen={setIsBookedReportOpen} />}
       </div>
     </CrmShell>
   );
@@ -148,89 +223,34 @@ function AgencyDashboard() {
   );
 }
 
-function SubaccountDashboard({ accountId }: { accountId: number }) {
-  const [selectedCampaignId, setSelectedCampaignId] = useState<number | "all">("all");
-  const [isBookedReportOpen, setIsBookedReportOpen] = useState(false);
-
-  const stagePalette = [
-    { id: "New" as const, label: "🆕 New", fill: "#0b2a5b", textColor: "white" as const },
-    { id: "Contacted" as const, label: "📩 Contacted", fill: "#103a75", textColor: "white" as const },
-    { id: "Responded" as const, label: "💬 Responded", fill: "#16509d", textColor: "white" as const },
-    { id: "Multiple Responses" as const, label: "🔁 Multiple", fill: "#1E90FF", textColor: "white" as const },
-    { id: "Qualified" as const, label: "✅ Qualified", fill: "#3b82f6", textColor: "white" as const },
-    { id: "Booked" as const, label: "📅 Booked", fill: "#facc15", textColor: "black" as const },
-    { id: "DND" as const, label: "⛔️ DND", fill: "#ffffff", textColor: "black" as const },
-  ];
-
-  const funnel = useMemo(() => {
-    const accountLeads = leads
-      .filter((l) => l.account_id === accountId)
-      .filter((l) => (selectedCampaignId === "all" ? true : l.campaign_id === selectedCampaignId));
-
-    const counts: Record<(typeof stagePalette)[number]["id"], number> = {
-      New: accountLeads.filter((l) => l.conversion_status === "New").length,
-      Contacted: accountLeads.filter((l) => l.conversion_status === "Contacted").length,
-      Responded: accountLeads.filter((l) => l.conversion_status === "Responded").length,
-      "Multiple Responses": accountLeads.filter((l) => l.conversion_status === "Multiple Responses").length,
-      Qualified: accountLeads.filter((l) => l.conversion_status === "Qualified").length,
-      Booked: accountLeads.filter((l) => l.conversion_status === "Booked").length,
-      DND: accountLeads.filter((l) => l.conversion_status === "DND").length,
-    };
-
-    return stagePalette
-      .filter((s) => s.id !== "DND")
-      .map((s) => ({ name: s.label, value: counts[s.id], fill: s.fill }));
-  }, [accountId, selectedCampaignId]);
-
-  const stats = useMemo(() => {
-    const accountLeads = leads
-      .filter((l) => l.account_id === accountId)
-      .filter((l) => (selectedCampaignId === "all" ? true : l.campaign_id === selectedCampaignId));
-
-    const accountCampaigns = campaigns.filter((c) => c.account_id === accountId);
-    const bookingsMo = accountLeads.filter((l) => l.conversion_status === "Booked").length;
-    const aiCost = accountCampaigns.reduce((sum, c) => sum + c.total_cost, 0);
-    return {
-      totalLeads: accountLeads.length,
-      activeCampaigns: accountCampaigns.filter((c) => c.status === "Active").length,
-      bookingsMo,
-      aiCost,
-    };
-  }, [accountId, selectedCampaignId]);
-
-  const campaignOptions = useMemo(() => {
-    return campaigns.filter((c) => c.account_id === accountId);
-  }, [accountId]);
+function SubaccountDashboard({ 
+  accountId, 
+  selectedCampaignId, 
+  setSelectedCampaignId, 
+  campaignOptions, 
+  stats, 
+  funnel, 
+  stagePalette, 
+  isBookedReportOpen, 
+  setIsBookedReportOpen 
+}: { 
+  accountId: number;
+  selectedCampaignId: number | "all";
+  setSelectedCampaignId: (v: number | "all") => void;
+  campaignOptions: any[];
+  stats: any;
+  funnel: any[];
+  stagePalette: any[];
+  isBookedReportOpen: boolean;
+  setIsBookedReportOpen: (v: boolean) => void;
+}) {
 
   return (
     <div className="mt-6 space-y-6" data-testid="subaccount-dashboard">
       <section className="rounded-2xl border border-border bg-background overflow-hidden" data-testid="section-campaign-selector">
-        <div className="px-4 py-3 border-b border-border flex items-center gap-3" data-testid="campaign-head">
-          <div className="flex items-center gap-2 min-w-0" data-testid="wrap-campaign-select">
-            <div className="text-xs text-muted-foreground" data-testid="label-campaign">Campaign</div>
-            <div className="relative" data-testid="wrap-campaign-select-inner">
-              <select
-                value={selectedCampaignId}
-                onChange={(e) => setSelectedCampaignId(e.target.value === "all" ? "all" : Number(e.target.value))}
-                className="h-9 rounded-xl border border-border bg-muted/20 pl-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30"
-                data-testid="select-dashboard-campaign"
-              >
-                <option value="all">All campaigns</option>
-                {campaignOptions.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" data-testid="icon-campaign-chevron">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className="ml-auto text-xs text-muted-foreground" data-testid="text-campaign-block-sub">Funnel + KPIs (MOCK)</div>
+        <div className="px-4 py-3 border-b border-border flex items-center justify-between" data-testid="campaign-head">
+          <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest" data-testid="label-campaign">Performance metrics</div>
+          <div className="text-xs text-muted-foreground" data-testid="text-campaign-block-sub">Funnel + KPIs (MOCK)</div>
         </div>
 
         <div className="px-4 py-3 grid grid-cols-1 lg:grid-cols-[640px_1fr] gap-4" data-testid="campaign-body">
