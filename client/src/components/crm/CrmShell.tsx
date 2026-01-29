@@ -29,7 +29,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   const settingsPath = isAgencyView ? "/agency/settings" : "/subaccount/settings";
 
   return (
-    <div className="min-h-screen bg-background" data-testid="shell-crm">
+    <div className="min-h-screen bg-background" data-testid="shell-crm" key={isAgencyView ? "agency" : "subaccount"}>
       <ThinLeftBar
         onOpenSupport={() => setSupportOpen(true)}
         onOpenSearch={() => setSearchOpen(true)}
