@@ -153,11 +153,11 @@ function SubaccountDashboard({ accountId }: { accountId: number }) {
   const [isBookedReportOpen, setIsBookedReportOpen] = useState(false);
 
   const stagePalette = [
-    { id: "New" as const, label: "🆕 New", fill: "#374151", textColor: "white" as const },
+    { id: "New" as const, label: "🆕 New", fill: "#111827", textColor: "white" as const },
     { id: "Contacted" as const, label: "📩 Contacted", fill: "#1f2937", textColor: "white" as const },
-    { id: "Responded" as const, label: "💬 Responded", fill: "#1E90FF", textColor: "white" as const },
-    { id: "Multiple Responses" as const, label: "🔁 Multiple", fill: "#60a5fa", textColor: "black" as const },
-    { id: "Qualified" as const, label: "✅ Qualified", fill: "#93c5fd", textColor: "black" as const },
+    { id: "Responded" as const, label: "💬 Responded", fill: "#1d4ed8", textColor: "white" as const },
+    { id: "Multiple Responses" as const, label: "🔁 Multiple", fill: "#2563eb", textColor: "white" as const },
+    { id: "Qualified" as const, label: "✅ Qualified", fill: "#3b82f6", textColor: "white" as const },
     { id: "Booked" as const, label: "📅 Booked", fill: "#facc15", textColor: "black" as const },
     { id: "DND" as const, label: "⛔️ DND", fill: "#ffffff", textColor: "black" as const },
   ];
@@ -233,7 +233,7 @@ function SubaccountDashboard({ accountId }: { accountId: number }) {
           <div className="ml-auto text-xs text-muted-foreground" data-testid="text-campaign-block-sub">Funnel + KPIs (MOCK)</div>
         </div>
 
-        <div className="px-4 py-3 grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4" data-testid="campaign-body">
+        <div className="px-4 py-3 grid grid-cols-1 lg:grid-cols-[640px_1fr] gap-4" data-testid="campaign-body">
           <div className="rounded-2xl border border-border bg-background p-4" data-testid="card-funnel">
             <div className="flex items-start justify-between gap-3" data-testid="funnel-head">
               <div className="min-w-0" data-testid="wrap-funnel-title">
@@ -374,10 +374,12 @@ function SubaccountDashboard({ accountId }: { accountId: number }) {
         <div className="mt-4 -mx-4">
           <div className="h-px bg-border" />
         </div>
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-8 gap-3" data-testid="grid-pipeline" style={{ alignItems: "start" }}>
-          {stagePalette.map((s) => (
-            <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
-          ))}
+        <div className="mt-4 overflow-x-auto pb-2" data-testid="scroll-pipeline">
+          <div className="min-w-[1120px] grid grid-cols-8 gap-3" data-testid="grid-pipeline">
+            {stagePalette.map((s) => (
+              <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
+            ))}
+          </div>
         </div>
       </section>
     </div>
@@ -457,49 +459,37 @@ function PipelineCol({
       </div>
       <div className="p-3 space-y-2" data-testid={`col-body-${stage.id}`}>
         {items.slice(0, 8).map((l) => (
-          <div key={l.id} className="rounded-xl border border-border bg-muted/10 p-3" data-testid={`card-pipe-${stage.id}-${l.id}`}>
-            <div className="min-w-0" data-testid={`row-pipe-lead-${stage.id}-${l.id}`}>
-              <div className="font-semibold text-sm truncate" data-testid={`text-pipe-name-${stage.id}-${l.id}`}>{l.full_name}</div>
+          <div key={l.id} className="group relative rounded-xl border border-border bg-muted/10 p-3" data-testid={`card-pipe-${stage.id}-${l.id}`}>
+            <button
+              type="button"
+              onClick={() => {
+                window.history.pushState({}, "", `/app/contacts/${l.id}`);
+                window.dispatchEvent(new PopStateEvent("popstate"));
+              }}
+              className="text-left w-full"
+              data-testid={`button-pipe-open-${stage.id}-${l.id}`}
+            >
+              <div
+                className="font-semibold text-sm truncate transition-colors"
+                style={{ color: stage.id === "DND" ? "hsl(var(--foreground))" : stage.fill }}
+                data-testid={`text-pipe-name-${stage.id}-${l.id}`}
+              >
+                {l.full_name}
+              </div>
+            </button>
 
-              <div className="mt-2 flex items-center gap-2" data-testid={`row-pipe-icons-${stage.id}-${l.id}`}>
-                <button
-                  type="button"
-                  className="h-7 w-7 rounded-lg border border-border bg-muted/20 hover:bg-muted/30 grid place-items-center text-muted-foreground"
-                  data-testid={`button-pipe-phone-${stage.id}-${l.id}`}
-                  aria-label="Phone"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.08 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.12.86.3 1.7.54 2.5a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.58-1.06a2 2 0 0 1 2.11-.45c.8.24 1.64.42 2.5.54A2 2 0 0 1 22 16.92Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
-
-                <button
-                  type="button"
-                  className="h-7 w-7 rounded-lg border border-border bg-muted/20 hover:bg-muted/30 grid place-items-center text-muted-foreground"
-                  data-testid={`button-pipe-email-${stage.id}-${l.id}`}
-                  aria-label="Email"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                    <path d="M4 4h16v16H4V4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-                    <path d="m22 6-10 7L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    window.history.pushState({}, "", `/app/contacts/${l.id}`);
-                    window.dispatchEvent(new PopStateEvent("popstate"));
-                  }}
-                  className="h-7 w-7 rounded-lg border border-border bg-muted/20 hover:bg-muted/30 grid place-items-center text-muted-foreground"
-                  data-testid={`button-pipe-contact-${stage.id}-${l.id}`}
-                  aria-label="Open contact"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
+            <div
+              className="pointer-events-none absolute left-3 top-10 z-20 hidden w-[240px] rounded-xl border border-border bg-background p-3 shadow-xl group-hover:block"
+              data-testid={`popover-pipe-${stage.id}-${l.id}`}
+            >
+              <div className="text-xs font-semibold" data-testid={`popover-name-${stage.id}-${l.id}`}>{l.full_name}</div>
+              <div className="mt-2 space-y-1 text-xs text-muted-foreground" data-testid={`popover-meta-${stage.id}-${l.id}`}>
+                <div data-testid={`popover-phone-${stage.id}-${l.id}`}>Phone: {l.phone || "—"}</div>
+                <div data-testid={`popover-email-${stage.id}-${l.id}`}>Email: {l.email || "—"}</div>
+                <div data-testid={`popover-tags-${stage.id}-${l.id}`}>Tags: {l.tags || "—"}</div>
+              </div>
+              <div className="mt-2 text-[11px] text-muted-foreground" data-testid={`popover-hint-${stage.id}-${l.id}`}>
+                Click name to open contact.
               </div>
             </div>
           </div>
