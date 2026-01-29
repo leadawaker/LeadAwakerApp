@@ -20,16 +20,7 @@ export function FiltersBar({
 
   return (
     <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between" data-testid="bar-filters">
-      <div className="text-xs text-muted-foreground" data-testid="text-filter-hint">
-        Filters • MOCK (client-side)
-      </div>
-
       <div className="flex items-center gap-2">
-        {/* Account filter is controlled by workspace switcher (RightSidebar). */}
-        <div className="text-xs text-muted-foreground" data-testid="text-filter-account">
-          Account: {allowAllAccounts ? "(workspace switcher / all)" : "(workspace)"}
-        </div>
-
         <select
           value={selectedCampaignId}
           onChange={(e) => {
