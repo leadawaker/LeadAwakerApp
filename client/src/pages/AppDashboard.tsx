@@ -3,6 +3,7 @@ import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { campaigns, leads, interactions, automationLogs } from "@/data/mocks";
 import { Funnel, FunnelChart, LabelList, ResponsiveContainer, Tooltip } from "recharts";
+import { FiltersBar } from "@/components/crm/FiltersBar";
 
 export default function AppDashboard() {
   const { currentAccountId, isAgencyView, currentAccount } = useWorkspace();
@@ -67,30 +68,7 @@ export default function AppDashboard() {
             Dashboard
           </h1>
           
-          {!isAgencyView && (
-            <div className="flex items-center gap-2 ml-2" data-testid="wrap-campaign-select">
-              <div className="relative" data-testid="wrap-campaign-select-inner">
-                <select
-                  value={selectedCampaignId}
-                  onChange={(e) => setSelectedCampaignId(e.target.value === "all" ? "all" : Number(e.target.value))}
-                  className="h-9 rounded-xl border border-border bg-muted/20 pl-3 pr-8 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-sky-500/30 appearance-none min-w-[160px]"
-                  data-testid="select-dashboard-campaign"
-                >
-                  <option value="all">All Campaigns</option>
-                  {campaignOptions.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" data-testid="icon-campaign-chevron">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          )}
+          <FiltersBar selectedCampaignId={selectedCampaignId} setSelectedCampaignId={setSelectedCampaignId} />
         </div>
 
         {isAgencyView ? <AgencyDashboard /> : <SubaccountDashboard accountId={currentAccountId} selectedCampaignId={selectedCampaignId} setSelectedCampaignId={setSelectedCampaignId} campaignOptions={campaignOptions} stats={stats} funnel={funnel} stagePalette={stagePalette} isBookedReportOpen={isBookedReportOpen} setIsBookedReportOpen={setIsBookedReportOpen} />}

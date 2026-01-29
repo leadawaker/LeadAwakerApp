@@ -7,7 +7,8 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { leads as allLeads, type Lead } from "@/data/mocks";
 
 export default function AppLeads() {
-  const { currentAccountId } = useWorkspace();
+  const { currentAccountId, isAgencyView } = useWorkspace();
+  const [campaignId, setCampaignId] = useState<number | "all">("all");
   const [status, setStatus] = useState<string>("all");
   const [priority, setPriority] = useState<string>("all");
   const [open, setOpen] = useState(false);
@@ -23,21 +24,20 @@ export default function AppLeads() {
     const withSam = sam && !merged.some((x) => x.id === 25) ? [sam, ...merged] : merged;
 
     return withSam
+      .filter((l) => (campaignId === "all" ? true : l.campaign_id === campaignId))
       .filter((l) => (status === "all" ? true : l.conversion_status === status))
       .filter((l) => (priority === "all" ? true : l.priority === priority))
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
-  }, [currentAccountId, status, priority, localLeads]);
+  }, [currentAccountId, campaignId, status, priority, localLeads]);
 
   return (
     <CrmShell>
       <div className="px-6 py-6" data-testid="page-leads">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Contacts</h1>
-            <p className="text-sm text-muted-foreground" data-testid="text-subtitle">
-              Edit fields inline — click a name to open the full contact record.
-            </p>
-          </div>
+        <div className="flex items-center gap-4 mb-6">
+          <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Contacts</h1>
+          <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
+          
+          <div className="flex-1" />
 
           <div className="flex items-center gap-2" data-testid="bar-actions">
             <button

@@ -43,20 +43,15 @@ export default function ConversationsPage() {
   return (
     <CrmShell>
       <div className="px-6 py-6" data-testid="page-conversations">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">
-              Conversations
-            </h1>
-            <p className="text-sm text-muted-foreground" data-testid="text-subtitle">
-              Inbox-style messaging view (MOCK).
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-4">
+        <div className="flex items-center gap-4 mb-6">
+          <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">
+            Conversations
+          </h1>
           <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
         </div>
+        <p className="text-sm text-muted-foreground" data-testid="text-subtitle">
+          Inbox-style messaging view (MOCK).
+        </p>
 
         <div
           className="mt-4 grid grid-cols-1 xl:grid-cols-[360px_1fr_340px] gap-4"

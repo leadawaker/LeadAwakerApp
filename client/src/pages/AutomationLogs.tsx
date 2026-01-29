@@ -18,14 +18,13 @@ export default function AutomationLogsPage() {
   return (
     <CrmShell>
       <div className="px-6 py-6" data-testid="page-automation-logs">
-        <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Automation Logs</h1>
+        <div className="flex items-center gap-4 mb-6">
+          <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Automation Logs</h1>
+          <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
+        </div>
         <p className="text-sm text-muted-foreground" data-testid="text-subtitle">
           Execution logs per lead/campaign (MOCK).
         </p>
-
-        <div className="mt-4">
-          <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
-        </div>
 
         <div className="mt-4 rounded-2xl border border-border bg-background overflow-hidden" data-testid="table-logs">
           <div className="grid grid-cols-[120px_1fr_140px_160px_200px] gap-0 text-xs font-semibold text-muted-foreground bg-muted/20 border-b border-border px-4 py-3">
