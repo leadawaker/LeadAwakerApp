@@ -24,6 +24,7 @@ const navItems = [
   { href: "/app/contacts", label: "Contacts", icon: BookUser, testId: "nav-contacts" },
   { href: "/app/conversations", label: "Conversations", icon: MessageSquare, testId: "nav-conversations" },
   { href: "/app/campaigns", label: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
+  { href: "/app/accounts", label: "Accounts", icon: Building2, testId: "nav-accounts" },
   { href: "/app/calendar", label: "Calendar", icon: Calendar, testId: "nav-calendar" },
   { href: "/app/automation-logs", label: "Automation Logs", icon: ScrollText, testId: "nav-automation-logs" },
   { href: "/app/users", label: "Users", icon: Users, testId: "nav-users" },
@@ -63,24 +64,9 @@ export function RightSidebar() {
               data-testid="wrap-workspace"
             >
               <div className="min-w-0 text-left">
-                <div className="text-[11px] text-muted-foreground" data-testid="text-workspace-label">
-                  Workspace
-                </div>
                 <div className="text-sm font-semibold truncate" data-testid="text-workspace-value">
                   {currentAccount.name}
                 </div>
-                {!isAgencyView ? (
-                  <div className="mt-1" data-testid="wrap-back-to-agency">
-                    <button
-                      type="button"
-                      onClick={() => setCurrentAccountId(1)}
-                      className="text-[11px] text-primary hover:underline"
-                      data-testid="button-back-to-agency"
-                    >
-                      Back to Agency
-                    </button>
-                  </div>
-                ) : null}
               </div>
               {isAgencyView ? (
                 <button
@@ -122,7 +108,7 @@ export function RightSidebar() {
                   }}
                   className={cn(
                     "w-full px-3 py-2 text-left text-sm hover:bg-muted/30",
-                    currentAccountId === a.id && "bg-primary/5",
+                    currentAccountId === a.id && "bg-yellow-400/15",
                   )}
                   data-testid={`button-workspace-${a.id}`}
                 >
@@ -135,30 +121,28 @@ export function RightSidebar() {
         )}
 
         <nav className={cn("p-3 space-y-1", collapsed && "px-2")} data-testid="nav-right">
-          {navItems
-            .filter((it) => (isAgencyView ? true : it.href !== "/app/accounts"))
-            .map((it) => {
-              const active = location === it.href;
-              const Icon = it.icon;
-              return (
-                <Link
-                  key={it.href}
-                  href={it.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-xl border border-transparent transition-colors",
-                    collapsed ? "h-11 justify-center" : "px-3 py-2.5",
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
-                  )}
-                  data-testid={`link-${it.testId}`}
-                  title={collapsed ? it.label : undefined}
-                >
-                  <Icon className="h-5 w-5" />
-                  {!collapsed && <span className="text-sm font-semibold">{it.label}</span>}
-                </Link>
-              );
-            })}
+          {navItems.map((it) => {
+            const active = location === it.href;
+            const Icon = it.icon;
+            return (
+              <Link
+                key={it.href}
+                href={it.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl border border-transparent transition-colors",
+                  collapsed ? "h-11 justify-center" : "px-3 py-2.5",
+                  active
+                    ? "bg-yellow-400 text-yellow-950"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
+                )}
+                data-testid={`link-${it.testId}`}
+                title={collapsed ? it.label : undefined}
+              >
+                <Icon className="h-5 w-5" />
+                {!collapsed && <span className="text-sm font-semibold">{it.label}</span>}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="mt-auto p-3 text-[11px] text-muted-foreground" data-testid="text-sidebar-foot">
