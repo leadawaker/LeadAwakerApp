@@ -71,7 +71,6 @@ export function ThinLeftBar({
 
   return (
     <aside
-      key={isAgencyView ? "agency" : "subaccount"}
       className={cn(
         "fixed left-0 top-0 bottom-0 w-[48px] border-r z-50 flex flex-col items-center py-3 transition-colors duration-300",
         isAgencyView 
