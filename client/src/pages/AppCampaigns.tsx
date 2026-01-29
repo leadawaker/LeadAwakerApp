@@ -61,15 +61,15 @@ export default function AppCampaigns() {
 
                       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <div className="text-xs text-muted-foreground" data-testid={`text-bumps-title-${c.id}`}>bump_templates (snippet)</div>
-                          <pre className="mt-1 text-xs whitespace-pre-wrap rounded-xl border border-border bg-background p-3" data-testid={`pre-bumps-${c.id}`}>
-{`bump_1: ${c.bump_1_template.slice(0, 80)}…\nbump_2: ${c.bump_2_template.slice(0, 80)}…\nbump_3: ${c.bump_3_template.slice(0, 80)}…`}
+                          <div className="text-xs text-muted-foreground" data-testid={`text-messages-title-${c.id}`}>message_templates</div>
+                          <pre className="mt-1 text-xs whitespace-pre-wrap rounded-xl border border-border bg-background p-3" data-testid={`pre-messages-${c.id}`}>
+{`first_message: ${c.first_message_template}\n\nbump_1: ${c.bump_1_template}\n\nbump_2: ${c.bump_2_template}\n\nbump_3: ${c.bump_3_template}`}
                           </pre>
                         </div>
                         <div>
-                          <div className="text-xs text-muted-foreground" data-testid={`text-ai-title-${c.id}`}>ai_prompt_template (truncated)</div>
+                          <div className="text-xs text-muted-foreground" data-testid={`text-ai-title-${c.id}`}>ai_prompt_template</div>
                           <pre className="mt-1 text-xs whitespace-pre-wrap rounded-xl border border-border bg-background p-3" data-testid={`pre-ai-${c.id}`}>
-{`${c.ai_prompt_template.slice(0, 220)}…`}
+{`${c.ai_prompt_template}`}
                           </pre>
                         </div>
                       </div>
