@@ -30,6 +30,7 @@ export default function AppArea() {
       <Switch>
         <Route path="/app" component={() => <Redirect to="/app/dashboard" />} />
         <Route path="/app/dashboard" component={AppDashboard} />
+        <Route path="/app/contacts" component={AppLeads} />
         <Route path="/app/leads" component={AppLeads} />
         <Route path="/app/conversations" component={ConversationsPage} />
         <Route path="/app/lead/:id" component={LeadDetailPage} />

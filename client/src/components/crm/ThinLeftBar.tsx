@@ -77,7 +77,7 @@ export function ThinLeftBar({
         data-testid="button-leftbar-home"
         aria-label="Go to home"
       >
-        <img src="/favicon.svg" alt="LeadAwaker" className="h-6 w-6" data-testid="img-leftbar-favicon" />
+        <img src="/6. Favicon.svg" alt="LeadAwaker" className="h-6 w-6" data-testid="img-leftbar-favicon" />
       </button>
 
       <div className="mt-4 flex flex-col gap-2" data-testid="group-leftbar-actions">
