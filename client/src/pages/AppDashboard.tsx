@@ -375,7 +375,7 @@ function SubaccountDashboard({ accountId }: { accountId: number }) {
           <div className="h-px bg-border" />
         </div>
         <div className="mt-4 overflow-x-auto pb-2" data-testid="scroll-pipeline">
-          <div className="min-w-[1120px] grid grid-cols-8 gap-3" data-testid="grid-pipeline">
+          <div className="min-w-[1600px] grid grid-cols-8 gap-3" data-testid="grid-pipeline">
             {stagePalette.map((s) => (
               <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
             ))}
@@ -434,7 +434,7 @@ function PipelineCol({
   }, [accountId, campaignId, stage.id]);
 
   return (
-    <div className="rounded-2xl border border-border bg-background overflow-hidden" data-testid={`col-${stage.id}`}>
+    <div className="w-full rounded-2xl border border-border bg-background overflow-hidden" data-testid={`col-${stage.id}`}>
       <div
         className="px-3 py-2 border-b border-border flex items-center justify-between"
         style={{ backgroundColor: stage.fill }}
@@ -459,7 +459,7 @@ function PipelineCol({
       </div>
       <div className="p-3 space-y-2" data-testid={`col-body-${stage.id}`}>
         {items.slice(0, 8).map((l) => (
-          <div key={l.id} className="group relative rounded-xl border border-border bg-muted/10 p-3" data-testid={`card-pipe-${stage.id}-${l.id}`}>
+          <div key={l.id} className="group relative w-full rounded-xl border border-border bg-muted/10 p-3" data-testid={`card-pipe-${stage.id}-${l.id}`}>
             <button
               type="button"
               onClick={() => {
@@ -495,7 +495,7 @@ function PipelineCol({
           </div>
         ))}
         {items.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border bg-muted/10 p-3 text-xs text-muted-foreground" data-testid={`empty-pipe-${stage.id}`}>
+          <div className="w-full rounded-xl border border-dashed border-border bg-muted/10 p-3 text-xs text-muted-foreground" data-testid={`empty-pipe-${stage.id}`}>
             No contacts.
           </div>
         ) : null}
