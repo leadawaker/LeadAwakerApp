@@ -4,6 +4,13 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { campaigns, leads, interactions, automationLogs } from "@/data/mocks";
 import { Funnel, FunnelChart, LabelList, ResponsiveContainer, Tooltip } from "recharts";
 import { FiltersBar } from "@/components/crm/FiltersBar";
+import {
+  Users,
+  MessageSquare,
+  TrendingUp,
+  Calendar as CalendarIcon,
+  CheckCircle2,
+} from "lucide-react";
 
 export default function AppDashboard() {
   const { currentAccountId, isAgencyView, currentAccount } = useWorkspace();

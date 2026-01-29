@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { leads as allLeads, type Lead } from "@/data/mocks";
+import { FiltersBar } from "@/components/crm/FiltersBar";
 
 export default function AppLeads() {
   const { currentAccountId, isAgencyView } = useWorkspace();
