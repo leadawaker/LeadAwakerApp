@@ -84,6 +84,7 @@ function AppRoutes() {
       <Route path="/services" component={Services} />
       <Route path="/book-demo" component={BookDemo} />
       <Route path="/login" component={Login} />
+      <Route path="/app" component={AppArea} />
       <Route path="/app/:rest*" component={AppArea} />
       <Route path="/canvas" component={Canvas} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
