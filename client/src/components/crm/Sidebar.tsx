@@ -58,7 +58,7 @@ export function Sidebar() {
                 )}
                 data-testid={it.testId}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className={cn("h-4 w-4", active && isAgencyView && "text-white")} />
                 {it.label}
               </Link>
             );
