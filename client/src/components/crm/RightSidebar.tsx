@@ -58,13 +58,9 @@ export function RightSidebar() {
       <div className="h-full flex flex-col">
         <div className={cn("h-14 border-b border-border flex items-center gap-2 px-3", collapsed && "justify-center")}>
           {!collapsed && (
-            <button
-              type="button"
-              onClick={() => setOpenSwitcher((v) => !v)}
-              className="flex-1 min-w-0 flex items-center justify-between gap-2 rounded-xl border border-border bg-muted/20 px-3 py-2 hover:bg-muted/30"
-              data-testid="button-workspace-switch"
-              disabled={!isAgencyView}
-              title={isAgencyView ? "Switch workspace" : "Workspace locked for clients"}
+            <div
+              className="flex-1 min-w-0 flex items-center justify-between gap-2 rounded-xl border border-border bg-muted/20 px-3 py-2"
+              data-testid="wrap-workspace"
             >
               <div className="min-w-0 text-left">
                 <div className="text-[11px] text-muted-foreground" data-testid="text-workspace-label">
@@ -74,18 +70,30 @@ export function RightSidebar() {
                   {currentAccount.name}
                 </div>
                 {!isAgencyView ? (
-                  <button
-                    type="button"
-                    onClick={() => setCurrentAccountId(1)}
-                    className="mt-1 text-[11px] text-primary hover:underline"
-                    data-testid="button-back-to-agency"
-                  >
-                    Back to Agency
-                  </button>
+                  <div className="mt-1" data-testid="wrap-back-to-agency">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentAccountId(1)}
+                      className="text-[11px] text-primary hover:underline"
+                      data-testid="button-back-to-agency"
+                    >
+                      Back to Agency
+                    </button>
+                  </div>
                 ) : null}
               </div>
-              {isAgencyView && <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-            </button>
+              {isAgencyView ? (
+                <button
+                  type="button"
+                  onClick={() => setOpenSwitcher((v) => !v)}
+                  className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center"
+                  data-testid="button-workspace-open"
+                  aria-label="Open workspace switcher"
+                >
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                </button>
+              ) : null}
+            </div>
           )}
 
           <button

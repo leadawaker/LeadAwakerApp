@@ -64,7 +64,7 @@ export default function CalendarPage() {
           <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
         </div>
 
-        <div className="mt-4 grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6" data-testid="layout-calendar">
+        <div className="mt-4 grid grid-cols-1 lg:grid-cols-[590px_1fr] gap-6" data-testid="layout-calendar">
           <div className="rounded-2xl border border-border bg-background overflow-hidden" data-testid="calendar-month">
             <div className="p-4 border-b border-border flex items-center justify-between">
               <div className="font-semibold" data-testid="text-month">

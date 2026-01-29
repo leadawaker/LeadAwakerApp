@@ -27,9 +27,9 @@ export default function AppLeads() {
       <div className="px-6 py-6" data-testid="page-leads">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Leads</h1>
+            <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Contacts</h1>
             <p className="text-sm text-muted-foreground" data-testid="text-subtitle">
-              Stacked table rows (MOCK) — click a lead name to open detail.
+              Edit fields inline — click a name to open the full contact record.
             </p>
           </div>
 
@@ -124,48 +124,118 @@ export default function AppLeads() {
           </button>
         </div>
 
-        <div className="mt-4 rounded-2xl border border-border bg-background overflow-hidden" data-testid="list-leads">
-          <div className="divide-y divide-border">
-            {leads.map((l) => (
-              <div key={l.id} className="p-4 flex items-start justify-between gap-4" data-testid={`row-lead-${l.id}`}>
-                <div className="min-w-0">
-                  <div className="font-semibold truncate" data-testid={`text-lead-name-${l.id}`}>
-                    <Link href={`/app/lead/${l.id}`} className="hover:underline" data-testid={`link-lead-${l.id}`}>
+        <div className="mt-4 rounded-2xl border border-border bg-background overflow-hidden" data-testid="table-contacts">
+          <div className="grid grid-cols-[44px_1.2fr_200px_240px_220px_180px] items-center gap-3 bg-muted/20 px-4 py-3 text-xs font-semibold text-muted-foreground border-b border-border" data-testid="row-contacts-head">
+            <div />
+            <div>name</div>
+            <div>phone</div>
+            <div>email</div>
+            <div>tags</div>
+            <div>conversion_status</div>
+          </div>
+
+          <div className="divide-y divide-border" data-testid="list-contacts">
+            {leads.map((l) => {
+              const initials = `${(l.first_name ?? "").slice(0, 1)}${(l.last_name ?? "").slice(0, 1)}`.toUpperCase();
+              return (
+                <div
+                  key={l.id}
+                  className="grid grid-cols-[44px_1.2fr_200px_240px_220px_180px] items-center gap-3 px-4 py-3"
+                  data-testid={`row-contact-${l.id}`}
+                >
+                  <div className="h-9 w-9 rounded-full bg-primary/10 text-primary font-bold grid place-items-center text-xs" data-testid={`avatar-contact-${l.id}`}>
+                    {initials || "?"}
+                  </div>
+
+                  <div className="min-w-0" data-testid={`cell-name-${l.id}`}>
+                    <Link
+                      href={`/app/lead/${l.id}`}
+                      className="font-semibold truncate hover:underline block"
+                      data-testid={`link-contact-${l.id}`}
+                    >
                       {l.full_name}
                     </Link>
+                    <div className="text-[11px] text-muted-foreground truncate" data-testid={`text-contact-sub-${l.id}`}>
+                      source: {l.source} • priority: {l.priority}
+                    </div>
                   </div>
-                  <div className="mt-1 text-xs text-muted-foreground" data-testid={`text-lead-meta-${l.id}`}>
-                    {l.phone} • {l.email}
-                  </div>
-                  <div className="mt-2 text-xs text-muted-foreground" data-testid={`text-lead-dates-${l.id}`}>
-                    created_at: {new Date(l.created_at).toLocaleString()} • last_activity: {new Date(l.last_interaction_at).toLocaleString()}
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2" data-testid={`wrap-tags-${l.id}`}>
-                    {(l.tags ?? []).slice(0, 4).map((t, idx) => (
-                      <span key={idx} className="px-2 py-1 rounded-full text-[11px] border border-border bg-muted/20" data-testid={`tag-${l.id}-${idx}`}>
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
 
-                <div className="text-right shrink-0" data-testid={`col-actions-${l.id}`}>
-                  <div className="text-xs text-muted-foreground" data-testid={`text-lead-status-${l.id}`}>{l.conversion_status}</div>
-                  <div className="text-xs text-muted-foreground" data-testid={`text-lead-priority-${l.id}`}>{l.priority}</div>
-                  <button
-                    className="mt-2 h-9 px-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-xs font-semibold"
-                    data-testid={`button-actions-${l.id}`}
+                  <input
+                    className="h-10 w-full rounded-xl border border-border bg-muted/10 px-3 text-sm"
+                    value={l.phone}
+                    onChange={(e) =>
+                      setLocalLeads((prev) =>
+                        prev.some((x) => x.id === l.id)
+                          ? prev.map((x) => (x.id === l.id ? { ...x, phone: e.target.value } : x))
+                          : [{ ...l, phone: e.target.value }, ...prev],
+                      )
+                    }
+                    data-testid={`input-phone-${l.id}`}
+                  />
+
+                  <input
+                    className="h-10 w-full rounded-xl border border-border bg-muted/10 px-3 text-sm"
+                    value={l.email}
+                    onChange={(e) =>
+                      setLocalLeads((prev) =>
+                        prev.some((x) => x.id === l.id)
+                          ? prev.map((x) => (x.id === l.id ? { ...x, email: e.target.value } : x))
+                          : [{ ...l, email: e.target.value }, ...prev],
+                      )
+                    }
+                    data-testid={`input-email-${l.id}`}
+                  />
+
+                  <input
+                    className="h-10 w-full rounded-xl border border-border bg-muted/10 px-3 text-sm"
+                    value={(l.tags ?? []).join(", ")}
+                    onChange={(e) =>
+                      setLocalLeads((prev) =>
+                        prev.some((x) => x.id === l.id)
+                          ? prev.map((x) =>
+                              x.id === l.id
+                                ? { ...x, tags: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) }
+                                : x,
+                            )
+                          : [
+                              {
+                                ...l,
+                                tags: e.target.value.split(",").map((t) => t.trim()).filter(Boolean),
+                              },
+                              ...prev,
+                            ],
+                      )
+                    }
+                    placeholder="New, Hot, Follow-up"
+                    data-testid={`input-tags-${l.id}`}
+                  />
+
+                  <select
+                    className="h-10 w-full rounded-xl border border-border bg-muted/10 px-3 text-sm"
+                    value={l.conversion_status}
+                    onChange={(e) =>
+                      setLocalLeads((prev) =>
+                        prev.some((x) => x.id === l.id)
+                          ? prev.map((x) => (x.id === l.id ? { ...x, conversion_status: e.target.value as any } : x))
+                          : [{ ...l, conversion_status: e.target.value as any }, ...prev],
+                      )
+                    }
+                    data-testid={`select-status-${l.id}`}
                   >
-                    Actions
-                  </button>
+                    {["New", "Contacted", "Responded", "Multiple Responses", "Qualified", "Booked", "Lost", "DND"].map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
         <div className="mt-3 text-xs text-muted-foreground" data-testid="text-real">
-          REAL: useSWR(`${import.meta.env.VITE_NOCODB_URL}/api/v1/db/data/nocodb/Leads`)
+          REAL: useSWR(`${import.meta.env.VITE_NOCODB_URL}/api/v1/db/data/nocodb/Contacts`)
         </div>
       </div>
     </CrmShell>
@@ -283,7 +353,7 @@ function AddLeadForm({
       </div>
 
       <div className="text-xs text-muted-foreground" data-testid="text-add-real">
-        REAL: POST new record into NocoDB Leads table
+        REAL: POST new record into NocoDB Contacts table
       </div>
     </form>
   );
