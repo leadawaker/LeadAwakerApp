@@ -9,7 +9,7 @@ export function ChatBubble({ item }: { item: Interaction }) {
       <div
         className={cn(
           "max-w-[78%] rounded-2xl px-3 py-2 text-sm border",
-          outbound ? "bg-primary text-primary-foreground border-primary/20" : "bg-muted/30 border-border",
+          outbound ? "bg-primary text-primary-foreground border-primary/20" : "bg-muted/40 text-foreground border-border",
         )}
         data-testid={`bubble-chat-${item.id}`}
       >

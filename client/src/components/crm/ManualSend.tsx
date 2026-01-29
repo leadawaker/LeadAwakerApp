@@ -9,7 +9,7 @@ export function ManualSend({ disabled }: { disabled: boolean }) {
     <div className="flex items-end gap-2" data-testid="form-manual-send">
       <div className="flex-1">
         <label className="text-xs text-muted-foreground" data-testid="label-manual-message">
-          Manual send
+          Manual send (takeover)
         </label>
         <textarea
           className="mt-1 w-full min-h-[44px] max-h-40 rounded-xl bg-muted/30 border border-border p-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"

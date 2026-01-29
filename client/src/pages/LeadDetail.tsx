@@ -34,7 +34,7 @@ export default function LeadDetailPage() {
           <>
             <div className="flex items-start justify-between gap-4" data-testid="header-lead">
               <div>
-                <div className="text-xs text-muted-foreground" data-testid="text-lead-header-label">Lead</div>
+                <div className="text-xs text-muted-foreground" data-testid="text-lead-header-label">Contact</div>
                 <div className="text-2xl font-extrabold tracking-tight" data-testid="text-lead-header-name">
                   {lead.full_name}
                 </div>
@@ -86,7 +86,7 @@ export default function LeadDetailPage() {
                 </Section>
 
                 <div className="p-4 border-t border-border text-xs text-muted-foreground" data-testid="text-lead-left-foot">
-                  REAL: PATCH lead fields in NocoDB Leads table
+                  REAL: PATCH contact fields in NocoDB Contacts table
                 </div>
               </div>
 

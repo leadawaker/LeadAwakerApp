@@ -55,7 +55,7 @@ export function SearchModal({ open, onOpenChange }: { open: boolean; onOpenChang
             <div className="flex items-center gap-2" data-testid="text-search-title">
               <Search className="h-4 w-4 text-muted-foreground" />
               <span className="font-semibold">Search</span>
-              <span className="text-xs text-muted-foreground">(Leads + Interactions)</span>
+              <span className="text-xs text-muted-foreground">(Contacts + Interactions)</span>
             </div>
             <Dialog.Close asChild>
               <button
@@ -72,7 +72,7 @@ export function SearchModal({ open, onOpenChange }: { open: boolean; onOpenChang
               value={q}
               onChange={(e) => setQ(e.target.value)}
               autoFocus
-              placeholder="Search lead name, phone, email, or message…"
+              placeholder="Search contact name, phone, email, or message…"
               className="h-11 w-full rounded-xl border border-border bg-muted/20 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
               data-testid="input-search"
             />
@@ -101,7 +101,7 @@ export function SearchModal({ open, onOpenChange }: { open: boolean; onOpenChang
             </div>
 
             <div className="mt-3 text-xs text-muted-foreground" data-testid="text-search-real">
-              REAL: global search via NocoDB full-text / indexed fields
+              REAL: global search via NocoDB full-text / indexed fields (Contacts + Interactions)
             </div>
           </div>
         </Dialog.Content>

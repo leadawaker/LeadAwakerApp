@@ -1,26 +1,44 @@
-import { Link } from "wouter";
 import { useMemo, useState } from "react";
-import { useWorkspace } from "@/hooks/useWorkspace";
-import { leads, interactions } from "@/data/mocks";
+import { Link } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { FiltersBar } from "@/components/crm/FiltersBar";
+import { leads, interactions, type Interaction, type Lead } from "@/data/mocks";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { cn } from "@/lib/utils";
+
+function initialsFor(lead: Lead) {
+  const a = (lead.first_name ?? "").slice(0, 1);
+  const b = (lead.last_name ?? "").slice(0, 1);
+  return `${a}${b}`.toUpperCase() || "?";
+}
 
 export default function ConversationsPage() {
   const { currentAccountId } = useWorkspace();
   const [campaignId, setCampaignId] = useState<number | "all">("all");
+  const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
 
-  const rows = useMemo(() => {
-    return leads
+  const threads = useMemo(() => {
+    const scoped = leads
       .filter((l) => l.account_id === currentAccountId)
-      .filter((l) => (campaignId === "all" ? true : l.campaign_id === campaignId))
-      .map((l) => {
-        const last = interactions
-          .filter((i) => i.lead_id === l.id)
-          .sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
-        return { lead: l, last };
+      .filter((l) => (campaignId === "all" ? true : l.campaign_id === campaignId));
+
+    return scoped
+      .map((lead) => {
+        const msgs = interactions
+          .filter((i) => i.lead_id === lead.id)
+          .sort((a, b) => a.created_at.localeCompare(b.created_at));
+        const last = msgs[msgs.length - 1];
+        const unread = msgs.filter((m) => m.direction === "Inbound").length > 0 && lead.message_count_received > 0;
+        return { lead, msgs, last, unread };
       })
       .sort((a, b) => (b.last?.created_at ?? "").localeCompare(a.last?.created_at ?? ""));
   }, [currentAccountId, campaignId]);
+
+  const selected = useMemo(() => {
+    const first = threads[0] ?? null;
+    const byId = selectedLeadId ? threads.find((t) => t.lead.id === selectedLeadId) ?? null : null;
+    return byId ?? first;
+  }, [threads, selectedLeadId]);
 
   return (
     <CrmShell>
@@ -31,7 +49,7 @@ export default function ConversationsPage() {
               Conversations
             </h1>
             <p className="text-sm text-muted-foreground" data-testid="text-subtitle">
-              Lead list focused on messaging activity (MOCK).
+              Inbox-style messaging view (MOCK).
             </p>
           </div>
         </div>
@@ -40,27 +58,252 @@ export default function ConversationsPage() {
           <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
         </div>
 
-        <div className="mt-4 rounded-2xl border border-border bg-background overflow-hidden" data-testid="table-conversations">
-          <div className="divide-y divide-border">
-            {rows.map(({ lead, last }) => (
-              <div key={lead.id} className="p-4 flex items-start justify-between gap-4" data-testid={`row-conv-${lead.id}`}>
+        <div
+          className="mt-4 grid grid-cols-1 xl:grid-cols-[360px_1fr_340px] gap-4"
+          data-testid="layout-conversations"
+        >
+          {/* Left: inbox list */}
+          <section
+            className="rounded-2xl border border-border bg-background overflow-hidden flex flex-col min-h-[640px]"
+            data-testid="panel-inbox"
+          >
+            <div className="p-4 border-b border-border" data-testid="panel-inbox-head">
+              <div className="text-sm font-semibold" data-testid="text-inbox-title">
+                Inbox
+              </div>
+              <div className="mt-2">
+                <input
+                  className="h-10 w-full rounded-xl border border-border bg-muted/20 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                  placeholder="Search contacts…"
+                  data-testid="input-inbox-search"
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto" data-testid="list-inbox">
+              <div className="divide-y divide-border">
+                {threads.map(({ lead, last, unread }) => {
+                  const active = selected?.lead.id === lead.id;
+                  return (
+                    <button
+                      key={lead.id}
+                      type="button"
+                      onClick={() => setSelectedLeadId(lead.id)}
+                      className={cn(
+                        "w-full text-left px-4 py-3 transition-colors",
+                        active ? "bg-primary/5" : "hover:bg-muted/20",
+                      )}
+                      data-testid={`button-thread-${lead.id}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={cn(
+                            "h-9 w-9 rounded-full grid place-items-center text-xs font-bold border",
+                            active ? "bg-primary/10 text-primary border-primary/20" : "bg-muted/30 text-foreground border-border",
+                          )}
+                          data-testid={`avatar-thread-${lead.id}`}
+                        >
+                          {initialsFor(lead)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="font-semibold truncate" data-testid={`text-thread-name-${lead.id}`}>
+                              {lead.full_name}
+                            </div>
+                            <div className="text-[11px] text-muted-foreground whitespace-nowrap" data-testid={`text-thread-time-${lead.id}`}>
+                              {last ? new Date(last.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
+                            </div>
+                          </div>
+                          <div className="mt-0.5 flex items-center justify-between gap-2">
+                            <div className="text-xs text-muted-foreground truncate" data-testid={`text-thread-preview-${lead.id}`}>
+                              {last ? last.content : "No messages yet."}
+                            </div>
+                            {unread ? (
+                              <span
+                                className="h-2.5 w-2.5 rounded-full bg-primary"
+                                data-testid={`status-thread-unread-${lead.id}`}
+                              />
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="px-4 py-3 border-t border-border text-xs text-muted-foreground" data-testid="text-inbox-foot">
+              {threads.length} threads • MOCK
+            </div>
+          </section>
+
+          {/* Center: chat */}
+          <section
+            className="rounded-2xl border border-border bg-background overflow-hidden flex flex-col min-h-[640px]"
+            data-testid="panel-chat"
+          >
+            <div className="px-4 py-3 border-b border-border" data-testid="panel-chat-head">
+              <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
-                  <div className="font-semibold truncate" data-testid={`text-conv-name-${lead.id}`}>
-                    <Link href={`/app/lead/${lead.id}`} className="hover:underline" data-testid={`link-lead-${lead.id}`}>
-                      {lead.full_name}
+                  <div className="text-sm font-semibold truncate" data-testid="text-chat-contact">
+                    {selected ? selected.lead.full_name : "Select a conversation"}
+                  </div>
+                  <div className="text-xs text-muted-foreground" data-testid="text-chat-meta">
+                    {selected ? `${selected.lead.phone} • ${selected.lead.email}` : ""}
+                  </div>
+                </div>
+                {selected ? (
+                  <Link
+                    href={`/app/lead/${selected.lead.id}`}
+                    className="text-xs font-semibold text-primary hover:underline"
+                    data-testid="link-open-contact"
+                  >
+                    Open contact
+                  </Link>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto p-4 space-y-3" data-testid="chat-scroll">
+              {!selected ? (
+                <div className="text-sm text-muted-foreground" data-testid="empty-chat">
+                  Pick a contact on the left.
+                </div>
+              ) : selected.msgs.length === 0 ? (
+                <div className="text-sm text-muted-foreground" data-testid="empty-chat-no-messages">
+                  No messages yet.
+                </div>
+              ) : (
+                selected.msgs.map((m) => <ChatLine key={m.id} item={m} />)
+              )}
+            </div>
+
+            <div className="p-4 border-t border-border" data-testid="chat-compose">
+              <div className="flex items-end gap-2" data-testid="form-compose">
+                <div className="flex-1">
+                  <label className="text-xs text-muted-foreground" data-testid="label-compose">
+                    Manual send (takeover)
+                  </label>
+                  <textarea
+                    className="mt-1 w-full min-h-[44px] max-h-40 rounded-xl bg-muted/30 border border-border p-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                    placeholder={selected ? "Type a message…" : "Select a contact first"}
+                    disabled={!selected}
+                    data-testid="input-compose"
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="h-11 px-4 rounded-xl bg-primary text-primary-foreground font-semibold disabled:opacity-50"
+                  disabled={!selected}
+                  data-testid="button-compose-send"
+                >
+                  Send
+                </button>
+              </div>
+              <div className="mt-2 text-xs text-muted-foreground" data-testid="text-compose-real">
+                REAL: POST to NocoDB Interactions + trigger n8n
+              </div>
+            </div>
+          </section>
+
+          {/* Right: contact panel */}
+          <section
+            className="rounded-2xl border border-border bg-background overflow-hidden flex flex-col min-h-[640px]"
+            data-testid="panel-contact"
+          >
+            <div className="p-4 border-b border-border" data-testid="panel-contact-head">
+              <div className="text-sm font-semibold" data-testid="text-contact-panel-title">
+                Contact
+              </div>
+              <div className="text-xs text-muted-foreground" data-testid="text-contact-panel-sub">
+                Quick actions + tags
+              </div>
+            </div>
+
+            <div className="p-4 space-y-4" data-testid="panel-contact-body">
+              {!selected ? (
+                <div className="text-sm text-muted-foreground" data-testid="empty-contact-panel">
+                  Select a conversation.
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-start gap-3" data-testid="block-contact-hero">
+                    <div
+                      className="h-10 w-10 rounded-full bg-primary/10 text-primary font-extrabold grid place-items-center border border-primary/20"
+                      data-testid="avatar-contact"
+                    >
+                      {initialsFor(selected.lead)}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-semibold truncate" data-testid="text-contact-name">
+                        {selected.lead.full_name}
+                      </div>
+                      <div className="text-xs text-muted-foreground" data-testid="text-contact-sub">
+                        {selected.lead.source} • {selected.lead.priority}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2" data-testid="grid-contact-meta">
+                    <div className="rounded-xl border border-border bg-muted/10 p-3" data-testid="card-contact-phone">
+                      <div className="text-[11px] text-muted-foreground" data-testid="label-contact-phone">
+                        Phone
+                      </div>
+                      <div className="mt-1 text-sm font-semibold" data-testid="text-contact-phone">
+                        {selected.lead.phone}
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-border bg-muted/10 p-3" data-testid="card-contact-email">
+                      <div className="text-[11px] text-muted-foreground" data-testid="label-contact-email">
+                        Email
+                      </div>
+                      <div className="mt-1 text-sm font-semibold break-words" data-testid="text-contact-email">
+                        {selected.lead.email}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div data-testid="block-contact-tags">
+                    <div className="text-xs font-semibold" data-testid="text-tags-title">
+                      Tags
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2" data-testid="wrap-tags">
+                      {(selected.lead.tags ?? []).length ? (
+                        (selected.lead.tags ?? []).map((t, idx) => (
+                          <span
+                            key={`${selected.lead.id}-${idx}`}
+                            className="px-2 py-1 rounded-full text-xs border border-border bg-muted/20"
+                            data-testid={`tag-${selected.lead.id}-${idx}`}
+                          >
+                            {t}
+                          </span>
+                        ))
+                      ) : (
+                        <div className="text-sm text-muted-foreground" data-testid="empty-tags">
+                          No tags.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="pt-2" data-testid="block-contact-actions">
+                    <Link
+                      href={`/app/lead/${selected.lead.id}`}
+                      className="block text-center h-11 leading-[44px] rounded-xl border border-border bg-background hover:bg-muted/20 font-semibold"
+                      data-testid="button-view-full"
+                    >
+                      View full contact
                     </Link>
                   </div>
-                  <div className="text-xs text-muted-foreground" data-testid={`text-conv-phone-${lead.id}`}>{lead.phone}</div>
-                  <div className="mt-2 text-sm text-muted-foreground line-clamp-2" data-testid={`text-conv-last-${lead.id}`}>
-                    {last ? last.content : "No messages yet."}
-                  </div>
-                </div>
-                <div className="text-xs text-muted-foreground whitespace-nowrap" data-testid={`text-conv-time-${lead.id}`}>
-                  {last ? new Date(last.created_at).toLocaleString() : "—"}
-                </div>
-              </div>
-            ))}
-          </div>
+                </>
+              )}
+            </div>
+
+            <div className="mt-auto px-4 py-3 border-t border-border text-xs text-muted-foreground" data-testid="text-contact-panel-foot">
+              REAL: editable tags, assign automation, manual takeover
+            </div>
+          </section>
         </div>
 
         <div className="mt-3 text-xs text-muted-foreground" data-testid="text-real">
@@ -68,5 +311,30 @@ export default function ConversationsPage() {
         </div>
       </div>
     </CrmShell>
+  );
+}
+
+function ChatLine({ item }: { item: Interaction }) {
+  const outbound = item.direction === "Outbound";
+  return (
+    <div className={cn("flex", outbound ? "justify-end" : "justify-start")} data-testid={`row-chat-${item.id}`}>
+      <div
+        className={cn(
+          "max-w-[78%] rounded-2xl px-3 py-2 text-sm border",
+          outbound ? "bg-primary text-primary-foreground border-primary/20" : "bg-muted/40 text-foreground border-border",
+        )}
+        data-testid={`bubble-chat-${item.id}`}
+      >
+        <div className="whitespace-pre-wrap leading-relaxed" data-testid={`text-chat-${item.id}`}>
+          {item.content}
+        </div>
+        <div
+          className={cn("mt-1 text-[11px] opacity-80", outbound ? "text-primary-foreground/80" : "text-muted-foreground")}
+          data-testid={`meta-chat-${item.id}`}
+        >
+          {new Date(item.created_at).toLocaleString()} • {item.type}
+        </div>
+      </div>
+    </div>
   );
 }

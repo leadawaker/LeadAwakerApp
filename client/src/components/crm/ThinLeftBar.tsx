@@ -67,7 +67,7 @@ export function ThinLeftBar({
 
   return (
     <aside
-      className="fixed left-0 top-0 bottom-0 w-[48px] border-r border-border bg-[#f8fafc] z-50 flex flex-col items-center py-3"
+      className="fixed left-0 top-0 bottom-0 w-[48px] border-r border-border bg-muted/40 z-50 flex flex-col items-center py-3 dark:bg-muted/20"
       data-testid="bar-thin-left"
     >
       <button

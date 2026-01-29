@@ -53,7 +53,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         <HelpMenu open={helpOpen} onOpenChange={setHelpOpen} />
       </div>
 
-      <main className="min-h-screen bg-white" style={{ paddingLeft: 48 + 225 }} data-testid="main-crm">
+      <main className="min-h-screen bg-background" style={{ paddingLeft: 48 + 225 }} data-testid="main-crm">
         {children}
       </main>
     </div>
