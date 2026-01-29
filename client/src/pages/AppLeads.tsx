@@ -16,7 +16,13 @@ export default function AppLeads() {
 
   const leads = useMemo(() => {
     const merged = [...allLeads.filter((l) => l.account_id === currentAccountId), ...localLeads];
-    return merged
+
+    // Ensure the demo contact (Sam Lewis, id=25) is accessible in all workspaces.
+    // This is a frontend-only prototype convenience so the “click Sam Lewis” flow always works.
+    const sam = allLeads.find((l) => l.id === 25);
+    const withSam = sam && !merged.some((x) => x.id === 25) ? [sam, ...merged] : merged;
+
+    return withSam
       .filter((l) => (status === "all" ? true : l.conversion_status === status))
       .filter((l) => (priority === "all" ? true : l.priority === priority))
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
