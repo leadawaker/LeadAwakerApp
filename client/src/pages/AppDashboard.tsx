@@ -158,12 +158,17 @@ function AgencyDashboard() {
 
 function SubaccountDashboard({ accountId }: { accountId: number }) {
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | "all">("all");
+  const [isBookedReportOpen, setIsBookedReportOpen] = useState(false);
 
   const stagePalette = [
     { id: "New" as const, label: "New", fill: "#1a3a6f" },
     { id: "Contacted" as const, label: "Contacted", fill: "#2d5aa8" },
     { id: "Responded" as const, label: "Responded", fill: "#1E90FF" },
+    { id: "Multiple Responses" as const, label: "Multiple Responses", fill: "#22c55e" },
+    { id: "Qualified" as const, label: "Qualified", fill: "#a855f7" },
     { id: "Booked" as const, label: "Booked", fill: "#facc15" },
+    { id: "Lost" as const, label: "Lost", fill: "#94a3b8" },
+    { id: "DND" as const, label: "DND", fill: "#ef4444" },
   ];
 
   const funnel = useMemo(() => {
@@ -171,11 +176,15 @@ function SubaccountDashboard({ accountId }: { accountId: number }) {
       .filter((l) => l.account_id === accountId)
       .filter((l) => (selectedCampaignId === "all" ? true : l.campaign_id === selectedCampaignId));
 
-    const counts = {
+    const counts: Record<(typeof stagePalette)[number]["id"], number> = {
       New: accountLeads.filter((l) => l.conversion_status === "New").length,
       Contacted: accountLeads.filter((l) => l.conversion_status === "Contacted").length,
-      Responded: accountLeads.filter((l) => l.conversion_status === "Responded" || l.conversion_status === "Multiple Responses").length,
+      Responded: accountLeads.filter((l) => l.conversion_status === "Responded").length,
+      "Multiple Responses": accountLeads.filter((l) => l.conversion_status === "Multiple Responses").length,
+      Qualified: accountLeads.filter((l) => l.conversion_status === "Qualified").length,
       Booked: accountLeads.filter((l) => l.conversion_status === "Booked").length,
+      Lost: accountLeads.filter((l) => l.conversion_status === "Lost").length,
+      DND: accountLeads.filter((l) => l.conversion_status === "DND").length,
     };
 
     return stagePalette.map((s) => ({ name: s.label, value: counts[s.id], fill: s.fill }));
@@ -204,46 +213,55 @@ function SubaccountDashboard({ accountId }: { accountId: number }) {
   return (
     <div className="mt-6 space-y-6" data-testid="subaccount-dashboard">
       <section className="rounded-2xl border border-border bg-background overflow-hidden" data-testid="section-campaign-selector">
-        <div className="px-4 py-3 border-b border-border flex flex-col gap-3" data-testid="campaign-head">
-          <div className="flex items-center justify-between gap-3" data-testid="row-campaign-title">
-            <div className="min-w-0" data-testid="wrap-campaign-title">
-              <div className="text-sm font-semibold truncate" data-testid="text-campaign-block-title">Campaign performance</div>
-              <div className="mt-0.5 text-xs text-muted-foreground" data-testid="text-campaign-block-sub">Funnel + KPIs (MOCK)</div>
-            </div>
-
-            <div className="flex items-center gap-2" data-testid="wrap-campaign-select">
-              <div className="text-xs text-muted-foreground" data-testid="label-campaign">Campaign</div>
-              <div className="relative" data-testid="wrap-campaign-select-inner">
-                <select
-                  value={selectedCampaignId}
-                  onChange={(e) => setSelectedCampaignId(e.target.value === "all" ? "all" : Number(e.target.value))}
-                  className="h-9 rounded-xl border border-border bg-muted/20 pl-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30"
-                  data-testid="select-dashboard-campaign"
-                >
-                  <option value="all">All campaigns</option>
-                  {campaignOptions.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" data-testid="icon-campaign-chevron">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
+        <div className="px-4 py-3 border-b border-border flex items-center gap-3" data-testid="campaign-head">
+          <div className="flex items-center gap-2 min-w-0" data-testid="wrap-campaign-select">
+            <div className="text-xs text-muted-foreground" data-testid="label-campaign">Campaign</div>
+            <div className="relative" data-testid="wrap-campaign-select-inner">
+              <select
+                value={selectedCampaignId}
+                onChange={(e) => setSelectedCampaignId(e.target.value === "all" ? "all" : Number(e.target.value))}
+                className="h-9 rounded-xl border border-border bg-muted/20 pl-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/30"
+                data-testid="select-dashboard-campaign"
+              >
+                <option value="all">All campaigns</option>
+                {campaignOptions.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" data-testid="icon-campaign-chevron">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
             </div>
           </div>
+
+          <div className="ml-auto text-xs text-muted-foreground" data-testid="text-campaign-block-sub">Funnel + KPIs (MOCK)</div>
         </div>
 
-        <div className="p-4 grid grid-cols-1 lg:grid-cols-[520px_1fr] gap-4" data-testid="campaign-body">
+        <div className="px-4 py-3 grid grid-cols-1 lg:grid-cols-[520px_1fr] gap-4" data-testid="campaign-body">
           <div className="rounded-2xl border border-border bg-background p-4" data-testid="card-funnel">
-            <div className="flex items-center justify-between" data-testid="funnel-head">
-              <div className="text-sm font-semibold" data-testid="text-funnel-title">Conversion Funnel</div>
-              <div className="text-xs text-muted-foreground" data-testid="text-funnel-hint">New → Contacted → Responded → Booked</div>
+            <div className="flex items-start justify-between gap-3" data-testid="funnel-head">
+              <div className="min-w-0" data-testid="wrap-funnel-title">
+                <div className="text-sm font-semibold" data-testid="text-funnel-title">Conversion Funnel</div>
+                <div className="mt-0.5 text-xs text-muted-foreground truncate" data-testid="text-funnel-hint">
+                  New → Contacted → Responded → Multiple Responses → Qualified → Booked → Lost → DND
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsBookedReportOpen(true)}
+                className="h-9 w-9 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors grid place-items-center text-muted-foreground"
+                data-testid="button-booked-report"
+                aria-label="Booked report"
+              >
+                <span className="text-sm font-black">!</span>
+              </button>
             </div>
-            <div className="mt-3 h-[280px]" data-testid="chart-funnel">
+            <div className="mt-3 h-[220px]" data-testid="chart-funnel">
               <ResponsiveContainer width="100%" height="100%">
                 <FunnelChart>
                   <Tooltip />
@@ -263,12 +281,98 @@ function SubaccountDashboard({ accountId }: { accountId: number }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4" data-testid="grid-stats">
+          <div className="grid grid-cols-2 gap-3" data-testid="grid-stats">
             <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" tone="blue" />
             <Stat label="Active Campaigns" value={String(stats.activeCampaigns)} testId="stat-active" tone="indigo" />
             <Stat label="Bookings/Mo" value={String(stats.bookingsMo)} testId="stat-bookings" tone="yellow" />
             <Stat label="AI Cost" value={`$${stats.aiCost.toFixed(2)}`} testId="stat-cost" tone="slate" />
           </div>
+
+          {isBookedReportOpen ? (
+            <div className="fixed inset-0 z-50" data-testid="modal-booked-report">
+              <button
+                type="button"
+                className="absolute inset-0 bg-black/50"
+                onClick={() => setIsBookedReportOpen(false)}
+                data-testid="button-close-booked-report-backdrop"
+                aria-label="Close booked report"
+              />
+              <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-background shadow-2xl">
+                <div className="p-5 border-b border-border flex items-start justify-between gap-4" data-testid="row-booked-report-head">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold" data-testid="text-booked-report-title">Booked Contacts Report</div>
+                    <div className="mt-1 text-xs text-muted-foreground" data-testid="text-booked-report-sub">
+                      AI insight summary (MOCK) based on recent booked conversations.
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="h-9 w-9 rounded-xl border border-border bg-muted/20 hover:bg-muted/30"
+                    onClick={() => setIsBookedReportOpen(false)}
+                    data-testid="button-close-booked-report"
+                    aria-label="Close booked report"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="p-5 space-y-4" data-testid="body-booked-report">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" data-testid="grid-booked-report-kpis">
+                    <div className="rounded-2xl border border-border bg-muted/10 p-4" data-testid="card-booked-kpi-0">
+                      <div className="text-xs text-muted-foreground" data-testid="text-booked-kpi-label-0">Booked (selected)</div>
+                      <div className="mt-2 text-2xl font-extrabold tracking-tight" data-testid="text-booked-kpi-value-0">{stats.bookingsMo}</div>
+                    </div>
+                    <div className="rounded-2xl border border-border bg-muted/10 p-4" data-testid="card-booked-kpi-1">
+                      <div className="text-xs text-muted-foreground" data-testid="text-booked-kpi-label-1">Avg time-to-book</div>
+                      <div className="mt-2 text-2xl font-extrabold tracking-tight" data-testid="text-booked-kpi-value-1">2.6d</div>
+                    </div>
+                    <div className="rounded-2xl border border-border bg-muted/10 p-4" data-testid="card-booked-kpi-2">
+                      <div className="text-xs text-muted-foreground" data-testid="text-booked-kpi-label-2">Top driver</div>
+                      <div className="mt-2 text-sm font-semibold" data-testid="text-booked-kpi-value-2">Fast follow-up</div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-border bg-gradient-to-br from-yellow-400/10 via-transparent to-sky-500/10 p-4" data-testid="card-booked-insight">
+                    <div className="text-xs font-semibold text-yellow-500" data-testid="text-booked-insight-tag">AI Insight</div>
+                    <div className="mt-2 text-sm" data-testid="text-booked-insight-body">
+                      Booked contacts tend to convert when the first reply happens within <span className="font-semibold">10 minutes</span> and the second message includes a <span className="font-semibold">specific time suggestion</span> (\"Can you do Tue at 2:30?\").
+                      <br />
+                      <span className="text-muted-foreground">Recommendation:</span> auto-suggest 2 time slots after positive intent and add a "quick reschedule" button.
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-border bg-background p-4" data-testid="card-booked-patterns">
+                    <div className="text-sm font-semibold" data-testid="text-booked-patterns-title">Patterns observed</div>
+                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="grid-booked-patterns">
+                      {[
+                        { k: "Best channel", v: "SMS", hint: "Most bookings came from SMS threads with 2–4 messages." },
+                        { k: "Language that wins", v: "Short + direct", hint: "Clear next step and one question at a time." },
+                        { k: "Drop-off risk", v: "After 30 min", hint: "Interest decays quickly without a follow-up nudge." },
+                        { k: "Offer angle", v: "Speed", hint: "\"We can get you in this week\" outperformed discounts." },
+                      ].map((p, idx) => (
+                        <div key={p.k} className="rounded-2xl border border-border bg-muted/10 p-4" data-testid={`card-booked-pattern-${idx}`}>
+                          <div className="text-xs text-muted-foreground" data-testid={`text-booked-pattern-k-${idx}`}>{p.k}</div>
+                          <div className="mt-1 text-sm font-semibold" data-testid={`text-booked-pattern-v-${idx}`}>{p.v}</div>
+                          <div className="mt-2 text-xs text-muted-foreground" data-testid={`text-booked-pattern-hint-${idx}`}>{p.hint}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2" data-testid="row-booked-report-actions">
+                    <button
+                      type="button"
+                      className="h-10 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 px-4 text-sm font-semibold"
+                      onClick={() => setIsBookedReportOpen(false)}
+                      data-testid="button-booked-report-done"
+                    >
+                      Done
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -327,22 +431,30 @@ function PipelineCol({
       .filter((l) => l.account_id === accountId)
       .filter((l) => (campaignId === "all" ? true : l.campaign_id === campaignId));
 
-    const isMatch = (s: string) => {
-      if (stage.id === "Responded") return s === "Responded" || s === "Multiple Responses";
-      return s === stage.id;
-    };
+    const isMatch = (s: string) => s === stage.id;
 
     return filtered.filter((l) => isMatch(l.conversion_status));
   }, [accountId, campaignId, stage.id]);
 
   return (
     <div className="rounded-2xl border border-border bg-background overflow-hidden" data-testid={`col-${stage.id}`}>
-      <div className="px-3 py-2 border-b border-border flex items-center justify-between" data-testid={`col-head-${stage.id}`}>
-        <div className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: stage.fill }} />
-          <div className="text-sm font-semibold" data-testid={`col-title-${stage.id}`}>{stage.label}</div>
+      <div
+        className="px-3 py-2 border-b border-border flex items-center justify-between"
+        style={{ backgroundColor: stage.fill + "1A" }}
+        data-testid={`col-head-${stage.id}`}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <div
+            className="text-sm font-semibold truncate"
+            style={{ color: stage.fill }}
+            data-testid={`col-title-${stage.id}`}
+          >
+            {stage.label}
+          </div>
         </div>
-        <div className="text-xs text-muted-foreground" data-testid={`col-count-${stage.id}`}>{items.length}</div>
+        <div className="text-xs font-semibold" style={{ color: stage.fill }} data-testid={`col-count-${stage.id}`}>
+          {items.length}
+        </div>
       </div>
       <div className="p-3 space-y-2" data-testid={`col-body-${stage.id}`}>
         {items.slice(0, 8).map((l) => (
