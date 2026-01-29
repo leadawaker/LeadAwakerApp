@@ -85,16 +85,21 @@ export function SearchModal({ open, onOpenChange }: { open: boolean; onOpenChang
               ) : (
                 <div className="divide-y divide-border">
                   {results.map((r) => (
-                    <Link
+                    <a
                       key={r.leadId}
                       href={`/app/contacts/${r.leadId}`}
-                      onClick={() => onOpenChange(false)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        window.history.pushState({}, "", `/app/contacts/${r.leadId}`);
+                        window.dispatchEvent(new PopStateEvent("popstate"));
+                        onOpenChange(false);
+                      }}
                       className="block p-4 hover:bg-muted/20"
                       data-testid={`row-search-${r.leadId}`}
                     >
                       <div className="font-semibold" data-testid={`text-search-name-${r.leadId}`}>{r.title}</div>
                       <div className="mt-1 text-xs text-muted-foreground" data-testid={`text-search-sub-${r.leadId}`}>{r.subtitle}</div>
-                    </Link>
+                    </a>
                   ))}
                 </div>
               )}

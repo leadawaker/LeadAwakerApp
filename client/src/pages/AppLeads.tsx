@@ -154,13 +154,18 @@ export default function AppLeads() {
                   </div>
 
                   <div className="min-w-0" data-testid={`cell-name-${l.id}`}>
-                    <Link
+                    <a
                       href={`/app/contacts/${l.id}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        window.history.pushState({}, "", `/app/contacts/${l.id}`);
+                        window.dispatchEvent(new PopStateEvent("popstate"));
+                      }}
                       className="font-semibold truncate hover:underline block"
                       data-testid={`link-contact-${l.id}`}
                     >
                       {l.full_name}
-                    </Link>
+                    </a>
                     <div className="text-[11px] text-muted-foreground truncate" data-testid={`text-contact-sub-${l.id}`}>
                       source: {l.source} • priority: {l.priority}
                     </div>

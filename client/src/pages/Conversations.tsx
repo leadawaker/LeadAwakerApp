@@ -154,13 +154,18 @@ export default function ConversationsPage() {
                   </div>
                 </div>
                 {selected ? (
-                  <Link
+                  <a
                     href={`/app/contacts/${selected.lead.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.history.pushState({}, "", `/app/contacts/${selected.lead.id}`);
+                      window.dispatchEvent(new PopStateEvent("popstate"));
+                    }}
                     className="text-xs font-semibold text-primary hover:underline"
                     data-testid="link-open-contact"
                   >
                     Open contact
-                  </Link>
+                  </a>
                 ) : null}
               </div>
             </div>
