@@ -68,17 +68,15 @@ export function RightSidebar() {
                   {currentAccount.name}
                 </div>
               </div>
-              {isAgencyView ? (
-                <button
-                  type="button"
-                  onClick={() => setOpenSwitcher((v) => !v)}
-                  className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center"
-                  data-testid="button-workspace-open"
-                  aria-label="Open workspace switcher"
-                >
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                </button>
-              ) : null}
+              <button
+                type="button"
+                onClick={() => setOpenSwitcher((v) => !v)}
+                className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center"
+                data-testid="button-workspace-open"
+                aria-label="Open workspace switcher"
+              >
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </button>
             </div>
           )}
 
@@ -95,7 +93,7 @@ export function RightSidebar() {
           </button>
         </div>
 
-        {!collapsed && openSwitcher && isAgencyView && (
+        {!collapsed && openSwitcher && (
           <div className="px-3 pt-3" data-testid="menu-workspace">
             <div className="rounded-2xl border border-border bg-background overflow-hidden">
               {accounts.map((a) => (
@@ -108,7 +106,7 @@ export function RightSidebar() {
                   }}
                   className={cn(
                     "w-full px-3 py-2 text-left text-sm hover:bg-muted/30",
-                    currentAccountId === a.id && "bg-yellow-400/15",
+                    currentAccountId === a.id && (isAgencyView ? "bg-blue-600/10" : "bg-yellow-400/15"),
                   )}
                   data-testid={`button-workspace-${a.id}`}
                 >

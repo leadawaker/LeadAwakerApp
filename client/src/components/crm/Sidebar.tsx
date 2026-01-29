@@ -24,7 +24,7 @@ export function Sidebar() {
     >
       <div className="p-4 w-full flex flex-col gap-4">
         <div className={cn(
-          "rounded-2xl border p-4 transition-all duration-300",
+          "rounded-2xl border p-4 transition-all duration-300 relative group",
           isAgencyView 
             ? "border-blue-500/20 bg-blue-600/10" 
             : "border-yellow-500/20 bg-yellow-500/10"
@@ -32,7 +32,7 @@ export function Sidebar() {
           <div className="text-xs text-muted-foreground" data-testid="text-workspace">
             Workspace
           </div>
-          <div className="mt-1 text-sm font-semibold" data-testid="text-workspace-name">
+          <div className="mt-1 text-sm font-semibold flex items-center justify-between" data-testid="text-workspace-name">
             {currentAccount.name}
           </div>
           <div className="mt-2 text-xs text-muted-foreground" data-testid="text-workspace-meta">
