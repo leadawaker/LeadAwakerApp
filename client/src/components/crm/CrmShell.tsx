@@ -6,6 +6,7 @@ import { SupportChat } from "@/components/crm/SupportChat";
 import { SearchModal } from "@/components/crm/SearchModal";
 import { NotificationsPanel } from "@/components/crm/NotificationsPanel";
 import { HelpMenu } from "@/components/crm/HelpMenu";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 export function CrmShell({ children }: { children: React.ReactNode }) {
   const [, setLocation] = useLocation();
@@ -24,6 +25,9 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [helpOpen]);
 
+  const { isAgencyView } = useWorkspace();
+  const settingsPath = isAgencyView ? "/agency/settings" : "/subaccount/settings";
+
   return (
     <div className="min-h-screen bg-background" data-testid="shell-crm">
       <ThinLeftBar
@@ -31,7 +35,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         onOpenSearch={() => setSearchOpen(true)}
         onOpenNotifications={() => setNotificationsOpen(true)}
         notificationsCount={unreadCount}
-        onOpenEdgeSettings={() => setLocation("/app/settings")}
+        onOpenEdgeSettings={() => setLocation(settingsPath)}
         onToggleHelp={() => setHelpOpen((v) => !v)}
         onGoHome={() => setLocation("/")}
       />

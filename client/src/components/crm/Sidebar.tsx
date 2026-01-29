@@ -3,16 +3,19 @@ import { LayoutDashboard, Users, Megaphone, Building2, LogOut } from "lucide-rea
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
-const items = [
-  { href: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard, testId: "link-nav-dashboard" },
-  { href: "/app/leads", label: "Leads", icon: Users, testId: "link-nav-leads" },
-  { href: "/app/campaigns", label: "Campaigns", icon: Megaphone, testId: "link-nav-campaigns" },
-  { href: "/app/accounts", label: "Accounts", icon: Building2, testId: "link-nav-accounts" },
-];
+const items = []; // Handled inside component for dynamic prefixing
 
 export function Sidebar() {
   const [location] = useLocation();
   const { currentAccount, isAgencyView } = useWorkspace();
+  const prefix = isAgencyView ? "/agency" : "/subaccount";
+
+  const items = [
+    { href: `${prefix}/dashboard`, label: "Dashboard", icon: LayoutDashboard, testId: "link-nav-dashboard" },
+    { href: `${prefix}/leads`, label: "Leads", icon: Users, testId: "link-nav-leads" },
+    { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, testId: "link-nav-campaigns" },
+    { href: `${prefix}/accounts`, label: "Accounts", icon: Building2, testId: "link-nav-accounts" },
+  ];
 
   return (
     <aside

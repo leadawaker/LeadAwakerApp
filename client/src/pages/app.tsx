@@ -28,21 +28,35 @@ export default function AppArea() {
   return (
     <Protected>
       <Switch>
-        <Route path="/app" component={() => <Redirect to="/app/dashboard" />} />
-        <Route path="/app/dashboard" component={AppDashboard} />
-        <Route path="/app/contacts" component={AppLeads} />
-        <Route path="/app/leads" component={AppLeads} />
-        <Route path="/app/conversations" component={ConversationsPage} />
-        <Route path="/app/contacts/:id" component={LeadDetailPage} />
-        <Route path="/app/lead/:id" component={() => <Redirect to="/app/contacts" />} />
-        <Route path="/app/campaigns" component={AppCampaigns} />
-        <Route path="/app/accounts" component={AppAccounts} />
-        <Route path="/app/calendar" component={CalendarPage} />
-        <Route path="/app/automation-logs" component={AutomationLogsPage} />
-        <Route path="/app/users" component={UsersPage} />
-        <Route path="/app/tags" component={TagsPage} />
-        <Route path="/app/prompt-library" component={PromptLibraryPage} />
-        <Route path="/app/settings" component={SettingsPage} />
+        <Route path="/agency" component={() => <Redirect to="/agency/dashboard" />} />
+        <Route path="/agency/dashboard" component={AppDashboard} />
+        <Route path="/agency/contacts" component={AppLeads} />
+        <Route path="/agency/leads" component={AppLeads} />
+        <Route path="/agency/conversations" component={ConversationsPage} />
+        <Route path="/agency/contacts/:id" component={LeadDetailPage} />
+        <Route path="/agency/campaigns" component={AppCampaigns} />
+        <Route path="/agency/accounts" component={AppAccounts} />
+        <Route path="/agency/calendar" component={CalendarPage} />
+        <Route path="/agency/automation-logs" component={AutomationLogsPage} />
+        <Route path="/agency/users" component={UsersPage} />
+        <Route path="/agency/tags" component={TagsPage} />
+        <Route path="/agency/prompt-library" component={PromptLibraryPage} />
+        <Route path="/agency/settings" component={SettingsPage} />
+
+        <Route path="/subaccount" component={() => <Redirect to="/subaccount/dashboard" />} />
+        <Route path="/subaccount/dashboard" component={AppDashboard} />
+        <Route path="/subaccount/contacts" component={AppLeads} />
+        <Route path="/subaccount/leads" component={AppLeads} />
+        <Route path="/subaccount/conversations" component={ConversationsPage} />
+        <Route path="/subaccount/contacts/:id" component={LeadDetailPage} />
+        <Route path="/subaccount/campaigns" component={AppCampaigns} />
+        <Route path="/subaccount/accounts" component={AppAccounts} />
+        <Route path="/subaccount/calendar" component={CalendarPage} />
+        <Route path="/subaccount/automation-logs" component={AutomationLogsPage} />
+        <Route path="/subaccount/users" component={UsersPage} />
+        <Route path="/subaccount/tags" component={TagsPage} />
+        <Route path="/subaccount/prompt-library" component={PromptLibraryPage} />
+        <Route path="/subaccount/settings" component={SettingsPage} />
         <Route component={() => (
           <CrmShell>
             <div className="px-6 py-6" data-testid="page-app-notfound">

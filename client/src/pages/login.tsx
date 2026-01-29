@@ -15,7 +15,7 @@ export default function Login() {
     // MOCK AUTH: store a local token
     localStorage.setItem("leadawaker_auth", "mock-jwt");
     // REAL: authenticate via your backend, then store JWT
-    window.location.href = "/app/dashboard";
+    window.location.href = "/agency/dashboard";
   };
 
   return (

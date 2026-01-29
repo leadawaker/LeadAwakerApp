@@ -84,8 +84,10 @@ function AppRoutes() {
       <Route path="/services" component={Services} />
       <Route path="/book-demo" component={BookDemo} />
       <Route path="/login" component={Login} />
-      <Route path="/app" component={AppArea} />
-      <Route path="/app/:rest*" component={AppArea} />
+      <Route path="/agency" component={AppArea} />
+      <Route path="/agency/:rest*" component={AppArea} />
+      <Route path="/subaccount" component={AppArea} />
+      <Route path="/subaccount/:rest*" component={AppArea} />
       <Route path="/canvas" component={Canvas} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />
@@ -162,7 +164,7 @@ function Router() {
     }
   }, [location, setLocation]);
 
-  const isAppArea = location.startsWith("/app");
+  const isAppArea = location.startsWith("/agency") || location.startsWith("/subaccount");
 
   return (
     <div className="flex flex-col min-h-screen">
