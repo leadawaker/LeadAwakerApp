@@ -5,7 +5,7 @@ import {
   Settings,
   Moon,
   HelpCircle,
-  MessageSquare,
+  Headphones,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -52,6 +52,7 @@ export function ThinLeftBar({
   onOpenEdgeSettings,
   onToggleHelp,
   onGoHome,
+  notificationsCount,
 }: {
   onOpenSupport: () => void;
   onOpenSearch: () => void;
@@ -59,31 +60,43 @@ export function ThinLeftBar({
   onOpenEdgeSettings: () => void;
   onToggleHelp: () => void;
   onGoHome: () => void;
+  notificationsCount?: number;
 }) {
   const [dark, setDark] = useState(false);
+  const count = notificationsCount ?? 0;
 
   return (
     <aside
-      className="fixed left-0 top-0 bottom-0 w-[48px] border-r border-border bg-background z-50 flex flex-col items-center py-3"
+      className="fixed left-0 top-0 bottom-0 w-[48px] border-r border-border bg-[#f8fafc] z-50 flex flex-col items-center py-3"
       data-testid="bar-thin-left"
     >
       <button
         type="button"
         onClick={onGoHome}
-        className="h-9 w-9 rounded-xl grid place-items-center border border-border bg-muted/20 overflow-hidden hover:bg-muted/30"
+        className="grid place-items-center"
         data-testid="button-leftbar-home"
         aria-label="Go to home"
       >
-        <img src="/favicon.svg" alt="LeadAwaker" className="h-5 w-5" data-testid="img-leftbar-favicon" />
+        <img src="/favicon.svg" alt="LeadAwaker" className="h-6 w-6" data-testid="img-leftbar-favicon" />
       </button>
 
       <div className="mt-4 flex flex-col gap-2" data-testid="group-leftbar-actions">
         <IconButton label="Search" testId="button-global-search" onClick={onOpenSearch}>
           <Search className="h-5 w-5" />
         </IconButton>
-        <IconButton label="Notifications" testId="button-notifications" onClick={onOpenNotifications}>
-          <Bell className="h-5 w-5" />
-        </IconButton>
+        <div className="relative" data-testid="wrap-notifications">
+          <IconButton label="Notifications" testId="button-notifications" onClick={onOpenNotifications}>
+            <Bell className="h-5 w-5" />
+          </IconButton>
+          {count > 0 ? (
+            <div
+              className="absolute -top-1 -right-1 h-5 min-w-5 px-1 rounded-full bg-blue-600 text-white text-[11px] font-bold grid place-items-center"
+              data-testid="badge-notifications"
+            >
+              {count}
+            </div>
+          ) : null}
+        </div>
         <IconButton label="Settings" testId="button-settings" onClick={onOpenEdgeSettings}>
           <Settings className="h-5 w-5" />
         </IconButton>
@@ -104,8 +117,8 @@ export function ThinLeftBar({
       </div>
 
       <div className="mt-auto pb-2" data-testid="group-leftbar-support">
-        <IconButton label="LeadAwaker Support" onClick={onOpenSupport} testId="button-support">
-          <MessageSquare className="h-5 w-5" />
+        <IconButton label="Customer Support" onClick={onOpenSupport} testId="button-support">
+          <Headphones className="h-5 w-5" />
         </IconButton>
       </div>
     </aside>

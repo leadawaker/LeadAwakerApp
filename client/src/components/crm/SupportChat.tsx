@@ -19,7 +19,7 @@ export function SupportChat({ open, onClose }: { open: boolean; onClose: () => v
 
   return (
     <div
-      className="fixed left-4 bottom-4 w-[360px] max-w-[calc(100vw-1rem)] rounded-2xl border border-border bg-background shadow-xl overflow-hidden z-[60]"
+      className="fixed right-4 bottom-4 w-[360px] max-w-[calc(100vw-1rem)] rounded-2xl border border-border bg-background shadow-xl overflow-hidden z-[60]"
       data-testid="panel-support-chat"
     >
       <div className="h-12 px-4 flex items-center justify-between border-b border-border bg-muted/20">

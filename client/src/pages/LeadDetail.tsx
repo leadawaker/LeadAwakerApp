@@ -10,7 +10,10 @@ export default function LeadDetailPage() {
   const [, params] = useRoute("/app/lead/:id");
   const id = Number(params?.id);
 
-  const lead = useMemo(() => leads.find((l) => l.id === id) ?? null, [id]);
+  const lead = useMemo(() => {
+    if (Number.isFinite(id) && id > 0) return leads.find((l) => l.id === id) ?? null;
+    return null;
+  }, [id]);
   const chat = useMemo(() => {
     if (!lead) return [];
     return interactions
@@ -56,6 +59,7 @@ export default function LeadDetailPage() {
               {/* Left editable form */}
               <div className="rounded-2xl border border-border bg-background overflow-hidden" data-testid="panel-lead-left">
                 <Section title="Contact" testId="section-contact">
+                  <ReadRow label="Lead example" value={lead.id === 25 ? "Using lead #25 (Sam Lewis)" : `Lead #${lead.id}`} testId="text-lead-example" />
                   <Field label="First Name" value={draft?.first_name ?? ""} onChange={(v) => setDraft((p) => (p ? { ...p, first_name: v } : p))} testId="input-first-name" />
                   <Field label="Last Name" value={draft?.last_name ?? ""} onChange={(v) => setDraft((p) => (p ? { ...p, last_name: v } : p))} testId="input-last-name" />
                   <Field label="Email" value={draft?.email ?? ""} onChange={(v) => setDraft((p) => (p ? { ...p, email: v } : p))} testId="input-email" />

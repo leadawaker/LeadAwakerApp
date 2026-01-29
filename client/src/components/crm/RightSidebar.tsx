@@ -50,8 +50,8 @@ export function RightSidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-[48px] top-0 bottom-0 border-r border-border bg-background z-40 transition-all",
-        collapsed ? "w-[64px]" : "w-[300px]",
+        "fixed left-[48px] top-0 bottom-0 border-r border-border bg-[#f3f4f6] z-40 transition-all",
+        collapsed ? "w-[64px]" : "w-[225px]",
       )}
       data-testid="sidebar-left"
     >
@@ -87,7 +87,7 @@ export function RightSidebar() {
             className="h-10 w-10 rounded-xl hover:bg-muted/30 grid place-items-center"
             data-testid="button-sidebar-collapse"
           >
-            {collapsed ? <PanelRightOpen className="h-5 w-5" /> : <PanelRightClose className="h-5 w-5" />}
+            {collapsed ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
           </button>
         </div>
 

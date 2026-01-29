@@ -28,7 +28,15 @@ const mockNotifications: NotificationItem[] = [
   },
 ];
 
-export function NotificationsPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function NotificationsPanel({
+  open,
+  onClose,
+  onMarkAllRead,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onMarkAllRead: () => void;
+}) {
   if (!open) return null;
 
   return (
@@ -41,11 +49,21 @@ export function NotificationsPanel({ open, onClose }: { open: boolean; onClose: 
         aria-label="Close notifications"
       />
 
+      <div className="fixed left-0 top-0 bottom-0 w-[48px] bg-[#f8fafc] border-r border-border" data-testid="keep-edgebar-white" />
+
       <aside
         className="absolute left-[48px] top-0 bottom-0 w-[340px] max-w-[calc(100vw-48px)] border-r border-border bg-background shadow-xl"
         data-testid="panel-notifications"
       >
         <div className="h-14 px-4 flex items-center justify-between border-b border-border">
+          <button
+            type="button"
+            className="h-9 px-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-xs font-semibold"
+            onClick={onMarkAllRead}
+            data-testid="button-mark-all-read"
+          >
+            Mark all as read
+          </button>
           <div className="font-semibold" data-testid="text-notifications-title">Notifications</div>
           <button
             type="button"

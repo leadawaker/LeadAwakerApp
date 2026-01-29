@@ -12,6 +12,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   const [supportOpen, setSupportOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(3);
   const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
@@ -29,6 +30,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         onOpenSupport={() => setSupportOpen(true)}
         onOpenSearch={() => setSearchOpen(true)}
         onOpenNotifications={() => setNotificationsOpen(true)}
+        notificationsCount={unreadCount}
         onOpenEdgeSettings={() => setLocation("/app/settings")}
         onToggleHelp={() => setHelpOpen((v) => !v)}
         onGoHome={() => setLocation("/")}
@@ -40,14 +42,18 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
 
       <SupportChat open={supportOpen} onClose={() => setSupportOpen(false)} />
       <SearchModal open={searchOpen} onOpenChange={setSearchOpen} />
-      <NotificationsPanel open={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
+      <NotificationsPanel
+        open={notificationsOpen}
+        onClose={() => setNotificationsOpen(false)}
+        onMarkAllRead={() => setUnreadCount(0)}
+      />
 
       {/* Help menu anchored near the help icon area */}
       <div className="fixed left-[48px] top-[220px] z-[90]" data-testid="anchor-help">
         <HelpMenu open={helpOpen} onOpenChange={setHelpOpen} />
       </div>
 
-      <main className="min-h-screen" style={{ paddingLeft: 48 + 300 }} data-testid="main-crm">
+      <main className="min-h-screen bg-white" style={{ paddingLeft: 48 + 225 }} data-testid="main-crm">
         {children}
       </main>
     </div>
