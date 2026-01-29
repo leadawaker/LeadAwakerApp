@@ -153,10 +153,10 @@ function SubaccountDashboard({ accountId }: { accountId: number }) {
   const [isBookedReportOpen, setIsBookedReportOpen] = useState(false);
 
   const stagePalette = [
-    { id: "New" as const, label: "🆕 New", fill: "#111827", textColor: "white" as const },
-    { id: "Contacted" as const, label: "📩 Contacted", fill: "#1f2937", textColor: "white" as const },
-    { id: "Responded" as const, label: "💬 Responded", fill: "#1d4ed8", textColor: "white" as const },
-    { id: "Multiple Responses" as const, label: "🔁 Multiple", fill: "#2563eb", textColor: "white" as const },
+    { id: "New" as const, label: "🆕 New", fill: "#0b2a5b", textColor: "white" as const },
+    { id: "Contacted" as const, label: "📩 Contacted", fill: "#103a75", textColor: "white" as const },
+    { id: "Responded" as const, label: "💬 Responded", fill: "#16509d", textColor: "white" as const },
+    { id: "Multiple Responses" as const, label: "🔁 Multiple", fill: "#1E90FF", textColor: "white" as const },
     { id: "Qualified" as const, label: "✅ Qualified", fill: "#3b82f6", textColor: "white" as const },
     { id: "Booked" as const, label: "📅 Booked", fill: "#facc15", textColor: "black" as const },
     { id: "DND" as const, label: "⛔️ DND", fill: "#ffffff", textColor: "black" as const },
@@ -375,7 +375,7 @@ function SubaccountDashboard({ accountId }: { accountId: number }) {
           <div className="h-px bg-border" />
         </div>
         <div className="mt-4 overflow-x-auto pb-2" data-testid="scroll-pipeline">
-          <div className="min-w-[1600px] grid grid-cols-8 gap-3" data-testid="grid-pipeline">
+          <div className="min-w-[1840px] grid grid-cols-8 gap-3" data-testid="grid-pipeline">
             {stagePalette.map((s) => (
               <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
             ))}
@@ -434,7 +434,7 @@ function PipelineCol({
   }, [accountId, campaignId, stage.id]);
 
   return (
-    <div className="w-full rounded-2xl border border-border bg-background overflow-hidden" data-testid={`col-${stage.id}`}>
+    <div className="w-full rounded-2xl border border-border bg-background" data-testid={`col-${stage.id}`}>
       <div
         className="px-3 py-2 border-b border-border flex items-center justify-between"
         style={{ backgroundColor: stage.fill }}
@@ -479,7 +479,7 @@ function PipelineCol({
             </button>
 
             <div
-              className="pointer-events-none absolute left-3 top-10 z-20 hidden w-[240px] rounded-xl border border-border bg-background p-3 shadow-xl group-hover:block"
+              className="pointer-events-none absolute left-3 top-10 z-[9999] hidden w-[260px] rounded-xl border border-border bg-background p-3 shadow-2xl group-hover:block"
               data-testid={`popover-pipe-${stage.id}-${l.id}`}
             >
               <div className="text-xs font-semibold" data-testid={`popover-name-${stage.id}-${l.id}`}>{l.full_name}</div>
