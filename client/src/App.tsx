@@ -15,6 +15,7 @@ import About from "@/pages/about";
 import Services from "@/pages/services";
 import BookDemo from "@/pages/book-demo";
 import Login from "@/pages/login";
+import AppArea from "@/pages/app";
 import Canvas from "@/pages/canvas";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsOfService from "@/pages/terms-of-service";
@@ -83,6 +84,7 @@ function AppRoutes() {
       <Route path="/services" component={Services} />
       <Route path="/book-demo" component={BookDemo} />
       <Route path="/login" component={Login} />
+      <Route path="/app/:rest*" component={AppArea} />
       <Route path="/canvas" component={Canvas} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />
@@ -138,9 +140,9 @@ function Router() {
 
     // 1️⃣ Stored preference
     const storedLang = getStoredLang();
-    if (!storedLang && browserLang && browserLang !== "en") {
-      storeLang(browserLang);
-      setLocation(`/${browserLang}`);
+    if (storedLang && storedLang !== "en") {
+      setLocation(`/${storedLang}`);
+      return;
     }
 
     // 2️⃣ Browser language (first visit)

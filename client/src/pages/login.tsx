@@ -12,6 +12,10 @@ export default function Login() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // MOCK AUTH: store a local token
+    localStorage.setItem("leadawaker_auth", "mock-jwt");
+    // REAL: authenticate via your backend, then store JWT
+    window.location.href = "/app/dashboard";
   };
 
   return (
@@ -75,6 +79,7 @@ export default function Login() {
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10 h-12"
                     required
+                    data-testid="input-email"
                   />
                 </div>
               </div>
@@ -92,6 +97,7 @@ export default function Login() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 h-12"
                     required
+                    data-testid="input-password"
                   />
                 </div>
               </div>
@@ -109,6 +115,7 @@ export default function Login() {
               <Button 
                 type="submit" 
                 className="w-full h-12 bg-primary hover:bg-yellow-400 hover:text-black text-white shadow-lg shadow-primary/20 hover:shadow-yellow-400/35 transition-all"
+                data-testid="button-login"
               >
                 {t("form.submitButton")}
                 <ArrowRight className="ml-2 w-5 h-5" />
