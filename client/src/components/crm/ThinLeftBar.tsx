@@ -27,7 +27,7 @@ function IconButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "group relative h-11 w-11 rounded-xl grid place-items-center transition-colors",
+        "group relative h-10 w-10 rounded-xl grid place-items-center transition-colors",
         active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/30 hover:text-foreground",
       )}
       data-testid={testId}
@@ -47,28 +47,44 @@ function IconButton({
 
 export function ThinLeftBar({
   onOpenSupport,
+  onOpenSearch,
+  onOpenNotifications,
+  onOpenEdgeSettings,
+  onToggleHelp,
+  onGoHome,
 }: {
   onOpenSupport: () => void;
+  onOpenSearch: () => void;
+  onOpenNotifications: () => void;
+  onOpenEdgeSettings: () => void;
+  onToggleHelp: () => void;
+  onGoHome: () => void;
 }) {
   const [dark, setDark] = useState(false);
 
   return (
     <aside
-      className="fixed left-0 top-0 bottom-0 w-[60px] border-r border-border bg-background z-50 flex flex-col items-center py-3"
+      className="fixed left-0 top-0 bottom-0 w-[48px] border-r border-border bg-background z-50 flex flex-col items-center py-3"
       data-testid="bar-thin-left"
     >
-      <div className="h-11 w-11 rounded-xl grid place-items-center border border-border bg-muted/20 overflow-hidden" data-testid="logo-leftbar">
-        <img src="/favicon.svg" alt="LeadAwaker" className="h-7 w-7" />
-      </div>
+      <button
+        type="button"
+        onClick={onGoHome}
+        className="h-9 w-9 rounded-xl grid place-items-center border border-border bg-muted/20 overflow-hidden hover:bg-muted/30"
+        data-testid="button-leftbar-home"
+        aria-label="Go to home"
+      >
+        <img src="/favicon.svg" alt="LeadAwaker" className="h-5 w-5" data-testid="img-leftbar-favicon" />
+      </button>
 
       <div className="mt-4 flex flex-col gap-2" data-testid="group-leftbar-actions">
-        <IconButton label="Search" testId="button-global-search">
+        <IconButton label="Search" testId="button-global-search" onClick={onOpenSearch}>
           <Search className="h-5 w-5" />
         </IconButton>
-        <IconButton label="Notifications" testId="button-notifications">
+        <IconButton label="Notifications" testId="button-notifications" onClick={onOpenNotifications}>
           <Bell className="h-5 w-5" />
         </IconButton>
-        <IconButton label="Settings" testId="button-settings">
+        <IconButton label="Settings" testId="button-settings" onClick={onOpenEdgeSettings}>
           <Settings className="h-5 w-5" />
         </IconButton>
         <IconButton
@@ -82,7 +98,7 @@ export function ThinLeftBar({
         >
           <Moon className="h-5 w-5" />
         </IconButton>
-        <IconButton label="Help" testId="button-help">
+        <IconButton label="Help" testId="button-help" onClick={onToggleHelp}>
           <HelpCircle className="h-5 w-5" />
         </IconButton>
       </div>

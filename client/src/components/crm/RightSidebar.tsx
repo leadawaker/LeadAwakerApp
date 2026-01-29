@@ -50,10 +50,10 @@ export function RightSidebar() {
   return (
     <aside
       className={cn(
-        "fixed right-0 top-0 bottom-0 border-l border-border bg-background z-40 transition-all",
+        "fixed left-[48px] top-0 bottom-0 border-r border-border bg-background z-40 transition-all",
         collapsed ? "w-[64px]" : "w-[300px]",
       )}
-      data-testid="sidebar-right"
+      data-testid="sidebar-left"
     >
       <div className="h-full flex flex-col">
         <div className={cn("h-14 border-b border-border flex items-center gap-2 px-3", collapsed && "justify-center")}>
