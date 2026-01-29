@@ -56,7 +56,7 @@ export function RightSidebar() {
     const isTargetAgency = id === 1;
     const currentPath = location.split('/').slice(2).join('/'); // get everything after /agency or /subaccount
     const newBase = isTargetAgency ? "/agency" : "/subaccount";
-    window.location.href = `${newBase}/${currentPath || 'dashboard'}`;
+    setLocation(`${newBase}/${currentPath || 'dashboard'}`);
   };
 
   return (
