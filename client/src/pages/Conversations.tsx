@@ -71,7 +71,7 @@ export default function ConversationsPage() {
         </div>
 
         <div
-          className="flex-1 min-h-0 px-4 md:px-6 pb-4 md:pb-6 mt-4 grid grid-cols-1 md:grid-cols-[360px_1fr] gap-4"
+          className="flex-1 min-h-0 px-4 md:px-6 pb-4 md:pb-6 mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[400px_1fr_340px] gap-4"
           data-testid="layout-conversations"
         >
           {/* Left: inbox list */}
@@ -224,6 +224,100 @@ export default function ConversationsPage() {
                   Send
                 </button>
               </div>
+            </div>
+          </section>
+
+          {/* Right: contact panel - visible only on XL screens */}
+          <section
+            className="hidden xl:flex rounded-2xl border border-border bg-background overflow-hidden flex-col h-full"
+            data-testid="panel-contact"
+          >
+            <div className="p-4 border-b border-border shrink-0" data-testid="panel-contact-head">
+              <div className="text-sm font-semibold" data-testid="text-contact-panel-title">
+                Contact
+              </div>
+              <div className="text-xs text-muted-foreground" data-testid="text-contact-panel-sub">
+                Quick actions + tags
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-4" data-testid="panel-contact-body">
+              {!selected ? (
+                <div className="text-sm text-muted-foreground" data-testid="empty-contact-panel">
+                  Select a conversation.
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-start gap-3" data-testid="block-contact-hero">
+                    <div
+                      className="h-10 w-10 rounded-full bg-primary/10 text-primary font-extrabold grid place-items-center border border-primary/20"
+                      data-testid="avatar-contact"
+                    >
+                      {initialsFor(selected.lead)}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-semibold truncate" data-testid="text-contact-name">
+                        {selected.lead.full_name}
+                      </div>
+                      <div className="text-xs text-muted-foreground" data-testid="text-contact-sub">
+                        {selected.lead.source} • {selected.lead.priority}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2" data-testid="grid-contact-meta">
+                    <div className="rounded-xl border border-border bg-muted/10 p-3" data-testid="card-contact-phone">
+                      <div className="text-[11px] text-muted-foreground" data-testid="label-contact-phone">
+                        Phone
+                      </div>
+                      <div className="mt-1 text-sm font-semibold" data-testid="text-contact-phone">
+                        {selected.lead.phone}
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-border bg-muted/10 p-3" data-testid="card-contact-email">
+                      <div className="text-[11px] text-muted-foreground" data-testid="label-contact-email">
+                        Email
+                      </div>
+                      <div className="mt-1 text-sm font-semibold break-words" data-testid="text-contact-email">
+                        {selected.lead.email}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div data-testid="block-contact-tags">
+                    <div className="text-xs font-semibold" data-testid="text-tags-title">
+                      Tags
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2" data-testid="wrap-tags">
+                      {(selected.lead.tags ?? []).length ? (
+                        (selected.lead.tags ?? []).map((t, idx) => (
+                          <span
+                            key={`${selected.lead.id}-${idx}`}
+                            className="px-2 py-1 rounded-full text-xs border border-border bg-muted/20"
+                            data-testid={`tag-${selected.lead.id}-${idx}`}
+                          >
+                            {t}
+                          </span>
+                        ))
+                      ) : (
+                        <div className="text-sm text-muted-foreground" data-testid="empty-tags">
+                          No tags.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="pt-2" data-testid="block-contact-actions">
+                    <Link
+                      href={`/app/contacts/${selected.lead.id}`}
+                      className="block text-center h-11 leading-[44px] rounded-xl border border-border bg-background hover:bg-muted/20 font-semibold"
+                      data-testid="button-view-full"
+                    >
+                      View full contact
+                    </Link>
+                  </div>
+                </>
+              )}
             </div>
           </section>
         </div>
