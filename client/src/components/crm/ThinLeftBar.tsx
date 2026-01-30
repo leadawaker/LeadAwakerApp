@@ -36,10 +36,10 @@ function IconButton({
     >
       {children}
       <div
-        className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="pointer-events-none absolute top-full mt-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-[100]"
         data-testid={`${testId}-tooltip`}
       >
-        <div className="rounded-md border border-border bg-background px-2 py-1 text-xs shadow-sm whitespace-nowrap">
+        <div className="rounded-md border border-border bg-background px-2 py-1 text-xs shadow-md whitespace-nowrap">
           {label}
         </div>
       </div>
@@ -72,10 +72,10 @@ export function ThinLeftBar({
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 bottom-0 w-[48px] border-r z-50 flex flex-col items-center py-3 duration-0",
+        "fixed left-0 top-0 right-0 h-[48px] border-b z-50 flex items-center px-4 duration-0",
         isAgencyView
-          ? "bg-yellow-500/20 border-yellow-500/30 shadow-[4px_0_24px_-4px_rgba(234,179,8,0.1)]"
-          : "bg-blue-600/20 border-blue-500/30 shadow-[4px_0_24px_-4px_rgba(37,99,235,0.1)]"
+          ? "bg-yellow-500/20 border-yellow-500/30 shadow-[0_4px_24px_-4px_rgba(234,179,8,0.1)]"
+          : "bg-blue-600/20 border-blue-500/30 shadow-[0_4px_24px_-4px_rgba(37,99,235,0.1)]"
       )}
       data-testid="bar-thin-left"
     >
@@ -83,7 +83,7 @@ export function ThinLeftBar({
         type="button"
         onClick={onGoHome}
         className={cn(
-          "h-8 w-8 rounded-lg flex items-center justify-center duration-0",
+          "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 duration-0",
           isAgencyView ? "bg-yellow-500" : "bg-blue-600"
         )}
         data-testid="button-leftbar-home"
@@ -92,7 +92,7 @@ export function ThinLeftBar({
         <span className="text-[10px] font-bold text-white">LA</span>
       </button>
 
-      <div className="mt-4 flex flex-col gap-2" data-testid="group-leftbar-actions">
+      <div className="ml-4 flex items-center gap-2" data-testid="group-leftbar-actions">
         <IconButton label="Search" testId="button-global-search" onClick={onOpenSearch} active={false}>
           <Search className="h-5 w-5" />
         </IconButton>
@@ -123,7 +123,7 @@ export function ThinLeftBar({
         </IconButton>
       </div>
 
-      <div className="mt-auto pb-2" data-testid="group-leftbar-support">
+      <div className="ml-auto" data-testid="group-leftbar-support">
         <IconButton
           label="Night mode"
           onClick={() => {
