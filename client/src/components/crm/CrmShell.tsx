@@ -100,8 +100,10 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <main className="min-h-screen bg-background" style={{ paddingLeft: 48 + 225 }} data-testid="main-crm">
-        {children}
+      <main className="h-screen flex flex-col bg-background md:pl-[273px]" data-testid="main-crm">
+        <div className="flex-1 min-h-0">
+          {children}
+        </div>
       </main>
     </div>
   );
