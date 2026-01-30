@@ -1,22 +1,31 @@
 import { motion } from "framer-motion";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "wouter";
 
 export default function Login() {
   const { t } = useTranslation("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [, setLocation] = useLocation();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+
+    // Simulate a small delay for a smoother feel
+    await new Promise(resolve => setTimeout(resolve, 800));
+
     // MOCK AUTH: store a local token
     localStorage.setItem("leadawaker_auth", "mock-jwt");
-    // REAL: authenticate via your backend, then store JWT
     localStorage.setItem("leadawaker_current_account_id", "1");
-    window.location.href = "/agency/dashboard";
+    
+    // Use wouter navigation instead of window.location.href for a SPA transition
+    setLocation("/agency/dashboard");
   };
 
   return (
@@ -80,6 +89,7 @@ export default function Login() {
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10 h-12"
                     required
+                    disabled={isLoading}
                     data-testid="input-email"
                   />
                 </div>
@@ -98,6 +108,7 @@ export default function Login() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 h-12"
                     required
+                    disabled={isLoading}
                     data-testid="input-password"
                   />
                 </div>
@@ -105,7 +116,7 @@ export default function Login() {
 
               <div className="flex items-center justify-between text-sm">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="w-4 h-4 rounded border-gray-300" />
+                  <input type="checkbox" className="w-4 h-4 rounded border-gray-300" disabled={isLoading} />
                   <span className="text-gray-600">{t("form.rememberMe")}</span>
                 </label>
                 <a href="#" className="text-primary hover:underline">
@@ -116,10 +127,20 @@ export default function Login() {
               <Button 
                 type="submit" 
                 className="w-full h-12 bg-primary hover:bg-yellow-400 hover:text-black text-white shadow-lg shadow-primary/20 hover:shadow-yellow-400/35 transition-all"
+                disabled={isLoading}
                 data-testid="button-login"
               >
-                {t("form.submitButton")}
-                <ArrowRight className="ml-2 w-5 h-5" />
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    {t("form.submitButton")}
+                    <ArrowRight className="ml-2 w-5 h-5" />
+                  </>
+                )}
               </Button>
             </form>
 
