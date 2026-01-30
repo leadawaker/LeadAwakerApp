@@ -72,8 +72,9 @@ export function RightSidebar({ collapsed, onCollapse }: { collapsed: boolean; on
             type="button"
             onClick={() => setOpenSwitcher((v) => !v)}
             className={cn(
-              "min-w-0 flex items-center justify-between gap-2 rounded-xl border border-border bg-muted/20 transition-colors",
+              "min-w-0 flex items-center justify-between gap-2 rounded-xl border border-border bg-muted/20 transition-all",
               collapsed ? "h-[56px] w-full justify-center px-2" : "h-[56px] flex-1 px-3 hover:bg-muted/30",
+              isAgencyView ? "text-yellow-600 font-bold" : "text-blue-600 font-bold"
             )}
             data-testid="wrap-workspace"
             aria-label="Switch account"
