@@ -32,29 +32,19 @@ export function NotificationsPanel({
   open,
   onClose,
   onMarkAllRead,
+  inline,
 }: {
   open: boolean;
   onClose: () => void;
   onMarkAllRead: () => void;
+  inline?: boolean;
 }) {
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-[70] pointer-events-none" data-testid="overlay-notifications">
-      <button
-        type="button"
-        className="absolute inset-0 bg-black/35 pointer-events-auto"
-        style={{ left: '48px' }}
-        onClick={onClose}
-        data-testid="button-notifications-backdrop"
-        aria-label="Close notifications"
-      />
-
-      <aside
-        className="absolute left-[48px] top-0 bottom-0 w-[340px] max-w-[calc(100vw-48px)] border-r border-border bg-background shadow-xl pointer-events-auto"
-        data-testid="panel-notifications"
-      >
-        <div className="h-14 px-4 flex items-center justify-between border-b border-border">
+  const content = (
+    <div className="flex flex-col h-full bg-background">
+      {!inline && (
+        <div className="h-14 px-4 flex items-center justify-between border-b border-border shrink-0">
           <button
             type="button"
             className="h-9 px-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-xs font-semibold"
@@ -73,26 +63,60 @@ export function NotificationsPanel({
             <X className="h-4 w-4" />
           </button>
         </div>
-
-        <div className="p-3 space-y-2 overflow-auto h-[calc(100%-56px)]" data-testid="list-notifications">
-          {mockNotifications.map((n) => (
-            <div
-              key={n.id}
-              className="rounded-2xl border border-border bg-muted/10 p-3"
-              data-testid={`card-notification-${n.id}`}
-            >
-              <div className="text-sm font-semibold" data-testid={`text-notification-title-${n.id}`}>{n.title}</div>
-              <div className="mt-1 text-xs text-muted-foreground" data-testid={`text-notification-desc-${n.id}`}>{n.description}</div>
-              <div className="mt-2 text-[11px] text-muted-foreground" data-testid={`text-notification-at-${n.id}`}>
-                {new Date(n.at).toLocaleString()}
-              </div>
-            </div>
-          ))}
-
-          <div className="pt-2 text-xs text-muted-foreground" data-testid="text-notifications-real">
-            REAL: notifications derived from Interactions + Automation_Logs
-          </div>
+      )}
+      {inline && (
+        <div className="p-4 border-b border-border shrink-0">
+          <button
+            type="button"
+            className="h-9 w-full rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-xs font-semibold"
+            onClick={onMarkAllRead}
+            data-testid="button-mark-all-read-inline"
+          >
+            Mark all as read
+          </button>
         </div>
+      )}
+
+      <div className="p-3 space-y-2 overflow-auto flex-grow" data-testid="list-notifications">
+        {mockNotifications.map((n) => (
+          <div
+            key={n.id}
+            className="rounded-2xl border border-border bg-muted/10 p-3"
+            data-testid={`card-notification-${n.id}`}
+          >
+            <div className="text-sm font-semibold" data-testid={`text-notification-title-${n.id}`}>{n.title}</div>
+            <div className="mt-1 text-xs text-muted-foreground" data-testid={`text-notification-desc-${n.id}`}>{n.description}</div>
+            <div className="mt-2 text-[11px] text-muted-foreground" data-testid={`text-notification-at-${n.id}`}>
+              {new Date(n.at).toLocaleString()}
+            </div>
+          </div>
+        ))}
+
+        <div className="pt-2 text-xs text-muted-foreground" data-testid="text-notifications-real">
+          REAL: notifications derived from Interactions + Automation_Logs
+        </div>
+      </div>
+    </div>
+  );
+
+  if (inline) return content;
+
+  return (
+    <div className="fixed inset-0 z-[70] pointer-events-none" data-testid="overlay-notifications">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/35 pointer-events-auto"
+        style={{ left: '48px' }}
+        onClick={onClose}
+        data-testid="button-notifications-backdrop"
+        aria-label="Close notifications"
+      />
+
+      <aside
+        className="absolute left-[48px] top-0 bottom-0 w-[400px] border-r border-border bg-background shadow-xl pointer-events-auto"
+        data-testid="panel-notifications"
+      >
+        {content}
       </aside>
     </div>
   );

@@ -4,11 +4,12 @@ import { leads, interactions } from "@/data/mocks";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { Link } from "wouter";
 
-export function SearchModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+export function SearchModal({ open, onOpenChange, inline }: { open: boolean; onOpenChange: (v: boolean) => void; inline?: boolean }) {
   const { currentAccountId } = useWorkspace();
   const [q, setQ] = useState("");
 
   const results = useMemo(() => {
+    // ... same logic ...
     const query = q.trim().toLowerCase();
     if (!query) return [] as { leadId: number; title: string; subtitle: string }[];
 
@@ -42,6 +43,63 @@ export function SearchModal({ open, onOpenChange }: { open: boolean; onOpenChang
     return Array.from(uniq.values()).slice(0, 10);
   }, [q, currentAccountId]);
 
+  const content = (
+    <div className="p-4 h-full flex flex-col">
+      <div className={cn("relative", !inline && "mt-0")}>
+        {!inline && (
+          <div className="h-14 px-4 border-b border-border flex items-center justify-between mb-4 -mx-4">
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <span className="font-semibold">Search</span>
+            </div>
+            <button
+              onClick={() => onOpenChange(false)}
+              className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          autoFocus
+          placeholder="Search leads..."
+          className="h-11 w-full rounded-xl border border-border bg-muted/20 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+        />
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-border bg-background overflow-hidden flex-grow">
+        {results.length === 0 ? (
+          <div className="p-4 text-sm text-muted-foreground">
+            {q.trim() ? "No results." : "Start typing to search…"}
+          </div>
+        ) : (
+          <div className="divide-y divide-border overflow-auto h-full">
+            {results.map((r) => (
+              <a
+                key={r.leadId}
+                href={`/agency/contacts/${r.leadId}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.history.pushState({}, "", `/agency/contacts/${r.leadId}`);
+                  window.dispatchEvent(new PopStateEvent("popstate"));
+                  onOpenChange(false);
+                }}
+                className="block p-4 hover:bg-muted/20"
+              >
+                <div className="font-semibold">{r.title}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{r.subtitle}</div>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  if (inline) return content;
+
   return (
     <div className="fixed inset-0 z-[70] pointer-events-none" data-testid="overlay-search">
       <button
@@ -51,55 +109,7 @@ export function SearchModal({ open, onOpenChange }: { open: boolean; onOpenChang
         onClick={() => onOpenChange(false)}
       />
       <aside className="absolute left-[48px] top-0 bottom-0 w-[400px] border-r border-border bg-background shadow-xl pointer-events-auto">
-        <div className="h-14 px-4 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <span className="font-semibold">Search</span>
-          </div>
-          <button
-            onClick={() => onOpenChange(false)}
-            className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="p-4">
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            autoFocus
-            placeholder="Search leads..."
-            className="h-11 w-full rounded-xl border border-border bg-muted/20 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-          />
-
-          <div className="mt-4 rounded-2xl border border-border bg-background overflow-hidden">
-            {results.length === 0 ? (
-              <div className="p-4 text-sm text-muted-foreground">
-                {q.trim() ? "No results." : "Start typing to search…"}
-              </div>
-            ) : (
-              <div className="divide-y divide-border">
-                {results.map((r) => (
-                  <a
-                    key={r.leadId}
-                    href={`/agency/contacts/${r.leadId}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      window.history.pushState({}, "", `/agency/contacts/${r.leadId}`);
-                      window.dispatchEvent(new PopStateEvent("popstate"));
-                      onOpenChange(false);
-                    }}
-                    className="block p-4 hover:bg-muted/20"
-                  >
-                    <div className="font-semibold">{r.title}</div>
-                    <div className="mt-1 text-xs text-muted-foreground">{r.subtitle}</div>
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        {content}
       </aside>
     </div>
   );
