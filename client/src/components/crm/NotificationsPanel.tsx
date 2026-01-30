@@ -40,19 +40,18 @@ export function NotificationsPanel({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[70]" data-testid="overlay-notifications">
+    <div className="fixed inset-0 z-[70] pointer-events-none" data-testid="overlay-notifications">
       <button
         type="button"
-        className="absolute inset-0 bg-black/35"
+        className="absolute inset-0 bg-black/35 pointer-events-auto"
+        style={{ left: '48px' }}
         onClick={onClose}
         data-testid="button-notifications-backdrop"
         aria-label="Close notifications"
       />
 
-      <div className="fixed left-0 top-0 bottom-0 w-[48px] pointer-events-none" data-testid="keep-edgebar-white" />
-
       <aside
-        className="absolute left-[48px] top-0 bottom-0 w-[340px] max-w-[calc(100vw-48px)] border-r border-border bg-background shadow-xl"
+        className="absolute left-[48px] top-0 bottom-0 w-[340px] max-w-[calc(100vw-48px)] border-r border-border bg-background shadow-xl pointer-events-auto"
         data-testid="panel-notifications"
       >
         <div className="h-14 px-4 flex items-center justify-between border-b border-border">
