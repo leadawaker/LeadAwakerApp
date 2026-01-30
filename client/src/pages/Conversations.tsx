@@ -42,24 +42,26 @@ export default function ConversationsPage() {
 
   return (
     <CrmShell>
-      <div className="px-6 py-6" data-testid="page-conversations">
-        <div className="flex items-center gap-4 mb-6">
-          <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">
-            Conversations
-          </h1>
-          <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
+      <div className="h-[calc(100vh-64px)] flex flex-col overflow-hidden" data-testid="page-conversations">
+        <div className="px-6 pt-6 pb-2 shrink-0">
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">
+              Conversations
+            </h1>
+            <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
+          </div>
         </div>
 
         <div
-          className="mt-4 grid grid-cols-1 xl:grid-cols-[360px_1fr_340px] gap-4"
+          className="flex-1 min-h-0 px-6 pb-6 mt-4 grid grid-cols-1 xl:grid-cols-[360px_1fr_340px] gap-4"
           data-testid="layout-conversations"
         >
           {/* Left: inbox list */}
           <section
-            className="rounded-2xl border border-border bg-background overflow-hidden flex flex-col min-h-[calc(100vh-184px)]"
+            className="rounded-2xl border border-border bg-background overflow-hidden flex flex-col h-full"
             data-testid="panel-inbox"
           >
-            <div className="p-4 border-b border-border" data-testid="panel-inbox-head">
+            <div className="p-4 border-b border-border shrink-0" data-testid="panel-inbox-head">
               <div className="text-sm font-semibold" data-testid="text-inbox-title">
                 Inbox
               </div>
@@ -72,7 +74,7 @@ export default function ConversationsPage() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto" data-testid="list-inbox">
+            <div className="flex-1 overflow-y-auto" data-testid="list-inbox">
               <div className="divide-y divide-border">
                 {threads.map(({ lead, last, unread }) => {
                   const active = selected?.lead.id === lead.id;
@@ -125,17 +127,17 @@ export default function ConversationsPage() {
               </div>
             </div>
 
-            <div className="px-4 py-3 border-t border-border text-xs text-muted-foreground" data-testid="text-inbox-foot">
+            <div className="px-4 py-3 border-t border-border text-xs text-muted-foreground shrink-0" data-testid="text-inbox-foot">
               {threads.length} threads • MOCK
             </div>
           </section>
 
           {/* Center: chat */}
           <section
-            className="rounded-2xl border border-border bg-background overflow-hidden flex flex-col min-h-[calc(100vh-184px)]"
+            className="rounded-2xl border border-border bg-background overflow-hidden flex flex-col h-full"
             data-testid="panel-chat"
           >
-            <div className="px-4 py-3 border-b border-border" data-testid="panel-chat-head">
+            <div className="px-4 py-3 border-b border-border shrink-0" data-testid="panel-chat-head">
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <div className="text-sm font-semibold truncate" data-testid="text-chat-contact">
@@ -162,7 +164,7 @@ export default function ConversationsPage() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto p-4 space-y-3" data-testid="chat-scroll">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3" data-testid="chat-scroll">
               {!selected ? (
                 <div className="text-sm text-muted-foreground" data-testid="empty-chat">
                   Pick a contact on the left.
@@ -176,7 +178,7 @@ export default function ConversationsPage() {
               )}
             </div>
 
-            <div className="p-4 border-t border-border" data-testid="chat-compose">
+            <div className="p-4 border-t border-border shrink-0" data-testid="chat-compose">
               <div className="flex items-end gap-2" data-testid="form-compose">
                 <div className="flex-1">
                   <label className="text-xs text-muted-foreground" data-testid="label-compose">
@@ -203,10 +205,10 @@ export default function ConversationsPage() {
 
           {/* Right: contact panel */}
           <section
-            className="rounded-2xl border border-border bg-background overflow-hidden flex flex-col min-h-[calc(100vh-184px)]"
+            className="rounded-2xl border border-border bg-background overflow-hidden flex flex-col h-full"
             data-testid="panel-contact"
           >
-            <div className="p-4 border-b border-border" data-testid="panel-contact-head">
+            <div className="p-4 border-b border-border shrink-0" data-testid="panel-contact-head">
               <div className="text-sm font-semibold" data-testid="text-contact-panel-title">
                 Contact
               </div>
@@ -215,7 +217,7 @@ export default function ConversationsPage() {
               </div>
             </div>
 
-            <div className="p-4 space-y-4" data-testid="panel-contact-body">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4" data-testid="panel-contact-body">
               {!selected ? (
                 <div className="text-sm text-muted-foreground" data-testid="empty-contact-panel">
                   Select a conversation.
