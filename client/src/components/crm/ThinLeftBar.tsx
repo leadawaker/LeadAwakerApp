@@ -72,31 +72,34 @@ export function ThinLeftBar({
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 right-0 h-[32px] border-b z-[100] flex items-center px-3 duration-0",
+        "fixed left-0 top-0 right-0 h-[32px] border-b z-[100] flex items-center px-3 duration-0 transition-all",
         isAgencyView
-          ? "bg-yellow-400 border-yellow-500 shadow-[0_1px_8px_-1px_rgba(234,179,8,0.15)]"
-          : "bg-blue-400 border-blue-500 shadow-[0_1px_8px_-1px_rgba(37,99,235,0.15)]"
+          ? "bg-yellow-500 border-yellow-600 shadow-[0_1px_12px_rgba(234,179,8,0.4)]"
+          : "bg-blue-600 border-blue-700 shadow-[0_1px_12px_rgba(37,99,235,0.4)]"
       )}
       data-testid="bar-thin-left"
     >
       <div className="flex items-center gap-2">
         <button
           onClick={onGoHome}
-          className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-black/5 transition-colors group"
+          className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-black/10 transition-colors group"
           data-testid="button-home-logo"
         >
           <img src="/6.Favicon.svg" className="h-5 w-5 object-contain" alt="Logo" />
-          <span className="text-xs font-bold text-black tracking-tight">Lead Awaker</span>
+          <span className={cn(
+            "text-xs font-bold tracking-tight",
+            isAgencyView ? "text-black" : "text-white"
+          )}>Lead Awaker</span>
         </button>
       </div>
 
       <div className="ml-auto flex items-center gap-1" data-testid="group-leftbar-actions">
         <IconButton label="Search" testId="button-global-search" onClick={onOpenSearch} active={false}>
-          <Search className="h-4 w-4 text-black" />
+          <Search className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
         </IconButton>
         <div className="relative" data-testid="wrap-notifications">
           <IconButton label="Notifications" testId="button-notifications" onClick={onOpenNotifications} active={false}>
-            <Bell className="h-4 w-4 text-black" />
+            <Bell className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
           </IconButton>
           {count > 0 ? (
             <div
@@ -111,13 +114,13 @@ export function ThinLeftBar({
           ) : null}
         </div>
         <IconButton label="Settings" testId="button-settings" onClick={onOpenEdgeSettings} active={false}>
-          <Settings className="h-4 w-4 text-black" />
+          <Settings className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
         </IconButton>
         <IconButton label="Help" testId="button-help" onClick={onToggleHelp} active={false}>
-          <HelpCircle className="h-4 w-4 text-black" />
+          <HelpCircle className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
         </IconButton>
         <IconButton label="Customer Support" onClick={onOpenSupport} testId="button-support" active={false}>
-          <Headphones className="h-4 w-4 text-black" />
+          <Headphones className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
         </IconButton>
         <IconButton
           label="Night mode"
@@ -128,7 +131,7 @@ export function ThinLeftBar({
           testId="button-nightmode"
           active={dark}
         >
-          <Moon className="h-4 w-4 text-black" />
+          <Moon className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
         </IconButton>
       </div>
     </aside>
