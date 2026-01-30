@@ -230,206 +230,262 @@ function SubaccountDashboard({
   isBookedReportOpen: boolean;
   setIsBookedReportOpen: (v: boolean) => void;
 }) {
+  const [dashboardTab, setDashboardTab] = useState<"pipeline" | "funnel">("pipeline");
 
   return (
     <div className="mt-6 space-y-6" data-testid="subaccount-dashboard">
       <section className="rounded-2xl border border-border bg-background overflow-hidden" data-testid="section-campaign-selector">
-        <div className="px-4 py-3 grid grid-cols-1 lg:grid-cols-[640px_1fr] gap-4" data-testid="campaign-body">
-          <div className="rounded-2xl border border-border bg-background p-4" data-testid="card-funnel">
-            <div className="flex items-start justify-between gap-3" data-testid="funnel-head">
-              <div className="min-w-0" data-testid="wrap-funnel-title">
-                <div className="text-xs font-semibold text-muted-foreground" data-testid="text-funnel-total">
-                  All contacts: <span className="text-foreground font-extrabold">{stats.totalLeads}</span>
-                </div>
-              </div>
+        <div className="px-4 py-3 flex items-center justify-between gap-3" data-testid="row-campaign-tabs">
+          <div className="min-w-0" data-testid="wrap-campaign-tabs-left">
+            <div className="text-xs font-semibold text-muted-foreground" data-testid="text-campaign-tabs-label">Campaigns</div>
+          </div>
 
+          <div className="flex items-center gap-2" data-testid="row-campaign-tabs-right">
+            <div
+              className="inline-flex rounded-xl border border-border bg-muted/20 p-1"
+              data-testid="segmented-dashboard-tabs"
+              role="tablist"
+              aria-label="Dashboard view"
+            >
               <button
                 type="button"
-                onClick={() => setIsBookedReportOpen(true)}
-                className="h-8 w-8 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors grid place-items-center text-muted-foreground"
-                data-testid="button-booked-report"
-                aria-label="Booked report"
+                onClick={() => setDashboardTab("pipeline")}
+                className={cn(
+                  "h-9 px-3 rounded-lg text-sm font-semibold transition-colors",
+                  dashboardTab === "pipeline"
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                data-testid="tab-conversion-pipeline"
+                role="tab"
+                aria-selected={dashboardTab === "pipeline"}
               >
-                <span className="text-sm font-black">!</span>
+                Conversion Pipeline
+              </button>
+              <button
+                type="button"
+                onClick={() => setDashboardTab("funnel")}
+                className={cn(
+                  "h-9 px-3 rounded-lg text-sm font-semibold transition-colors",
+                  dashboardTab === "funnel"
+                    ? "bg-background shadow-sm text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                data-testid="tab-sales-funnel"
+                role="tab"
+                aria-selected={dashboardTab === "funnel"}
+              >
+                Sales Funnel
               </button>
             </div>
-            <div className="mt-4 h-[240px] w-full overflow-hidden" data-testid="chart-funnel">
-              <div className="flex h-full w-full items-end justify-center px-4 relative">
-                {/* Attract labels on the left like the reference */}
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none hidden xl:block">
-                  <div className="flex flex-col gap-2">
-                    {[1,2,3,4,5].map(i => <Users key={i} className="w-4 h-4 text-muted-foreground" />)}
-                  </div>
-                </div>
-
-                {funnel.map((stage, idx) => {
-                  const maxValue = Math.max(...funnel.map(s => s.value), 1);
-                  const heightPercent = (stage.value / maxValue) * 100;
-                  
-                  // Curved funnel logic:
-                  // The segments should feel like a radial sweep
-                  const taperFactor = 1 - (idx / (funnel.length - 1)) * 0.8;
-                  const widthPercent = 100 * taperFactor;
-                  
-                  return (
-                    <div 
-                      key={stage.name} 
-                      className="flex flex-col items-center group relative h-full justify-end transition-all duration-300"
-                      style={{ 
-                        width: `${100 / funnel.length}%`,
-                        marginLeft: idx === 0 ? 0 : `-20px`,
-                        zIndex: funnel.length - idx 
-                      }}
-                    >
-                      <div 
-                        className="transition-all duration-500 relative flex items-start justify-center pt-6 cursor-pointer hover:brightness-110 hover:scale-[1.02]"
-                        style={{ 
-                          height: `${Math.max(heightPercent, 20)}%`,
-                          backgroundColor: stage.fill,
-                          // Reference curved shape: Rounded top left/right but with perspective sweep
-                          // We use a complex clipPath or multiple border-radii to mimic the radial segment
-                          borderRadius: "100% 100% 0 0 / 20% 20% 0 0",
-                          opacity: 0.95,
-                          width: `${widthPercent}%`,
-                          minWidth: "45px",
-                          boxShadow: "0 10px 30px rgba(0,0,0,0.1), inset 0 2px 10px rgba(255,255,255,0.2)",
-                          transform: "perspective(1000px) rotateX(10deg)"
-                        }}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-black/40 pointer-events-none" />
-                        
-                        <div className="absolute top-2 left-0 right-0 flex justify-center">
-                          <span className="z-10 text-[13px] font-black text-white drop-shadow-xl bg-black/30 px-2 py-0.5 rounded-lg border border-white/10 group-hover:scale-110 transition-transform">
-                            {stage.value}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-6 flex flex-col items-center gap-1 w-full relative z-20">
-                        <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest text-center px-1 leading-tight group-hover:text-foreground transition-colors">
-                          {stage.name.replace(/[^a-zA-Z]/g, '')}
-                        </div>
-                        <div className="w-1.5 h-1.5 rounded-full mt-1 transition-all duration-300 group-hover:scale-150" style={{ backgroundColor: stage.fill }} />
-                      </div>
-                      
-                      {/* Tooltip */}
-                      <div className="absolute bottom-full mb-8 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 bg-popover/90 backdrop-blur-md text-popover-foreground text-[11px] px-4 py-2 rounded-2xl border border-border shadow-2xl z-[100] pointer-events-none whitespace-nowrap font-extrabold">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: stage.fill }} />
-                          {stage.name}: {stage.value}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
           </div>
+        </div>
 
-          <div className="grid grid-cols-2 gap-3" data-testid="grid-stats">
-            <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" tone="blue" />
-            <Stat label="Active Campaigns" value={String(stats.activeCampaigns)} testId="stat-active" tone="indigo" />
-            <Stat label="Bookings/Mo" value={String(stats.bookingsMo)} testId="stat-bookings" tone="yellow" />
-            <Stat label="AI Cost" value={`$${stats.aiCost.toFixed(2)}`} testId="stat-cost" tone="slate" />
-          </div>
-
-          {isBookedReportOpen ? (
-            <div className="fixed inset-0 z-50" data-testid="modal-booked-report">
-              <button
-                type="button"
-                className="absolute inset-0 bg-black/50"
-                onClick={() => setIsBookedReportOpen(false)}
-                data-testid="button-close-booked-report-backdrop"
-                aria-label="Close booked report"
-              />
-              <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-background shadow-2xl">
-                <div className="p-5 border-b border-border flex items-start justify-between gap-4" data-testid="row-booked-report-head">
-                  <div className="min-w-0">
-                    <div className="text-sm font-semibold" data-testid="text-booked-report-title">Booked Contacts Report</div>
-                    <div className="mt-1 text-xs text-muted-foreground" data-testid="text-booked-report-sub">
-                      AI insight summary (MOCK) based on recent booked conversations.
+        {dashboardTab === "funnel" ? (
+          <div className="px-4 pb-4" data-testid="panel-sales-funnel">
+            <div className="grid grid-cols-1 lg:grid-cols-[640px_1fr] gap-4" data-testid="campaign-body">
+              <div className="rounded-2xl border border-border bg-background p-4" data-testid="card-funnel">
+                <div className="flex items-start justify-between gap-3" data-testid="funnel-head">
+                  <div className="min-w-0" data-testid="wrap-funnel-title">
+                    <div className="text-xs font-semibold text-muted-foreground" data-testid="text-funnel-total">
+                      All contacts: <span className="text-foreground font-extrabold">{stats.totalLeads}</span>
                     </div>
                   </div>
+
                   <button
                     type="button"
-                    className="h-9 w-9 rounded-xl border border-border bg-muted/20 hover:bg-muted/30"
-                    onClick={() => setIsBookedReportOpen(false)}
-                    data-testid="button-close-booked-report"
-                    aria-label="Close booked report"
+                    onClick={() => setIsBookedReportOpen(true)}
+                    className="h-8 w-8 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors grid place-items-center text-muted-foreground"
+                    data-testid="button-booked-report"
+                    aria-label="Booked report"
                   >
-                    ✕
+                    <span className="text-sm font-black">!</span>
                   </button>
                 </div>
+                <div className="mt-4 h-[240px] w-full overflow-hidden" data-testid="chart-funnel">
+                  <div className="flex h-full w-full items-end justify-center px-4 relative">
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none hidden xl:block">
+                      <div className="flex flex-col gap-2">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <Users key={i} className="w-4 h-4 text-muted-foreground" />
+                        ))}
+                      </div>
+                    </div>
 
-                <div className="p-5 space-y-4" data-testid="body-booked-report">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" data-testid="grid-booked-report-kpis">
-                    <div className="rounded-2xl border border-border bg-muted/10 p-4" data-testid="card-booked-kpi-0">
-                      <div className="text-xs text-muted-foreground" data-testid="text-booked-kpi-label-0">Booked (selected)</div>
-                      <div className="mt-2 text-2xl font-extrabold tracking-tight" data-testid="text-booked-kpi-value-0">{stats.bookingsMo}</div>
-                    </div>
-                    <div className="rounded-2xl border border-border bg-muted/10 p-4" data-testid="card-booked-kpi-1">
-                      <div className="text-xs text-muted-foreground" data-testid="text-booked-kpi-label-1">Avg time-to-book</div>
-                      <div className="mt-2 text-2xl font-extrabold tracking-tight" data-testid="text-booked-kpi-value-1">2.6d</div>
-                    </div>
-                    <div className="rounded-2xl border border-border bg-muted/10 p-4" data-testid="card-booked-kpi-2">
-                      <div className="text-xs text-muted-foreground" data-testid="text-booked-kpi-label-2">Top driver</div>
-                      <div className="mt-2 text-sm font-semibold" data-testid="text-booked-kpi-value-2">Fast follow-up</div>
-                    </div>
-                  </div>
+                    {funnel.map((stage, idx) => {
+                      const maxValue = Math.max(...funnel.map((s) => s.value), 1);
+                      const heightPercent = (stage.value / maxValue) * 100;
 
-                  <div className="rounded-2xl border border-border bg-gradient-to-br from-yellow-400/10 via-transparent to-sky-500/10 p-4" data-testid="card-booked-insight">
-                    <div className="text-xs font-semibold text-yellow-500" data-testid="text-booked-insight-tag">AI Insight</div>
-                    <div className="mt-2 text-sm" data-testid="text-booked-insight-body">
-                      Booked contacts tend to convert when the first reply happens within <span className="font-semibold">10 minutes</span> and the second message includes a <span className="font-semibold">specific time suggestion</span> (\"Can you do Tue at 2:30?\").
-                      <br />
-                      <span className="text-muted-foreground">Recommendation:</span> auto-suggest 2 time slots after positive intent and add a "quick reschedule" button.
-                    </div>
-                  </div>
+                      const taperFactor = 1 - (idx / (funnel.length - 1)) * 0.8;
+                      const widthPercent = 100 * taperFactor;
 
-                  <div className="rounded-2xl border border-border bg-background p-4" data-testid="card-booked-patterns">
-                    <div className="text-sm font-semibold" data-testid="text-booked-patterns-title">Patterns observed</div>
-                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="grid-booked-patterns">
-                      {[
-                        { k: "Best channel", v: "SMS", hint: "Most bookings came from SMS threads with 2–4 messages." },
-                        { k: "Language that wins", v: "Short + direct", hint: "Clear next step and one question at a time." },
-                        { k: "Drop-off risk", v: "After 30 min", hint: "Interest decays quickly without a follow-up nudge." },
-                        { k: "Offer angle", v: "Speed", hint: "\"We can get you in this week\" outperformed discounts." },
-                      ].map((p, idx) => (
-                        <div key={p.k} className="rounded-2xl border border-border bg-muted/10 p-4" data-testid={`card-booked-pattern-${idx}`}>
-                          <div className="text-xs text-muted-foreground" data-testid={`text-booked-pattern-k-${idx}`}>{p.k}</div>
-                          <div className="mt-1 text-sm font-semibold" data-testid={`text-booked-pattern-v-${idx}`}>{p.v}</div>
-                          <div className="mt-2 text-xs text-muted-foreground" data-testid={`text-booked-pattern-hint-${idx}`}>{p.hint}</div>
+                      return (
+                        <div
+                          key={stage.name}
+                          className="flex flex-col items-center group relative h-full justify-end transition-all duration-300"
+                          style={{
+                            width: `${100 / funnel.length}%`,
+                            marginLeft: idx === 0 ? 0 : `-20px`,
+                            zIndex: funnel.length - idx,
+                          }}
+                        >
+                          <div
+                            className="transition-all duration-500 relative flex items-start justify-center pt-6 cursor-pointer hover:brightness-110 hover:scale-[1.02]"
+                            style={{
+                              height: `${Math.max(heightPercent, 20)}%`,
+                              backgroundColor: stage.fill,
+                              borderRadius: "100% 100% 0 0 / 20% 20% 0 0",
+                              opacity: 0.95,
+                              width: `${widthPercent}%`,
+                              minWidth: "45px",
+                              boxShadow:
+                                "0 10px 30px rgba(0,0,0,0.1), inset 0 2px 10px rgba(255,255,255,0.2)",
+                              transform: "perspective(1000px) rotateX(10deg)",
+                            }}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-black/40 pointer-events-none" />
+
+                            <div className="absolute top-2 left-0 right-0 flex justify-center">
+                              <span className="z-10 text-[13px] font-black text-white drop-shadow-xl bg-black/30 px-2 py-0.5 rounded-lg border border-white/10 group-hover:scale-110 transition-transform">
+                                {stage.value}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="mt-6 flex flex-col items-center gap-1 w-full relative z-20">
+                            <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest text-center px-1 leading-tight group-hover:text-foreground transition-colors">
+                              {stage.name.replace(/[^a-zA-Z]/g, "")}
+                            </div>
+                            <div
+                              className="w-1.5 h-1.5 rounded-full mt-1 transition-all duration-300 group-hover:scale-150"
+                              style={{ backgroundColor: stage.fill }}
+                            />
+                          </div>
+
+                          <div className="absolute bottom-full mb-8 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 bg-popover/90 backdrop-blur-md text-popover-foreground text-[11px] px-4 py-2 rounded-2xl border border-border shadow-2xl z-[100] pointer-events-none whitespace-nowrap font-extrabold">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: stage.fill }} />
+                              {stage.name}: {stage.value}
+                            </div>
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-end gap-2" data-testid="row-booked-report-actions">
-                    <button
-                      type="button"
-                      className="h-10 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 px-4 text-sm font-semibold"
-                      onClick={() => setIsBookedReportOpen(false)}
-                      data-testid="button-booked-report-done"
-                    >
-                      Done
-                    </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-3" data-testid="grid-stats">
+                <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" tone="blue" />
+                <Stat label="Active Campaigns" value={String(stats.activeCampaigns)} testId="stat-active" tone="indigo" />
+                <Stat label="Bookings/Mo" value={String(stats.bookingsMo)} testId="stat-bookings" tone="yellow" />
+                <Stat label="AI Cost" value={`$${stats.aiCost.toFixed(2)}`} testId="stat-cost" tone="slate" />
+              </div>
+
+              {isBookedReportOpen ? (
+                <div className="fixed inset-0 z-50" data-testid="modal-booked-report">
+                  <button
+                    type="button"
+                    className="absolute inset-0 bg-black/50"
+                    onClick={() => setIsBookedReportOpen(false)}
+                    data-testid="button-close-booked-report-backdrop"
+                    aria-label="Close booked report"
+                  />
+                  <div className="absolute left-1/2 top-1/2 w-[92vw] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-background shadow-2xl">
+                    <div className="p-5 border-b border-border flex items-start justify-between gap-4" data-testid="row-booked-report-head">
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold" data-testid="text-booked-report-title">Booked Contacts Report</div>
+                        <div className="mt-1 text-xs text-muted-foreground" data-testid="text-booked-report-sub">
+                          AI insight summary (MOCK) based on recent booked conversations.
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="h-9 w-9 rounded-xl border border-border bg-muted/20 hover:bg-muted/30"
+                        onClick={() => setIsBookedReportOpen(false)}
+                        data-testid="button-close-booked-report"
+                        aria-label="Close booked report"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <div className="p-5 space-y-4" data-testid="body-booked-report">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" data-testid="grid-booked-report-kpis">
+                        <div className="rounded-2xl border border-border bg-muted/10 p-4" data-testid="card-booked-kpi-0">
+                          <div className="text-xs text-muted-foreground" data-testid="text-booked-kpi-label-0">Booked (selected)</div>
+                          <div className="mt-2 text-2xl font-extrabold tracking-tight" data-testid="text-booked-kpi-value-0">{stats.bookingsMo}</div>
+                        </div>
+                        <div className="rounded-2xl border border-border bg-muted/10 p-4" data-testid="card-booked-kpi-1">
+                          <div className="text-xs text-muted-foreground" data-testid="text-booked-kpi-label-1">Avg time-to-book</div>
+                          <div className="mt-2 text-2xl font-extrabold tracking-tight" data-testid="text-booked-kpi-value-1">2.6d</div>
+                        </div>
+                        <div className="rounded-2xl border border-border bg-muted/10 p-4" data-testid="card-booked-kpi-2">
+                          <div className="text-xs text-muted-foreground" data-testid="text-booked-kpi-label-2">Top driver</div>
+                          <div className="mt-2 text-sm font-semibold" data-testid="text-booked-kpi-value-2">Fast follow-up</div>
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-border bg-gradient-to-br from-yellow-400/10 via-transparent to-sky-500/10 p-4" data-testid="card-booked-insight">
+                        <div className="text-xs font-semibold text-yellow-500" data-testid="text-booked-insight-tag">AI Insight</div>
+                        <div className="mt-2 text-sm" data-testid="text-booked-insight-body">
+                          Booked contacts tend to convert when the first reply happens within <span className="font-semibold">10 minutes</span> and the second message includes a <span className="font-semibold">specific time suggestion</span> (\"Can you do Tue at 2:30?\").
+                          <br />
+                          <span className="text-muted-foreground">Recommendation:</span> auto-suggest 2 time slots after positive intent and add a "quick reschedule" button.
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-border bg-background p-4" data-testid="card-booked-patterns">
+                        <div className="text-sm font-semibold" data-testid="text-booked-patterns-title">Patterns observed</div>
+                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="grid-booked-patterns">
+                          {[
+                            { k: "Best channel", v: "SMS", hint: "Most bookings came from SMS threads with 2–4 messages." },
+                            { k: "Language that wins", v: "Short + direct", hint: "Clear next step and one question at a time." },
+                            { k: "Drop-off risk", v: "After 30 min", hint: "Interest decays quickly without a follow-up nudge." },
+                            { k: "Offer angle", v: "Speed", hint: "\"We can get you in this week\" outperformed discounts." },
+                          ].map((p, idx) => (
+                            <div key={p.k} className="rounded-2xl border border-border bg-muted/10 p-4" data-testid={`card-booked-pattern-${idx}`}>
+                              <div className="text-xs text-muted-foreground" data-testid={`text-booked-pattern-k-${idx}`}>{p.k}</div>
+                              <div className="mt-1 text-sm font-semibold" data-testid={`text-booked-pattern-v-${idx}`}>{p.v}</div>
+                              <div className="mt-2 text-xs text-muted-foreground" data-testid={`text-booked-pattern-hint-${idx}`}>{p.hint}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2" data-testid="row-booked-report-actions">
+                        <button
+                          type="button"
+                          className="h-10 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 px-4 text-sm font-semibold"
+                          onClick={() => setIsBookedReportOpen(false)}
+                          data-testid="button-booked-report-done"
+                        >
+                          Done
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
             </div>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </section>
 
-      <section className="rounded-2xl border border-border bg-background p-4 h-[600px] flex flex-col" data-testid="section-pipeline">
-        <div className="mt-2 overflow-x-auto flex-grow pb-2" data-testid="scroll-pipeline">
-          <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-full" data-testid="grid-pipeline">
-            {stagePalette.map((s) => (
-              <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
-            ))}
+      {dashboardTab === "pipeline" ? (
+        <section
+          className="rounded-2xl border border-border bg-background p-4 flex flex-col min-h-[calc(100vh-220px)]"
+          data-testid="section-pipeline"
+        >
+          <div className="mt-2 overflow-x-auto flex-grow pb-2" data-testid="scroll-pipeline">
+            <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-full" data-testid="grid-pipeline">
+              {stagePalette.map((s) => (
+                <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
     </div>
   );
 }
