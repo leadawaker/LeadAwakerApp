@@ -19,7 +19,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   const closePanel = () => setActivePanel(null);
 
   return (
-    <div className="min-h-screen bg-background" data-testid="shell-crm" key={`${currentAccountId}-${isAgencyView}`}>
+    <div className="min-h-screen bg-background transition-none" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
       <ThinLeftBar
         onOpenSupport={() => setActivePanel('support')}
         onOpenSearch={() => setActivePanel('search')}
