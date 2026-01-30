@@ -73,18 +73,29 @@ export function RightSidebar() {
             type="button"
             onClick={() => setOpenSwitcher((v) => !v)}
             className={cn(
-              "flex-1 min-w-0 flex items-center justify-between gap-2 rounded-xl border border-border bg-muted/20 px-3 py-2 hover:bg-muted/30 transition-colors",
-              collapsed && "hidden",
+              "flex-1 min-w-0 flex items-center justify-between gap-2 rounded-xl border border-border bg-muted/20 transition-colors",
+              collapsed ? "px-1 py-1 justify-center" : "px-3 py-2 hover:bg-muted/30",
             )}
             data-testid="wrap-workspace"
             aria-label="Switch account"
           >
-            <div className="min-w-0 text-left">
-              <div className="text-sm font-semibold truncate" data-testid="text-workspace-value">
-                {currentAccount.name}
+            {collapsed ? (
+              <div 
+                className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold shadow-sm"
+                title={currentAccount.name}
+              >
+                {currentAccount.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
               </div>
-            </div>
-            <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", openSwitcher && "rotate-180")} />
+            ) : (
+              <>
+                <div className="min-w-0 text-left">
+                  <div className="text-sm font-semibold truncate" data-testid="text-workspace-value">
+                    {currentAccount.name}
+                  </div>
+                </div>
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", openSwitcher && "rotate-180")} />
+              </>
+            )}
           </button>
 
           {openSwitcher && (

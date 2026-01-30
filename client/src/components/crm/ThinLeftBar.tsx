@@ -30,7 +30,7 @@ function IconButton({
       onClick={onClick}
       className={cn(
         "group relative h-8 w-8 rounded-lg grid place-items-center transition-colors",
-        active ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10 hover:text-white",
+        active ? "bg-black/10 text-black" : "text-black/60 hover:bg-black/5 hover:text-black",
       )}
       data-testid={testId}
     >
@@ -74,35 +74,35 @@ export function ThinLeftBar({
       className={cn(
         "fixed left-0 top-0 right-0 h-[32px] border-b z-[100] flex items-center px-3 duration-0",
         isAgencyView
-          ? "bg-yellow-500 border-yellow-600 shadow-[0_2px_12px_-2px_rgba(234,179,8,0.2)]"
-          : "bg-blue-600 border-blue-700 shadow-[0_2px_12px_-2px_rgba(37,99,235,0.2)]"
+          ? "bg-yellow-400 border-yellow-500 shadow-[0_1px_8px_-1px_rgba(234,179,8,0.15)]"
+          : "bg-blue-400 border-blue-500 shadow-[0_1px_8px_-1px_rgba(37,99,235,0.15)]"
       )}
       data-testid="bar-thin-left"
     >
       <div className="flex items-center gap-2">
         <button
           onClick={onGoHome}
-          className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-white/10 transition-colors group"
+          className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-black/5 transition-colors group"
           data-testid="button-home-logo"
         >
-          <div className="h-5 w-5 bg-white rounded flex items-center justify-center text-[10px] font-bold text-primary">6</div>
-          <span className="text-xs font-bold text-white tracking-tight">Lead Awaker CRM</span>
+          <div className="h-5 w-5 bg-black rounded flex items-center justify-center text-[10px] font-bold text-white">6</div>
+          <span className="text-xs font-bold text-black tracking-tight">Lead Awaker CRM</span>
         </button>
       </div>
 
       <div className="ml-auto flex items-center gap-1" data-testid="group-leftbar-actions">
         <IconButton label="Search" testId="button-global-search" onClick={onOpenSearch} active={false}>
-          <Search className="h-4 w-4 text-white" />
+          <Search className="h-4 w-4 text-black" />
         </IconButton>
         <div className="relative" data-testid="wrap-notifications">
           <IconButton label="Notifications" testId="button-notifications" onClick={onOpenNotifications} active={false}>
-            <Bell className="h-4 w-4 text-white" />
+            <Bell className="h-4 w-4 text-black" />
           </IconButton>
           {count > 0 ? (
             <div
               className={cn(
                 "absolute top-0 right-0 h-4 w-4 rounded-full text-white text-[9px] font-bold grid place-items-center",
-                "bg-red-500 border border-white/20"
+                "bg-red-500 border border-black/10"
               )}
               data-testid="badge-notifications"
             >
@@ -111,13 +111,13 @@ export function ThinLeftBar({
           ) : null}
         </div>
         <IconButton label="Settings" testId="button-settings" onClick={onOpenEdgeSettings} active={false}>
-          <Settings className="h-4 w-4 text-white" />
+          <Settings className="h-4 w-4 text-black" />
         </IconButton>
         <IconButton label="Help" testId="button-help" onClick={onToggleHelp} active={false}>
-          <HelpCircle className="h-4 w-4 text-white" />
+          <HelpCircle className="h-4 w-4 text-black" />
         </IconButton>
         <IconButton label="Customer Support" onClick={onOpenSupport} testId="button-support" active={false}>
-          <Headphones className="h-4 w-4 text-white" />
+          <Headphones className="h-4 w-4 text-black" />
         </IconButton>
         <IconButton
           label="Night mode"
@@ -128,7 +128,7 @@ export function ThinLeftBar({
           testId="button-nightmode"
           active={dark}
         >
-          <Moon className="h-4 w-4 text-white" />
+          <Moon className="h-4 w-4 text-black" />
         </IconButton>
       </div>
     </aside>
