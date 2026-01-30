@@ -72,21 +72,19 @@ export function RightSidebar({ collapsed, onCollapse }: { collapsed: boolean; on
             type="button"
             onClick={() => setOpenSwitcher((v) => !v)}
             className={cn(
-              "min-w-0 flex items-center justify-between gap-2 rounded-xl border border-border bg-muted/20 transition-all",
-              collapsed ? "h-[56px] w-full justify-center px-2" : "h-[56px] flex-1 px-3 hover:bg-muted/30",
-              isAgencyView ? "text-yellow-600 font-bold" : "text-blue-600 font-bold"
+              "min-w-0 flex items-center justify-between gap-2 rounded-xl border border-transparent transition-all",
+              collapsed ? "h-11 w-11 justify-center p-0" : "h-[56px] flex-1 px-3 border-border bg-muted/20 hover:bg-muted/30",
+              collapsed && (isAgencyView 
+                ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/20" 
+                : "bg-blue-600 text-white shadow-lg shadow-blue-500/20"),
+              !collapsed && (isAgencyView ? "text-yellow-600 font-bold" : "text-blue-600 font-bold")
             )}
             data-testid="wrap-workspace"
             aria-label="Switch account"
           >
             {collapsed ? (
               <div
-                className={cn(
-                  "h-11 w-full rounded-xl flex items-center justify-center text-xs font-bold shadow-sm",
-                  isAgencyView
-                    ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/20"
-                    : "bg-blue-600 text-white shadow-lg shadow-blue-500/20",
-                )}
+                className="flex items-center justify-center text-xs font-bold"
                 title={currentAccount.name}
               >
                 {currentAccount.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
