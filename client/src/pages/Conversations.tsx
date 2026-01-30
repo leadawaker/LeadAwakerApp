@@ -50,7 +50,7 @@ export default function ConversationsPage() {
   return (
     <CrmShell>
       <div className="h-full flex flex-col overflow-hidden" data-testid="page-conversations">
-        <div className="px-4 md:px-6 pt-4 md:pt-6 pb-2 shrink-0">
+        <div className="px-4 md:px-6 pt-4 md:pt-4 pb-1 shrink-0">
           <div className="flex items-center gap-4">
             {mobileView === "chat" && (
               <button 
@@ -71,7 +71,7 @@ export default function ConversationsPage() {
         </div>
 
         <div
-          className="flex-1 min-h-0 px-4 md:px-6 pb-4 md:pb-6 mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[400px_1fr_340px] gap-4"
+          className="flex-1 min-h-0 px-4 md:px-6 pb-4 md:pb-4 mt-2 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[400px_1fr_340px] gap-4"
           data-testid="layout-conversations"
         >
           {/* Left: inbox list */}
