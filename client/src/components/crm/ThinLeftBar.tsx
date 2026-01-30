@@ -71,12 +71,7 @@ export function ThinLeftBar({
 
   return (
     <aside
-      className={cn(
-        "fixed left-0 top-0 right-0 h-[32px] border-b z-[100] flex items-center px-3 duration-0",
-        isAgencyView
-          ? "bg-yellow-400 border-yellow-500 shadow-[0_1px_8px_-1px_rgba(234,179,8,0.15)]"
-          : "bg-blue-400 border-blue-500 shadow-[0_1px_8px_-1px_rgba(37,99,235,0.15)]"
-      )}
+      className="fixed left-0 top-0 right-0 h-[32px] border-b z-[100] flex items-center px-3 duration-0 border-yellow-500 shadow-[0_1px_8px_-1px_rgba(234,179,8,0.15)] bg-[#ffeeab]"
       data-testid="bar-thin-left"
     >
       <div className="flex items-center gap-2">
@@ -89,7 +84,6 @@ export function ThinLeftBar({
           <span className="text-xs font-bold text-black tracking-tight">Lead Awaker CRM</span>
         </button>
       </div>
-
       <div className="ml-auto flex items-center gap-1" data-testid="group-leftbar-actions">
         <IconButton label="Search" testId="button-global-search" onClick={onOpenSearch} active={false}>
           <Search className="h-4 w-4 text-black" />
