@@ -19,19 +19,19 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   const closePanel = () => setActivePanel(null);
 
   return (
-    <div className="min-h-screen bg-background transition-none" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
-      <ThinLeftBar
-        onOpenSupport={() => setActivePanel('support')}
-        onOpenSearch={() => setActivePanel('search')}
-        onOpenNotifications={() => setActivePanel('notifications')}
-        notificationsCount={unreadCount}
-        onOpenEdgeSettings={() => setActivePanel('settings')}
-        onToggleHelp={() => setActivePanel('help')}
-        onGoHome={() => setLocation("/")}
-      />
-
-      <div className="fixed left-0 top-[32px] bottom-0 z-40" data-testid="wrap-left-nav">
-        <RightSidebar collapsed={collapsed} onCollapse={setCollapsed} />
+    <div className="min-h-screen bg-background" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
+      <div className="fixed left-0 top-0 bottom-0 z-40" data-testid="wrap-left-nav">
+        <RightSidebar 
+          collapsed={collapsed} 
+          onCollapse={setCollapsed}
+          onOpenSupport={() => setActivePanel('support')}
+          onOpenSearch={() => setActivePanel('search')}
+          onOpenNotifications={() => setActivePanel('notifications')}
+          notificationsCount={unreadCount}
+          onOpenEdgeSettings={() => setActivePanel('settings')}
+          onToggleHelp={() => setActivePanel('help')}
+          onGoHome={() => setLocation("/")}
+        />
       </div>
 
       {activePanel && (
