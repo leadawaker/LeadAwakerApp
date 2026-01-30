@@ -3,6 +3,7 @@ import { Search, X } from "lucide-react";
 import { leads, interactions } from "@/data/mocks";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { Link } from "wouter";
+import { cn } from "@/lib/utils";
 
 export function SearchModal({ open, onOpenChange, inline }: { open: boolean; onOpenChange: (v: boolean) => void; inline?: boolean }) {
   const { currentAccountId } = useWorkspace();
