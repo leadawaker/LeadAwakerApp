@@ -68,7 +68,7 @@ export function RightSidebar() {
       data-testid="sidebar-left"
     >
       <div className="h-full flex flex-col">
-        <div className={cn("h-14 border-b border-border flex items-center gap-2 px-3")}> 
+        <div className={cn("h-14 border-b border-border flex items-center gap-2 px-3 relative")}> 
           <button
             type="button"
             onClick={() => setOpenSwitcher((v) => !v)}
@@ -84,8 +84,34 @@ export function RightSidebar() {
                 {currentAccount.name}
               </div>
             </div>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", openSwitcher && "rotate-180")} />
           </button>
+
+          {openSwitcher && (
+            <div 
+              className="absolute top-full left-3 right-3 mt-1 bg-background border border-border rounded-xl shadow-xl z-50 py-1 animate-in fade-in zoom-in-95 duration-100"
+              data-testid="dropdown-switcher"
+            >
+              {accountsList.map((acc) => (
+                <button
+                  key={acc.id}
+                  onClick={() => handleAccountSelect(acc.id)}
+                  className={cn(
+                    "w-full text-left px-3 py-2 text-sm hover:bg-muted/50 transition-colors flex items-center justify-between",
+                    currentAccountId === acc.id && "text-blue-600 font-medium bg-blue-50/50"
+                  )}
+                  data-testid={`button-account-${acc.id}`}
+                >
+                  <span className="truncate">{acc.label}</span>
+                  {acc.id === 1 && (
+                    <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ml-2">
+                      Agency
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <nav className={cn("p-3 space-y-1", collapsed && "px-2")} data-testid="nav-right">
