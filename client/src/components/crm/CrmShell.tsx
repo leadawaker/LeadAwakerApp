@@ -6,6 +6,7 @@ import { SupportChat } from "@/components/crm/SupportChat";
 import { SearchModal } from "@/components/crm/SearchModal";
 import { NotificationsPanel } from "@/components/crm/NotificationsPanel";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 
 export function CrmShell({ children }: { children: React.ReactNode }) {
@@ -13,6 +14,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   const { isAgencyView, currentAccountId, currentAccount } = useWorkspace();
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(3);
+  const [collapsed, setCollapsed] = useState(false);
 
   const closePanel = () => setActivePanel(null);
 
@@ -29,7 +31,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
       />
 
       <div className="fixed left-0 top-[32px] bottom-0 z-40" data-testid="wrap-left-nav">
-        <RightSidebar />
+        <RightSidebar collapsed={collapsed} onCollapse={setCollapsed} />
       </div>
 
       {activePanel && (
@@ -92,14 +94,22 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
                 </div>
               )}
               {activePanel === 'support' && (
-                <SupportChat open={true} onClose={closePanel} inline />
+                <div className="h-full">
+                  <SupportChat open={true} onClose={closePanel} inline />
+                </div>
               )}
             </div>
           </aside>
         </div>
       )}
 
-      <main className="h-screen flex flex-col bg-background md:pl-[225px] pt-[32px]" data-testid="main-crm">
+      <main 
+        className={cn(
+          "h-screen flex flex-col bg-background pt-[32px] transition-all duration-200",
+          collapsed ? "md:pl-[64px]" : "md:pl-[225px]"
+        )} 
+        data-testid="main-crm"
+      >
         <div className="flex-1 min-h-0">
           {children}
         </div>

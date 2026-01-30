@@ -81,7 +81,12 @@ export function RightSidebar() {
           >
             {collapsed ? (
               <div 
-                className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold shadow-sm"
+                className={cn(
+                  "h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold shadow-sm",
+                  isAgencyView 
+                    ? "bg-muted text-yellow-600 border border-yellow-500/20" 
+                    : "bg-muted text-blue-600 border border-blue-500/20"
+                )}
                 title={currentAccount.name}
               >
                 {currentAccount.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}

@@ -85,8 +85,8 @@ export function ThinLeftBar({
           className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-black/5 transition-colors group"
           data-testid="button-home-logo"
         >
-          <div className="h-5 w-5 bg-black rounded flex items-center justify-center text-[10px] font-bold text-white">6</div>
-          <span className="text-xs font-bold text-black tracking-tight">Lead Awaker CRM</span>
+          <img src="/6.Favicon.svg" className="h-5 w-5 object-contain" alt="Logo" />
+          <span className="text-xs font-bold text-black tracking-tight">Lead Awaker</span>
         </button>
       </div>
 
