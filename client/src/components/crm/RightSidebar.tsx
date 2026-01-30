@@ -27,10 +27,9 @@ const accountsList = [
   { id: 3, label: "LawFirm XYZ" },
 ];
 
-export function RightSidebar() {
+export function RightSidebar({ collapsed, onCollapse }: { collapsed: boolean; onCollapse: (v: boolean) => void }) {
   const [location, setLocation] = useLocation();
   const { currentAccountId, setCurrentAccountId, currentAccount, isAgencyView } = useWorkspace();
-  const [collapsed, setCollapsed] = useState(false);
   const [openSwitcher, setOpenSwitcher] = useState(false);
 
   const prefix = isAgencyView ? "/agency" : "/subaccount";
@@ -161,7 +160,7 @@ export function RightSidebar() {
         <div className={cn("mt-auto p-3", collapsed && "px-2")} data-testid="section-sidebar-bottom">
           <button
             type="button"
-            onClick={() => setCollapsed((v) => !v)}
+            onClick={() => onCollapse(!collapsed)}
             className={cn(
               "w-full h-11 rounded-xl border border-border bg-background/70 hover:bg-muted/30 transition-colors flex items-center gap-3",
               collapsed ? "justify-center" : "px-3",
