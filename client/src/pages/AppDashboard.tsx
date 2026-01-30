@@ -253,57 +253,71 @@ function SubaccountDashboard({
                 <span className="text-sm font-black">!</span>
               </button>
             </div>
-            <div className="mt-4 h-[240px] w-full" data-testid="chart-funnel">
-              <div className="flex h-full w-full items-end justify-center px-4">
+            <div className="mt-4 h-[240px] w-full overflow-hidden" data-testid="chart-funnel">
+              <div className="flex h-full w-full items-end justify-center px-4 relative">
+                {/* Attract labels on the left like the reference */}
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none hidden xl:block">
+                  <div className="flex flex-col gap-2">
+                    {[1,2,3,4,5].map(i => <Users key={i} className="w-4 h-4 text-muted-foreground" />)}
+                  </div>
+                </div>
+
                 {funnel.map((stage, idx) => {
                   const maxValue = Math.max(...funnel.map(s => s.value), 1);
                   const heightPercent = (stage.value / maxValue) * 100;
                   
-                  // Funnel taper logic: each stage is smaller in width than the previous one
-                  const taperFactor = 1 - (idx / (funnel.length - 1)) * 0.85;
+                  // Curved funnel logic:
+                  // The segments should feel like a radial sweep
+                  const taperFactor = 1 - (idx / (funnel.length - 1)) * 0.8;
                   const widthPercent = 100 * taperFactor;
                   
-                  // Overlap offset to create the "stacked" effect from the reference
-                  const leftOffset = idx * -15;
-
                   return (
                     <div 
                       key={stage.name} 
-                      className="flex flex-col items-center group relative h-full justify-end"
+                      className="flex flex-col items-center group relative h-full justify-end transition-all duration-300"
                       style={{ 
                         width: `${100 / funnel.length}%`,
-                        marginLeft: idx === 0 ? 0 : `${leftOffset}px`,
+                        marginLeft: idx === 0 ? 0 : `-20px`,
                         zIndex: funnel.length - idx 
                       }}
                     >
                       <div 
-                        className="transition-all duration-700 relative flex items-start justify-center pt-4"
+                        className="transition-all duration-500 relative flex items-start justify-center pt-6 cursor-pointer hover:brightness-110 hover:scale-[1.02]"
                         style={{ 
                           height: `${Math.max(heightPercent, 20)}%`,
                           backgroundColor: stage.fill,
-                          // Infographic "curved" polygon
-                          clipPath: "polygon(0% 15%, 100% 0%, 100% 100%, 0% 85%)",
+                          // Reference curved shape: Rounded top left/right but with perspective sweep
+                          // We use a complex clipPath or multiple border-radii to mimic the radial segment
+                          borderRadius: "100% 100% 0 0 / 20% 20% 0 0",
                           opacity: 0.95,
                           width: `${widthPercent}%`,
-                          minWidth: "40px",
-                          borderLeft: "1px solid rgba(255,255,255,0.2)",
-                          boxShadow: "10px 0 20px rgba(0,0,0,0.2)"
+                          minWidth: "45px",
+                          boxShadow: "0 10px 30px rgba(0,0,0,0.1), inset 0 2px 10px rgba(255,255,255,0.2)",
+                          transform: "perspective(1000px) rotateX(10deg)"
                         }}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/30" />
-                        <span className="z-10 text-[12px] font-black text-white drop-shadow-lg">
-                          {stage.value}
-                        </span>
-                      </div>
-                      <div className="mt-4 flex flex-col items-center gap-1 w-full translate-y-2">
-                        <div className="text-[9px] font-black text-muted-foreground uppercase tracking-wider text-center px-1 leading-tight">
-                          {stage.name.replace(/[^a-zA-Z]/g, '')}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-black/40 pointer-events-none" />
+                        
+                        <div className="absolute top-2 left-0 right-0 flex justify-center">
+                          <span className="z-10 text-[13px] font-black text-white drop-shadow-xl bg-black/30 px-2 py-0.5 rounded-lg border border-white/10 group-hover:scale-110 transition-transform">
+                            {stage.value}
+                          </span>
                         </div>
                       </div>
                       
+                      <div className="mt-6 flex flex-col items-center gap-1 w-full relative z-20">
+                        <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest text-center px-1 leading-tight group-hover:text-foreground transition-colors">
+                          {stage.name.replace(/[^a-zA-Z]/g, '')}
+                        </div>
+                        <div className="w-1.5 h-1.5 rounded-full mt-1 transition-all duration-300 group-hover:scale-150" style={{ backgroundColor: stage.fill }} />
+                      </div>
+                      
                       {/* Tooltip */}
-                      <div className="absolute bottom-full mb-6 opacity-0 group-hover:opacity-100 transition-opacity bg-popover text-popover-foreground text-[10px] px-3 py-2 rounded-xl border border-border shadow-2xl z-50 pointer-events-none whitespace-nowrap font-bold">
-                        {stage.name}: {stage.value} contacts
+                      <div className="absolute bottom-full mb-8 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 bg-popover/90 backdrop-blur-md text-popover-foreground text-[11px] px-4 py-2 rounded-2xl border border-border shadow-2xl z-[100] pointer-events-none whitespace-nowrap font-extrabold">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: stage.fill }} />
+                          {stage.name}: {stage.value}
+                        </div>
                       </div>
                     </div>
                   );
