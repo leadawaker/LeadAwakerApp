@@ -418,70 +418,77 @@ const tagPool = [
   "Needs details",
 ];
 
-export const leads: Lead[] = Array.from({ length: 50 }).map((_, idx) => {
-  const id = idx + 1;
-  const account_id = idx < 25 ? 2 : 3;
-  const campaign_id = account_id === 2 ? pick([11, 12], idx) : pick([21, 22], idx);
+// Distribution to follow a funnel pattern (more at the start, tapering down)
+const leadsPerStage: Record<string, number> = {
+  "New": 20,
+  "Contacted": 12,
+  "Responded": 8,
+  "Multiple Responses": 5,
+  "Qualified": 3,
+  "Booked": 2,
+  "DND": 2
+};
 
-  const first_name = pick(leadFirst, idx);
-  const last_name = pick(leadLast, idx + 2);
-  const created = new Date(Date.now() - (60 - idx) * 24 * 3600 * 1000);
-  const updated = new Date(created.getTime() + 6 * 3600 * 1000);
+let leadIdCounter = 1;
+const generateLeadsForAccount = (accId: number) => {
+  const accountLeads: Lead[] = [];
+  Object.entries(leadsPerStage).forEach(([stage, count]) => {
+    for (let i = 0; i < count; i++) {
+      const first_name = pick(leadFirst, leadIdCounter);
+      const last_name = pick(leadLast, leadIdCounter + 2);
+      const created = new Date(Date.now() - Math.random() * 30 * 24 * 3600 * 1000);
+      const updated = new Date(created.getTime() + 6 * 3600 * 1000);
+      
+      accountLeads.push({
+        id: leadIdCounter++,
+        account_id: accId,
+        campaign_id: accId === 2 ? pick([11, 12], i) : pick([21, 22], i),
+        created_at: iso(created),
+        updated_at: iso(updated),
+        first_name,
+        last_name,
+        full_name: `${first_name} ${last_name}`,
+        phone: `+31 6 ${String(1200 + leadIdCounter).padStart(4, "0")} ${String(5600 + leadIdCounter).padStart(4, "0")}`,
+        phone_normalized: `+316${String(12005600 + leadIdCounter).padStart(8, "0")}`,
+        email: `${first_name.toLowerCase()}.${last_name.toLowerCase()}@example.com`,
+        conversion_status: stage as any,
+        source: pick(sources, i),
+        last_interaction_at: iso(new Date(Date.now() - (5 - (i % 5)) * 3600 * 1000)),
+        notes: i % 4 === 0 ? "Asked about pricing" : "",
+        booked_call_date: stage === "Booked" ? iso(new Date(Date.now() + 2 * 24 * 3600 * 1000)) : null,
+        automation_status: pick(automation, i),
+        last_message_sent_at: iso(new Date(Date.now() - 3600 * 1000)),
+        last_message_received_at: (stage === "Responded" || stage === "Multiple Responses") ? iso(new Date(Date.now() - 1800 * 1000)) : null,
+        message_count_sent: 2,
+        message_count_received: (stage === "Responded" || stage === "Multiple Responses") ? 1 : 0,
+        ai_memory: "{}",
+        bump_1_sent_at: null,
+        bump_2_sent_at: null,
+        bump_3_sent_at: null,
+        first_message_sent_at: iso(new Date(Date.now() - 72 * 3600 * 1000)),
+        current_bump_stage: 0,
+        next_action_at: iso(new Date(Date.now() + 3600 * 1000)),
+        timezone: "Europe/Amsterdam",
+        opted_out: stage === "DND",
+        ai_sentiment: "Neutral",
+        priority: "Medium",
+        manual_takeover: false,
+        dnc_reason: stage === "DND" ? "User opted out" : "",
+        custom_field_1: "",
+        custom_field_2: "",
+        custom_field_3: "",
+        tags: [pick(tagPool, i)],
+      });
+    }
+  });
+  return accountLeads;
+};
 
-  const phone = `+31 6 ${String(1200 + idx).padStart(4, "0")} ${String(5600 + idx).padStart(4, "0")}`;
-  const phone_normalized = `+316${String(12005600 + idx).padStart(8, "0")}`;
-
-  const conversion_status = pick(statuses, idx);
-  const hasRecentInbound = conversion_status === "Responded" || conversion_status === "Multiple Responses";
-
-  const booked_call_date =
-    conversion_status === "Booked" ? iso(new Date(Date.now() + ((idx % 10) + 1) * 24 * 3600 * 1000)) : null;
-
-  const tags = Array.from(new Set([pick(tagPool, idx), idx % 4 === 0 ? "Pricing" : "Follow-up"]))
-    .filter(Boolean)
-    .slice(0, 4);
-
-  return {
-    id,
-    account_id,
-    campaign_id,
-    created_at: iso(created),
-    updated_at: iso(updated),
-    first_name,
-    last_name,
-    full_name: `${first_name} ${last_name}`,
-    phone,
-    phone_normalized,
-    email: `${first_name.toLowerCase()}.${last_name.toLowerCase()}@example.com`,
-    conversion_status,
-    source: pick(sources, idx),
-    last_interaction_at: iso(new Date(Date.now() - (5 - (idx % 5)) * 3600 * 1000)),
-    notes: idx % 4 === 0 ? "Asked about pricing" : idx % 4 === 1 ? "Prefer mornings" : "",
-    booked_call_date,
-    automation_status: pick(automation, idx),
-    last_message_sent_at: iso(new Date(Date.now() - (idx % 6) * 3600 * 1000)),
-    last_message_received_at: hasRecentInbound ? iso(new Date(Date.now() - ((idx % 4) + 1) * 3600 * 1000)) : null,
-    message_count_sent: 2 + (idx % 6),
-    message_count_received: hasRecentInbound ? 1 + (idx % 3) : 0,
-    ai_memory: JSON.stringify({ last_intent: idx % 3 === 0 ? "price" : "schedule", objections: [] }),
-    bump_1_sent_at: idx % 3 === 0 ? iso(new Date(Date.now() - 48 * 3600 * 1000)) : null,
-    bump_2_sent_at: idx % 5 === 0 ? iso(new Date(Date.now() - 24 * 3600 * 1000)) : null,
-    bump_3_sent_at: null,
-    first_message_sent_at: iso(new Date(Date.now() - 72 * 3600 * 1000)),
-    current_bump_stage: idx % 6 === 0 ? 2 : idx % 4 === 0 ? 1 : 0,
-    next_action_at: iso(new Date(Date.now() + (idx % 6) * 3600 * 1000)),
-    timezone: "Europe/Amsterdam",
-    opted_out: conversion_status === "DND",
-    ai_sentiment: pick(sentiments, idx),
-    priority: pick(priorities, idx),
-    manual_takeover: idx % 10 === 0,
-    dnc_reason: conversion_status === "DND" ? "User opted out" : "",
-    custom_field_1: idx % 2 === 0 ? "facebook_ad_12" : "",
-    custom_field_2: idx % 3 === 0 ? "variant_a" : "",
-    custom_field_3: "",
-    tags,
-  };
-});
+export const leads: Lead[] = [
+  ...generateLeadsForAccount(1),
+  ...generateLeadsForAccount(2),
+  ...generateLeadsForAccount(3),
+];
 
 const interactionTypes: Interaction["type"][] = ["SMS", "WhatsApp", "Email", "Call", "Note"];
 const interactionStatus: Interaction["status"][] = ["queued", "sending", "sent", "delivered", "failed", "read"];

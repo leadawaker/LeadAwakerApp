@@ -253,40 +253,56 @@ function SubaccountDashboard({
                 <span className="text-sm font-black">!</span>
               </button>
             </div>
-            <div className="mt-4 h-[220px] w-full" data-testid="chart-funnel">
-              <div className="flex h-full w-full items-end gap-1 px-2">
+            <div className="mt-4 h-[240px] w-full" data-testid="chart-funnel">
+              <div className="flex h-full w-full items-end justify-center px-4">
                 {funnel.map((stage, idx) => {
                   const maxValue = Math.max(...funnel.map(s => s.value), 1);
                   const heightPercent = (stage.value / maxValue) * 100;
                   
+                  // Funnel taper logic: each stage is smaller in width than the previous one
+                  const taperFactor = 1 - (idx / (funnel.length - 1)) * 0.85;
+                  const widthPercent = 100 * taperFactor;
+                  
+                  // Overlap offset to create the "stacked" effect from the reference
+                  const leftOffset = idx * -15;
+
                   return (
-                    <div key={stage.name} className="flex-1 flex flex-col items-center group relative h-full justify-end">
+                    <div 
+                      key={stage.name} 
+                      className="flex flex-col items-center group relative h-full justify-end"
+                      style={{ 
+                        width: `${100 / funnel.length}%`,
+                        marginLeft: idx === 0 ? 0 : `${leftOffset}px`,
+                        zIndex: funnel.length - idx 
+                      }}
+                    >
                       <div 
-                        className="w-full transition-all duration-700 relative flex items-end justify-center"
+                        className="transition-all duration-700 relative flex items-start justify-center pt-4"
                         style={{ 
-                          height: `${Math.max(heightPercent, 15)}%`,
+                          height: `${Math.max(heightPercent, 20)}%`,
                           backgroundColor: stage.fill,
-                          clipPath: "polygon(0% 0%, 100% 20%, 100% 100%, 0% 100%)",
+                          // Infographic "curved" polygon
+                          clipPath: "polygon(0% 15%, 100% 0%, 100% 100%, 0% 85%)",
                           opacity: 0.95,
-                          boxShadow: "inset 0 2px 10px rgba(255,255,255,0.1)"
+                          width: `${widthPercent}%`,
+                          minWidth: "40px",
+                          borderLeft: "1px solid rgba(255,255,255,0.2)",
+                          boxShadow: "10px 0 20px rgba(0,0,0,0.2)"
                         }}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/10" />
-                        <div className="absolute top-4 left-0 right-0 flex justify-center">
-                          <span className="z-10 text-[11px] font-black text-white drop-shadow-md bg-black/20 px-1.5 py-0.5 rounded-md">
-                            {stage.value}
-                          </span>
-                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/30" />
+                        <span className="z-10 text-[12px] font-black text-white drop-shadow-lg">
+                          {stage.value}
+                        </span>
                       </div>
-                      <div className="mt-3 flex flex-col items-center gap-1 w-full">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: stage.fill }} />
-                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight text-center px-1 leading-tight">
-                          {stage.name}
+                      <div className="mt-4 flex flex-col items-center gap-1 w-full translate-y-2">
+                        <div className="text-[9px] font-black text-muted-foreground uppercase tracking-wider text-center px-1 leading-tight">
+                          {stage.name.replace(/[^a-zA-Z]/g, '')}
                         </div>
                       </div>
                       
                       {/* Tooltip */}
-                      <div className="absolute bottom-full mb-4 opacity-0 group-hover:opacity-100 transition-opacity bg-popover text-popover-foreground text-[10px] px-3 py-1.5 rounded-xl border border-border shadow-2xl z-20 pointer-events-none whitespace-nowrap font-bold">
+                      <div className="absolute bottom-full mb-6 opacity-0 group-hover:opacity-100 transition-opacity bg-popover text-popover-foreground text-[10px] px-3 py-2 rounded-xl border border-border shadow-2xl z-50 pointer-events-none whitespace-nowrap font-bold">
                         {stage.name}: {stage.value} contacts
                       </div>
                     </div>
