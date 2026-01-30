@@ -21,17 +21,17 @@ export function Sidebar() {
     <aside
       className={cn(
         "hidden lg:flex w-64 shrink-0 border-r duration-0",
-        isAgencyView ? "bg-blue-600/10 border-blue-500/20" : "bg-yellow-500/10 border-yellow-500/20"
+        isAgencyView ? "bg-yellow-500/10 border-yellow-500/20" : "bg-blue-600/10 border-blue-500/20",
       )}
       data-testid="sidebar-crm"
     >
       <div className="p-4 w-full flex flex-col gap-4">
-        <div className={cn(
-          "rounded-2xl border p-4 duration-0 relative group",
-          isAgencyView 
-            ? "border-blue-500/20 bg-blue-600/10" 
-            : "border-yellow-500/20 bg-yellow-500/10"
-        )}>
+        <div
+          className={cn(
+            "rounded-2xl border p-4 duration-0 relative group",
+            isAgencyView ? "border-yellow-500/20 bg-yellow-500/10" : "border-blue-500/20 bg-blue-600/10",
+          )}
+        >
           <div className="text-xs text-muted-foreground" data-testid="text-workspace">
             Workspace
           </div>
@@ -54,9 +54,9 @@ export function Sidebar() {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all",
                   active
-                    ? isAgencyView 
-                      ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" 
-                      : "bg-yellow-500 text-black shadow-lg shadow-yellow-500/20"
+                    ? isAgencyView
+                      ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/20"
+                      : "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
                 )}
                 data-testid={it.testId}

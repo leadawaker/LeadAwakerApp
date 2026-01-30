@@ -26,9 +26,6 @@ export default function TagsPage() {
     <CrmShell>
       <div className="px-6 py-6" data-testid="page-tags">
         <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Tags</h1>
-        <p className="text-sm text-muted-foreground" data-testid="text-subtitle">
-          Tag library + counts (MOCK).
-        </p>
 
         <div className="mt-4 flex items-center gap-2" data-testid="bar-tags">
           <input
@@ -49,9 +46,6 @@ export default function TagsPage() {
           ))}
         </div>
 
-        <div className="mt-3 text-xs text-muted-foreground" data-testid="text-real">
-          REAL: useSWR(`${import.meta.env.VITE_NOCODB_URL}/api/v1/db/data/nocodb/Tags`)
-        </div>
       </div>
     </CrmShell>
   );

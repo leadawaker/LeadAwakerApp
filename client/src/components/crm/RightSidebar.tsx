@@ -68,28 +68,29 @@ export function RightSidebar() {
       data-testid="sidebar-left"
     >
       <div className="h-full flex flex-col">
-        <div className={cn("h-14 border-b border-border flex items-center gap-2 px-3", collapsed && "justify-center")}>
-          {!collapsed && (
-            <div
-              className="flex-1 min-w-0 flex items-center justify-between gap-2 rounded-xl border border-border bg-muted/20 px-3 py-2"
-              data-testid="wrap-workspace"
-            >
-              <div className="min-w-0 text-left">
-                <div className="text-sm font-semibold truncate" data-testid="text-workspace-value">
-                  {currentAccount.name}
-                </div>
+        <div className={cn("h-14 border-b border-border flex items-center gap-2 px-3")}>          
+          <div
+            className={cn(
+              "flex-1 min-w-0 flex items-center justify-between gap-2 rounded-xl border border-border bg-muted/20 px-3 py-2",
+              collapsed && "hidden",
+            )}
+            data-testid="wrap-workspace"
+          >
+            <div className="min-w-0 text-left">
+              <div className="text-sm font-semibold truncate" data-testid="text-workspace-value">
+                {currentAccount.name}
               </div>
-              <button
-                type="button"
-                onClick={() => setOpenSwitcher((v) => !v)}
-                className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center"
-                data-testid="button-workspace-open"
-                aria-label="Open workspace switcher"
-              >
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              </button>
             </div>
-          )}
+            <button
+              type="button"
+              onClick={() => setOpenSwitcher((v) => !v)}
+              className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center"
+              data-testid="button-workspace-open"
+              aria-label="Open workspace switcher"
+            >
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </div>
 
           <button
             type="button"
@@ -99,6 +100,7 @@ export function RightSidebar() {
             }}
             className="h-10 w-10 rounded-xl hover:bg-muted/30 grid place-items-center"
             data-testid="button-sidebar-collapse"
+            aria-label="Toggle sidebar"
           >
             {collapsed ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
           </button>
@@ -114,7 +116,7 @@ export function RightSidebar() {
                   onClick={() => handleAccountSelect(a.id)}
                   className={cn(
                     "w-full px-3 py-2 text-left text-sm hover:bg-muted/30",
-                    currentAccountId === a.id && (isAgencyView ? "bg-blue-600/10" : "bg-yellow-400/15"),
+                    currentAccountId === a.id && (isAgencyView ? "bg-yellow-500/15" : "bg-blue-600/10"),
                   )}
                   data-testid={`button-workspace-${a.id}`}
                 >
@@ -140,8 +142,8 @@ export function RightSidebar() {
                   collapsed ? "h-11 justify-center" : "px-3 py-2.5",
                   active
                     ? isAgencyView
-                      ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
-                      : "bg-yellow-400 text-yellow-950 shadow-lg shadow-yellow-500/20"
+                      ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/20"
+                      : "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
                 )}
                 data-testid={`link-${it.testId}`}

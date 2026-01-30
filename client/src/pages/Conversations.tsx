@@ -49,9 +49,6 @@ export default function ConversationsPage() {
           </h1>
           <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
         </div>
-        <p className="text-sm text-muted-foreground" data-testid="text-subtitle">
-          Inbox-style messaging view (MOCK).
-        </p>
 
         <div
           className="mt-4 grid grid-cols-1 xl:grid-cols-[360px_1fr_340px] gap-4"
@@ -59,7 +56,7 @@ export default function ConversationsPage() {
         >
           {/* Left: inbox list */}
           <section
-            className="rounded-2xl border border-border bg-background overflow-hidden flex flex-col min-h-[640px]"
+            className="rounded-2xl border border-border bg-background overflow-hidden flex flex-col min-h-[calc(100vh-184px)]"
             data-testid="panel-inbox"
           >
             <div className="p-4 border-b border-border" data-testid="panel-inbox-head">
@@ -135,7 +132,7 @@ export default function ConversationsPage() {
 
           {/* Center: chat */}
           <section
-            className="rounded-2xl border border-border bg-background overflow-hidden flex flex-col min-h-[640px]"
+            className="rounded-2xl border border-border bg-background overflow-hidden flex flex-col min-h-[calc(100vh-184px)]"
             data-testid="panel-chat"
           >
             <div className="px-4 py-3 border-b border-border" data-testid="panel-chat-head">
@@ -201,15 +198,12 @@ export default function ConversationsPage() {
                   Send
                 </button>
               </div>
-              <div className="mt-2 text-xs text-muted-foreground" data-testid="text-compose-real">
-                REAL: POST to NocoDB Interactions + trigger n8n
-              </div>
             </div>
           </section>
 
           {/* Right: contact panel */}
           <section
-            className="rounded-2xl border border-border bg-background overflow-hidden flex flex-col min-h-[640px]"
+            className="rounded-2xl border border-border bg-background overflow-hidden flex flex-col min-h-[calc(100vh-184px)]"
             data-testid="panel-contact"
           >
             <div className="p-4 border-b border-border" data-testid="panel-contact-head">
@@ -300,15 +294,9 @@ export default function ConversationsPage() {
               )}
             </div>
 
-            <div className="mt-auto px-4 py-3 border-t border-border text-xs text-muted-foreground" data-testid="text-contact-panel-foot">
-              REAL: editable tags, assign automation, manual takeover
-            </div>
           </section>
         </div>
 
-        <div className="mt-3 text-xs text-muted-foreground" data-testid="text-real">
-          REAL: useSWR(`${import.meta.env.VITE_NOCODB_URL}/api/v1/db/data/nocodb/Interactions`)
-        </div>
       </div>
     </CrmShell>
   );

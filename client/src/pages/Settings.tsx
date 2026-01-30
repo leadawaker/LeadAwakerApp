@@ -9,9 +9,6 @@ export default function SettingsPage() {
     <CrmShell>
       <div className="px-6 py-6" data-testid="page-settings">
         <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Settings</h1>
-        <p className="text-sm text-muted-foreground" data-testid="text-subtitle">
-          Profile, password, and user management (MOCK).
-        </p>
 
         <div className="mt-6 grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6" data-testid="grid-settings">
           <section className="rounded-2xl border border-border bg-background overflow-hidden" data-testid="card-edit-profile">
@@ -35,9 +32,6 @@ export default function SettingsPage() {
                 </button>
               </div>
 
-              <div className="text-xs text-muted-foreground" data-testid="text-profile-real">
-                REAL: update user in NocoDB Users table
-              </div>
             </div>
           </section>
 
@@ -57,9 +51,6 @@ export default function SettingsPage() {
                 >
                   Send reset email
                 </button>
-                <div className="mt-3 text-xs text-muted-foreground" data-testid="text-password-real">
-                  REAL: send reset email via backend
-                </div>
               </div>
             </section>
 
@@ -85,9 +76,6 @@ export default function SettingsPage() {
                 >
                   Manage roles
                 </button>
-                <div className="text-xs text-muted-foreground" data-testid="text-users-real">
-                  REAL: manage roles via backend auth + Users table
-                </div>
               </div>
             </section>
           </div>

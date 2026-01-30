@@ -22,9 +22,6 @@ export default function AutomationLogsPage() {
           <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Automation Logs</h1>
           <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
         </div>
-        <p className="text-sm text-muted-foreground" data-testid="text-subtitle">
-          Execution logs per lead/campaign (MOCK).
-        </p>
 
         <div className="mt-4 rounded-2xl border border-border bg-background overflow-hidden" data-testid="table-logs">
           <div className="grid grid-cols-[120px_1fr_140px_160px_200px] gap-0 text-xs font-semibold text-muted-foreground bg-muted/20 border-b border-border px-4 py-3">
@@ -54,9 +51,6 @@ export default function AutomationLogsPage() {
           </div>
         </div>
 
-        <div className="mt-3 text-xs text-muted-foreground" data-testid="text-real">
-          REAL: useSWR(`${import.meta.env.VITE_NOCODB_URL}/api/v1/db/data/nocodb/Automation_Logs`)
-        </div>
       </div>
     </CrmShell>
   );

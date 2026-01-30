@@ -73,9 +73,9 @@ export function ThinLeftBar({
     <aside
       className={cn(
         "fixed left-0 top-0 bottom-0 w-[48px] border-r z-50 flex flex-col items-center py-3 duration-0",
-        isAgencyView 
-          ? "bg-blue-600/20 border-blue-500/30 shadow-[4px_0_24px_-4px_rgba(37,99,235,0.1)]" 
-          : "bg-yellow-500/20 border-yellow-500/30 shadow-[4px_0_24px_-4px_rgba(234,179,8,0.1)]"
+        isAgencyView
+          ? "bg-yellow-500/20 border-yellow-500/30 shadow-[4px_0_24px_-4px_rgba(234,179,8,0.1)]"
+          : "bg-blue-600/20 border-blue-500/30 shadow-[4px_0_24px_-4px_rgba(37,99,235,0.1)]"
       )}
       data-testid="bar-thin-left"
     >
@@ -84,7 +84,7 @@ export function ThinLeftBar({
         onClick={onGoHome}
         className={cn(
           "h-8 w-8 rounded-lg flex items-center justify-center duration-0",
-          isAgencyView ? "bg-blue-600" : "bg-yellow-500"
+          isAgencyView ? "bg-yellow-500" : "bg-blue-600"
         )}
         data-testid="button-leftbar-home"
         aria-label="Go to home"
@@ -104,7 +104,7 @@ export function ThinLeftBar({
             <div
               className={cn(
                 "absolute -top-1 -right-1 h-5 w-5 rounded-full text-white text-[11px] font-bold grid place-items-center",
-                isAgencyView ? "bg-blue-600" : "bg-yellow-500 text-black"
+                isAgencyView ? "bg-yellow-500 text-black" : "bg-blue-600"
               )}
               data-testid="badge-notifications"
             >

@@ -20,9 +20,7 @@ export function Topbar() {
     <header
       className={cn(
         "sticky top-0 z-40 backdrop-blur-xl border-b transition-colors duration-300",
-        isAgencyView 
-          ? "bg-blue-600/10 border-blue-500/20" 
-          : "bg-yellow-500/10 border-yellow-500/20"
+        isAgencyView ? "bg-yellow-500/10 border-yellow-500/20" : "bg-blue-600/10 border-blue-500/20",
       )}
       data-testid="header-crm-topbar"
     >
@@ -33,9 +31,7 @@ export function Topbar() {
               <div
                 className={cn(
                   "h-9 w-9 rounded-xl border flex items-center justify-center transition-colors",
-                  isAgencyView 
-                    ? "bg-blue-600 text-white border-blue-400" 
-                    : "bg-yellow-500 text-black border-yellow-400"
+                  isAgencyView ? "bg-yellow-500 text-black border-yellow-400" : "bg-blue-600 text-white border-blue-400",
                 )}
               >
                 <span className="font-heading font-extrabold text-xs">
@@ -65,14 +61,16 @@ export function Topbar() {
                   currentAccount.id === acc.id && "bg-muted font-bold"
                 )}
               >
-                <div className={cn(
-                  "h-6 w-6 rounded-md flex items-center justify-center text-[10px] text-white font-bold",
-                  acc.id === 1 ? "bg-blue-600" : "bg-yellow-500 text-black"
-                )}>
+                <div
+                  className={cn(
+                    "h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-bold",
+                    acc.id === 1 ? "bg-yellow-500 text-black" : "bg-blue-600 text-white",
+                  )}
+                >
                   {acc.name[0]}
                 </div>
                 {acc.name}
-                {acc.id === 1 && <span className="ml-auto text-[10px] bg-blue-100 text-blue-700 px-1 rounded">Agency</span>}
+                {acc.id === 1 && <span className="ml-auto text-[10px] bg-yellow-100 text-yellow-900 px-1 rounded">Agency</span>}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

@@ -26,9 +26,6 @@ export default function AppAccounts() {
     <CrmShell>
       <div className="px-6 py-6" data-testid="page-accounts">
         <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Accounts</h1>
-        <p className="text-sm text-muted-foreground" data-testid="text-subtitle">
-          {isAgencyView ? "Agency view: manage client accounts." : "Client view: your own account."}
-        </p>
 
         <div className="mt-4 rounded-2xl border border-border bg-background overflow-hidden" data-testid="table-accounts">
           <div className="grid grid-cols-[1.2fr_140px_160px_220px] text-xs font-semibold text-muted-foreground bg-muted/20 border-b border-border px-4 py-3">
@@ -59,9 +56,6 @@ export default function AppAccounts() {
           </div>
         </div>
 
-        <div className="mt-3 text-xs text-muted-foreground" data-testid="text-real">
-          REAL: useSWR(`${import.meta.env.VITE_NOCODB_URL}/api/v1/db/data/nocodb/Accounts`)
-        </div>
       </div>
     </CrmShell>
   );

@@ -85,9 +85,6 @@ export default function LeadDetailPage() {
                   <ReadRow label="Lead Response" value={lead.message_count_received ? "Has replies" : "No replies"} testId="text-lead-response" />
                 </Section>
 
-                <div className="p-4 border-t border-border text-xs text-muted-foreground" data-testid="text-lead-left-foot">
-                  REAL: PATCH contact fields in NocoDB Contacts table
-                </div>
               </div>
 
               {/* Center chat */}
@@ -129,9 +126,6 @@ export default function LeadDetailPage() {
                   </button>
                 </Section>
 
-                <div className="p-4 border-t border-border text-xs text-muted-foreground" data-testid="text-right-foot">
-                  REAL: pull tags, automation, logs per lead
-                </div>
               </div>
             </div>
           </>

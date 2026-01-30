@@ -17,9 +17,6 @@ export default function PromptLibraryPage() {
     <CrmShell>
       <div className="px-6 py-6" data-testid="page-prompt-library">
         <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Prompt Library</h1>
-        <p className="text-sm text-muted-foreground" data-testid="text-subtitle">
-          Re-usable prompts per account (MOCK).
-        </p>
 
         <div className="mt-4 flex items-center gap-2" data-testid="bar-prompts">
           <input
@@ -44,9 +41,6 @@ export default function PromptLibraryPage() {
           ))}
         </div>
 
-        <div className="mt-3 text-xs text-muted-foreground" data-testid="text-real">
-          REAL: useSWR(`${import.meta.env.VITE_NOCODB_URL}/api/v1/db/data/nocodb/Prompt_Library`)
-        </div>
       </div>
     </CrmShell>
   );
