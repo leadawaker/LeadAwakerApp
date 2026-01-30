@@ -61,7 +61,7 @@ export function RightSidebar({ collapsed, onCollapse }: { collapsed: boolean; on
   return (
     <aside
       className={cn(
-        "fixed left-0 top-[32px] bottom-0 border-r border-border bg-muted/20 z-40 duration-0 dark:bg-muted/10",
+        "fixed left-0 top-[32px] bottom-0 border-r border-border bg-muted/20 z-40 transition-all duration-300 ease-in-out dark:bg-muted/10",
         collapsed ? "w-[64px]" : "w-[225px]",
       )}
       data-testid="sidebar-left"
@@ -72,12 +72,9 @@ export function RightSidebar({ collapsed, onCollapse }: { collapsed: boolean; on
             type="button"
             onClick={() => setOpenSwitcher((v) => !v)}
             className={cn(
-              "min-w-0 flex items-center justify-between gap-2 rounded-xl border border-transparent transition-all",
-              collapsed ? "h-11 w-11 justify-center p-0" : "h-[56px] flex-1 px-3 border-border bg-muted/20 hover:bg-muted/30",
-              collapsed && (isAgencyView 
-                ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/20" 
-                : "bg-blue-600 text-white shadow-lg shadow-blue-500/20"),
-              !collapsed && (isAgencyView ? "text-yellow-600 font-bold" : "text-blue-600 font-bold")
+              "min-w-0 flex items-center justify-between gap-2 rounded-xl border border-border bg-white shadow-sm transition-all duration-300 ease-in-out",
+              collapsed ? "h-[56px] w-[56px] justify-center p-0" : "h-[56px] flex-1 px-3 bg-muted/20 hover:bg-muted/30",
+              isAgencyView ? "text-yellow-600 font-bold" : "text-blue-600 font-bold"
             )}
             data-testid="wrap-workspace"
             aria-label="Switch account"
@@ -130,7 +127,7 @@ export function RightSidebar({ collapsed, onCollapse }: { collapsed: boolean; on
           )}
         </div>
 
-        <nav className={cn("p-3 space-y-1", collapsed && "px-2")} data-testid="nav-right">
+        <nav className={cn("p-3 space-y-1 transition-all duration-300 ease-in-out", collapsed && "px-2")} data-testid="nav-right">
           {navItems.map((it) => {
             if (it.agencyOnly && !isAgencyView) return null;
             const active = location === it.href;
@@ -140,8 +137,8 @@ export function RightSidebar({ collapsed, onCollapse }: { collapsed: boolean; on
                 key={it.href}
                 href={it.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-xl border border-transparent transition-colors",
-                  collapsed ? "h-11 justify-center" : "px-3 py-2.5",
+                  "flex items-center gap-3 rounded-xl border border-transparent transition-all duration-300 ease-in-out",
+                  collapsed ? "h-11 w-11 mx-auto justify-center px-0" : "px-3 py-2.5",
                   active
                     ? isAgencyView
                       ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/20"
@@ -151,31 +148,33 @@ export function RightSidebar({ collapsed, onCollapse }: { collapsed: boolean; on
                 data-testid={`link-${it.testId}`}
                 title={collapsed ? it.label : undefined}
               >
-                <Icon className="h-5 w-5" />
-                {!collapsed && <span className="text-sm font-semibold">{it.label}</span>}
+                <Icon className="h-5 w-5 shrink-0" />
+                {!collapsed && <span className="text-sm font-semibold truncate">{it.label}</span>}
               </Link>
             );
           })}
         </nav>
 
-        <div className={cn("mt-auto p-3", collapsed && "px-2")} data-testid="section-sidebar-bottom">
+        <div className={cn("mt-auto p-3 transition-all duration-300 ease-in-out", collapsed && "px-2")} data-testid="section-sidebar-bottom">
           <button
             type="button"
             onClick={() => onCollapse(!collapsed)}
             className={cn(
-              "w-full h-11 rounded-xl border border-border bg-background/70 hover:bg-muted/30 transition-colors flex items-center gap-3",
-              collapsed ? "justify-center" : "px-3",
+              "w-full h-11 rounded-xl border border-border bg-background/70 hover:bg-muted/30 transition-all duration-300 ease-in-out flex items-center gap-3",
+              collapsed ? "w-11 h-11 mx-auto justify-center px-0" : "px-3",
             )}
             data-testid="button-sidebar-collapse"
             aria-label="Toggle sidebar"
             title={collapsed ? "Toggle sidebar" : undefined}
           >
-            {collapsed ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
-            {!collapsed && <span className="text-sm font-semibold">Collapse menu</span>}
+            <div className="shrink-0">
+              {collapsed ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
+            </div>
+            {!collapsed && <span className="text-sm font-semibold truncate">Collapse menu</span>}
           </button>
 
 
-          <div className={cn("mt-3 text-[11px] text-muted-foreground", collapsed && "hidden")} data-testid="text-sidebar-foot">
+          <div className={cn("mt-3 text-[11px] text-muted-foreground transition-all duration-300", collapsed ? "opacity-0 h-0 mt-0 pointer-events-none" : "opacity-100")} data-testid="text-sidebar-foot">
             MOCK CRM • NocoDB-ready
           </div>
         </div>
