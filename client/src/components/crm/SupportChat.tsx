@@ -18,75 +18,80 @@ export function SupportChat({ open, onClose }: { open: boolean; onClose: () => v
   if (!open) return null;
 
   return (
-    <div
-      className="fixed right-4 bottom-4 w-[360px] max-w-[calc(100vw-1rem)] rounded-2xl border border-border bg-background shadow-xl overflow-hidden z-[60]"
-      data-testid="panel-support-chat"
-    >
-      <div className="h-12 px-4 flex items-center justify-between border-b border-border bg-muted/20">
-        <div className="font-semibold" data-testid="text-support-title">LeadAwaker Support</div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="h-8 w-8 grid place-items-center rounded-lg hover:bg-muted/40"
-          data-testid="button-support-close"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-
-      <div className="max-h-[340px] overflow-auto p-3 space-y-2" data-testid="list-support-messages">
-        {msgs.map((m) => (
-          <div
-            key={m.id}
-            className={cn("flex", m.from === "user" ? "justify-end" : "justify-start")}
-            data-testid={`row-support-${m.id}`}
-          >
-            <div
-              className={cn(
-                "max-w-[80%] rounded-2xl px-3 py-2 text-sm border",
-                m.from === "user" ? "bg-primary text-primary-foreground border-primary/20" : "bg-muted/30 border-border",
-              )}
-              data-testid={`bubble-support-${m.id}`}
-            >
-              {m.text}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="p-3 border-t border-border">
-        <div className="flex gap-2">
-          <input
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            className="h-10 flex-1 rounded-xl border border-border bg-muted/20 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-            placeholder="Type a message…"
-            data-testid="input-support-message"
-          />
+    <div className="fixed inset-0 z-[70] pointer-events-none" data-testid="overlay-support">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/35 pointer-events-auto"
+        style={{ left: '48px' }}
+        onClick={onClose}
+      />
+      <aside className="absolute left-[48px] top-0 bottom-0 w-[400px] border-r border-border bg-background shadow-xl pointer-events-auto flex flex-col">
+        <div className="h-14 px-4 flex items-center justify-between border-b border-border bg-muted/20 shrink-0">
+          <div className="font-semibold" data-testid="text-support-title">LeadAwaker Support</div>
           <button
             type="button"
-            onClick={() => {
-              if (!value.trim()) return;
-              const now = new Date().toISOString();
-              setMsgs((prev) => [
-                ...prev,
-                { id: prev.length + 1, from: "user", text: value.trim(), at: now },
-                {
-                  id: prev.length + 2,
-                  from: "support",
-                  text: "Got it — this is mock. REAL: connect to Intercom/Helpdesk.",
-                  at: new Date().toISOString(),
-                },
-              ]);
-              setValue("");
-            }}
-            className="h-10 w-10 rounded-xl border border-border bg-background hover:bg-muted/30 grid place-items-center"
-            data-testid="button-support-send"
+            onClick={onClose}
+            className="h-9 w-9 grid place-items-center rounded-xl hover:bg-muted/40"
+            data-testid="button-support-close"
           >
-            <Send className="h-4 w-4" />
+            <X className="h-4 w-4" />
           </button>
         </div>
-      </div>
+
+        <div className="flex-grow overflow-auto p-4 space-y-4" data-testid="list-support-messages">
+          {msgs.map((m) => (
+            <div
+              key={m.id}
+              className={cn("flex", m.from === "user" ? "justify-end" : "justify-start")}
+              data-testid={`row-support-${m.id}`}
+            >
+              <div
+                className={cn(
+                  "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm border",
+                  m.from === "user" ? "bg-primary text-primary-foreground border-primary/20" : "bg-muted/30 border-border",
+                )}
+                data-testid={`bubble-support-${m.id}`}
+              >
+                {m.text}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="p-4 border-t border-border bg-background">
+          <div className="flex gap-2">
+            <input
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              className="h-11 flex-1 rounded-xl border border-border bg-muted/20 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+              placeholder="Type a message…"
+              data-testid="input-support-message"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                if (!value.trim()) return;
+                const now = new Date().toISOString();
+                setMsgs((prev) => [
+                  ...prev,
+                  { id: prev.length + 1, from: "user", text: value.trim(), at: now },
+                  {
+                    id: prev.length + 2,
+                    from: "support",
+                    text: "Got it — this is mock. REAL: connect to Intercom/Helpdesk.",
+                    at: new Date().toISOString(),
+                  },
+                ]);
+                setValue("");
+              }}
+              className="h-11 w-11 rounded-xl border border-border bg-background hover:bg-muted/30 grid place-items-center"
+              data-testid="button-support-send"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </aside>
     </div>
   );
 }

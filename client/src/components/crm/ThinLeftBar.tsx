@@ -112,9 +112,18 @@ export function ThinLeftBar({
             </div>
           ) : null}
         </div>
-        <IconButton label="Settings" testId="button-settings" onClick={onOpenEdgeSettings} active={location.includes('/settings')}>
+        <IconButton label="Settings" testId="button-settings" onClick={onOpenEdgeSettings} active={false}>
           <Settings className="h-5 w-5" />
         </IconButton>
+        <IconButton label="Help" testId="button-help" onClick={onToggleHelp} active={false}>
+          <HelpCircle className="h-5 w-5" />
+        </IconButton>
+        <IconButton label="Customer Support" onClick={onOpenSupport} testId="button-support" active={false}>
+          <Headphones className="h-5 w-5" />
+        </IconButton>
+      </div>
+
+      <div className="mt-auto pb-2" data-testid="group-leftbar-support">
         <IconButton
           label="Night mode"
           onClick={() => {
@@ -125,15 +134,6 @@ export function ThinLeftBar({
           active={dark}
         >
           <Moon className="h-5 w-5" />
-        </IconButton>
-        <IconButton label="Help" testId="button-help" onClick={onToggleHelp} active={false}>
-          <HelpCircle className="h-5 w-5" />
-        </IconButton>
-      </div>
-
-      <div className="mt-auto pb-2" data-testid="group-leftbar-support">
-        <IconButton label="Customer Support" onClick={onOpenSupport} testId="button-support" active={false}>
-          <Headphones className="h-5 w-5" />
         </IconButton>
       </div>
     </aside>

@@ -1,5 +1,4 @@
-import * as Dialog from "@radix-ui/react-dialog";
-import { useMemo, useState } from "react";
+import { useState, useMemo } from "react";
 import { Search, X } from "lucide-react";
 import { leads, interactions } from "@/data/mocks";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -44,73 +43,64 @@ export function SearchModal({ open, onOpenChange }: { open: boolean; onOpenChang
   }, [q, currentAccountId]);
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/35 z-[80]" />
-        <Dialog.Content
-          className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[81] w-[640px] max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-background shadow-xl overflow-hidden"
-          data-testid="modal-search"
-        >
-          <div className="p-4 border-b border-border flex items-center justify-between">
-            <div className="flex items-center gap-2" data-testid="text-search-title">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <span className="font-semibold">Search</span>
-              <span className="text-xs text-muted-foreground">(Contacts + Interactions)</span>
-            </div>
-            <Dialog.Close asChild>
-              <button
-                className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center"
-                data-testid="button-search-close"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </Dialog.Close>
+    <div className="fixed inset-0 z-[70] pointer-events-none" data-testid="overlay-search">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/35 pointer-events-auto"
+        style={{ left: '48px' }}
+        onClick={() => onOpenChange(false)}
+      />
+      <aside className="absolute left-[48px] top-0 bottom-0 w-[400px] border-r border-border bg-background shadow-xl pointer-events-auto">
+        <div className="h-14 px-4 border-b border-border flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <span className="font-semibold">Search</span>
           </div>
+          <button
+            onClick={() => onOpenChange(false)}
+            className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
 
-          <div className="p-4">
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              autoFocus
-              placeholder="Search contact name, phone, email, or message…"
-              className="h-11 w-full rounded-xl border border-border bg-muted/20 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-              data-testid="input-search"
-            />
+        <div className="p-4">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            autoFocus
+            placeholder="Search leads..."
+            className="h-11 w-full rounded-xl border border-border bg-muted/20 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+          />
 
-            <div className="mt-4 rounded-2xl border border-border bg-background overflow-hidden" data-testid="list-search-results">
-              {results.length === 0 ? (
-                <div className="p-4 text-sm text-muted-foreground" data-testid="empty-search">
-                  {q.trim() ? "No results." : "Start typing to search…"}
-                </div>
-              ) : (
-                <div className="divide-y divide-border">
-                  {results.map((r) => (
-                    <a
-                      key={r.leadId}
-                      href={`/app/contacts/${r.leadId}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        window.history.pushState({}, "", `/app/contacts/${r.leadId}`);
-                        window.dispatchEvent(new PopStateEvent("popstate"));
-                        onOpenChange(false);
-                      }}
-                      className="block p-4 hover:bg-muted/20"
-                      data-testid={`row-search-${r.leadId}`}
-                    >
-                      <div className="font-semibold" data-testid={`text-search-name-${r.leadId}`}>{r.title}</div>
-                      <div className="mt-1 text-xs text-muted-foreground" data-testid={`text-search-sub-${r.leadId}`}>{r.subtitle}</div>
-                    </a>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="mt-3 text-xs text-muted-foreground" data-testid="text-search-real">
-              REAL: global search via NocoDB full-text / indexed fields (Contacts + Interactions)
-            </div>
+          <div className="mt-4 rounded-2xl border border-border bg-background overflow-hidden">
+            {results.length === 0 ? (
+              <div className="p-4 text-sm text-muted-foreground">
+                {q.trim() ? "No results." : "Start typing to search…"}
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {results.map((r) => (
+                  <a
+                    key={r.leadId}
+                    href={`/agency/contacts/${r.leadId}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.history.pushState({}, "", `/agency/contacts/${r.leadId}`);
+                      window.dispatchEvent(new PopStateEvent("popstate"));
+                      onOpenChange(false);
+                    }}
+                    className="block p-4 hover:bg-muted/20"
+                  >
+                    <div className="font-semibold">{r.title}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">{r.subtitle}</div>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        </div>
+      </aside>
+    </div>
   );
 }
