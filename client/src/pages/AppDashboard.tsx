@@ -452,10 +452,10 @@ function SubaccountDashboard({
 
       {dashboardTab === "pipeline" ? (
         <section
-          className="rounded-2xl border border-border bg-background p-4 flex flex-col min-h-[calc(100vh-220px)]"
+          className="rounded-2xl border border-border bg-background p-4 flex flex-col h-[calc(100vh-220px)]"
           data-testid="section-pipeline"
         >
-          <div className="mt-2 overflow-x-auto flex-grow pb-2" data-testid="scroll-pipeline">
+          <div className="mt-2 overflow-x-auto overflow-y-hidden flex-grow pb-2" data-testid="scroll-pipeline">
             <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-full" data-testid="grid-pipeline">
               {stagePalette.map((s) => (
                 <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
@@ -547,7 +547,7 @@ function PipelineCol({
           {items.length}
         </div>
       </div>
-      <div className="p-3 space-y-2 overflow-y-auto flex-grow" data-testid={`col-body-${stage.id}`}>
+      <div className="p-3 space-y-2 overflow-y-auto flex-grow overscroll-contain" data-testid={`col-body-${stage.id}`}>
         {items.slice(0, 15).map((l) => (
           <div 
             key={l.id} 
