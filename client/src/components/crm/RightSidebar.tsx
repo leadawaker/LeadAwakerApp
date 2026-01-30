@@ -132,55 +132,6 @@ export function RightSidebar() {
             {!collapsed && <span className="text-sm font-semibold">Collapse menu</span>}
           </button>
 
-          {!collapsed && (
-            <div className="mt-3" data-testid="wrap-workspace-bottom">
-              <button
-                type="button"
-                onClick={() => setOpenSwitcher((v) => !v)}
-                className="w-full h-11 rounded-xl border border-border bg-background/70 hover:bg-muted/30 transition-colors flex items-center gap-3 px-3"
-                data-testid="button-workspace-open-bottom"
-                aria-label="Switch account"
-              >
-                <div className="h-8 w-8 rounded-lg border border-border bg-muted/20 grid place-items-center">
-                  <span className="text-[10px] font-extrabold">
-                    {currentAccount.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .substring(0, 2)
-                      .toUpperCase()}
-                  </span>
-                </div>
-                <div className="min-w-0 flex-1 text-left">
-                  <div className="text-sm font-semibold truncate" data-testid="text-workspace-bottom-value">
-                    {currentAccount.name}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground">Switch account</div>
-                </div>
-                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", openSwitcher && "rotate-180")} />
-              </button>
-
-              {openSwitcher && (
-                <div className="mt-2 rounded-2xl border border-border bg-background overflow-hidden" data-testid="menu-workspace">
-                  {accountsList.map((a) => (
-                    <button
-                      key={a.id}
-                      type="button"
-                      onClick={() => handleAccountSelect(a.id)}
-                      className={cn(
-                        "w-full px-3 py-2 text-left text-sm hover:bg-muted/30",
-                        currentAccountId === a.id && (isAgencyView ? "bg-yellow-500/15" : "bg-blue-600/10"),
-                      )}
-                      data-testid={`button-workspace-${a.id}`}
-                    >
-                      <div className="font-semibold">{a.label}</div>
-                      <div className="text-xs text-muted-foreground">account_id={a.id}</div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
 
           <div className={cn("mt-3 text-[11px] text-muted-foreground", collapsed && "hidden")} data-testid="text-sidebar-foot">
             MOCK CRM • NocoDB-ready
