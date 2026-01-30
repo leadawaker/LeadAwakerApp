@@ -253,37 +253,41 @@ function SubaccountDashboard({
                 <span className="text-sm font-black">!</span>
               </button>
             </div>
-            <div className="mt-4 h-[180px] w-full" data-testid="chart-funnel">
+            <div className="mt-4 h-[220px] w-full" data-testid="chart-funnel">
               <div className="flex h-full w-full items-end gap-1 px-2">
                 {funnel.map((stage, idx) => {
                   const maxValue = Math.max(...funnel.map(s => s.value), 1);
                   const heightPercent = (stage.value / maxValue) * 100;
-                  // Calculate width based on position to simulate a funnel taper
-                  const taperWidth = 100 - (idx * (80 / funnel.length));
                   
                   return (
                     <div key={stage.name} className="flex-1 flex flex-col items-center group relative h-full justify-end">
                       <div 
-                        className="w-full transition-all duration-500 rounded-t-lg relative overflow-hidden flex items-end justify-center"
+                        className="w-full transition-all duration-700 relative flex items-end justify-center"
                         style={{ 
-                          height: `${Math.max(heightPercent, 10)}%`,
+                          height: `${Math.max(heightPercent, 15)}%`,
                           backgroundColor: stage.fill,
-                          width: `${taperWidth}%`,
-                          opacity: 0.9
+                          clipPath: "polygon(0% 0%, 100% 20%, 100% 100%, 0% 100%)",
+                          opacity: 0.95,
+                          boxShadow: "inset 0 2px 10px rgba(255,255,255,0.1)"
                         }}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                        <span className="z-10 text-[10px] font-bold text-white mb-1 drop-shadow-md">
-                          {stage.value}
-                        </span>
+                        <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/10" />
+                        <div className="absolute top-4 left-0 right-0 flex justify-center">
+                          <span className="z-10 text-[11px] font-black text-white drop-shadow-md bg-black/20 px-1.5 py-0.5 rounded-md">
+                            {stage.value}
+                          </span>
+                        </div>
                       </div>
-                      <div className="mt-2 text-[10px] font-medium text-muted-foreground truncate w-full text-center">
-                        {stage.name}
+                      <div className="mt-3 flex flex-col items-center gap-1 w-full">
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: stage.fill }} />
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight text-center px-1 leading-tight">
+                          {stage.name}
+                        </div>
                       </div>
                       
                       {/* Tooltip */}
-                      <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-popover text-popover-foreground text-[10px] px-2 py-1 rounded border border-border shadow-lg z-20 pointer-events-none whitespace-nowrap">
-                        {stage.name}: {stage.value}
+                      <div className="absolute bottom-full mb-4 opacity-0 group-hover:opacity-100 transition-opacity bg-popover text-popover-foreground text-[10px] px-3 py-1.5 rounded-xl border border-border shadow-2xl z-20 pointer-events-none whitespace-nowrap font-bold">
+                        {stage.name}: {stage.value} contacts
                       </div>
                     </div>
                   );
