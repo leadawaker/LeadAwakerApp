@@ -29,17 +29,17 @@ function IconButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "group relative h-10 w-10 rounded-xl grid place-items-center transition-colors",
+        "group relative h-8 w-8 rounded-lg grid place-items-center transition-colors",
         active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted/30 hover:text-foreground",
       )}
       data-testid={testId}
     >
       {children}
       <div
-        className="pointer-events-none absolute top-full mt-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-[100]"
+        className="pointer-events-none absolute top-full mt-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-[100]"
         data-testid={`${testId}-tooltip`}
       >
-        <div className="rounded-md border border-border bg-background px-2 py-1 text-xs shadow-md whitespace-nowrap">
+        <div className="rounded-md border border-border bg-background px-2 py-0.5 text-[10px] shadow-md whitespace-nowrap">
           {label}
         </div>
       </div>
@@ -72,38 +72,25 @@ export function ThinLeftBar({
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 right-0 h-[48px] border-b z-50 flex items-center px-4 duration-0",
+        "fixed left-0 top-0 right-0 h-[32px] border-b z-50 flex items-center px-3 duration-0",
         isAgencyView
-          ? "bg-yellow-500/20 border-yellow-500/30 shadow-[0_4px_24px_-4px_rgba(234,179,8,0.1)]"
-          : "bg-blue-600/20 border-blue-500/30 shadow-[0_4px_24px_-4px_rgba(37,99,235,0.1)]"
+          ? "bg-yellow-500/20 border-yellow-500/30 shadow-[0_2px_12px_-2px_rgba(234,179,8,0.1)]"
+          : "bg-blue-600/20 border-blue-500/30 shadow-[0_2px_12px_-2px_rgba(37,99,235,0.1)]"
       )}
       data-testid="bar-thin-left"
     >
-      <button
-        type="button"
-        onClick={onGoHome}
-        className={cn(
-          "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 duration-0",
-          isAgencyView ? "bg-yellow-500" : "bg-blue-600"
-        )}
-        data-testid="button-leftbar-home"
-        aria-label="Go to home"
-      >
-        <span className="text-[10px] font-bold text-white">LA</span>
-      </button>
-
-      <div className="ml-4 flex items-center gap-2" data-testid="group-leftbar-actions">
+      <div className="ml-auto flex items-center gap-1" data-testid="group-leftbar-actions">
         <IconButton label="Search" testId="button-global-search" onClick={onOpenSearch} active={false}>
-          <Search className="h-5 w-5" />
+          <Search className="h-4 w-4" />
         </IconButton>
         <div className="relative" data-testid="wrap-notifications">
           <IconButton label="Notifications" testId="button-notifications" onClick={onOpenNotifications} active={false}>
-            <Bell className="h-5 w-5" />
+            <Bell className="h-4 w-4" />
           </IconButton>
           {count > 0 ? (
             <div
               className={cn(
-                "absolute -top-1 -right-1 h-5 w-5 rounded-full text-white text-[11px] font-bold grid place-items-center",
+                "absolute top-0 right-0 h-4 w-4 rounded-full text-white text-[9px] font-bold grid place-items-center",
                 isAgencyView ? "bg-yellow-500 text-black" : "bg-blue-600"
               )}
               data-testid="badge-notifications"
@@ -113,17 +100,14 @@ export function ThinLeftBar({
           ) : null}
         </div>
         <IconButton label="Settings" testId="button-settings" onClick={onOpenEdgeSettings} active={false}>
-          <Settings className="h-5 w-5" />
+          <Settings className="h-4 w-4" />
         </IconButton>
         <IconButton label="Help" testId="button-help" onClick={onToggleHelp} active={false}>
-          <HelpCircle className="h-5 w-5" />
+          <HelpCircle className="h-4 w-4" />
         </IconButton>
         <IconButton label="Customer Support" onClick={onOpenSupport} testId="button-support" active={false}>
-          <Headphones className="h-5 w-5" />
+          <Headphones className="h-4 w-4" />
         </IconButton>
-      </div>
-
-      <div className="ml-auto" data-testid="group-leftbar-support">
         <IconButton
           label="Night mode"
           onClick={() => {
@@ -133,7 +117,7 @@ export function ThinLeftBar({
           testId="button-nightmode"
           active={dark}
         >
-          <Moon className="h-5 w-5" />
+          <Moon className="h-4 w-4" />
         </IconButton>
       </div>
     </aside>

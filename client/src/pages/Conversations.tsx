@@ -49,7 +49,7 @@ export default function ConversationsPage() {
 
   return (
     <CrmShell>
-      <div className="h-full flex flex-col overflow-hidden" data-testid="page-conversations">
+      <div className="h-[calc(100vh-32px)] flex flex-col overflow-hidden" data-testid="page-conversations">
         <div className="px-4 md:px-6 pt-4 md:pt-6 pb-2 shrink-0">
           <div className="flex items-center gap-4">
             {mobileView === "chat" && (

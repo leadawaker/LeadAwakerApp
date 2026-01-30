@@ -28,7 +28,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         onGoHome={() => setLocation("/")}
       />
 
-      <div className="fixed left-0 top-[48px] bottom-0 z-40" data-testid="wrap-left-nav">
+      <div className="fixed left-0 top-[32px] bottom-0 z-40" data-testid="wrap-left-nav">
         <RightSidebar />
       </div>
 
@@ -39,7 +39,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
             className="absolute inset-0 bg-black/35 pointer-events-auto"
             onClick={closePanel}
           />
-          <aside className="absolute left-0 top-[48px] bottom-0 w-[400px] border-r border-border bg-background shadow-xl pointer-events-auto flex flex-col overflow-hidden">
+          <aside className="absolute left-0 top-[32px] bottom-0 w-[400px] border-r border-border bg-background shadow-xl pointer-events-auto flex flex-col overflow-hidden">
             <div className="h-14 px-4 flex items-center justify-between border-b border-border bg-background sticky top-0 z-10 shrink-0">
               <div className="font-semibold capitalize">{activePanel.replace('-', ' ')}</div>
               <button onClick={closePanel} className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center">
@@ -99,7 +99,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <main className="h-screen flex flex-col bg-background md:pl-[225px] pt-[48px]" data-testid="main-crm">
+      <main className="h-screen flex flex-col bg-background md:pl-[225px] pt-[32px]" data-testid="main-crm">
         <div className="flex-1 min-h-0">
           {children}
         </div>
