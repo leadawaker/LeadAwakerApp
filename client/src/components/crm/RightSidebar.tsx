@@ -67,7 +67,7 @@ export function RightSidebar({ collapsed, onCollapse }: { collapsed: boolean; on
       data-testid="sidebar-left"
     >
       <div className="h-full flex flex-col">
-        <div className={cn("h-14 border-b border-border flex items-center gap-2 px-3 relative")}> 
+        <div className={cn("h-auto py-3 border-b border-border flex items-center gap-2 px-3 relative")}> 
           <button
             type="button"
             onClick={() => setOpenSwitcher((v) => !v)}
