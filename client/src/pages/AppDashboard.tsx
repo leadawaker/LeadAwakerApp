@@ -4,6 +4,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { campaigns, leads, interactions, automationLogs } from "@/data/mocks";
 import { Funnel, FunnelChart, LabelList, ResponsiveContainer, Tooltip } from "recharts";
 import { FiltersBar } from "@/components/crm/FiltersBar";
+import { cn } from "@/lib/utils";
 import {
   Users,
   MessageSquare,
@@ -18,13 +19,13 @@ export default function AppDashboard() {
   const [isBookedReportOpen, setIsBookedReportOpen] = useState(false);
 
   const stagePalette = useMemo(() => [
-    { id: "New" as const, label: "🆕 New", fill: "#0b2a5b", textColor: "white" as const },
-    { id: "Contacted" as const, label: "📩 Contacted", fill: "#103a75", textColor: "white" as const },
-    { id: "Responded" as const, label: "💬 Responded", fill: "#16509d", textColor: "white" as const },
-    { id: "Multiple Responses" as const, label: "🔁 Multiple", fill: "#1E90FF", textColor: "white" as const },
-    { id: "Qualified" as const, label: "✅ Qualified", fill: "#3b82f6", textColor: "white" as const },
+    { id: "New" as const, label: "🆕 New", fill: "#1a3a6f", textColor: "white" as const },
+    { id: "Contacted" as const, label: "📩 Contacted", fill: "#2d5aa8", textColor: "white" as const },
+    { id: "Responded" as const, label: "💬 Responded", fill: "#1E90FF", textColor: "white" as const },
+    { id: "Multiple Responses" as const, label: "🔁 Multiple", fill: "#3b82f6", textColor: "white" as const },
+    { id: "Qualified" as const, label: "✅ Qualified", fill: "#10b981", textColor: "white" as const },
     { id: "Booked" as const, label: "📅 Booked", fill: "#facc15", textColor: "black" as const },
-    { id: "DND" as const, label: "⛔️ DND", fill: "#ffffff", textColor: "black" as const },
+    { id: "DND" as const, label: "⛔️ DND", fill: "#ef4444", textColor: "white" as const },
   ], []);
 
   const funnel = useMemo(() => {
@@ -370,7 +371,7 @@ function SubaccountDashboard({
 
       <section className="rounded-2xl border border-border bg-background p-4 h-[600px] flex flex-col" data-testid="section-pipeline">
         <div className="mt-2 overflow-x-auto flex-grow pb-2" data-testid="scroll-pipeline">
-          <div className="min-w-[1840px] grid grid-cols-8 gap-3 h-full" data-testid="grid-pipeline">
+          <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-full" data-testid="grid-pipeline">
             {stagePalette.map((s) => (
               <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
             ))}
@@ -428,69 +429,69 @@ function PipelineCol({
     return filtered.filter((l) => isMatch(l.conversion_status));
   }, [accountId, campaignId, stage.id]);
 
+  const formatTimeAgo = (timestamp: string | number) => {
+    const date = typeof timestamp === 'string' ? new Date(timestamp).getTime() : timestamp;
+    const elapsedMs = (Date.now() - date);
+    const elapsedSeconds = Math.floor(elapsedMs / 1000);
+    const hours = Math.floor(elapsedSeconds / 3600);
+    if (hours > 24) return `${Math.floor(hours / 24)}d ago`;
+    return `${hours}h ago`;
+  };
+
   return (
-    <div className="w-full h-full rounded-2xl border border-border bg-background flex flex-col" data-testid={`col-${stage.id}`}>
+    <div className="w-full h-full rounded-2xl border border-border bg-slate-50/50 dark:bg-slate-900/50 flex flex-col" data-testid={`col-${stage.id}`}>
       <div
-        className="px-3 py-2 border-b border-border flex items-center justify-between shrink-0"
-        style={{ backgroundColor: stage.fill }}
+        className={cn(
+          "sticky top-0 p-3 rounded-t-xl flex items-center justify-between shadow-sm backdrop-blur-sm z-10 shrink-0 border-b border-border/10",
+          stage.id === 'Booked' ? "bg-yellow-500 text-yellow-950" : "text-white"
+        )}
+        style={stage.id !== 'Booked' ? { backgroundColor: stage.fill } : undefined}
         data-testid={`col-head-${stage.id}`}
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <div
-            className="text-sm font-semibold truncate"
-            style={{ color: stage.textColor === "white" ? "#ffffff" : "#0b1220" }}
-            data-testid={`col-title-${stage.id}`}
-          >
-            {stage.label}
-          </div>
+        <div className="flex items-center gap-2 font-medium min-w-0">
+          <span className="text-sm truncate">{stage.label}</span>
         </div>
         <div
-          className="text-xs font-semibold"
-          style={{ color: stage.textColor === "white" ? "#ffffff" : "#0b1220" }}
+          className={cn(
+            "text-xs font-bold px-2 py-0.5 rounded-full bg-white/20",
+            stage.id === 'Booked' ? "text-yellow-950" : "text-white"
+          )}
           data-testid={`col-count-${stage.id}`}
         >
           {items.length}
         </div>
       </div>
       <div className="p-3 space-y-2 overflow-y-auto flex-grow" data-testid={`col-body-${stage.id}`}>
-        {items.slice(0, 8).map((l) => (
-          <div key={l.id} className="group relative w-full rounded-xl border border-border bg-muted/10 p-3" data-testid={`card-pipe-${stage.id}-${l.id}`}>
-            <button
-              type="button"
-              onClick={() => {
-                window.history.pushState({}, "", `/app/contacts/${l.id}`);
-                window.dispatchEvent(new PopStateEvent("popstate"));
-              }}
-              className="text-left w-full"
-              data-testid={`button-pipe-open-${stage.id}-${l.id}`}
-            >
-              <div
-                className="font-semibold text-sm truncate transition-colors"
-                style={{ color: stage.id === "DND" ? "hsl(var(--foreground))" : stage.fill }}
-                data-testid={`text-pipe-name-${stage.id}-${l.id}`}
-              >
-                {l.full_name}
+        {items.slice(0, 15).map((l) => (
+          <div 
+            key={l.id} 
+            className="group relative w-full"
+            onClick={() => {
+              window.history.pushState({}, "", `/app/contacts/${l.id}`);
+              window.dispatchEvent(new PopStateEvent("popstate"));
+            }}
+          >
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 shadow-sm hover:shadow-md transition-all cursor-pointer">
+              <div className="flex justify-between items-start mb-2">
+                <div 
+                  className="font-semibold text-sm truncate"
+                  style={{ color: stage.id === 'Booked' ? '#ca8a04' : stage.fill }}
+                  data-testid={`text-pipe-name-${stage.id}-${l.id}`}
+                >
+                  {l.full_name}
+                </div>
               </div>
-            </button>
-
-            <div
-              className="pointer-events-none absolute left-3 top-10 z-[9999] hidden w-[260px] rounded-xl border border-border bg-background p-3 shadow-2xl group-hover:block"
-              data-testid={`popover-pipe-${stage.id}-${l.id}`}
-            >
-              <div className="text-xs font-semibold" data-testid={`popover-name-${stage.id}-${l.id}`}>{l.full_name}</div>
-              <div className="mt-2 space-y-1 text-xs text-muted-foreground" data-testid={`popover-meta-${stage.id}-${l.id}`}>
-                <div data-testid={`popover-phone-${stage.id}-${l.id}`}>Phone: {l.phone || "—"}</div>
-                <div data-testid={`popover-email-${stage.id}-${l.id}`}>Email: {l.email || "—"}</div>
-                <div data-testid={`popover-tags-${stage.id}-${l.id}`}>Tags: {l.tags || "—"}</div>
-              </div>
-              <div className="mt-2 text-[11px] text-muted-foreground" data-testid={`popover-hint-${stage.id}-${l.id}`}>
-                Click name to open contact.
+              <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
+                <span>{formatTimeAgo(l.created_at)}</span>
+                <span className="font-mono font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded text-[0.65rem]">
+                  {l.phone}
+                </span>
               </div>
             </div>
           </div>
         ))}
         {items.length === 0 ? (
-          <div className="w-full rounded-xl border border-dashed border-border bg-muted/10 p-3 text-xs text-muted-foreground" data-testid={`empty-pipe-${stage.id}`}>
+          <div className="flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-slate-400 text-xs italic bg-slate-50/50 dark:bg-slate-900/50 p-3">
             No contacts.
           </div>
         ) : null}
