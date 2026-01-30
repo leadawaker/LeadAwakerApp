@@ -103,9 +103,9 @@ export function ThinLeftBar({
           {count > 0 ? (
             <div
               className={cn(
-            "h-5 min-w-5 px-1 rounded-full text-white text-[11px] font-bold grid place-items-center",
-            isAgencyView ? "bg-blue-600" : "bg-yellow-500 text-black"
-          )}
+                "absolute -top-1 -right-1 h-5 w-5 rounded-full text-white text-[11px] font-bold grid place-items-center",
+                isAgencyView ? "bg-blue-600" : "bg-yellow-500 text-black"
+              )}
               data-testid="badge-notifications"
             >
               {count}

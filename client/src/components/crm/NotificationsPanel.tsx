@@ -49,7 +49,7 @@ export function NotificationsPanel({
         aria-label="Close notifications"
       />
 
-      <div className="fixed left-0 top-0 bottom-0 w-[48px] bg-[#f8fafc] border-r border-border" data-testid="keep-edgebar-white" />
+      <div className="fixed left-0 top-0 bottom-0 w-[48px] pointer-events-none" data-testid="keep-edgebar-white" />
 
       <aside
         className="absolute left-[48px] top-0 bottom-0 w-[340px] max-w-[calc(100vw-48px)] border-r border-border bg-background shadow-xl"
