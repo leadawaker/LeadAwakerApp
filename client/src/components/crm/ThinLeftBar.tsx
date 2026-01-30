@@ -72,7 +72,7 @@ export function ThinLeftBar({
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 right-0 h-[32px] border-b z-[100] flex items-center px-3 duration-0 transition-all",
+        "fixed left-0 top-0 right-0 h-[32px] border-b z-[100] flex items-center px-3 duration-0 transition-none",
         isAgencyView
           ? "bg-yellow-500 border-yellow-600 shadow-[0_1px_12px_rgba(234,179,8,0.4)]"
           : "bg-blue-600 border-blue-700 shadow-[0_1px_12px_rgba(37,99,235,0.4)]"
@@ -85,7 +85,7 @@ export function ThinLeftBar({
           className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-black/10 transition-colors group"
           data-testid="button-home-logo"
         >
-          <img src="/6.Favicon.svg" className="h-5 w-5 object-contain" alt="Logo" />
+          <img src="/6. Favicon.svg" className="h-5 w-5 object-contain" alt="Logo" />
           <span className={cn(
             "text-xs font-bold tracking-tight",
             isAgencyView ? "text-black" : "text-white"
