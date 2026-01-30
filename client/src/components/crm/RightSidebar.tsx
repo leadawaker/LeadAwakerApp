@@ -72,23 +72,23 @@ export function RightSidebar({ collapsed, onCollapse }: { collapsed: boolean; on
             type="button"
             onClick={() => setOpenSwitcher((v) => !v)}
             className={cn(
-              "flex-1 min-w-0 flex items-center justify-between gap-2 rounded-xl border border-border bg-muted/20 transition-colors",
-              collapsed ? "px-1 py-1 justify-center" : "px-3 py-2 hover:bg-muted/30",
+              "min-w-0 flex items-center justify-between gap-2 rounded-xl border border-border bg-muted/20 transition-colors",
+              collapsed ? "h-[56px] w-full justify-center px-2" : "h-[56px] flex-1 px-3 hover:bg-muted/30",
             )}
             data-testid="wrap-workspace"
             aria-label="Switch account"
           >
             {collapsed ? (
-              <div 
+              <div
                 className={cn(
-                  "h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold shadow-sm",
-                  isAgencyView 
-                    ? "bg-muted text-yellow-600 border border-yellow-500/20" 
-                    : "bg-muted text-blue-600 border border-blue-500/20"
+                  "h-11 w-full rounded-xl flex items-center justify-center text-xs font-bold shadow-sm",
+                  isAgencyView
+                    ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/20"
+                    : "bg-blue-600 text-white shadow-lg shadow-blue-500/20",
                 )}
                 title={currentAccount.name}
               >
-                {currentAccount.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                {currentAccount.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
               </div>
             ) : (
               <>
@@ -97,14 +97,16 @@ export function RightSidebar({ collapsed, onCollapse }: { collapsed: boolean; on
                     {currentAccount.name}
                   </div>
                 </div>
-                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", openSwitcher && "rotate-180")} />
               </>
             )}
           </button>
 
           {openSwitcher && (
-            <div 
-              className="absolute top-full left-3 right-3 mt-1 bg-background border border-border rounded-xl shadow-xl z-50 py-1 animate-in fade-in zoom-in-95 duration-100"
+            <div
+              className={cn(
+                "absolute top-full mt-1 bg-background border border-border rounded-xl shadow-xl z-50 py-1 animate-in fade-in zoom-in-95 duration-100",
+                collapsed ? "left-3 w-[260px]" : "left-3 right-3",
+              )}
               data-testid="dropdown-switcher"
             >
               {accountsList.map((acc) => (
@@ -113,7 +115,7 @@ export function RightSidebar({ collapsed, onCollapse }: { collapsed: boolean; on
                   onClick={() => handleAccountSelect(acc.id)}
                   className={cn(
                     "w-full text-left px-3 py-2 text-sm hover:bg-muted/50 transition-colors flex items-center justify-between",
-                    currentAccountId === acc.id && "text-blue-600 font-medium bg-blue-50/50"
+                    currentAccountId === acc.id && "text-blue-600 font-medium bg-blue-50/50",
                   )}
                   data-testid={`button-account-${acc.id}`}
                 >
