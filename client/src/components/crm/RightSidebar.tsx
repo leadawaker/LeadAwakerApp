@@ -149,7 +149,12 @@ export function RightSidebar({ collapsed, onCollapse }: { collapsed: boolean; on
                 title={collapsed ? it.label : undefined}
               >
                 <Icon className="h-5 w-5 shrink-0" />
-                {!collapsed && <span className="text-sm font-semibold truncate">{it.label}</span>}
+                <span className={cn(
+                  "text-sm font-semibold truncate transition-all duration-300 origin-left",
+                  collapsed ? "w-0 opacity-0 scale-x-0 overflow-hidden" : "w-auto opacity-100 scale-x-100"
+                )}>
+                  {it.label}
+                </span>
               </Link>
             );
           })}
@@ -170,7 +175,12 @@ export function RightSidebar({ collapsed, onCollapse }: { collapsed: boolean; on
             <div className="shrink-0">
               {collapsed ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
             </div>
-            {!collapsed && <span className="text-sm font-semibold truncate">Collapse menu</span>}
+            <span className={cn(
+              "text-sm font-semibold truncate transition-all duration-300 origin-left",
+              collapsed ? "w-0 opacity-0 scale-x-0 overflow-hidden" : "w-auto opacity-100 scale-x-100"
+            )}>
+              Collapse menu
+            </span>
           </button>
 
 
