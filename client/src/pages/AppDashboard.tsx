@@ -253,24 +253,42 @@ function SubaccountDashboard({
                 <span className="text-sm font-black">!</span>
               </button>
             </div>
-            <div className="mt-2 h-[120px]" data-testid="chart-funnel">
-              <ResponsiveContainer width="100%" height="100%">
-                <FunnelChart>
-                  <Tooltip />
-                  <Funnel dataKey="value" data={funnel} isAnimationActive>
-                    <LabelList
-                      position="left"
-                      fill="hsl(var(--foreground))"
-                      stroke="none"
-                      dataKey="name"
-                      formatter={(value: unknown, entry: any) => {
-                        const v = typeof entry?.value === "number" ? entry.value : 0;
-                        return `${String(value)}  ${v}`;
-                      }}
-                    />
-                  </Funnel>
-                </FunnelChart>
-              </ResponsiveContainer>
+            <div className="mt-4 h-[180px] w-full" data-testid="chart-funnel">
+              <div className="flex h-full w-full items-end gap-1 px-2">
+                {funnel.map((stage, idx) => {
+                  const maxValue = Math.max(...funnel.map(s => s.value), 1);
+                  const heightPercent = (stage.value / maxValue) * 100;
+                  // Calculate width based on position to simulate a funnel taper
+                  const taperWidth = 100 - (idx * (80 / funnel.length));
+                  
+                  return (
+                    <div key={stage.name} className="flex-1 flex flex-col items-center group relative h-full justify-end">
+                      <div 
+                        className="w-full transition-all duration-500 rounded-t-lg relative overflow-hidden flex items-end justify-center"
+                        style={{ 
+                          height: `${Math.max(heightPercent, 10)}%`,
+                          backgroundColor: stage.fill,
+                          width: `${taperWidth}%`,
+                          opacity: 0.9
+                        }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                        <span className="z-10 text-[10px] font-bold text-white mb-1 drop-shadow-md">
+                          {stage.value}
+                        </span>
+                      </div>
+                      <div className="mt-2 text-[10px] font-medium text-muted-foreground truncate w-full text-center">
+                        {stage.name}
+                      </div>
+                      
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-popover text-popover-foreground text-[10px] px-2 py-1 rounded border border-border shadow-lg z-20 pointer-events-none whitespace-nowrap">
+                        {stage.name}: {stage.value}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
