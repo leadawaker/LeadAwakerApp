@@ -4,7 +4,6 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { campaigns, leads, interactions, automationLogs } from "@/data/mocks";
 import { Funnel, FunnelChart, LabelList, ResponsiveContainer, Tooltip } from "recharts";
 import { FiltersBar } from "@/components/crm/FiltersBar";
-import { cn } from "@/lib/utils";
 import {
   Users,
   MessageSquare,
@@ -12,10 +11,14 @@ import {
   Calendar as CalendarIcon,
   CheckCircle2,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type DashboardTab = "pipeline" | "funnel";
 
 export default function AppDashboard() {
   const { currentAccountId, isAgencyView, currentAccount } = useWorkspace();
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | "all">("all");
+  const [dashboardTab, setDashboardTab] = useState<DashboardTab>("pipeline");
   const [isBookedReportOpen, setIsBookedReportOpen] = useState(false);
 
   const stagePalette = useMemo(() => [
@@ -76,10 +79,30 @@ export default function AppDashboard() {
             Dashboard
           </h1>
           
-          <FiltersBar selectedCampaignId={selectedCampaignId} setSelectedCampaignId={setSelectedCampaignId} />
+          <FiltersBar
+            selectedCampaignId={selectedCampaignId}
+            setSelectedCampaignId={setSelectedCampaignId}
+            dashboardTab={dashboardTab}
+            setDashboardTab={setDashboardTab}
+          />
         </div>
 
-        {isAgencyView ? <AgencyDashboard /> : <SubaccountDashboard accountId={currentAccountId} selectedCampaignId={selectedCampaignId} setSelectedCampaignId={setSelectedCampaignId} campaignOptions={campaignOptions} stats={stats} funnel={funnel} stagePalette={stagePalette} isBookedReportOpen={isBookedReportOpen} setIsBookedReportOpen={setIsBookedReportOpen} />}
+        {isAgencyView ? (
+          <AgencyDashboard />
+        ) : (
+          <SubaccountDashboard
+            accountId={currentAccountId}
+            selectedCampaignId={selectedCampaignId}
+            setSelectedCampaignId={setSelectedCampaignId}
+            campaignOptions={campaignOptions}
+            stats={stats}
+            funnel={funnel}
+            stagePalette={stagePalette}
+            isBookedReportOpen={isBookedReportOpen}
+            setIsBookedReportOpen={setIsBookedReportOpen}
+            dashboardTab={dashboardTab}
+          />
+        )}
       </div>
     </CrmShell>
   );
@@ -218,7 +241,8 @@ function SubaccountDashboard({
   funnel, 
   stagePalette, 
   isBookedReportOpen, 
-  setIsBookedReportOpen 
+  setIsBookedReportOpen,
+  dashboardTab
 }: { 
   accountId: number;
   selectedCampaignId: number | "all";
@@ -229,59 +253,13 @@ function SubaccountDashboard({
   stagePalette: any[];
   isBookedReportOpen: boolean;
   setIsBookedReportOpen: (v: boolean) => void;
+  dashboardTab: DashboardTab;
 }) {
-  const [dashboardTab, setDashboardTab] = useState<"pipeline" | "funnel">("pipeline");
 
   return (
     <div className="mt-6 space-y-6" data-testid="subaccount-dashboard">
-      <section className="rounded-2xl border border-border bg-background overflow-hidden" data-testid="section-campaign-selector">
-        <div className="px-4 py-3 flex items-center justify-between gap-3" data-testid="row-campaign-tabs">
-          <div className="min-w-0" data-testid="wrap-campaign-tabs-left">
-            <div className="text-xs font-semibold text-muted-foreground" data-testid="text-campaign-tabs-label">Campaigns</div>
-          </div>
-
-          <div className="flex items-center gap-2" data-testid="row-campaign-tabs-right">
-            <div
-              className="inline-flex rounded-xl border border-border bg-muted/20 p-1"
-              data-testid="segmented-dashboard-tabs"
-              role="tablist"
-              aria-label="Dashboard view"
-            >
-              <button
-                type="button"
-                onClick={() => setDashboardTab("pipeline")}
-                className={cn(
-                  "h-9 px-3 rounded-lg text-sm font-semibold transition-colors",
-                  dashboardTab === "pipeline"
-                    ? "bg-background shadow-sm text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                data-testid="tab-conversion-pipeline"
-                role="tab"
-                aria-selected={dashboardTab === "pipeline"}
-              >
-                Conversion Pipeline
-              </button>
-              <button
-                type="button"
-                onClick={() => setDashboardTab("funnel")}
-                className={cn(
-                  "h-9 px-3 rounded-lg text-sm font-semibold transition-colors",
-                  dashboardTab === "funnel"
-                    ? "bg-background shadow-sm text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                data-testid="tab-sales-funnel"
-                role="tab"
-                aria-selected={dashboardTab === "funnel"}
-              >
-                Sales Funnel
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {dashboardTab === "funnel" ? (
+      {dashboardTab === "funnel" ? (
+        <section className="rounded-2xl border border-border bg-background overflow-hidden" data-testid="section-campaign-selector">
           <div className="px-4 pb-4" data-testid="panel-sales-funnel">
             <div className="grid grid-cols-1 lg:grid-cols-[640px_1fr] gap-4" data-testid="campaign-body">
               <div className="rounded-2xl border border-border bg-background p-4" data-testid="card-funnel">
@@ -469,8 +447,8 @@ function SubaccountDashboard({
               ) : null}
             </div>
           </div>
-        ) : null}
-      </section>
+        </section>
+      ) : null}
 
       {dashboardTab === "pipeline" ? (
         <section
