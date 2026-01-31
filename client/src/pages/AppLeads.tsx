@@ -1,11 +1,10 @@
 import { useMemo, useState } from "react";
-import { Link } from "wouter";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { leads as allLeads, type Lead } from "@/data/mocks";
 import { FiltersBar } from "@/components/crm/FiltersBar";
+import { useLeads, type Lead } from "@/hooks/useLeads";
 
 export default function AppLeads() {
   const { currentAccountId, isAgencyView } = useWorkspace();
@@ -16,20 +15,20 @@ export default function AppLeads() {
 
   const [localLeads, setLocalLeads] = useState<Lead[]>([]);
 
+  const { leads: csvLeads, isLoading } = useLeads({
+    accountId: currentAccountId,
+    campaignId: campaignId === "all" ? null : campaignId,
+  });
+
   const leads = useMemo(() => {
-    const merged = [...allLeads.filter((l) => l.account_id === currentAccountId), ...localLeads];
+    const merged = [...csvLeads, ...localLeads];
 
-    // Ensure the demo contact (Sam Lewis, id=25) is accessible in all workspaces.
-    // This is a frontend-only prototype convenience so the “click Sam Lewis” flow always works.
-    const sam = allLeads.find((l) => l.id === 25);
-    const withSam = sam && !merged.some((x) => x.id === 25) ? [sam, ...merged] : merged;
-
-    return withSam
+    return merged
       .filter((l) => (campaignId === "all" ? true : l.campaign_id === campaignId))
       .filter((l) => (status === "all" ? true : l.conversion_status === status))
       .filter((l) => (priority === "all" ? true : l.priority === priority))
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
-  }, [currentAccountId, campaignId, status, priority, localLeads]);
+  }, [csvLeads, campaignId, status, priority, localLeads]);
 
   return (
     <CrmShell>
@@ -132,6 +131,11 @@ export default function AppLeads() {
         </div>
 
         <div className="mt-4 rounded-2xl border border-border bg-background overflow-hidden" data-testid="table-contacts">
+          {isLoading ? (
+            <div className="px-4 py-6 text-sm text-muted-foreground" data-testid="status-leads-loading">
+              Loading contacts…
+            </div>
+          ) : null}
           <div className="grid grid-cols-[44px_1.2fr_200px_240px_220px_180px] items-center gap-3 bg-muted/20 px-4 py-3 text-xs font-semibold text-muted-foreground border-b border-border" data-testid="row-contacts-head">
             <div />
             <div>name</div>
@@ -258,13 +262,24 @@ function AddLeadForm({
   accountId: number;
   onSubmit: (lead: Lead) => void;
 }) {
-  const [first, setFirst] = useState("");
-  const [last, setLast] = useState("");
+  const [first_name, setFirstName] = useState("");
+  const [last_name, setLastName] = useState("");
+  const [automation_status, setAutomationStatus] = useState("");
+  const [conversion_status, setConversionStatus] = useState("New");
+  const [campaign_id, setCampaignId] = useState("1");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [source, setSource] = useState<Lead["source"]>("Manual Upload");
-  const [status, setStatus] = useState<Lead["conversion_status"]>("New");
-  const [priority, setPriority] = useState<Lead["priority"]>("Medium");
+  const [source, setSource] = useState("");
+  const [notes, setNotes] = useState("");
+  const [booked_call_date, setBookedCallDate] = useState("");
+  const [timezone, setTimezone] = useState("");
+  const [ai_sentiment, setAiSentiment] = useState("");
+  const [opted_out, setOptedOut] = useState(false);
+  const [manual_takeover, setManualTakeover] = useState(false);
+  const [dnc_reason, setDncReason] = useState("");
+  const [priority, setPriority] = useState("Medium");
+  const [language, setLanguage] = useState("");
+  const [time_zone, setTimeZone] = useState("");
 
   return (
     <form
@@ -276,41 +291,37 @@ function AddLeadForm({
         const lead: Lead = {
           id,
           account_id: accountId,
-          campaign_id: 1,
+          campaign_id: Number(campaign_id) || 0,
           created_at: now,
           updated_at: now,
-          first_name: first,
-          last_name: last,
-          full_name: `${first} ${last}`.trim(),
+          first_name,
+          last_name,
+          full_name: `${first_name} ${last_name}`.trim(),
           phone,
-          phone_normalized: phone,
           email,
-          conversion_status: status,
+          conversion_status,
           source,
           last_interaction_at: now,
-          notes: "",
-          booked_call_date: null,
-          automation_status: "queued",
+          notes,
+          booked_call_date: booked_call_date || null,
+          automation_status,
           last_message_sent_at: null,
           last_message_received_at: null,
           message_count_sent: 0,
           message_count_received: 0,
-          ai_memory: "{}",
+          ai_memory: "",
           bump_1_sent_at: null,
           bump_2_sent_at: null,
           bump_3_sent_at: null,
           first_message_sent_at: null,
           current_bump_stage: 0,
           next_action_at: null,
-          timezone: "Europe/Amsterdam",
-          opted_out: false,
-          ai_sentiment: "Unknown",
+          timezone: timezone || time_zone,
+          opted_out,
+          ai_sentiment,
           priority,
-          manual_takeover: false,
-          dnc_reason: "",
-          custom_field_1: "",
-          custom_field_2: "",
-          custom_field_3: "",
+          manual_takeover,
+          dnc_reason,
           tags: [],
         };
         onSubmit(lead);
@@ -318,38 +329,80 @@ function AddLeadForm({
       data-testid="form-add-lead"
     >
       <Row>
-        <Input label="First Name" value={first} onChange={setFirst} testId="input-add-first" />
-        <Input label="Last Name" value={last} onChange={setLast} testId="input-add-last" />
+        <Input label="first_name" value={first_name} onChange={setFirstName} testId="input-add-first_name" />
+        <Input label="last_name" value={last_name} onChange={setLastName} testId="input-add-last_name" />
       </Row>
+
       <Row>
-        <Input label="Phone" value={phone} onChange={setPhone} testId="input-add-phone" />
-        <Input label="Email" value={email} onChange={setEmail} testId="input-add-email" />
+        <Input label="phone" value={phone} onChange={setPhone} testId="input-add-phone" />
+        <Input label="Email" value={email} onChange={setEmail} testId="input-add-Email" />
       </Row>
+
       <Row>
+        <Input label="Source" value={source} onChange={setSource} testId="input-add-Source" />
+        <Input label="notes" value={notes} onChange={setNotes} testId="input-add-notes" />
+      </Row>
+
+      <Row>
+        <Input label="automation_status" value={automation_status} onChange={setAutomationStatus} testId="input-add-automation_status" />
         <Select
-          label="Source"
-          value={source}
-          onChange={(v) => setSource(v as Lead["source"])}
-          options={["Manual Upload", "Facebook", "Google", "Referral", "API", "Import"]}
-          testId="select-add-source"
-        />
-        <Select
-          label="Status"
-          value={status}
-          onChange={(v) => setStatus(v as Lead["conversion_status"])}
+          label="Conversion Status"
+          value={conversion_status}
+          onChange={setConversionStatus}
           options={["New", "Contacted", "Responded", "Multiple Responses", "Qualified", "Booked", "Lost", "DND"]}
-          testId="select-add-status"
+          testId="select-add-Conversion_Status"
         />
       </Row>
+
       <Row>
+        <Input label="campaign_id" value={campaign_id} onChange={setCampaignId} testId="input-add-campaign_id" />
         <Select
-          label="Priority"
+          label="priority"
           value={priority}
-          onChange={(v) => setPriority(v as Lead["priority"])}
+          onChange={setPriority}
           options={["Low", "Medium", "High", "Urgent"]}
           testId="select-add-priority"
         />
       </Row>
+
+      <Row>
+        <Input label="booked_call_date" value={booked_call_date} onChange={setBookedCallDate} testId="input-add-booked_call_date" />
+        <Input label="timezone" value={timezone} onChange={setTimezone} testId="input-add-timezone" />
+      </Row>
+
+      <Row>
+        <Input label="ai_sentiment" value={ai_sentiment} onChange={setAiSentiment} testId="input-add-ai_sentiment" />
+        <Input label="dnc_reason" value={dnc_reason} onChange={setDncReason} testId="input-add-dnc_reason" />
+      </Row>
+
+      <Row>
+        <Input label="language" value={language} onChange={setLanguage} testId="input-add-language" />
+        <Input label="time_zone" value={time_zone} onChange={setTimeZone} testId="input-add-time_zone" />
+      </Row>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="row-add-flags">
+        <div className="flex items-center justify-between rounded-xl border border-border bg-muted/20 px-3 h-10" data-testid="toggle-add-opted_out-wrap">
+          <span className="text-sm" data-testid="toggle-add-opted_out-label">opted_out</span>
+          <input
+            type="checkbox"
+            checked={opted_out}
+            onChange={(e) => setOptedOut(e.target.checked)}
+            className="h-4 w-4"
+            data-testid="toggle-add-opted_out"
+          />
+        </div>
+
+        <div className="flex items-center justify-between rounded-xl border border-border bg-muted/20 px-3 h-10" data-testid="toggle-add-manual_takeover-wrap">
+          <span className="text-sm" data-testid="toggle-add-manual_takeover-label">manual_takeover</span>
+          <input
+            type="checkbox"
+            checked={manual_takeover}
+            onChange={(e) => setManualTakeover(e.target.checked)}
+            className="h-4 w-4"
+            data-testid="toggle-add-manual_takeover"
+          />
+        </div>
+      </div>
 
       <div className="pt-2 flex justify-end gap-2" data-testid="row-add-actions">
         <button
@@ -360,7 +413,6 @@ function AddLeadForm({
           Create Lead
         </button>
       </div>
-
     </form>
   );
 }

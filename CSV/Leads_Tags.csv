@@ -1,0 +1,6 @@
+﻿tag_name,workflow,lead_id,lead_name,tag_id,account_name,account_id,workflow_step,created_at,applied_by,removed_at,removed_by,notes
+no response,LeadAwaker-First_Contact,2,Danique van de Kerkhof,21,van de Kerkhof,2,60D_no_response,2026-01-28 18:38:24+00:00,Automation,,,
+bump 3.1,LeadAwaker-First_Contact,2,Danique van de Kerkhof,29,van de Kerkhof,2,bump_3_sent,2026-01-28 18:22:52+00:00,Automation,,,
+bump 2.1,LeadAwaker-First_Contact,2,Danique van de Kerkhof,7,van de Kerkhof,2,bump_2_sent,2026-01-28 18:15:42+00:00,Automation,,,
+bump 1.1,LeadAwaker-First_Contact,2,Danique van de Kerkhof,5,van de Kerkhof,2,bump_1_sent,2026-01-28 18:14:34+00:00,Automation,,,
+first message,LeadAwaker-First_Contact,1,Gabriel Fronza,13,van de Kerkhof,2,first_message_sent,2026-01-28 18:02:46+00:00,Automation,,,

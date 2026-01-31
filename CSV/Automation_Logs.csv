@@ -1,0 +1,13 @@
+﻿workflow_name,automation_logs_id,workflow_execution_id,step_number,step_name,status,lead_id,lead_name,error_code,input_data,output_data,execution_time_ms,retry_count,Created time,metadata,campaign_id,campaign_name,account_id,account_name
+LeadAwaker-First_Contact,36,390,3,bump_3_sent,success,2,Danique van de Kerkhof,,,"{""phone"":null}",0,0,2026-01-28 18:22:52+00:00,,1,Reactivation of our lives,2,van de Kerkhof
+LeadAwaker-First_Contact,35,382,2,bump_2_sent,success,2,Danique van de Kerkhof,,,"{""phone"":null}",0,0,2026-01-28 18:15:42+00:00,,1,Reactivation of our lives,2,van de Kerkhof
+LeadAwaker-First_Contact,34,381,2,bump_1_sent,success,2,Danique van de Kerkhof,,,"{""phone"":null}",0,0,2026-01-28 18:14:34+00:00,,1,Reactivation of our lives,2,van de Kerkhof
+LeadAwaker-First_Contact,31,367,2,bump_1_sent,success,1,Gabriel Fronza,,,"{""phone"":null}",0,0,2026-01-28 18:02:47+00:00,,1,Reactivation of our lives,2,van de Kerkhof
+LeadAwaker-First_Contact,32,367,2,bump_2_sent,success,1,Gabriel Fronza,,,"{""phone"":null}",0,0,2026-01-28 18:02:47+00:00,,1,Reactivation of our lives,2,van de Kerkhof
+LeadAwaker-First_Contact,33,367,3,bump_3_sent,success,1,Gabriel Fronza,,,"{""phone"":null}",0,0,2026-01-28 18:02:47+00:00,,1,Reactivation of our lives,2,van de Kerkhof
+LeadAwaker-First_Contact,30,367,1,First Message Sent,success,1,Gabriel Fronza,,,"{""phone"":null}",0,0,2026-01-28 18:02:46+00:00,,1,Reactivation of our lives,2,van de Kerkhof
+LeadAwaker-First_Contact,29,359,2,bump_2_sent,success,1,Gabriel Fronza,,,"{""phone"":null}",0,0,2026-01-28 17:53:44+00:00,,1,Reactivation of our lives,2,van de Kerkhof
+LeadAwaker-First_Contact,28,358,3,bump_3_sent,success,1,Gabriel Fronza,,,"{""phone"":null}",0,0,2026-01-28 17:52:42+00:00,,1,Reactivation of our lives,2,van de Kerkhof
+LeadAwaker-First_Contact,24,348,2,bump_2_sent,success,1,Gabriel Fronza,,,"{""phone"":null}",0,0,2026-01-28 17:32:46+00:00,,1,Reactivation of our lives,2,van de Kerkhof
+LeadAwaker-First_Contact,22,347,2,bump_1_sent,success,1,Gabriel Fronza,,,"{""phone"":null}",0,0,2026-01-28 17:32:40+00:00,,1,Reactivation of our lives,2,van de Kerkhof
+LeadAwaker-First_Contact,10,338,2,First Message Sent,success,1,Gabriel Fronza,,,"{""phone"":null}",0,0,2026-01-28 17:17:56+00:00,,1,Reactivation of our lives,2,van de Kerkhof
