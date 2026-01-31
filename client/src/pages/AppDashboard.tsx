@@ -549,39 +549,62 @@ function PipelineCol({
       </div>
       <div className="p-3 space-y-2 flex-grow" data-testid={`col-body-${stage.id}`}>
         {items.slice(0, 15).map((l) => (
-          <div 
-            key={l.id} 
-            className="group relative w-full"
-          >
-            <div 
-              className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2 shadow-sm hover:shadow-md transition-all cursor-pointer relative"
+          <div key={l.id} className="group relative w-full" data-testid={`row-contact-pill-${stage.id}-${l.id}`}>
+            <div
+              className={cn(
+                "rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm cursor-pointer relative",
+                "transition-[height,transform,box-shadow,background-color,border-color] duration-150 ease-out",
+                "hover:shadow-md",
+                "h-10 group-hover:h-[104px]",
+                "p-2"
+              )}
               onClick={() => {
                 window.history.pushState({}, "", `/app/contacts/${l.id}`);
                 window.dispatchEvent(new PopStateEvent("popstate"));
               }}
+              data-testid={`pill-contact-${stage.id}-${l.id}`}
             >
-              <div className="flex justify-between items-center gap-2">
-                <div 
+              <div className="flex justify-between items-center gap-2" data-testid={`row-pill-header-${stage.id}-${l.id}`}>
+                <div
                   className="font-semibold text-xs truncate flex-grow"
                   style={{ color: stage.id === 'Booked' ? '#ca8a04' : stage.fill }}
                   data-testid={`text-pipe-name-${stage.id}-${l.id}`}
                 >
                   {l.full_name}
                 </div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 whitespace-nowrap uppercase tracking-tighter">
+                <span
+                  className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 whitespace-nowrap uppercase tracking-tighter"
+                  data-testid={`text-pipe-time-${stage.id}-${l.id}`}
+                >
                   {formatTimeAgo(l.created_at)}
                 </span>
               </div>
 
-              {/* Hover popup info */}
-              <div className="absolute left-full ml-2 top-0 z-50 w-48 p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
-                <div className="space-y-1.5">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Contact Details</div>
-                  <div className="text-xs font-mono">{l.phone}</div>
-                  <div className="text-xs truncate">{l.email || "No email"}</div>
-                  <div className="flex flex-wrap gap-1 mt-1">
+              <div
+                className={cn(
+                  "mt-2 overflow-hidden",
+                  "opacity-0 translate-y-1 pointer-events-none",
+                  "transition-[opacity,transform] duration-150 ease-out",
+                  "group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto"
+                )}
+                data-testid={`panel-contact-details-${stage.id}-${l.id}`}
+              >
+                <div className="space-y-1.5" data-testid={`stack-contact-details-${stage.id}-${l.id}`}>
+                  <div
+                    className="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
+                    data-testid={`text-contact-details-label-${stage.id}-${l.id}`}
+                  >
+                    Contact Details
+                  </div>
+                  <div className="text-xs font-mono" data-testid={`text-contact-phone-${stage.id}-${l.id}`}>{l.phone}</div>
+                  <div className="text-xs truncate" data-testid={`text-contact-email-${stage.id}-${l.id}`}>{l.email || "No email"}</div>
+                  <div className="flex flex-wrap gap-1 mt-1" data-testid={`list-contact-tags-${stage.id}-${l.id}`}>
                     {(l.tags || ['Lead']).map((tag: string) => (
-                      <span key={tag} className="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[9px] font-medium text-slate-600 dark:text-slate-400">
+                      <span
+                        key={tag}
+                        className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[9px] font-medium text-slate-600 dark:text-slate-400"
+                        data-testid={`chip-contact-tag-${stage.id}-${l.id}-${tag}`}
+                      >
                         {tag}
                       </span>
                     ))}
