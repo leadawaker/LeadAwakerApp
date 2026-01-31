@@ -40,8 +40,7 @@ export default function AppArea() {
   return (
     <Protected>
       <Suspense fallback={<PageLoader />}>
-        <div key={window.location.pathname}>
-          <Switch>
+        <Switch>
           <Route path="/agency" component={() => <Redirect to="/agency/dashboard" />} />
           <Route path="/agency/dashboard" component={AppDashboard} />
           <Route path="/agency/contacts" component={AppLeads} />
@@ -80,7 +79,6 @@ export default function AppArea() {
             </CrmShell>
           )} />
         </Switch>
-        </div>
       </Suspense>
     </Protected>
   );
