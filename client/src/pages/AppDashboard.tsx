@@ -525,10 +525,10 @@ function PipelineCol({
   };
 
   return (
-    <div className="w-full h-full rounded-2xl border border-border bg-slate-50/50 dark:bg-slate-900/50 flex flex-col" data-testid={`col-${stage.id}`}>
+    <div className="w-full rounded-2xl border border-border bg-slate-50/50 dark:bg-slate-900/50 flex flex-col h-fit" data-testid={`col-${stage.id}`}>
       <div
         className={cn(
-          "sticky top-0 p-3 rounded-t-xl flex items-center justify-between shadow-sm backdrop-blur-sm z-10 shrink-0 border-b border-border/10",
+          "p-3 rounded-t-xl flex items-center justify-between shadow-sm backdrop-blur-sm z-10 shrink-0 border-b border-border/10",
           stage.id === 'Booked' ? "bg-yellow-500 text-yellow-950" : "text-white"
         )}
         style={stage.id !== 'Booked' ? { backgroundColor: stage.fill } : undefined}
@@ -547,31 +547,46 @@ function PipelineCol({
           {items.length}
         </div>
       </div>
-      <div className="p-3 space-y-2 overflow-y-auto flex-grow overscroll-contain" data-testid={`col-body-${stage.id}`}>
+      <div className="p-3 space-y-2 flex-grow" data-testid={`col-body-${stage.id}`}>
         {items.slice(0, 15).map((l) => (
           <div 
             key={l.id} 
             className="group relative w-full"
-            onClick={() => {
-              window.history.pushState({}, "", `/app/contacts/${l.id}`);
-              window.dispatchEvent(new PopStateEvent("popstate"));
-            }}
           >
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 shadow-sm hover:shadow-md transition-all cursor-pointer">
-              <div className="flex justify-between items-start mb-2">
+            <div 
+              className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2 shadow-sm hover:shadow-md transition-all cursor-pointer relative"
+              onClick={() => {
+                window.history.pushState({}, "", `/app/contacts/${l.id}`);
+                window.dispatchEvent(new PopStateEvent("popstate"));
+              }}
+            >
+              <div className="flex justify-between items-center gap-2">
                 <div 
-                  className="font-semibold text-sm truncate"
+                  className="font-semibold text-xs truncate flex-grow"
                   style={{ color: stage.id === 'Booked' ? '#ca8a04' : stage.fill }}
                   data-testid={`text-pipe-name-${stage.id}-${l.id}`}
                 >
                   {l.full_name}
                 </div>
-              </div>
-              <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
-                <span>{formatTimeAgo(l.created_at)}</span>
-                <span className="font-mono font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded text-[0.65rem]">
-                  {l.phone}
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 whitespace-nowrap uppercase tracking-tighter">
+                  {formatTimeAgo(l.created_at)}
                 </span>
+              </div>
+
+              {/* Hover popup info */}
+              <div className="absolute left-full ml-2 top-0 z-50 w-48 p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+                <div className="space-y-1.5">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Contact Details</div>
+                  <div className="text-xs font-mono">{l.phone}</div>
+                  <div className="text-xs truncate">{l.email || "No email"}</div>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {(l.tags || ['Lead']).map((tag: string) => (
+                      <span key={tag} className="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[9px] font-medium text-slate-600 dark:text-slate-400">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
