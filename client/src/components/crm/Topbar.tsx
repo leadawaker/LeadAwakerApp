@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Bell, Search, User, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -14,7 +14,25 @@ import {
 import { cn } from "@/lib/utils";
 
 export function Topbar() {
-  const { currentAccount, setCurrentAccountId, isAgencyView } = useWorkspace();
+  const [location, setLocation] = useLocation();
+  const { currentAccountId, currentAccount, setCurrentAccountId, isAgencyView } = useWorkspace();
+
+  const handleAccountSelect = (id: number) => {
+    const prevIsAgency = currentAccountId === 1;
+    const prevBase = prevIsAgency ? "/agency" : "/subaccount";
+
+    setCurrentAccountId(id);
+
+    const nextIsAgency = id === 1;
+    const nextBase = nextIsAgency ? "/agency" : "/subaccount";
+
+    const tail = location.startsWith(prevBase)
+      ? location.slice(prevBase.length)
+      : location.replace(/^\/(agency|subaccount)/, "");
+
+    const nextPath = `${nextBase}${tail || "/dashboard"}`;
+    setLocation(nextPath);
+  };
 
   return (
     <header
@@ -55,7 +73,7 @@ export function Topbar() {
             {accounts.map((acc) => (
               <DropdownMenuItem
                 key={acc.id}
-                onClick={() => setCurrentAccountId(acc.id)}
+                onClick={() => handleAccountSelect(acc.id)}
                 className={cn(
                   "flex items-center gap-2 cursor-pointer",
                   currentAccount.id === acc.id && "bg-muted font-bold"

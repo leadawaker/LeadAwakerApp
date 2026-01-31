@@ -112,13 +112,23 @@ export function RightSidebar({
   ];
 
   const handleAccountSelect = (id: number) => {
+    const prevIsAgency = currentAccountId === 1;
+    const prevBase = prevIsAgency ? "/agency" : "/subaccount";
+
     setCurrentAccountId(id);
     setOpenSwitcher(false);
-    
-    const isTargetAgency = id === 1;
-    const currentPath = location.split('/').slice(2).join('/');
-    const newBase = isTargetAgency ? "/agency" : "/subaccount";
-    setLocation(`${newBase}/${currentPath || 'dashboard'}`);
+
+    const nextIsAgency = id === 1;
+    const nextBase = nextIsAgency ? "/agency" : "/subaccount";
+
+    // Keep the same page path, but swap the base (agency/subaccount).
+    // Example: /agency/conversations -> /subaccount/conversations
+    const tail = location.startsWith(prevBase)
+      ? location.slice(prevBase.length)
+      : location.replace(/^\/(agency|subaccount)/, "");
+
+    const nextPath = `${nextBase}${tail || "/dashboard"}`;
+    setLocation(nextPath);
   };
 
   return (
