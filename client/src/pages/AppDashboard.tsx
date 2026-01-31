@@ -452,7 +452,7 @@ function SubaccountDashboard({
 
       {dashboardTab === "pipeline" ? (
         <section
-          className="rounded-2xl border border-border bg-background p-4 flex flex-col h-[calc(100vh-220px)]"
+          className="rounded-2xl border border-border bg-background p-4 flex flex-col h-[calc(100vh-168px)]"
           data-testid="section-pipeline"
         >
           <div className="mt-2 overflow-x-auto overflow-y-hidden flex-grow pb-2" data-testid="scroll-pipeline">

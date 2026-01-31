@@ -19,6 +19,7 @@ import {
   PanelRightClose,
   PanelRightOpen,
   BookUser,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -224,8 +225,9 @@ export function RightSidebar({
               ) : (
                 <>
                   <div className="min-w-0 text-left">
-                    <div className="text-sm font-semibold truncate" data-testid="text-workspace-value">
-                      {currentAccount.name}
+                    <div className="text-sm font-semibold truncate flex items-center gap-1.5" data-testid="text-workspace-value">
+                      <span className="truncate">{currentAccount.name}</span>
+                      <ChevronDown className={cn("h-3.5 w-3.5 shrink-0 transition-transform", openSwitcher && "rotate-180")} />
                     </div>
                   </div>
                 </>
