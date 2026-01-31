@@ -160,10 +160,11 @@ export default function AppLeads() {
 
                   <div className="min-w-0" data-testid={`cell-name-${l.id}`}>
                     <a
-                      href={`/app/contacts/${l.id}`}
+                      href={`${isAgencyView ? "/agency" : "/subaccount"}/contacts/${l.id}`}
                       onClick={(e) => {
                         e.preventDefault();
-                        window.history.pushState({}, "", `/app/contacts/${l.id}`);
+                        const href = `${isAgencyView ? "/agency" : "/subaccount"}/contacts/${l.id}`;
+                        window.history.pushState({}, "", href);
                         window.dispatchEvent(new PopStateEvent("popstate"));
                       }}
                       className="font-semibold truncate hover:underline block"

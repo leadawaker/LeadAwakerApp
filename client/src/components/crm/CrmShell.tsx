@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { ThinLeftBar } from "@/components/crm/ThinLeftBar";
 import { RightSidebar } from "@/components/crm/RightSidebar";
 import { SupportChat } from "@/components/crm/SupportChat";
 import { SearchModal } from "@/components/crm/SearchModal";
