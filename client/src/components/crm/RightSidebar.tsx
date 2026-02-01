@@ -142,9 +142,10 @@ export function RightSidebar({
 
   return (
     <>
+      {/* Desktop Top Bar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 right-0 h-[48px] border-b z-[100] flex items-center px-4 transition-none",
+          "fixed left-0 top-0 right-0 h-[48px] border-b z-[100] hidden md:flex items-center px-4 transition-none",
           isAgencyView
             ? "bg-yellow-500 border-yellow-600 shadow-[0_1px_12px_rgba(234,179,8,0.4)]"
             : "bg-blue-600 border-blue-700 shadow-[0_1px_12px_rgba(37,99,235,0.4)]"
@@ -152,19 +153,6 @@ export function RightSidebar({
         data-testid="bar-thin-left"
       >
         <div className="flex items-center gap-3">
-          {/* Mobile Menu Button */}
-          <button
-            type="button"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={cn(
-              "md:hidden p-2 rounded-md transition-colors",
-              isAgencyView ? "text-black hover:bg-black/10" : "text-white hover:bg-white/10"
-            )}
-            aria-label="Toggle mobile menu"
-          >
-            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
-
           <button
             onClick={onGoHome}
             className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-black/10 transition-colors group"
@@ -185,9 +173,75 @@ export function RightSidebar({
         </div>
       </aside>
 
+      {/* Mobile Bottom Bar */}
+      <div
+        className={cn(
+          "md:hidden fixed bottom-0 left-0 right-0 h-[64px] border-t z-[100] flex items-center justify-around px-2",
+          isAgencyView
+            ? "bg-yellow-500 border-yellow-600"
+            : "bg-blue-600 border-blue-700"
+        )}
+      >
+        <button
+          onClick={() => setLocation(`${prefix}/dashboard`)}
+          className={cn(
+            "p-3 rounded-xl transition-colors relative group",
+            isAgencyView ? "text-black hover:bg-black/10" : "text-white hover:bg-white/10"
+          )}
+          title="Dashboard"
+        >
+          <LayoutDashboard className="h-6 w-6" />
+          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 group-active:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+            Dashboard
+          </div>
+        </button>
+
+        <button
+          onClick={() => setLocation(`${prefix}/contacts`)}
+          className={cn(
+            "p-3 rounded-xl transition-colors relative group",
+            isAgencyView ? "text-black hover:bg-black/10" : "text-white hover:bg-white/10"
+          )}
+          title="Leads"
+        >
+          <BookUser className="h-6 w-6" />
+          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 group-active:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+            Leads
+          </div>
+        </button>
+
+        <button
+          onClick={() => setLocation(`${prefix}/campaigns`)}
+          className={cn(
+            "p-3 rounded-xl transition-colors relative group",
+            isAgencyView ? "text-black hover:bg-black/10" : "text-white hover:bg-white/10"
+          )}
+          title="Campaigns"
+        >
+          <Megaphone className="h-6 w-6" />
+          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 group-active:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+            Campaigns
+          </div>
+        </button>
+
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className={cn(
+            "p-3 rounded-xl transition-colors relative group",
+            isAgencyView ? "text-black hover:bg-black/10" : "text-white hover:bg-white/10"
+          )}
+          title="Menu"
+        >
+          {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 group-active:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+            Menu
+          </div>
+        </button>
+      </div>
+
       {/* Mobile Fullscreen Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-[90] bg-background pt-[48px] animate-in slide-in-from-left duration-300">
+        <div className="md:hidden fixed inset-0 z-[90] bg-background animate-in slide-in-from-bottom duration-300 pb-[64px]">
           <div className="h-full flex flex-col overflow-y-auto p-4 space-y-6">
             <div className="space-y-2">
               <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-3 mb-2">Workspace</h3>

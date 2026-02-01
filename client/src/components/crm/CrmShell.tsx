@@ -6,7 +6,7 @@ import { SearchModal } from "@/components/crm/SearchModal";
 import { NotificationsPanel } from "@/components/crm/NotificationsPanel";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
-import { X, Search, Bell, HelpCircle, Headphones } from "lucide-react";
+import { X, Search, Bell, HelpCircle, Headphones, Moon } from "lucide-react";
 
 export function CrmShell({ children }: { children: React.ReactNode }) {
   const [, setLocation] = useLocation();
@@ -76,6 +76,16 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
                         <Headphones className="h-5 w-5 text-muted-foreground" />
                         <span className="text-xs font-semibold">Support</span>
                       </button>
+                      <button
+                        onClick={() => {
+                          const isDark = document.documentElement.classList.toggle("dark");
+                          localStorage.setItem("theme", isDark ? "dark" : "light");
+                        }}
+                        className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors"
+                      >
+                        <Moon className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-xs font-semibold">Dark Mode</span>
+                      </button>
                     </div>
 
                     <h3 className="text-xs font-bold uppercase text-muted-foreground mb-4">Profile</h3>
@@ -124,8 +134,9 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
 
       <main 
         className={cn(
-          "h-screen flex flex-col bg-background pt-[48px] transition-all duration-200",
-          collapsed ? "md:pl-[64px]" : "md:pl-[225px]"
+          "h-screen flex flex-col bg-background transition-all duration-200",
+          collapsed ? "md:pl-[64px]" : "md:pl-[225px]",
+          "pb-[64px] md:pb-0 pt-[32px] md:pt-[48px]"
         )} 
         data-testid="main-crm"
       >
