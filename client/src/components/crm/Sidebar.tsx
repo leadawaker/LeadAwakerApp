@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, Megaphone, Building2, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Calendar, Building2, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
@@ -13,7 +13,7 @@ export function Sidebar() {
   const items = [
     { href: `${prefix}/dashboard`, label: "Dashboard", icon: LayoutDashboard, testId: "link-nav-dashboard" },
     { href: `${prefix}/leads`, label: "Leads", icon: Users, testId: "link-nav-leads" },
-    { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, testId: "link-nav-campaigns" },
+    { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "link-nav-calendar" },
     { href: `${prefix}/accounts`, label: "Accounts", icon: Building2, testId: "link-nav-accounts" },
   ];
 

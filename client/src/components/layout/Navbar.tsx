@@ -165,10 +165,10 @@ export function Navbar() {
               );
             })}
 
-            <Link href={withLang("/login")}>
-              <Button variant="ghost" className="font-heading font-bold text-[15px]">
-                {t("nav.login")}
-              </Button>
+            <Link href={withLang("/login")} className={`text-[15px] font-bold transition-colors hover:text-primary ${
+              location === withLang("/login") ? "text-primary" : "text-muted-foreground"
+            }`}>
+              {t("nav.login")}
             </Link>
 
             <Link href={withLang("/book-demo")}>

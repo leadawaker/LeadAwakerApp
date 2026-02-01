@@ -19,6 +19,33 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
+      {/* Slim Top Bar */}
+      <div className="fixed top-0 left-0 right-0 h-8 bg-white border-b border-border z-[60] flex items-center justify-end px-4 gap-4">
+        <button onClick={() => setActivePanel('search')} className="p-1 hover:bg-muted rounded transition-colors" title="Search">
+          <Search className="h-4 w-4 text-blue-600" />
+        </button>
+        <button onClick={() => setActivePanel('notifications')} className="p-1 hover:bg-muted rounded transition-colors relative" title="Alerts">
+          <Bell className="h-4 w-4 text-blue-600" />
+          {unreadCount > 0 && <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border border-white" />}
+        </button>
+        <button 
+          onClick={() => {
+            const isDark = document.documentElement.classList.toggle("dark");
+            localStorage.setItem("theme", isDark ? "dark" : "light");
+          }} 
+          className="p-1 hover:bg-muted rounded transition-colors" 
+          title="Night Mode"
+        >
+          <Moon className="h-4 w-4 text-blue-600" />
+        </button>
+        <button onClick={() => setActivePanel('help')} className="p-1 hover:bg-muted rounded transition-colors" title="Help">
+          <HelpCircle className="h-4 w-4 text-blue-600" />
+        </button>
+        <button onClick={() => setActivePanel('support')} className="p-1 hover:bg-muted rounded transition-colors" title="Customer Service">
+          <Headphones className="h-4 w-4 text-blue-600" />
+        </button>
+      </div>
+
       <div className="fixed left-0 top-0 bottom-0 z-40" data-testid="wrap-left-nav">
         <RightSidebar 
           collapsed={collapsed} 
@@ -136,7 +163,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         className={cn(
           "h-screen flex flex-col bg-background transition-all duration-200",
           collapsed ? "md:pl-[64px]" : "md:pl-[225px]",
-          "pb-[64px] md:pb-0 pt-[32px] md:pt-[48px]"
+          "pb-[64px] md:pb-0 pt-[32px] md:pt-[40px]"
         )} 
         data-testid="main-crm"
       >
