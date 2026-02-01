@@ -191,34 +191,43 @@ export function Navbar() {
       {/* Mobile Nav */}
       {isOpen && (
         <div
-          className="md:hidden fixed left-0 right-0 bg-background/70 backdrop-blur-lg border-b border-border p-4 flex flex-col gap-4 shadow-xl z-40"
+          className="md:hidden fixed left-0 right-0 bg-background/70 backdrop-blur-lg border-b border-border p-4 flex flex-col gap-2 shadow-xl z-40"
           style={{ top: scrolled ? "68px" : "80px" }}
         >
           {/* Language Picker in Mobile Menu */}
-          <div className="flex justify-end px-2 py-1 border-b border-border/50 mb-2">
-            <div className="flex gap-4">
-              {languages.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => changeLanguage(lang.code)}
-                  className={`flex items-center gap-2 px-2 py-1 rounded-md transition-all ${
-                    currentLang === lang.code 
-                      ? "bg-primary/10 text-primary font-bold" 
-                      : "text-muted-foreground hover:bg-muted"
-                  }`}
-                >
+          <div className="flex justify-end px-2 py-2 mb-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/50 transition-all hover:bg-muted">
                   <img
-                    src={lang.flag}
-                    alt={lang.label}
-                    className="h-3.5 w-5 object-cover shadow-sm rounded-sm"
+                    src={currentLangConfig.flag}
+                    alt={currentLangConfig.display}
+                    className="h-4 w-6 object-cover shadow-sm rounded-sm"
                   />
-                  <span className="text-xs uppercase">{lang.display}</span>
+                  <span className="text-sm font-bold uppercase text-foreground">{currentLangConfig.display}</span>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
                 </button>
-              ))}
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40 p-1">
+                {languages.map((lang) => (
+                  <DropdownMenuItem
+                    key={lang.code}
+                    onClick={() => changeLanguage(lang.code)}
+                    className="cursor-pointer flex items-center gap-3 px-3 py-2 text-[15px] font-medium rounded-md"
+                  >
+                    <img
+                      src={lang.flag}
+                      alt={lang.label}
+                      className="h-4 w-[1.35rem] object-cover shadow-sm"
+                    />
+                    {lang.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
-          {navLinks.map((link) => (
+          {[...navLinks, { href: "/login", label: t("nav.login") }, { href: "/book-demo", label: t("nav.bookDemo") }].map((link) => (
             <Link
               key={link.href}
               href={withLang(link.href)}
@@ -228,23 +237,6 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
-
-          <div className="flex flex-col gap-0 mt-2">
-            <Link 
-              href={withLang("/login")} 
-              onClick={() => setIsOpen(false)}
-              className="text-lg font-medium p-2 hover:bg-muted rounded-md text-right"
-            >
-              {t("nav.login")}
-            </Link>
-            <Link 
-              href={withLang("/book-demo")} 
-              onClick={() => setIsOpen(false)}
-              className="text-lg font-medium p-2 hover:bg-muted rounded-md text-right"
-            >
-              {t("nav.bookDemo")}
-            </Link>
-          </div>
         </div>
       )}
     </>
