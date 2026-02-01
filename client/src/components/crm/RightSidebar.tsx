@@ -167,6 +167,42 @@ export function RightSidebar({
         </div>
 
         <div className="ml-auto flex items-center gap-2" data-testid="group-leftbar-actions">
+          <IconButton label="Search" testId="button-search" onClick={onOpenSearch} active={false} isAgencyView={isAgencyView}>
+            <Search className={cn("h-5 w-5", isAgencyView ? "text-black" : "text-white")} />
+          </IconButton>
+
+          <IconButton label="Alerts" testId="button-notifications" onClick={onOpenNotifications} active={false} isAgencyView={isAgencyView}>
+            <div className="relative">
+              <Bell className={cn("h-5 w-5", isAgencyView ? "text-black" : "text-white")} />
+              {count > 0 && (
+                <div className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-red-500 text-white text-[8px] font-bold grid place-items-center border border-background">
+                  {count}
+                </div>
+              )}
+            </div>
+          </IconButton>
+
+          <IconButton 
+            label={dark ? "Light Mode" : "Dark Mode"} 
+            testId="button-theme" 
+            onClick={() => {
+              setDark(!dark);
+              document.documentElement.classList.toggle("dark");
+            }} 
+            active={false} 
+            isAgencyView={isAgencyView}
+          >
+            <Moon className={cn("h-5 w-5", isAgencyView ? "text-black" : "text-white")} />
+          </IconButton>
+
+          <IconButton label="Help" testId="button-help" onClick={onToggleHelp} active={false} isAgencyView={isAgencyView}>
+            <HelpCircle className={cn("h-5 w-5", isAgencyView ? "text-black" : "text-white")} />
+          </IconButton>
+
+          <IconButton label="Customer Service" testId="button-support" onClick={onOpenSupport} active={false} isAgencyView={isAgencyView}>
+            <Headphones className={cn("h-5 w-5", isAgencyView ? "text-black" : "text-white")} />
+          </IconButton>
+
           <IconButton label="Settings" testId="button-settings" onClick={onOpenEdgeSettings} active={false} isAgencyView={isAgencyView}>
             <Settings className={cn("h-5 w-5", isAgencyView ? "text-black" : "text-white")} />
           </IconButton>
@@ -176,17 +212,14 @@ export function RightSidebar({
       {/* Mobile Bottom Bar */}
       <div
         className={cn(
-          "md:hidden fixed bottom-0 left-0 right-0 h-[64px] border-t z-[100] flex items-center justify-around px-2",
-          isAgencyView
-            ? "bg-yellow-500 border-yellow-600"
-            : "bg-blue-600 border-blue-700"
+          "md:hidden fixed bottom-0 left-0 right-0 h-[64px] border-t z-[100] flex items-center justify-around px-2 bg-white"
         )}
       >
         <button
           onClick={() => setLocation(`${prefix}/dashboard`)}
           className={cn(
             "p-3 rounded-xl transition-colors relative group",
-            isAgencyView ? "text-black hover:bg-black/10" : "text-white hover:bg-white/10"
+            isAgencyView ? "text-yellow-500 hover:bg-yellow-50" : "text-blue-600 hover:bg-blue-50"
           )}
           title="Dashboard"
         >
@@ -200,7 +233,7 @@ export function RightSidebar({
           onClick={() => setLocation(`${prefix}/contacts`)}
           className={cn(
             "p-3 rounded-xl transition-colors relative group",
-            isAgencyView ? "text-black hover:bg-black/10" : "text-white hover:bg-white/10"
+            isAgencyView ? "text-yellow-500 hover:bg-yellow-50" : "text-blue-600 hover:bg-blue-50"
           )}
           title="Leads"
         >
@@ -211,16 +244,16 @@ export function RightSidebar({
         </button>
 
         <button
-          onClick={() => setLocation(`${prefix}/campaigns`)}
+          onClick={() => setLocation(`${prefix}/calendar`)}
           className={cn(
             "p-3 rounded-xl transition-colors relative group",
-            isAgencyView ? "text-black hover:bg-black/10" : "text-white hover:bg-white/10"
+            isAgencyView ? "text-yellow-500 hover:bg-yellow-50" : "text-blue-600 hover:bg-blue-50"
           )}
-          title="Campaigns"
+          title="Calendar"
         >
-          <Megaphone className="h-6 w-6" />
+          <Calendar className="h-6 w-6" />
           <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 group-active:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-            Campaigns
+            Calendar
           </div>
         </button>
 
@@ -228,7 +261,7 @@ export function RightSidebar({
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className={cn(
             "p-3 rounded-xl transition-colors relative group",
-            isAgencyView ? "text-black hover:bg-black/10" : "text-white hover:bg-white/10"
+            isAgencyView ? "text-yellow-500 hover:bg-yellow-50" : "text-blue-600 hover:bg-blue-50"
           )}
           title="Menu"
         >
