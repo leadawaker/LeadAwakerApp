@@ -6,7 +6,7 @@ import { SearchModal } from "@/components/crm/SearchModal";
 import { NotificationsPanel } from "@/components/crm/NotificationsPanel";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
-import { X } from "lucide-react";
+import { X, Search, Bell, HelpCircle, Headphones } from "lucide-react";
 
 export function CrmShell({ children }: { children: React.ReactNode }) {
   const [, setLocation] = useLocation();
@@ -58,7 +58,27 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
               {activePanel === 'settings' && (
                 <div className="p-6 space-y-8 overflow-auto h-full">
                   <section>
-                    <h3 className="text-sm font-bold uppercase text-muted-foreground mb-4">Profile</h3>
+                    <h3 className="text-xs font-bold uppercase text-muted-foreground mb-4">System Actions</h3>
+                    <div className="grid grid-cols-2 gap-3 mb-8">
+                      <button onClick={() => { setActivePanel('search'); }} className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors">
+                        <Search className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-xs font-semibold">Search</span>
+                      </button>
+                      <button onClick={() => { setActivePanel('notifications'); }} className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors">
+                        <Bell className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-xs font-semibold">Alerts</span>
+                      </button>
+                      <button onClick={() => { setActivePanel('help'); }} className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors">
+                        <HelpCircle className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-xs font-semibold">Help</span>
+                      </button>
+                      <button onClick={() => { setActivePanel('support'); }} className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors">
+                        <Headphones className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-xs font-semibold">Support</span>
+                      </button>
+                    </div>
+
+                    <h3 className="text-xs font-bold uppercase text-muted-foreground mb-4">Profile</h3>
                     <div className="space-y-4">
                       <div>
                         <label className="text-xs text-muted-foreground">Name</label>
@@ -104,7 +124,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
 
       <main 
         className={cn(
-          "h-screen flex flex-col bg-background pt-[32px] transition-all duration-200",
+          "h-screen flex flex-col bg-background pt-[48px] transition-all duration-200",
           collapsed ? "md:pl-[64px]" : "md:pl-[225px]"
         )} 
         data-testid="main-crm"

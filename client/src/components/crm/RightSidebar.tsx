@@ -144,87 +144,50 @@ export function RightSidebar({
     <>
       <aside
         className={cn(
-          "fixed left-0 top-0 right-0 h-[32px] border-b z-[100] flex items-center px-3 transition-none",
+          "fixed left-0 top-0 right-0 h-[48px] border-b z-[100] flex items-center px-4 transition-none",
           isAgencyView
             ? "bg-yellow-500 border-yellow-600 shadow-[0_1px_12px_rgba(234,179,8,0.4)]"
             : "bg-blue-600 border-blue-700 shadow-[0_1px_12px_rgba(37,99,235,0.4)]"
         )}
         data-testid="bar-thin-left"
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {/* Mobile Menu Button */}
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className={cn(
-              "md:hidden p-1 rounded-md transition-colors",
+              "md:hidden p-2 rounded-md transition-colors",
               isAgencyView ? "text-black hover:bg-black/10" : "text-white hover:bg-white/10"
             )}
             aria-label="Toggle mobile menu"
           >
-            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
 
           <button
             onClick={onGoHome}
-            className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-black/10 transition-colors group"
+            className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-black/10 transition-colors group"
             data-testid="button-home-logo"
           >
-            <img src="/6. Favicon.svg" className="h-5 w-5 object-contain" alt="Logo" />
+            <img src="/6. Favicon.svg" className="h-6 w-6 object-contain" alt="Logo" />
             <span className={cn(
-              "text-xs font-bold tracking-tight",
+              "text-sm font-bold tracking-tight",
               isAgencyView ? "text-black" : "text-white"
             )}>Lead Awaker</span>
           </button>
         </div>
 
-        <div className="ml-auto flex items-center gap-1" data-testid="group-leftbar-actions">
-          <IconButton label="Search" testId="button-global-search" onClick={onOpenSearch} active={false} isAgencyView={isAgencyView}>
-            <Search className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
-          </IconButton>
-          <div className="relative" data-testid="wrap-notifications">
-            <IconButton label="Notifications" testId="button-notifications" onClick={onOpenNotifications} active={false} isAgencyView={isAgencyView}>
-              <Bell className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
-            </IconButton>
-            {count > 0 ? (
-              <div
-                className={cn(
-                  "absolute top-0 right-0 h-4 w-4 rounded-full text-white text-[9px] font-bold grid place-items-center",
-                  "bg-red-500 border border-black/10"
-                )}
-                data-testid="badge-notifications"
-              >
-                {count}
-              </div>
-            ) : null}
-          </div>
+        <div className="ml-auto flex items-center gap-2" data-testid="group-leftbar-actions">
           <IconButton label="Settings" testId="button-settings" onClick={onOpenEdgeSettings} active={false} isAgencyView={isAgencyView}>
-            <Settings className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
-          </IconButton>
-          <IconButton label="Help" testId="button-help" onClick={onToggleHelp} active={false} isAgencyView={isAgencyView}>
-            <HelpCircle className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
-          </IconButton>
-          <IconButton label="Customer Support" onClick={onOpenSupport} testId="button-support" active={false} isAgencyView={isAgencyView}>
-            <Headphones className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
-          </IconButton>
-          <IconButton
-            label="Night mode"
-            onClick={() => {
-              setDark((v) => !v);
-              document.documentElement.classList.toggle("dark");
-            }}
-            testId="button-nightmode"
-            active={dark}
-            isAgencyView={isAgencyView}
-          >
-            <Moon className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
+            <Settings className={cn("h-5 w-5", isAgencyView ? "text-black" : "text-white")} />
           </IconButton>
         </div>
       </aside>
 
       {/* Mobile Fullscreen Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-[90] bg-background pt-[32px] animate-in slide-in-from-left duration-300">
+        <div className="md:hidden fixed inset-0 z-[90] bg-background pt-[48px] animate-in slide-in-from-left duration-300">
           <div className="h-full flex flex-col overflow-y-auto p-4 space-y-6">
             <div className="space-y-2">
               <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-3 mb-2">Workspace</h3>
@@ -293,6 +256,55 @@ export function RightSidebar({
               })}
             </nav>
 
+            <div className="space-y-2 pt-2">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-3 mb-2">System</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={onOpenSearch}
+                  className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors"
+                >
+                  <Search className="h-6 w-6 text-muted-foreground" />
+                  <span className="text-xs font-semibold">Search</span>
+                </button>
+                <button
+                  onClick={onOpenNotifications}
+                  className="relative flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors"
+                >
+                  <Bell className="h-6 w-6 text-muted-foreground" />
+                  <span className="text-xs font-semibold">Alerts</span>
+                  {count > 0 && (
+                    <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-red-500 text-white text-[10px] font-bold grid place-items-center border-2 border-background">
+                      {count}
+                    </div>
+                  )}
+                </button>
+                <button
+                  onClick={onToggleHelp}
+                  className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors"
+                >
+                  <HelpCircle className="h-6 w-6 text-muted-foreground" />
+                  <span className="text-xs font-semibold">Help</span>
+                </button>
+                <button
+                  onClick={onOpenSupport}
+                  className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors"
+                >
+                  <Headphones className="h-6 w-6 text-muted-foreground" />
+                  <span className="text-xs font-semibold">Support</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setDark((v) => !v);
+                    document.documentElement.classList.toggle("dark");
+                  }}
+                  className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors"
+                >
+                  <Moon className={cn("h-6 w-6", dark ? "text-yellow-500" : "text-muted-foreground")} />
+                  <span className="text-xs font-semibold">{dark ? "Light Mode" : "Dark Mode"}</span>
+                </button>
+              </div>
+            </div>
+
             <div className="mt-auto pt-6 border-t border-border">
               <div className="text-center text-[11px] text-muted-foreground">
                 MOCK CRM • NocoDB-ready
@@ -304,7 +316,7 @@ export function RightSidebar({
 
       <aside
         className={cn(
-          "fixed left-0 top-[32px] bottom-0 border-r border-border bg-muted/20 z-40 transition-none dark:bg-muted/10 hidden md:block",
+          "fixed left-0 top-[48px] bottom-0 border-r border-border bg-muted/20 z-40 transition-none dark:bg-muted/10 hidden md:block",
           collapsed ? "w-[64px]" : "w-[225px]",
         )}
         data-testid="sidebar-left"
