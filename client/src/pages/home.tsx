@@ -33,7 +33,7 @@ export default function Home() {
   const [isFinished, setIsFinished] = useState(false);
 
   return (
-    <div className="min-h-screen pt-24 overflow-x-hidden md:overflow-visible">
+    <div className="min-h-screen pt-32 overflow-x-hidden md:overflow-visible">
       {/* Hero Section */}
       <section className="relative overflow-hidden pb-20 md:pb-32">
         <div className="absolute top-0 right-0 -z-10 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent blur-3xl opacity-50" />
