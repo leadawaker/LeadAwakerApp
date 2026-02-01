@@ -112,7 +112,7 @@ export function Navbar() {
         }`}
       >
         <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
-          <Link href={withLang("/")} className="flex items-center">
+          <Link href={withLang("/")} className="flex items-center -ml-4">
             <img src="/5.SideLogo.svg" alt="Lead Awaker Logo" className="h-10 md:h-10 object-contain" data-testid="img-navbar-logo" />
           </Link>
 
@@ -194,6 +194,30 @@ export function Navbar() {
           className="md:hidden fixed left-0 right-0 bg-background/70 backdrop-blur-lg border-b border-border p-4 flex flex-col gap-4 shadow-xl z-40"
           style={{ top: scrolled ? "68px" : "80px" }}
         >
+          {/* Language Picker in Mobile Menu */}
+          <div className="flex justify-end px-2 py-1 border-b border-border/50 mb-2">
+            <div className="flex gap-4">
+              {languages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => changeLanguage(lang.code)}
+                  className={`flex items-center gap-2 px-2 py-1 rounded-md transition-all ${
+                    currentLang === lang.code 
+                      ? "bg-primary/10 text-primary font-bold" 
+                      : "text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  <img
+                    src={lang.flag}
+                    alt={lang.label}
+                    className="h-3.5 w-5 object-cover shadow-sm rounded-sm"
+                  />
+                  <span className="text-xs uppercase">{lang.display}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {navLinks.map((link) => (
             <Link
               key={link.href}

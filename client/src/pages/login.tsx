@@ -44,7 +44,7 @@ export default function Login() {
               {t("subtitle")}
             </p>
 
-            <div className="space-y-6">
+            <div className="hidden lg:block space-y-6">
               <div className="flex gap-4">
                 <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary shrink-0">
                   <Mail className="w-6 h-6" />
