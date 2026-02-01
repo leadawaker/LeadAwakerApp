@@ -209,10 +209,13 @@
   animation: hologram-static 0.15s linear 1.5s 10 forwards, pixelate-glitch-word 0.15s ease-in-out 1.5s;
   animation-play-state: paused;
   overflow: visible;
+  /* Fix for mobile: ensure transform-style is preserved and animations can run */
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .hologram-glitch.animate {
-  animation-play-state: running;
+  animation-play-state: running !important;
 }
 
 .hologram-glitch::before {
@@ -236,10 +239,12 @@
   pointer-events: none;
   white-space: nowrap;
   z-index: 10;
+  /* Mobile performance */
+  transform: translateZ(0);
 }
 
 .hologram-glitch.animate::before {
-  animation-play-state: running;
+  animation-play-state: running !important;
 }
 
 .hologram-glitch::after {
@@ -263,10 +268,12 @@
   pointer-events: none;
   white-space: nowrap;
   z-index: 10;
+  /* Mobile performance */
+  transform: translateZ(0);
 }
 
 .hologram-glitch.animate::after {
-  animation-play-state: running;
+  animation-play-state: running !important;
 }
 
 @keyframes text-flicker-intense {
