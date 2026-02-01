@@ -504,9 +504,27 @@ export const SalesRepSteps = () => {
     // Trigger glitch animation much earlier
     const glitchTimer = setTimeout(() => setGlitchAnimating(true), 500);
 
+    // Add CSS for the glitch animation to work on all devices
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes glitch-mobile {
+        0% { transform: translate(0); }
+        20% { transform: translate(-2px, 2px); }
+        40% { transform: translate(-2px, -2px); }
+        60% { transform: translate(2px, 2px); }
+        80% { transform: translate(2px, -2px); }
+        100% { transform: translate(0); }
+      }
+      .hologram-glitch.animate {
+        animation: glitch-mobile 0.3s ease-in-out infinite;
+      }
+    `;
+    document.head.appendChild(style);
+
     return () => {
       clearTimeout(timer);
       clearTimeout(glitchTimer);
+      document.head.removeChild(style);
     };
   }, []);
   const { scrollYProgress } = useScroll({
