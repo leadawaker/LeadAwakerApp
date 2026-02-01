@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import {
   Search,
@@ -20,6 +20,8 @@ import {
   PanelRightOpen,
   BookUser,
   ChevronDown,
+  Menu,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -96,6 +98,13 @@ export function RightSidebar({
   const [dark, setDark] = useState(false);
   const count = notificationsCount ?? 0;
 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Close mobile menu on location change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location]);
+
   const prefix = isAgencyView ? "/agency" : "/subaccount";
   const navItems = [
     { href: `${prefix}/dashboard`, label: "Dashboard", icon: LayoutDashboard, testId: "nav-dashboard" },
@@ -143,6 +152,19 @@ export function RightSidebar({
         data-testid="bar-thin-left"
       >
         <div className="flex items-center gap-2">
+          {/* Mobile Menu Button */}
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className={cn(
+              "md:hidden p-1 rounded-md transition-colors",
+              isAgencyView ? "text-black hover:bg-black/10" : "text-white hover:bg-white/10"
+            )}
+            aria-label="Toggle mobile menu"
+          >
+            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+
           <button
             onClick={onGoHome}
             className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-black/10 transition-colors group"
@@ -200,9 +222,89 @@ export function RightSidebar({
         </div>
       </aside>
 
+      {/* Mobile Fullscreen Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-[90] bg-background pt-[32px] animate-in slide-in-from-left duration-300">
+          <div className="h-full flex flex-col overflow-y-auto p-4 space-y-6">
+            <div className="space-y-2">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-3 mb-2">Workspace</h3>
+              <button
+                type="button"
+                onClick={() => setOpenSwitcher((v) => !v)}
+                className={cn(
+                  "w-full flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/20 h-[56px] px-4",
+                  isAgencyView ? "text-yellow-600 font-bold" : "text-blue-600 font-bold"
+                )}
+              >
+                <div className="min-w-0 text-left">
+                  <div className="text-sm font-semibold truncate flex items-center gap-1.5">
+                    <span className="truncate">{currentAccount.name}</span>
+                    <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", openSwitcher && "rotate-180")} />
+                  </div>
+                </div>
+              </button>
+              
+              {openSwitcher && (
+                <div className="bg-muted/10 border border-border rounded-xl overflow-hidden mt-2">
+                  {accountsList.map((acc) => (
+                    <button
+                      key={acc.id}
+                      onClick={() => handleAccountSelect(acc.id)}
+                      className={cn(
+                        "w-full text-left px-4 py-3 text-sm hover:bg-muted/50 transition-colors flex items-center justify-between border-b border-border/50 last:border-0",
+                        currentAccountId === acc.id && "text-blue-600 font-bold bg-blue-50/50",
+                      )}
+                    >
+                      <span className="truncate">{acc.label}</span>
+                      {acc.id === 1 && (
+                        <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                          Agency
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <nav className="space-y-1">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-3 mb-2">Navigation</h3>
+              {navItems.map((it) => {
+                if (it.agencyOnly && !isAgencyView) return null;
+                const active = location === it.href;
+                const Icon = it.icon;
+                return (
+                  <Link
+                    key={it.href}
+                    href={it.href}
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl border border-transparent px-4 py-3.5 transition-colors",
+                      active
+                        ? isAgencyView
+                          ? "bg-yellow-500 text-black font-bold shadow-lg shadow-yellow-500/20"
+                          : "bg-blue-600 text-white font-bold shadow-lg shadow-blue-500/20"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/30 font-medium",
+                    )}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span className="text-base">{it.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="mt-auto pt-6 border-t border-border">
+              <div className="text-center text-[11px] text-muted-foreground">
+                MOCK CRM • NocoDB-ready
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <aside
         className={cn(
-          "fixed left-0 top-[32px] bottom-0 border-r border-border bg-muted/20 z-40 transition-none dark:bg-muted/10",
+          "fixed left-0 top-[32px] bottom-0 border-r border-border bg-muted/20 z-40 transition-none dark:bg-muted/10 hidden md:block",
           collapsed ? "w-[64px]" : "w-[225px]",
         )}
         data-testid="sidebar-left"
