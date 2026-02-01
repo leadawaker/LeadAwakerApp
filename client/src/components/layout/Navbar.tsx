@@ -229,16 +229,20 @@ export function Navbar() {
             </Link>
           ))}
 
-          <div className="flex flex-col items-end gap-2 mt-2">
-            <Link href={withLang("/login")} onClick={() => setIsOpen(false)}>
-              <Button variant="ghost" className="w-32">
-                {t("nav.login")}
-              </Button>
+          <div className="flex flex-col gap-0 mt-2">
+            <Link 
+              href={withLang("/login")} 
+              onClick={() => setIsOpen(false)}
+              className="text-lg font-medium p-2 hover:bg-muted rounded-md text-right"
+            >
+              {t("nav.login")}
             </Link>
-            <Link href={withLang("/book-demo")} onClick={() => setIsOpen(false)}>
-              <Button className="w-32 hover:bg-yellow-400 hover:text-black transition-all">
-                {t("nav.bookDemo")}
-              </Button>
+            <Link 
+              href={withLang("/book-demo")} 
+              onClick={() => setIsOpen(false)}
+              className="text-lg font-medium p-2 hover:bg-muted rounded-md text-right"
+            >
+              {t("nav.bookDemo")}
             </Link>
           </div>
         </div>
