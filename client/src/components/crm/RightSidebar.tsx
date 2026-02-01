@@ -143,132 +143,57 @@ export function RightSidebar({
   return (
     <>
       {/* Desktop Top Bar */}
-      <aside
-        className={cn(
-          "fixed left-0 top-0 right-0 h-[48px] border-b z-[100] hidden md:flex items-center px-4 transition-none",
-          isAgencyView
-            ? "bg-yellow-500 border-yellow-600 shadow-[0_1px_12px_rgba(234,179,8,0.4)]"
-            : "bg-blue-600 border-blue-700 shadow-[0_1px_12px_rgba(37,99,235,0.4)]"
-        )}
-        data-testid="bar-thin-left"
-      >
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onGoHome}
-            className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-black/10 transition-colors group"
-            data-testid="button-home-logo"
-          >
-            <img src="/6. Favicon.svg" className="h-6 w-6 object-contain" alt="Logo" />
-            <span className={cn(
-              "text-sm font-bold tracking-tight",
-              isAgencyView ? "text-black" : "text-white"
-            )}>Lead Awaker</span>
-          </button>
-        </div>
-
-        <div className="ml-auto flex items-center gap-2" data-testid="group-leftbar-actions">
-          <IconButton label="Search" testId="button-search" onClick={onOpenSearch} active={false} isAgencyView={isAgencyView}>
-            <Search className={cn("h-5 w-5", isAgencyView ? "text-black" : "text-white")} />
-          </IconButton>
-
-          <IconButton label="Alerts" testId="button-notifications" onClick={onOpenNotifications} active={false} isAgencyView={isAgencyView}>
-            <div className="relative">
-              <Bell className={cn("h-5 w-5", isAgencyView ? "text-black" : "text-white")} />
-              {count > 0 && (
-                <div className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-red-500 text-white text-[8px] font-bold grid place-items-center border border-background">
-                  {count}
-                </div>
-              )}
-            </div>
-          </IconButton>
-
-          <IconButton 
-            label={dark ? "Light Mode" : "Dark Mode"} 
-            testId="button-theme" 
-            onClick={() => {
-              setDark(!dark);
-              document.documentElement.classList.toggle("dark");
-            }} 
-            active={false} 
-            isAgencyView={isAgencyView}
-          >
-            <Moon className={cn("h-5 w-5", isAgencyView ? "text-black" : "text-white")} />
-          </IconButton>
-
-          <IconButton label="Help" testId="button-help" onClick={onToggleHelp} active={false} isAgencyView={isAgencyView}>
-            <HelpCircle className={cn("h-5 w-5", isAgencyView ? "text-black" : "text-white")} />
-          </IconButton>
-
-          <IconButton label="Customer Service" testId="button-support" onClick={onOpenSupport} active={false} isAgencyView={isAgencyView}>
-            <Headphones className={cn("h-5 w-5", isAgencyView ? "text-black" : "text-white")} />
-          </IconButton>
-
-          <IconButton label="Settings" testId="button-settings" onClick={onOpenEdgeSettings} active={false} isAgencyView={isAgencyView}>
-            <Settings className={cn("h-5 w-5", isAgencyView ? "text-black" : "text-white")} />
-          </IconButton>
-        </div>
-      </aside>
+      {/* Hidden to avoid double header */}
 
       {/* Mobile Bottom Bar */}
       <div
         className={cn(
-          "md:hidden fixed bottom-0 left-0 right-0 h-[64px] border-t z-[100] flex items-center justify-around px-2 bg-white"
+          "md:hidden fixed bottom-0 left-0 right-0 h-[64px] border-t z-[100] flex items-center justify-around px-2",
+          isAgencyView ? "bg-yellow-50" : "bg-blue-50/95"
         )}
       >
         <button
-          onClick={() => setLocation(`${prefix}/dashboard`)}
+          onClick={() => { setLocation(`${prefix}/dashboard`); setIsMobileMenuOpen(false); }}
           className={cn(
             "p-3 rounded-xl transition-colors relative group",
-            isAgencyView ? "text-yellow-500 hover:bg-yellow-50" : "text-blue-600 hover:bg-blue-50"
+            isAgencyView ? "text-yellow-600 hover:bg-yellow-100" : "text-blue-700 hover:bg-blue-100"
           )}
           title="Dashboard"
         >
           <LayoutDashboard className="h-6 w-6" />
-          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 group-active:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-            Dashboard
-          </div>
         </button>
 
         <button
-          onClick={() => setLocation(`${prefix}/contacts`)}
+          onClick={() => { setLocation(`${prefix}/contacts`); setIsMobileMenuOpen(false); }}
           className={cn(
             "p-3 rounded-xl transition-colors relative group",
-            isAgencyView ? "text-yellow-500 hover:bg-yellow-50" : "text-blue-600 hover:bg-blue-50"
+            isAgencyView ? "text-yellow-600 hover:bg-yellow-100" : "text-blue-700 hover:bg-blue-100"
           )}
           title="Leads"
         >
           <BookUser className="h-6 w-6" />
-          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 group-active:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-            Leads
-          </div>
         </button>
 
         <button
-          onClick={() => setLocation(`${prefix}/calendar`)}
+          onClick={() => { setLocation(`${prefix}/calendar`); setIsMobileMenuOpen(false); }}
           className={cn(
             "p-3 rounded-xl transition-colors relative group",
-            isAgencyView ? "text-yellow-500 hover:bg-yellow-50" : "text-blue-600 hover:bg-blue-50"
+            isAgencyView ? "text-yellow-600 hover:bg-yellow-100" : "text-blue-700 hover:bg-blue-100"
           )}
           title="Calendar"
         >
           <Calendar className="h-6 w-6" />
-          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 group-active:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-            Calendar
-          </div>
         </button>
 
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className={cn(
             "p-3 rounded-xl transition-colors relative group",
-            isAgencyView ? "text-yellow-500 hover:bg-yellow-50" : "text-blue-600 hover:bg-blue-50"
+            isAgencyView ? "text-yellow-600 hover:bg-yellow-100" : "text-blue-700 hover:bg-blue-100"
           )}
           title="Menu"
         >
           {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 group-active:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-            Menu
-          </div>
         </button>
       </div>
 

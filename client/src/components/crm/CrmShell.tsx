@@ -20,12 +20,15 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
       {/* Slim Top Bar */}
-      <div className="fixed top-0 left-0 right-0 h-8 bg-white border-b border-border z-[60] flex items-center justify-end px-4 gap-4">
-        <button onClick={() => setActivePanel('search')} className="p-1 hover:bg-muted rounded transition-colors" title="Search">
-          <Search className="h-4 w-4 text-blue-600" />
+      <div className={cn(
+        "fixed top-0 left-0 right-0 h-8 z-[60] flex items-center justify-end px-4 gap-4 transition-colors duration-300",
+        isAgencyView ? "bg-yellow-500 shadow-[0_1px_12px_rgba(234,179,8,0.4)]" : "bg-blue-600 shadow-[0_1px_12px_rgba(37,99,235,0.4)]"
+      )}>
+        <button onClick={() => setActivePanel('search')} className="p-1 hover:bg-black/10 rounded transition-colors" title="Search">
+          <Search className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
         </button>
-        <button onClick={() => setActivePanel('notifications')} className="p-1 hover:bg-muted rounded transition-colors relative" title="Alerts">
-          <Bell className="h-4 w-4 text-blue-600" />
+        <button onClick={() => setActivePanel('notifications')} className="p-1 hover:bg-black/10 rounded transition-colors relative" title="Alerts">
+          <Bell className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
           {unreadCount > 0 && <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border border-white" />}
         </button>
         <button 
@@ -33,16 +36,16 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
             const isDark = document.documentElement.classList.toggle("dark");
             localStorage.setItem("theme", isDark ? "dark" : "light");
           }} 
-          className="p-1 hover:bg-muted rounded transition-colors" 
+          className="p-1 hover:bg-black/10 rounded transition-colors" 
           title="Night Mode"
         >
-          <Moon className="h-4 w-4 text-blue-600" />
+          <Moon className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
         </button>
-        <button onClick={() => setActivePanel('help')} className="p-1 hover:bg-muted rounded transition-colors" title="Help">
-          <HelpCircle className="h-4 w-4 text-blue-600" />
+        <button onClick={() => setActivePanel('help')} className="p-1 hover:bg-black/10 rounded transition-colors" title="Help">
+          <HelpCircle className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
         </button>
-        <button onClick={() => setActivePanel('support')} className="p-1 hover:bg-muted rounded transition-colors" title="Customer Service">
-          <Headphones className="h-4 w-4 text-blue-600" />
+        <button onClick={() => setActivePanel('support')} className="p-1 hover:bg-black/10 rounded transition-colors" title="Customer Service">
+          <Headphones className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
         </button>
       </div>
 
@@ -67,7 +70,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
             className="absolute inset-0 bg-black/35 pointer-events-auto"
             onClick={closePanel}
           />
-          <aside className="absolute right-0 top-[32px] bottom-0 w-[400px] border-l border-border bg-background shadow-xl pointer-events-auto flex flex-col overflow-hidden">
+          <aside className="absolute right-0 top-0 bottom-0 w-full md:w-[400px] border-l border-border bg-background shadow-xl pointer-events-auto flex flex-col overflow-hidden">
             <div className="h-14 px-4 flex items-center justify-between border-b border-border bg-background sticky top-0 z-10 shrink-0">
               <div className="font-semibold capitalize">{activePanel.replace('-', ' ')}</div>
               <button onClick={closePanel} className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center">
