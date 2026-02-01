@@ -212,7 +212,10 @@ export function Footer() {
             <img src="/Logo-Lead.svg" className="absolute inset-0 w-full h-full object-contain" />
             <img src="/Logo-Awaker.svg" className="absolute inset-0 w-full h-full object-contain" />
             <img src="/Logo-Rooster.svg" className="absolute inset-0 w-full h-full object-contain" />
-            <img src="/Logo-Top.svg" className="absolute inset-0 w-full h-full object-contain" />
+            <img 
+              src="/Logo-Top.svg" 
+              className="absolute inset-0 w-[120%] h-[120%] object-contain left-1/2 -translate-x-1/2 -translate-y-[10%] grayscale opacity-40 brightness-150 contrast-75" 
+            />
           </div>
         </div>
 
