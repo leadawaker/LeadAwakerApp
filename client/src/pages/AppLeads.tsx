@@ -36,52 +36,6 @@ export default function AppLeads() {
         <div className="flex items-center gap-4 mb-6">
           <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Contacts</h1>
           <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
-          
-          <div className="flex-1" />
-
-          <div className="flex items-center gap-2" data-testid="bar-actions">
-            <button
-              className="h-10 px-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold"
-              data-testid="button-import"
-            >
-              Import CSV
-            </button>
-
-            <Dialog.Root open={open} onOpenChange={setOpen}>
-              <Dialog.Trigger asChild>
-                <button
-                  className="h-10 px-3 rounded-xl border border-border bg-primary text-primary-foreground hover:opacity-90 text-sm font-semibold"
-                  data-testid="button-add-lead"
-                >
-                  + Add Lead
-                </button>
-              </Dialog.Trigger>
-
-              <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 bg-black/30" />
-                <Dialog.Content
-                  className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-background shadow-xl"
-                  data-testid="modal-add-lead"
-                >
-                  <div className="p-4 border-b border-border flex items-center justify-between">
-                    <div className="font-semibold" data-testid="text-modal-title">Add Lead (MOCK)</div>
-                    <Dialog.Close asChild>
-                      <button className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center" data-testid="button-modal-close">
-                        <X className="h-4 w-4" />
-                      </button>
-                    </Dialog.Close>
-                  </div>
-                  <AddLeadForm
-                    onSubmit={(lead) => {
-                      setLocalLeads((prev) => [lead, ...prev]);
-                      setOpen(false);
-                    }}
-                    accountId={currentAccountId}
-                  />
-                </Dialog.Content>
-              </Dialog.Portal>
-            </Dialog.Root>
-          </div>
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-2" data-testid="bar-filters">
@@ -128,6 +82,50 @@ export default function AppLeads() {
           >
             Filter
           </button>
+
+          <div className="ml-auto flex items-center gap-2" data-testid="bar-actions">
+            <button
+              className="h-10 px-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold"
+              data-testid="button-import"
+            >
+              Import CSV
+            </button>
+
+            <Dialog.Root open={open} onOpenChange={setOpen}>
+              <Dialog.Trigger asChild>
+                <button
+                  className="h-10 px-3 rounded-xl border border-border bg-primary text-primary-foreground hover:opacity-90 text-sm font-semibold"
+                  data-testid="button-add-lead"
+                >
+                  + Add Lead
+                </button>
+              </Dialog.Trigger>
+
+              <Dialog.Portal>
+                <Dialog.Overlay className="fixed inset-0 bg-black/30" />
+                <Dialog.Content
+                  className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-background shadow-xl"
+                  data-testid="modal-add-lead"
+                >
+                  <div className="p-4 border-b border-border flex items-center justify-between">
+                    <div className="font-semibold" data-testid="text-modal-title">Add Lead (MOCK)</div>
+                    <Dialog.Close asChild>
+                      <button className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center" data-testid="button-modal-close">
+                        <X className="h-4 w-4" />
+                      </button>
+                    </Dialog.Close>
+                  </div>
+                  <AddLeadForm
+                    onSubmit={(lead) => {
+                      setLocalLeads((prev) => [lead, ...prev]);
+                      setOpen(false);
+                    }}
+                    accountId={currentAccountId}
+                  />
+                </Dialog.Content>
+              </Dialog.Portal>
+            </Dialog.Root>
+          </div>
         </div>
 
         <div className="mt-4 rounded-2xl border border-border bg-background overflow-hidden" data-testid="table-contacts">
