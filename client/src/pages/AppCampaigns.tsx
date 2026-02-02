@@ -22,9 +22,6 @@ export default function AppCampaigns() {
           <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Campaigns</h1>
           <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
         </div>
-        <p className="text-sm text-muted-foreground" data-testid="text-subtitle">
-          Click a campaign to expand inline (MOCK).
-        </p>
 
         <div className="mt-4 rounded-2xl border border-border bg-background overflow-hidden" data-testid="list-campaigns">
           <div className="divide-y divide-border">
