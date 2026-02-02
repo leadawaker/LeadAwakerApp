@@ -20,7 +20,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
-      <Topbar />
+      <Topbar onOpenPanel={(p) => setActivePanel(p)} />
       <div className="fixed left-0 top-0 bottom-0 z-40" data-testid="wrap-left-nav">
         <RightSidebar 
           collapsed={collapsed} 
@@ -87,6 +87,14 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
                       >
                         <Moon className="h-5 w-5 text-muted-foreground" />
                         <span className="text-xs font-semibold">Dark Mode</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setLocation("/login");
+                        }}
+                        className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-red-500/10 hover:bg-red-500/20 transition-colors col-span-2 mt-2"
+                      >
+                        <span className="text-xs font-bold text-red-600">Logout</span>
                       </button>
                     </div>
 
