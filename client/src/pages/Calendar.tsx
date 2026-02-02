@@ -234,6 +234,7 @@ export default function CalendarPage() {
             {(viewMode === "week" || viewMode === "day") && (
               <div className="flex-1 overflow-y-auto relative flex" data-testid="grid-time">
                 <div className="w-16 border-r border-border bg-muted/5 flex flex-col shrink-0">
+                  <div className="h-[65px] border-b border-border sticky top-0 bg-background/95 z-30" />
                   {hours.map(h => (
                     <div key={h} className="h-20 border-b border-border/50 text-[10px] font-bold text-muted-foreground p-2 text-right">
                       {h === 0 ? "12 AM" : h < 12 ? `${h} AM` : h === 12 ? "12 PM" : `${h-12} PM`}
@@ -246,7 +247,7 @@ export default function CalendarPage() {
                     const isWeekend = d.getDay() === 0 || d.getDay() === 6;
                     return (
                       <div key={i} className={cn("relative border-r border-border/50 last:border-r-0", isWeekend && "bg-muted/5")}>
-                        <div className={cn("sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border p-2 text-center", isToday && "bg-primary/5")}>
+                        <div className={cn("sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border p-2 text-center h-[65px] flex flex-col justify-center", isToday && "bg-primary/5")}>
                           <div className="text-[10px] font-bold text-muted-foreground uppercase">{MONTHS[d.getMonth()]}</div>
                           <div className={cn("text-lg font-black", isToday ? "text-primary" : "text-foreground")}>{d.getDate()}</div>
                         </div>
