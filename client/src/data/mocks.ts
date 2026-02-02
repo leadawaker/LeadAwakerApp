@@ -420,12 +420,13 @@ const tagPool = [
 
 // Distribution to follow a funnel pattern (more at the start, tapering down)
 const leadsPerStage: Record<string, number> = {
-  "New": 20,
-  "Contacted": 12,
-  "Responded": 8,
-  "Multiple Responses": 5,
-  "Qualified": 3,
-  "Booked": 2,
+  "New": 15,
+  "Contacted": 10,
+  "Responded": 6,
+  "Multiple Responses": 4,
+  "Qualified": 2,
+  "Booked": 5,
+  "Lost": 3,
   "DND": 2
 };
 
@@ -448,36 +449,36 @@ const generateLeadsForAccount = (accId: number) => {
         first_name,
         last_name,
         full_name: `${first_name} ${last_name}`,
-        phone: `+31 6 ${String(1200 + leadIdCounter).padStart(4, "0")} ${String(5600 + leadIdCounter).padStart(4, "0")}`,
-        phone_normalized: `+316${String(12005600 + leadIdCounter).padStart(8, "0")}`,
-        email: `${first_name.toLowerCase()}.${last_name.toLowerCase()}@example.com`,
+        phone: `+31 6 ${String(1000 + leadIdCounter).padStart(4, "0")} ${String(4000 + leadIdCounter).padStart(4, "0")}`,
+        phone_normalized: `+316${String(10004000 + leadIdCounter).padStart(8, "0")}`,
+        email: `${first_name.toLowerCase()}.${last_name.toLowerCase()}@${pick(["gmail.com", "outlook.com", "company.io", "startup.ai"], i)}`,
         conversion_status: stage as any,
         source: pick(sources, i),
-        last_interaction_at: iso(new Date(Date.now() - (5 - (i % 5)) * 3600 * 1000)),
-        notes: i % 4 === 0 ? "Asked about pricing" : "",
-        booked_call_date: stage === "Booked" ? iso(new Date(Date.now() + 2 * 24 * 3600 * 1000)) : null,
+        last_interaction_at: iso(new Date(Date.now() - (Math.random() * 48) * 3600 * 1000)),
+        notes: i % 3 === 0 ? "Interested in AI automation" : i % 5 === 0 ? "Referred by partner" : "",
+        booked_call_date: stage === "Booked" ? iso(new Date(Date.now() + (1 + Math.random() * 5) * 24 * 3600 * 1000)) : null,
         automation_status: pick(automation, i),
         last_message_sent_at: iso(new Date(Date.now() - 3600 * 1000)),
         last_message_received_at: (stage === "Responded" || stage === "Multiple Responses") ? iso(new Date(Date.now() - 1800 * 1000)) : null,
-        message_count_sent: 2,
-        message_count_received: (stage === "Responded" || stage === "Multiple Responses") ? 1 : 0,
-        ai_memory: "{}",
-        bump_1_sent_at: null,
+        message_count_sent: 1 + (i % 5),
+        message_count_received: (stage === "Responded" || stage === "Multiple Responses") ? 1 + (i % 3) : 0,
+        ai_memory: "User is looking for a CRM solution with automated follow-ups.",
+        bump_1_sent_at: i % 2 === 0 ? iso(new Date(Date.now() - 48 * 3600 * 1000)) : null,
         bump_2_sent_at: null,
         bump_3_sent_at: null,
         first_message_sent_at: iso(new Date(Date.now() - 72 * 3600 * 1000)),
-        current_bump_stage: 0,
+        current_bump_stage: i % 2 === 0 ? 1 : 0,
         next_action_at: iso(new Date(Date.now() + 3600 * 1000)),
         timezone: "Europe/Amsterdam",
         opted_out: stage === "DND",
-        ai_sentiment: "Neutral",
-        priority: "Medium",
-        manual_takeover: false,
-        dnc_reason: stage === "DND" ? "User opted out" : "",
+        ai_sentiment: pick(sentiments, i),
+        priority: pick(priorities, i),
+        manual_takeover: i % 10 === 0,
+        dnc_reason: stage === "DND" ? "Requested to stop" : "",
         custom_field_1: "",
         custom_field_2: "",
         custom_field_3: "",
-        tags: [pick(tagPool, i)],
+        tags: [pick(tagPool, i), pick(tagPool, i + 1)].filter((v, i, a) => a.indexOf(v) === i),
       });
     }
   });
@@ -493,32 +494,32 @@ export const leads: Lead[] = [
 const interactionTypes: Interaction["type"][] = ["SMS", "WhatsApp", "Email", "Call", "Note"];
 const interactionStatus: Interaction["status"][] = ["queued", "sending", "sent", "delivered", "failed", "read"];
 
-export const interactions: Interaction[] = Array.from({ length: 120 }).map((_, idx) => {
+export const interactions: Interaction[] = Array.from({ length: 180 }).map((_, idx) => {
   const id = idx + 1;
-  const lead_id = (idx % 50) + 1;
+  const lead_id = (idx % leads.length) + 1;
   const lead = leads[lead_id - 1];
-  const direction: Interaction["direction"] = idx % 3 === 0 ? "Inbound" : "Outbound";
-  const created = new Date(Date.now() - (120 - idx) * 25 * 60 * 1000);
+  const direction: Interaction["direction"] = idx % 2 === 0 ? "Outbound" : "Inbound";
+  const created = new Date(Date.now() - (180 - idx) * 45 * 60 * 1000);
 
   const content =
     direction === "Outbound"
       ? pick(
           [
-            "Hey {{first_name}} — quick question: are you still interested in getting this scheduled?",
-            "Totally fair. Want me to send available times?",
-            "If it helps, we can do a 10-min call today.",
-            "No worries — should I close this out?",
-            "Just checking if you saw this.",
+            "Hey {{first_name}} — still interested in automating your lead flow?",
+            "Just wanted to check if you had any questions about the pricing we discussed.",
+            "I've got some time tomorrow afternoon for a quick demo if you're free.",
+            "Hey {{first_name}}, following up on our last conversation!",
+            "Should I keep your file open or close it out for now?",
           ],
           idx,
         ).replace("{{first_name}}", lead.first_name)
       : pick(
           [
-            "Yes, but I'm busy this week.",
-            "How much is it?",
-            "Can you text me tomorrow morning?",
-            "Stop messaging me.",
-            "Ok, send me the link.",
+            "Yeah, can we chat tomorrow at 2pm?",
+            "What's the monthly cost for the Enterprise plan?",
+            "I'm interested, but need to talk to my team first.",
+            "Please send me more information about the AI bumps.",
+            "Does this integrate with my existing calendar?",
           ],
           idx,
         );
@@ -535,21 +536,21 @@ export const interactions: Interaction[] = Array.from({ length: 120 }).map((_, i
     direction,
     content,
     status: pick(interactionStatus, idx),
-    twilio_message_sid: `SM${String(100000 + idx)}`,
+    twilio_message_sid: `SM${String(200000 + idx)}`,
     from_number: direction === "Outbound" ? "+31612345678" : lead.phone,
     to_number: direction === "Outbound" ? lead.phone : "+31612345678",
     metadata: JSON.stringify({ campaign_id: lead.campaign_id, lead_id }),
-    ai_generated: direction === "Outbound" && idx % 2 === 0,
+    ai_generated: direction === "Outbound" && idx % 3 !== 0,
     ai_model: direction === "Outbound" ? "gpt-4" : "",
-    ai_prompt: direction === "Outbound" ? "Generate a friendly follow up" : "",
-    ai_response: direction === "Outbound" ? "(mock)" : "",
+    ai_prompt: direction === "Outbound" ? "Follow up naturally" : "",
+    ai_response: direction === "Outbound" ? "(mock AI response)" : "",
   };
 });
 
-export const automationLogs: AutomationLog[] = Array.from({ length: 40 }).map((_, idx) => {
+export const automationLogs: AutomationLog[] = Array.from({ length: 60 }).map((_, idx) => {
   const lead = leads[(idx % leads.length)];
-  const created = new Date(Date.now() - (idx + 1) * 2 * 60 * 60 * 1000);
-  const status = pick<AutomationLog["status"]>(["success", "error", "skipped", "running"], idx);
+  const created = new Date(Date.now() - (idx + 1) * 90 * 60 * 1000);
+  const status = pick<AutomationLog["status"]>(["success", "success", "success", "error", "skipped"], idx);
   return {
     id: idx + 1,
     account_id: lead.account_id,
@@ -557,9 +558,9 @@ export const automationLogs: AutomationLog[] = Array.from({ length: 40 }).map((_
     lead_id: lead.id,
     created_at: iso(created),
     status,
-    error_message: status === "error" ? "Twilio delivery failed (mock)" : "",
-    execution_time_ms: 250 + (idx % 900),
-    stage: pick(["first_message", "bump_1", "bump_2", "handoff"], idx),
+    error_message: status === "error" ? pick(["Rate limit exceeded", "Invalid phone number", "Webhook timeout"], idx) : "",
+    execution_time_ms: 150 + (idx % 1200),
+    stage: pick(["initial_reachout", "bump_1", "ai_qualification", "calendar_sync"], idx),
   };
 });
 

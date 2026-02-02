@@ -21,32 +21,50 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
       {/* Slim Top Bar */}
       <div className={cn(
-        "fixed top-0 left-0 right-0 h-8 z-[60] flex items-center justify-end px-4 gap-4 transition-colors duration-300",
+        "fixed top-0 left-0 right-0 h-8 z-[60] flex items-center justify-between px-4 transition-colors duration-300",
         isAgencyView ? "bg-yellow-500 shadow-[0_1px_12px_rgba(234,179,8,0.4)]" : "bg-blue-600 shadow-[0_1px_12px_rgba(37,99,235,0.4)]"
       )}>
-        <button onClick={() => setActivePanel('search')} className="p-1 hover:bg-black/10 rounded transition-colors" title="Search">
-          <Search className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
-        </button>
-        <button onClick={() => setActivePanel('notifications')} className="p-1 hover:bg-black/10 rounded transition-colors relative" title="Alerts">
-          <Bell className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
-          {unreadCount > 0 && <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border border-white" />}
-        </button>
-        <button 
-          onClick={() => {
-            const isDark = document.documentElement.classList.toggle("dark");
-            localStorage.setItem("theme", isDark ? "dark" : "light");
-          }} 
-          className="p-1 hover:bg-black/10 rounded transition-colors" 
-          title="Night Mode"
-        >
-          <Moon className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
-        </button>
-        <button onClick={() => setActivePanel('help')} className="p-1 hover:bg-black/10 rounded transition-colors" title="Help">
-          <HelpCircle className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
-        </button>
-        <button onClick={() => setActivePanel('support')} className="p-1 hover:bg-black/10 rounded transition-colors" title="Customer Service">
-          <Headphones className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
-        </button>
+        <div className="flex items-center gap-2 group relative">
+          <button 
+            onClick={() => setLocation("/")}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            data-testid="button-home-logo"
+          >
+            <img src="/6.Favicon.svg" alt="Lead Awaker" className="h-5 w-5" />
+            <span className={cn("text-xs font-bold tracking-tight", isAgencyView ? "text-black" : "text-white")}>
+              Lead Awaker
+            </span>
+          </button>
+          <div className="absolute left-0 top-full mt-1 hidden group-hover:block bg-black/80 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap z-[70]">
+            v.0.5
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <button onClick={() => setActivePanel('search')} className="p-1 hover:bg-black/10 rounded transition-colors" title="Search">
+            <Search className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
+          </button>
+          <button onClick={() => setActivePanel('notifications')} className="p-1 hover:bg-black/10 rounded transition-colors relative" title="Alerts">
+            <Bell className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
+            {unreadCount > 0 && <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border border-white" />}
+          </button>
+          <button 
+            onClick={() => {
+              const isDark = document.documentElement.classList.toggle("dark");
+              localStorage.setItem("theme", isDark ? "dark" : "light");
+            }} 
+            className="p-1 hover:bg-black/10 rounded transition-colors" 
+            title="Night Mode"
+          >
+            <Moon className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
+          </button>
+          <button onClick={() => setActivePanel('help')} className="p-1 hover:bg-black/10 rounded transition-colors" title="Help">
+            <HelpCircle className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
+          </button>
+          <button onClick={() => setActivePanel('support')} className="p-1 hover:bg-black/10 rounded transition-colors" title="Customer Service">
+            <Headphones className={cn("h-4 w-4", isAgencyView ? "text-black" : "text-white")} />
+          </button>
+        </div>
       </div>
 
       <div className="fixed left-0 top-0 bottom-0 z-40" data-testid="wrap-left-nav">
