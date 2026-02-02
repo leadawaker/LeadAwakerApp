@@ -61,26 +61,8 @@ export default function CalendarPage() {
   return (
     <CrmShell>
       <div className="px-6 py-6" data-testid="page-calendar">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Calendar</h1>
-            <p className="text-sm text-muted-foreground" data-testid="text-subtitle">
-              Booked appointments derived from Leads.
-            </p>
-          </div>
-          {selectedDate && (
-            <button
-              onClick={() => setSelectedDate(null)}
-              className="flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
-              data-testid="button-back-to-month"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Full Month
-            </button>
-          )}
-        </div>
-
-        <div className="mt-4">
+        <div className="flex items-center gap-4 mb-6">
+          <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Calendar</h1>
           <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
         </div>
 

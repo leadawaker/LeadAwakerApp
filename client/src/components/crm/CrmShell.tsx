@@ -30,7 +30,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             data-testid="button-home-logo"
           >
-            <img src="/6.Favicon.svg" alt="Lead Awaker" className="h-5 w-5" />
+            <img src="/favicon.svg" alt="Lead Awaker" className="h-5 w-5" />
             <span className={cn("text-xs font-bold tracking-tight", isAgencyView ? "text-black" : "text-white")}>
               Lead Awaker
             </span>
