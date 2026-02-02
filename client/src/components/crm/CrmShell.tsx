@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { RightSidebar } from "@/components/crm/RightSidebar";
+import { Topbar } from "@/components/crm/Topbar";
 import { SupportChat } from "@/components/crm/SupportChat";
 import { SearchModal } from "@/components/crm/SearchModal";
 import { NotificationsPanel } from "@/components/crm/NotificationsPanel";
@@ -19,6 +20,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
+      <Topbar />
       <div className="fixed left-0 top-0 bottom-0 z-40" data-testid="wrap-left-nav">
         <RightSidebar 
           collapsed={collapsed} 
