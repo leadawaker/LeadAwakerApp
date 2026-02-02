@@ -1,12 +1,14 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { leads } from "@/data/mocks";
 import { FiltersBar } from "@/components/crm/FiltersBar";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const FULL_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 function formatDate(date: Date) {
   const day = String(date.getDate()).padStart(2, '0');
@@ -15,10 +17,19 @@ function formatDate(date: Date) {
   return `${day} ${month} - ${year}`;
 }
 
+type ViewMode = "month" | "week" | "day";
+
 export default function CalendarPage() {
   const { currentAccountId } = useWorkspace();
   const [campaignId, setCampaignId] = useState<number | "all">("all");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("month");
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   const todayStr = new Date().toLocaleDateString();
 
@@ -35,6 +46,8 @@ export default function CalendarPage() {
           date: d.toLocaleDateString(),
           formattedDate: formatDate(d),
           time: d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          hour: d.getHours(),
+          minutes: d.getMinutes(),
           status: l.conversion_status,
           calendar_link: "https://cal.example.com/leadawaker",
         };
@@ -42,17 +55,17 @@ export default function CalendarPage() {
       .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
   }, [currentAccountId, campaignId]);
 
-  const [month, setMonth] = useState(() => {
+  const [anchorDate, setAnchorDate] = useState(() => {
     const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth(), 1);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
   });
+
+  const month = useMemo(() => new Date(anchorDate.getFullYear(), anchorDate.getMonth(), 1), [anchorDate]);
 
   const days = useMemo(() => {
     const year = month.getFullYear();
     const m = month.getMonth();
     const first = new Date(year, m, 1);
-    // Adjust startDow to make Monday the first day (0=Mon, 6=Sun)
-    // first.getDay() is 0 for Sun, 1 for Mon, ..., 6 for Sat
     const startDow = (first.getDay() + 6) % 7; 
     const gridStart = new Date(year, m, 1 - startDow);
 
@@ -67,6 +80,21 @@ export default function CalendarPage() {
     return out;
   }, [month, appts]);
 
+  const weekDays = useMemo(() => {
+    const startOfWeek = new Date(anchorDate);
+    const day = startOfWeek.getDay();
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
+    startOfWeek.setDate(diff);
+
+    const out = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(startOfWeek);
+      d.setDate(startOfWeek.getDate() + i);
+      out.push(d);
+    }
+    return out;
+  }, [anchorDate]);
+
   const appointmentsForSelectedDate = useMemo(() => {
     if (!selectedDate) return [];
     return appts.filter((a) => a.date === selectedDate);
@@ -75,6 +103,30 @@ export default function CalendarPage() {
   const handleDateClick = (dateStr: string) => {
     setSelectedDate(prev => prev === dateStr ? null : dateStr);
   };
+
+  const navigate = (direction: number) => {
+    const next = new Date(anchorDate);
+    if (viewMode === "month") {
+      next.setMonth(anchorDate.getMonth() + direction);
+    } else if (viewMode === "week") {
+      next.setDate(anchorDate.getDate() + (direction * 7));
+    } else {
+      next.setDate(anchorDate.getDate() + direction);
+    }
+    setAnchorDate(next);
+  };
+
+  const viewLabel = useMemo(() => {
+    if (viewMode === "month") return `${FULL_MONTHS[anchorDate.getMonth()]} ${anchorDate.getFullYear()}`;
+    if (viewMode === "week") {
+      const start = weekDays[0];
+      const end = weekDays[6];
+      return `${MONTHS[start.getMonth()]} ${start.getDate()} - ${end.getDate()}, ${end.getFullYear()}`;
+    }
+    return `${FULL_MONTHS[anchorDate.getMonth()]} ${anchorDate.getDate()}, ${anchorDate.getFullYear()}`;
+  }, [viewMode, anchorDate, weekDays]);
+
+  const hours = Array.from({ length: 24 }, (_, i) => i);
 
   return (
     <CrmShell>
@@ -85,76 +137,148 @@ export default function CalendarPage() {
         </div>
 
         <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-6" data-testid="layout-calendar">
-          <div className="rounded-2xl border border-border bg-background overflow-hidden flex flex-col h-full" data-testid="calendar-month">
+          <div className="rounded-2xl border border-border bg-background overflow-hidden flex flex-col h-full" data-testid="calendar-main">
             <div className="p-4 border-b border-border flex items-center justify-between shrink-0">
-              <div className="font-semibold" data-testid="text-month">
-                {month.toLocaleString(undefined, { month: "long", year: "numeric" })}
-              </div>
-              <div className="flex gap-2">
-                <button
-                  className="h-9 w-9 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 flex items-center justify-center"
-                  onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1))}
-                  data-testid="button-prev-month"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button
-                  className="h-9 w-9 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 flex items-center justify-center"
-                  onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1))}
-                  data-testid="button-next-month"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-7 text-xs text-center font-bold text-muted-foreground border-b border-border bg-muted/5 shrink-0" data-testid="row-dow">
-              {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((d, i) => (
-                <div key={i} className={cn("px-3 py-3", (i >= 5) && "bg-muted/10 opacity-70")} data-testid={`dow-${i}`}>{d}</div>
-              ))}
-            </div>
-
-            <div className="flex-1 grid grid-cols-7 overflow-y-auto" data-testid="grid-days">
-              {days.map((d, idx) => {
-                const inMonth = d.date.getMonth() === month.getMonth();
-                const isToday = d.date.toLocaleDateString() === todayStr;
-                const isSelected = selectedDate === d.date.toLocaleDateString();
-                const isWeekend = d.date.getDay() === 0 || d.date.getDay() === 6;
-                return (
-                  <div
-                    key={idx}
-                    onClick={() => handleDateClick(d.date.toLocaleDateString())}
-                    className={cn(
-                      "min-h-[100px] border-b border-r border-border/60 last:border-r-0 p-2 cursor-pointer transition-colors hover:bg-muted/30 relative",
-                      !inMonth && "bg-muted/5 opacity-40",
-                      isWeekend && inMonth && "bg-muted/10 opacity-80",
-                      isSelected && "bg-primary/5 ring-2 ring-inset ring-primary z-10",
-                      isToday && !isSelected && "bg-primary/5"
-                    )}
-                    data-testid={`day-${idx}`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className={cn(
-                        "text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full", 
-                        isToday ? "bg-primary text-primary-foreground" : inMonth ? "text-foreground" : "text-muted-foreground"
-                      )}>
-                        {d.date.getDate()}
-                      </div>
-                    </div>
-                    {d.count > 0 && (
-                      <div className="flex justify-center mt-2">
-                        <div 
-                          className="h-6 w-6 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shadow-sm"
-                          data-testid={`day-count-${idx}`}
+              <div className="flex items-center gap-4">
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <button className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold transition-colors uppercase tracking-wider" data-testid="button-view-mode">
+                      {viewMode} View <ChevronDown className="h-4 w-4" />
+                    </button>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content className="z-[100] min-w-[160px] bg-background border border-border rounded-xl shadow-xl p-1" sideOffset={5}>
+                      {(["month", "week", "day"] as ViewMode[]).map((mode) => (
+                        <DropdownMenu.Item
+                          key={mode}
+                          className="flex items-center px-3 py-2 text-sm font-medium rounded-lg cursor-pointer hover:bg-muted/50 outline-none capitalize"
+                          onClick={() => setViewMode(mode)}
                         >
-                          {d.count}
+                          {mode} View
+                        </DropdownMenu.Item>
+                      ))}
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+
+                <div className="flex items-center gap-2">
+                  <div className="font-bold text-lg min-w-[180px]" data-testid="text-view-label">
+                    {viewLabel}
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      className="h-8 w-8 rounded-lg border border-border bg-muted/20 hover:bg-muted/30 flex items-center justify-center"
+                      onClick={() => navigate(-1)}
+                      data-testid="button-prev"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <button
+                      className="h-8 w-8 rounded-lg border border-border bg-muted/20 hover:bg-muted/30 flex items-center justify-center"
+                      onClick={() => navigate(1)}
+                      data-testid="button-next"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {viewMode === "month" && (
+              <>
+                <div className="grid grid-cols-7 text-xs text-center font-bold text-muted-foreground border-b border-border bg-muted/5 shrink-0" data-testid="row-dow">
+                  {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((d, i) => (
+                    <div key={i} className={cn("px-3 py-3", (i >= 5) && "bg-muted/10 opacity-70")} data-testid={`dow-${i}`}>{d}</div>
+                  ))}
+                </div>
+                <div className="flex-1 grid grid-cols-7 overflow-y-auto" data-testid="grid-days">
+                  {days.map((d, idx) => {
+                    const inMonth = d.date.getMonth() === month.getMonth();
+                    const isToday = d.date.toLocaleDateString() === todayStr;
+                    const isSelected = selectedDate === d.date.toLocaleDateString();
+                    const isWeekend = d.date.getDay() === 0 || d.date.getDay() === 6;
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => handleDateClick(d.date.toLocaleDateString())}
+                        className={cn(
+                          "min-h-[100px] border-b border-r border-border/60 last:border-r-0 p-2 cursor-pointer transition-colors hover:bg-muted/30 relative",
+                          !inMonth && "bg-muted/5 opacity-40",
+                          isWeekend && inMonth && "bg-muted/10 opacity-80",
+                          isSelected && "bg-primary/5 ring-2 ring-inset ring-primary z-10",
+                          isToday && !isSelected && "bg-primary/5"
+                        )}
+                        data-testid={`day-${idx}`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className={cn(
+                            "text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full", 
+                            isToday ? "text-primary bg-primary/10" : inMonth ? "text-foreground" : "text-muted-foreground"
+                          )}>
+                            {d.date.getDate()}
+                          </div>
+                        </div>
+                        {d.count > 0 && (
+                          <div className="flex justify-center mt-2">
+                            <div className="h-6 w-6 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shadow-sm">
+                              {d.count}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {(viewMode === "week" || viewMode === "day") && (
+              <div className="flex-1 overflow-y-auto relative flex" data-testid="grid-time">
+                <div className="w-16 border-r border-border bg-muted/5 flex flex-col shrink-0">
+                  {hours.map(h => (
+                    <div key={h} className="h-20 border-b border-border/50 text-[10px] font-bold text-muted-foreground p-2 text-right">
+                      {h === 0 ? "12 AM" : h < 12 ? `${h} AM` : h === 12 ? "12 PM" : `${h-12} PM`}
+                    </div>
+                  ))}
+                </div>
+                <div className="flex-1 grid" style={{ gridTemplateColumns: `repeat(${viewMode === "week" ? 7 : 1}, 1fr)` }}>
+                  {(viewMode === "week" ? weekDays : [anchorDate]).map((d, i) => {
+                    const isToday = d.toLocaleDateString() === todayStr;
+                    const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                    return (
+                      <div key={i} className={cn("relative border-r border-border/50 last:border-r-0", isWeekend && "bg-muted/5")}>
+                        <div className={cn("sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border p-2 text-center", isToday && "bg-primary/5")}>
+                          <div className="text-[10px] font-bold text-muted-foreground uppercase">{MONTHS[d.getMonth()]}</div>
+                          <div className={cn("text-lg font-black", isToday ? "text-primary" : "text-foreground")}>{d.getDate()}</div>
+                        </div>
+                        <div className="relative h-[1920px]">
+                          {hours.map(h => <div key={h} className="h-20 border-b border-border/30" />)}
+                          {isToday && (
+                            <div 
+                              className="absolute left-0 right-0 border-t-2 border-red-500 z-30 pointer-events-none"
+                              style={{ top: `${(currentTime.getHours() * 60 + currentTime.getMinutes()) * (20/60) * 4}px` }}
+                            >
+                              <div className="w-2 h-2 rounded-full bg-red-500 -ml-1 -mt-[5px]" />
+                            </div>
+                          )}
+                          {appts.filter(a => a.date === d.toLocaleDateString()).map(a => (
+                            <div 
+                              key={a.id}
+                              className="absolute left-1 right-1 p-2 rounded-lg bg-blue-100 border-l-4 border-blue-600 shadow-sm z-10"
+                              style={{ top: `${(a.hour * 60 + a.minutes) * (20/60) * 4}px`, height: '60px' }}
+                            >
+                              <div className="text-[10px] font-bold text-blue-900 truncate">{a.lead_name}</div>
+                              <div className="text-[9px] font-medium text-blue-700">{a.time}</div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="rounded-2xl border border-border bg-background flex flex-col overflow-hidden h-full" data-testid="calendar-list">
