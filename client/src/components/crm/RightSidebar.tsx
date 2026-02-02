@@ -342,7 +342,7 @@ export function RightSidebar({
         data-testid="sidebar-left"
       >
         <div className="h-full flex flex-col">
-          <div className={cn("h-auto py-8 flex items-center justify-start px-6 relative")}> 
+          <div className={cn("h-auto py-6 flex items-center justify-start px-6 relative")}> 
             <button
               type="button"
               onClick={onGoHome}
@@ -352,7 +352,7 @@ export function RightSidebar({
             </button>
           </div>
 
-          <nav className={cn("px-3 space-y-4 flex-1")} data-testid="nav-right">
+          <nav className={cn("px-3 space-y-2 flex-1")} data-testid="nav-right">
             {navItems.map((it) => {
               if (it.agencyOnly && !isAgencyView) return null;
               const active = location === it.href;
@@ -374,13 +374,13 @@ export function RightSidebar({
                   title={collapsed ? it.label : undefined}
                 >
                   <Icon className={cn("h-[24px] w-[24px]", active && "scale-110")} />
-                  {!collapsed && <span className="text-base font-bold tracking-tight">{it.label}</span>}
+                  {!collapsed && <span className="text-sm font-semibold tracking-tight">{it.label}</span>}
                 </Link>
               );
             })}
           </nav>
 
-          <div className={cn("mt-auto px-3 mb-8 space-y-4 font-bold")} data-testid="section-sidebar-bottom">
+          <div className={cn("mt-auto px-3 mb-8 space-y-3 font-bold")} data-testid="section-sidebar-bottom">
             <button
               type="button"
               onClick={() => onCollapse(!collapsed)}
@@ -392,7 +392,7 @@ export function RightSidebar({
               aria-label="Toggle sidebar"
             >
               {collapsed ? <PanelRightClose className="h-[24px] w-[24px]" /> : <PanelRightOpen className="h-[24px] w-[24px]" />}
-              {!collapsed && <span className="text-base font-bold">Collapse</span>}
+              {!collapsed && <span className="text-sm font-bold">Collapse</span>}
             </button>
 
             <DropdownMenu>
@@ -405,7 +405,7 @@ export function RightSidebar({
                   data-testid="button-sidebar-help"
                 >
                   <HelpCircle className="h-[24px] w-[24px]" />
-                  {!collapsed && <span className="text-base font-bold">Help</span>}
+                  {!collapsed && <span className="text-sm font-bold">Help</span>}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" side="right" className="w-56 ml-2 rounded-xl shadow-xl border-border bg-background">

@@ -39,19 +39,19 @@ export function Topbar({ onOpenPanel }: { onOpenPanel: (panel: string) => void }
       )}
       data-testid="header-crm-topbar"
     >
-      <div className="flex items-center gap-10">
+      <div className="flex items-center gap-6">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
               variant="ghost" 
               className={cn(
-                "h-10 px-0 hover:bg-transparent text-xl font-bold flex items-center gap-2",
+                "h-9 px-0 hover:bg-transparent text-base font-semibold flex items-center gap-2",
                 isAgencyView ? "text-yellow-600" : "text-blue-600"
               )}
               data-testid="button-account-selector"
             >
               {currentAccount.name}
-              <ChevronDown className="h-6 w-6 opacity-50" />
+              <ChevronDown className="h-4 w-4 opacity-60" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-64 rounded-xl shadow-xl border-border bg-background">
@@ -79,24 +79,6 @@ export function Topbar({ onOpenPanel }: { onOpenPanel: (panel: string) => void }
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button 
-              variant="ghost" 
-              className="h-10 px-0 hover:bg-transparent text-xl font-bold flex items-center gap-2"
-              data-testid="button-campaign-selector"
-            >
-              All campaigns
-              <ChevronDown className="h-6 w-6 opacity-50" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-xl border-border bg-background">
-            <DropdownMenuItem className="font-bold py-3">All campaigns</DropdownMenuItem>
-            {campaigns.map(c => (
-              <DropdownMenuItem key={c.id} className="py-3 font-bold">{c.name}</DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
 
         <div className="flex items-center gap-4">
           <button 
