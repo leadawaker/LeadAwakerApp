@@ -332,23 +332,23 @@ export function RightSidebar({
 
       <aside
         className={cn(
-          "fixed left-4 top-[16px] bottom-4 border border-border bg-background/80 backdrop-blur-md z-40 transition-all dark:bg-muted/10 hidden md:block rounded-2xl shadow-sm",
-          collapsed ? "w-[60px]" : "w-[200px]",
+          "fixed left-4 top-[16px] bottom-4 border-none bg-background z-40 transition-all hidden md:block rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.02)]",
+          collapsed ? "w-[60px]" : "w-[180px]",
         )}
         data-testid="sidebar-left"
       >
         <div className="h-full flex flex-col">
-          <div className={cn("h-auto py-6 flex items-center justify-start px-5 relative")}> 
+          <div className={cn("h-auto py-8 flex items-center justify-start px-6 relative")}> 
             <button
               type="button"
               onClick={onGoHome}
               className="flex items-center justify-center hover:opacity-80 transition-opacity"
             >
-              <img src="/6. Favicon.svg" alt="Lead Awaker" className="h-9 w-9 object-contain" />
+              <img src="/6. Favicon.svg" alt="Lead Awaker" className="h-10 w-10 object-contain" />
             </button>
           </div>
 
-          <nav className={cn("px-4 space-y-2 flex-1")} data-testid="nav-right">
+          <nav className={cn("px-3 space-y-4 flex-1")} data-testid="nav-right">
             {navItems.map((it) => {
               if (it.agencyOnly && !isAgencyView) return null;
               const active = location === it.href;
@@ -359,7 +359,7 @@ export function RightSidebar({
                   href={it.href}
                   className={cn(
                     "flex items-center gap-3 rounded-xl border border-transparent transition-all group",
-                    collapsed ? "h-10 justify-center" : "px-3 py-2",
+                    collapsed ? "h-12 justify-center" : "px-3 py-3",
                     active
                       ? isAgencyView
                         ? "text-yellow-600"
@@ -369,48 +369,48 @@ export function RightSidebar({
                   data-testid={`link-${it.testId}`}
                   title={collapsed ? it.label : undefined}
                 >
-                  <Icon className={cn("h-5 w-5", active && "scale-110")} />
-                  {!collapsed && <span className="text-sm font-bold tracking-tight">{it.label}</span>}
+                  <Icon className={cn("h-[32px] w-[32px]", active && "scale-110")} />
+                  {!collapsed && <span className="text-base font-bold tracking-tight">{it.label}</span>}
                 </Link>
               );
             })}
           </nav>
 
-          <div className={cn("mt-auto px-4 mb-6 space-y-2")} data-testid="section-sidebar-bottom">
+          <div className={cn("mt-auto px-3 mb-8 space-y-4")} data-testid="section-sidebar-bottom">
             <button
               type="button"
               onClick={() => onCollapse(!collapsed)}
               className={cn(
-                "w-full h-10 rounded-xl transition-colors flex items-center gap-3 text-muted-foreground hover:text-foreground",
+                "w-full h-12 rounded-xl transition-colors flex items-center gap-3 text-muted-foreground hover:text-foreground",
                 collapsed ? "justify-center" : "px-3",
               )}
               data-testid="button-sidebar-collapse"
               aria-label="Toggle sidebar"
             >
-              {collapsed ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
-              {!collapsed && <span className="text-sm font-bold">Collapse</span>}
+              {collapsed ? <PanelRightClose className="h-[32px] w-[32px]" /> : <PanelRightOpen className="h-[32px] w-[32px]" />}
+              {!collapsed && <span className="text-base font-bold">Collapse</span>}
             </button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   className={cn(
-                    "w-full h-10 rounded-xl transition-colors flex items-center gap-3 text-muted-foreground hover:text-foreground",
+                    "w-full h-12 rounded-xl transition-colors flex items-center gap-3 text-muted-foreground hover:text-foreground",
                     collapsed ? "justify-center" : "px-3",
                   )}
                   data-testid="button-sidebar-help"
                 >
-                  <HelpCircle className="h-5 w-5" />
-                  {!collapsed && <span className="text-sm font-bold">Help</span>}
+                  <HelpCircle className="h-[32px] w-[32px]" />
+                  {!collapsed && <span className="text-base font-bold">Help</span>}
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" side="right" className="w-56 ml-2 rounded-xl shadow-xl border-border">
-                <DropdownMenuItem onClick={onOpenSupport} className="py-2.5 cursor-pointer font-semibold flex items-center gap-2">
-                  <Headphones className="h-4 w-4" />
+              <DropdownMenuContent align="start" side="right" className="w-56 ml-2 rounded-xl shadow-xl border-border bg-background">
+                <DropdownMenuItem onClick={onOpenSupport} className="py-3 cursor-pointer font-bold flex items-center gap-2">
+                  <Headphones className="h-5 w-5" />
                   Speak to Support
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocation('/documentation')} className="py-2.5 cursor-pointer font-semibold flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
+                <DropdownMenuItem onClick={() => setLocation('/documentation')} className="py-3 cursor-pointer font-bold flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
                   Documentation
                 </DropdownMenuItem>
               </DropdownMenuContent>

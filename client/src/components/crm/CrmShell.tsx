@@ -19,7 +19,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   const closePanel = () => setActivePanel(null);
 
   return (
-    <div className="min-h-screen bg-background" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
+    <div className="min-h-screen bg-[#F5F5F7]" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
       <Topbar onOpenPanel={(p) => setActivePanel(p)} />
       <div className="fixed left-0 top-0 bottom-0 z-40" data-testid="wrap-left-nav">
         <RightSidebar 
@@ -59,8 +59,8 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
               )}
               {activePanel === 'settings' && (
                 <div className="p-6 space-y-8 overflow-auto h-full">
-                  <section>
-                    <h3 className="text-xs font-bold uppercase text-muted-foreground mb-4">System Actions</h3>
+                  <section className="bg-white rounded-2xl p-6 shadow-sm border border-border/40">
+                    <h3 className="text-xs font-bold uppercase text-muted-foreground mb-4 tracking-widest">System Actions</h3>
                     <div className="grid grid-cols-2 gap-3 mb-8">
                       <button onClick={() => { setActivePanel('search'); }} className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors">
                         <Search className="h-5 w-5 text-muted-foreground" />
@@ -98,7 +98,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
                       </button>
                     </div>
 
-                    <h3 className="text-xs font-bold uppercase text-muted-foreground mb-4">Profile</h3>
+                    <h3 className="text-xs font-bold uppercase text-muted-foreground mb-4 tracking-widest">Profile</h3>
                     <div className="space-y-4">
                       <div>
                         <label className="text-xs text-muted-foreground">Name</label>
@@ -110,14 +110,14 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
                       </div>
                     </div>
                   </section>
-                  <section>
-                    <h3 className="text-sm font-bold uppercase text-muted-foreground mb-4">Security</h3>
+                  <section className="bg-white rounded-2xl p-6 shadow-sm border border-border/40">
+                    <h3 className="text-sm font-bold uppercase text-muted-foreground mb-4 tracking-widest">Security</h3>
                     <button className="h-10 w-full rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold">
                       Send reset email
                     </button>
                   </section>
-                  <section>
-                    <h3 className="text-sm font-bold uppercase text-muted-foreground mb-4">Users</h3>
+                  <section className="bg-white rounded-2xl p-6 shadow-sm border border-border/40">
+                    <h3 className="text-sm font-bold uppercase text-muted-foreground mb-4 tracking-widest">Users</h3>
                     <div className="space-y-2">
                       <button className="h-10 w-full rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold text-left px-4">Invite user</button>
                       <button className="h-10 w-full rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold text-left px-4">Manage roles</button>
