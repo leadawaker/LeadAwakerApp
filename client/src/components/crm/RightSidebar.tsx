@@ -25,6 +25,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function IconButton({
   label,
@@ -106,18 +112,16 @@ export function RightSidebar({
   }, [location]);
 
   const prefix = isAgencyView ? "/agency" : "/subaccount";
-  const navItems = [
+  const navItems: { href: string; label: string; icon: any; testId: string; agencyOnly?: boolean }[] = [
     { href: `${prefix}/dashboard`, label: "Dashboard", icon: LayoutDashboard, testId: "nav-dashboard" },
     { href: `${prefix}/contacts`, label: "Contacts", icon: BookUser, testId: "nav-contacts" },
     { href: `${prefix}/conversations`, label: "Conversations", icon: MessageSquare, testId: "nav-conversations" },
     { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "nav-calendar" },
-    { href: `${prefix}/accounts`, label: "Accounts", icon: Building2, testId: "nav-accounts", agencyOnly: true },
     { href: `${prefix}/automation-logs`, label: "Automation Logs", icon: ScrollText, testId: "nav-automation-logs" },
     { href: `${prefix}/users`, label: "Users", icon: Users, testId: "nav-users" },
     { href: `${prefix}/tags`, label: "Tags", icon: Tag, testId: "nav-tags" },
     { href: `${prefix}/prompt-library`, label: "Prompt Library", icon: BookOpen, testId: "nav-prompt-library" },
-    { href: `${prefix}/settings`, label: "Settings", icon: Settings, testId: "nav-settings" },
   ];
 
   const handleAccountSelect = (id: number) => {
@@ -328,23 +332,23 @@ export function RightSidebar({
 
       <aside
         className={cn(
-          "fixed left-2 top-[12px] bottom-2 border border-border bg-background/80 backdrop-blur-md z-40 transition-all dark:bg-muted/10 hidden md:block rounded-2xl shadow-xl",
-          collapsed ? "w-[64px]" : "w-[225px]",
+          "fixed left-4 top-[16px] bottom-4 border border-border bg-background/80 backdrop-blur-md z-40 transition-all dark:bg-muted/10 hidden md:block rounded-2xl shadow-sm",
+          collapsed ? "w-[60px]" : "w-[200px]",
         )}
         data-testid="sidebar-left"
       >
         <div className="h-full flex flex-col">
-          <div className={cn("h-auto py-4 flex items-center justify-center px-3 relative")}> 
+          <div className={cn("h-auto py-6 flex items-center justify-start px-5 relative")}> 
             <button
               type="button"
               onClick={onGoHome}
               className="flex items-center justify-center hover:opacity-80 transition-opacity"
             >
-              <img src="/6. Favicon.svg" alt="Lead Awaker" className="h-8 w-8 object-contain" />
+              <img src="/6. Favicon.svg" alt="Lead Awaker" className="h-9 w-9 object-contain" />
             </button>
           </div>
 
-          <nav className={cn("p-3 space-y-1", collapsed && "px-2")} data-testid="nav-right">
+          <nav className={cn("px-4 space-y-2 flex-1")} data-testid="nav-right">
             {navItems.map((it) => {
               if (it.agencyOnly && !isAgencyView) return null;
               const active = location === it.href;
@@ -354,39 +358,63 @@ export function RightSidebar({
                   key={it.href}
                   href={it.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl border border-transparent transition-colors",
-                    collapsed ? "h-11 justify-center" : "px-3 py-2.5",
+                    "flex items-center gap-3 rounded-xl border border-transparent transition-all group",
+                    collapsed ? "h-10 justify-center" : "px-3 py-2",
                     active
                       ? isAgencyView
-                        ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/20"
-                        : "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
+                        ? "text-yellow-600"
+                        : "text-blue-600"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                   data-testid={`link-${it.testId}`}
                   title={collapsed ? it.label : undefined}
                 >
-                  <Icon className="h-5 w-5" />
-                  {!collapsed && <span className="text-sm font-semibold">{it.label}</span>}
+                  <Icon className={cn("h-5 w-5", active && "scale-110")} />
+                  {!collapsed && <span className="text-sm font-bold tracking-tight">{it.label}</span>}
                 </Link>
               );
             })}
           </nav>
 
-          <div className={cn("mt-auto p-3 mb-4", collapsed && "px-2")} data-testid="section-sidebar-bottom">
+          <div className={cn("mt-auto px-4 mb-6 space-y-2")} data-testid="section-sidebar-bottom">
             <button
               type="button"
               onClick={() => onCollapse(!collapsed)}
               className={cn(
-                "w-full h-11 rounded-xl border border-border bg-background/70 hover:bg-muted/30 transition-colors flex items-center gap-3",
+                "w-full h-10 rounded-xl transition-colors flex items-center gap-3 text-muted-foreground hover:text-foreground",
                 collapsed ? "justify-center" : "px-3",
               )}
               data-testid="button-sidebar-collapse"
               aria-label="Toggle sidebar"
-              title={collapsed ? "Toggle sidebar" : undefined}
             >
               {collapsed ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
-              {!collapsed && <span className="text-sm font-semibold">Collapse menu</span>}
+              {!collapsed && <span className="text-sm font-bold">Collapse</span>}
             </button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={cn(
+                    "w-full h-10 rounded-xl transition-colors flex items-center gap-3 text-muted-foreground hover:text-foreground",
+                    collapsed ? "justify-center" : "px-3",
+                  )}
+                  data-testid="button-sidebar-help"
+                >
+                  <HelpCircle className="h-5 w-5" />
+                  {!collapsed && <span className="text-sm font-bold">Help</span>}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" side="right" className="w-56 ml-2 rounded-xl shadow-xl border-border">
+                <DropdownMenuItem onClick={onOpenSupport} className="py-2.5 cursor-pointer font-semibold flex items-center gap-2">
+                  <Headphones className="h-4 w-4" />
+                  Speak to Support
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLocation('/documentation')} className="py-2.5 cursor-pointer font-semibold flex items-center gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Documentation
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </aside>
