@@ -61,7 +61,7 @@ export default function ConversationsPage() {
                 <ChevronLeft className="h-5 w-5" />
               </button>
             )}
-            <h1 className="text-xl md:text-2xl font-extrabold tracking-tight" data-testid="text-title">
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight" data-testid="text-title">
               {mobileView === "chat" && selected ? selected.lead.full_name : "Conversations"}
             </h1>
             <div className={cn("flex-1 md:flex-none", mobileView === "chat" && "hidden md:block")}>

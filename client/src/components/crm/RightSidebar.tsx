@@ -116,7 +116,7 @@ export function RightSidebar({
     { href: `${prefix}/dashboard`, label: "Home", icon: LayoutDashboard, testId: "nav-home" },
     { href: `${prefix}/contacts`, label: "Portfolio", icon: BookUser, testId: "nav-portfolio" },
     { href: `${prefix}/conversations`, label: "Explore", icon: MessageSquare, testId: "nav-explore" },
-    { href: `${prefix}/campaigns`, label: "Earn", icon: Megaphone, testId: "nav-earn" },
+    { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
     { href: `${prefix}/automation-logs`, label: "Activity", icon: ScrollText, testId: "nav-activity" },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "nav-calendar" },
     { href: `${prefix}/users`, label: "Users", icon: Users, testId: "nav-users" },
@@ -385,7 +385,7 @@ export function RightSidebar({
               type="button"
               onClick={() => onCollapse(!collapsed)}
               className={cn(
-                "w-full h-12 rounded-xl transition-colors flex items-center gap-3 text-muted-foreground hover:text-foreground",
+                "w-full h-11 rounded-xl transition-colors flex items-center gap-3 text-muted-foreground hover:text-foreground",
                 collapsed ? "justify-center" : "px-3",
               )}
               data-testid="button-sidebar-collapse"
@@ -399,7 +399,7 @@ export function RightSidebar({
               <DropdownMenuTrigger asChild>
                 <button
                   className={cn(
-                    "w-full h-12 rounded-xl transition-colors flex items-center gap-3 text-muted-foreground hover:text-foreground",
+                    "w-full h-11 rounded-xl transition-colors flex items-center gap-3 text-muted-foreground hover:text-foreground",
                     collapsed ? "justify-center" : "px-3",
                   )}
                   data-testid="button-sidebar-help"

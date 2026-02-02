@@ -74,35 +74,41 @@ export default function AppDashboard() {
   return (
     <CrmShell>
       <div className="px-6 py-6" data-testid="page-dashboard">
-        <div className="flex items-center gap-4 mb-6">
-          <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <h1 className="text-3xl font-extrabold tracking-tight" data-testid="text-title">
             Dashboard
           </h1>
-          
-          <FiltersBar
-            selectedCampaignId={selectedCampaignId}
-            setSelectedCampaignId={setSelectedCampaignId}
-            dashboardTab={dashboardTab}
-            setDashboardTab={setDashboardTab}
-          />
+
+          <div className="flex items-center gap-2" data-testid="row-page-actions">
+            <FiltersBar
+              selectedCampaignId={selectedCampaignId}
+              setSelectedCampaignId={setSelectedCampaignId}
+              dashboardTab={dashboardTab}
+              setDashboardTab={setDashboardTab}
+            />
+          </div>
         </div>
 
-        {isAgencyView ? (
-          <AgencyDashboard />
-        ) : (
-          <SubaccountDashboard
-            accountId={currentAccountId}
-            selectedCampaignId={selectedCampaignId}
-            setSelectedCampaignId={setSelectedCampaignId}
-            campaignOptions={campaignOptions}
-            stats={stats}
-            funnel={funnel}
-            stagePalette={stagePalette}
-            isBookedReportOpen={isBookedReportOpen}
-            setIsBookedReportOpen={setIsBookedReportOpen}
-            dashboardTab={dashboardTab}
-          />
-        )}
+        <div className="rounded-2xl bg-white shadow-sm" data-testid="card-page-dashboard">
+          <div className="p-6">
+            {isAgencyView ? (
+              <AgencyDashboard />
+            ) : (
+              <SubaccountDashboard
+                accountId={currentAccountId}
+                selectedCampaignId={selectedCampaignId}
+                setSelectedCampaignId={setSelectedCampaignId}
+                campaignOptions={campaignOptions}
+                stats={stats}
+                funnel={funnel}
+                stagePalette={stagePalette}
+                isBookedReportOpen={isBookedReportOpen}
+                setIsBookedReportOpen={setIsBookedReportOpen}
+                dashboardTab={dashboardTab}
+              />
+            )}
+          </div>
+        </div>
       </div>
     </CrmShell>
   );

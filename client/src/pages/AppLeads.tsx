@@ -33,34 +33,38 @@ export default function AppLeads() {
   return (
     <CrmShell>
       <div className="px-6 py-6" data-testid="page-leads">
-        <div className="flex items-center gap-4 mb-6">
-          <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Contacts</h1>
-          <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <h1 className="text-3xl font-extrabold tracking-tight" data-testid="text-title">Contacts</h1>
+          <div className="flex items-center gap-2" data-testid="row-page-actions">
+            <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
+          </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-2" data-testid="bar-filters">
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="h-10 rounded-xl border border-border bg-muted/20 px-3 text-sm"
-            data-testid="select-status"
-          >
-            <option value="all">All statuses</option>
-            {[
-              "New",
-              "Contacted",
-              "Responded",
-              "Multiple Responses",
-              "Qualified",
-              "Booked",
-              "Lost",
-              "DND",
-            ].map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+        <div className="rounded-2xl bg-white shadow-sm" data-testid="card-page-leads">
+          <div className="p-6">
+            <div className="flex flex-wrap items-center gap-2" data-testid="bar-filters">
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="h-10 rounded-xl border border-border bg-muted/20 px-3 text-sm"
+                data-testid="select-status"
+              >
+                <option value="all">All statuses</option>
+                {[
+                  "New",
+                  "Contacted",
+                  "Responded",
+                  "Multiple Responses",
+                  "Qualified",
+                  "Booked",
+                  "Lost",
+                  "DND",
+                ].map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
 
           <select
             value={priority}
@@ -128,7 +132,7 @@ export default function AppLeads() {
           </div>
         </div>
 
-        <div className="mt-4 rounded-2xl border border-border bg-background overflow-hidden" data-testid="table-contacts">
+        <div className="mt-4 rounded-2xl bg-background overflow-hidden shadow-sm" data-testid="table-contacts">
           {isLoading ? (
             <div className="px-4 py-6 text-sm text-muted-foreground" data-testid="status-leads-loading">
               Loading contacts…

@@ -33,7 +33,7 @@ export function FiltersBar({
             const v = e.target.value;
             setSelectedCampaignId(v === "all" ? "all" : Number(v));
           }}
-          className="h-10 rounded-xl border border-border bg-muted/20 px-3 text-sm"
+          className="h-10 rounded-xl border-none bg-white px-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
           data-testid="select-campaign"
         >
           <option value="all">All campaigns</option>
