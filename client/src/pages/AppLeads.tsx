@@ -108,7 +108,7 @@ export default function AppLeads() {
                   data-testid="modal-add-lead"
                 >
                   <div className="p-4 border-b border-border flex items-center justify-between">
-                    <div className="font-semibold" data-testid="text-modal-title">Add Lead</div>
+                    <div className="font-semibold" data-testid="text-modal-title">Add Lead (MOCK)</div>
                     <Dialog.Close asChild>
                       <button className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center" data-testid="button-modal-close">
                         <X className="h-4 w-4" />

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { RightSidebar } from "@/components/crm/RightSidebar";
 import { SupportChat } from "@/components/crm/SupportChat";
@@ -6,29 +6,16 @@ import { SearchModal } from "@/components/crm/SearchModal";
 import { NotificationsPanel } from "@/components/crm/NotificationsPanel";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
-import { X, Search, Bell, HelpCircle, Headphones, Moon, Settings, ChevronLeft, ChevronRight } from "lucide-react";
-import { campaigns } from "@/data/mocks";
+import { X, Search, Bell, HelpCircle, Headphones, Moon } from "lucide-react";
 
 export function CrmShell({ children }: { children: React.ReactNode }) {
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
   const { isAgencyView, currentAccountId, currentAccount } = useWorkspace();
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(3);
   const [collapsed, setCollapsed] = useState(false);
-  const [campaignId, setCampaignId] = useState<number | "all">("all");
 
   const closePanel = () => setActivePanel(null);
-
-  const campaignOptions = useMemo(() => {
-    return campaigns.filter(c => c.account_id === currentAccountId);
-  }, [currentAccountId]);
-
-  const handleCampaignChange = (v: string) => {
-    const id = v === "all" ? "all" : Number(v);
-    setCampaignId(id);
-    // Dispatch custom event so pages can listen to it if they don't use the shell state
-    window.dispatchEvent(new CustomEvent('campaignChange', { detail: id }));
-  };
 
   return (
     <div className="min-h-screen bg-background" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
@@ -80,97 +67,18 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      {/* Main Sidebar Structure */}
-      <div 
-        className={cn(
-          "fixed left-0 top-8 bottom-0 z-40 bg-background border-r border-border transition-all duration-200 flex flex-col",
-          collapsed ? "w-[64px]" : "w-[225px]"
-        )}
-      >
-        <div className="flex-1 overflow-y-auto pt-4 flex flex-col">
-          <RightSidebar 
-            collapsed={collapsed} 
-            onCollapse={setCollapsed}
-            onOpenSupport={() => setActivePanel('support')}
-            onOpenSearch={() => setActivePanel('search')}
-            onOpenNotifications={() => setActivePanel('notifications')}
-            notificationsCount={unreadCount}
-            onOpenEdgeSettings={() => setActivePanel('settings')}
-            onToggleHelp={() => setActivePanel('help')}
-            onGoHome={() => setLocation("/")}
-            hideStandardSidebar={true}
-          />
-
-          {/* New Campaign Selector in Sidebar */}
-          {!collapsed && !isAgencyView && (
-            <div className="px-4 mt-6">
-              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-2">Campaign</label>
-              <select
-                value={campaignId}
-                onChange={(e) => handleCampaignChange(e.target.value)}
-                className="w-full h-9 rounded-xl border border-border bg-muted/20 px-3 text-xs focus:ring-1 focus:ring-primary outline-none"
-                data-testid="sidebar-campaign-select"
-              >
-                <option value="all">All Campaigns</option>
-                {campaignOptions.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-        </div>
-
-        {/* Bottom Actions */}
-        <div className="p-4 border-t border-border space-y-2 relative">
-          <button
-            onClick={() => {
-              const nextId = currentAccountId === 1 ? 2 : 1;
-              const nextBase = nextId === 1 ? "/agency" : "/subaccount";
-              const currentPrefix = isAgencyView ? "/agency" : "/subaccount";
-              const locString = typeof location === 'string' ? location : window.location.pathname;
-              const tail = locString.startsWith(currentPrefix)
-                ? locString.slice(currentPrefix.length)
-                : locString.replace(/^\/(agency|subaccount)/, "");
-              
-              window.location.href = `${nextBase}${tail || "/dashboard"}`;
-            }}
-            className={cn(
-              "w-full flex items-center gap-3 h-10 px-3 rounded-xl hover:bg-muted/50 transition-colors text-primary",
-              collapsed && "justify-center px-0"
-            )}
-            title="Switch Workspace"
-          >
-            <div className={cn(
-              "h-5 w-5 rounded flex items-center justify-center text-[10px] font-bold",
-              isAgencyView ? "bg-blue-600 text-white" : "bg-yellow-500 text-black"
-            )}>
-              {isAgencyView ? "C" : "A"}
-            </div>
-            {!collapsed && <span className="text-sm font-bold">Switch to {isAgencyView ? "Client" : "Agency"}</span>}
-          </button>
-
-          <button
-            onClick={() => setActivePanel('settings')}
-            className={cn(
-              "w-full flex items-center gap-3 h-10 px-3 rounded-xl hover:bg-muted/50 transition-colors",
-              collapsed && "justify-center px-0"
-            )}
-            title="Settings"
-          >
-            <Settings className="h-5 w-5 text-muted-foreground" />
-            {!collapsed && <span className="text-sm font-semibold">Settings</span>}
-          </button>
-          
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="absolute right-0 bottom-6 translate-x-1/2 h-6 w-6 rounded-full border border-border bg-background shadow-sm hover:bg-muted grid place-items-center z-50"
-            title={collapsed ? "Expand" : "Collapse"}
-          >
-            {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
-          </button>
-        </div>
+      <div className="fixed left-0 top-0 bottom-0 z-40" data-testid="wrap-left-nav">
+        <RightSidebar 
+          collapsed={collapsed} 
+          onCollapse={setCollapsed}
+          onOpenSupport={() => setActivePanel('support')}
+          onOpenSearch={() => setActivePanel('search')}
+          onOpenNotifications={() => setActivePanel('notifications')}
+          notificationsCount={unreadCount}
+          onOpenEdgeSettings={() => setActivePanel('settings')}
+          onToggleHelp={() => setActivePanel('help')}
+          onGoHome={() => setLocation("/")}
+        />
       </div>
 
       {activePanel && (
