@@ -328,13 +328,23 @@ export function RightSidebar({
 
       <aside
         className={cn(
-          "fixed left-0 top-[48px] bottom-0 border-r border-border bg-muted/20 z-40 transition-none dark:bg-muted/10 hidden md:block",
+          "fixed left-2 top-[60px] bottom-2 border border-border bg-background/80 backdrop-blur-md z-40 transition-all dark:bg-muted/10 hidden md:block rounded-2xl shadow-xl",
           collapsed ? "w-[64px]" : "w-[225px]",
         )}
         data-testid="sidebar-left"
       >
         <div className="h-full flex flex-col">
-          <div className={cn("h-auto py-3 border-b border-border flex items-center gap-2 px-3 relative")}> 
+          <div className={cn("h-auto py-4 flex items-center justify-center px-3 relative")}> 
+            <button
+              type="button"
+              onClick={onGoHome}
+              className="flex items-center justify-center hover:opacity-80 transition-opacity"
+            >
+              <img src="/6. Favicon.svg" alt="Lead Awaker" className="h-8 w-8 object-contain" />
+            </button>
+          </div>
+
+          <div className={cn("px-3 mb-2")}>
             <button
               type="button"
               onClick={() => setOpenSwitcher((v) => !v)}
@@ -428,7 +438,7 @@ export function RightSidebar({
             })}
           </nav>
 
-          <div className={cn("mt-auto p-3", collapsed && "px-2")} data-testid="section-sidebar-bottom">
+          <div className={cn("mt-auto p-3 mb-4", collapsed && "px-2")} data-testid="section-sidebar-bottom">
             <button
               type="button"
               onClick={() => onCollapse(!collapsed)}
@@ -443,11 +453,6 @@ export function RightSidebar({
               {collapsed ? <PanelRightClose className="h-5 w-5" /> : <PanelRightOpen className="h-5 w-5" />}
               {!collapsed && <span className="text-sm font-semibold">Collapse menu</span>}
             </button>
-
-
-            <div className={cn("mt-3 text-[11px] text-muted-foreground", collapsed && "hidden")} data-testid="text-sidebar-foot">
-              MOCK CRM • NocoDB-ready
-            </div>
           </div>
         </div>
       </aside>
