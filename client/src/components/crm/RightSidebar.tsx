@@ -369,14 +369,14 @@ export function RightSidebar({
                   data-testid={`link-${it.testId}`}
                   title={collapsed ? it.label : undefined}
                 >
-                  <Icon className={cn("h-[32px] w-[32px]", active && "scale-110")} />
+                  <Icon className={cn("h-[24px] w-[24px]", active && "scale-110")} />
                   {!collapsed && <span className="text-base font-bold tracking-tight">{it.label}</span>}
                 </Link>
               );
             })}
           </nav>
 
-          <div className={cn("mt-auto px-3 mb-8 space-y-4")} data-testid="section-sidebar-bottom">
+          <div className={cn("mt-auto px-3 mb-8 space-y-4 font-bold")} data-testid="section-sidebar-bottom">
             <button
               type="button"
               onClick={() => onCollapse(!collapsed)}
@@ -387,7 +387,7 @@ export function RightSidebar({
               data-testid="button-sidebar-collapse"
               aria-label="Toggle sidebar"
             >
-              {collapsed ? <PanelRightClose className="h-[32px] w-[32px]" /> : <PanelRightOpen className="h-[32px] w-[32px]" />}
+              {collapsed ? <PanelRightClose className="h-[24px] w-[24px]" /> : <PanelRightOpen className="h-[24px] w-[24px]" />}
               {!collapsed && <span className="text-base font-bold">Collapse</span>}
             </button>
 
@@ -400,7 +400,7 @@ export function RightSidebar({
                   )}
                   data-testid="button-sidebar-help"
                 >
-                  <HelpCircle className="h-[32px] w-[32px]" />
+                  <HelpCircle className="h-[24px] w-[24px]" />
                   {!collapsed && <span className="text-base font-bold">Help</span>}
                 </button>
               </DropdownMenuTrigger>

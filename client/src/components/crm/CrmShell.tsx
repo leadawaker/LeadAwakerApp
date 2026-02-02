@@ -19,7 +19,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   const closePanel = () => setActivePanel(null);
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7]" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
+    <div className="min-h-screen bg-[#E5E7EB]" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
       <Topbar onOpenPanel={(p) => setActivePanel(p)} />
       <div className="fixed left-0 top-0 bottom-0 z-40" data-testid="wrap-left-nav">
         <RightSidebar 

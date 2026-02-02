@@ -104,7 +104,7 @@ export function Topbar({ onOpenPanel }: { onOpenPanel: (panel: string) => void }
             className="p-2 text-muted-foreground hover:text-foreground transition-colors"
             data-testid="button-search-top"
           >
-            <Search className="h-[32px] w-[32px]" />
+            <Search className="h-[24px] w-[24px]" />
           </button>
 
           <button 
@@ -112,7 +112,7 @@ export function Topbar({ onOpenPanel }: { onOpenPanel: (panel: string) => void }
             className="p-2 text-muted-foreground hover:text-foreground transition-colors"
             data-testid="button-notifications"
           >
-            <Bell className="h-[32px] w-[32px]" />
+            <Bell className="h-[24px] w-[24px]" />
           </button>
 
           <button 
@@ -120,7 +120,7 @@ export function Topbar({ onOpenPanel }: { onOpenPanel: (panel: string) => void }
             className="p-2 text-muted-foreground hover:text-foreground transition-colors"
             data-testid="button-settings-top"
           >
-            <Settings className="h-[32px] w-[32px]" />
+            <Settings className="h-[24px] w-[24px]" />
           </button>
         </div>
       </div>
