@@ -10,7 +10,7 @@ import { X, Search, Bell, HelpCircle, Headphones, Moon, Settings, ChevronLeft, C
 import { campaigns } from "@/data/mocks";
 
 export function CrmShell({ children }: { children: React.ReactNode }) {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { isAgencyView, currentAccountId, currentAccount } = useWorkspace();
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(3);
@@ -124,6 +124,33 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
 
         {/* Bottom Actions */}
         <div className="p-4 border-t border-border space-y-2 relative">
+          <button
+            onClick={() => {
+              const nextId = currentAccountId === 1 ? 2 : 1;
+              const nextBase = nextId === 1 ? "/agency" : "/subaccount";
+              const currentPrefix = isAgencyView ? "/agency" : "/subaccount";
+              const locString = typeof location === 'string' ? location : window.location.pathname;
+              const tail = locString.startsWith(currentPrefix)
+                ? locString.slice(currentPrefix.length)
+                : locString.replace(/^\/(agency|subaccount)/, "");
+              
+              window.location.href = `${nextBase}${tail || "/dashboard"}`;
+            }}
+            className={cn(
+              "w-full flex items-center gap-3 h-10 px-3 rounded-xl hover:bg-muted/50 transition-colors text-primary",
+              collapsed && "justify-center px-0"
+            )}
+            title="Switch Workspace"
+          >
+            <div className={cn(
+              "h-5 w-5 rounded flex items-center justify-center text-[10px] font-bold",
+              isAgencyView ? "bg-blue-600 text-white" : "bg-yellow-500 text-black"
+            )}>
+              {isAgencyView ? "C" : "A"}
+            </div>
+            {!collapsed && <span className="text-sm font-bold">Switch to {isAgencyView ? "Client" : "Agency"}</span>}
+          </button>
+
           <button
             onClick={() => setActivePanel('settings')}
             className={cn(
