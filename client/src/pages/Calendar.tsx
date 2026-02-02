@@ -233,11 +233,13 @@ export default function CalendarPage() {
 
             {(viewMode === "week" || viewMode === "day") && (
               <div className="flex-1 overflow-y-auto relative flex" data-testid="grid-time">
-                <div className="w-16 border-r border-border bg-muted/5 flex flex-col shrink-0">
+                <div className="w-16 border-r border-border bg-muted/5 flex flex-col shrink-0 relative">
                   <div className="h-[65px] border-b border-border sticky top-0 bg-background/95 z-30" />
                   {hours.map(h => (
-                    <div key={h} className="h-20 border-b border-border/50 text-[10px] font-bold text-muted-foreground p-2 text-right">
-                      {h === 0 ? "12 AM" : h < 12 ? `${h} AM` : h === 12 ? "12 PM" : `${h-12} PM`}
+                    <div key={h} className="h-20 border-b border-border/50 text-[10px] font-bold text-muted-foreground p-2 text-right relative">
+                      <span className="absolute -bottom-2 right-2">
+                        {h === 23 ? "12 AM" : (h + 1 < 12 ? `${h + 1} AM` : h + 1 === 12 ? "12 PM" : `${h + 1 - 12} PM`)}
+                      </span>
                     </div>
                   ))}
                 </div>
