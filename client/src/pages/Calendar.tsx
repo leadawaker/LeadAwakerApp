@@ -143,7 +143,7 @@ export default function CalendarPage() {
                 <DropdownMenu.Root>
                   <DropdownMenu.Trigger asChild>
                     <button className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold transition-colors uppercase tracking-wider" data-testid="button-view-mode">
-                      {viewMode} View <ChevronDown className="h-4 w-4" />
+                      <span className="capitalize">{viewMode}</span> View <ChevronDown className="h-4 w-4" />
                     </button>
                   </DropdownMenu.Trigger>
                   <DropdownMenu.Portal>
@@ -154,33 +154,31 @@ export default function CalendarPage() {
                           className="flex items-center px-3 py-2 text-sm font-medium rounded-lg cursor-pointer hover:bg-muted/50 outline-none capitalize"
                           onClick={() => setViewMode(mode)}
                         >
-                          {mode} View
+                          <span className="capitalize">{mode}</span> View
                         </DropdownMenu.Item>
                       ))}
                     </DropdownMenu.Content>
                   </DropdownMenu.Portal>
                 </DropdownMenu.Root>
 
-                <div className="flex items-center gap-2">
-                  <div className="font-bold text-lg min-w-[180px]" data-testid="text-view-label">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-muted/20">
+                  <button
+                    className="h-6 w-6 rounded-lg hover:bg-muted/30 flex items-center justify-center transition-colors"
+                    onClick={() => navigate(-1)}
+                    data-testid="button-prev"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <div className="font-bold text-sm min-w-[140px] text-center" data-testid="text-view-label">
                     {viewLabel}
                   </div>
-                  <div className="flex gap-1">
-                    <button
-                      className="h-8 w-8 rounded-lg border border-border bg-muted/20 hover:bg-muted/30 flex items-center justify-center"
-                      onClick={() => navigate(-1)}
-                      data-testid="button-prev"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <button
-                      className="h-8 w-8 rounded-lg border border-border bg-muted/20 hover:bg-muted/30 flex items-center justify-center"
-                      onClick={() => navigate(1)}
-                      data-testid="button-next"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
+                  <button
+                    className="h-6 w-6 rounded-lg hover:bg-muted/30 flex items-center justify-center transition-colors"
+                    onClick={() => navigate(1)}
+                    data-testid="button-next"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             </div>
