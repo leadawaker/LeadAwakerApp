@@ -151,7 +151,7 @@ export default function CalendarPage() {
                       {(["month", "week", "day"] as ViewMode[]).map((mode) => (
                         <DropdownMenu.Item
                           key={mode}
-                          className="flex items-center px-3 py-2 text-sm font-medium rounded-lg cursor-pointer hover:bg-muted/50 outline-none capitalize"
+                          className="flex items-center px-3 py-2 text-sm font-medium rounded-lg cursor-pointer hover:bg-muted/50 outline-none"
                           onClick={() => setViewMode(mode)}
                         >
                           <span className="capitalize">{mode}</span> View
@@ -255,7 +255,7 @@ export default function CalendarPage() {
                           {isToday && (
                             <div 
                               className="absolute left-0 right-0 border-t-2 border-red-500 z-30 pointer-events-none"
-                              style={{ top: `${(currentTime.getHours() * 60 + currentTime.getMinutes()) * (20/60) * 4}px` }}
+                              style={{ top: `${(currentTime.getHours() * 60 + currentTime.getMinutes()) * (80/60)}px` }}
                             >
                               <div className="w-2 h-2 rounded-full bg-red-500 -ml-1 -mt-[5px]" />
                             </div>
@@ -264,7 +264,7 @@ export default function CalendarPage() {
                             <div 
                               key={a.id}
                               className="absolute left-1 right-1 p-2 rounded-lg bg-blue-100 border-l-4 border-blue-600 shadow-sm z-10"
-                              style={{ top: `${(a.hour * 60 + a.minutes) * (20/60) * 4}px`, height: '60px' }}
+                              style={{ top: `${(a.hour * 60 + a.minutes) * (80/60)}px`, height: '60px' }}
                             >
                               <div className="text-[10px] font-bold text-blue-900 truncate">{a.lead_name}</div>
                               <div className="text-[9px] font-medium text-blue-700">{a.time}</div>
