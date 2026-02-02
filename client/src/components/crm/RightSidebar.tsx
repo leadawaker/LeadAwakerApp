@@ -113,15 +113,15 @@ export function RightSidebar({
 
   const prefix = isAgencyView ? "/agency" : "/subaccount";
   const navItems: { href: string; label: string; icon: any; testId: string; agencyOnly?: boolean }[] = [
-    { href: `${prefix}/dashboard`, label: "Dashboard", icon: LayoutDashboard, testId: "nav-dashboard" },
-    { href: `${prefix}/contacts`, label: "Contacts", icon: BookUser, testId: "nav-contacts" },
-    { href: `${prefix}/conversations`, label: "Conversations", icon: MessageSquare, testId: "nav-conversations" },
-    { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
+    { href: `${prefix}/dashboard`, label: "Home", icon: LayoutDashboard, testId: "nav-home" },
+    { href: `${prefix}/contacts`, label: "Portfolio", icon: BookUser, testId: "nav-portfolio" },
+    { href: `${prefix}/conversations`, label: "Explore", icon: MessageSquare, testId: "nav-explore" },
+    { href: `${prefix}/campaigns`, label: "Earn", icon: Megaphone, testId: "nav-earn" },
+    { href: `${prefix}/automation-logs`, label: "Activity", icon: ScrollText, testId: "nav-activity" },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "nav-calendar" },
-    { href: `${prefix}/automation-logs`, label: "Automation Logs", icon: ScrollText, testId: "nav-automation-logs" },
     { href: `${prefix}/users`, label: "Users", icon: Users, testId: "nav-users" },
     { href: `${prefix}/tags`, label: "Tags", icon: Tag, testId: "nav-tags" },
-    { href: `${prefix}/prompt-library`, label: "Prompt Library", icon: BookOpen, testId: "nav-prompt-library" },
+    { href: `${prefix}/prompt-library`, label: "Library", icon: BookOpen, testId: "nav-library" },
   ];
 
   const handleAccountSelect = (id: number) => {
@@ -152,17 +152,18 @@ export function RightSidebar({
       {/* Mobile Bottom Bar */}
       <div
         className={cn(
-          "md:hidden fixed bottom-0 left-0 right-0 h-[64px] border-t z-[100] flex items-center justify-around px-2",
-          isAgencyView ? "bg-yellow-50" : "bg-blue-50/95"
+          "md:hidden fixed bottom-0 left-0 right-0 h-[64px] border-t border-border/60 z-[100] flex items-center justify-around px-2 bg-white"
         )}
+        data-testid="mobile-bottom-nav"
       >
         <button
           onClick={() => { setLocation(`${prefix}/dashboard`); setIsMobileMenuOpen(false); }}
           className={cn(
-            "p-3 rounded-xl transition-colors relative group",
-            isAgencyView ? "text-yellow-600 hover:bg-yellow-100" : "text-blue-700 hover:bg-blue-100"
+            "p-3 rounded-xl transition-colors relative group text-muted-foreground hover:text-foreground hover:bg-muted/40",
+            location === `${prefix}/dashboard` && "text-foreground"
           )}
-          title="Dashboard"
+          title="Home"
+          data-testid="button-mobile-home"
         >
           <LayoutDashboard className="h-6 w-6" />
         </button>
@@ -170,32 +171,35 @@ export function RightSidebar({
         <button
           onClick={() => { setLocation(`${prefix}/contacts`); setIsMobileMenuOpen(false); }}
           className={cn(
-            "p-3 rounded-xl transition-colors relative group",
-            isAgencyView ? "text-yellow-600 hover:bg-yellow-100" : "text-blue-700 hover:bg-blue-100"
+            "p-3 rounded-xl transition-colors relative group text-muted-foreground hover:text-foreground hover:bg-muted/40",
+            location === `${prefix}/contacts` && "text-foreground"
           )}
-          title="Leads"
+          title="Portfolio"
+          data-testid="button-mobile-portfolio"
         >
           <BookUser className="h-6 w-6" />
         </button>
 
         <button
-          onClick={() => { setLocation(`${prefix}/calendar`); setIsMobileMenuOpen(false); }}
+          onClick={() => { setLocation(`${prefix}/conversations`); setIsMobileMenuOpen(false); }}
           className={cn(
-            "p-3 rounded-xl transition-colors relative group",
-            isAgencyView ? "text-yellow-600 hover:bg-yellow-100" : "text-blue-700 hover:bg-blue-100"
+            "p-3 rounded-xl transition-colors relative group text-muted-foreground hover:text-foreground hover:bg-muted/40",
+            location === `${prefix}/conversations` && "text-foreground"
           )}
-          title="Calendar"
+          title="Explore"
+          data-testid="button-mobile-explore"
         >
-          <Calendar className="h-6 w-6" />
+          <MessageSquare className="h-6 w-6" />
         </button>
 
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className={cn(
-            "p-3 rounded-xl transition-colors relative group",
-            isAgencyView ? "text-yellow-600 hover:bg-yellow-100" : "text-blue-700 hover:bg-blue-100"
+            "p-3 rounded-xl transition-colors relative group text-muted-foreground hover:text-foreground hover:bg-muted/40",
+            isMobileMenuOpen && "text-foreground"
           )}
           title="Menu"
+          data-testid="button-mobile-menu"
         >
           {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
@@ -203,7 +207,7 @@ export function RightSidebar({
 
       {/* Mobile Fullscreen Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-[90] bg-background animate-in slide-in-from-bottom duration-300 pb-[64px]">
+        <div className="md:hidden fixed inset-0 z-[90] bg-white animate-in slide-in-from-bottom duration-300 pb-[64px]" data-testid="mobile-menu">
           <div className="h-full flex flex-col overflow-y-auto p-4 space-y-6">
             <div className="space-y-2">
               <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-3 mb-2">Workspace</h3>

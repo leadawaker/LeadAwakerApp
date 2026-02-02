@@ -144,14 +144,16 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
 
       <main 
         className={cn(
-          "h-screen flex flex-col bg-background transition-all duration-200",
+          "h-screen flex flex-col bg-transparent transition-all duration-200",
           collapsed ? "md:pl-[80px]" : "md:pl-[240px]",
           "pb-[64px] md:pb-0 pt-0"
         )} 
         data-testid="main-crm"
       >
-        <div className="flex-1 min-h-0">
-          {children}
+        <div className="h-full w-full p-4 md:p-6">
+          <section className="h-full w-full rounded-2xl bg-white" data-testid="container-app">
+            <div className="h-full w-full min-h-0">{children}</div>
+          </section>
         </div>
       </main>
     </div>
