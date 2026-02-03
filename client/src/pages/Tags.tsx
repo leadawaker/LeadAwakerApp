@@ -71,14 +71,9 @@ export default function TagsPage() {
   return (
     <CrmShell>
       <div className="h-full flex flex-col px-6 py-6 overflow-hidden" data-testid="page-tags">
-        <div className="flex items-center gap-4 mb-6 shrink-0">
-          <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Tags</h1>
-          <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
-        </div>
-
         <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-6">
           <div className="flex flex-col min-h-0 overflow-hidden">
-            <div className="mt-4 flex items-center gap-2 shrink-0" data-testid="bar-tags">
+            <div className="flex items-center gap-2 shrink-0" data-testid="bar-tags">
               <input
                 className="h-10 w-[280px] max-w-full rounded-xl border border-border bg-muted/20 px-3 text-sm"
                 placeholder="Search tags…"

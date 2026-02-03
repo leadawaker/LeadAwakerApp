@@ -13,6 +13,27 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const CSV_TAGS = [
+  { name: "New Lead", color: "#3B82F6" },
+  { name: "Contacted", color: "#10B981" },
+  { name: "Follow-up Required", color: "#F59E0B" },
+  { name: "Nurturing", color: "#8B5CF6" },
+  { name: "Qualified", color: "#EC4899" },
+  { name: "High Intent", color: "#EF4444" },
+  { name: "Ready to Book", color: "#14B8A6" },
+  { name: "Appointment Scheduled", color: "#6366F1" },
+  { name: "Post-Call Follow-up", color: "#F43F5E" },
+  { name: "Closed - Won", color: "#059669" },
+  { name: "Closed - Lost", color: "#4B5563" },
+  { name: "DND / Opt-out", color: "#1F2937" },
+  { name: "Re-engagement", color: "#D946EF" },
+  { name: "Future Interest", color: "#84CC16" },
+  { name: "Pricing Inquiry", color: "#0EA5E9" },
+  { name: "Technical Question", color: "#64748B" },
+  { name: "Referral", color: "#A855F7" },
+  { name: "Partner Lead", color: "#F97316" }
+];
+
 type DashboardTab = "pipeline" | "funnel";
 
 export default function AppDashboard() {
@@ -74,39 +95,23 @@ export default function AppDashboard() {
   return (
     <CrmShell>
       <div className="px-6 py-6" data-testid="page-dashboard">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="flex items-center gap-4">
-            <h1 className="text-3xl font-extrabold tracking-tight" data-testid="text-title">
-              Dashboard
-            </h1>
-            <FiltersBar
+        <div className="p-0">
+          {isAgencyView ? (
+            <AgencyDashboard />
+          ) : (
+            <SubaccountDashboard
+              accountId={currentAccountId}
               selectedCampaignId={selectedCampaignId}
               setSelectedCampaignId={setSelectedCampaignId}
+              campaignOptions={campaignOptions}
+              stats={stats}
+              funnel={funnel}
+              stagePalette={stagePalette}
+              isBookedReportOpen={isBookedReportOpen}
+              setIsBookedReportOpen={setIsBookedReportOpen}
               dashboardTab={dashboardTab}
-              setDashboardTab={setDashboardTab}
             />
-          </div>
-        </div>
-
-        <div className="rounded-2xl bg-white border-none shadow-none" data-testid="card-page-dashboard">
-          <div className="p-0">
-            {isAgencyView ? (
-              <AgencyDashboard />
-            ) : (
-              <SubaccountDashboard
-                accountId={currentAccountId}
-                selectedCampaignId={selectedCampaignId}
-                setSelectedCampaignId={setSelectedCampaignId}
-                campaignOptions={campaignOptions}
-                stats={stats}
-                funnel={funnel}
-                stagePalette={stagePalette}
-                isBookedReportOpen={isBookedReportOpen}
-                setIsBookedReportOpen={setIsBookedReportOpen}
-                dashboardTab={dashboardTab}
-              />
-            )}
-          </div>
+          )}
         </div>
       </div>
     </CrmShell>
@@ -177,7 +182,7 @@ function AgencyDashboard() {
         </div>
         <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" data-testid="grid-campaigns">
           {activeCampaigns.map((c) => (
-            <div key={c.id} className="rounded-2xl border border-border bg-background p-4" data-testid={`card-campaign-${c.id}`}>
+            <div key={c.id} className="rounded-2xl border-none bg-white p-4 shadow-none" data-testid={`card-campaign-${c.id}`}>
               <div className="font-semibold" data-testid={`text-campaign-name-${c.id}`}>{c.name}</div>
               <div className="mt-1 text-xs text-muted-foreground" data-testid={`text-campaign-meta-${c.id}`}>
                 {c.status} • leads={c.leads_count}
@@ -195,23 +200,19 @@ function AgencyDashboard() {
             Add task
           </button>
         </div>
-        <div className="mt-3 rounded-2xl border border-border bg-background overflow-hidden" data-testid="table-tasks">
-          <div className="grid grid-cols-[1fr_120px_220px_140px] text-xs font-semibold text-muted-foreground bg-muted/20 border-b border-border px-4 py-3">
-            <div>lead_name</div>
-            <div>priority</div>
-            <div>next_action_at</div>
-            <div>status</div>
-          </div>
-          <div className="divide-y divide-border">
-            {tasks.map((t) => (
-              <div key={t.id} className="grid grid-cols-[1fr_120px_220px_140px] px-4 py-3 text-sm" data-testid={`row-task-${t.id}`}>
+        <div className="mt-3 grid grid-cols-1 gap-3">
+          {tasks.map((t) => (
+            <div key={t.id} className="rounded-2xl bg-white p-4 shadow-none border-none" data-testid={`row-task-${t.id}`}>
+              <div className="flex items-center justify-between">
                 <div className="font-semibold" data-testid={`text-task-lead-${t.id}`}>{t.lead_name}</div>
-                <div className="text-muted-foreground" data-testid={`text-task-priority-${t.id}`}>{t.priority}</div>
-                <div className="text-muted-foreground" data-testid={`text-task-next-${t.id}`}>{new Date(t.next_action_at).toLocaleString()}</div>
-                <div className="text-muted-foreground" data-testid={`text-task-status-${t.id}`}>{t.status}</div>
+                <div className="text-xs font-bold px-2 py-0.5 rounded-full bg-muted/10 text-muted-foreground" data-testid={`text-task-priority-${t.id}`}>{t.priority}</div>
               </div>
-            ))}
-          </div>
+              <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                <div data-testid={`text-task-next-${t.id}`}>{new Date(t.next_action_at).toLocaleString()}</div>
+                <div data-testid={`text-task-status-${t.id}`}>{t.status}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -222,15 +223,13 @@ function AgencyDashboard() {
             Export
           </button>
         </div>
-        <div className="mt-3 rounded-2xl border border-border bg-background overflow-hidden" data-testid="feed-activity">
-          <div className="divide-y divide-border">
-            {activity.map((a) => (
-              <div key={`${a.kind}-${a.id}`} className="p-4" data-testid={`row-activity-${a.kind}-${a.id}`}>
-                <div className="text-xs text-muted-foreground" data-testid={`text-activity-at-${a.kind}-${a.id}`}>{new Date(a.at).toLocaleString()}</div>
-                <div className="mt-1 text-sm" data-testid={`text-activity-text-${a.kind}-${a.id}`}>{a.text}</div>
-              </div>
-            ))}
-          </div>
+        <div className="mt-3 grid grid-cols-1 gap-3">
+          {activity.map((a) => (
+            <div key={`${a.kind}-${a.id}`} className="rounded-2xl bg-white p-4 shadow-none border-none" data-testid={`row-activity-${a.kind}-${a.id}`}>
+              <div className="text-xs text-muted-foreground" data-testid={`text-activity-at-${a.kind}-${a.id}`}>{new Date(a.at).toLocaleString()}</div>
+              <div className="mt-1 text-sm font-medium" data-testid={`text-activity-text-${a.kind}-${a.id}`}>{a.text}</div>
+            </div>
+          ))}
         </div>
       </section>
     </div>
@@ -592,25 +591,28 @@ function PipelineCol({
                 data-testid={`panel-contact-details-${stage.id}-${l.id}`}
               >
                 <div className="space-y-1.5" data-testid={`stack-contact-details-${stage.id}-${l.id}`}>
-                  <div
-                    className="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
-                    data-testid={`text-contact-details-label-${stage.id}-${l.id}`}
-                  >
-                    Contact Details
-                  </div>
                   <div className="text-xs font-mono" data-testid={`text-contact-phone-${stage.id}-${l.id}`}>{l.phone}</div>
                   <div className="text-xs truncate" data-testid={`text-contact-email-${stage.id}-${l.id}`}>{l.email || "No email"}</div>
-                  <div className="flex flex-wrap gap-1 mt-1" data-testid={`list-contact-tags-${stage.id}-${l.id}`}>
-                    {(l.tags || ['Lead']).map((tag: string) => (
-                      <span
-                        key={tag}
-                        className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[9px] font-medium text-slate-600 dark:text-slate-400"
-                        data-testid={`chip-contact-tag-${stage.id}-${l.id}-${tag}`}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+        <div className="flex flex-wrap gap-1 mt-1" data-testid={`list-contact-tags-${stage.id}-${l.id}`}>
+          {(l.tags || ['Lead']).map((tag: string) => {
+            const tagInfo = CSV_TAGS.find(ct => ct.name === tag);
+            const color = tagInfo?.color || '#64748B';
+            return (
+              <span
+                key={tag}
+                className="px-1.5 py-0.5 rounded-md text-[9px] font-bold border"
+                style={{ 
+                  backgroundColor: `${color}15`,
+                  color: color,
+                  borderColor: `${color}30`
+                }}
+                data-testid={`chip-contact-tag-${stage.id}-${l.id}-${tag}`}
+              >
+                {tag}
+              </span>
+            );
+          })}
+        </div>
                 </div>
               </div>
             </div>

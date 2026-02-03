@@ -35,56 +35,6 @@ export default function AppLeads() {
   return (
     <CrmShell>
       <div className="px-6 py-6" data-testid="page-leads">
-        <div className="flex items-center justify-between gap-4 mb-4">
-          <h1 className="text-3xl font-extrabold tracking-tight" data-testid="text-title">Contacts</h1>
-          <div className="flex items-center gap-2" data-testid="row-page-actions">
-            <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
-            <div className="flex items-center gap-2">
-              <button
-                className="h-10 px-3 rounded-xl border border-border bg-white hover:bg-muted/30 text-sm font-semibold shadow-none"
-                data-testid="button-import"
-              >
-                Import CSV
-              </button>
-
-              <Dialog.Root open={open} onOpenChange={setOpen}>
-                <Dialog.Trigger asChild>
-                  <button
-                    className="h-10 px-3 rounded-xl bg-primary text-primary-foreground hover:opacity-90 text-sm font-semibold shadow-none"
-                    data-testid="button-add-lead"
-                  >
-                    + Add Lead
-                  </button>
-                </Dialog.Trigger>
-
-                <Dialog.Portal>
-                  <Dialog.Overlay className="fixed inset-0 bg-black/30" />
-                  <Dialog.Content
-                    className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-background shadow-xl"
-                    data-testid="modal-add-lead"
-                  >
-                    <div className="p-4 border-b border-border flex items-center justify-between">
-                      <div className="font-semibold" data-testid="text-modal-title">Add Lead (MOCK)</div>
-                      <Dialog.Close asChild>
-                        <button className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center" data-testid="button-modal-close">
-                          <X className="h-4 w-4" />
-                        </button>
-                      </Dialog.Close>
-                    </div>
-                    <AddLeadForm
-                      onSubmit={(lead) => {
-                        setLocalLeads((prev) => [lead, ...prev]);
-                        setOpen(false);
-                      }}
-                      accountId={currentAccountId}
-                    />
-                  </Dialog.Content>
-                </Dialog.Portal>
-              </Dialog.Root>
-            </div>
-          </div>
-        </div>
-
         <div className="rounded-2xl bg-white shadow-none border-none" data-testid="card-page-leads">
           <div className="p-6">
             <div className="flex flex-wrap items-center gap-2" data-testid="bar-filters">

@@ -37,14 +37,55 @@ export function Topbar({ onOpenPanel }: { onOpenPanel: (panel: string) => void }
     setLocation(nextPath);
   };
 
+  const titles: Record<string, string> = {
+    "/agency/dashboard": "Dashboard",
+    "/subaccount/dashboard": "Dashboard",
+    "/agency/leads": "Contacts",
+    "/subaccount/leads": "Contacts",
+    "/agency/contacts": "Contacts",
+    "/subaccount/contacts": "Contacts",
+    "/agency/conversations": "Conversations",
+    "/subaccount/conversations": "Conversations",
+    "/agency/campaigns": "Campaigns",
+    "/subaccount/campaigns": "Campaigns",
+    "/agency/automation-logs": "Activity",
+    "/subaccount/automation-logs": "Activity",
+    "/agency/calendar": "Calendar",
+    "/subaccount/calendar": "Calendar",
+    "/agency/users": "Users",
+    "/subaccount/users": "Users",
+    "/agency/tags": "Tags",
+    "/subaccount/tags": "Tags",
+    "/agency/prompt-library": "Library",
+    "/subaccount/prompt-library": "Library",
+    "/agency/accounts": "Accounts",
+    "/subaccount/accounts": "Accounts",
+  };
+
+  const currentTitle = titles[location] || "";
+
   return (
     <header
       className={cn(
-        "fixed top-4 right-10 z-50 transition-colors duration-300",
+        "fixed top-0 left-0 right-0 h-16 bg-[#F6F5FA] z-50 flex items-center px-10",
       )}
       data-testid="header-crm-topbar"
     >
-      <div className="flex items-center gap-6">
+      <div className="absolute left-10 h-10 w-10">
+        <button
+          type="button"
+          onClick={() => setLocation("/")}
+          className="hover:opacity-80 transition-opacity"
+        >
+          <img src="/6. Favicon.svg" alt="Lead Awaker" className="h-10 w-10 object-contain" />
+        </button>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center">
+        <h1 className="text-xl font-bold tracking-tight text-foreground">{currentTitle}</h1>
+      </div>
+
+      <div className="absolute right-10 flex items-center gap-6">
         <div className="flex items-center gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
