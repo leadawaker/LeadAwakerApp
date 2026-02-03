@@ -24,15 +24,16 @@ export default function AppLeads() {
   const { leads: mockLeads } = useLeads({ accountId: currentAccountId });
 
   const leads = useMemo(() => {
-    // Only use mockLeads to ensure mock data is displayed as requested
-    const merged = mockLeads;
+    // Merge all leads and filter out duplicates by ID
+    const merged = [...csvLeads, ...mockLeads, ...localLeads];
+    const unique = Array.from(new Map(merged.map(l => [l.id, l])).values());
 
-    return merged
+    return unique
       .filter((l) => (campaignId === "all" ? true : l.campaign_id === campaignId))
       .filter((l) => (status === "all" ? true : l.conversion_status === status))
       .filter((l) => (priority === "all" ? true : l.priority === priority))
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
-  }, [mockLeads, campaignId, status, priority]);
+  }, [csvLeads, mockLeads, campaignId, status, priority, localLeads]);
 
   return (
     <CrmShell>
@@ -174,9 +175,9 @@ export default function AppLeads() {
                         <span 
                           key={i} 
                           className={cn(
-                            "px-2 py-0.5 rounded-full border text-[10px] font-bold transition-all duration-200",
+                            "px-2 py-0.5 rounded-full border text-[10px] font-bold transition-all duration-300",
                             colorClass,
-                            "group-hover:text-[12px] group-hover:px-3 group-hover:py-1"
+                            "group-hover:text-[14px] group-hover:px-4 group-hover:py-1.5"
                           )}
                         >
                           {t}
