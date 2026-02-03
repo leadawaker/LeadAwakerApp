@@ -66,26 +66,28 @@ export default function AppLeads() {
                 ))}
               </select>
 
-          <select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-            className="h-10 rounded-xl border border-border bg-muted/20 px-3 text-sm"
-            data-testid="select-priority"
-          >
-            <option value="all">All priorities</option>
-            {["Low", "Medium", "High", "Urgent"].map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+                className="h-10 rounded-xl border border-border bg-muted/20 px-3 text-sm"
+                data-testid="select-priority"
+              >
+                <option value="all">All priorities</option>
+                {["Low", "Medium", "High", "Urgent"].map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
 
-          <button
-            className="h-10 px-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold"
-            data-testid="button-filter"
-          >
-            Filter
-          </button>
+              <button
+                className="h-10 px-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold"
+                data-testid="button-filter"
+              >
+                Filter
+              </button>
+            </div>
+          </div>
 
           <div className="ml-auto flex items-center gap-2" data-testid="bar-actions">
             <button
