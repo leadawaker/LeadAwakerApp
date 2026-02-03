@@ -116,7 +116,7 @@ export default function About() {
               }}
             />
             <div className="container mx-auto px-4 md:px-8 lg:px-12 xl:px-16 2xl:px-20 relative text-left">
-              <div className="max-w-5xl mx-auto">
+              <div className="max-w-4xl mx-auto">
                 <motion.div
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -166,7 +166,7 @@ export default function About() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="max-w-5xl mx-auto mb-24"
+            className="w-full max-w-none md:max-w-5xl mx-auto mb-24"
           >
             <div className="bg-card/50 border rounded-3xl p-8 md:p-12">
               <h2 className="text-4xl font-bold mb-12 text-left">
