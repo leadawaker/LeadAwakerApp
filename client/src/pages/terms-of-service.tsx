@@ -53,9 +53,24 @@ export default function TermsOfService() {
 
           <h2 className="text-2xl font-semibold mt-8 mb-4">{t('section9.title')}</h2>
           <p className="text-muted-foreground mb-4">
-            {t('section9.intro')}<br />
-            {t('section9.email')}<br />
-            {t('section9.address')}
+            {t('section9.content')}
+          </p>
+
+          <h2 className="text-2xl font-semibold mt-8 mb-4">{t('section10.title')}</h2>
+          <p className="text-muted-foreground mb-4">
+            {t('section10.content')}
+          </p>
+
+          <h2 className="text-2xl font-semibold mt-8 mb-4">{t('section11.title')}</h2>
+          <p className="text-muted-foreground mb-4">
+            {t('section11.content')}
+          </p>
+
+          <h2 className="text-2xl font-semibold mt-8 mb-4">{t('section12.title')}</h2>
+          <p className="text-muted-foreground mb-4">
+            {t('section12.intro')}<br />
+            {t('section12.email')}<br />
+            {t('section12.address')}
           </p>
         </div>
       </div>

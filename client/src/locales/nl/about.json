@@ -12,45 +12,77 @@
     "quote": "\"Bij de kliniek van mijn ouders zag ik hetzelfde patroon steeds weer: oprechte interesse, geboekte consultaties en dan... stilte. Het leerde me dat het verlies van leads geen marketingfout is; het is een signaal om opnieuw te verbinden\"",
     "description": "10+ jaar software productie. 5 jaar data-gedreven automatisering. 4 jaar samen met mijn vrouw Danique een bedrijf opgebouwd. Dat is wat Lead Awaker defineert."
   },
-  "faq": {
-    "title": "Veelgestelde Vragen"
-  },
-  "faqs": [
-    {
-      "q": "Wat als onze leads heel oud of helemaal afgekoeld zijn?",
-      "a": "Leeftijd is niet de belangrijkste factor, relevantie wel. Leads van 6 maanden of zelfs 2 jaar geleden kunnen nog steeds converteren als het oorspronkelijke pijnpunt nog speelt en het contact persoonlijk aanvoelt. Het systeem bepaalt wie nog steeds interesse heeft op basis van betrokkenheidssignalen, niet alleen op basis van hoe lang ze in de database staan."
-    },
-    {
-      "q": "Werkt dit ook voor onze branche?",
-      "a": "Lead Awaker werkt voor elk kanaal en past zich aan jouw specifieke verkoopproces aan, of je nu werkt in levensverzekeringen, fitness coaching, juridische diensten, hondenuitlaatservice of B2B consulting. De AI leert jouw terminologie, diensten, gangbare bezwaren en conversiepatronen tijdens de setup."
-    },
-    {
-      "q": "Hoe voorkom je dat berichten als spam of opdringerig overkomen?",
-      "a": "Elk bericht wordt gepersonaliseerd op basis van waar de lead is gestopt in je funnel, gebruikt natuurlijke taal (geen robotachtige sjablonen) en respecteert direct afmeldverzoeken. Het voelt aan als een nuttige follow-up van je team, niet als een massa campagne."
-    },
-    {
-      "q": "Moeten wij scripts aanleveren of schrijft de AI alles zelf?",
-      "a": "Het is niet verplicht, maar je kunt als je wilt voorbeelden geven van je best presterende gesprekken en belangrijke gespreksonderwerpen. De AI past deze aan tot natuurlijke, gepersonaliseerde berichten. Je keurt de toon goed tijdens de setup en het systeem leert in de loop der tijd wat het beste werkt."
-    },
-    {
-      "q": "Via welke kanalen benader je leads opnieuw?",
-      "a": "Email, SMS, WhatsApp en Telegram, afhankelijk van je doelgroep en compliance-eisen. SMS haalt vaak 90-99% openingspercentages tegenover 20-30% voor email, dus het systeem geeft prioriteit aan het kanaal dat het best de aandacht trekt zonder opdringerig te zijn."
-    },
-    {
-      "q": "Hoe gaan jullie om met privacyregels (AVG, CAN-SPAM, CCPA)?",
-      "a": "Alle communicatie respecteert bestaande toestemmingen, bevat duidelijke afmeldmogelijkheden en registreert toestemming per kanaal. Als een lead alleen toestemming heeft gegeven voor email maar niet voor SMS, wordt alleen email gebruikt. Compliance is ingebouwd in het systeem, niet er achteraf aan toegevoegd."
-    },
-    {
-      "q": "Wat gebeurt er als een lead reageert?",
-      "a": "De AI bepaalt hun interesseniveau en doet daarna één van drie dingen: direct een afspraak inplannen in je agenda, overdragen aan je sales team met alle context, of zorgen voor verdere opvolging op basis van hun koopbereidheid. Je stelt de overdrachtcriteria in tijdens de setup."
-    },
-    {
-      "q": "Kunnen we campagnes halverwege pauzeren of aanpassen?",
-      "a": "Ja. Je kunt op elk moment de communicatie pauzeren, berichten aanpassen of targeting-regels wijzigen. Wijzigingen worden direct doorgevoerd zonder dat je voortgang verliest bij actieve gesprekken."
-    },
-    {
-      "q": "Welke resultaten kunnen we realistisch verwachten?",
-      "a": "De meeste klanten zien dat 8–15% van inactieve leads binnen de eerste 30 dagen weer reageert, en dat 20–40% daarvan leidt tot geboekte gesprekken of aankopen. Resultaten hangen af van lijstkwaliteit, hoe goed je aanbod aansluit en hoe lang leads inactief zijn geweest, maar zelfs een 5% reactivatie percentage betaalt zichzelf snel terug."
-    }
-  ]
+ "faq": {
+    "title": "Veelgestelde vragen",
+    "categories": [
+      {
+        "title": "Resultaten en waarde",
+        "items": [
+          {
+            "q": "Welke resultaten kunnen we realistisch verwachten?",
+            "a": "Op basis van marktbenchmarks en publiek waargenomen resultaten van vergelijkbare systemen voor lead reactivatie en conversatiegerichte outreach, liggen heractivatiepercentages vaak tussen de 5 en 15 procent binnen de eerste 30 dagen. Deze cijfers zijn indicatief en geen garanties. De uiteindelijke resultaten hangen af van factoren zoals leadkwaliteit, relevantie van het aanbod, timing, kanaalkeuze en campagneconfiguratie."
+          },
+          {
+            "q": "Is dit een vervanging voor ons salesteam?",
+            "a": "Nee. Lead Awaker is bedoeld om je salesinspanningen te ondersteunen en op te schalen, niet om ze te vervangen. Het systeem verzorgt de eerste benadering, opvolging en kwalificatie, zodat je salesteam zich kan richten op gesprekken met hoge intentie en het sluiten van deals."
+          }
+        ]
+      },
+      {
+        "title": "Hoe het werkt",
+        "items": [
+          {
+            "q": "Wat gebeurt er wanneer een lead reageert?",
+            "a": "Wanneer een lead reageert, beoordeelt het systeem de intentie en koopbereidheid. Afhankelijk van de ingestelde configuratie kan er direct een gesprek in je agenda worden ingepland, wordt de conversatie overgedragen aan je salesteam met volledige context, of blijft het systeem opvolgen totdat menselijk contact zinvol is."
+          },
+          {
+            "q": "Wat als onze leads erg oud of volledig afgekoeld zijn?",
+            "a": "Leeftijd op zichzelf is niet doorslaggevend, relevantie wel. Leads van 6 maanden of zelfs 2 jaar oud kunnen nog steeds converteren als de oorspronkelijke behoefte of het probleem nog bestaat en de benadering persoonlijk en contextueel aanvoelt. Het systeem kijkt vooral naar betrokkenheid en reactiegedrag, niet alleen naar de leeftijd van de database."
+          },
+          {
+            "q": "Werkt dit voor onze branche of niche?",
+            "a": "Lead Awaker past zich aan verschillende verkoopprocessen en sectoren aan, waaronder B2B en dienstverlenende bedrijven. Tijdens de setup wordt het systeem afgestemd op jouw terminologie, aanbod, veelvoorkomende bezwaren en kwalificatielogica, zodat het goed aansluit bij jouw specifieke markt."
+          }
+        ]
+      },
+      {
+        "title": "Berichten en controle",
+        "items": [
+          {
+            "q": "Hoe voorkomen jullie dat berichten als spam of opdringerig overkomen?",
+            "a": "Berichten worden contextueel verstuurd op basis van waar een lead is afgehaakt in de funnel en maken gebruik van natuurlijke taal in plaats van generieke templates. De benadering respecteert timing, relevantie en afmeldsignalen, zodat het voelt als een doordachte follow-up en niet als een massale campagne."
+          },
+          {
+            "q": "Moeten wij scripts aanleveren of schrijft de AI alles zelf?",
+            "a": "Het aanleveren van scripts is optioneel. Je kunt voorbeelden delen van goed presterende gesprekken, merk richtlijnen of belangrijke gesprekspunten. Het systeem vertaalt deze input naar gepersonaliseerde berichten, met toon en positionering die tijdens de setup worden afgestemd."
+          },
+          {
+            "q": "Kunnen we berichten vooraf bekijken of goedkeuren?",
+            "a": "Ja. Voordat een campagne live gaat, kun je voorbeelden van berichten, toon, positionering en kwalificatielogica beoordelen. Er wordt niets uitgerold zonder afstemming over hoe het systeem namens jou communiceert."
+          },
+          {
+            "q": "Kunnen we campagnes tussentijds pauzeren of aanpassen?",
+            "a": "Ja. Campagnes kunnen op elk moment worden gepauzeerd, aangepast of verfijnd. Berichten, targetingregels en kwalificatiecriteria kunnen worden gewijzigd zonder dat actieve gesprekken hun context verliezen."
+          }
+        ]
+      },
+      {
+        "title": "Compliance en risico",
+        "items": [
+          {
+            "q": "Via welke kanalen worden leads opnieuw benaderd?",
+            "a": "Kanalen kunnen bestaan uit WhatsApp, SMS, Instagram of andere messaging platforms, afhankelijk van je doelgroep, technische haalbaarheid, platformbeleid en compliance vereisten. De keuze en prioriteit van kanalen worden tijdens de setup bepaald."
+          },
+          {
+            "q": "Hoe gaan jullie om met compliance zoals AVG, CAN-SPAM en CCPA?",
+            "a": "Lead Awaker werkt met compliancegerichte processen zoals directe verwerking van afmeldingen, consent bewuste berichtlogica en respectvolle benaderingspatronen. Klanten blijven verantwoordelijk voor de herkomst van hun leads en de juridische grondslag voor contact. Het systeem voert campagnes uit volgens klantinstructies en toepasselijke wetgeving."
+          },
+          {
+            "q": "Wat gebeurt er als leads klagen of zich afmelden?",
+            "a": "Afmeldverzoeken worden direct gerespecteerd en deze leads worden uitgesloten van verdere communicatie. Bij klachten kunnen campagnes worden aangepast of gepauzeerd, terwijl berichten, targeting of verzendfrequentie worden geëvalueerd om een respectvolle benadering te waarborgen."
+          }
+        ]
+      }
+    ]
+  }
 }
