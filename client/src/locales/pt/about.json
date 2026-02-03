@@ -14,55 +14,77 @@
   },
 
   
-  "faq.title": "Perguntas Frequentes",
-  "faqs": [
-    {
-      "q": "Isso substitui o nosso time de vendas?",
-      "a": "Não. O Lead Awaker foi criado para apoiar e escalar o seu time de vendas, não para substituí-lo. O sistema cuida do primeiro contato, follow-ups e qualificação inicial, permitindo que sua equipe foque em conversas de alta intenção e no fechamento."
-    },
-    {
-      "q": "O que acontece quando um lead responde?",
-      "a": "Quando um lead responde, o sistema avalia o nível de interesse e prontidão. Dependendo da configuração definida, ele pode agendar uma call diretamente no seu calendário, transferir a conversa para o seu time comercial com todo o contexto ou continuar nutrindo o lead até o momento ideal para contato humano."
-    },
-    {
-      "q": "E se nossos leads forem muito antigos ou totalmente frios?",
-      "a": "A idade por si só não é o principal fator; relevância é. Leads de 6 meses ou até 2 anos ainda podem converter se o problema ou necessidade original continuar existindo e se a abordagem for contextual e personalizada. O sistema prioriza sinais de engajamento e comportamento de resposta, não apenas a idade da base."
-    },
-    {
-      "q": "Isso funciona para o nosso mercado ou nicho?",
-      "a": "O Lead Awaker se adapta a diferentes processos de venda e segmentos, incluindo negócios B2B e empresas de serviços. Durante o setup, o sistema é configurado para refletir sua linguagem, oferta, objeções comuns e critérios de qualificação, garantindo aderência ao seu mercado específico."
-    },
-    {
-      "q": "Quais resultados podemos esperar de forma realista?",
-      "a": "Com base em benchmarks de mercado e resultados publicamente observados de sistemas semelhantes de reativação de leads e outreach conversacional, taxas de reengajamento geralmente variam entre 5% e 15% nos primeiros 30 dias. Esses números são indicativos, não garantias. Os resultados reais dependem de fatores como qualidade dos leads, relevância da oferta, timing, canal utilizado e configuração da campanha."
-    },
-    {
-      "q": "Como vocês evitam parecer spam ou mensagens insistentes?",
-      "a": "As mensagens são enviadas de forma contextual, considerando em que etapa cada lead parou no funil, utilizando linguagem natural em vez de templates genéricos. A abordagem respeita cadência, relevância e sinais de opt-out, buscando parecer um follow-up inteligente — não uma campanha em massa."
-    },
-    {
-      "q": "Precisamos fornecer scripts ou a IA escreve tudo?",
-      "a": "Fornecer scripts é opcional. Você pode compartilhar exemplos de conversas que performaram bem, diretrizes de marca ou pontos-chave de venda. O sistema adapta essas informações em mensagens personalizadas, com tom e posicionamento alinhados durante o setup."
-    },
-    {
-      "q": "Podemos revisar ou aprovar as mensagens antes do lançamento?",
-      "a": "Sim. Antes de qualquer campanha ir ao ar, você pode revisar exemplos de mensagens, tom de comunicação, posicionamento e lógica de qualificação. Nada é ativado sem alinhamento sobre como o sistema se comunicará em seu nome."
-    },
-    {
-      "q": "Quais canais são usados para reativar os leads?",
-      "a": "Os canais podem incluir WhatsApp, SMS, Instagram ou outras plataformas de mensagens, dependendo do seu público, viabilidade técnica, políticas das plataformas e requisitos de conformidade. A escolha e priorização dos canais são definidas durante o setup."
-    },
-    {
-      "q": "Como vocês lidam com compliance (GDPR, CAN-SPAM, CCPA)?",
-      "a": "O Lead Awaker opera com fluxos orientados à conformidade, como respeito imediato a opt-outs, lógica de mensagens baseada em consentimento e abordagens responsáveis. Os clientes permanecem responsáveis pela origem dos leads e pela base legal de contato. O sistema executa as campanhas conforme as instruções do cliente e a legislação aplicável."
-    },
-    {
-      "q": "O que acontece se os leads reclamarem ou pedirem descadastro?",
-      "a": "Pedidos de opt-out são respeitados imediatamente e esses leads são excluídos de qualquer novo contato. Caso ocorram reclamações, as campanhas podem ser ajustadas ou pausadas enquanto mensagens, segmentação ou cadência são revisadas para garantir uma comunicação adequada."
-    },
-    {
-      "q": "Podemos pausar ou ajustar campanhas durante a execução?",
-      "a": "Sim. As campanhas podem ser pausadas, ajustadas ou refinadas a qualquer momento. Mensagens, regras de segmentação e critérios de qualificação podem ser atualizados sem perder o contexto das conversas em andamento."
-    }
-  ]
+  "faq": {
+    "title": "Perguntas Frequentes",
+    "categories": [
+      {
+        "title": "Resultados & Valor",
+        "items": [
+          {
+            "q": "Quais resultados podemos esperar de forma realista?",
+            "a": "Com base em benchmarks de mercado e resultados publicamente observados de sistemas semelhantes de reativação de leads e outreach conversacional, taxas de reengajamento geralmente variam entre 5% e 15% nos primeiros 30 dias. Esses números são indicativos, não garantias. Os resultados reais dependem de fatores como qualidade dos leads, relevância da oferta, timing, canal utilizado e configuração da campanha."
+          },
+          {
+            "q": "Isso substitui o nosso time de vendas?",
+            "a": "Não. O Lead Awaker foi criado para apoiar e escalar o seu time de vendas, não para substituí-lo. O sistema cuida do primeiro contato, follow-ups e qualificação inicial, permitindo que sua equipe foque em conversas de alta intenção e no fechamento."
+          }
+        ]
+      },
+      {
+        "title": "Como Funciona",
+        "items": [
+          {
+            "q": "O que acontece quando um lead responde?",
+            "a": "Quando um lead responde, o sistema avalia o nível de interesse e prontidão. Dependendo da configuração definida, ele pode agendar uma call diretamente no seu calendário, transferir a conversa para o seu time comercial com todo o contexto ou continuar nutrindo o lead até o momento ideal para contato humano."
+          },
+          {
+            "q": "E se nossos leads forem muito antigos ou totalmente frios?",
+            "a": "A idade por si só não é o principal fator; relevância é. Leads de 6 meses ou até 2 anos ainda podem converter se o problema ou necessidade original continuar existindo e se a abordagem for contextual e personalizada. O sistema prioriza sinais de engajamento e comportamento de resposta, não apenas a idade da base."
+          },
+          {
+            "q": "Isso funciona para o nosso mercado ou nicho?",
+            "a": "O Lead Awaker se adapta a diferentes processos de venda e segmentos, incluindo negócios B2B e empresas de serviços. Durante o setup, o sistema é configurado para refletir sua linguagem, oferta, objeções comuns e critérios de qualificação, garantindo aderência ao seu mercado específico."
+          }
+        ]
+      },
+      {
+        "title": "Mensagens & Controle",
+        "items": [
+          {
+            "q": "Como vocês evitam parecer spam ou mensagens insistentes?",
+            "a": "As mensagens são enviadas de forma contextual, considerando em que etapa cada lead parou no funil, utilizando linguagem natural em vez de templates genéricos. A abordagem respeita cadência, relevância e sinais de opt-out, buscando parecer um follow-up inteligente — não uma campanha em massa."
+          },
+          {
+            "q": "Precisamos fornecer scripts ou a IA escreve tudo?",
+            "a": "Fornecer scripts é opcional. Você pode compartilhar exemplos de conversas que performaram bem, diretrizes de marca ou pontos-chave de venda. O sistema adapta essas informações em mensagens personalizadas, com tom e posicionamento alinhados durante o setup."
+          },
+          {
+            "q": "Podemos revisar ou aprovar as mensagens antes do lançamento?",
+            "a": "Sim. Antes de qualquer campanha ir ao ar, você pode revisar exemplos de mensagens, tom de comunicação, posicionamento e lógica de qualificação. Nada é ativado sem alinhamento sobre como o sistema se comunicará em seu nome."
+          },
+          {
+            "q": "Podemos pausar ou ajustar campanhas durante a execução?",
+            "a": "Sim. As campanhas podem ser pausadas, ajustadas ou refinadas a qualquer momento. Mensagens, regras de segmentação e critérios de qualificação podem ser atualizados sem perder o contexto das conversas em andamento."
+          }
+        ]
+      },
+      {
+        "title": "Conformidade & Risco",
+        "items": [
+          {
+            "q": "Quais canais são usados para reativar os leads?",
+            "a": "Os canais podem incluir WhatsApp, SMS, Instagram ou outras plataformas de mensagens, dependendo do seu público, viabilidade técnica, políticas das plataformas e requisitos de conformidade. A escolha e priorização dos canais são definidas durante o setup."
+          },
+          {
+            "q": "Como vocês lidam com compliance (GDPR, CAN-SPAM, CCPA)?",
+            "a": "O Lead Awaker opera com fluxos orientados à conformidade, como respeito imediato a opt-outs, lógica de mensagens baseada em consentimento e abordagens responsáveis. Os clientes permanecem responsáveis pela origem dos leads e pela base legal de contato. O sistema executa as campanhas conforme as instruções do cliente e a legislação aplicável."
+          },
+          {
+            "q": "O que acontece se os leads reclamarem ou pedirem descadastro?",
+            "a": "Pedidos de opt-out são respeitados imediatamente e esses leads são excluídos de qualquer novo contato. Caso ocorram reclamações, as campanhas podem ser ajustadas ou pausadas enquanto mensagens, segmentação ou cadência são revisadas para garantir uma comunicação adequada."
+          }
+        ]
+      }
+    ]
+  }
 }
