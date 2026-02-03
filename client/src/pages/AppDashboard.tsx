@@ -74,12 +74,11 @@ export default function AppDashboard() {
   return (
     <CrmShell>
       <div className="px-6 py-6" data-testid="page-dashboard">
-        <div className="flex items-center justify-between gap-4 mb-4">
-          <h1 className="text-3xl font-extrabold tracking-tight" data-testid="text-title">
-            Dashboard
-          </h1>
-
-          <div className="flex items-center gap-2" data-testid="row-page-actions">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-extrabold tracking-tight" data-testid="text-title">
+              Dashboard
+            </h1>
             <FiltersBar
               selectedCampaignId={selectedCampaignId}
               setSelectedCampaignId={setSelectedCampaignId}
@@ -89,8 +88,8 @@ export default function AppDashboard() {
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white shadow-sm" data-testid="card-page-dashboard">
-          <div className="p-6">
+        <div className="rounded-2xl bg-white" data-testid="card-page-dashboard">
+          <div className="p-0">
             {isAgencyView ? (
               <AgencyDashboard />
             ) : (
