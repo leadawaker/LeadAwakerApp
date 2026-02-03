@@ -20,15 +20,17 @@ export default function AppLeads() {
     campaignId: campaignId === "all" ? null : campaignId,
   });
 
+  const { leads: mockLeads } = useLeads({ accountId: currentAccountId });
+
   const leads = useMemo(() => {
-    const merged = [...csvLeads, ...localLeads];
+    const merged = [...csvLeads, ...mockLeads, ...localLeads];
 
     return merged
       .filter((l) => (campaignId === "all" ? true : l.campaign_id === campaignId))
       .filter((l) => (status === "all" ? true : l.conversion_status === status))
       .filter((l) => (priority === "all" ? true : l.priority === priority))
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
-  }, [csvLeads, campaignId, status, priority, localLeads]);
+  }, [csvLeads, mockLeads, campaignId, status, priority, localLeads]);
 
   return (
     <CrmShell>
@@ -37,10 +39,53 @@ export default function AppLeads() {
           <h1 className="text-3xl font-extrabold tracking-tight" data-testid="text-title">Contacts</h1>
           <div className="flex items-center gap-2" data-testid="row-page-actions">
             <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
+            <div className="flex items-center gap-2">
+              <button
+                className="h-10 px-3 rounded-xl border border-border bg-white hover:bg-muted/30 text-sm font-semibold shadow-none"
+                data-testid="button-import"
+              >
+                Import CSV
+              </button>
+
+              <Dialog.Root open={open} onOpenChange={setOpen}>
+                <Dialog.Trigger asChild>
+                  <button
+                    className="h-10 px-3 rounded-xl bg-primary text-primary-foreground hover:opacity-90 text-sm font-semibold shadow-none"
+                    data-testid="button-add-lead"
+                  >
+                    + Add Lead
+                  </button>
+                </Dialog.Trigger>
+
+                <Dialog.Portal>
+                  <Dialog.Overlay className="fixed inset-0 bg-black/30" />
+                  <Dialog.Content
+                    className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-background shadow-xl"
+                    data-testid="modal-add-lead"
+                  >
+                    <div className="p-4 border-b border-border flex items-center justify-between">
+                      <div className="font-semibold" data-testid="text-modal-title">Add Lead (MOCK)</div>
+                      <Dialog.Close asChild>
+                        <button className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center" data-testid="button-modal-close">
+                          <X className="h-4 w-4" />
+                        </button>
+                      </Dialog.Close>
+                    </div>
+                    <AddLeadForm
+                      onSubmit={(lead) => {
+                        setLocalLeads((prev) => [lead, ...prev]);
+                        setOpen(false);
+                      }}
+                      accountId={currentAccountId}
+                    />
+                  </Dialog.Content>
+                </Dialog.Portal>
+              </Dialog.Root>
+            </div>
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white shadow-sm" data-testid="card-page-leads">
+        <div className="rounded-2xl bg-white shadow-none border-none" data-testid="card-page-leads">
           <div className="p-6">
             <div className="flex flex-wrap items-center gap-2" data-testid="bar-filters">
               <select
@@ -88,53 +133,9 @@ export default function AppLeads() {
               </button>
             </div>
           </div>
-
-          <div className="ml-auto flex items-center gap-2" data-testid="bar-actions">
-            <button
-              className="h-10 px-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold"
-              data-testid="button-import"
-            >
-              Import CSV
-            </button>
-
-            <Dialog.Root open={open} onOpenChange={setOpen}>
-              <Dialog.Trigger asChild>
-                <button
-                  className="h-10 px-3 rounded-xl border border-border bg-primary text-primary-foreground hover:opacity-90 text-sm font-semibold"
-                  data-testid="button-add-lead"
-                >
-                  + Add Lead
-                </button>
-              </Dialog.Trigger>
-
-              <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 bg-black/30" />
-                <Dialog.Content
-                  className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-background shadow-xl"
-                  data-testid="modal-add-lead"
-                >
-                  <div className="p-4 border-b border-border flex items-center justify-between">
-                    <div className="font-semibold" data-testid="text-modal-title">Add Lead (MOCK)</div>
-                    <Dialog.Close asChild>
-                      <button className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center" data-testid="button-modal-close">
-                        <X className="h-4 w-4" />
-                      </button>
-                    </Dialog.Close>
-                  </div>
-                  <AddLeadForm
-                    onSubmit={(lead) => {
-                      setLocalLeads((prev) => [lead, ...prev]);
-                      setOpen(false);
-                    }}
-                    accountId={currentAccountId}
-                  />
-                </Dialog.Content>
-              </Dialog.Portal>
-            </Dialog.Root>
-          </div>
         </div>
 
-        <div className="mt-4 rounded-2xl bg-background overflow-hidden shadow-sm" data-testid="table-contacts">
+        <div className="mt-4 rounded-2xl bg-white overflow-hidden shadow-none border-none" data-testid="table-contacts">
           {isLoading ? (
             <div className="px-4 py-6 text-sm text-muted-foreground" data-testid="status-leads-loading">
               Loading contacts…

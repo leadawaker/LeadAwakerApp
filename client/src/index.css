@@ -52,6 +52,7 @@
   /* Blue Base - from logo #5170ff */
   --background: 230 30% 98%; /* Very light blue tint */
   --foreground: 230 60% 10%; /* Very dark blue/black */
+  --bg-main: 246 33% 97%; /* #F6F5FA */
 
   --card: 0 0% 100%;
   --card-foreground: 230 60% 10%;
@@ -842,7 +843,8 @@
     cursor: auto;
   }
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    background-color: #F6F5FA;
+    @apply font-sans antialiased text-foreground;
   }
   button, 
   [role="button"], 

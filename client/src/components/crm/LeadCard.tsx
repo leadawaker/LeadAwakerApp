@@ -2,6 +2,27 @@ import { Lead } from "@/data/mocks";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
+const CSV_TAGS = [
+  { name: "New Lead", color: "#3B82F6" },
+  { name: "Contacted", color: "#10B981" },
+  { name: "Follow-up Required", color: "#F59E0B" },
+  { name: "Nurturing", color: "#8B5CF6" },
+  { name: "Qualified", color: "#EC4899" },
+  { name: "High Intent", color: "#EF4444" },
+  { name: "Ready to Book", color: "#14B8A6" },
+  { name: "Appointment Scheduled", color: "#6366F1" },
+  { name: "Post-Call Follow-up", color: "#F43F5E" },
+  { name: "Closed - Won", color: "#059669" },
+  { name: "Closed - Lost", color: "#4B5563" },
+  { name: "DND / Opt-out", color: "#1F2937" },
+  { name: "Re-engagement", color: "#D946EF" },
+  { name: "Future Interest", color: "#84CC16" },
+  { name: "Pricing Inquiry", color: "#0EA5E9" },
+  { name: "Technical Question", color: "#64748B" },
+  { name: "Referral", color: "#A855F7" },
+  { name: "Partner Lead", color: "#F97316" }
+];
+
 function statusTone(status: Lead["conversion_status"]) {
   switch (status) {
     case "Booked":
@@ -36,6 +57,27 @@ export function LeadCard({ lead, active }: { lead: Lead; active: boolean }) {
           <div className="text-xs text-muted-foreground truncate" data-testid={`text-lead-phone-${lead.id}`}>
             {lead.phone}
           </div>
+          {lead.tags && lead.tags.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {lead.tags.map((tag, idx) => {
+                const tagInfo = CSV_TAGS.find(t => t.name === tag);
+                const color = tagInfo?.color || '#64748B';
+                return (
+                  <Badge 
+                    key={idx} 
+                    className="text-[11px] px-2.5 h-6 font-bold border shadow-none rounded-lg"
+                    style={{ 
+                      backgroundColor: `${color}15`,
+                      color: color,
+                      borderColor: `${color}30`
+                    }}
+                  >
+                    {tag}
+                  </Badge>
+                );
+              })}
+            </div>
+          )}
         </div>
         <Badge className={cn("border", statusTone(lead.conversion_status))} data-testid={`badge-status-${lead.id}`}>
           {lead.conversion_status}
@@ -44,7 +86,7 @@ export function LeadCard({ lead, active }: { lead: Lead; active: boolean }) {
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
         <div data-testid={`text-lead-source-${lead.id}`}>Source: {lead.source}</div>
         <div data-testid={`text-lead-priority-${lead.id}`}>Priority: {lead.priority}</div>
-        <div className="col-span-2 truncate" data-testid={`text-lead-notes-${lead.id}`}>
+        <div className="col-span-2 truncate mt-1" data-testid={`text-lead-notes-${lead.id}`}>
           {lead.notes || "—"}
         </div>
       </div>

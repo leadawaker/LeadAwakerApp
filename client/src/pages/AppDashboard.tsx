@@ -88,7 +88,7 @@ export default function AppDashboard() {
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white" data-testid="card-page-dashboard">
+        <div className="rounded-2xl bg-white border-none shadow-none" data-testid="card-page-dashboard">
           <div className="p-0">
             {isAgencyView ? (
               <AgencyDashboard />

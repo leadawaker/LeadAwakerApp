@@ -95,7 +95,7 @@ export default function TagsPage() {
                     key={t.id}
                     onClick={() => setSelectedTagName(t.name === selectedTagName ? null : t.name)}
                     className={cn(
-                      "rounded-2xl border border-border bg-background p-3 flex items-center justify-between group transition-all text-left",
+                      "rounded-2xl border-none bg-white p-3 flex items-center justify-between group transition-all text-left shadow-none",
                       selectedTagName === t.name ? "ring-2 ring-primary border-transparent" : "hover:border-primary/50"
                     )}
                     data-testid={`card-tag-${t.id}`}
@@ -116,7 +116,7 @@ export default function TagsPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-background flex flex-col overflow-hidden h-full shadow-sm" data-testid="panel-leads-per-tag">
+          <div className="rounded-2xl border-none bg-white flex flex-col overflow-hidden h-full shadow-none" data-testid="panel-leads-per-tag">
             <div className="p-4 border-b border-border bg-muted/5 shrink-0">
               <div className="font-bold text-sm" data-testid="text-selected-tag">
                 {selectedTagName ? `Leads: ${selectedTagName}` : "Select a tag to view leads"}

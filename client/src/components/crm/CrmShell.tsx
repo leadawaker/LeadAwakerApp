@@ -19,7 +19,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   const closePanel = () => setActivePanel(null);
 
   return (
-    <div className="min-h-screen bg-white" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
+    <div className="min-h-screen bg-[#F6F5FA]" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
       <Topbar onOpenPanel={(p) => setActivePanel(p)} />
       <div className="fixed left-0 top-0 bottom-0 z-40" data-testid="wrap-left-nav">
         <RightSidebar 
@@ -59,7 +59,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
               )}
               {activePanel === 'settings' && (
                 <div className="p-6 space-y-8 overflow-auto h-full">
-                  <section className="bg-white rounded-2xl p-6 shadow-sm border border-border/40">
+                  <section className="bg-white rounded-2xl p-6 border border-border/40">
                     <h3 className="text-xs font-bold uppercase text-muted-foreground mb-4 tracking-widest">System Actions</h3>
                     <div className="grid grid-cols-2 gap-3 mb-8">
                       <button onClick={() => { setActivePanel('search'); }} className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors">
@@ -144,7 +144,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
 
       <main 
         className={cn(
-          "h-screen flex flex-col bg-white transition-all duration-200 overflow-hidden",
+          "h-screen flex flex-col bg-[#F6F5FA] transition-all duration-200 overflow-hidden",
           collapsed ? "md:pl-[80px]" : "md:pl-[240px]",
           "pb-[64px] md:pb-0 pt-0"
         )} 

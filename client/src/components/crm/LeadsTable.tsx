@@ -79,7 +79,7 @@ export function LeadsTable({
   });
 
   return (
-    <div className="rounded-2xl border border-border bg-background overflow-hidden" data-testid="table-leads">
+    <div className="rounded-2xl bg-white overflow-hidden shadow-none border-none" data-testid="table-leads">
       <div className="overflow-auto">
         <table className="w-full text-left">
           <thead className="bg-muted/30 border-b border-border">

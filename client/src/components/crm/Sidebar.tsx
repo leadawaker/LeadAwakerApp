@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, Calendar, Building2, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Calendar, MessageSquare, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
@@ -11,10 +11,10 @@ export function Sidebar() {
   const prefix = isAgencyView ? "/agency" : "/subaccount";
 
   const items = [
-    { href: `${prefix}/dashboard`, label: "Dashboard", icon: LayoutDashboard, testId: "link-nav-dashboard" },
-    { href: `${prefix}/leads`, label: "Leads", icon: Users, testId: "link-nav-leads" },
+    { href: `${prefix}/dashboard`, label: "Conversions", icon: LayoutDashboard, testId: "link-nav-dashboard" },
+    { href: `${prefix}/leads`, label: "Contacts", icon: Users, testId: "link-nav-leads" },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "link-nav-calendar" },
-    { href: `${prefix}/accounts`, label: "Accounts", icon: Building2, testId: "link-nav-accounts" },
+    { href: `${prefix}/conversations`, label: "Conversations", icon: MessageSquare, testId: "link-nav-conversations" },
   ];
 
   return (
