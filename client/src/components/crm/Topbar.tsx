@@ -38,8 +38,8 @@ export function Topbar({ onOpenPanel }: { onOpenPanel: (panel: string) => void }
   };
 
   const titles: Record<string, string> = {
-    "/agency/dashboard": "Dashboard",
-    "/subaccount/dashboard": "Dashboard",
+    "/agency/dashboard": "Convertions",
+    "/subaccount/dashboard": "Convertions",
     "/agency/leads": "Contacts",
     "/subaccount/leads": "Contacts",
     "/agency/contacts": "Contacts",

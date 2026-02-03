@@ -26,9 +26,6 @@ export function Sidebar() {
       data-testid="sidebar-crm"
     >
       <div className="p-4 w-full flex flex-col gap-4">
-        <Link href="/" className="mb-6 block px-3 hover:opacity-80 transition-opacity">
-          <img src="/6. Favicon.svg" alt="Lead Awaker" className="h-10 w-10 object-contain" />
-        </Link>
         <div
           className={cn(
             "rounded-2xl border p-4 duration-0 relative group",

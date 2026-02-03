@@ -113,14 +113,14 @@ export function RightSidebar({
 
   const prefix = isAgencyView ? "/agency" : "/subaccount";
   const navItems: { href: string; label: string; icon: any; testId: string; agencyOnly?: boolean }[] = [
-    { href: `${prefix}/dashboard`, label: "Home", icon: LayoutDashboard, testId: "nav-home" },
-    { href: `${prefix}/contacts`, label: "Portfolio", icon: BookUser, testId: "nav-portfolio" },
-    { href: `${prefix}/conversations`, label: "Explore", icon: MessageSquare, testId: "nav-explore" },
+    { href: `${prefix}/dashboard`, label: "Convertions", icon: LayoutDashboard, testId: "nav-home" },
+    { href: `${prefix}/contacts`, label: "Contacts", icon: BookUser, testId: "nav-portfolio" },
+    { href: `${prefix}/conversations`, label: "Conversations", icon: MessageSquare, testId: "nav-explore" },
     { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
-    { href: `${prefix}/automation-logs`, label: "Activity", icon: ScrollText, testId: "nav-activity" },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "nav-calendar" },
-    { href: `${prefix}/users`, label: "Users", icon: Users, testId: "nav-users" },
     { href: `${prefix}/tags`, label: "Tags", icon: Tag, testId: "nav-tags" },
+    { href: `${prefix}/users`, label: "Users", icon: Users, testId: "nav-users" },
+    { href: `${prefix}/automation-logs`, label: "Activity", icon: ScrollText, testId: "nav-activity" },
     { href: `${prefix}/prompt-library`, label: "Library", icon: BookOpen, testId: "nav-library" },
   ];
 
@@ -342,7 +342,10 @@ export function RightSidebar({
         data-testid="sidebar-left"
       >
         <div className="h-full flex flex-col">
-          <div className={cn("h-auto py-12")}> 
+          <div className={cn("h-auto py-6 flex justify-center")}>
+            <Link href="/" className="hover:opacity-80 transition-opacity">
+              <img src="/6. Favicon.svg" alt="Lead Awaker" className="h-10 w-10 object-contain" />
+            </Link>
           </div>
 
           <nav className={cn("px-3 space-y-2 flex-1")} data-testid="nav-right">
@@ -364,10 +367,17 @@ export function RightSidebar({
                       : "text-muted-foreground hover:text-foreground",
                   )}
                   data-testid={`link-${it.testId}`}
-                  title={collapsed ? it.label : undefined}
                 >
                   <Icon className={cn("h-[24px] w-[24px]", active && "scale-110")} />
                   {!collapsed && <span className="text-sm font-semibold tracking-tight">{it.label}</span>}
+                  
+                  {collapsed && (
+                    <div className="absolute left-[70px] opacity-0 group-hover:opacity-100 transition-opacity z-[120] pointer-events-none">
+                      <div className="bg-black text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-xl whitespace-nowrap">
+                        {it.label}
+                      </div>
+                    </div>
+                  )}
                 </Link>
               );
             })}
