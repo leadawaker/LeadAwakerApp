@@ -150,7 +150,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         )} 
         data-testid="main-crm"
       >
-        <div className="h-full w-full p-4 md:p-6 overflow-y-auto">
+        <div className="h-full w-full overflow-y-auto">
           {children}
         </div>
       </main>
