@@ -46,7 +46,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-center md:text-left lg:min-w-[580px] lg:-translate-x-2 xl:-translate-x-2 2xl:translate-x-4"
+            className="text-center md:text-left lg:min-w-[580px] lg:translate-x-0 xl:translate-x-0 2xl:translate-x-0"
           >
 
 
@@ -123,7 +123,7 @@ export default function Home() {
               relative flex justify-center
               scale-[1] sm:scale-90 md:scale-100
               sm:-translate-x-2 md:translate-x-0
-              lg:translate-x-[-20px] xl:translate-x-[-12px]
+              lg:translate-x-[-40px] xl:translate-x-[-32px]
               origin-center
             ">
               <Chat3D />
