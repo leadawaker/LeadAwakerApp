@@ -71,13 +71,13 @@ function LogoAnimation() {
               key={topWaveKey}
               src="/Logo-Top.svg"
               alt=""
-              className="absolute inset-0 w-full h-full object-contain"
-              initial={{ opacity: 0, scale: 0.25, x: 0, y: 0 }}
+              className="absolute inset-0 w-[120%] h-[120%] object-contain left-1/2 -translate-x-1/2 -translate-y-[10%] grayscale opacity-40 brightness-150 contrast-75"
+              initial={{ opacity: 0, scale: 0.25, x: "-50%", y: "-35%" }}
               animate={{
-                opacity: [0, 1, 0, 1, 0, 0, 1, 1],
+                opacity: [0, 0.4, 0, 0.4, 0, 0, 0.4, 0.4],
                 scale: [0.6, 0.6, 0.6, 0.6, 0.6, 1, 1.07, 1],
-                x: [15, 15, 15, 15, 15, 0, 0, 0],
-                y: [-25, -25, -25, -25, -25, 0, 0, 0],
+                x: ["-50%", "-50%", "-50%", "-50%", "-50%", "-50%", "-50%", "-50%"],
+                y: ["-35%", "-35%", "-35%", "-35%", "-35%", "-10%", "-10%", "-10%"],
               }}
               transition={{
                 duration: 2.0,
