@@ -334,7 +334,6 @@ function SubaccountDashboard({
                               </span>
                             </div>
                           </div>
-
                           <div className="mt-6 flex flex-col items-center gap-1 w-full relative z-20">
                             <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest text-center px-1 leading-tight group-hover:text-foreground transition-colors">
                               {stage.name.replace(/[^a-zA-Z]/g, "")}
@@ -344,7 +343,6 @@ function SubaccountDashboard({
                               style={{ backgroundColor: stage.fill }}
                             />
                           </div>
-
                           <div className="absolute bottom-full mb-8 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 bg-popover/90 backdrop-blur-md text-popover-foreground text-[11px] px-4 py-2 rounded-2xl border border-border shadow-2xl z-[100] pointer-events-none whitespace-nowrap font-extrabold">
                             <div className="flex items-center gap-2">
                               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: stage.fill }} />
@@ -454,13 +452,12 @@ function SubaccountDashboard({
           </div>
         </section>
       ) : null}
-
       {dashboardTab === "pipeline" ? (
         <section
           className="rounded-2xl border border-border bg-background p-4 flex flex-col h-[calc(100vh-168px)]"
           data-testid="section-pipeline"
         >
-          <div className="mt-2 overflow-x-auto overflow-y-hidden flex-grow pb-2" data-testid="scroll-pipeline">
+          <div className="mt-2 overflow-x-auto overflow-y-hidden flex-grow pb-2 bg-[#ffffff]" data-testid="scroll-pipeline">
             <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-full" data-testid="grid-pipeline">
               {stagePalette.map((s) => (
                 <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
