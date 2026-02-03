@@ -336,13 +336,13 @@ export function RightSidebar({
 
       <aside
         className={cn(
-          "fixed left-4 top-[16px] bottom-4 border border-border bg-white z-[60] transition-all hidden md:block rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.02)]",
+          "fixed left-4 top-[16px] bottom-4 border border-border bg-white z-[60] transition-all hidden md:block rounded-[32px] shadow-[0_2px_10px_rgba(0,0,0,0.02)]",
           collapsed ? "w-[60px]" : "w-[180px]",
         )}
         data-testid="sidebar-left"
       >
         <div className="h-full flex flex-col">
-          <div className={cn("h-auto py-6 flex justify-center")}>
+          <div className={cn("h-auto py-6 flex justify-start pl-4")}>
             <Link href="/" className="hover:opacity-80 transition-opacity">
               <img src="/6. Favicon.svg" alt="Lead Awaker" className="h-10 w-10 object-contain" />
             </Link>

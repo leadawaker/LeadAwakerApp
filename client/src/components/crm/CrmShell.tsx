@@ -42,9 +42,9 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
             className="absolute inset-0 bg-black/35 pointer-events-auto"
             onClick={closePanel}
           />
-          <aside className="absolute right-0 top-0 bottom-0 w-full md:w-[400px] border-l border-border bg-background shadow-xl pointer-events-auto flex flex-col overflow-hidden">
-            <div className="h-14 px-4 flex items-center justify-between border-b border-border bg-background sticky top-0 z-10 shrink-0">
-              <div className="font-semibold capitalize">{activePanel.replace('-', ' ')}</div>
+          <aside className="absolute right-4 top-8 bottom-4 w-full md:w-[400px] border border-border bg-background shadow-2xl rounded-[32px] pointer-events-auto flex flex-col overflow-hidden">
+            <div className="h-14 px-6 flex items-center justify-between border-b border-border bg-background sticky top-0 z-10 shrink-0">
+              <div className="font-bold text-lg capitalize">{activePanel.replace('-', ' ')}</div>
               <button onClick={closePanel} className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center">
                 <X className="h-4 w-4" />
               </button>
@@ -150,7 +150,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         )} 
         data-testid="main-crm"
       >
-        <div className="h-full w-full pl-10 pr-24 py-4 overflow-y-auto">
+        <div className="h-full w-full pl-10 pr-10 py-4 overflow-y-auto">
           {children}
         </div>
       </main>

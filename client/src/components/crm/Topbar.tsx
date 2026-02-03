@@ -67,7 +67,7 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
   return (
     <header
       className={cn(
-        "fixed top-5 right-0 h-16 bg-[#F6F5FA] z-50 flex items-center px-10 transition-all duration-200",
+        "fixed top-4 right-0 h-16 bg-[#F6F5FA] z-50 flex items-center px-10 transition-all duration-200",
         collapsed ? "left-[80px]" : "left-[200px]"
       )}
       data-testid="header-crm-topbar"
@@ -76,29 +76,29 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
         <h1 className="text-3xl font-bold tracking-tight text-foreground">{currentTitle}</h1>
       </div>
 
-      <div className="absolute right-24 flex items-center gap-6">
+      <div className="absolute right-10 flex items-center gap-6">
         <div className="flex items-center gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
                 className={cn(
-                  "h-9 px-0 hover:bg-transparent text-base font-semibold flex items-center gap-2",
+                  "h-9 px-3 w-48 justify-between hover:bg-white border border-border bg-white rounded-xl text-xs font-semibold flex items-center gap-2",
                   isAgencyView ? "text-yellow-600" : "text-blue-600"
                 )}
                 data-testid="button-account-selector"
               >
-                {currentAccount.name}
-                <ChevronDown className="h-4 w-4 opacity-60" />
+                <span className="truncate">{currentAccount.name}</span>
+                <ChevronDown className="h-3 w-3 opacity-60 shrink-0" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64 rounded-xl shadow-xl border-border bg-background">
+            <DropdownMenuContent align="end" className="w-64 rounded-2xl shadow-xl border-border bg-background mt-2">
               {accounts.map((acc) => (
                 <DropdownMenuItem
                   key={acc.id}
                   onClick={() => handleAccountSelect(acc.id)}
                   className={cn(
-                    "flex items-center gap-2 cursor-pointer py-3",
+                    "flex items-center gap-2 cursor-pointer py-3 rounded-xl m-1",
                     currentAccountId === acc.id && "bg-muted font-bold"
                   )}
                 >
@@ -117,50 +117,72 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <select
-            value={localStorage.getItem("leadawaker_selected_campaign") || "all"}
-            onChange={(e) => {
-              const v = e.target.value;
-              localStorage.setItem("leadawaker_selected_campaign", v);
-              // Trigger a storage event so other components can sync
-              window.dispatchEvent(new Event("storage"));
-            }}
-            className="h-9 rounded-xl border-none bg-white px-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-            data-testid="select-campaign-topbar"
-          >
-            <option value="all">All campaigns</option>
-            {campaignOptions.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className="h-9 px-3 w-[160px] justify-between hover:bg-white border border-border bg-white rounded-xl text-xs font-semibold flex items-center gap-2"
+                data-testid="select-campaign-topbar-custom"
+              >
+                <span className="truncate">
+                  {campaignOptions.find(c => c.id === Number(localStorage.getItem("leadawaker_selected_campaign")))?.name || "All campaigns"}
+                </span>
+                <ChevronDown className="h-3 w-3 opacity-60 shrink-0" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64 rounded-2xl shadow-xl border-border bg-background mt-2">
+              <DropdownMenuItem 
+                onClick={() => {
+                  localStorage.setItem("leadawaker_selected_campaign", "all");
+                  window.dispatchEvent(new Event("storage"));
+                }}
+                className="py-3 rounded-xl m-1 cursor-pointer"
+              >
+                All campaigns
+              </DropdownMenuItem>
+              {campaignOptions.map((c) => (
+                <DropdownMenuItem
+                  key={c.id}
+                  onClick={() => {
+                    localStorage.setItem("leadawaker_selected_campaign", String(c.id));
+                    window.dispatchEvent(new Event("storage"));
+                  }}
+                  className="py-3 rounded-xl m-1 cursor-pointer"
+                >
+                  {c.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <button 
             onClick={() => onOpenPanel('search')}
-            className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
             data-testid="button-search-top"
           >
-            <Search className="h-[24px] w-[24px]" />
+            <Search className="h-[20px] w-[20px]" />
           </button>
 
           <button 
             onClick={() => onOpenPanel('notifications')}
-            className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
             data-testid="button-notifications"
           >
-            <Bell className="h-[24px] w-[24px]" />
+            <Bell className="h-[20px] w-[20px]" />
+            <div className="absolute top-1 right-1 h-4 w-4 bg-blue-600 rounded-full flex items-center justify-center border-2 border-[#F6F5FA]">
+              <span className="text-[8px] font-bold text-white">3</span>
+            </div>
           </button>
 
           <button 
             onClick={() => onOpenPanel('settings')}
-            className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
             data-testid="button-settings-top"
           >
-            <Settings className="h-[24px] w-[24px]" />
+            <Settings className="h-[20px] w-[20px]" />
           </button>
         </div>
       </div>

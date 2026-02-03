@@ -34,9 +34,9 @@ export default function AppLeads() {
 
   return (
     <CrmShell>
-      <div className="px-6 py-6" data-testid="page-leads">
-        <div className="rounded-2xl bg-white shadow-none border-none" data-testid="card-page-leads">
-          <div className="p-6">
+      <div className="py-6" data-testid="page-leads">
+        <div className="rounded-2xl bg-white border border-border shadow-sm mb-4" data-testid="card-page-leads">
+          <div className="p-4">
             <div className="flex flex-wrap items-center gap-2" data-testid="bar-filters">
               <select
                 value={status}
@@ -85,13 +85,13 @@ export default function AppLeads() {
           </div>
         </div>
 
-        <div className="mt-4 rounded-2xl bg-white overflow-hidden shadow-none border-none" data-testid="table-contacts">
+        <div className="rounded-2xl bg-white overflow-hidden border border-border shadow-sm" data-testid="table-contacts">
           {isLoading ? (
             <div className="px-4 py-6 text-sm text-muted-foreground" data-testid="status-leads-loading">
               Loading contacts…
             </div>
           ) : null}
-          <div className="grid grid-cols-[44px_1.2fr_200px_240px_220px_180px] items-center gap-3 bg-muted/20 px-4 py-3 text-xs font-semibold text-muted-foreground border-b border-border" data-testid="row-contacts-head">
+          <div className="grid grid-cols-[44px_1.2fr_200px_240px_220px_180px] items-center gap-3 bg-muted/20 px-4 py-2 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider" data-testid="row-contacts-head">
             <div />
             <div>name</div>
             <div>phone</div>
@@ -101,12 +101,12 @@ export default function AppLeads() {
           </div>
 
           <div className="divide-y divide-border" data-testid="list-contacts">
-            {leads.map((l) => {
+            {mockLeads.map((l) => {
               const initials = `${(l.first_name ?? "").slice(0, 1)}${(l.last_name ?? "").slice(0, 1)}`.toUpperCase();
               return (
                 <div
                   key={l.id}
-                  className="grid grid-cols-[44px_1.2fr_200px_240px_220px_180px] items-center gap-3 px-4 py-3"
+                  className="grid grid-cols-[44px_1.2fr_200px_240px_220px_180px] items-center gap-3 px-4 py-2"
                   data-testid={`row-contact-${l.id}`}
                 >
                   <div className="h-9 w-9 rounded-full bg-primary/10 text-primary font-bold grid place-items-center text-xs" data-testid={`avatar-contact-${l.id}`}>
@@ -122,18 +122,18 @@ export default function AppLeads() {
                         window.history.pushState({}, "", href);
                         window.dispatchEvent(new PopStateEvent("popstate"));
                       }}
-                      className="font-semibold truncate hover:underline block"
+                      className="text-sm font-semibold truncate hover:underline block leading-tight"
                       data-testid={`link-contact-${l.id}`}
                     >
                       {l.full_name}
                     </a>
-                    <div className="text-[11px] text-muted-foreground truncate" data-testid={`text-contact-sub-${l.id}`}>
+                    <div className="text-[10px] text-muted-foreground truncate" data-testid={`text-contact-sub-${l.id}`}>
                       source: {l.source} • priority: {l.priority}
                     </div>
                   </div>
 
                   <input
-                    className="h-10 w-full rounded-xl border border-border bg-muted/10 px-3 text-sm"
+                    className="h-8 w-full rounded-lg border border-border bg-muted/10 px-3 text-sm"
                     value={l.phone}
                     onChange={(e) =>
                       setLocalLeads((prev) =>
@@ -146,7 +146,7 @@ export default function AppLeads() {
                   />
 
                   <input
-                    className="h-10 w-full rounded-xl border border-border bg-muted/10 px-3 text-sm"
+                    className="h-8 w-full rounded-lg border border-border bg-muted/10 px-3 text-sm"
                     value={l.email}
                     onChange={(e) =>
                       setLocalLeads((prev) =>
@@ -158,32 +158,16 @@ export default function AppLeads() {
                     data-testid={`input-email-${l.id}`}
                   />
 
-                  <input
-                    className="h-10 w-full rounded-xl border border-border bg-muted/10 px-3 text-sm"
-                    value={(l.tags ?? []).join(", ")}
-                    onChange={(e) =>
-                      setLocalLeads((prev) =>
-                        prev.some((x) => x.id === l.id)
-                          ? prev.map((x) =>
-                              x.id === l.id
-                                ? { ...x, tags: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) }
-                                : x,
-                            )
-                          : [
-                              {
-                                ...l,
-                                tags: e.target.value.split(",").map((t) => t.trim()).filter(Boolean),
-                              },
-                              ...prev,
-                            ],
-                      )
-                    }
-                    placeholder="New, Hot, Follow-up"
-                    data-testid={`input-tags-${l.id}`}
-                  />
+                  <div className="flex flex-wrap gap-1" data-testid={`cell-tags-${l.id}`}>
+                    {(l.tags ?? []).map((t, i) => (
+                      <span key={i} className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100 text-[10px] font-bold">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
 
                   <select
-                    className="h-10 w-full rounded-xl border border-border bg-muted/10 px-3 text-sm"
+                    className="h-8 w-full rounded-lg border border-border bg-muted/10 px-3 text-sm"
                     value={l.conversion_status}
                     onChange={(e) =>
                       setLocalLeads((prev) =>

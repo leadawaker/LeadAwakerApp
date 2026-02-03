@@ -49,7 +49,7 @@ export default function ConversationsPage() {
 
   return (
     <CrmShell>
-      <div className="h-[calc(100vh-32px)] flex flex-col overflow-hidden bg-white" data-testid="page-conversations">
+      <div className="h-[calc(100vh-100px)] flex flex-col overflow-hidden" data-testid="page-conversations">
         <div className="px-4 md:px-6 pt-4 md:pt-6 pb-2 shrink-0 hidden">
           <div className="flex items-center gap-4">
             {mobileView === "chat" && (
@@ -71,13 +71,13 @@ export default function ConversationsPage() {
         </div>
 
         <div
-          className="flex-1 min-h-0 px-4 md:px-6 pb-4 md:pb-6 mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[400px_1fr_340px] gap-4"
+          className="flex-1 min-h-0 pb-4 md:pb-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[400px_1fr_340px] gap-4"
           data-testid="layout-conversations"
         >
           {/* Left: inbox list */}
           <section
             className={cn(
-              "rounded-2xl border border-border bg-background overflow-hidden flex flex-col h-full transition-all duration-300",
+              "rounded-2xl border border-border bg-white overflow-hidden flex flex-col h-full transition-all duration-300",
               mobileView === "chat" ? "hidden md:flex" : "flex"
             )}
             data-testid="panel-inbox"
@@ -156,7 +156,7 @@ export default function ConversationsPage() {
           {/* Center: chat */}
           <section
             className={cn(
-              "rounded-2xl border border-border bg-background overflow-hidden flex flex-col h-full transition-all duration-300",
+              "rounded-2xl border border-border bg-white overflow-hidden flex flex-col h-full transition-all duration-300",
               mobileView === "inbox" ? "hidden md:flex" : "flex"
             )}
             data-testid="panel-chat"
@@ -229,7 +229,7 @@ export default function ConversationsPage() {
 
           {/* Right: contact panel - visible only on XL screens */}
           <section
-            className="hidden xl:flex rounded-2xl border border-border bg-background overflow-hidden flex-col h-full"
+            className="hidden xl:flex rounded-2xl border border-border bg-white overflow-hidden flex-col h-full"
             data-testid="panel-contact"
           >
             <div className="p-4 border-b border-border shrink-0" data-testid="panel-contact-head">
