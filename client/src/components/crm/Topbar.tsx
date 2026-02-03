@@ -76,7 +76,7 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
         <h1 className="text-3xl font-bold tracking-tight text-foreground">{currentTitle}</h1>
       </div>
 
-      <div className="absolute right-10 flex items-center gap-6">
+      <div className="absolute right-24 flex items-center gap-6">
         <div className="flex items-center gap-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
