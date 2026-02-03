@@ -94,7 +94,7 @@ export default function AppDashboard() {
 
   return (
     <CrmShell>
-      <div className="px-6 py-6" data-testid="page-dashboard">
+      <div className="px-6 py-6 bg-white min-h-full" data-testid="page-dashboard">
         <div className="p-0">
           {isAgencyView ? (
             <AgencyDashboard />

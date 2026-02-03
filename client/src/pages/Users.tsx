@@ -15,8 +15,8 @@ export default function UsersPage() {
 
   return (
     <CrmShell>
-      <div className="px-6 py-6" data-testid="page-users">
-        <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Users</h1>
+      <div className="px-6 py-6 bg-white min-h-full" data-testid="page-users">
+        <h1 className="text-2xl font-extrabold tracking-tight hidden" data-testid="text-title">Users</h1>
 
         <div className="mt-4 flex items-center gap-2" data-testid="bar-users">
           <input

@@ -130,8 +130,8 @@ export default function CalendarPage() {
 
   return (
     <CrmShell>
-      <div className="h-full flex flex-col px-6 py-6 overflow-hidden" data-testid="page-calendar">
-        <div className="flex items-center gap-4 mb-6 shrink-0">
+      <div className="h-full flex flex-col px-6 py-6 overflow-hidden bg-white" data-testid="page-calendar">
+        <div className="flex items-center gap-4 mb-6 shrink-0 hidden">
           <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Calendar</h1>
           <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
         </div>
