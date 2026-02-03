@@ -130,14 +130,14 @@ export default function CalendarPage() {
 
   return (
     <CrmShell>
-      <div className="h-full flex flex-col px-0 py-0 overflow-hidden bg-white" data-testid="page-calendar">
+      <div className="h-full flex flex-col px-0 py-0 overflow-hidden bg-transparent" data-testid="page-calendar">
         <div className="flex items-center gap-4 mb-6 shrink-0 hidden">
           <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Calendar</h1>
           <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
         </div>
 
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_350px]" data-testid="layout-calendar">
-          <div className="border-r border-border bg-white overflow-hidden flex flex-col h-full" data-testid="calendar-main">
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-4" data-testid="layout-calendar">
+          <div className="border border-border bg-white overflow-hidden flex flex-col h-full rounded-2xl" data-testid="calendar-main">
             <div className="p-4 border-b border-border flex items-center justify-between shrink-0">
               <div className="flex items-center gap-4">
                 <DropdownMenu.Root>
@@ -282,7 +282,7 @@ export default function CalendarPage() {
             )}
           </div>
 
-          <div className="bg-white flex flex-col overflow-hidden h-full" data-testid="calendar-list">
+          <div className="bg-white flex flex-col overflow-hidden h-full rounded-2xl border border-border" data-testid="calendar-list">
             <div className="p-4 border-b border-border bg-muted/5 shrink-0">
               <div className="font-semibold text-sm" data-testid="text-list-title">
                 {selectedDate ? `Appointments for ${selectedDate}` : "Upcoming Appointments"}
