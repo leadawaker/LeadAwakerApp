@@ -362,9 +362,9 @@ export function RightSidebar({
                     collapsed ? "h-12 justify-center" : "px-3 py-3",
                     active
                       ? isAgencyView
-                        ? "text-yellow-600"
-                        : "text-blue-600"
-                      : "text-muted-foreground hover:text-foreground",
+                        ? "text-yellow-600 bg-yellow-500/10"
+                        : "text-blue-600 bg-blue-500/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
                   )}
                   data-testid={`link-${it.testId}`}
                 >

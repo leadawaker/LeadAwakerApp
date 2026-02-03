@@ -5,6 +5,7 @@ import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { FiltersBar } from "@/components/crm/FiltersBar";
 import { useLeads, type Lead } from "@/hooks/useLeads";
+import { cn } from "@/lib/utils";
 
 export default function AppLeads() {
   const { currentAccountId, isAgencyView } = useWorkspace();
@@ -23,14 +24,15 @@ export default function AppLeads() {
   const { leads: mockLeads } = useLeads({ accountId: currentAccountId });
 
   const leads = useMemo(() => {
-    const merged = [...csvLeads, ...mockLeads, ...localLeads];
+    // Only use mockLeads to ensure mock data is displayed as requested
+    const merged = mockLeads;
 
     return merged
       .filter((l) => (campaignId === "all" ? true : l.campaign_id === campaignId))
       .filter((l) => (status === "all" ? true : l.conversion_status === status))
       .filter((l) => (priority === "all" ? true : l.priority === priority))
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
-  }, [csvLeads, mockLeads, campaignId, status, priority, localLeads]);
+  }, [mockLeads, campaignId, status, priority]);
 
   return (
     <CrmShell>
@@ -106,7 +108,7 @@ export default function AppLeads() {
               return (
                 <div
                   key={l.id}
-                  className="grid grid-cols-[44px_1.2fr_200px_240px_220px_180px] items-center gap-3 px-4 py-2"
+                  className="grid grid-cols-[44px_1.2fr_200px_240px_220px_180px] items-center gap-3 px-4 py-2 hover:bg-muted/5 group"
                   data-testid={`row-contact-${l.id}`}
                 >
                   <div className="h-9 w-9 rounded-full bg-primary/10 text-primary font-bold grid place-items-center text-xs" data-testid={`avatar-contact-${l.id}`}>
@@ -159,11 +161,28 @@ export default function AppLeads() {
                   />
 
                   <div className="flex flex-wrap gap-1" data-testid={`cell-tags-${l.id}`}>
-                    {(l.tags ?? []).map((t, i) => (
-                      <span key={i} className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100 text-[10px] font-bold">
-                        {t}
-                      </span>
-                    ))}
+                    {(l.tags ?? []).map((t, i) => {
+                      const colors = [
+                        "bg-blue-50 text-blue-600 border-blue-100",
+                        "bg-purple-50 text-purple-600 border-purple-100",
+                        "bg-emerald-50 text-emerald-600 border-emerald-100",
+                        "bg-orange-50 text-orange-600 border-orange-100",
+                        "bg-pink-50 text-pink-600 border-pink-100",
+                      ];
+                      const colorClass = colors[i % colors.length];
+                      return (
+                        <span 
+                          key={i} 
+                          className={cn(
+                            "px-2 py-0.5 rounded-full border text-[10px] font-bold transition-all duration-200",
+                            colorClass,
+                            "group-hover:text-[12px] group-hover:px-3 group-hover:py-1"
+                          )}
+                        >
+                          {t}
+                        </span>
+                      );
+                    })}
                   </div>
 
                   <select

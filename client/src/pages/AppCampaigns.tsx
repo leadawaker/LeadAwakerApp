@@ -17,13 +17,12 @@ export default function AppCampaigns() {
 
   return (
     <CrmShell>
-      <div className="px-6 py-6" data-testid="page-campaigns">
-        <div className="flex items-center gap-4 mb-6">
-          <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Campaigns</h1>
+      <div className="py-6" data-testid="page-campaigns">
+        <div className="flex items-center gap-4 mb-4 rounded-2xl bg-white border border-border shadow-sm p-4">
           <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
         </div>
 
-        <div className="mt-4 rounded-2xl border border-border bg-background overflow-hidden" data-testid="list-campaigns">
+        <div className="rounded-2xl border border-border bg-white overflow-hidden shadow-sm" data-testid="list-campaigns">
           <div className="divide-y divide-border">
             {rows.map((c) => {
               const expanded = expandedId === c.id;
