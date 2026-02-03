@@ -68,7 +68,7 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
     <header
       className={cn(
         "fixed top-5 right-0 h-16 bg-[#F6F5FA] z-50 flex items-center px-10 transition-all duration-200",
-        collapsed ? "left-[80px]" : "left-[200px]"
+        collapsed ? "left-[120px]" : "left-[240px]"
       )}
       data-testid="header-crm-topbar"
     >
