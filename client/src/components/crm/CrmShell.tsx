@@ -20,7 +20,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#F6F5FA]" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
-      <Topbar onOpenPanel={(p) => setActivePanel(p)} />
+      <Topbar onOpenPanel={(p) => setActivePanel(p)} collapsed={collapsed} />
       <div className="fixed left-0 top-0 bottom-0 z-40" data-testid="wrap-left-nav">
         <RightSidebar 
           collapsed={collapsed} 

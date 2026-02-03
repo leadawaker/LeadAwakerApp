@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function Topbar({ onOpenPanel }: { onOpenPanel: (panel: string) => void }) {
+export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string) => void; collapsed: boolean }) {
   const [location, setLocation] = useLocation();
   const { currentAccountId, currentAccount, setCurrentAccountId, isAgencyView } = useWorkspace();
 
@@ -67,7 +67,8 @@ export function Topbar({ onOpenPanel }: { onOpenPanel: (panel: string) => void }
   return (
     <header
       className={cn(
-        "fixed top-5 left-0 right-0 h-16 bg-[#F6F5FA] z-50 flex items-center px-10",
+        "fixed top-5 right-0 h-16 bg-[#F6F5FA] z-50 flex items-center px-10 transition-all duration-200",
+        collapsed ? "left-[80px]" : "left-[200px]"
       )}
       data-testid="header-crm-topbar"
     >
