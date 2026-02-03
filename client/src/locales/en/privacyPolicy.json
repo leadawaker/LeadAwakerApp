@@ -3,31 +3,31 @@
   "lastUpdated": "Last updated: January 2026",
   "section1": {
     "title": "1. Introduction",
-    "content": "Welcome to Lead Awaker. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our services."
+    "content": "Welcome to Lead Awaker. This Privacy Policy explains how we process, use, store, and protect personal data in the context of providing our messaging automation services via WhatsApp, SMS, and Instagram, including the use of Artificial Intelligence for lead reactivation and automated communications. Lead Awaker operates in compliance with applicable European Union data protection laws, including the General Data Protection Regulation (GDPR)."
   },
   "section2": {
-    "title": "2. Information We Collect",
-    "content": "[Placeholder: Describe the types of personal information collected, such as name, email, phone number, company information, etc.]"
+    "title": "2. Information We Process",
+    "content": "Lead Awaker does not directly collect leads for its own purposes. All personal data processed through our services is provided exclusively by our clients, who declare that they have a valid legal basis to share such data. The data processed may include: full name, phone number (WhatsApp and SMS), email address, social media identifiers (such as Instagram), interaction history, and other information necessary to deliver the contracted services. We do not intentionally process special categories of personal data as defined under the GDPR."
   },
   "section3": {
     "title": "3. How We Use Your Information",
-    "content": "[Placeholder: Explain how the collected information is used, such as providing services, improving user experience, marketing communications, etc.]"
+    "content": "Personal data is processed solely for the purpose of delivering our contracted services, including message automation, lead reactivation, AI-based message personalization, execution of automated communication flows, performance analysis, service improvement, and compliance with legal and regulatory obligations. Our clients act as the Data Controllers, while Lead Awaker acts as a Data Processor, processing data strictly in accordance with client instructions."
   },
   "section4": {
-    "title": "4. Information Sharing",
-    "content": "[Placeholder: Describe circumstances under which information may be shared with third parties.]"
+    "title": "4. Data Sharing",
+    "content": "Lead Awaker may share personal data only when necessary to provide the services, including with messaging platforms (WhatsApp, SMS, and Instagram), technology infrastructure providers, hosting services, and automation or AI tools. We do not sell, rent, or trade personal data. Any data sharing is conducted with appropriate safeguards to ensure compliance with applicable data protection laws."
   },
   "section5": {
     "title": "5. Data Security",
-    "content": "[Placeholder: Explain the security measures in place to protect user data.]"
+    "content": "We implement appropriate technical and organizational measures to protect personal data against unauthorized access, loss, misuse, alteration, or unlawful disclosure. These measures include access controls, secure infrastructure, monitoring, and industry-standard information security practices. While we strive to protect personal data, no system can be guaranteed to be completely secure."
   },
   "section6": {
     "title": "6. Your Rights",
-    "content": "[Placeholder: Describe user rights regarding their data, such as access, correction, deletion, etc.]"
+    "content": "Under applicable EU data protection laws, individuals have the right to request access to their personal data, rectification of inaccurate or incomplete data, erasure, restriction or objection to processing, data portability where applicable, and withdrawal of consent at any time when processing is based on consent. Requests should primarily be directed to the client acting as the Data Controller, with Lead Awaker providing technical support when required."
   },
   "section7": {
-    "title": "7. Contact Us",
-    "content": "If you have questions about this Privacy Policy, please contact us at:",
+    "title": "7. Contact Information",
+    "content": "If you have any questions, requests, or concerns regarding this Privacy Policy or the processing of personal data, please contact us:",
     "email": "Email: leadawaker@gmail.com",
     "address": "Address: Christiaan Huygensweg 32, s'Hertogenbosch, NL"
   }

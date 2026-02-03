@@ -1,41 +1,53 @@
 {
-  "title": "Servicevoorwaarden",
+  "title": "Algemene Voorwaarden",
   "lastUpdated": "Laatst bijgewerkt: januari 2026",
   "section1": {
-    "title": "1. Aanvaarding van Voorwaarden",
-    "content": "[Placeholder: Leg uit dat gebruikers door het gebruik van de dienst akkoord gaan met deze voorwaarden.]"
+    "title": "1. Aanvaarding van de voorwaarden",
+    "content": "Door het afsluiten of gebruiken van de diensten van Lead Awaker bevestigt de klant deze Algemene Voorwaarden volledig te hebben gelezen, begrepen en geaccepteerd. Indien de klant niet akkoord gaat met enige bepaling, dient hij het gebruik van de diensten te staken."
   },
   "section2": {
-    "title": "2. Beschrijving van de Dienst",
-    "content": "[Placeholder: Beschrijf wat Lead Awaker biedt—AI-aangedreven leadreactivatiediensten, enz.]"
+    "title": "2. Beschrijving van de diensten",
+    "content": "Lead Awaker levert B2B-diensten op het gebied van geautomatiseerde berichten via WhatsApp, SMS en Instagram, ondersteund door kunstmatige intelligentie, met als doel leadreactivatie, het plannen van afspraken en geautomatiseerde communicatie. De exacte omvang van de diensten, het prijsmodel, de duur van campagnes en doelstellingen kunnen variëren afhankelijk van de sector en de commerciële afspraken tussen partijen."
   },
   "section3": {
-    "title": "3. Gebruikersverantwoordelijkheden",
-    "content": "[Placeholder: Beschrijf gebruikersverplichtingen, aanvaardbaar gebruiksbeleid, enz.]"
+    "title": "3. Verantwoordelijkheden van de klant",
+    "content": "De klant is volledig verantwoordelijk voor de herkomst, rechtmatigheid en legitimiteit van de aangeleverde leads, evenals voor de commerciële inhoud, producten en diensten die worden gepromoot. De klant verklaart te beschikken over een geldige rechtsgrond om contact op te nemen met de leads en te voldoen aan alle toepasselijke wetgeving en platformregels."
   },
   "section4": {
-    "title": "4. Betalingsvoorwaarden",
-    "content": "[Placeholder: Beschrijf prijzen, factureringscycli, restitutiebeleid, enz.]"
+    "title": "4. Verantwoordelijkheden van Lead Awaker",
+    "content": "Lead Awaker is verantwoordelijk voor de technische en operationele uitvoering van de diensten, waaronder configuratie, automatisering en het gebruik van kunstmatige intelligentie zoals overeengekomen. Lead Awaker zal niet opzettelijk onrechtmatige, beledigende of misleidende inhoud creëren en is niet verantwoordelijk voor commerciële beslissingen van de klant, tenzij uitdrukkelijk anders overeengekomen."
   },
   "section5": {
-    "title": "5. Intellectueel Eigendom",
-    "content": "[Placeholder: Leg uit wie eigenaar is van inhoud, handelsmerken en intellectuele eigendomsrechten.]"
+    "title": "5. Resultaten en prestatiedisclaimer",
+    "content": "Tenzij uitdrukkelijk anders overeengekomen, vormt de dienstverlening van Lead Awaker een inspanningsverplichting en geen resultaatsverplichting. In bepaalde zakelijke afspraken kan een prestatiegarantie worden overeengekomen, waarbij resultaten binnen maximaal 30 (dertig) dagen na de start van de campagne worden geëvalueerd. Indien overeengekomen criteria niet worden behaald, kan betaling geheel of gedeeltelijk vervallen volgens de commerciële afspraken."
   },
   "section6": {
-    "title": "6. Beperking van Aansprakelijkheid",
-    "content": "[Placeholder: Beschrijf beperkingen van aansprakelijkheid en disclaimers.]"
+    "title": "6. Vergoedingen en betaling",
+    "content": "Vergoedingen en betalingsstructuren kunnen variëren en omvatten onder andere prestatiegebaseerde vergoedingen, abonnementen, setupkosten, campagneprijzen of andere overeengekomen modellen. Tenzij anders bepaald, gelden er geen boetes bij opzegging. Eventuele terugbetalingen volgen uitsluitend de gemaakte afspraken."
   },
   "section7": {
-    "title": "7. Beëindiging",
-    "content": "[Placeholder: Leg uit onder welke voorwaarden de dienst of het gebruikersaccount kan worden beëindigd.]"
+    "title": "7. Platforms van derden",
+    "content": "De diensten van Lead Awaker zijn afhankelijk van platforms van derden zoals WhatsApp, Instagram, SMS-aanbieders en infrastructuurdiensten. Lead Awaker heeft geen controle over beleidsregels, beperkingen, blokkeringen of opschortingen door deze derden en is niet aansprakelijk voor onderbrekingen, bans of beperkingen die hieruit voortvloeien."
   },
   "section8": {
-    "title": "8. Toepasselijk Recht",
-    "content": "[Placeholder: Specificeer de jurisdictie en het toepasselijke recht.]"
+    "title": "8. Intellectuele eigendom",
+    "content": "Alle systemen, automatiseringen, methodologieën, software, handelsmerken en materialen die door Lead Awaker zijn ontwikkeld, blijven het exclusieve intellectuele eigendom van Lead Awaker, tenzij schriftelijk anders overeengekomen. De klant verkrijgt uitsluitend een beperkt en niet-overdraagbaar gebruiksrecht voor de duur van de dienstverlening."
   },
   "section9": {
-    "title": "9. Contact",
-    "intro": "Als u vragen heeft over deze Servicevoorwaarden, neem dan contact met ons op via:",
+    "title": "9. Opschorting en beëindiging",
+    "content": "Lead Awaker behoudt zich het recht voor de dienstverlening op te schorten of te beëindigen indien sprake is van onrechtmatig gebruik, schending van deze voorwaarden, overtreding van toepasselijke wetgeving of niet-naleving van platformregels. De klant kan de diensten beëindigen conform de commerciële afspraken."
+  },
+  "section10": {
+    "title": "10. Beperking van aansprakelijkheid",
+    "content": "Voor zover wettelijk toegestaan is Lead Awaker niet aansprakelijk voor indirecte schade, winstderving, verlies van zakelijke kansen, opschorting van accounts door derden of gevolgschade voortvloeiend uit het gebruik van de diensten. Eventuele aansprakelijkheid van Lead Awaker is beperkt tot de door de klant betaalde bedragen in de relevante periode."
+  },
+  "section11": {
+    "title": "11. Toepasselijk recht en bevoegde rechter",
+    "content": "Op deze Algemene Voorwaarden is het recht van de Europese Unie van toepassing, aangevuld met het recht van Nederland indien nodig. Geschillen worden voorgelegd aan de bevoegde rechter, met inachtneming van dwingendrechtelijke bepalingen."
+  },
+  "section12": {
+    "title": "12. Contactgegevens",
+    "intro": "Voor vragen over deze Algemene Voorwaarden kunt u contact met ons opnemen:",
     "email": "E-mail: leadawaker@gmail.com",
     "address": "Adres: Christiaan Huygensweg 32, s'Hertogenbosch, NL"
   }

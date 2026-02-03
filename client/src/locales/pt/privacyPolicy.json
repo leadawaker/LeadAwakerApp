@@ -3,31 +3,31 @@
   "lastUpdated": "Última atualização: Janeiro de 2026",
   "section1": {
     "title": "1. Introdução",
-    "content": "Bem-vindo ao Lead Awaker. Esta Política de Privacidade explica como coletamos, usamos, divulgamos e protegemos suas informações quando você utiliza nossos serviços."
+    "content": "Bem-vindo ao Lead Awaker. Esta Política de Privacidade descreve como tratamos, utilizamos, armazenamos e protegemos dados pessoais no contexto da prestação de nossos serviços de automação de mensagens via WhatsApp, SMS e Instagram, com uso de Inteligência Artificial, voltados à reativação de leads e comunicação automatizada. Atuamos em conformidade com a Lei Geral de Proteção de Dados (LGPD – Lei nº 13.709/2018)."
   },
   "section2": {
     "title": "2. Informações que Coletamos",
-    "content": "[Espaço reservado: Descreva os tipos de informações pessoais coletadas, como nome, e-mail, telefone, informações da empresa, etc.]"
+    "content": "O Lead Awaker não realiza captação direta de leads para fins próprios. Os dados pessoais tratados são fornecidos exclusivamente por nossos clientes, que declaram possuir base legal adequada para esse compartilhamento. Os dados podem incluir: nome completo, número de telefone (WhatsApp e SMS), endereço de e-mail, identificadores de redes sociais (como Instagram), histórico de interações e demais informações necessárias para a execução dos serviços. Não coletamos intencionalmente dados sensíveis, conforme definidos pela LGPD."
   },
   "section3": {
     "title": "3. Como Usamos suas Informações",
-    "content": "[Espaço reservado: Explique como as informações coletadas são utilizadas, como prestação de serviços, melhoria da experiência do usuário, comunicações de marketing, etc.]"
+    "content": "As informações pessoais são utilizadas exclusivamente para a prestação dos serviços contratados, incluindo automação de mensagens, reativação de leads, personalização de comunicações por meio de Inteligência Artificial, execução de fluxos automatizados, análise de performance e melhoria contínua dos serviços, além do cumprimento de obrigações legais e regulatórias. O tratamento ocorre de acordo com as instruções do cliente, que atua como Controlador dos Dados, enquanto o Lead Awaker atua como Operador."
   },
   "section4": {
     "title": "4. Compartilhamento de Informações",
-    "content": "[Espaço reservado: Descreva as circunstâncias sob as quais as informações podem ser compartilhadas com terceiros.]"
+    "content": "O Lead Awaker poderá compartilhar dados pessoais apenas quando necessário para a execução dos serviços, como com plataformas de mensageria (WhatsApp, SMS e Instagram), provedores de infraestrutura tecnológica, servidores e ferramentas de automação e Inteligência Artificial. Não vendemos, alugamos ou comercializamos dados pessoais. O compartilhamento ocorre sempre observando critérios de segurança e conformidade com a legislação de proteção de dados."
   },
   "section5": {
     "title": "5. Segurança de Dados",
-    "content": "[Espaço reservado: Explique as medidas de segurança implementadas para proteger os dados dos usuários.]"
+    "content": "Adotamos medidas técnicas e organizacionais adequadas para proteger os dados pessoais contra acessos não autorizados, perdas, alterações ou divulgações indevidas. Essas medidas incluem controle de acesso restrito, proteção de servidores, boas práticas de segurança da informação e monitoramento de sistemas. Apesar disso, nenhum sistema é completamente livre de riscos."
   },
   "section6": {
     "title": "6. Seus Direitos",
-    "content": "[Espaço reservado: Descreva os direitos dos usuários em relação aos seus dados, como acesso, correção, exclusão, etc.]"
+    "content": "Nos termos da LGPD, os titulares dos dados possuem direitos como: confirmação da existência de tratamento, acesso aos dados, correção de informações incompletas ou desatualizadas, anonimização, bloqueio ou eliminação de dados desnecessários, portabilidade dos dados quando aplicável e revogação do consentimento. As solicitações devem ser feitas preferencialmente ao cliente controlador dos dados, com apoio técnico do Lead Awaker quando necessário."
   },
   "section7": {
     "title": "7. Entre em Contato",
-    "content": "Se você tiver dúvidas sobre esta Política de Privacidade, entre em contato conosco através de:",
+    "content": "Se você tiver dúvidas, solicitações ou quiser exercer seus direitos relacionados a esta Política de Privacidade, entre em contato conosco através de:",
     "email": "E-mail: leadawaker@gmail.com",
     "address": "Endereço: Christiaan Huygensweg 32, s'Hertogenbosch, NL"
   }

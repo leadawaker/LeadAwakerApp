@@ -1,41 +1,53 @@
 {
-  "title": "Termos de Serviço",
+  "title": "Termos e Condições de Uso",
   "lastUpdated": "Última atualização: Janeiro de 2026",
   "section1": {
     "title": "1. Aceitação dos Termos",
-    "content": "[Placeholder: Explique que ao usar o serviço, os usuários concordam com estes termos.]"
+    "content": "Ao contratar ou utilizar os serviços do Lead Awaker, o cliente declara que leu, compreendeu e concorda integralmente com estes Termos e Condições. Caso não concorde com qualquer disposição aqui prevista, o cliente não deverá utilizar os serviços."
   },
   "section2": {
     "title": "2. Descrição do Serviço",
-    "content": "[Placeholder: Descreva o que o Lead Awaker oferece—serviços de reativação de leads com inteligência artificial, etc.]"
+    "content": "O Lead Awaker oferece serviços B2B de automação de mensagens via WhatsApp, SMS e Instagram, com apoio de Inteligência Artificial, voltados principalmente à reativação de leads, agendamento de contatos e comunicação automatizada. O escopo específico do serviço, modelo de cobrança, duração da campanha e metas podem variar conforme o nicho, negociação e acordo comercial estabelecido entre as partes."
   },
   "section3": {
-    "title": "3. Responsabilidades do Usuário",
-    "content": "[Placeholder: Descreva as obrigações do usuário, políticas de uso aceitável, etc.]"
+    "title": "3. Responsabilidades do Cliente",
+    "content": "O cliente é integralmente responsável pela origem, legitimidade e legalidade dos leads fornecidos, bem como pelas informações comerciais, ofertas, produtos e serviços divulgados. O cliente declara possuir base legal para o contato com os leads e autorizações necessárias. Também é responsabilidade do cliente garantir que o uso do serviço esteja em conformidade com a legislação aplicável, políticas das plataformas de mensageria e boas práticas de mercado."
   },
   "section4": {
-    "title": "4. Termos de Pagamento",
-    "content": "[Placeholder: Descreva preços, ciclos de faturamento, políticas de reembolso, etc.]"
+    "title": "4. Responsabilidades do Lead Awaker",
+    "content": "O Lead Awaker é responsável pela execução técnica e operacional do serviço, incluindo a configuração, automação, uso de Inteligência Artificial e envio das mensagens conforme o escopo acordado. O Lead Awaker compromete-se a não criar intencionalmente conteúdos ilegais, abusivos ou ofensivos e a operar dentro de padrões técnicos razoáveis. O Lead Awaker não se responsabiliza por decisões comerciais tomadas pelo cliente nem por resultados financeiros específicos, exceto quando expressamente acordado."
   },
   "section5": {
-    "title": "5. Propriedade Intelectual",
-    "content": "[Placeholder: Explique a propriedade de conteúdo, marcas registradas e direitos de propriedade intelectual.]"
+    "title": "5. Resultados e Garantia",
+    "content": "Salvo disposição específica em contrário, o Lead Awaker não garante resultados comerciais determinados, tratando-se de obrigação de meio. Contudo, em determinados modelos de negócio, poderá ser oferecida uma garantia de resultados em até 30 (trinta) dias a partir do início da campanha. Caso os critérios previamente acordados não sejam atingidos nesse período, o cliente poderá ficar isento do pagamento, conforme definido no acordo comercial específico."
   },
   "section6": {
-    "title": "6. Limitação de Responsabilidade",
-    "content": "[Placeholder: Descreva as limitações de responsabilidade e isenções de garantia.]"
+    "title": "6. Termos de Pagamento",
+    "content": "Os valores, formas de cobrança e critérios de pagamento variam conforme o modelo de negócio acordado, podendo incluir cobrança sobre vendas realizadas, mensalidade, taxa de setup, campanhas específicas ou outros formatos. Salvo acordo em contrário, não há multa por cancelamento. Reembolsos, quando aplicáveis, seguirão o que for expressamente definido entre as partes."
   },
   "section7": {
-    "title": "7. Rescisão",
-    "content": "[Placeholder: Explique as condições sob as quais o serviço ou a conta do usuário podem ser encerrados.]"
+    "title": "7. Plataformas de Terceiros",
+    "content": "Os serviços do Lead Awaker dependem do uso de plataformas de terceiros, como WhatsApp, Instagram, serviços de SMS e provedores de infraestrutura. O Lead Awaker não possui controle sobre políticas, limitações, instabilidades, bloqueios ou suspensões aplicadas por essas plataformas, não se responsabilizando por eventuais restrições, banimentos ou interrupções decorrentes de decisões desses terceiros."
   },
   "section8": {
-    "title": "8. Lei Aplicável",
-    "content": "[Placeholder: Especifique a jurisdição e a lei aplicável.]"
+    "title": "8. Propriedade Intelectual",
+    "content": "Todos os sistemas, fluxos, automações, metodologias, códigos, marcas e materiais desenvolvidos pelo Lead Awaker permanecem de sua exclusiva propriedade intelectual, salvo disposição contratual em contrário. O cliente não adquire qualquer direito de propriedade sobre tais elementos, apenas uma licença limitada de uso durante a vigência do serviço."
   },
   "section9": {
-    "title": "9. Entre em Contato",
-    "intro": "Se você tiver dúvidas sobre estes Termos de Serviço, entre em contato conosco em:",
+    "title": "9. Suspensão e Rescisão",
+    "content": "O Lead Awaker poderá suspender ou encerrar o serviço, a qualquer momento, caso identifique uso indevido, ilegal, antiético ou em desacordo com estes Termos, com a legislação aplicável ou com as políticas das plataformas utilizadas. O cliente também poderá solicitar o encerramento do serviço, respeitadas as condições comerciais acordadas."
+  },
+  "section10": {
+    "title": "10. Limitação de Responsabilidade",
+    "content": "Na máxima extensão permitida pela lei, o Lead Awaker não será responsável por danos indiretos, lucros cessantes, perda de oportunidades, bloqueios de contas em plataformas de terceiros ou prejuízos decorrentes do uso do serviço. A responsabilidade do Lead Awaker limita-se aos valores efetivamente pagos pelo cliente no período correspondente, quando aplicável."
+  },
+  "section11": {
+    "title": "11. Lei Aplicável e Foro",
+    "content": "Estes Termos e Condições são regidos pelas leis da República Federativa do Brasil. Fica eleito o foro da comarca a ser definida conforme a legislação aplicável, para dirimir quaisquer controvérsias oriundas destes Termos, com renúncia a qualquer outro, por mais privilegiado que seja."
+  },
+  "section12": {
+    "title": "12. Entre em Contato",
+    "intro": "Se você tiver dúvidas sobre estes Termos e Condições, entre em contato conosco:",
     "email": "E-mail: leadawaker@gmail.com",
     "address": "Endereço: Christiaan Huygensweg 32, s'Hertogenbosch, NL"
   }

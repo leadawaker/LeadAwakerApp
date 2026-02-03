@@ -1,41 +1,53 @@
 {
-  "title": "Terms of Service",
+  "title": "Terms and Conditions",
   "lastUpdated": "Last updated: January 2026",
   "section1": {
-    "title": "1. Acceptance of Terms",
-    "content": "[Placeholder: Explain that by using the service, users agree to these terms.]"
+    "title": "1. Acceptance of the Terms",
+    "content": "By contracting or using Lead Awaker’s services, the client confirms that they have read, understood, and agreed to these Terms and Conditions in full. If the client does not agree with any provision, they must refrain from using the services."
   },
   "section2": {
-    "title": "2. Description of Service",
-    "content": "[Placeholder: Describe what Lead Awaker provides—AI-powered lead reactivation services, etc.]"
+    "title": "2. Description of the Services",
+    "content": "Lead Awaker provides B2B services focused on automated messaging via WhatsApp, SMS, and Instagram, supported by Artificial Intelligence, primarily aimed at lead reactivation, appointment scheduling, and automated communications. The specific scope of services, pricing model, campaign duration, and objectives may vary depending on the client’s industry and the commercial agreement established between the parties."
   },
   "section3": {
-    "title": "3. User Responsibilities",
-    "content": "[Placeholder: Outline user obligations, acceptable use policies, etc.]"
+    "title": "3. Client Responsibilities",
+    "content": "The client is solely responsible for the origin, legality, and legitimacy of the leads provided, as well as for the commercial content, products, and services promoted. The client represents that they have a valid legal basis to contact the leads and that all applicable laws and platform policies are respected. The client remains responsible for compliance with data protection, consumer, and marketing regulations."
   },
   "section4": {
-    "title": "4. Payment Terms",
-    "content": "[Placeholder: Describe pricing, billing cycles, refund policies, etc.]"
+    "title": "4. Lead Awaker Responsibilities",
+    "content": "Lead Awaker is responsible for the technical and operational execution of the services, including system configuration, automation, and use of Artificial Intelligence as agreed. Lead Awaker undertakes not to intentionally create unlawful, abusive, or offensive content. Lead Awaker does not make business decisions on behalf of the client and is not responsible for the client’s commercial strategies or decisions, except where expressly agreed."
   },
   "section5": {
-    "title": "5. Intellectual Property",
-    "content": "[Placeholder: Explain ownership of content, trademarks, and intellectual property rights.]"
+    "title": "5. Results and Performance Disclaimer",
+    "content": "Unless expressly agreed otherwise, Lead Awaker’s services constitute an obligation of means and not an obligation of results. In certain business arrangements, a performance-based guarantee may be offered, whereby results are evaluated within up to 30 (thirty) days from the start of a campaign. If agreed performance criteria are not met, payment obligations may be waived in accordance with the specific commercial agreement."
   },
   "section6": {
-    "title": "6. Limitation of Liability",
-    "content": "[Placeholder: Describe limitations on liability and disclaimers.]"
+    "title": "6. Fees and Payment Terms",
+    "content": "Fees and payment structures may vary and can include performance-based compensation, recurring fees, setup fees, campaign-based pricing, or other models as agreed. Unless otherwise stated, there are no penalties for cancellation. Refunds, if applicable, shall follow the terms expressly agreed between the parties."
   },
   "section7": {
-    "title": "7. Termination",
-    "content": "[Placeholder: Explain conditions under which the service or user account may be terminated.]"
+    "title": "7. Third-Party Platforms",
+    "content": "Lead Awaker’s services rely on third-party platforms such as WhatsApp, Instagram, SMS providers, and infrastructure services. Lead Awaker has no control over the policies, availability, limitations, suspensions, or account restrictions imposed by such platforms and shall not be liable for disruptions, blocks, or bans resulting from actions or decisions taken by these third parties."
   },
   "section8": {
-    "title": "8. Governing Law",
-    "content": "[Placeholder: Specify the jurisdiction and governing law.]"
+    "title": "8. Intellectual Property",
+    "content": "All systems, workflows, automation logic, methodologies, software, trademarks, and materials developed by Lead Awaker remain its exclusive intellectual property, unless otherwise agreed in writing. The client is granted a limited, non-transferable right to use such materials solely for the duration and purpose of the services."
   },
   "section9": {
-    "title": "9. Contact Us",
-    "intro": "If you have questions about these Terms of Service, please contact us at:",
+    "title": "9. Suspension and Termination",
+    "content": "Lead Awaker reserves the right to suspend or terminate services at any time if it identifies unlawful use, breach of these Terms, violation of applicable laws, or non-compliance with third-party platform policies. The client may also terminate the services in accordance with the agreed commercial terms."
+  },
+  "section10": {
+    "title": "10. Limitation of Liability",
+    "content": "To the maximum extent permitted by law, Lead Awaker shall not be liable for indirect damages, loss of profits, loss of business opportunities, account suspensions by third parties, or consequential damages arising from the use of the services. Any potential liability of Lead Awaker shall be limited to the amounts effectively paid by the client for the services in the relevant period."
+  },
+  "section11": {
+    "title": "11. Governing Law and Jurisdiction",
+    "content": "These Terms and Conditions shall be governed by and construed in accordance with applicable European Union law and, where necessary, the laws of the Netherlands. Any disputes shall be submitted to the competent courts, without prejudice to mandatory legal provisions."
+  },
+  "section12": {
+    "title": "12. Contact Information",
+    "intro": "If you have any questions regarding these Terms and Conditions, please contact us:",
     "email": "Email: leadawaker@gmail.com",
     "address": "Address: Christiaan Huygensweg 32, s'Hertogenbosch, NL"
   }
