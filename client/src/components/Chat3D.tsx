@@ -163,7 +163,7 @@ export default function Chat3D() {
 
           <div 
             ref={scrollContainerRef}
-             className="p-6 pb-2 space-y-1 min-h-[650px] max-h-[650px] overflow-y-auto relative scrollbar-hide bg-[#ffffff]"
+             className="p-6 pb-2 space-y-1 min-h-[650px] max-h-[650px] overflow-y-auto relative scrollbar-hide bg-[#fafafa]"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-slate-100/20 via-transparent to-slate-100/20 pointer-events-none" />
 
