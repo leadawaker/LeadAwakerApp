@@ -404,7 +404,7 @@ function SubaccountDashboard({
           <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Conversions</h2>
         </div>
         <div className="overflow-x-auto overflow-y-hidden pb-4" data-testid="scroll-pipeline">
-          <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-[calc(100vh-285px)]" data-testid="grid-pipeline">
+          <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-[calc(100vh-160px)]" data-testid="grid-pipeline">
             {stagePalette.map((s) => (
               <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
             ))}
