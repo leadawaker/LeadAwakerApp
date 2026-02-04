@@ -112,8 +112,9 @@ export function RightSidebar({
   }, [location]);
 
   const prefix = isAgencyView ? "/agency" : "/subaccount";
+
   const navItems: { href: string; label: string; icon: any; testId: string; agencyOnly?: boolean }[] = [
-    { href: `${prefix}/dashboard`, label: "Conversion", icon: LayoutDashboard, testId: "nav-home" },
+    { href: `${prefix}/dashboard`, label: "Dashboard", icon: LayoutDashboard, testId: "nav-home" },
     { href: `${prefix}/contacts`, label: "Contacts", icon: BookUser, testId: "nav-portfolio" },
     { href: `${prefix}/conversations`, label: "Chats", icon: MessageSquare, testId: "nav-explore" },
     { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },

@@ -29,6 +29,45 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const TAG_CATEGORIES = [
+  {
+    type: "Status",
+    tags: [
+      { name: "bump 1 reply", color: "#3B82F6" },
+      { name: "bump 2 reply", color: "#3B82F6" },
+      { name: "bump 3 reply", color: "#3B82F6" },
+      { name: "bump response", color: "#3B82F6" },
+      { name: "first message", color: "#EAB308" },
+      { name: "follow-up", color: "#F97316" },
+      { name: "lead", color: "#3B82F6" },
+      { name: "multiple messages", color: "#3B82F6" },
+      { name: "qualify", color: "#22C55E" },
+      { name: "responded", color: "#22C55E" },
+      { name: "second message", color: "#EAB308" }
+    ]
+  },
+  {
+    type: "Outcome",
+    tags: [
+      { name: "appointment booked", color: "#22C55E" },
+      { name: "goodbye", color: "#64748B" },
+      { name: "no response", color: "#64748B" },
+      { name: "schedule", color: "#22C55E" }
+    ]
+  },
+  {
+    type: "Automation",
+    tags: [
+      { name: "ai stop", color: "#EF4444" },
+      { name: "bump 1.1", color: "#3B82F6" },
+      { name: "bump 2.1", color: "#3B82F6" },
+      { name: "bump 3.1", color: "#3B82F6" },
+      { name: "no bump", color: "#64748B" },
+      { name: "reply generating", color: "#EAB308" }
+    ]
+  }
+];
+
 const CSV_TAGS = [
   { name: "New Lead", color: "#3B82F6" },
   { name: "Contacted", color: "#10B981" },
@@ -111,6 +150,10 @@ export default function AppDashboard() {
     <CrmShell>
       <div className="py-4 px-0" data-testid="page-dashboard">
         <div className="p-0">
+          <div className="px-1 md:px-0 mb-6 flex items-center justify-between">
+            <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Dashboard</h1>
+            <FiltersBar selectedCampaignId={selectedCampaignId} setSelectedCampaignId={setSelectedCampaignId} />
+          </div>
           {isAgencyView ? (
             <AgencyDashboard />
           ) : (
@@ -137,7 +180,6 @@ function AgencyDashboard() {
   const agencyButtons = "h-10 rounded-xl bg-yellow-400 text-yellow-950 font-semibold hover:bg-yellow-300";
 
   const activeCampaigns = useMemo(() => {
-    // Agency view: show a mix of active campaigns across accounts
     return campaigns
       .filter((c) => c.status === "Active")
       .slice(0, 4)
@@ -152,7 +194,6 @@ function AgencyDashboard() {
   }, []);
 
   const tasks = useMemo(() => {
-    // Mock tasks derived from automation logs + leads
     return automationLogs
       .slice(0, 10)
       .map((log) => {
@@ -296,8 +337,8 @@ function SubaccountDashboard({
   const checkScroll = () => {
     if (scrollRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      setShowLeftArrow(scrollLeft > 10);
-      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
+      setShowLeftArrow(scrollLeft > 20);
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 20);
     }
   };
 
@@ -351,7 +392,7 @@ function SubaccountDashboard({
             <div className="mb-3">
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Performance Over Time</h3>
             </div>
-            <div className="flex-grow rounded-2xl border border-slate-200 bg-white p-6 shadow-sm overflow-hidden flex flex-col">
+            <div className="flex-grow rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm overflow-hidden flex flex-col">
               <div className="flex items-center justify-end mb-4 shrink-0">
                 <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold">
                   <TrendingUp className="w-3 h-3" />
@@ -400,9 +441,9 @@ function SubaccountDashboard({
           </div>
           <div className="flex flex-col">
             <div className="mb-3">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Conversion Funnel</h3>
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Sales Funnel</h3>
             </div>
-            <div className="flex-grow rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col">
+            <div className="flex-grow rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm flex flex-col">
               <div className="flex-grow flex flex-col justify-between py-2">
                 {funnel.map((stage: any, idx: number) => (
                   <div key={stage.name} className="space-y-1.5">
@@ -431,18 +472,18 @@ function SubaccountDashboard({
         className="p-0 flex flex-col -mb-3 relative"
         data-testid="section-pipeline"
       >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Conversions</h2>
+        <div className="flex items-center justify-between mb-4 px-1 md:px-0">
+          <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Pipeline</h2>
         </div>
         
         <div className="relative group/pipeline">
           {showLeftArrow && (
             <button 
               onClick={() => scroll('left')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-16 h-32 bg-gradient-to-r from-[#F6F5FA] via-[#F6F5FA]/80 to-transparent flex items-center justify-start pl-2 text-slate-400 hover:text-slate-900 transition-colors pointer-events-auto"
+              className="absolute left-0 top-0 bottom-0 z-20 w-48 bg-gradient-to-r from-[#F6F5FA] via-[#F6F5FA]/95 via-[#F6F5FA]/80 to-transparent flex items-center justify-start pl-2 text-slate-400 hover:text-slate-900 transition-all pointer-events-auto"
             >
-              <div className="p-2 rounded-full bg-white shadow-lg border border-slate-100 ml-2">
-                <ChevronLeft className="w-5 h-5" />
+              <div className="p-4 rounded-full bg-white shadow-2xl border border-slate-100 ml-6 hover:scale-110 transition-transform">
+                <ChevronLeft className="w-8 h-8" />
               </div>
             </button>
           )}
@@ -450,10 +491,10 @@ function SubaccountDashboard({
           {showRightArrow && (
             <button 
               onClick={() => scroll('right')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-16 h-32 bg-gradient-to-l from-[#F6F5FA] via-[#F6F5FA]/80 to-transparent flex items-center justify-end pr-2 text-slate-400 hover:text-slate-900 transition-colors pointer-events-auto"
+              className="absolute right-0 top-0 bottom-0 z-20 w-48 bg-gradient-to-l from-[#F6F5FA] via-[#F6F5FA]/95 via-[#F6F5FA]/80 to-transparent flex items-center justify-end pr-2 text-slate-400 hover:text-slate-900 transition-all pointer-events-auto"
             >
-              <div className="p-2 rounded-full bg-white shadow-lg border border-slate-100 mr-2">
-                <ChevronRight className="w-5 h-5" />
+              <div className="p-4 rounded-full bg-white shadow-2xl border border-slate-100 mr-6 hover:scale-110 transition-transform">
+                <ChevronRight className="w-8 h-8" />
               </div>
             </button>
           )}
@@ -488,7 +529,7 @@ function Stat({
   icon?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" data-testid={testId}>
+    <div className="rounded-[32px] border border-slate-200 bg-white p-4 shadow-sm" data-testid={testId}>
       <div className="flex items-center justify-between mb-2">
         <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider" data-testid={`${testId}-label`}>{label}</div>
         <div className="text-slate-400">{icon}</div>
@@ -535,6 +576,20 @@ function PipelineCol({
       .slice(0, 2);
   };
 
+  const getTagColor = (tagName: string) => {
+    const normalized = tagName.toLowerCase();
+    for (const cat of TAG_CATEGORIES) {
+      const tag = cat.tags.find(t => t.name.toLowerCase() === normalized);
+      if (tag) return tag.color;
+    }
+    if (normalized.includes('booked')) return "#22C55E";
+    if (normalized.includes('qualified')) return "#22C55E";
+    if (normalized.includes('follow')) return "#F97316";
+    if (normalized.includes('lead')) return "#3B82F6";
+    if (normalized.includes('ai')) return "#EF4444";
+    return "#64748b";
+  };
+
   return (
     <div className="w-full bg-white flex flex-col h-full rounded-[32px] overflow-hidden shadow-sm border border-slate-100" data-testid={`col-${stage.id}`}>
       <div
@@ -543,106 +598,86 @@ function PipelineCol({
         )}
         data-testid={`col-head-${stage.id}`}
       >
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div 
-            className="flex items-center justify-center w-7 h-7 rounded-lg shadow-sm border"
-            style={{ 
-              backgroundColor: `${stage.fill}15`,
-              color: stage.id === 'Booked' ? '#ca8a04' : stage.fill,
-              borderColor: `${stage.fill}30`
-            }}
-          >
-            {stage.icon}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] font-black uppercase tracking-tight text-slate-900 truncate">{stage.label}</span>
-            <span
-              className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500"
-              data-testid={`col-count-${stage.id}`}
+        <div className="flex items-center justify-between w-full min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div 
+              style={{ 
+                color: stage.id === 'Booked' ? '#ca8a04' : stage.fill,
+              }}
             >
-              {items.length}
-            </span>
+              {stage.icon}
+            </div>
+            <span className="text-[16px] font-black uppercase tracking-tight text-slate-900 truncate">{stage.label}</span>
           </div>
+          <span
+            className="text-[14px] font-black px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 ml-2"
+            data-testid={`col-count-${stage.id}`}
+          >
+            {items.length}
+          </span>
         </div>
       </div>
       <div className="p-3 pt-0 space-y-2 flex-grow overflow-y-auto scrollbar-hide" data-testid={`col-body-${stage.id}`}>
         {items.slice(0, 50).map((l) => (
           <div key={l.id} className="group relative w-full" data-testid={`row-contact-pill-${stage.id}-${l.id}`}>
-            <div
-              className={cn(
-                "rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm cursor-pointer relative",
-                "transition-[height,transform,box-shadow,background-color,border-color] duration-150 ease-out",
-                "hover:shadow-md",
-                "h-10 group-hover:h-[104px]",
-                "p-2"
-              )}
-              onClick={() => {
-                window.history.pushState({}, "", `/app/contacts/${l.id}`);
-                window.dispatchEvent(new PopStateEvent("popstate"));
-              }}
-              data-testid={`pill-contact-${stage.id}-${l.id}`}
-            >
-              <div className="flex items-center gap-2" data-testid={`row-pill-header-${stage.id}-${l.id}`}>
-                <div 
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
-                  style={{ 
-                    backgroundColor: `${stage.fill}15`,
-                    color: stage.id === 'Booked' ? '#ca8a04' : stage.fill,
-                    border: `1px solid ${stage.fill}30`
-                  }}
-                >
-                  {getInitials(l.full_name)}
-                </div>
-                <div
-                  className="font-semibold text-xs truncate flex-grow"
-                  style={{ color: stage.id === 'Booked' ? '#ca8a04' : stage.fill }}
-                  data-testid={`text-pipe-name-${stage.id}-${l.id}`}
-                >
-                  {l.full_name}
-                </div>
-                <span
-                  className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 whitespace-nowrap uppercase tracking-tighter"
-                  data-testid={`text-pipe-time-${stage.id}-${l.id}`}
-                >
-                  {formatTimeAgo(l.created_at)}
-                </span>
-              </div>
-
               <div
                 className={cn(
-                  "mt-2 overflow-hidden",
-                  "opacity-0 translate-y-1 pointer-events-none",
-                  "transition-[opacity,transform] duration-150 ease-out",
-                  "group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto"
+                  "rounded-xl border border-slate-200/40 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm cursor-pointer relative",
+                  "transition-[height,transform,box-shadow,background-color,border-color] duration-150 ease-out",
+                  "hover:shadow-md hover:border-slate-300/60",
+                  "h-10 group-hover:h-[145px]",
+                  "p-2"
                 )}
-                data-testid={`panel-contact-details-${stage.id}-${l.id}`}
-              >
-                <div className="space-y-1.5" data-testid={`stack-contact-details-${stage.id}-${l.id}`}>
-                  <div className="text-xs font-mono" data-testid={`text-contact-phone-${stage.id}-${l.id}`}>{l.phone}</div>
-                  <div className="text-xs truncate" data-testid={`text-contact-email-${stage.id}-${l.id}`}>{l.email || "No email"}</div>
-        <div className="flex flex-wrap gap-1 mt-1" data-testid={`list-contact-tags-${stage.id}-${l.id}`}>
-          {(l.tags || ['Lead']).map((tag: string) => {
-            const tagInfo = CSV_TAGS.find(ct => ct.name === tag);
-            const color = tagInfo?.color || '#64748B';
-            return (
-              <span
-                key={tag}
-                className="px-1.5 py-0.5 rounded-md text-[9px] font-bold border"
-                style={{ 
-                  backgroundColor: `${color}15`,
-                  color: color,
-                  borderColor: `${color}30`
+                onClick={() => {
+                  window.history.pushState({}, "", `/app/contacts/${l.id}`);
+                  window.dispatchEvent(new PopStateEvent("popstate"));
                 }}
-                data-testid={`chip-contact-tag-${stage.id}-${l.id}-${tag}`}
+                data-testid={`pill-contact-${stage.id}-${l.id}`}
               >
-                {tag}
-              </span>
-            );
-          })}
-        </div>
+                <div className="flex items-center gap-2" data-testid={`row-pill-header-${stage.id}-${l.id}`}>
+                  <div 
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 opacity-60"
+                    style={{ 
+                      backgroundColor: `${stage.fill}15`,
+                      color: stage.id === 'Booked' ? '#ca8a04' : stage.fill,
+                      border: `1px solid ${stage.fill}30`
+                    }}
+                  >
+                    {getInitials(l.full_name)}
+                  </div>
+                  <div
+                    className="font-semibold text-xs truncate flex-grow"
+                    style={{ color: stage.id === 'Booked' ? '#ca8a04' : stage.fill }}
+                    data-testid={`text-pipe-name-${stage.id}-${l.id}`}
+                  >
+                    {l.full_name}
+                  </div>
+                  <span className="text-[9px] text-muted-foreground whitespace-nowrap opacity-30 font-bold uppercase">
+                    {formatTimeAgo(l.created_at)}
+                  </span>
+                </div>
+
+                <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="flex flex-wrap gap-1.5 max-h-[90px] overflow-hidden">
+                    {(l.tags || []).slice(0, 8).map((tag: string, idx: number) => {
+                      const color = getTagColor(tag);
+                      return (
+                        <span 
+                          key={idx}
+                          className="px-2.5 py-1 rounded-full text-[10px] font-black border shadow-sm"
+                          style={{ 
+                            backgroundColor: `${color}15`,
+                            color: color,
+                            borderColor: `${color}30`
+                          }}
+                        >
+                          {tag}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-            </div>
           </div>
         ))}
         {items.length === 0 ? (
