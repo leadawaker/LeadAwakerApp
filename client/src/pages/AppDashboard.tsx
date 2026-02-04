@@ -158,18 +158,26 @@ function AgencyDashboard() {
         kind: "interaction" as const,
         id: i.id,
         at: i.created_at,
-        text: `${i.direction}: ${i.content}`,
+        text: i.content,
+        category: i.direction === "Inbound" ? "Received" : "Sent",
       })),
       ...automationLogs.slice(0, 12).map((l) => ({
         kind: "log" as const,
         id: l.id,
         at: l.created_at,
-        text: `Log: ${l.status}${l.error_message ? ` — ${l.error_message}` : ""}`,
+        text: `${l.status}${l.error_message ? ` — ${l.error_message}` : ""}`,
+        category: "System",
       })),
     ];
 
     return items.sort((a, b) => b.at.localeCompare(a.at)).slice(0, 12);
   }, []);
+
+  const categoryColors: Record<string, string> = {
+    Received: "bg-blue-50 text-blue-600 border-blue-100",
+    Sent: "bg-green-50 text-green-600 border-green-100",
+    System: "bg-purple-50 text-purple-600 border-purple-100",
+  };
 
   return (
     <div className="mt-6 space-y-6" data-testid="agency-dashboard">
@@ -223,11 +231,18 @@ function AgencyDashboard() {
             Export
           </button>
         </div>
-        <div className="mt-3 grid grid-cols-1 gap-3">
+        <div className="mt-3 space-y-2">
           {activity.map((a) => (
-            <div key={`${a.kind}-${a.id}`} className="rounded-2xl bg-white p-4 shadow-none border-none" data-testid={`row-activity-${a.kind}-${a.id}`}>
-              <div className="text-xs text-muted-foreground" data-testid={`text-activity-at-${a.kind}-${a.id}`}>{new Date(a.at).toLocaleString()}</div>
-              <div className="mt-1 text-sm font-medium" data-testid={`text-activity-text-${a.kind}-${a.id}`}>{a.text}</div>
+            <div key={`${a.kind}-${a.id}`} className="rounded-2xl bg-white p-4 shadow-none border-none flex items-center justify-between gap-4" data-testid={`row-activity-${a.kind}-${a.id}`}>
+              <div className="flex items-center gap-3 min-w-0">
+                <span className={cn("px-2 py-0.5 rounded-lg text-[10px] font-bold border uppercase shrink-0", categoryColors[a.category])}>
+                  {a.category}
+                </span>
+                <div className="text-sm font-medium truncate" data-testid={`text-activity-text-${a.kind}-${a.id}`}>{a.text}</div>
+              </div>
+              <div className="text-[11px] text-muted-foreground whitespace-nowrap" data-testid={`text-activity-at-${a.kind}-${a.id}`}>
+                {new Date(a.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </div>
             </div>
           ))}
         </div>

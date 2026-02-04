@@ -119,7 +119,7 @@ export default function TagsPage() {
 
   return (
     <CrmShell>
-      <div className="px-6 py-6">
+      <div className="py-6">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-6 items-start">
 
           {/* LEFT — TAGS (NATURAL SCROLL, NO CROPPING) */}

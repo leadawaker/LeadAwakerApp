@@ -17,9 +17,8 @@ export default function AutomationLogsPage() {
 
   return (
     <CrmShell>
-      <div className="px-6 py-6" data-testid="page-automation-logs">
+      <div className="py-6" data-testid="page-automation-logs">
         <div className="flex items-center gap-4 mb-6">
-          <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Automation Logs</h1>
           <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
         </div>
 
