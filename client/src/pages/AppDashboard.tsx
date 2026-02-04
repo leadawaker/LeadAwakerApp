@@ -57,13 +57,13 @@ export default function AppDashboard() {
   const [isBookedReportOpen, setIsBookedReportOpen] = useState(false);
 
   const stagePalette = useMemo(() => [
-    { id: "New" as const, label: "🆕 New", fill: "#1a3a6f", textColor: "white" as const },
-    { id: "Contacted" as const, label: "📩 Contacted", fill: "#2d5aa8", textColor: "white" as const },
-    { id: "Responded" as const, label: "💬 Responded", fill: "#1E90FF", textColor: "white" as const },
-    { id: "Multiple Responses" as const, label: "🔁 Multiple", fill: "#17A398", textColor: "white" as const },
-    { id: "Qualified" as const, label: "✅ Qualified", fill: "#10b981", textColor: "white" as const },
-    { id: "Booked" as const, label: "📅 Booked", fill: "#facc15", textColor: "#ca8a04" as const },
-    { id: "DND" as const, label: "⛔️ DND", fill: "#ef4444", textColor: "white" as const },
+    { id: "New" as const, label: "New", icon: <Zap className="w-3.5 h-3.5" />, fill: "#1a3a6f", textColor: "white" as const },
+    { id: "Contacted" as const, label: "Contacted", icon: <MessageSquare className="w-3.5 h-3.5" />, fill: "#2d5aa8", textColor: "white" as const },
+    { id: "Responded" as const, label: "Responded", icon: <TrendingUp className="w-3.5 h-3.5" />, fill: "#1E90FF", textColor: "white" as const },
+    { id: "Multiple Responses" as const, label: "Multiple", icon: <ArrowUpRight className="w-3.5 h-3.5" />, fill: "#17A398", textColor: "white" as const },
+    { id: "Qualified" as const, label: "Qualified", icon: <CheckCircle2 className="w-3.5 h-3.5" />, fill: "#10b981", textColor: "white" as const },
+    { id: "Booked" as const, label: "Booked", icon: <CalendarIcon className="w-3.5 h-3.5" />, fill: "#facc15", textColor: "#ca8a04" as const },
+    { id: "DND" as const, label: "DND", icon: <Target className="w-3.5 h-3.5" />, fill: "#ef4444", textColor: "white" as const },
   ], []);
 
   const funnel = useMemo(() => {
@@ -305,87 +305,95 @@ function SubaccountDashboard({
 
   return (
     <div className="mt-2 space-y-6 flex flex-col" data-testid="subaccount-dashboard">
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4" data-testid="grid-kpis">
-        <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" icon={<Users className="w-4 h-4" />} />
-        <Stat label="Active Campaigns" value={String(stats.activeCampaigns)} testId="stat-active" icon={<Target className="w-4 h-4" />} />
-        <Stat label="Bookings/Mo" value={String(stats.bookingsMo)} testId="stat-bookings" icon={<CalendarIcon className="w-4 h-4" />} />
-        <Stat label="AI Cost" value={`$${stats.aiCost.toFixed(0)}`} testId="stat-cost" icon={<Zap className="w-4 h-4" />} />
-        <Stat label="Avg Resp Time" value="4.2m" testId="stat-resp" icon={<Clock className="w-4 h-4" />} />
-        <Stat label="Conv Rate" value="12.4%" testId="stat-conv" icon={<TrendingUp className="w-4 h-4" />} />
+      <div className="flex items-start justify-between">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 flex-grow max-w-[calc(100%-200px)]" data-testid="grid-kpis">
+          <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" icon={<Users className="w-4 h-4" />} />
+          <Stat label="Active Campaigns" value={String(stats.activeCampaigns)} testId="stat-active" icon={<Target className="w-4 h-4" />} />
+          <Stat label="Bookings/Mo" value={String(stats.bookingsMo)} testId="stat-bookings" icon={<CalendarIcon className="w-4 h-4" />} />
+          <Stat label="AI Cost" value={`$${stats.aiCost.toFixed(0)}`} testId="stat-cost" icon={<Zap className="w-4 h-4" />} />
+          <Stat label="Avg Resp Time" value="4.2m" testId="stat-resp" icon={<Clock className="w-4 h-4" />} />
+          <Stat label="Conv Rate" value="12.4%" testId="stat-conv" icon={<TrendingUp className="w-4 h-4" />} />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[350px]">
-        <div className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">Performance Over Time</h3>
-              <p className="text-[11px] text-slate-500">Monthly lead acquisition and conversion growth</p>
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[400px]">
+          <div className="lg:col-span-2 flex flex-col">
+            <div className="mb-3">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Performance Over Time</h3>
+              <p className="text-[10px] text-slate-400">Monthly lead acquisition and conversion growth</p>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold">
-              <TrendingUp className="w-3 h-3" />
-              +24% vs last year
-            </div>
-          </div>
-          <div className="flex-grow">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={leadGrowthData}>
-                <defs>
-                  <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{fontSize: 10, fill: '#64748b'}}
-                  dy={10}
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{fontSize: 10, fill: '#64748b'}}
-                />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="leads" 
-                  stroke="#3b82f6" 
-                  strokeWidth={3}
-                  fillOpacity={1} 
-                  fill="url(#colorLeads)" 
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-sm font-bold text-slate-900">Conversion Funnel</h3>
-            <ArrowUpRight className="w-4 h-4 text-slate-400" />
-          </div>
-          <div className="flex-grow flex flex-col justify-between py-2">
-            {funnel.map((stage, idx) => (
-              <div key={stage.name} className="space-y-1.5">
-                <div className="flex justify-between text-[10px] font-bold">
-                  <span className="text-slate-600">{stage.name}</span>
-                  <span className="text-slate-900">{stage.value}</span>
-                </div>
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full rounded-full transition-all duration-1000 ease-out" 
-                    style={{ 
-                      width: `${(stage.value / Math.max(...funnel.map(s => s.value))) * 100}%`,
-                      backgroundColor: stage.fill,
-                    }} 
-                  />
+            <div className="flex-grow rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex items-center justify-end mb-4">
+                <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold">
+                  <TrendingUp className="w-3 h-3" />
+                  +24% vs last year
                 </div>
               </div>
-            ))}
+              <div className="h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={leadGrowthData}>
+                    <defs>
+                      <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis 
+                      dataKey="name" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{fontSize: 10, fill: '#64748b'}}
+                      dy={10}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{fontSize: 10, fill: '#64748b'}}
+                    />
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="leads" 
+                      stroke="#3b82f6" 
+                      strokeWidth={3}
+                      fillOpacity={1} 
+                      fill="url(#colorLeads)" 
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col">
+            <div className="mb-3">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Conversion Funnel</h3>
+              <p className="text-[10px] text-slate-400">Visual breakdown of your pipeline stages</p>
+            </div>
+            <div className="flex-grow rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col">
+              <div className="flex-grow flex flex-col justify-between py-2">
+                {funnel.map((stage: any, idx: number) => (
+                  <div key={stage.name} className="space-y-1.5">
+                    <div className="flex justify-between text-[10px] font-bold">
+                      <span className="text-slate-600">{stage.name}</span>
+                      <span className="text-slate-900">{stage.value}</span>
+                    </div>
+                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full rounded-full transition-all duration-1000 ease-out" 
+                        style={{ 
+                          width: `${(stage.value / Math.max(...funnel.map((s: any) => s.value))) * 100}%`,
+                          backgroundColor: stage.fill,
+                        }} 
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -395,10 +403,10 @@ function SubaccountDashboard({
         data-testid="section-pipeline"
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-black tracking-tight text-slate-900">Conversions</h2>
+          <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Conversions</h2>
         </div>
         <div className="overflow-x-auto overflow-y-hidden pb-4" data-testid="scroll-pipeline">
-          <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-[calc(100vh-450px)] max-h-[800px]" data-testid="grid-pipeline">
+          <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-[calc(200vh-450px)] min-h-[1200px]" data-testid="grid-pipeline">
             {stagePalette.map((s) => (
               <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
             ))}
@@ -436,7 +444,7 @@ function PipelineCol({
   accountId,
   campaignId,
 }: {
-  stage: { id: string; label: string; fill: string; textColor: "black" | "white" };
+  stage: { id: string; label: string; icon?: React.ReactNode; fill: string; textColor: "black" | "white" };
   accountId: number;
   campaignId: number | "all";
 }) {
@@ -472,21 +480,26 @@ function PipelineCol({
     <div className="w-full bg-white flex flex-col h-full rounded-2xl overflow-hidden shadow-sm border border-slate-100" data-testid={`col-${stage.id}`}>
       <div
         className={cn(
-          "p-3 flex items-center justify-between shadow-sm z-10 shrink-0 sticky top-0 bg-white dark:bg-slate-900",
+          "p-4 flex items-center justify-between z-10 shrink-0 sticky top-0 bg-white dark:bg-slate-900",
         )}
         data-testid={`col-head-${stage.id}`}
       >
-        <div className="flex items-center gap-2 font-medium min-w-0">
-          <span className="text-sm truncate text-slate-900">{stage.label}</span>
-          <span
-            className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500"
-            data-testid={`col-count-${stage.id}`}
-          >
-            {items.length}
-          </span>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-slate-50 border border-slate-100 text-slate-600 shadow-sm">
+            {stage.icon}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[13px] font-black uppercase tracking-tight text-slate-900 truncate">{stage.label}</span>
+            <span
+              className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500"
+              data-testid={`col-count-${stage.id}`}
+            >
+              {items.length}
+            </span>
+          </div>
         </div>
       </div>
-      <div className="p-3 space-y-2 flex-grow overflow-y-auto scrollbar-hide" data-testid={`col-body-${stage.id}`}>
+      <div className="p-3 pt-0 space-y-2 flex-grow overflow-y-auto scrollbar-hide" data-testid={`col-body-${stage.id}`}>
         {items.slice(0, 50).map((l) => (
           <div key={l.id} className="group relative w-full" data-testid={`row-contact-pill-${stage.id}-${l.id}`}>
             <div
