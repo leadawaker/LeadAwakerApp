@@ -67,7 +67,7 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
   return (
     <header
       className={cn(
-        "fixed top-4 right-0 h-16 bg-[#F6F5FA]/60 backdrop-blur-md z-50 flex items-center px-10 transition-all duration-200 [mask-image:linear-gradient(to_bottom,black_80%,transparent)]",
+        "fixed top-0 right-0 h-20 bg-[#F6F5FA]/80 backdrop-blur-xl z-50 flex items-center px-10 transition-all duration-200 border-b border-slate-200/50",
         collapsed ? "left-[80px]" : "left-[200px]"
       )}
       data-testid="header-crm-topbar"

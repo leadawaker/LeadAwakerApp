@@ -150,7 +150,7 @@ export default function AppDashboard() {
     <CrmShell>
       <div className="py-4 px-0" data-testid="page-dashboard">
         <div className="p-0">
-          <div className="px-1 md:px-0 mb-6 flex items-center justify-between">
+          <div className="px-1 md:px-0 mb-6 flex items-center justify-end">
             <FiltersBar selectedCampaignId={selectedCampaignId} setSelectedCampaignId={setSelectedCampaignId} />
           </div>
           {isAgencyView ? (
@@ -374,7 +374,7 @@ function SubaccountDashboard({
 
   return (
     <div className="mt-0 space-y-6 flex flex-col" data-testid="subaccount-dashboard">
-      <div className="flex items-start justify-between -mt-2">
+      <div className="flex items-start justify-between -mt-10 mb-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 flex-grow" data-testid="grid-kpis">
           <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" icon={<Users className="w-4 h-4" />} />
           <Stat label="Active Campaigns" value={String(stats.activeCampaigns)} testId="stat-active" icon={<Target className="w-4 h-4" />} />
