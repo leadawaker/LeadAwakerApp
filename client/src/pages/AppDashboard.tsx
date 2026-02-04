@@ -2,7 +2,17 @@ import { useMemo, useState } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { campaigns, leads, interactions, automationLogs } from "@/data/mocks";
-import { Funnel, FunnelChart, LabelList, ResponsiveContainer, Tooltip } from "recharts";
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  AreaChart,
+  Area
+} from "recharts";
 import { FiltersBar } from "@/components/crm/FiltersBar";
 import {
   Users,
@@ -10,6 +20,10 @@ import {
   TrendingUp,
   Calendar as CalendarIcon,
   CheckCircle2,
+  ArrowUpRight,
+  Target,
+  Clock,
+  Zap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -68,7 +82,6 @@ export default function AppDashboard() {
     };
 
     return stagePalette
-      .filter((s) => s.id !== "DND")
       .map((s) => ({ name: s.label, value: counts[s.id], fill: s.fill }));
   }, [currentAccountId, selectedCampaignId, stagePalette]);
 
@@ -276,58 +289,101 @@ function SubaccountDashboard({
 }) {
 
   const leadGrowthData = useMemo(() => [
-    { name: "Mon", leads: 40 },
-    { name: "Tue", leads: 30 },
-    { name: "Wed", leads: 60 },
-    { name: "Thu", leads: 80 },
-    { name: "Fri", leads: 50 },
-    { name: "Sat", leads: 90 },
-    { name: "Sun", leads: 100 },
+    { name: "Jan", leads: 400 },
+    { name: "Feb", leads: 300 },
+    { name: "Mar", leads: 600 },
+    { name: "Apr", leads: 800 },
+    { name: "May", leads: 500 },
+    { name: "Jun", leads: 900 },
+    { name: "Jul", leads: 1000 },
+    { name: "Aug", leads: 850 },
+    { name: "Sep", leads: 1100 },
+    { name: "Oct", leads: 1250 },
+    { name: "Nov", leads: 1200 },
+    { name: "Dec", leads: 1400 },
   ], []);
 
   return (
-    <div className="mt-2 space-y-6 flex flex-col min-h-screen" data-testid="subaccount-dashboard">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4" data-testid="grid-kpis">
-        <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" tone="blue" />
-        <Stat label="Active Campaigns" value={String(stats.activeCampaigns)} testId="stat-active" tone="indigo" />
-        <Stat label="Bookings/Mo" value={String(stats.bookingsMo)} testId="stat-bookings" tone="yellow" />
-        <Stat label="AI Cost" value={`$${stats.aiCost.toFixed(2)}`} testId="stat-cost" tone="slate" />
+    <div className="mt-2 space-y-6 flex flex-col" data-testid="subaccount-dashboard">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4" data-testid="grid-kpis">
+        <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" icon={<Users className="w-4 h-4" />} />
+        <Stat label="Active Campaigns" value={String(stats.activeCampaigns)} testId="stat-active" icon={<Target className="w-4 h-4" />} />
+        <Stat label="Bookings/Mo" value={String(stats.bookingsMo)} testId="stat-bookings" icon={<CalendarIcon className="w-4 h-4" />} />
+        <Stat label="AI Cost" value={`$${stats.aiCost.toFixed(0)}`} testId="stat-cost" icon={<Zap className="w-4 h-4" />} />
+        <Stat label="Avg Resp Time" value="4.2m" testId="stat-resp" icon={<Clock className="w-4 h-4" />} />
+        <Stat label="Conv Rate" value="12.4%" testId="stat-conv" icon={<TrendingUp className="w-4 h-4" />} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[300px]">
-        <div className="lg:col-span-2 rounded-2xl border border-border bg-background p-4 shadow-sm flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold">Campaign Performance</h3>
-            <TrendingUp className="w-4 h-4 text-muted-foreground" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[350px]">
+        <div className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">Performance Over Time</h3>
+              <p className="text-[11px] text-slate-500">Monthly lead acquisition and conversion growth</p>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold">
+              <TrendingUp className="w-3 h-3" />
+              +24% vs last year
+            </div>
           </div>
           <div className="flex-grow">
             <ResponsiveContainer width="100%" height="100%">
-              <FunnelChart>
-                <Tooltip />
-                <Funnel data={leadGrowthData} dataKey="leads">
-                  <LabelList position="right" fill="#888" stroke="none" dataKey="name" />
-                </Funnel>
-              </FunnelChart>
+              <AreaChart data={leadGrowthData}>
+                <defs>
+                  <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{fontSize: 10, fill: '#64748b'}}
+                  dy={10}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{fontSize: 10, fill: '#64748b'}}
+                />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="leads" 
+                  stroke="#3b82f6" 
+                  strokeWidth={3}
+                  fillOpacity={1} 
+                  fill="url(#colorLeads)" 
+                />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
-        <div className="rounded-2xl border border-border bg-background p-4 shadow-sm flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold">Conversion Funnel</h3>
-            <Users className="w-4 h-4 text-muted-foreground" />
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-sm font-bold text-slate-900">Conversion Funnel</h3>
+            <ArrowUpRight className="w-4 h-4 text-slate-400" />
           </div>
-          <div className="flex-grow flex flex-col justify-between">
-            {funnel.slice(0, 5).map((stage, idx) => (
-              <div key={stage.name} className="flex items-center gap-3">
-                <div 
-                  className="h-2 rounded-full transition-all duration-500" 
-                  style={{ 
-                    width: `${(stage.value / Math.max(...funnel.map(s => s.value))) * 100}%`,
-                    backgroundColor: stage.fill,
-                    minWidth: '4px'
-                  }} 
-                />
-                <span className="text-[10px] font-bold whitespace-nowrap">{stage.name}: {stage.value}</span>
+          <div className="flex-grow flex flex-col justify-between py-2">
+            {funnel.map((stage, idx) => (
+              <div key={stage.name} className="space-y-1.5">
+                <div className="flex justify-between text-[10px] font-bold">
+                  <span className="text-slate-600">{stage.name}</span>
+                  <span className="text-slate-900">{stage.value}</span>
+                </div>
+                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full rounded-full transition-all duration-1000 ease-out" 
+                    style={{ 
+                      width: `${(stage.value / Math.max(...funnel.map(s => s.value))) * 100}%`,
+                      backgroundColor: stage.fill,
+                    }} 
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -335,14 +391,14 @@ function SubaccountDashboard({
       </div>
 
       <section
-        className="p-0 flex flex-col flex-grow overflow-hidden"
+        className="p-0 flex flex-col"
         data-testid="section-pipeline"
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-black tracking-tight">Conversions</h2>
+          <h2 className="text-xl font-black tracking-tight text-slate-900">Conversions</h2>
         </div>
-        <div className="overflow-x-auto overflow-y-hidden flex-grow pb-12" data-testid="scroll-pipeline">
-          <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-full" data-testid="grid-pipeline">
+        <div className="overflow-x-auto overflow-y-hidden pb-4" data-testid="scroll-pipeline">
+          <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-[calc(100vh-450px)] max-h-[800px]" data-testid="grid-pipeline">
             {stagePalette.map((s) => (
               <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
             ))}
@@ -357,26 +413,20 @@ function Stat({
   label,
   value,
   testId,
-  tone,
+  icon,
 }: {
   label: string;
   value: string;
   testId: string;
-  tone: "blue" | "indigo" | "yellow" | "slate";
+  icon?: React.ReactNode;
 }) {
-  const toneCls =
-    tone === "yellow"
-      ? "border-yellow-300/30 bg-yellow-400/10"
-      : tone === "indigo"
-        ? "border-indigo-400/20 bg-indigo-500/10"
-        : tone === "blue"
-          ? "border-sky-400/20 bg-sky-500/10"
-          : "border-border bg-muted/10";
-
   return (
-    <div className={"rounded-2xl border p-4 " + toneCls} data-testid={testId}>
-      <div className="text-xs text-muted-foreground" data-testid={`${testId}-label`}>{label}</div>
-      <div className="mt-2 text-2xl font-extrabold tracking-tight" data-testid={`${testId}-value`}>{value}</div>
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" data-testid={testId}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider" data-testid={`${testId}-label`}>{label}</div>
+        <div className="text-slate-400">{icon}</div>
+      </div>
+      <div className="text-2xl font-black tracking-tight text-slate-900" data-testid={`${testId}-value`}>{value}</div>
     </div>
   );
 }
