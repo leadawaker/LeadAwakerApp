@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
+import { X, Zap, MessageSquare, TrendingUp, ArrowUpRight, CheckCircle2, Calendar as CalendarIcon, Target } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { FiltersBar } from "@/components/crm/FiltersBar";
 import { useLeads, type Lead } from "@/hooks/useLeads";
 import { leads as hardcodedLeads } from "@/data/mocks";
 import { cn } from "@/lib/utils";
+import { LeadCard } from "@/components/crm/LeadCard";
 
 export default function AppLeads() {
   const { currentAccountId, isAgencyView } = useWorkspace();
@@ -39,73 +40,23 @@ export default function AppLeads() {
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
   }, [csvLeads, hardcodedLeads, currentAccountId, campaignId, status, priority, localLeads]);
 
-  const statusColors: Record<string, { text: string, emoji: string }> = {
-    "New": { text: "text-blue-600", emoji: "🆕" },
-    "Contacted": { text: "text-purple-600", emoji: "📱" },
-    "Responded": { text: "text-emerald-600", emoji: "💬" },
-    "Multiple Responses": { text: "text-cyan-600", emoji: "🗣️" },
-    "Qualified": { text: "text-amber-600", emoji: "⭐" },
-    "Booked": { text: "text-indigo-600", emoji: "📅" },
-    "DND": { text: "text-slate-600", emoji: "🚫" },
+  const statusColors: Record<string, { text: string, bg: string, border: string, icon: any }> = {
+    "New": { text: "text-[#1a3a6f]", bg: "bg-[#1a3a6f]/10", border: "border-[#1a3a6f]/20", icon: <Zap className="w-3 h-3" /> },
+    "Contacted": { text: "text-[#2d5aa8]", bg: "bg-[#2d5aa8]/10", border: "border-[#2d5aa8]/20", icon: <MessageSquare className="w-3 h-3" /> },
+    "Responded": { text: "text-[#1E90FF]", bg: "bg-[#1E90FF]/10", border: "border-[#1E90FF]/20", icon: <TrendingUp className="w-3 h-3" /> },
+    "Multiple Responses": { text: "text-[#17A398]", bg: "bg-[#17A398]/10", border: "border-[#17A398]/20", icon: <ArrowUpRight className="w-3 h-3" /> },
+    "Qualified": { text: "text-[#10b981]", bg: "bg-[#10b981]/10", border: "border-[#10b981]/20", icon: <CheckCircle2 className="w-3 h-3" /> },
+    "Booked": { text: "text-[#ca8a04]", bg: "bg-[#facc15]/20", border: "border-[#facc15]/30", icon: <CalendarIcon className="w-3 h-3" /> },
+    "DND": { text: "text-[#ef4444]", bg: "bg-[#ef4444]/10", border: "border-[#ef4444]/20", icon: <Target className="w-3 h-3" /> },
   };
 
   const getStatusColor = (status: string) => {
-    return statusColors[status] || { text: "text-muted-foreground", emoji: "" };
-  };
-
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [tempData, setTempData] = useState<{ phone: string, email: string } | null>(null);
-  const [selectedLeads, setSelectedLeads] = useState<Set<number>>(new Set());
-
-  const toggleSelectAll = () => {
-    if (selectedLeads.size === leads.length) {
-      setSelectedLeads(new Set());
-    } else {
-      setSelectedLeads(new Set(leads.map(l => l.id)));
-    }
-  };
-
-  const toggleSelectLead = (id: number) => {
-    const next = new Set(selectedLeads);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setSelectedLeads(next);
-  };
-
-  const tagColors: Record<string, string> = {
-    "bump 1 reply": "#3B82F6",
-    "bump 2 reply": "#3B82F6",
-    "bump 3 reply": "#3B82F6",
-    "bump response": "#3B82F6",
-    "first message": "#EAB308",
-    "follow-up": "#F97316",
-    "lead": "#3B82F6",
-    "multiple messages": "#3B82F6",
-    "qualify": "#22C55E",
-    "responded": "#22C55E",
-    "second message": "#EAB308",
-    "appointment booked": "#22C55E",
-    "goodbye": "#64748B",
-    "no response": "#64748B",
-    "schedule": "#22C55E",
-    "ai stop": "#EF4444",
-    "bump 1.1": "#3B82F6",
-    "bump 2.1": "#3B82F6",
-    "bump 3.1": "#3B82F6",
-    "no bump": "#64748B",
-    "reply generating": "#EAB308",
-    "dnd": "#EF4444",
-    "manual takeover": "#F97316",
-    "dbr android": "#A855F7",
-    "fb lead": "#A855F7",
-    "sleeping beauty android optin": "#A855F7",
-    "high priority": "#EF4444",
-    "warm lead": "#F97316",
+    return statusColors[status] || { text: "text-muted-foreground", bg: "bg-muted/10", border: "border-border", icon: null };
   };
 
   return (
     <CrmShell>
-      <div className="h-full flex flex-col pt-6" data-testid="page-leads">
+      <div className="h-full flex flex-col pt-3 -mt-10" data-testid="page-leads">
         <div className="shrink-0 mb-4" data-testid="card-page-leads">
           <div className="p-0">
             <div className="flex flex-wrap items-center gap-2" data-testid="bar-filters">
@@ -147,8 +98,8 @@ export default function AppLeads() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0  bg-white rounded-2xl border border-border flex flex-col overflow-hidden" data-testid="table-contacts">
-          <div className="shrink-0 grid grid-cols-[40px_44px_1.2fr_180px_220px_180px_220px_120px] items-center gap-3 bg-white px-4 py-2 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider z-20" data-testid="row-contacts-head">
+        <div className="flex-1 min-h-0 bg-white rounded-[32px] border border-border flex flex-col overflow-hidden mb-6" data-testid="table-contacts">
+          <div className="shrink-0 grid grid-cols-[40px_44px_1.5fr_160px_1fr_120px_180px_120px] items-center gap-3 bg-white px-6 py-4 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider z-20" data-testid="row-contacts-head">
             <div className="flex justify-center">
               <input 
                 type="checkbox" 
@@ -163,24 +114,23 @@ export default function AppLeads() {
             <div>tags</div>
             <div>phone</div>
             <div>email</div>
-            <div>last update</div>
+            <div className="text-right">last update</div>
           </div>
 
-          <div className="flex-1 overflow-y-auto divide-y divide-transparent" data-testid="list-contacts">
+          <div className="flex-1 overflow-y-auto divide-y divide-border/30" data-testid="list-contacts">
             {isLoading ? (
               <div className="px-4 py-6 text-sm text-muted-foreground" data-testid="status-leads-loading">
                 Loading contacts…
               </div>
             ) : null}
-            {leads.map((l) => {
+            {leads.map((l: any) => {
               const initials = `${(l.first_name ?? "").slice(0, 1)}${(l.last_name ?? "").slice(0, 1)}`.toUpperCase();
               const statusInfo = getStatusColor(l.conversion_status);
-              const isEditing = editingId === l.id;
 
               return (
                 <div
                   key={l.id}
-                  className="grid grid-cols-[40px_44px_1.2fr_180px_220px_180px_220px_120px] items-center gap-3 px-4 py-3 hover:bg-muted/5 group bg-white transition-colors"
+                  className="grid grid-cols-[40px_44px_1.5fr_160px_1fr_120px_180px_120px] items-center gap-3 px-6 py-4 hover:bg-muted/5 group bg-white transition-colors"
                   data-testid={`row-contact-${l.id}`}
                 >
                   <div className="flex justify-center">
@@ -191,7 +141,7 @@ export default function AppLeads() {
                       onChange={() => toggleSelectLead(l.id)}
                     />
                   </div>
-                  <div className={cn("h-9 w-9 rounded-full font-bold grid place-items-center text-xs border border-transparent", statusColors[l.conversion_status]?.text || "text-muted-foreground", "bg-muted/10")} data-testid={`avatar-contact-${l.id}`}>
+                  <div className={cn("h-9 w-9 rounded-full font-bold grid place-items-center text-xs border border-transparent", statusInfo.text, "bg-muted/10")} data-testid={`avatar-contact-${l.id}`}>
                     {initials || "?"}
                   </div>
 
@@ -204,30 +154,28 @@ export default function AppLeads() {
                         window.history.pushState({}, "", href);
                         window.dispatchEvent(new PopStateEvent("popstate"));
                       }}
-                      className="text-sm font-semibold truncate hover:underline block leading-tight"
+                      className="text-base font-bold truncate hover:underline block leading-tight text-slate-900"
                       data-testid={`link-contact-${l.id}`}
                     >
                       {l.full_name}
                     </a>
                   </div>
 
-                  <div className={cn("flex items-center gap-1.5 text-sm font-semibold w-fit", statusInfo.text)} data-testid={`cell-status-${l.id}`}>
-                    <span>{statusInfo.emoji}</span>
-                    <span>{l.conversion_status}</span>
+                  <div className="flex items-center shrink-0" data-testid={`cell-status-${l.id}`}>
+                    <div className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold uppercase whitespace-nowrap", statusInfo.text, statusInfo.bg, statusInfo.border)}>
+                      {statusInfo.icon}
+                      {l.conversion_status}
+                    </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-1" data-testid={`cell-tags-${l.id}`}>
-                    {(l.tags ?? []).map((t, i) => {
+                  <div className="flex flex-wrap gap-x-2 gap-y-1" data-testid={`cell-tags-${l.id}`}>
+                    {(l.tags ?? []).map((t: string, i: number) => {
                       const color = tagColors[t] || "#64748B";
                       return (
                         <span 
                           key={i} 
-                          className="px-2 py-0.5 rounded-full border text-sm font-bold transition-all"
-                          style={{ 
-                            backgroundColor: `${color}10`, // 10% opacity for bg
-                            color: color,
-                            borderColor: `${color}20` // 20% opacity for border
-                          }}
+                          className="text-[11px] font-bold"
+                          style={{ color }}
                         >
                           {t}
                         </span>
@@ -235,77 +183,15 @@ export default function AppLeads() {
                     })}
                   </div>
 
-                  <div className="relative group/field">
-                    {isEditing ? (
-                      <input
-                        className="h-8 w-full rounded-lg border border-primary bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                        value={tempData?.phone}
-                        onChange={(e) => setTempData(prev => prev ? { ...prev, phone: e.target.value } : null)}
-                        autoFocus
-                      />
-                    ) : (
-                      <div 
-                        className="text-sm text-muted-foreground py-1 px-2 cursor-text hover:bg-muted/10 rounded transition-colors"
-                        onClick={() => {
-                          setEditingId(l.id);
-                          setTempData({ phone: l.phone, email: l.email });
-                        }}
-                      >
-                        {l.phone}
-                      </div>
-                    )}
+                  <div className="min-w-0 overflow-hidden shrink-1">
+                    <div className="text-xs text-muted-foreground truncate" style={{ minWidth: 0 }}>{l.phone}</div>
                   </div>
 
-                  <div className="relative group/field">
-                    {isEditing ? (
-                      <div className="flex flex-col gap-2">
-                        <input
-                          className="h-8 w-full rounded-lg border border-primary bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                          value={tempData?.email}
-                          onChange={(e) => setTempData(prev => prev ? { ...prev, email: e.target.value } : null)}
-                        />
-                        <div className="absolute top-full left-0 mt-1 z-10 flex gap-1 p-1 bg-white border border-border rounded-lg shadow-lg">
-                          <button
-                            onClick={() => {
-                              if (tempData) {
-                                setLocalLeads((prev) =>
-                                  prev.some((x) => x.id === l.id)
-                                    ? prev.map((x) => (x.id === l.id ? { ...x, phone: tempData.phone, email: tempData.email } : x))
-                                    : [{ ...l, phone: tempData.phone, email: tempData.email }, ...prev],
-                                );
-                              }
-                              setEditingId(null);
-                              setTempData(null);
-                            }}
-                            className="px-2 py-1 bg-primary text-primary-foreground text-[10px] font-bold rounded hover:opacity-90"
-                          >
-                            Accept
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingId(null);
-                              setTempData(null);
-                            }}
-                            className="px-2 py-1 bg-muted text-muted-foreground text-[10px] font-bold rounded hover:bg-muted/80"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div 
-                        className="text-sm text-muted-foreground py-1 px-2 cursor-text hover:bg-muted/10 rounded transition-colors truncate"
-                        onClick={() => {
-                          setEditingId(l.id);
-                          setTempData({ phone: l.phone, email: l.email });
-                        }}
-                      >
-                        {l.email}
-                      </div>
-                    )}
+                  <div className="min-w-0 overflow-hidden shrink-1">
+                    <div className="text-xs text-muted-foreground truncate" style={{ minWidth: 0 }}>{l.email}</div>
                   </div>
 
-                  <div className="text-sm text-muted-foreground font-medium" data-testid={`cell-updated-${l.id}`}>
+                  <div className="text-[11px] text-muted-foreground font-bold text-right" data-testid={`cell-updated-${l.id}`}>
                     {new Date(l.updated_at).toLocaleDateString()}
                   </div>
                 </div>

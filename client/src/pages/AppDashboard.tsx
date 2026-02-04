@@ -28,6 +28,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LeadCard } from "@/components/crm/LeadCard";
 
 const TAG_CATEGORIES = [
   {
@@ -106,6 +107,37 @@ export default function AppDashboard() {
     { id: "Booked" as const, label: "Booked", icon: <CalendarIcon className="w-5 h-5" />, fill: "#facc15", textColor: "#ca8a04" as const },
     { id: "DND" as const, label: "DND", icon: <Target className="w-5 h-5" />, fill: "#ef4444", textColor: "white" as const },
   ], []);
+
+  const PipelineCol = ({ stage, accountId, campaignId }: any) => {
+    const items = useMemo(() => {
+      const filtered = leads
+        .filter((l) => l.account_id === accountId)
+        .filter((l) => (campaignId === "all" ? true : l.campaign_id === campaignId));
+
+      const isMatch = (s: string) => s === stage.id;
+
+      return filtered.filter((l) => isMatch(l.conversion_status));
+    }, [accountId, campaignId, stage.id]);
+
+    return (
+      <div className="flex flex-col h-full bg-muted/30 rounded-2xl p-3">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl" style={{ backgroundColor: stage.fill + '20', color: stage.fill }}>
+              {React.cloneElement(stage.icon as React.ReactElement, { className: "w-4 h-4" })}
+            </div>
+            <h3 className="text-[12px] font-bold text-slate-700">{stage.label}</h3>
+          </div>
+          <span className="text-[12px] font-bold text-slate-400">{items.length}</span>
+        </div>
+          <div className="flex-1 overflow-y-auto space-y-3 scrollbar-hide">
+            {items.map((lead: any) => (
+              <LeadCard key={lead.id} lead={lead} active={false} />
+            ))}
+          </div>
+      </div>
+    );
+  };
 
   const funnel = useMemo(() => {
     const accountLeads = leads
@@ -374,7 +406,7 @@ function SubaccountDashboard({
 
   return (
     <div className="mt-0 space-y-12 flex flex-col" data-testid="subaccount-dashboard">
-      <div className="flex items-start justify-between -mt-10 mb-4">
+      <div className="flex items-start justify-between -mt-10 mb-0">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 flex-grow" data-testid="grid-kpis">
           <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" icon={<Users className="w-4 h-4" />} />
           <Stat label="Active Campaigns" value={String(stats.activeCampaigns)} testId="stat-active" icon={<Target className="w-4 h-4" />} />
@@ -479,7 +511,7 @@ function SubaccountDashboard({
           {showLeftArrow && (
             <button 
               onClick={() => scroll('left')}
-              className="absolute left-0 top-0 bottom-0 z-20 w-48 bg-gradient-to-r from-[#F6F5FA] via-[#F6F5FA]/95 via-[#F6F5FA]/80 to-transparent flex items-center justify-start pl-2 text-slate-400 hover:text-slate-900 transition-all pointer-events-auto"
+              className="absolute left-0 top-0 bottom-0 z-20 w-12 flex items-center justify-start pl-2 text-slate-400 hover:text-slate-900 transition-all pointer-events-auto"
             >
               <div className="p-4 rounded-full bg-white shadow-2xl border border-slate-100 ml-6 hover:scale-110 transition-transform">
                 <ChevronLeft className="w-8 h-8" />

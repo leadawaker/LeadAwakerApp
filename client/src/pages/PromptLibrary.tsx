@@ -16,9 +16,7 @@ export default function PromptLibraryPage() {
   return (
     <CrmShell>
       <div className="px-6 py-6" data-testid="page-prompt-library">
-        <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Prompt Library</h1>
-
-        <div className="mt-4 flex items-center gap-2" data-testid="bar-prompts">
+        <div className="flex items-center gap-2" data-testid="bar-prompts">
           <input
             className="h-10 w-[320px] max-w-full rounded-xl border border-border bg-muted/20 px-3 text-sm"
             placeholder="Search prompts…"

@@ -48,16 +48,16 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
     "/subaccount/conversations": "Conversations",
     "/agency/campaigns": "Campaigns",
     "/subaccount/campaigns": "Campaigns",
-    "/agency/automation-logs": "Activity",
-    "/subaccount/automation-logs": "Activity",
+    "/agency/automation-logs": "Automation",
+    "/subaccount/automation-logs": "Automation",
     "/agency/calendar": "Calendar",
     "/subaccount/calendar": "Calendar",
     "/agency/users": "Users",
     "/subaccount/users": "Users",
     "/agency/tags": "Tags",
     "/subaccount/tags": "Tags",
-    "/agency/prompt-library": "Library",
-    "/subaccount/prompt-library": "Library",
+    "/agency/prompt-library": "Prompts",
+    "/subaccount/prompt-library": "Prompts",
     "/agency/accounts": "Accounts",
     "/subaccount/accounts": "Accounts",
   };
@@ -67,7 +67,7 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 h-20 bg-[#F6F5FA]/50 backdrop-blur-xl z-50 flex items-center px-10 transition-all duration-200 border-b border-slate-200/50 [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)]",
+        "fixed top-0 right-0 h-20 bg-[#F6F5FA]/50 backdrop-blur-xl z-50 flex items-center px-10 transition-all duration-200 border-b border-slate-200/50 [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] pt-4",
         collapsed ? "left-[80px]" : "left-[200px]"
       )}
       data-testid="header-crm-topbar"

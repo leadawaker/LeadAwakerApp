@@ -20,9 +20,10 @@ const STATUS_CONFIG: Record<string, { color: string; icon: any }> = {
 export default function AutomationLogsPage() {
   const { currentAccountId, isAgencyView } = useWorkspace();
   const [campaignId, setCampaignId] = useState<number | "all">("all");
+  const [page, setPage] = useState(0);
 
   const rows = useMemo(() => {
-    return automationLogs
+    const baseRows = automationLogs
       .filter((r) => r.account_id === currentAccountId)
       .filter((r) => (campaignId === "all" ? true : r.campaign_id === campaignId))
       .map(log => {
@@ -32,17 +33,34 @@ export default function AutomationLogsPage() {
         return { ...log, lead, account, campaign };
       })
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
+
+    // Duplicate data to create 2 pages
+    const doubled = [...baseRows, ...baseRows.map(r => ({ ...r, id: r.id + 10000 }))];
+    return doubled;
   }, [currentAccountId, campaignId]);
+
+  const pageSize = 50;
+  const paginatedRows = rows.slice(page * pageSize, (page + 1) * pageSize);
 
   return (
     <CrmShell>
-      <div className="py-6" data-testid="page-automation-logs">
-        <div className="flex items-center gap-4 mb-6">
+      <div className="h-full flex flex-col -mt-10" data-testid="page-automation-logs">
+        <div className="flex items-center justify-between mb-4">
           <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setPage(0)} 
+              className={cn("px-3 py-1 rounded-lg text-xs font-bold", page === 0 ? "bg-primary text-white" : "bg-white border border-border")}
+            >1</button>
+            <button 
+              onClick={() => setPage(1)} 
+              className={cn("px-3 py-1 rounded-lg text-xs font-bold", page === 1 ? "bg-primary text-white" : "bg-white border border-border")}
+            >2</button>
+          </div>
         </div>
 
-        <div className="rounded-2xl bg-white overflow-hidden shadow-none border-none" data-testid="table-logs">
-          <div className="grid grid-cols-[100px_160px_1fr_1fr_1fr_180px] gap-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-white border-b border-border/50 px-6 py-4">
+        <div className="flex-1 min-h-0 bg-white rounded-2xl border border-border flex flex-col overflow-hidden mb-6" data-testid="table-logs">
+          <div className="shrink-0 grid grid-cols-[100px_160px_1fr_1fr_1fr_180px] gap-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-white border-b border-border/50 px-6 py-4 sticky top-0 z-10">
             <div>Execution</div>
             <div>Status</div>
             <div>Lead</div>
@@ -50,8 +68,8 @@ export default function AutomationLogsPage() {
             <div>Campaign</div>
             <div className="text-right">Created At</div>
           </div>
-          <div className="divide-y divide-border/30">
-            {rows.map((r) => {
+          <div className="flex-1 overflow-y-auto divide-y divide-border/30">
+            {paginatedRows.map((r) => {
               const status = r.status === 'error' ? 'failed' : r.status;
               const config = STATUS_CONFIG[status] || STATUS_CONFIG.success;
               const StatusIcon = config.icon;
@@ -63,7 +81,7 @@ export default function AutomationLogsPage() {
                   data-testid={`row-log-${r.id}`}
                 >
                   <div className="font-mono text-xs text-muted-foreground" data-testid={`text-log-ms-${r.id}`}>
-                    {r.execution_time_ms}ms
+                    #{r.execution_time_ms}
                   </div>
                   
                   <div className="flex" data-testid={`text-log-status-${r.id}`}>
@@ -79,16 +97,16 @@ export default function AutomationLogsPage() {
                       className="font-semibold text-primary hover:underline truncate block"
                       data-testid={`text-log-lead-${r.id}`}
                     >
-                      #{r.lead_id} / {r.lead?.full_name || 'Unknown'}
+                      {r.lead?.full_name || 'Unknown'}
                     </Link>
                   </div>
 
                   <div className="text-muted-foreground truncate" data-testid={`text-log-account-${r.id}`}>
-                    #{r.account_id} / {r.account?.name || 'N/A'}
+                    {r.account?.name || 'N/A'}
                   </div>
 
                   <div className="text-muted-foreground truncate" data-testid={`text-log-campaign-${r.id}`}>
-                    #{r.campaign_id} / {r.campaign?.name || 'N/A'}
+                    {r.campaign?.name || 'N/A'}
                   </div>
 
                   <div className="text-[11px] text-muted-foreground text-right" data-testid={`text-log-at-${r.id}`}>
@@ -99,7 +117,6 @@ export default function AutomationLogsPage() {
             })}
           </div>
         </div>
-
       </div>
     </CrmShell>
   );

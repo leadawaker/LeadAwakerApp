@@ -17,74 +17,72 @@ export default function AppCampaigns() {
 
   return (
     <CrmShell>
-      <div className="py-6" data-testid="page-campaigns">
-        <div className="flex items-center gap-4 mb-4 rounded-2xl bg-white border border-border shadow-sm p-4">
+      <div className="py-6 -mt-10" data-testid="page-campaigns">
+        <div className="flex items-center gap-4 mb-6 rounded-2xl bg-white border border-border shadow-sm p-4">
           <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
         </div>
 
-        <div className="rounded-2xl border border-border bg-white overflow-hidden shadow-sm" data-testid="list-campaigns">
-          <div className="divide-y divide-border">
-            {rows.map((c) => {
-              const expanded = expandedId === c.id;
-              const sent = interactions.filter((i) => i.campaign_id === c.id && i.direction === "Outbound").length;
-              const received = interactions.filter((i) => i.campaign_id === c.id && i.direction === "Inbound").length;
-              const leadCount = leads.filter((l) => l.campaign_id === c.id && l.account_id === c.account_id).length;
+        <div className="space-y-4" data-testid="list-campaigns">
+          {rows.map((c) => {
+            const expanded = expandedId === c.id;
+            const sent = interactions.filter((i) => i.campaign_id === c.id && i.direction === "Outbound").length;
+            const received = interactions.filter((i) => i.campaign_id === c.id && i.direction === "Inbound").length;
+            const leadCount = leads.filter((l) => l.campaign_id === c.id && l.account_id === c.account_id).length;
 
-              return (
-                <div key={c.id} className="p-4" data-testid={`card-campaign-${c.id}`}>
-                  <button
-                    type="button"
-                    onClick={() => setExpandedId((prev) => (prev === c.id ? null : c.id))}
-                    className="w-full flex items-start justify-between gap-4"
-                    data-testid={`button-campaign-toggle-${c.id}`}
-                  >
-                    <div className="min-w-0 text-left">
-                      <div className="font-semibold" data-testid={`text-campaign-name-${c.id}`}>{c.name}</div>
-                      <div className="text-xs text-muted-foreground" data-testid={`text-campaign-meta-${c.id}`}>
-                        {c.status} • {c.type} • leads={leadCount}
-                      </div>
+            return (
+              <div key={c.id} className="rounded-2xl border border-border bg-white overflow-hidden shadow-sm p-4" data-testid={`card-campaign-${c.id}`}>
+                <button
+                  type="button"
+                  onClick={() => setExpandedId((prev) => (prev === c.id ? null : c.id))}
+                  className="w-full flex items-start justify-between gap-4"
+                  data-testid={`button-campaign-toggle-${c.id}`}
+                >
+                  <div className="min-w-0 text-left">
+                    <div className="font-semibold" data-testid={`text-campaign-name-${c.id}`}>{c.name}</div>
+                    <div className="text-xs text-muted-foreground" data-testid={`text-campaign-meta-${c.id}`}>
+                      {c.status} • {c.type} • leads={leadCount}
                     </div>
-                    <div className="text-xs text-muted-foreground" data-testid={`text-campaign-expand-${c.id}`}>
-                      {expanded ? "Collapse" : "Expand"}
-                    </div>
-                  </button>
+                  </div>
+                  <div className="text-xs text-muted-foreground" data-testid={`text-campaign-expand-${c.id}`}>
+                    {expanded ? "Collapse" : "Expand"}
+                  </div>
+                </button>
 
-                  {expanded && (
-                    <div className="mt-4 rounded-2xl border border-border bg-muted/10 p-4" data-testid={`panel-campaign-expand-${c.id}`}>
-                      <div className="text-sm font-semibold" data-testid={`text-campaign-desc-title-${c.id}`}>Description</div>
-                      <div className="mt-1 text-sm text-muted-foreground" data-testid={`text-campaign-desc-${c.id}`}>{c.description}</div>
+                {expanded && (
+                  <div className="mt-4 rounded-2xl border border-border bg-muted/10 p-4" data-testid={`panel-campaign-expand-${c.id}`}>
+                    <div className="text-sm font-semibold" data-testid={`text-campaign-desc-title-${c.id}`}>Description</div>
+                    <div className="mt-1 text-sm text-muted-foreground" data-testid={`text-campaign-desc-${c.id}`}>{c.description}</div>
 
-                      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <div className="text-xs text-muted-foreground" data-testid={`text-messages-title-${c.id}`}>message_templates</div>
-                          <pre className="mt-1 text-xs whitespace-pre-wrap rounded-xl border border-border bg-background p-3" data-testid={`pre-messages-${c.id}`}>
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-xs text-muted-foreground" data-testid={`text-messages-title-${c.id}`}>message_templates</div>
+                        <pre className="mt-1 text-xs whitespace-pre-wrap rounded-xl border border-border bg-background p-3" data-testid={`pre-messages-${c.id}`}>
 {`first_message: ${c.first_message_template}\n\nbump_1: ${c.bump_1_template}\n\nbump_2: ${c.bump_2_template}\n\nbump_3: ${c.bump_3_template}`}
-                          </pre>
-                        </div>
-                        <div>
-                          <div className="text-xs text-muted-foreground" data-testid={`text-ai-title-${c.id}`}>ai_prompt_template</div>
-                          <pre className="mt-1 text-xs whitespace-pre-wrap rounded-xl border border-border bg-background p-3" data-testid={`pre-ai-${c.id}`}>
+                        </pre>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground" data-testid={`text-ai-title-${c.id}`}>ai_prompt_template</div>
+                        <pre className="mt-1 text-xs whitespace-pre-wrap rounded-xl border border-border bg-background p-3" data-testid={`pre-ai-${c.id}`}>
 {`${c.ai_prompt_template}`}
-                          </pre>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                        <Stat label="sent" value={String(sent)} testId={`stat-sent-${c.id}`} />
-                        <Stat label="received" value={String(received)} testId={`stat-received-${c.id}`} />
-                        <Stat label="cost" value={`$${c.total_cost.toFixed(2)}`} testId={`stat-cost-${c.id}`} />
-                        <Stat label="ai_model" value={c.ai_model} testId={`stat-model-${c.id}`} />
-                      </div>
-
-                      <div className="mt-3 text-xs text-muted-foreground" data-testid={`text-campaign-real-${c.id}`}>
-                        REAL: load campaign stats from NocoDB + Twilio status
+                        </pre>
                       </div>
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+
+                    <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                      <Stat label="sent" value={String(sent)} testId={`stat-sent-${c.id}`} />
+                      <Stat label="received" value={String(received)} testId={`stat-received-${c.id}`} />
+                      <Stat label="cost" value={`$${c.total_cost.toFixed(2)}`} testId={`stat-cost-${c.id}`} />
+                      <Stat label="ai_model" value={c.ai_model} testId={`stat-model-${c.id}`} />
+                    </div>
+
+                    <div className="mt-3 text-xs text-muted-foreground" data-testid={`text-campaign-real-${c.id}`}>
+                      REAL: load campaign stats from NocoDB + Twilio status
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </CrmShell>

@@ -55,7 +55,7 @@ export function LeadCard({ lead, active }: { lead: Lead; active: boolean }) {
             {lead.full_name}
           </div>
           
-          <div className="max-h-0 overflow-hidden group-hover/lead:max-h-40 transition-all duration-300 ease-in-out">
+          <div className="overflow-visible group-hover/lead:max-h-40 transition-all duration-300 ease-in-out">
             <div className="pt-2 flex flex-col gap-1.5 border-t border-slate-100 mt-2 mb-2">
               <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                 <span className="opacity-50 font-bold uppercase text-[9px]">Email</span> 
