@@ -389,7 +389,7 @@ function SubaccountDashboard({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[400px]">
           <div className="lg:col-span-2 flex flex-col">
             <div className="mb-3">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Performance Over Time</h3>
+              <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Performance Over Time</h3>
             </div>
             <div className="flex-grow rounded-[32px] border border-slate-200 bg-white p-6 overflow-hidden flex flex-col">
               <div className="flex items-center justify-end mb-4 shrink-0">
@@ -440,7 +440,7 @@ function SubaccountDashboard({
           </div>
           <div className="flex flex-col">
             <div className="mb-3">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Sales Funnel</h3>
+              <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sales Funnel</h3>
             </div>
             <div className="flex-grow rounded-[32px] border border-slate-200 bg-white p-6 flex flex-col">
               <div className="flex-grow flex flex-col justify-between py-2">
@@ -472,7 +472,7 @@ function SubaccountDashboard({
         data-testid="section-pipeline"
       >
         <div className="flex items-center justify-between mb-4 px-1 md:px-0">
-          <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Sales Pipeline</h2>
+          <h2 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sales Pipeline</h2>
         </div>
         
         <div className="relative group/pipeline">

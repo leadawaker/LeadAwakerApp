@@ -83,13 +83,13 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
               <Button 
                 variant="ghost" 
                 className={cn(
-                  "h-9 px-3 w-48 justify-between hover:bg-white border border-border bg-white rounded-xl text-xs font-semibold flex items-center gap-2",
+                  "h-11 px-4 w-56 justify-between hover:bg-white border border-border bg-white rounded-xl text-sm font-semibold flex items-center gap-2",
                   isAgencyView ? "text-yellow-600" : "text-blue-600"
                 )}
                 data-testid="button-account-selector"
               >
                 <span className="truncate">{currentAccount.name}</span>
-                <ChevronDown className="h-3 w-3 opacity-60 shrink-0" />
+                <ChevronDown className="h-4 w-4 opacity-60 shrink-0" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64 rounded-2xl shadow-xl border-border bg-background mt-2">
@@ -121,13 +121,13 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
-                className="h-9 px-3 w-[160px] justify-between hover:bg-white border border-border bg-white rounded-xl text-xs font-semibold flex items-center gap-2"
+                className="h-11 px-4 w-[180px] justify-between hover:bg-white border border-border bg-white rounded-xl text-sm font-semibold flex items-center gap-2"
                 data-testid="select-campaign-topbar-custom"
               >
                 <span className="truncate">
                   {campaignOptions.find(c => c.id === Number(localStorage.getItem("leadawaker_selected_campaign")))?.name || "All campaigns"}
                 </span>
-                <ChevronDown className="h-3 w-3 opacity-60 shrink-0" />
+                <ChevronDown className="h-4 w-4 opacity-60 shrink-0" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64 rounded-2xl shadow-xl border-border bg-background mt-2">
@@ -157,32 +157,32 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
         </div>
 
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button 
             onClick={() => onOpenPanel('search')}
-            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
+            className="p-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
             data-testid="button-search-top"
           >
-            <Search className="h-[20px] w-[20px]" />
+            <Search className="h-[24px] w-[24px]" />
           </button>
 
           <button 
             onClick={() => onOpenPanel('notifications')}
-            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
+            className="p-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
             data-testid="button-notifications"
           >
-            <Bell className="h-[20px] w-[20px]" />
-            <div className="absolute top-1 right-1 h-4 w-4 bg-blue-600 rounded-full flex items-center justify-center border-2 border-[#F6F5FA]">
-              <span className="text-[8px] font-bold text-white">3</span>
+            <Bell className="h-[24px] w-[24px]" />
+            <div className="absolute top-2 right-2 h-5 w-5 bg-blue-600 rounded-full flex items-center justify-center border-2 border-[#F6F5FA]">
+              <span className="text-[10px] font-bold text-white">3</span>
             </div>
           </button>
 
           <button 
             onClick={() => onOpenPanel('settings')}
-            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
+            className="p-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
             data-testid="button-settings-top"
           >
-            <Settings className="h-[20px] w-[20px]" />
+            <Settings className="h-[24px] w-[24px]" />
           </button>
         </div>
       </div>
