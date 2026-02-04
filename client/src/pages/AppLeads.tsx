@@ -5,6 +5,7 @@ import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { FiltersBar } from "@/components/crm/FiltersBar";
 import { useLeads, type Lead } from "@/hooks/useLeads";
+import { leads as hardcodedLeads } from "@/data/mocks";
 import { cn } from "@/lib/utils";
 
 export default function AppLeads() {
@@ -21,11 +22,14 @@ export default function AppLeads() {
     campaignId: campaignId === "all" ? null : campaignId,
   });
 
-  const { leads: mockLeads } = useLeads({ accountId: currentAccountId });
-
   const leads = useMemo(() => {
-    // Merge all leads and filter out duplicates by ID
-    const merged = [...csvLeads, ...mockLeads, ...localLeads];
+    // Include the hardcoded leads from data/mocks.ts for the current account
+    const accountMockLeads = hardcodedLeads.filter(l => l.account_id === currentAccountId);
+    
+    // Merge all sources: CSV data, hardcoded mock data, and any local session edits
+    const merged = [...csvLeads, ...accountMockLeads, ...localLeads];
+    
+    // De-duplicate by ID
     const unique = Array.from(new Map(merged.map(l => [l.id, l])).values());
 
     return unique
@@ -33,7 +37,7 @@ export default function AppLeads() {
       .filter((l) => (status === "all" ? true : l.conversion_status === status))
       .filter((l) => (priority === "all" ? true : l.priority === priority))
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
-  }, [csvLeads, mockLeads, campaignId, status, priority, localLeads]);
+  }, [csvLeads, hardcodedLeads, currentAccountId, campaignId, status, priority, localLeads]);
 
   return (
     <CrmShell>
