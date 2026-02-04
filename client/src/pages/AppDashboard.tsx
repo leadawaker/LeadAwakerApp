@@ -373,7 +373,7 @@ function SubaccountDashboard({
   ], []);
 
   return (
-    <div className="mt-0 space-y-6 flex flex-col" data-testid="subaccount-dashboard">
+    <div className="mt-0 space-y-12 flex flex-col" data-testid="subaccount-dashboard">
       <div className="flex items-start justify-between -mt-10 mb-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 flex-grow" data-testid="grid-kpis">
           <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" icon={<Users className="w-4 h-4" />} />
