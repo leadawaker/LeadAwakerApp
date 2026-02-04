@@ -5,25 +5,63 @@ import { tags as mockTags, leads } from "@/data/mocks";
 import { FiltersBar } from "@/components/crm/FiltersBar";
 import { cn } from "@/lib/utils";
 
-const CSV_TAGS = [
-  { name: "New Lead", color: "#3B82F6" },
-  { name: "Contacted", color: "#10B981" },
-  { name: "Follow-up Required", color: "#F59E0B" },
-  { name: "Nurturing", color: "#8B5CF6" },
-  { name: "Qualified", color: "#EC4899" },
-  { name: "High Intent", color: "#EF4444" },
-  { name: "Ready to Book", color: "#14B8A6" },
-  { name: "Appointment Scheduled", color: "#6366F1" },
-  { name: "Post-Call Follow-up", color: "#F43F5E" },
-  { name: "Closed - Won", color: "#059669" },
-  { name: "Closed - Lost", color: "#4B5563" },
-  { name: "DND / Opt-out", color: "#1F2937" },
-  { name: "Re-engagement", color: "#D946EF" },
-  { name: "Future Interest", color: "#84CC16" },
-  { name: "Pricing Inquiry", color: "#0EA5E9" },
-  { name: "Technical Question", color: "#64748B" },
-  { name: "Referral", color: "#A855F7" },
-  { name: "Partner Lead", color: "#F97316" }
+const TAG_CATEGORIES = [
+  {
+    type: "Status",
+    tags: [
+      { name: "New Lead", color: "#3B82F6" },
+      { name: "Contacted", color: "#10B981" },
+      { name: "Qualified", color: "#EC4899" },
+      { name: "Closed - Won", color: "#059669" },
+      { name: "Closed - Lost", color: "#4B5563" },
+      { name: "DND / Opt-out", color: "#1F2937" }
+    ]
+  },
+  {
+    type: "Outcome",
+    tags: [
+      { name: "Ready to Book", color: "#14B8A6" },
+      { name: "Appointment Scheduled", color: "#6366F1" },
+      { name: "Post-Call Follow-up", color: "#F43F5E" },
+      { name: "Booked", color: "#facc15" }
+    ]
+  },
+  {
+    type: "Automation",
+    tags: [
+      { name: "Nurturing", color: "#8B5CF6" },
+      { name: "Re-engagement", color: "#D946EF" },
+      { name: "Follow-up Required", color: "#F59E0B" },
+      { name: "Follow-up", color: "#F59E0B" }
+    ]
+  },
+  {
+    type: "Behavior",
+    tags: [
+      { name: "High Intent", color: "#EF4444" },
+      { name: "Future Interest", color: "#84CC16" },
+      { name: "Technical Question", color: "#64748B" },
+      { name: "Needs details", color: "#64748B" },
+      { name: "No-show risk", color: "#EF4444" }
+    ]
+  },
+  {
+    type: "Source",
+    tags: [
+      { name: "Referral", color: "#A855F7" },
+      { name: "Partner Lead", color: "#F97316" },
+      { name: "Facebook", color: "#1877F2" },
+      { name: "Google", color: "#DB4437" }
+    ]
+  },
+  {
+    type: "Priority",
+    tags: [
+      { name: "Hot", color: "#EF4444" },
+      { name: "Pricing Inquiry", color: "#0EA5E9" },
+      { name: "Pricing", color: "#0EA5E9" }
+    ]
+  }
 ];
 
 export default function TagsPage() {
@@ -32,7 +70,7 @@ export default function TagsPage() {
   const [q, setQ] = useState("");
   const [selectedTagName, setSelectedTagName] = useState<string | null>(null);
 
-  const rows = useMemo(() => {
+  const categoriesWithCounts = useMemo(() => {
     const accountLeads = leads
       .filter((l) => l.account_id === currentAccountId)
       .filter((l) => (campaignId === "all" ? true : l.campaign_id === campaignId));
@@ -43,21 +81,15 @@ export default function TagsPage() {
       raw.forEach((t) => counts.set(t, (counts.get(t) ?? 0) + 1));
     });
 
-    const allTags = [...CSV_TAGS];
-    mockTags.forEach(mt => {
-      if (!allTags.find(t => t.name === mt.name)) {
-        allTags.push({ name: mt.name, color: "#64748B" });
-      }
-    });
-
-    return allTags
-      .filter((t) => (q ? t.name.toLowerCase().includes(q.toLowerCase()) : true))
-      .map((t, idx) => ({ 
-        id: idx, 
-        ...t, 
-        count: counts.get(t.name) ?? 0 
-      }))
-      .sort((a, b) => b.count - a.count);
+    return TAG_CATEGORIES.map(cat => ({
+      ...cat,
+      tags: cat.tags
+        .filter(t => q ? t.name.toLowerCase().includes(q.toLowerCase()) : true)
+        .map(t => ({
+          ...t,
+          count: counts.get(t.name) ?? 0
+        }))
+    })).filter(cat => cat.tags.length > 0);
   }, [currentAccountId, campaignId, q]);
 
   const selectedLeads = useMemo(() => {
@@ -83,31 +115,38 @@ export default function TagsPage() {
               />
             </div>
 
-            <div className="mt-6 overflow-y-auto pr-2" data-testid="grid-tags">
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                {rows.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => setSelectedTagName(t.name === selectedTagName ? null : t.name)}
-                    className={cn(
-                      "rounded-2xl border-none bg-white p-3 flex items-center justify-between group transition-all text-left shadow-none",
-                      selectedTagName === t.name ? "ring-2 ring-primary border-transparent" : "hover:border-primary/50"
-                    )}
-                    data-testid={`card-tag-${t.id}`}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-sm truncate" data-testid={`text-tag-name-${t.id}`}>{t.name}</div>
-                      <div className="mt-0.5 text-[10px] text-muted-foreground" data-testid={`text-tag-count-${t.id}`}>{t.count} leads</div>
-                    </div>
-                    <div 
-                      className="h-6 w-6 rounded-lg flex items-center justify-center transition-colors shrink-0 ml-2"
-                      style={{ backgroundColor: `${t.color}20`, color: t.color }}
-                    >
-                      <span className="text-[8px] font-bold">TAG</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
+            <div className="mt-6 overflow-y-auto pr-2 space-y-8" data-testid="grid-tags">
+              {categoriesWithCounts.map((cat) => (
+                <div key={cat.type} className="space-y-3">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-1">
+                    {cat.type}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 bg-white p-4 rounded-3xl">
+                    {cat.tags.map((t, idx) => (
+                      <button
+                        key={`${cat.type}-${idx}`}
+                        onClick={() => setSelectedTagName(t.name === selectedTagName ? null : t.name)}
+                        className={cn(
+                          "rounded-2xl border-none bg-slate-50/50 p-3 flex items-center justify-between group transition-all text-left shadow-none",
+                          selectedTagName === t.name ? "ring-2 ring-primary border-transparent" : "hover:bg-muted/20"
+                        )}
+                        data-testid={`card-tag-${cat.type}-${idx}`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold text-sm truncate" data-testid={`text-tag-name-${cat.type}-${idx}`}>{t.name}</div>
+                          <div className="mt-0.5 text-[10px] text-muted-foreground" data-testid={`text-tag-count-${cat.type}-${idx}`}>{t.count} leads</div>
+                        </div>
+                        <div 
+                          className="h-6 w-6 rounded-lg flex items-center justify-center transition-colors shrink-0 ml-2"
+                          style={{ backgroundColor: `${t.color}20`, color: t.color }}
+                        >
+                          <span className="text-[8px] font-bold">TAG</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
