@@ -81,7 +81,8 @@ export default function TagsPage() {
     const map = new Map<string, number>();
     accountLeads.forEach(l => {
       l.tags?.forEach(t => {
-        map.set(t, (map.get(t) ?? 0) + 1);
+        const normalized = t.toLowerCase();
+        map.set(normalized, (map.get(normalized) ?? 0) + 1);
       });
     });
     return map;
@@ -94,7 +95,7 @@ export default function TagsPage() {
         .filter(t => (q ? t.name.toLowerCase().includes(q.toLowerCase()) : true))
         .map(t => ({
           ...t,
-          count: tagCounts.get(t.name) ?? 0
+          count: tagCounts.get(t.name.toLowerCase()) ?? 0
         }))
     })).filter(cat => cat.tags.length > 0);
   }, [q, tagCounts]);
@@ -128,17 +129,18 @@ export default function TagsPage() {
                       key={t.id}
                       onClick={() => setSelectedTagName(t.name === selectedTagName ? null : t.name)}
                       className={cn(
-                        "flex items-center gap-3 px-2 py-2 rounded-xl transition text-left",
+                        "flex items-center gap-3 px-2 py-2 rounded-xl transition text-left relative",
                         selectedTagName === t.name
                           ? "ring-2 ring-primary"
                           : "hover:bg-muted/10"
                       )}
                     >
                       <div
-                        className="h-7 w-7 rounded-full text-[11px] font-bold flex items-center justify-center text-white shrink-0"
+                        className="h-8 w-8 rounded-full text-[10px] font-bold flex items-center justify-center text-white shrink-0 relative overflow-hidden"
                         style={{ backgroundColor: t.color }}
                       >
-                        {t.count}
+                        <span className="relative z-10">{t.count}</span>
+                        <div className="absolute inset-0 bg-black/10" />
                       </div>
 
                       <div

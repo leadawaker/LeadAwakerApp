@@ -13,7 +13,7 @@ function initialsFor(lead: Lead) {
   return `${a}${b}`.toUpperCase() || "?";
 }
 
-export default function ConversationsPage() {
+export default function ConversionsPage() {
   const { currentAccountId } = useWorkspace();
   const [campaignId, setCampaignId] = useState<number | "all">("all");
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
@@ -56,7 +56,7 @@ export default function ConversationsPage() {
 
   return (
     <CrmShell>
-      <div className="h-[calc(100vh-100px)] flex flex-col overflow-hidden" data-testid="page-conversations">
+      <div className="h-[calc(100vh-100px)] flex flex-col overflow-hidden" data-testid="page-conversions">
         <div className="px-4 md:px-6 pt-4 md:pt-6 pb-2 shrink-0 hidden">
           <div className="flex items-center gap-4">
             {mobileView === "chat" && (
@@ -69,7 +69,7 @@ export default function ConversationsPage() {
               </button>
             )}
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight" data-testid="text-title">
-              {mobileView === "chat" && selected ? selected.lead.full_name : "Conversations"}
+              {mobileView === "chat" && selected ? selected.lead.full_name : "Conversions"}
             </h1>
             <div className={cn("flex-1 md:flex-none", mobileView === "chat" && "hidden md:block")}>
               <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
