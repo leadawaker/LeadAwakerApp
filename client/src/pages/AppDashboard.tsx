@@ -304,8 +304,8 @@ function SubaccountDashboard({
   ], []);
 
   return (
-    <div className="mt-0 space-y-4 flex flex-col" data-testid="subaccount-dashboard">
-      <div className="flex items-start justify-between">
+    <div className="mt-0 space-y-6 flex flex-col" data-testid="subaccount-dashboard">
+      <div className="flex items-start justify-between -mt-2">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 flex-grow" data-testid="grid-kpis">
           <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" icon={<Users className="w-4 h-4" />} />
           <Stat label="Active Campaigns" value={String(stats.activeCampaigns)} testId="stat-active" icon={<Target className="w-4 h-4" />} />
@@ -406,7 +406,7 @@ function SubaccountDashboard({
           <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Conversions</h2>
         </div>
         <div className="overflow-x-auto overflow-y-hidden pb-4" data-testid="scroll-pipeline">
-          <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-[calc(100vh-210px)]" data-testid="grid-pipeline">
+          <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-[calc(100vh-170px)]" data-testid="grid-pipeline">
             {stagePalette.map((s) => (
               <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
             ))}
