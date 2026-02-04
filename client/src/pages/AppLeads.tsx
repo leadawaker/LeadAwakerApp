@@ -59,8 +59,8 @@ export default function AppLeads() {
 
   return (
     <CrmShell>
-      <div className="py-6" data-testid="page-leads">
-        <div className="mb-4" data-testid="card-page-leads">
+      <div className="h-full flex flex-col pt-6" data-testid="page-leads">
+        <div className="shrink-0 mb-4" data-testid="card-page-leads">
           <div className="p-0">
             <div className="flex flex-wrap items-center gap-2" data-testid="bar-filters">
               <select
@@ -101,13 +101,8 @@ export default function AppLeads() {
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white overflow-hidden" data-testid="table-contacts">
-          {isLoading ? (
-            <div className="px-4 py-6 text-sm text-muted-foreground" data-testid="status-leads-loading">
-              Loading contacts…
-            </div>
-          ) : null}
-          <div className="grid grid-cols-[44px_1.2fr_180px_220px_180px_220px_120px] items-center gap-3 bg-white px-4 py-2 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider" data-testid="row-contacts-head">
+        <div className="flex-1 min-h-0 mb-6 bg-white rounded-2xl border border-border flex flex-col overflow-hidden" data-testid="table-contacts">
+          <div className="shrink-0 grid grid-cols-[44px_1.2fr_180px_220px_180px_220px_120px] items-center gap-3 bg-white px-4 py-2 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider z-10" data-testid="row-contacts-head">
             <div />
             <div>name</div>
             <div>conversion</div>
@@ -117,7 +112,12 @@ export default function AppLeads() {
             <div>last update</div>
           </div>
 
-          <div className="divide-y divide-transparent" data-testid="list-contacts">
+          <div className="flex-1 overflow-y-auto divide-y divide-transparent" data-testid="list-contacts">
+            {isLoading ? (
+              <div className="px-4 py-6 text-sm text-muted-foreground" data-testid="status-leads-loading">
+                Loading contacts…
+              </div>
+            ) : null}
             {leads.map((l) => {
               const initials = `${(l.first_name ?? "").slice(0, 1)}${(l.last_name ?? "").slice(0, 1)}`.toUpperCase();
               const statusInfo = getStatusColor(l.conversion_status);
@@ -156,21 +156,10 @@ export default function AppLeads() {
 
                   <div className="flex flex-wrap gap-1" data-testid={`cell-tags-${l.id}`}>
                     {(l.tags ?? []).map((t, i) => {
-                      const colors = [
-                        "bg-blue-50 text-blue-600 border-blue-100",
-                        "bg-purple-50 text-purple-600 border-purple-100",
-                        "bg-emerald-50 text-emerald-600 border-emerald-100",
-                        "bg-orange-50 text-orange-600 border-orange-100",
-                        "bg-pink-50 text-pink-600 border-pink-100",
-                      ];
-                      const colorClass = colors[i % colors.length];
                       return (
                         <span 
                           key={i} 
-                          className={cn(
-                            "px-2 py-0.5 rounded-full border text-[10px] font-bold transition-all",
-                            colorClass
-                          )}
+                          className="px-2 py-0.5 rounded-full border border-slate-200 bg-slate-50 text-slate-500 text-[10px] font-bold transition-all"
                         >
                           {t}
                         </span>
