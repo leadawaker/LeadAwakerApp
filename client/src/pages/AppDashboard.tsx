@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { campaigns, leads, interactions, automationLogs } from "@/data/mocks";
@@ -23,7 +23,9 @@ import {
   ArrowUpRight,
   Target,
   Clock,
-  Zap
+  Zap,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -107,7 +109,7 @@ export default function AppDashboard() {
 
   return (
     <CrmShell>
-      <div className="py-2" data-testid="page-dashboard">
+      <div className="py-4 px-0" data-testid="page-dashboard">
         <div className="p-0">
           {isAgencyView ? (
             <AgencyDashboard />
@@ -287,6 +289,33 @@ function SubaccountDashboard({
   setIsBookedReportOpen: (v: boolean) => void;
   dashboardTab: DashboardTab;
 }) {
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const checkScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setShowLeftArrow(scrollLeft > 10);
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, []);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const scrollAmount = 350;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const leadGrowthData = useMemo(() => [
     { name: "Jan", leads: 400 },
@@ -399,17 +428,47 @@ function SubaccountDashboard({
       </div>
 
       <section
-        className="p-0 flex flex-col mb-1"
+        className="p-0 flex flex-col -mb-3 relative"
         data-testid="section-pipeline"
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Conversions</h2>
         </div>
-        <div className="overflow-x-auto overflow-y-hidden pb-0" data-testid="scroll-pipeline">
-          <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-[calc(100vh-170px)]" data-testid="grid-pipeline">
-            {stagePalette.map((s) => (
-              <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
-            ))}
+        
+        <div className="relative group/pipeline">
+          {showLeftArrow && (
+            <button 
+              onClick={() => scroll('left')}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-16 h-32 bg-gradient-to-r from-[#F6F5FA] via-[#F6F5FA]/80 to-transparent flex items-center justify-start pl-2 text-slate-400 hover:text-slate-900 transition-colors pointer-events-auto"
+            >
+              <div className="p-2 rounded-full bg-white shadow-lg border border-slate-100 ml-2">
+                <ChevronLeft className="w-5 h-5" />
+              </div>
+            </button>
+          )}
+
+          {showRightArrow && (
+            <button 
+              onClick={() => scroll('right')}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-16 h-32 bg-gradient-to-l from-[#F6F5FA] via-[#F6F5FA]/80 to-transparent flex items-center justify-end pr-2 text-slate-400 hover:text-slate-900 transition-colors pointer-events-auto"
+            >
+              <div className="p-2 rounded-full bg-white shadow-lg border border-slate-100 mr-2">
+                <ChevronRight className="w-5 h-5" />
+              </div>
+            </button>
+          )}
+
+          <div 
+            ref={scrollRef}
+            onScroll={checkScroll}
+            className="overflow-x-auto overflow-y-hidden pb-0 scrollbar-hide -mx-10 px-10" 
+            data-testid="scroll-pipeline"
+          >
+            <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-[calc(100vh-170px)]" data-testid="grid-pipeline">
+              {stagePalette.map((s) => (
+                <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -477,7 +536,7 @@ function PipelineCol({
   };
 
   return (
-    <div className="w-full bg-white flex flex-col h-full rounded-2xl overflow-hidden shadow-sm border border-slate-100" data-testid={`col-${stage.id}`}>
+    <div className="w-full bg-white flex flex-col h-full rounded-[32px] overflow-hidden shadow-sm border border-slate-100" data-testid={`col-${stage.id}`}>
       <div
         className={cn(
           "p-4 flex items-center justify-between z-10 shrink-0 sticky top-0 bg-white dark:bg-slate-900",
