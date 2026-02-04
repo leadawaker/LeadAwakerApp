@@ -130,11 +130,11 @@ export default function AppDashboard() {
           </div>
           <span className="text-[12px] font-bold text-slate-400">{items.length}</span>
         </div>
-          <div className="flex-1 overflow-y-auto space-y-3 scrollbar-hide">
-            {items.map((lead: any) => (
-              <LeadCard key={lead.id} lead={lead} active={false} />
-            ))}
-          </div>
+        <div className="flex-1 overflow-y-auto space-y-3 scrollbar-hide">
+          {items.map((lead: any) => (
+            <LeadCard key={lead.id} lead={lead} active={false} />
+          ))}
+        </div>
       </div>
     );
   };

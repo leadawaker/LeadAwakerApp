@@ -50,6 +50,56 @@ export default function AppLeads() {
     "DND": { text: "text-[#ef4444]", bg: "bg-[#ef4444]/10", border: "border-[#ef4444]/20", icon: <Target className="w-3 h-3" /> },
   };
 
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [tempData, setTempData] = useState<{ phone: string, email: string } | null>(null);
+  const [selectedLeads, setSelectedLeads] = useState<Set<number>>(new Set());
+
+  const toggleSelectAll = () => {
+    if (selectedLeads.size === leads.length) {
+      setSelectedLeads(new Set());
+    } else {
+      setSelectedLeads(new Set(leads.map(l => l.id)));
+    }
+  };
+
+  const toggleSelectLead = (id: number) => {
+    const next = new Set(selectedLeads);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedLeads(next);
+  };
+
+  const tagColors: Record<string, string> = {
+    "bump 1 reply": "#3B82F6",
+    "bump 2 reply": "#3B82F6",
+    "bump 3 reply": "#3B82F6",
+    "bump response": "#3B82F6",
+    "first message": "#EAB308",
+    "follow-up": "#F97316",
+    "lead": "#3B82F6",
+    "multiple messages": "#3B82F6",
+    "qualify": "#22C55E",
+    "responded": "#22C55E",
+    "second message": "#EAB308",
+    "appointment booked": "#22C55E",
+    "goodbye": "#64748B",
+    "no response": "#64748B",
+    "schedule": "#22C55E",
+    "ai stop": "#EF4444",
+    "bump 1.1": "#3B82F6",
+    "bump 2.1": "#3B82F6",
+    "bump 3.1": "#3B82F6",
+    "no bump": "#64748B",
+    "reply generating": "#EAB308",
+    "dnd": "#EF4444",
+    "manual takeover": "#F97316",
+    "dbr android": "#A855F7",
+    "fb lead": "#A855F7",
+    "sleeping beauty android optin": "#A855F7",
+    "high priority": "#EF4444",
+    "warm lead": "#F97316",
+  };
+
   const getStatusColor = (status: string) => {
     return statusColors[status] || { text: "text-muted-foreground", bg: "bg-muted/10", border: "border-border", icon: null };
   };
