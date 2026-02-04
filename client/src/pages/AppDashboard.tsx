@@ -468,10 +468,10 @@ function SubaccountDashboard({
       ) : null}
       {dashboardTab === "pipeline" ? (
         <section
-          className="bg-white p-4 flex flex-col h-[calc(100vh-120px)] mt-[2px]"
+          className="p-0 flex flex-col h-[calc(100vh-120px)] mt-[2px]"
           data-testid="section-pipeline"
         >
-          <div className="mt-2 overflow-x-auto overflow-y-hidden flex-grow pb-2 bg-[#ffffff]" data-testid="scroll-pipeline">
+          <div className="mt-0 overflow-x-auto overflow-y-hidden flex-grow pb-2" data-testid="scroll-pipeline">
             <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-full" data-testid="grid-pipeline">
               {stagePalette.map((s) => (
                 <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
@@ -541,10 +541,10 @@ function PipelineCol({
   };
 
   return (
-    <div className="w-full rounded-2xl border border-border bg-slate-50/50 dark:bg-slate-900/50 flex flex-col h-fit" data-testid={`col-${stage.id}`}>
+    <div className="w-full bg-white flex flex-col h-fit" data-testid={`col-${stage.id}`}>
       <div
         className={cn(
-          "p-3 rounded-t-xl flex items-center justify-between shadow-sm backdrop-blur-sm z-10 shrink-0 border-b border-border/10",
+          "p-3 flex items-center justify-between shadow-sm z-10 shrink-0",
           stage.id === 'Booked' ? "bg-yellow-500 text-yellow-950" : "text-white"
         )}
         style={stage.id !== 'Booked' ? { backgroundColor: stage.fill } : undefined}
