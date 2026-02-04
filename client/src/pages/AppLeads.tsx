@@ -38,13 +38,13 @@ export default function AppLeads() {
   return (
     <CrmShell>
       <div className="py-6" data-testid="page-leads">
-        <div className="rounded-2xl bg-white border border-border shadow-sm mb-4" data-testid="card-page-leads">
-          <div className="p-4">
+        <div className="mb-4" data-testid="card-page-leads">
+          <div className="p-0">
             <div className="flex flex-wrap items-center gap-2" data-testid="bar-filters">
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="h-10 rounded-xl border border-border bg-muted/20 px-3 text-sm"
+                className="h-10 rounded-xl border border-border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
                 data-testid="select-status"
               >
                 <option value="all">All statuses</option>
@@ -67,7 +67,7 @@ export default function AppLeads() {
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-                className="h-10 rounded-xl border border-border bg-muted/20 px-3 text-sm"
+                className="h-10 rounded-xl border border-border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
                 data-testid="select-priority"
               >
                 <option value="all">All priorities</option>
@@ -79,7 +79,7 @@ export default function AppLeads() {
               </select>
 
               <button
-                className="h-10 px-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold"
+                className="h-10 px-3 rounded-xl border border-border bg-white hover:bg-muted/10 text-sm font-semibold transition-colors"
                 data-testid="button-filter"
               >
                 Filter
@@ -88,13 +88,13 @@ export default function AppLeads() {
           </div>
         </div>
 
-        <div className="rounded-2xl bg-white overflow-hidden border border-border shadow-sm" data-testid="table-contacts">
+        <div className="rounded-2xl bg-white overflow-hidden" data-testid="table-contacts">
           {isLoading ? (
             <div className="px-4 py-6 text-sm text-muted-foreground" data-testid="status-leads-loading">
               Loading contacts…
             </div>
           ) : null}
-          <div className="grid grid-cols-[44px_1.2fr_200px_240px_220px_180px] items-center gap-3 bg-muted/20 px-4 py-2 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider" data-testid="row-contacts-head">
+          <div className="grid grid-cols-[44px_1.2fr_200px_240px_220px_180px] items-center gap-3 bg-white px-4 py-2 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider" data-testid="row-contacts-head">
             <div />
             <div>name</div>
             <div>phone</div>
@@ -104,12 +104,12 @@ export default function AppLeads() {
           </div>
 
           <div className="divide-y divide-border" data-testid="list-contacts">
-            {mockLeads.map((l) => {
+            {leads.map((l) => {
               const initials = `${(l.first_name ?? "").slice(0, 1)}${(l.last_name ?? "").slice(0, 1)}`.toUpperCase();
               return (
                 <div
                   key={l.id}
-                  className="grid grid-cols-[44px_1.2fr_200px_240px_220px_180px] items-center gap-3 px-4 py-2 hover:bg-muted/5 group"
+                  className="grid grid-cols-[44px_1.2fr_200px_240px_220px_180px] items-center gap-3 px-4 py-2 hover:bg-muted/5 group bg-white transition-colors"
                   data-testid={`row-contact-${l.id}`}
                 >
                   <div className="h-9 w-9 rounded-full bg-primary/10 text-primary font-bold grid place-items-center text-xs" data-testid={`avatar-contact-${l.id}`}>

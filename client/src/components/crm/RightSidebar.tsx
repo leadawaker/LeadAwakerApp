@@ -113,14 +113,14 @@ export function RightSidebar({
 
   const prefix = isAgencyView ? "/agency" : "/subaccount";
   const navItems: { href: string; label: string; icon: any; testId: string; agencyOnly?: boolean }[] = [
-    { href: `${prefix}/dashboard`, label: "Convertions", icon: LayoutDashboard, testId: "nav-home" },
+    { href: `${prefix}/dashboard`, label: "Conversion", icon: LayoutDashboard, testId: "nav-home" },
     { href: `${prefix}/contacts`, label: "Contacts", icon: BookUser, testId: "nav-portfolio" },
-    { href: `${prefix}/conversations`, label: "Conversations", icon: MessageSquare, testId: "nav-explore" },
+    { href: `${prefix}/conversations`, label: "Chats", icon: MessageSquare, testId: "nav-explore" },
     { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "nav-calendar" },
     { href: `${prefix}/tags`, label: "Tags", icon: Tag, testId: "nav-tags" },
     { href: `${prefix}/users`, label: "Users", icon: Users, testId: "nav-users" },
-    { href: `${prefix}/automation-logs`, label: "Activity", icon: ScrollText, testId: "nav-activity" },
+    { href: `${prefix}/automation-logs`, label: "Automations", icon: ScrollText, testId: "nav-activity" },
     { href: `${prefix}/prompt-library`, label: "Library", icon: BookOpen, testId: "nav-library" },
   ];
 

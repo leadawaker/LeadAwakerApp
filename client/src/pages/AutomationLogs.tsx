@@ -1,17 +1,36 @@
 import { useMemo, useState } from "react";
+import { Link } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { FiltersBar } from "@/components/crm/FiltersBar";
-import { automationLogs } from "@/data/mocks";
+import { automationLogs, leads, accounts, campaigns } from "@/data/mocks";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { CheckCircle2, XCircle, AlertCircle, Clock, RotateCcw, PlayCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const STATUS_CONFIG: Record<string, { color: string; icon: any }> = {
+  success: { color: "text-emerald-500 bg-emerald-50 border-emerald-100", icon: CheckCircle2 },
+  failed: { color: "text-rose-500 bg-rose-50 border-rose-100", icon: XCircle },
+  skipped: { color: "text-slate-500 bg-slate-50 border-slate-100", icon: AlertCircle },
+  waiting: { color: "text-amber-500 bg-amber-50 border-amber-100", icon: Clock },
+  retrying: { color: "text-indigo-500 bg-indigo-50 border-indigo-100", icon: RotateCcw },
+  started: { color: "text-blue-500 bg-blue-50 border-blue-100", icon: PlayCircle },
+  error: { color: "text-rose-500 bg-rose-50 border-rose-100", icon: XCircle }, // Fallback for existing mock data
+};
 
 export default function AutomationLogsPage() {
-  const { currentAccountId } = useWorkspace();
+  const { currentAccountId, isAgencyView } = useWorkspace();
   const [campaignId, setCampaignId] = useState<number | "all">("all");
 
   const rows = useMemo(() => {
     return automationLogs
       .filter((r) => r.account_id === currentAccountId)
       .filter((r) => (campaignId === "all" ? true : r.campaign_id === campaignId))
+      .map(log => {
+        const lead = leads.find(l => l.id === log.lead_id);
+        const account = accounts.find(a => a.id === log.account_id);
+        const campaign = campaigns.find(c => c.id === log.campaign_id);
+        return { ...log, lead, account, campaign };
+      })
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
   }, [currentAccountId, campaignId]);
 
@@ -22,31 +41,62 @@ export default function AutomationLogsPage() {
           <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
         </div>
 
-        <div className="mt-4 rounded-2xl border border-border bg-background overflow-hidden" data-testid="table-logs">
-          <div className="grid grid-cols-[120px_1fr_140px_160px_200px] gap-0 text-xs font-semibold text-muted-foreground bg-muted/20 border-b border-border px-4 py-3">
-            <div>lead_id</div>
-            <div>status / error_message</div>
-            <div>execution_ms</div>
-            <div>stage</div>
-            <div>created_at</div>
+        <div className="rounded-2xl bg-white overflow-hidden shadow-none border-none" data-testid="table-logs">
+          <div className="grid grid-cols-[100px_160px_1fr_1fr_1fr_180px] gap-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-white border-b border-border/50 px-6 py-4">
+            <div>Execution</div>
+            <div>Status</div>
+            <div>Lead</div>
+            <div>Account</div>
+            <div>Campaign</div>
+            <div className="text-right">Created At</div>
           </div>
-          <div className="divide-y divide-border">
-            {rows.map((r) => (
-              <div
-                key={r.id}
-                className="grid grid-cols-[120px_1fr_140px_160px_200px] gap-0 px-4 py-3 text-sm"
-                data-testid={`row-log-${r.id}`}
-              >
-                <div data-testid={`text-log-lead-${r.id}`}>{r.lead_id}</div>
-                <div className="min-w-0">
-                  <div className="font-semibold" data-testid={`text-log-status-${r.id}`}>{r.status}</div>
-                  <div className="text-xs text-muted-foreground truncate" data-testid={`text-log-error-${r.id}`}>{r.error_message || "—"}</div>
+          <div className="divide-y divide-border/30">
+            {rows.map((r) => {
+              const status = r.status === 'error' ? 'failed' : r.status;
+              const config = STATUS_CONFIG[status] || STATUS_CONFIG.success;
+              const StatusIcon = config.icon;
+
+              return (
+                <div
+                  key={r.id}
+                  className="grid grid-cols-[100px_160px_1fr_1fr_1fr_180px] gap-4 px-6 py-4 text-sm items-center hover:bg-muted/5 transition-colors bg-white"
+                  data-testid={`row-log-${r.id}`}
+                >
+                  <div className="font-mono text-xs text-muted-foreground" data-testid={`text-log-ms-${r.id}`}>
+                    {r.execution_time_ms}ms
+                  </div>
+                  
+                  <div className="flex" data-testid={`text-log-status-${r.id}`}>
+                    <div className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold uppercase", config.color)}>
+                      <StatusIcon className="h-3.5 w-3.5" />
+                      {status}
+                    </div>
+                  </div>
+
+                  <div className="min-w-0">
+                    <Link 
+                      href={`${isAgencyView ? '/agency' : '/subaccount'}/contacts/${r.lead?.id}`}
+                      className="font-semibold text-primary hover:underline truncate block"
+                      data-testid={`text-log-lead-${r.id}`}
+                    >
+                      #{r.lead_id} / {r.lead?.full_name || 'Unknown'}
+                    </Link>
+                  </div>
+
+                  <div className="text-muted-foreground truncate" data-testid={`text-log-account-${r.id}`}>
+                    #{r.account_id} / {r.account?.name || 'N/A'}
+                  </div>
+
+                  <div className="text-muted-foreground truncate" data-testid={`text-log-campaign-${r.id}`}>
+                    #{r.campaign_id} / {r.campaign?.name || 'N/A'}
+                  </div>
+
+                  <div className="text-[11px] text-muted-foreground text-right" data-testid={`text-log-at-${r.id}`}>
+                    {new Date(r.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                  </div>
                 </div>
-                <div className="text-muted-foreground" data-testid={`text-log-ms-${r.id}`}>{r.execution_time_ms}</div>
-                <div className="text-muted-foreground" data-testid={`text-log-stage-${r.id}`}>{r.stage}</div>
-                <div className="text-muted-foreground" data-testid={`text-log-at-${r.id}`}>{new Date(r.created_at).toLocaleString()}</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
