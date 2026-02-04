@@ -46,7 +46,7 @@ export default function AppDashboard() {
     { id: "New" as const, label: "🆕 New", fill: "#1a3a6f", textColor: "white" as const },
     { id: "Contacted" as const, label: "📩 Contacted", fill: "#2d5aa8", textColor: "white" as const },
     { id: "Responded" as const, label: "💬 Responded", fill: "#1E90FF", textColor: "white" as const },
-    { id: "Multiple Responses" as const, label: "🔁 Multiple", fill: "#3b82f6", textColor: "white" as const },
+    { id: "Multiple Responses" as const, label: "🔁 Multiple", fill: "#17A398", textColor: "white" as const },
     { id: "Qualified" as const, label: "✅ Qualified", fill: "#10b981", textColor: "white" as const },
     { id: "Booked" as const, label: "📅 Booked", fill: "#facc15", textColor: "black" as const },
     { id: "DND" as const, label: "⛔️ DND", fill: "#ef4444", textColor: "white" as const },
@@ -468,7 +468,7 @@ function SubaccountDashboard({
       ) : null}
       {dashboardTab === "pipeline" ? (
         <section
-          className="rounded-2xl border border-border bg-background p-4 flex flex-col h-[calc(100vh-168px)]"
+          className="bg-white p-4 flex flex-col h-[calc(100vh-120px)] mt-[2px]"
           data-testid="section-pipeline"
         >
           <div className="mt-2 overflow-x-auto overflow-y-hidden flex-grow pb-2 bg-[#ffffff]" data-testid="scroll-pipeline">
