@@ -39,6 +39,24 @@ export default function AppLeads() {
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
   }, [csvLeads, hardcodedLeads, currentAccountId, campaignId, status, priority, localLeads]);
 
+  const statusColors: Record<string, { bg: string, text: string, emoji: string }> = {
+    "New": { bg: "bg-blue-50", text: "text-blue-600", emoji: "🆕" },
+    "Contacted": { bg: "bg-purple-50", text: "text-purple-600", emoji: "📱" },
+    "Responded": { bg: "bg-emerald-50", text: "text-emerald-600", emoji: "💬" },
+    "Multiple Responses": { bg: "bg-cyan-50", text: "text-cyan-600", emoji: "🗣️" },
+    "Qualified": { bg: "bg-amber-50", text: "text-amber-600", emoji: "⭐" },
+    "Booked": { bg: "bg-indigo-50", text: "text-indigo-600", emoji: "📅" },
+    "Lost": { bg: "bg-rose-50", text: "text-rose-600", emoji: "❌" },
+    "DND": { bg: "bg-slate-50", text: "text-slate-600", emoji: "🚫" },
+  };
+
+  const getStatusColor = (status: string) => {
+    return statusColors[status] || { bg: "bg-muted/10", text: "text-muted-foreground", emoji: "" };
+  };
+
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [tempData, setTempData] = useState<{ phone: string, email: string } | null>(null);
+
   return (
     <CrmShell>
       <div className="py-6" data-testid="page-leads">
@@ -52,16 +70,7 @@ export default function AppLeads() {
                 data-testid="select-status"
               >
                 <option value="all">All statuses</option>
-                {[
-                  "New",
-                  "Contacted",
-                  "Responded",
-                  "Multiple Responses",
-                  "Qualified",
-                  "Booked",
-                  "Lost",
-                  "DND",
-                ].map((s) => (
+                {Object.keys(statusColors).map((s) => (
                   <option key={s} value={s}>
                     {s}
                   </option>
@@ -98,25 +107,29 @@ export default function AppLeads() {
               Loading contacts…
             </div>
           ) : null}
-          <div className="grid grid-cols-[44px_1.2fr_200px_240px_220px_180px] items-center gap-3 bg-white px-4 py-2 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider" data-testid="row-contacts-head">
+          <div className="grid grid-cols-[44px_1.2fr_180px_220px_180px_220px_120px] items-center gap-3 bg-white px-4 py-2 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider" data-testid="row-contacts-head">
             <div />
             <div>name</div>
+            <div>conversion</div>
+            <div>tags</div>
             <div>phone</div>
             <div>email</div>
-            <div>tags</div>
-            <div>conversion_status</div>
+            <div>last update</div>
           </div>
 
-          <div className="divide-y divide-border" data-testid="list-contacts">
+          <div className="divide-y divide-transparent" data-testid="list-contacts">
             {leads.map((l) => {
               const initials = `${(l.first_name ?? "").slice(0, 1)}${(l.last_name ?? "").slice(0, 1)}`.toUpperCase();
+              const statusInfo = getStatusColor(l.conversion_status);
+              const isEditing = editingId === l.id;
+
               return (
                 <div
                   key={l.id}
-                  className="grid grid-cols-[44px_1.2fr_200px_240px_220px_180px] items-center gap-3 px-4 py-2 hover:bg-muted/5 group bg-white transition-colors"
+                  className="grid grid-cols-[44px_1.2fr_180px_220px_180px_220px_120px] items-center gap-3 px-4 py-3 hover:bg-muted/5 group bg-white transition-colors"
                   data-testid={`row-contact-${l.id}`}
                 >
-                  <div className="h-9 w-9 rounded-full bg-primary/10 text-primary font-bold grid place-items-center text-xs" data-testid={`avatar-contact-${l.id}`}>
+                  <div className={cn("h-9 w-9 rounded-full font-bold grid place-items-center text-xs border border-transparent", statusInfo.bg, statusInfo.text)} data-testid={`avatar-contact-${l.id}`}>
                     {initials || "?"}
                   </div>
 
@@ -134,36 +147,12 @@ export default function AppLeads() {
                     >
                       {l.full_name}
                     </a>
-                    <div className="text-[10px] text-muted-foreground truncate" data-testid={`text-contact-sub-${l.id}`}>
-                      source: {l.source} • priority: {l.priority}
-                    </div>
                   </div>
 
-                  <input
-                    className="h-8 w-full rounded-lg border border-border bg-muted/10 px-3 text-sm"
-                    value={l.phone}
-                    onChange={(e) =>
-                      setLocalLeads((prev) =>
-                        prev.some((x) => x.id === l.id)
-                          ? prev.map((x) => (x.id === l.id ? { ...x, phone: e.target.value } : x))
-                          : [{ ...l, phone: e.target.value }, ...prev],
-                      )
-                    }
-                    data-testid={`input-phone-${l.id}`}
-                  />
-
-                  <input
-                    className="h-8 w-full rounded-lg border border-border bg-muted/10 px-3 text-sm"
-                    value={l.email}
-                    onChange={(e) =>
-                      setLocalLeads((prev) =>
-                        prev.some((x) => x.id === l.id)
-                          ? prev.map((x) => (x.id === l.id ? { ...x, email: e.target.value } : x))
-                          : [{ ...l, email: e.target.value }, ...prev],
-                      )
-                    }
-                    data-testid={`input-email-${l.id}`}
-                  />
+                  <div className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold w-fit", statusInfo.bg, statusInfo.text)} data-testid={`cell-status-${l.id}`}>
+                    <span>{statusInfo.emoji}</span>
+                    <span>{l.conversion_status}</span>
+                  </div>
 
                   <div className="flex flex-wrap gap-1" data-testid={`cell-tags-${l.id}`}>
                     {(l.tags ?? []).map((t, i) => {
@@ -179,9 +168,8 @@ export default function AppLeads() {
                         <span 
                           key={i} 
                           className={cn(
-                            "px-2 py-0.5 rounded-full border text-[10px] font-bold transition-all duration-300",
-                            colorClass,
-                            "group-hover:text-[14px] group-hover:px-4 group-hover:py-1.5"
+                            "px-2 py-0.5 rounded-full border text-[10px] font-bold transition-all",
+                            colorClass
                           )}
                         >
                           {t}
@@ -190,24 +178,79 @@ export default function AppLeads() {
                     })}
                   </div>
 
-                  <select
-                    className="h-8 w-full rounded-lg border border-border bg-muted/10 px-3 text-sm"
-                    value={l.conversion_status}
-                    onChange={(e) =>
-                      setLocalLeads((prev) =>
-                        prev.some((x) => x.id === l.id)
-                          ? prev.map((x) => (x.id === l.id ? { ...x, conversion_status: e.target.value as any } : x))
-                          : [{ ...l, conversion_status: e.target.value as any }, ...prev],
-                      )
-                    }
-                    data-testid={`select-status-${l.id}`}
-                  >
-                    {["New", "Contacted", "Responded", "Multiple Responses", "Qualified", "Booked", "Lost", "DND"].map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative group/field">
+                    {isEditing ? (
+                      <input
+                        className="h-8 w-full rounded-lg border border-primary bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        value={tempData?.phone}
+                        onChange={(e) => setTempData(prev => prev ? { ...prev, phone: e.target.value } : null)}
+                        autoFocus
+                      />
+                    ) : (
+                      <div 
+                        className="text-sm text-muted-foreground py-1 px-2 cursor-text hover:bg-muted/10 rounded transition-colors"
+                        onClick={() => {
+                          setEditingId(l.id);
+                          setTempData({ phone: l.phone, email: l.email });
+                        }}
+                      >
+                        {l.phone}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="relative group/field">
+                    {isEditing ? (
+                      <div className="flex flex-col gap-2">
+                        <input
+                          className="h-8 w-full rounded-lg border border-primary bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          value={tempData?.email}
+                          onChange={(e) => setTempData(prev => prev ? { ...prev, email: e.target.value } : null)}
+                        />
+                        <div className="absolute top-full left-0 mt-1 z-10 flex gap-1 p-1 bg-white border border-border rounded-lg shadow-lg">
+                          <button
+                            onClick={() => {
+                              if (tempData) {
+                                setLocalLeads((prev) =>
+                                  prev.some((x) => x.id === l.id)
+                                    ? prev.map((x) => (x.id === l.id ? { ...x, phone: tempData.phone, email: tempData.email } : x))
+                                    : [{ ...l, phone: tempData.phone, email: tempData.email }, ...prev],
+                                );
+                              }
+                              setEditingId(null);
+                              setTempData(null);
+                            }}
+                            className="px-2 py-1 bg-primary text-primary-foreground text-[10px] font-bold rounded hover:opacity-90"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingId(null);
+                              setTempData(null);
+                            }}
+                            className="px-2 py-1 bg-muted text-muted-foreground text-[10px] font-bold rounded hover:bg-muted/80"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        className="text-sm text-muted-foreground py-1 px-2 cursor-text hover:bg-muted/10 rounded transition-colors truncate"
+                        onClick={() => {
+                          setEditingId(l.id);
+                          setTempData({ phone: l.phone, email: l.email });
+                        }}
+                      >
+                        {l.email}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="text-[11px] text-muted-foreground font-medium" data-testid={`cell-updated-${l.id}`}>
+                    {new Date(l.updated_at).toLocaleDateString()}
+                  </div>
                 </div>
               );
             })}
