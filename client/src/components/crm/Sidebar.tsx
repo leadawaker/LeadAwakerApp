@@ -15,6 +15,9 @@ export function Sidebar() {
     { href: `${prefix}/leads`, label: "Contacts", icon: Users, testId: "link-nav-leads" },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "link-nav-calendar" },
     { href: `${prefix}/conversations`, label: "Conversations", icon: MessageSquare, testId: "link-nav-conversations" },
+    ...(isAgencyView ? [] : [
+      { href: `${prefix}/campaigns`, label: "Campaigns", icon: Target, testId: "link-nav-campaigns" }
+    ])
   ];
 
   return (

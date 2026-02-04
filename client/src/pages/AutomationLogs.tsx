@@ -39,24 +39,16 @@ export default function AutomationLogsPage() {
     return doubled;
   }, [currentAccountId, campaignId]);
 
-  const pageSize = 50;
+  const pageSize = 100;
   const paginatedRows = rows.slice(page * pageSize, (page + 1) * pageSize);
+
+  const totalPages = Math.ceil(rows.length / pageSize);
 
   return (
     <CrmShell>
       <div className="h-full flex flex-col -mt-10" data-testid="page-automation-logs">
         <div className="flex items-center justify-between mb-4">
           <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setPage(0)} 
-              className={cn("px-3 py-1 rounded-lg text-xs font-bold", page === 0 ? "bg-primary text-white" : "bg-white border border-border")}
-            >1</button>
-            <button 
-              onClick={() => setPage(1)} 
-              className={cn("px-3 py-1 rounded-lg text-xs font-bold", page === 1 ? "bg-primary text-white" : "bg-white border border-border")}
-            >2</button>
-          </div>
         </div>
 
         <div className="flex-1 min-h-0 bg-white rounded-2xl border border-border flex flex-col overflow-hidden mb-6" data-testid="table-logs">
@@ -116,6 +108,23 @@ export default function AutomationLogsPage() {
               );
             })}
           </div>
+        </div>
+
+        <div className="flex items-center justify-center gap-2 pb-6">
+          {Array.from({ length: totalPages }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setPage(i)}
+              className={cn(
+                "px-3 py-1 rounded-lg text-xs font-bold transition-all",
+                page === i 
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" 
+                  : "bg-white border border-border text-slate-600 hover:bg-slate-50"
+              )}
+            >
+              {i + 1}
+            </button>
+          ))}
         </div>
       </div>
     </CrmShell>

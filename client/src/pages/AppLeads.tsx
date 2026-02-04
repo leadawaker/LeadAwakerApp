@@ -106,50 +106,72 @@ export default function AppLeads() {
 
   return (
     <CrmShell>
-      <div className="h-full flex flex-col pt-3 -mt-10" data-testid="page-leads">
-        <div className="shrink-0 mb-4" data-testid="card-page-leads">
+      <div className="h-full flex flex-col pt-6 -mt-10" data-testid="page-leads">
+        <div className="shrink-0 mb-6" data-testid="card-page-leads">
           <div className="p-0">
-            <div className="flex flex-wrap items-center gap-2" data-testid="bar-filters">
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="h-10 rounded-xl border border-border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                data-testid="select-status"
-              >
-                <option value="all">All statuses</option>
-                {Object.keys(statusColors).map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+            <div className="flex flex-wrap items-center gap-3" data-testid="bar-filters">
+              <div className="flex items-center gap-2">
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="h-10 rounded-xl border border-border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none min-w-[140px]"
+                  data-testid="select-status"
+                >
+                  <option value="all">All statuses</option>
+                  {Object.keys(statusColors).filter(s => s !== "Lost").map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
 
-              <select
-                value={priority}
-                onChange={(e) => setPriority(e.target.value)}
-                className="h-10 rounded-xl border border-border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                data-testid="select-priority"
-              >
-                <option value="all">All priorities</option>
-                {["Low", "Medium", "High", "Urgent"].map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
+                <select
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value)}
+                  className="h-10 rounded-xl border border-border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none min-w-[140px]"
+                  data-testid="select-priority"
+                >
+                  <option value="all">All priorities</option>
+                  {["Low", "Medium", "High", "Urgent"].map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
 
-              <button
-                className="h-10 px-3 rounded-xl border border-border bg-white hover:bg-muted/10 text-sm font-semibold transition-colors"
-                data-testid="button-filter"
-              >
-                Filter
-              </button>
+                <button
+                  className="h-10 px-4 rounded-xl border border-border bg-white hover:bg-muted/10 text-sm font-semibold transition-colors"
+                  data-testid="button-filter"
+                >
+                  Filter
+                </button>
+              </div>
+
+              <div className="flex-1 flex items-center gap-2">
+                <input
+                  className="h-10 flex-1 min-w-[200px] rounded-xl border border-border bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                  placeholder="Search contacts..."
+                  data-testid="input-search-contacts"
+                />
+                <button
+                  className="h-10 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold transition-colors"
+                  data-testid="button-add-lead"
+                >
+                  +Add
+                </button>
+                <button
+                  className="h-10 px-4 rounded-xl border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 text-sm font-semibold transition-colors"
+                  data-testid="button-delete-leads"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 bg-white rounded-[32px] border border-border flex flex-col overflow-hidden mb-6" data-testid="table-contacts">
-          <div className="shrink-0 grid grid-cols-[40px_44px_1.5fr_160px_1fr_120px_180px_120px] items-center gap-3 bg-white px-6 py-4 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider z-20" data-testid="row-contacts-head">
+        <div className="flex-1 min-h-0 bg-white rounded-[32px] border border-border flex flex-col overflow-hidden mb-[1px]" data-testid="table-contacts">
+          <div className="shrink-0 grid grid-cols-[40px_44px_1.5fr_1fr_1fr_1fr] items-center gap-3 bg-white px-6 py-4 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider z-20" data-testid="row-contacts-head">
             <div className="flex justify-center">
               <input 
                 type="checkbox" 
@@ -162,9 +184,7 @@ export default function AppLeads() {
             <div className="sticky left-0 bg-white z-30 px-2">name</div>
             <div>conversion</div>
             <div>tags</div>
-            <div>phone</div>
-            <div>email</div>
-            <div className="text-right">last update</div>
+            <div className="text-right">details</div>
           </div>
 
           <div className="flex-1 overflow-y-auto divide-y divide-border/30" data-testid="list-contacts">
@@ -176,11 +196,21 @@ export default function AppLeads() {
             {leads.map((l: any) => {
               const initials = `${(l.first_name ?? "").slice(0, 1)}${(l.last_name ?? "").slice(0, 1)}`.toUpperCase();
               const statusInfo = getStatusColor(l.conversion_status);
+              const initialsColors = [
+                { text: "text-blue-600", bg: "bg-blue-50" },
+                { text: "text-emerald-600", bg: "bg-emerald-50" },
+                { text: "text-amber-600", bg: "bg-amber-50" },
+                { text: "text-indigo-600", bg: "bg-indigo-50" },
+                { text: "text-rose-600", bg: "bg-rose-50" },
+                { text: "text-violet-600", bg: "bg-violet-50" },
+              ];
+              const colorIdx = (l.id % initialsColors.length);
+              const avatarColor = initialsColors[colorIdx];
 
               return (
                 <div
                   key={l.id}
-                  className="grid grid-cols-[40px_44px_1.5fr_160px_1fr_120px_180px_120px] items-center gap-3 px-6 py-4 hover:bg-muted/5 group bg-white transition-colors"
+                  className="grid grid-cols-[40px_44px_1.5fr_1fr_1fr_1fr] items-center gap-3 px-6 py-4 hover:bg-muted/5 group bg-white transition-colors"
                   data-testid={`row-contact-${l.id}`}
                 >
                   <div className="flex justify-center">
@@ -191,24 +221,32 @@ export default function AppLeads() {
                       onChange={() => toggleSelectLead(l.id)}
                     />
                   </div>
-                  <div className={cn("h-9 w-9 rounded-full font-bold grid place-items-center text-xs border border-transparent", statusInfo.text, "bg-muted/10")} data-testid={`avatar-contact-${l.id}`}>
+                  <div 
+                    className={cn("h-9 w-9 rounded-full font-bold grid place-items-center text-xs border border-transparent", avatarColor.text, avatarColor.bg)} 
+                    data-testid={`avatar-contact-${l.id}`}
+                  >
                     {initials || "?"}
                   </div>
 
                   <div className="min-w-0 sticky left-0 bg-white group-hover:bg-muted/5 transition-colors z-10 px-2" data-testid={`cell-name-${l.id}`}>
-                    <a
-                      href={`${isAgencyView ? "/agency" : "/subaccount"}/contacts/${l.id}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        const href = `${isAgencyView ? "/agency" : "/subaccount"}/contacts/${l.id}`;
-                        window.history.pushState({}, "", href);
-                        window.dispatchEvent(new PopStateEvent("popstate"));
-                      }}
-                      className="text-base font-bold truncate hover:underline block leading-tight text-slate-900"
-                      data-testid={`link-contact-${l.id}`}
-                    >
-                      {l.full_name}
-                    </a>
+                    <div className="flex flex-col">
+                      <a
+                        href={`${isAgencyView ? "/agency" : "/subaccount"}/contacts/${l.id}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const href = `${isAgencyView ? "/agency" : "/subaccount"}/contacts/${l.id}`;
+                          window.history.pushState({}, "", href);
+                          window.dispatchEvent(new PopStateEvent("popstate"));
+                        }}
+                        className="text-base font-bold truncate hover:underline block leading-tight text-slate-900/90"
+                        data-testid={`link-contact-${l.id}`}
+                      >
+                        {l.full_name}
+                      </a>
+                      <div className="text-[10px] text-muted-foreground font-medium mt-0.5">
+                        Last update: {new Date(l.updated_at).toLocaleDateString()}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="flex items-center shrink-0" data-testid={`cell-status-${l.id}`}>
@@ -224,8 +262,12 @@ export default function AppLeads() {
                       return (
                         <span 
                           key={i} 
-                          className="text-[11px] font-bold"
-                          style={{ color }}
+                          className="text-[10px] font-bold px-1.5 py-0.5 rounded-md border"
+                          style={{ 
+                            color: "#000",
+                            backgroundColor: `${color}08`,
+                            borderColor: `${color}20`
+                          }}
                         >
                           {t}
                         </span>
@@ -233,23 +275,15 @@ export default function AppLeads() {
                     })}
                   </div>
 
-                  <div className="min-w-0 overflow-hidden shrink-1">
-                    <div className="text-xs text-muted-foreground truncate" style={{ minWidth: 0 }}>{l.phone}</div>
-                  </div>
-
-                  <div className="min-w-0 overflow-hidden shrink-1">
-                    <div className="text-xs text-muted-foreground truncate" style={{ minWidth: 0 }}>{l.email}</div>
-                  </div>
-
-                  <div className="text-[11px] text-muted-foreground font-bold text-right" data-testid={`cell-updated-${l.id}`}>
-                    {new Date(l.updated_at).toLocaleDateString()}
+                  <div className="flex flex-col items-end gap-0.5">
+                    <div className="text-[11px] text-muted-foreground font-medium truncate max-w-full">{l.phone}</div>
+                    <div className="text-[11px] text-muted-foreground font-medium truncate max-w-full">{l.email}</div>
                   </div>
                 </div>
               );
             })}
           </div>
         </div>
-
       </div>
     </CrmShell>
   );

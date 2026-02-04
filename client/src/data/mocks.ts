@@ -398,7 +398,6 @@ const statuses: Lead["conversion_status"][] = [
   "Multiple Responses",
   "Qualified",
   "Booked",
-  "Lost",
   "DND",
 ];
 

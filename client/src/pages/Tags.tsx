@@ -136,22 +136,24 @@ export default function TagsPage() {
                       key={t.id}
                       onClick={() => setSelectedTagName(t.name === selectedTagName ? null : t.name)}
                       className={cn(
-                        "flex items-center gap-3 px-2 py-2 rounded-xl transition text-left",
+                        "flex items-center gap-3 px-3 py-2 rounded-xl transition text-left border border-transparent",
                         selectedTagName === t.name
-                          ? "ring-2 ring-primary"
-                          : "hover:bg-muted/10"
+                          ? "ring-2 ring-primary bg-white"
+                          : "hover:bg-muted/5"
                       )}
+                      style={{ 
+                        backgroundColor: `${t.color}05`
+                      }}
                     >
                       <div
-                        className="h-7 w-7 rounded-full text-[11px] font-bold flex items-center justify-center text-white shrink-0"
+                        className="h-7 w-7 rounded-full text-[11px] font-bold flex items-center justify-center text-white shrink-0 shadow-sm"
                         style={{ backgroundColor: t.color }}
                       >
                         {t.count}
                       </div>
 
                       <div
-                        className="truncate font-semibold text-[14px]"
-                        style={{ color: t.color }}
+                        className="truncate font-semibold text-[14px] text-black"
                       >
                         {t.name}
                       </div>

@@ -208,132 +208,50 @@ export default function AppDashboard() {
 }
 
 function AgencyDashboard() {
-  const agencyButtons = "h-10 rounded-xl bg-yellow-400 text-yellow-950 font-semibold hover:bg-yellow-300";
-
-  const activeCampaigns = useMemo(() => {
-    return campaigns
-      .filter((c) => c.status === "Active")
-      .slice(0, 4)
-      .map((c) => {
-        const leadsCount = leads.filter((l) => l.campaign_id === c.id && l.account_id === c.account_id).length;
-        return {
-          ...c,
-          leads_count: leadsCount,
-          next_run: new Date(Date.now() + 60 * 60 * 1000).toLocaleString(),
-        };
-      });
+  const { currentAccountId } = useWorkspace();
+  
+  const subaccounts = useMemo(() => {
+    return accounts.filter(a => a.id !== 1).slice(0, 2);
   }, []);
-
-  const tasks = useMemo(() => {
-    return automationLogs
-      .slice(0, 10)
-      .map((log) => {
-        const lead = leads.find((l) => l.id === log.lead_id);
-        return {
-          id: log.id,
-          lead_name: lead?.full_name ?? `Lead #${log.lead_id}`,
-          priority: lead?.priority ?? "Medium",
-          next_action_at: lead?.next_action_at ?? new Date().toISOString(),
-          status: log.status,
-        };
-      });
-  }, []);
-
-  const activity = useMemo(() => {
-    const items = [
-      ...interactions.slice(0, 12).map((i) => ({
-        kind: "interaction" as const,
-        id: i.id,
-        at: i.created_at,
-        text: i.content,
-        category: i.direction === "Inbound" ? "Received" : "Sent",
-      })),
-      ...automationLogs.slice(0, 12).map((l) => ({
-        kind: "log" as const,
-        id: l.id,
-        at: l.created_at,
-        text: `${l.status}${l.error_message ? ` — ${l.error_message}` : ""}`,
-        category: "System",
-      })),
-    ];
-
-    return items.sort((a, b) => b.at.localeCompare(a.at)).slice(0, 12);
-  }, []);
-
-  const categoryColors: Record<string, string> = {
-    Received: "bg-blue-50 text-blue-600 border-blue-100",
-    Sent: "bg-green-50 text-green-600 border-green-100",
-    System: "bg-purple-50 text-purple-600 border-purple-100",
-  };
 
   return (
-    <div className="mt-6 space-y-6" data-testid="agency-dashboard">
-      <section data-testid="section-active-campaigns">
-        <div className="flex items-center justify-between gap-3" data-testid="row-campaigns-head">
-          <div className="text-sm font-semibold" data-testid="text-campaigns-title">Active Campaigns</div>
-          <button className={agencyButtons} type="button" data-testid="button-agency-new-campaign">
-            New campaign
-          </button>
-        </div>
-        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" data-testid="grid-campaigns">
-          {activeCampaigns.map((c) => (
-            <div key={c.id} className="rounded-2xl border-none bg-white p-4 shadow-none" data-testid={`card-campaign-${c.id}`}>
-              <div className="font-semibold" data-testid={`text-campaign-name-${c.id}`}>{c.name}</div>
-              <div className="mt-1 text-xs text-muted-foreground" data-testid={`text-campaign-meta-${c.id}`}>
-                {c.status} • leads={c.leads_count}
+    <div className="mt-6 space-y-12" data-testid="agency-dashboard">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {subaccounts.map(acc => {
+          const accCampaigns = campaigns.filter(c => c.account_id === acc.id);
+          return (
+            <div key={acc.id} className="rounded-[32px] border border-slate-200 bg-white p-8 flex flex-col shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">{acc.name}</h2>
+                  <p className="text-sm text-slate-500">{acc.owner_email}</p>
+                </div>
+                <div className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-[10px] font-bold uppercase">
+                  {acc.status}
+                </div>
               </div>
-              <div className="mt-3 text-xs text-muted-foreground" data-testid={`text-campaign-next-${c.id}`}>next_run: {c.next_run}</div>
-            </div>
-          ))}
-        </div>
-      </section>
 
-      <section data-testid="section-tasks">
-        <div className="flex items-center justify-between gap-3" data-testid="row-tasks-head">
-          <div className="text-sm font-semibold" data-testid="text-tasks-title">My Tasks</div>
-          <button className={agencyButtons} type="button" data-testid="button-agency-add-task">
-            Add task
-          </button>
-        </div>
-        <div className="mt-3 grid grid-cols-1 gap-3">
-          {tasks.map((t) => (
-            <div key={t.id} className="rounded-2xl bg-white p-4 shadow-none border-none" data-testid={`row-task-${t.id}`}>
-              <div className="flex items-center justify-between">
-                <div className="font-semibold" data-testid={`text-task-lead-${t.id}`}>{t.lead_name}</div>
-                <div className="text-xs font-bold px-2 py-0.5 rounded-full bg-muted/10 text-muted-foreground" data-testid={`text-task-priority-${t.id}`}>{t.priority}</div>
-              </div>
-              <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                <div data-testid={`text-task-next-${t.id}`}>{new Date(t.next_action_at).toLocaleString()}</div>
-                <div data-testid={`text-task-status-${t.id}`}>{t.status}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section data-testid="section-activity">
-        <div className="flex items-center justify-between gap-3" data-testid="row-activity-head">
-          <div className="text-sm font-semibold" data-testid="text-activity-title">Recent Activity</div>
-          <button className={agencyButtons} type="button" data-testid="button-agency-export">
-            Export
-          </button>
-        </div>
-        <div className="mt-3 space-y-2">
-          {activity.map((a) => (
-            <div key={`${a.kind}-${a.id}`} className="rounded-2xl bg-white p-4 shadow-none border-none flex items-center justify-between gap-4" data-testid={`row-activity-${a.kind}-${a.id}`}>
-              <div className="flex items-center gap-3 min-w-0">
-                <span className={cn("px-2 py-0.5 rounded-lg text-[10px] font-bold border uppercase shrink-0", categoryColors[a.category])}>
-                  {a.category}
-                </span>
-                <div className="text-sm font-medium truncate" data-testid={`text-activity-text-${a.kind}-${a.id}`}>{a.text}</div>
-              </div>
-              <div className="text-[11px] text-muted-foreground whitespace-nowrap" data-testid={`text-activity-at-${a.kind}-${a.id}`}>
-                {new Date(a.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              <div className="space-y-4">
+                <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Active Campaigns</h3>
+                <div className="space-y-3">
+                  {accCampaigns.map(c => (
+                    <div key={c.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-sm text-slate-800">{c.name}</div>
+                        <div className="text-xs text-slate-500">{c.type}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-bold text-slate-900">${c.total_cost}</div>
+                        <div className="text-[10px] text-slate-400">spend</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -406,7 +324,7 @@ function SubaccountDashboard({
 
   return (
     <div className="mt-0 space-y-12 flex flex-col" data-testid="subaccount-dashboard">
-      <div className="flex items-start justify-between -mt-10 mb-0">
+      <div className="flex items-start justify-between -mt-10 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 flex-grow" data-testid="grid-kpis">
           <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" icon={<Users className="w-4 h-4" />} />
           <Stat label="Active Campaigns" value={String(stats.activeCampaigns)} testId="stat-active" icon={<Target className="w-4 h-4" />} />
@@ -417,10 +335,10 @@ function SubaccountDashboard({
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[400px]">
           <div className="lg:col-span-2 flex flex-col">
-            <div className="mb-3">
+            <div className="mb-4">
               <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Performance Over Time</h3>
             </div>
             <div className="flex-grow rounded-[32px] border border-slate-200 bg-white p-6 overflow-hidden flex flex-col">
@@ -471,7 +389,7 @@ function SubaccountDashboard({
             </div>
           </div>
           <div className="flex flex-col">
-            <div className="mb-3">
+            <div className="mb-4">
               <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sales Funnel</h3>
             </div>
             <div className="flex-grow rounded-[32px] border border-slate-200 bg-white p-6 flex flex-col">
