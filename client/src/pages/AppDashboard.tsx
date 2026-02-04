@@ -107,7 +107,7 @@ export default function AppDashboard() {
 
   return (
     <CrmShell>
-      <div className="py-6" data-testid="page-dashboard">
+      <div className="py-2" data-testid="page-dashboard">
         <div className="p-0">
           {isAgencyView ? (
             <AgencyDashboard />
@@ -399,13 +399,13 @@ function SubaccountDashboard({
       </div>
 
       <section
-        className="p-0 flex flex-col"
+        className="p-0 flex flex-col mb-1"
         data-testid="section-pipeline"
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Conversions</h2>
         </div>
-        <div className="overflow-x-auto overflow-y-hidden pb-4" data-testid="scroll-pipeline">
+        <div className="overflow-x-auto overflow-y-hidden pb-0" data-testid="scroll-pipeline">
           <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-[calc(100vh-170px)]" data-testid="grid-pipeline">
             {stagePalette.map((s) => (
               <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
