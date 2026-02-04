@@ -408,14 +408,34 @@ const sources: Lead["source"][] = ["Manual Upload", "Facebook", "Google", "Refer
 const automation: Lead["automation_status"][] = ["queued", "active", "paused", "completed", "dnd", "error"];
 
 const tagPool = [
-  "New",
-  "Hot",
-  "Follow-up",
-  "Pricing",
-  "Booked",
-  "No-show risk",
-  "High intent",
-  "Needs details",
+  "bump 1 reply",
+  "bump 2 reply",
+  "bump 3 reply",
+  "bump response",
+  "first message",
+  "follow-up",
+  "lead",
+  "multiple messages",
+  "qualify",
+  "responded",
+  "second message",
+  "appointment booked",
+  "goodbye",
+  "no response",
+  "schedule",
+  "ai stop",
+  "bump 1.1",
+  "bump 2.1",
+  "bump 3.1",
+  "no bump",
+  "reply generating",
+  "dnd",
+  "manual takeover",
+  "dbr android",
+  "fb lead",
+  "sleeping beauty android optin",
+  "high priority",
+  "warm lead"
 ];
 
 // Distribution to follow a funnel pattern (more at the start, tapering down)

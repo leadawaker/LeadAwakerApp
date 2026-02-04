@@ -109,6 +109,14 @@ export default function TagsPage() {
     return accountLeads.filter(l => l.tags?.includes(selectedTagName));
   }, [selectedTagName, accountLeads]);
 
+  const sortedCategories = useMemo(() => {
+    return [...categoriesWithCounts].sort((a, b) => {
+      const colorA = a.tags[0]?.color || "";
+      const colorB = b.tags[0]?.color || "";
+      return colorA.localeCompare(colorB);
+    });
+  }, [categoriesWithCounts]);
+
   return (
     <CrmShell>
       <div className="px-6 py-6">
@@ -116,7 +124,7 @@ export default function TagsPage() {
 
           {/* LEFT — TAGS (NATURAL SCROLL, NO CROPPING) */}
           <div className="space-y-8">
-            {categoriesWithCounts.map(cat => (
+            {sortedCategories.map(cat => (
               <div key={cat.type} className="space-y-3">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-1">
                   {cat.type}
