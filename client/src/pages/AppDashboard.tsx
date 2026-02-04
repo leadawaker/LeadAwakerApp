@@ -304,7 +304,7 @@ function SubaccountDashboard({
   ], []);
 
   return (
-    <div className="mt-2 space-y-6 flex flex-col" data-testid="subaccount-dashboard">
+    <div className="mt-0 space-y-6 flex flex-col" data-testid="subaccount-dashboard">
       <div className="flex items-start justify-between">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 flex-grow max-w-[calc(100%-200px)]" data-testid="grid-kpis">
           <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" icon={<Users className="w-4 h-4" />} />
@@ -321,7 +321,6 @@ function SubaccountDashboard({
           <div className="lg:col-span-2 flex flex-col">
             <div className="mb-3">
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Performance Over Time</h3>
-              <p className="text-[10px] text-slate-400">Monthly lead acquisition and conversion growth</p>
             </div>
             <div className="flex-grow rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-end mb-4">
@@ -371,7 +370,6 @@ function SubaccountDashboard({
           <div className="flex flex-col">
             <div className="mb-3">
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Conversion Funnel</h3>
-              <p className="text-[10px] text-slate-400">Visual breakdown of your pipeline stages</p>
             </div>
             <div className="flex-grow rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col">
               <div className="flex-grow flex flex-col justify-between py-2">
@@ -406,7 +404,7 @@ function SubaccountDashboard({
           <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Conversions</h2>
         </div>
         <div className="overflow-x-auto overflow-y-hidden pb-4" data-testid="scroll-pipeline">
-          <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-[calc(200vh-450px)] min-h-[1200px]" data-testid="grid-pipeline">
+          <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-[calc(100vh-285px)]" data-testid="grid-pipeline">
             {stagePalette.map((s) => (
               <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
             ))}
@@ -485,7 +483,14 @@ function PipelineCol({
         data-testid={`col-head-${stage.id}`}
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-slate-50 border border-slate-100 text-slate-600 shadow-sm">
+          <div 
+            className="flex items-center justify-center w-7 h-7 rounded-lg shadow-sm border"
+            style={{ 
+              backgroundColor: `${stage.fill}15`,
+              color: stage.id === 'Booked' ? '#ca8a04' : stage.fill,
+              borderColor: `${stage.fill}30`
+            }}
+          >
             {stage.icon}
           </div>
           <div className="flex items-center gap-2">
