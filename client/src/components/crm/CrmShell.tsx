@@ -14,7 +14,15 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   const { isAgencyView, currentAccountId, currentAccount } = useWorkspace();
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(3);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    const saved = localStorage.getItem("sidebar-collapsed");
+    return saved === "true";
+  });
+
+  const handleCollapse = (val: boolean) => {
+    setCollapsed(val);
+    localStorage.setItem("sidebar-collapsed", String(val));
+  };
 
   const closePanel = () => setActivePanel(null);
 
@@ -24,7 +32,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
       <div className="fixed left-0 top-0 bottom-0 z-40" data-testid="wrap-left-nav">
         <RightSidebar 
           collapsed={collapsed} 
-          onCollapse={setCollapsed}
+          onCollapse={handleCollapse}
           onOpenSupport={() => setActivePanel('support')}
           onOpenSearch={() => setActivePanel('search')}
           onOpenNotifications={() => setActivePanel('notifications')}

@@ -19,12 +19,14 @@ export default function ConversationsPage() {
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
   const [mobileView, setMobileView] = useState<"inbox" | "chat">("inbox");
 
+  const [tab, setTab] = useState<"all" | "unread">("all");
+
   const threads = useMemo(() => {
     const scoped = leads
       .filter((l) => l.account_id === currentAccountId)
       .filter((l) => (campaignId === "all" ? true : l.campaign_id === campaignId));
 
-    return scoped
+    const all = scoped
       .map((lead) => {
         const msgs = interactions
           .filter((i) => i.lead_id === lead.id)
@@ -34,7 +36,12 @@ export default function ConversationsPage() {
         return { lead, msgs, last, unread };
       })
       .sort((a, b) => (b.last?.created_at ?? "").localeCompare(a.last?.created_at ?? ""));
-  }, [currentAccountId, campaignId]);
+
+    if (tab === "unread") {
+      return all.filter((t) => t.unread);
+    }
+    return all;
+  }, [currentAccountId, campaignId, tab]);
 
   const selected = useMemo(() => {
     const first = threads[0] ?? null;
@@ -83,8 +90,27 @@ export default function ConversationsPage() {
             data-testid="panel-inbox"
           >
             <div className="p-4 border-b border-border shrink-0" data-testid="panel-inbox-head">
-              <div className="text-sm font-semibold" data-testid="text-inbox-title">
-                Inbox
+              <div className="flex items-center gap-4 mb-2" data-testid="row-inbox-tabs">
+                <button
+                  onClick={() => setTab("all")}
+                  className={cn(
+                    "text-sm font-bold transition-colors pb-1 border-b-2",
+                    tab === "all" ? "text-foreground border-primary" : "text-muted-foreground border-transparent hover:text-foreground"
+                  )}
+                  data-testid="button-tab-all"
+                >
+                  Inbox
+                </button>
+                <button
+                  onClick={() => setTab("unread")}
+                  className={cn(
+                    "text-sm font-bold transition-colors pb-1 border-b-2",
+                    tab === "unread" ? "text-foreground border-primary" : "text-muted-foreground border-transparent hover:text-foreground"
+                  )}
+                  data-testid="button-tab-unread"
+                >
+                  Unread
+                </button>
               </div>
               <div className="mt-2">
                 <input
@@ -96,7 +122,7 @@ export default function ConversationsPage() {
             </div>
 
             <div className="flex-1 overflow-y-auto" data-testid="list-inbox">
-              <div className="divide-y divide-border">
+              <div className="flex flex-col">
                 {threads.map(({ lead, last, unread }) => {
                   const active = selected?.lead.id === lead.id;
                   return (
@@ -148,7 +174,7 @@ export default function ConversationsPage() {
               </div>
             </div>
 
-            <div className="px-4 py-3 border-t border-border text-xs text-muted-foreground shrink-0" data-testid="text-inbox-foot">
+            <div className="px-4 py-3 text-xs text-muted-foreground shrink-0" data-testid="text-inbox-foot">
               {threads.length} threads • MOCK
             </div>
           </section>

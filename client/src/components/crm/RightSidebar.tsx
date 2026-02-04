@@ -342,7 +342,7 @@ export function RightSidebar({
         data-testid="sidebar-left"
       >
         <div className="h-full flex flex-col">
-          <div className={cn("h-auto py-6 flex justify-start pl-4")}>
+          <div className={cn("h-auto py-6 flex", collapsed ? "justify-center" : "justify-start pl-4")}>
             <Link href="/" className="hover:opacity-80 transition-opacity">
               <img src="/6. Favicon.svg" alt="Lead Awaker" className="h-10 w-10 object-contain" />
             </Link>
