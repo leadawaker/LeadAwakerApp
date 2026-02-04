@@ -38,8 +38,8 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
   };
 
   const titles: Record<string, string> = {
-    "/agency/dashboard": "Convertions",
-    "/subaccount/dashboard": "Convertions",
+    "/agency/dashboard": "Dashboard",
+    "/subaccount/dashboard": "Dashboard",
     "/agency/leads": "Contacts",
     "/subaccount/leads": "Contacts",
     "/agency/contacts": "Contacts",
@@ -67,7 +67,7 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
   return (
     <header
       className={cn(
-        "fixed top-4 right-0 h-16 bg-[#F6F5FA] z-50 flex items-center px-10 transition-all duration-200",
+        "fixed top-4 right-0 h-16 bg-[#F6F5FA]/60 backdrop-blur-md z-50 flex items-center px-10 transition-all duration-200 [mask-image:linear-gradient(to_bottom,black_80%,transparent)]",
         collapsed ? "left-[80px]" : "left-[200px]"
       )}
       data-testid="header-crm-topbar"

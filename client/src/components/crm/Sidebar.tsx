@@ -11,7 +11,7 @@ export function Sidebar() {
   const prefix = isAgencyView ? "/agency" : "/subaccount";
 
   const items = [
-    { href: `${prefix}/dashboard`, label: "Conversions", icon: LayoutDashboard, testId: "link-nav-dashboard" },
+    { href: `${prefix}/dashboard`, label: "Dashboard", icon: LayoutDashboard, testId: "link-nav-dashboard" },
     { href: `${prefix}/leads`, label: "Contacts", icon: Users, testId: "link-nav-leads" },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "link-nav-calendar" },
     { href: `${prefix}/conversations`, label: "Conversations", icon: MessageSquare, testId: "link-nav-conversations" },
@@ -20,16 +20,16 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "hidden lg:flex w-64 shrink-0 border-r duration-0",
-        isAgencyView ? "bg-yellow-500/10 border-yellow-500/20" : "bg-blue-600/10 border-blue-500/20",
+        "hidden lg:flex w-64 shrink-0 border-r border-slate-200 duration-0",
+        isAgencyView ? "bg-yellow-500/10" : "bg-blue-600/10",
       )}
       data-testid="sidebar-crm"
     >
       <div className="p-4 w-full flex flex-col gap-4">
         <div
           className={cn(
-            "rounded-2xl border p-4 duration-0 relative group",
-            isAgencyView ? "border-yellow-500/20 bg-yellow-500/10" : "border-blue-500/20 bg-blue-600/10",
+            "rounded-2xl border border-slate-200 p-4 duration-0 relative group",
+            isAgencyView ? "bg-yellow-500/10" : "bg-blue-600/10",
           )}
         >
           <div className="text-xs text-muted-foreground" data-testid="text-workspace">

@@ -98,13 +98,13 @@ export default function AppDashboard() {
   const [isBookedReportOpen, setIsBookedReportOpen] = useState(false);
 
   const stagePalette = useMemo(() => [
-    { id: "New" as const, label: "New", icon: <Zap className="w-3.5 h-3.5" />, fill: "#1a3a6f", textColor: "white" as const },
-    { id: "Contacted" as const, label: "Contacted", icon: <MessageSquare className="w-3.5 h-3.5" />, fill: "#2d5aa8", textColor: "white" as const },
-    { id: "Responded" as const, label: "Responded", icon: <TrendingUp className="w-3.5 h-3.5" />, fill: "#1E90FF", textColor: "white" as const },
-    { id: "Multiple Responses" as const, label: "Multiple", icon: <ArrowUpRight className="w-3.5 h-3.5" />, fill: "#17A398", textColor: "white" as const },
-    { id: "Qualified" as const, label: "Qualified", icon: <CheckCircle2 className="w-3.5 h-3.5" />, fill: "#10b981", textColor: "white" as const },
-    { id: "Booked" as const, label: "Booked", icon: <CalendarIcon className="w-3.5 h-3.5" />, fill: "#facc15", textColor: "#ca8a04" as const },
-    { id: "DND" as const, label: "DND", icon: <Target className="w-3.5 h-3.5" />, fill: "#ef4444", textColor: "white" as const },
+    { id: "New" as const, label: "New", icon: <Zap className="w-5 h-5" />, fill: "#1a3a6f", textColor: "white" as const },
+    { id: "Contacted" as const, label: "Contacted", icon: <MessageSquare className="w-5 h-5" />, fill: "#2d5aa8", textColor: "white" as const },
+    { id: "Responded" as const, label: "Responded", icon: <TrendingUp className="w-5 h-5" />, fill: "#1E90FF", textColor: "white" as const },
+    { id: "Multiple Responses" as const, label: "Multiple", icon: <ArrowUpRight className="w-5 h-5" />, fill: "#17A398", textColor: "white" as const },
+    { id: "Qualified" as const, label: "Qualified", icon: <CheckCircle2 className="w-5 h-5" />, fill: "#10b981", textColor: "white" as const },
+    { id: "Booked" as const, label: "Booked", icon: <CalendarIcon className="w-5 h-5" />, fill: "#facc15", textColor: "#ca8a04" as const },
+    { id: "DND" as const, label: "DND", icon: <Target className="w-5 h-5" />, fill: "#ef4444", textColor: "white" as const },
   ], []);
 
   const funnel = useMemo(() => {
@@ -151,7 +151,6 @@ export default function AppDashboard() {
       <div className="py-4 px-0" data-testid="page-dashboard">
         <div className="p-0">
           <div className="px-1 md:px-0 mb-6 flex items-center justify-between">
-            <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Dashboard</h1>
             <FiltersBar selectedCampaignId={selectedCampaignId} setSelectedCampaignId={setSelectedCampaignId} />
           </div>
           {isAgencyView ? (
@@ -392,7 +391,7 @@ function SubaccountDashboard({
             <div className="mb-3">
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Performance Over Time</h3>
             </div>
-            <div className="flex-grow rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm overflow-hidden flex flex-col">
+            <div className="flex-grow rounded-[32px] border border-slate-200 bg-white p-6 overflow-hidden flex flex-col">
               <div className="flex items-center justify-end mb-4 shrink-0">
                 <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold">
                   <TrendingUp className="w-3 h-3" />
@@ -443,11 +442,11 @@ function SubaccountDashboard({
             <div className="mb-3">
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Sales Funnel</h3>
             </div>
-            <div className="flex-grow rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm flex flex-col">
+            <div className="flex-grow rounded-[32px] border border-slate-200 bg-white p-6 flex flex-col">
               <div className="flex-grow flex flex-col justify-between py-2">
                 {funnel.map((stage: any, idx: number) => (
                   <div key={stage.name} className="space-y-1.5">
-                    <div className="flex justify-between text-[10px] font-bold">
+                    <div className="flex justify-between text-[13px] font-bold">
                       <span className="text-slate-600">{stage.name}</span>
                       <span className="text-slate-900">{stage.value}</span>
                     </div>
@@ -473,7 +472,7 @@ function SubaccountDashboard({
         data-testid="section-pipeline"
       >
         <div className="flex items-center justify-between mb-4 px-1 md:px-0">
-          <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Pipeline</h2>
+          <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Sales Pipeline</h2>
         </div>
         
         <div className="relative group/pipeline">
@@ -491,7 +490,7 @@ function SubaccountDashboard({
           {showRightArrow && (
             <button 
               onClick={() => scroll('right')}
-              className="absolute right-0 top-0 bottom-0 z-20 w-48 bg-gradient-to-l from-[#F6F5FA] via-[#F6F5FA]/95 via-[#F6F5FA]/80 to-transparent flex items-center justify-end pr-2 text-slate-400 hover:text-slate-900 transition-all pointer-events-auto"
+              className="absolute right-0 top-0 bottom-0 z-20 w-12 flex items-center justify-end pr-2 text-slate-400 hover:text-slate-900 transition-all pointer-events-auto"
             >
               <div className="p-4 rounded-full bg-white shadow-2xl border border-slate-100 mr-6 hover:scale-110 transition-transform">
                 <ChevronRight className="w-8 h-8" />
@@ -529,7 +528,7 @@ function Stat({
   icon?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-[32px] border border-slate-200 bg-white p-4 shadow-sm" data-testid={testId}>
+    <div className="rounded-[32px] border border-slate-200 bg-white p-4" data-testid={testId}>
       <div className="flex items-center justify-between mb-2">
         <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider" data-testid={`${testId}-label`}>{label}</div>
         <div className="text-slate-400">{icon}</div>

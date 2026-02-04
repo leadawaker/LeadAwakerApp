@@ -44,17 +44,29 @@ export function LeadCard({ lead, active }: { lead: Lead; active: boolean }) {
   return (
     <div
       className={cn(
-        "rounded-2xl border p-4 transition-colors",
-        active ? "border-primary/30 bg-primary/5" : "border-border bg-background hover:bg-muted/10",
+        "rounded-2xl border border-slate-200 p-4 transition-all duration-300 group/lead",
+        active ? "bg-primary/5" : "bg-background hover:bg-muted/10",
       )}
       data-testid={`card-lead-${lead.id}`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="font-semibold truncate" data-testid={`text-lead-name-${lead.id}`}>
             {lead.full_name}
           </div>
-          <div className="text-xs text-muted-foreground truncate" data-testid={`text-lead-phone-${lead.id}`}>
+          
+          <div className="max-h-0 overflow-hidden group-hover/lead:max-h-20 transition-all duration-300 ease-in-out">
+            <div className="pt-2 flex flex-col gap-0.5">
+              <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                <span className="opacity-50 font-medium">Email:</span> {lead.email}
+              </div>
+              <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                <span className="opacity-50 font-medium">Phone:</span> {lead.phone}
+              </div>
+            </div>
+          </div>
+
+          <div className="text-xs text-muted-foreground truncate group-hover/lead:hidden" data-testid={`text-lead-phone-${lead.id}`}>
             {lead.phone}
           </div>
           {lead.tags && lead.tags.length > 0 && (
