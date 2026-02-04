@@ -304,7 +304,7 @@ function SubaccountDashboard({
   ], []);
 
   return (
-    <div className="mt-0 space-y-6 flex flex-col" data-testid="subaccount-dashboard">
+    <div className="mt-0 space-y-4 flex flex-col" data-testid="subaccount-dashboard">
       <div className="flex items-start justify-between">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 flex-grow" data-testid="grid-kpis">
           <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" icon={<Users className="w-4 h-4" />} />
@@ -322,16 +322,16 @@ function SubaccountDashboard({
             <div className="mb-3">
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Performance Over Time</h3>
             </div>
-            <div className="flex-grow rounded-2xl border border-slate-200 bg-white p-6 shadow-sm overflow-hidden">
-              <div className="flex items-center justify-end mb-4">
+            <div className="flex-grow rounded-2xl border border-slate-200 bg-white p-6 shadow-sm overflow-hidden flex flex-col">
+              <div className="flex items-center justify-end mb-4 shrink-0">
                 <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold">
                   <TrendingUp className="w-3 h-3" />
                   +24% vs last year
                 </div>
               </div>
-              <div className="h-[250px] -ml-6 -mb-6">
+              <div className="flex-grow -ml-2 -mb-2">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={leadGrowthData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                  <AreaChart data={leadGrowthData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
@@ -344,17 +344,17 @@ function SubaccountDashboard({
                       axisLine={false} 
                       tickLine={false} 
                       tick={{fontSize: 10, fill: '#64748b'}}
-                      dy={10}
-                      hide
+                      dy={5}
                     />
                     <YAxis 
                       axisLine={false} 
                       tickLine={false} 
                       tick={{fontSize: 10, fill: '#64748b'}}
-                      hide
+                      tickFormatter={(val) => `${val}%`}
                     />
                     <Tooltip 
                       contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                      formatter={(value: number) => [`${value}%`, 'Growth']}
                     />
                     <Area 
                       type="monotone" 
@@ -406,7 +406,7 @@ function SubaccountDashboard({
           <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Conversions</h2>
         </div>
         <div className="overflow-x-auto overflow-y-hidden pb-4" data-testid="scroll-pipeline">
-          <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-[calc(100vh-140px)]" data-testid="grid-pipeline">
+          <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-[calc(100vh-210px)]" data-testid="grid-pipeline">
             {stagePalette.map((s) => (
               <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
             ))}
