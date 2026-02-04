@@ -147,7 +147,7 @@ export default function AppLeads() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 mb-10 bg-white rounded-2xl border border-border flex flex-col overflow-hidden" data-testid="table-contacts">
+        <div className="flex-1 min-h-0  bg-white rounded-2xl border border-border flex flex-col overflow-hidden" data-testid="table-contacts">
           <div className="shrink-0 grid grid-cols-[40px_44px_1.2fr_180px_220px_180px_220px_120px] items-center gap-3 bg-white px-4 py-2 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider z-20" data-testid="row-contacts-head">
             <div className="flex justify-center">
               <input 
