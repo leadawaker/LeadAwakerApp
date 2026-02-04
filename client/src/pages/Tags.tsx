@@ -9,57 +9,59 @@ const TAG_CATEGORIES = [
   {
     type: "Status",
     tags: [
-      { name: "New Lead", color: "#3B82F6" },
-      { name: "Contacted", color: "#10B981" },
-      { name: "Qualified", color: "#EC4899" },
-      { name: "Closed - Won", color: "#059669" },
-      { name: "Closed - Lost", color: "#4B5563" },
-      { name: "DND / Opt-out", color: "#1F2937" }
+      { name: "bump 1 reply", color: "#3B82F6", id: 4, description: "Lead replied to first bump" },
+      { name: "bump 2 reply", color: "#3B82F6", id: 6, description: "Lead replied to second bump" },
+      { name: "bump 3 reply", color: "#3B82F6", id: 8, description: "Lead replied to third bump" },
+      { name: "bump 3.1", color: "#3B82F6", id: 29, description: "Third bump sent" },
+      { name: "bump response", color: "#3B82F6", id: 9, description: "Lead responded to any bump" },
+      { name: "first message", color: "#EAB308", id: 13, description: "Initial message sent" },
+      { name: "follow-up", color: "#F97316", id: 14, description: "Requires follow-up" },
+      { name: "lead", color: "#3B82F6", id: 17, description: "General lead status" },
+      { name: "multiple messages", color: "#3B82F6", id: 19, description: "Lead sent multiple messages" },
+      { name: "qualify", color: "#22C55E", id: 22, description: "Lead is qualified" },
+      { name: "responded", color: "#22C55E", id: 24, description: "Lead has responded" },
+      { name: "second message", color: "#EAB308", id: 26, description: "Second message sent" }
     ]
   },
   {
     type: "Outcome",
     tags: [
-      { name: "Ready to Book", color: "#14B8A6" },
-      { name: "Appointment Scheduled", color: "#6366F1" },
-      { name: "Post-Call Follow-up", color: "#F43F5E" },
-      { name: "Booked", color: "#facc15" }
+      { name: "appointment booked", color: "#22C55E", id: 3, description: "Lead has booked a call" },
+      { name: "goodbye", color: "#64748B", id: 15, description: "Lead said goodbye/not interested" },
+      { name: "no response", color: "#64748B", id: 21, description: "Lead never responded" },
+      { name: "schedule", color: "#22C55E", id: 25, description: "Lead wants to schedule" }
     ]
   },
   {
     type: "Automation",
     tags: [
-      { name: "Nurturing", color: "#8B5CF6" },
-      { name: "Re-engagement", color: "#D946EF" },
-      { name: "Follow-up Required", color: "#F59E0B" },
-      { name: "Follow-up", color: "#F59E0B" }
+      { name: "ai stop", color: "#EF4444", id: 2, description: "Stop all AI-generated messages" },
+      { name: "bump 1.1", color: "#3B82F6", id: 5, description: "First bump sent" },
+      { name: "bump 2.1", color: "#3B82F6", id: 7, description: "Second bump sent" },
+      { name: "no bump", color: "#64748B", id: 20, description: "Do not send bump messages" },
+      { name: "reply generating", color: "#EAB308", id: 23, description: "AI is generating reply" }
     ]
   },
   {
     type: "Behavior",
     tags: [
-      { name: "High Intent", color: "#EF4444" },
-      { name: "Future Interest", color: "#84CC16" },
-      { name: "Technical Question", color: "#64748B" },
-      { name: "Needs details", color: "#64748B" },
-      { name: "No-show risk", color: "#EF4444" }
+      { name: "dnd", color: "#EF4444", id: 11, description: "Do not contact - opted out" },
+      { name: "manual takeover", color: "#F97316", id: 18, description: "Human agent took over conversation" }
     ]
   },
   {
     type: "Source",
     tags: [
-      { name: "Referral", color: "#A855F7" },
-      { name: "Partner Lead", color: "#F97316" },
-      { name: "Facebook", color: "#1877F2" },
-      { name: "Google", color: "#DB4437" }
+      { name: "dbr android", color: "#A855F7", id: 10, description: "DBR Android source" },
+      { name: "fb lead", color: "#A855F7", id: 12, description: "Facebook lead source" },
+      { name: "sleeping beauty android optin", color: "#A855F7", id: 27, description: "Sleeping Beauty Android opt-in" }
     ]
   },
   {
     type: "Priority",
     tags: [
-      { name: "Hot", color: "#EF4444" },
-      { name: "Pricing Inquiry", color: "#0EA5E9" },
-      { name: "Pricing", color: "#0EA5E9" }
+      { name: "high priority", color: "#EF4444", id: 16, description: "High priority lead" },
+      { name: "warm lead", color: "#F97316", id: 28, description: "Warm lead - engaged" }
     ]
   }
 ];
@@ -105,17 +107,7 @@ export default function TagsPage() {
       <div className="h-full flex flex-col px-6 py-6 overflow-hidden" data-testid="page-tags">
         <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-6">
           <div className="flex flex-col min-h-0 overflow-hidden">
-            <div className="flex items-center gap-2 shrink-0" data-testid="bar-tags">
-              <input
-                className="h-10 w-[280px] max-w-full rounded-xl border border-border bg-muted/20 px-3 text-sm"
-                placeholder="Search tags…"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                data-testid="input-tag-search"
-              />
-            </div>
-
-            <div className="mt-6 overflow-y-auto pr-2 space-y-8" data-testid="grid-tags">
+            <div className="mt-2 overflow-y-auto pr-2 space-y-8" data-testid="grid-tags">
               {categoriesWithCounts.map((cat) => (
                 <div key={cat.type} className="space-y-3">
                   <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-1">
@@ -125,9 +117,10 @@ export default function TagsPage() {
                     {cat.tags.map((t, idx) => (
                       <button
                         key={`${cat.type}-${idx}`}
+                        title={t.description}
                         onClick={() => setSelectedTagName(t.name === selectedTagName ? null : t.name)}
                         className={cn(
-                          "rounded-2xl border-none bg-slate-50/50 p-3 flex items-center justify-between group transition-all text-left shadow-none",
+                          "rounded-2xl border-none bg-slate-50/50 p-3 flex items-center justify-between group transition-all text-left shadow-none relative",
                           selectedTagName === t.name ? "ring-2 ring-primary border-transparent" : "hover:bg-muted/20"
                         )}
                         data-testid={`card-tag-${cat.type}-${idx}`}
@@ -151,14 +144,64 @@ export default function TagsPage() {
           </div>
 
           <div className="rounded-2xl border-none bg-white flex flex-col overflow-hidden h-full shadow-none" data-testid="panel-leads-per-tag">
-            <div className="p-4 border-b border-border bg-muted/5 shrink-0">
-              <div className="font-bold text-sm" data-testid="text-selected-tag">
-                {selectedTagName ? `Leads: ${selectedTagName}` : "Select a tag to view leads"}
+            <div className="p-4 border-b border-border bg-muted/5 shrink-0 space-y-3">
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="font-bold text-sm truncate" data-testid="text-selected-tag">
+                    {selectedTagName ? `Leads: ${selectedTagName}` : "Tag Insights"}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">
+                    {selectedTagName ? "Distribution overview" : "Search and filter tags"}
+                  </div>
+                </div>
               </div>
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">
-                Distribution overview
+              <div className="relative">
+                <input
+                  className="h-10 w-full rounded-xl border border-border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  placeholder="Search tags…"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  data-testid="input-tag-search"
+                />
               </div>
             </div>
+            
+            <div className="flex-1 overflow-y-auto divide-y divide-border">
+              {!selectedTagName ? (
+                <div className="p-8 text-center text-muted-foreground opacity-40">
+                  <div className="text-4xl mb-2">🏷️</div>
+                  <div className="text-xs font-medium">Click a tag to see associated leads</div>
+                </div>
+              ) : selectedLeads.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground opacity-40">
+                  <div className="text-xs font-medium">No leads found with this tag</div>
+                </div>
+              ) : (
+                selectedLeads.map((l) => (
+                  <div key={l.id} className="p-4 hover:bg-muted/10 transition-colors" data-testid={`row-tag-lead-${l.id}`}>
+                    <div className="font-bold text-sm truncate mb-1">{l.full_name}</div>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-muted-foreground">Applied:</span>
+                        <span className="font-medium text-foreground">02 Feb - 2026</span>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-muted-foreground">Last Message:</span>
+                        <span className="font-medium text-foreground">
+                          {l.last_message_sent_at ? "01 Feb - 2026" : "No messages yet"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </CrmShell>
+  );
+}
             
             <div className="flex-1 overflow-y-auto divide-y divide-border">
               {!selectedTagName ? (
