@@ -39,23 +39,69 @@ export default function AppLeads() {
       .sort((a, b) => b.created_at.localeCompare(a.created_at));
   }, [csvLeads, hardcodedLeads, currentAccountId, campaignId, status, priority, localLeads]);
 
-  const statusColors: Record<string, { bg: string, text: string, emoji: string }> = {
-    "New": { bg: "bg-blue-50", text: "text-blue-600", emoji: "🆕" },
-    "Contacted": { bg: "bg-purple-50", text: "text-purple-600", emoji: "📱" },
-    "Responded": { bg: "bg-emerald-50", text: "text-emerald-600", emoji: "💬" },
-    "Multiple Responses": { bg: "bg-cyan-50", text: "text-cyan-600", emoji: "🗣️" },
-    "Qualified": { bg: "bg-amber-50", text: "text-amber-600", emoji: "⭐" },
-    "Booked": { bg: "bg-indigo-50", text: "text-indigo-600", emoji: "📅" },
-    "Lost": { bg: "bg-rose-50", text: "text-rose-600", emoji: "❌" },
-    "DND": { bg: "bg-slate-50", text: "text-slate-600", emoji: "🚫" },
+  const statusColors: Record<string, { text: string, emoji: string }> = {
+    "New": { text: "text-blue-600", emoji: "🆕" },
+    "Contacted": { text: "text-purple-600", emoji: "📱" },
+    "Responded": { text: "text-emerald-600", emoji: "💬" },
+    "Multiple Responses": { text: "text-cyan-600", emoji: "🗣️" },
+    "Qualified": { text: "text-amber-600", emoji: "⭐" },
+    "Booked": { text: "text-indigo-600", emoji: "📅" },
+    "DND": { text: "text-slate-600", emoji: "🚫" },
   };
 
   const getStatusColor = (status: string) => {
-    return statusColors[status] || { bg: "bg-muted/10", text: "text-muted-foreground", emoji: "" };
+    return statusColors[status] || { text: "text-muted-foreground", emoji: "" };
   };
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [tempData, setTempData] = useState<{ phone: string, email: string } | null>(null);
+  const [selectedLeads, setSelectedLeads] = useState<Set<number>>(new Set());
+
+  const toggleSelectAll = () => {
+    if (selectedLeads.size === leads.length) {
+      setSelectedLeads(new Set());
+    } else {
+      setSelectedLeads(new Set(leads.map(l => l.id)));
+    }
+  };
+
+  const toggleSelectLead = (id: number) => {
+    const next = new Set(selectedLeads);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedLeads(next);
+  };
+
+  const tagColors: Record<string, string> = {
+    "bump 1 reply": "#3B82F6",
+    "bump 2 reply": "#3B82F6",
+    "bump 3 reply": "#3B82F6",
+    "bump response": "#3B82F6",
+    "first message": "#EAB308",
+    "follow-up": "#F97316",
+    "lead": "#3B82F6",
+    "multiple messages": "#3B82F6",
+    "qualify": "#22C55E",
+    "responded": "#22C55E",
+    "second message": "#EAB308",
+    "appointment booked": "#22C55E",
+    "goodbye": "#64748B",
+    "no response": "#64748B",
+    "schedule": "#22C55E",
+    "ai stop": "#EF4444",
+    "bump 1.1": "#3B82F6",
+    "bump 2.1": "#3B82F6",
+    "bump 3.1": "#3B82F6",
+    "no bump": "#64748B",
+    "reply generating": "#EAB308",
+    "dnd": "#EF4444",
+    "manual takeover": "#F97316",
+    "dbr android": "#A855F7",
+    "fb lead": "#A855F7",
+    "sleeping beauty android optin": "#A855F7",
+    "high priority": "#EF4444",
+    "warm lead": "#F97316",
+  };
 
   return (
     <CrmShell>
@@ -101,10 +147,18 @@ export default function AppLeads() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 mb-6 bg-white rounded-2xl border border-border flex flex-col overflow-hidden" data-testid="table-contacts">
-          <div className="shrink-0 grid grid-cols-[44px_1.2fr_180px_220px_180px_220px_120px] items-center gap-3 bg-white px-4 py-2 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider z-10" data-testid="row-contacts-head">
+        <div className="flex-1 min-h-0 mb-10 bg-white rounded-2xl border border-border flex flex-col overflow-hidden" data-testid="table-contacts">
+          <div className="shrink-0 grid grid-cols-[40px_44px_1.2fr_180px_220px_180px_220px_120px] items-center gap-3 bg-white px-4 py-2 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider z-20" data-testid="row-contacts-head">
+            <div className="flex justify-center">
+              <input 
+                type="checkbox" 
+                className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                checked={leads.length > 0 && selectedLeads.size === leads.length}
+                onChange={toggleSelectAll}
+              />
+            </div>
             <div />
-            <div>name</div>
+            <div className="sticky left-0 bg-white z-30 px-2">name</div>
             <div>conversion</div>
             <div>tags</div>
             <div>phone</div>
@@ -126,14 +180,22 @@ export default function AppLeads() {
               return (
                 <div
                   key={l.id}
-                  className="grid grid-cols-[44px_1.2fr_180px_220px_180px_220px_120px] items-center gap-3 px-4 py-3 hover:bg-muted/5 group bg-white transition-colors"
+                  className="grid grid-cols-[40px_44px_1.2fr_180px_220px_180px_220px_120px] items-center gap-3 px-4 py-3 hover:bg-muted/5 group bg-white transition-colors"
                   data-testid={`row-contact-${l.id}`}
                 >
-                  <div className={cn("h-9 w-9 rounded-full font-bold grid place-items-center text-xs border border-transparent", statusInfo.bg, statusInfo.text)} data-testid={`avatar-contact-${l.id}`}>
+                  <div className="flex justify-center">
+                    <input 
+                      type="checkbox" 
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                      checked={selectedLeads.has(l.id)}
+                      onChange={() => toggleSelectLead(l.id)}
+                    />
+                  </div>
+                  <div className={cn("h-9 w-9 rounded-full font-bold grid place-items-center text-xs border border-transparent", statusColors[l.conversion_status]?.text || "text-muted-foreground", "bg-muted/10")} data-testid={`avatar-contact-${l.id}`}>
                     {initials || "?"}
                   </div>
 
-                  <div className="min-w-0" data-testid={`cell-name-${l.id}`}>
+                  <div className="min-w-0 sticky left-0 bg-white group-hover:bg-muted/5 transition-colors z-10 px-2" data-testid={`cell-name-${l.id}`}>
                     <a
                       href={`${isAgencyView ? "/agency" : "/subaccount"}/contacts/${l.id}`}
                       onClick={(e) => {
@@ -149,17 +211,23 @@ export default function AppLeads() {
                     </a>
                   </div>
 
-                  <div className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold w-fit", statusInfo.bg, statusInfo.text)} data-testid={`cell-status-${l.id}`}>
+                  <div className={cn("flex items-center gap-1.5 text-sm font-semibold w-fit", statusInfo.text)} data-testid={`cell-status-${l.id}`}>
                     <span>{statusInfo.emoji}</span>
                     <span>{l.conversion_status}</span>
                   </div>
 
                   <div className="flex flex-wrap gap-1" data-testid={`cell-tags-${l.id}`}>
                     {(l.tags ?? []).map((t, i) => {
+                      const color = tagColors[t] || "#64748B";
                       return (
                         <span 
                           key={i} 
-                          className="px-2 py-0.5 rounded-full border border-slate-200 bg-slate-50 text-slate-500 text-[10px] font-bold transition-all"
+                          className="px-2 py-0.5 rounded-full border text-sm font-bold transition-all"
+                          style={{ 
+                            backgroundColor: `${color}10`, // 10% opacity for bg
+                            color: color,
+                            borderColor: `${color}20` // 20% opacity for border
+                          }}
                         >
                           {t}
                         </span>
@@ -237,7 +305,7 @@ export default function AppLeads() {
                     )}
                   </div>
 
-                  <div className="text-[11px] text-muted-foreground font-medium" data-testid={`cell-updated-${l.id}`}>
+                  <div className="text-sm text-muted-foreground font-medium" data-testid={`cell-updated-${l.id}`}>
                     {new Date(l.updated_at).toLocaleDateString()}
                   </div>
                 </div>
