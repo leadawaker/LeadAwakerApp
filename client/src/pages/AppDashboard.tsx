@@ -468,7 +468,7 @@ function SubaccountDashboard({
       ) : null}
       {dashboardTab === "pipeline" ? (
         <section
-          className="p-0 flex flex-col h-[calc(100vh-120px)] mt-[2px]"
+          className="p-0 flex flex-col h-[calc(100vh-120px)] mt-[6px]"
           data-testid="section-pipeline"
         >
           <div className="mt-0 overflow-x-auto overflow-y-hidden flex-grow pb-2" data-testid="scroll-pipeline">
@@ -541,10 +541,10 @@ function PipelineCol({
   };
 
   return (
-    <div className="w-full bg-white flex flex-col h-fit" data-testid={`col-${stage.id}`}>
+    <div className="w-full bg-white flex flex-col h-full rounded-2xl overflow-hidden shadow-sm border border-slate-100" data-testid={`col-${stage.id}`}>
       <div
         className={cn(
-          "p-3 flex items-center justify-between shadow-sm z-10 shrink-0",
+          "p-3 flex items-center justify-between shadow-sm z-10 shrink-0 sticky top-0",
           stage.id === 'Booked' ? "bg-yellow-500 text-yellow-950" : "text-white"
         )}
         style={stage.id !== 'Booked' ? { backgroundColor: stage.fill } : undefined}
@@ -563,8 +563,8 @@ function PipelineCol({
           {items.length}
         </div>
       </div>
-      <div className="p-3 space-y-2 flex-grow" data-testid={`col-body-${stage.id}`}>
-        {items.slice(0, 15).map((l) => (
+      <div className="p-3 space-y-2 flex-grow overflow-y-auto scrollbar-hide" data-testid={`col-body-${stage.id}`}>
+        {items.slice(0, 50).map((l) => (
           <div key={l.id} className="group relative w-full" data-testid={`row-contact-pill-${stage.id}-${l.id}`}>
             <div
               className={cn(
