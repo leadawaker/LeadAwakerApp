@@ -48,7 +48,7 @@ export default function AppDashboard() {
     { id: "Responded" as const, label: "💬 Responded", fill: "#1E90FF", textColor: "white" as const },
     { id: "Multiple Responses" as const, label: "🔁 Multiple", fill: "#17A398", textColor: "white" as const },
     { id: "Qualified" as const, label: "✅ Qualified", fill: "#10b981", textColor: "white" as const },
-    { id: "Booked" as const, label: "📅 Booked", fill: "#facc15", textColor: "black" as const },
+    { id: "Booked" as const, label: "📅 Booked", fill: "#facc15", textColor: "#ca8a04" as const },
     { id: "DND" as const, label: "⛔️ DND", fill: "#ef4444", textColor: "white" as const },
   ], []);
 
@@ -276,7 +276,30 @@ function SubaccountDashboard({
 }) {
 
   return (
-    <div className="mt-6 space-y-6" data-testid="subaccount-dashboard">
+    <div className="mt-6 space-y-6 flex flex-col h-[calc(100vh-180px)]" data-testid="subaccount-dashboard">
+      <div className="flex items-center gap-4 mb-2">
+        <div className="flex items-baseline gap-2">
+          <button 
+            onClick={() => setSelectedCampaignId("all")}
+            className={cn(
+              "text-sm font-bold transition-colors",
+              dashboardTab === "pipeline" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Pipeline
+          </button>
+          <button 
+            onClick={() => setSelectedCampaignId("all")}
+            className={cn(
+              "text-xs font-medium transition-colors",
+              dashboardTab === "funnel" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Funnel/KPI
+          </button>
+        </div>
+      </div>
+
       {dashboardTab === "funnel" ? (
         <section className="rounded-2xl border border-border bg-background overflow-hidden" data-testid="section-campaign-selector">
           <div className="px-4 pb-4" data-testid="panel-sales-funnel">
@@ -468,10 +491,10 @@ function SubaccountDashboard({
       ) : null}
       {dashboardTab === "pipeline" ? (
         <section
-          className="p-0 flex flex-col h-[calc(100vh-120px)] mt-[6px]"
+          className="p-0 flex flex-col flex-grow mt-0 overflow-hidden"
           data-testid="section-pipeline"
         >
-          <div className="mt-0 overflow-x-auto overflow-y-hidden flex-grow pb-2" data-testid="scroll-pipeline">
+          <div className="overflow-x-auto overflow-y-hidden flex-grow pb-2" data-testid="scroll-pipeline">
             <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-full" data-testid="grid-pipeline">
               {stagePalette.map((s) => (
                 <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
@@ -540,27 +563,31 @@ function PipelineCol({
     return `${hours}h ago`;
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
     <div className="w-full bg-white flex flex-col h-full rounded-2xl overflow-hidden shadow-sm border border-slate-100" data-testid={`col-${stage.id}`}>
       <div
         className={cn(
-          "p-3 flex items-center justify-between shadow-sm z-10 shrink-0 sticky top-0",
-          stage.id === 'Booked' ? "bg-yellow-500 text-yellow-950" : "text-white"
+          "p-3 flex items-center justify-between shadow-sm z-10 shrink-0 sticky top-0 bg-white dark:bg-slate-900",
         )}
-        style={stage.id !== 'Booked' ? { backgroundColor: stage.fill } : undefined}
         data-testid={`col-head-${stage.id}`}
       >
         <div className="flex items-center gap-2 font-medium min-w-0">
-          <span className="text-sm truncate">{stage.label}</span>
-        </div>
-        <div
-          className={cn(
-            "text-xs font-bold px-2 py-0.5 rounded-full bg-white/20",
-            stage.id === 'Booked' ? "text-yellow-950" : "text-white"
-          )}
-          data-testid={`col-count-${stage.id}`}
-        >
-          {items.length}
+          <span className="text-sm truncate text-slate-900">{stage.label}</span>
+          <span
+            className="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500"
+            data-testid={`col-count-${stage.id}`}
+          >
+            {items.length}
+          </span>
         </div>
       </div>
       <div className="p-3 space-y-2 flex-grow overflow-y-auto scrollbar-hide" data-testid={`col-body-${stage.id}`}>
@@ -580,7 +607,17 @@ function PipelineCol({
               }}
               data-testid={`pill-contact-${stage.id}-${l.id}`}
             >
-              <div className="flex justify-between items-center gap-2" data-testid={`row-pill-header-${stage.id}-${l.id}`}>
+              <div className="flex items-center gap-2" data-testid={`row-pill-header-${stage.id}-${l.id}`}>
+                <div 
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
+                  style={{ 
+                    backgroundColor: `${stage.fill}15`,
+                    color: stage.id === 'Booked' ? '#ca8a04' : stage.fill,
+                    border: `1px solid ${stage.fill}30`
+                  }}
+                >
+                  {getInitials(l.full_name)}
+                </div>
                 <div
                   className="font-semibold text-xs truncate flex-grow"
                   style={{ color: stage.id === 'Booked' ? '#ca8a04' : stage.fill }}
