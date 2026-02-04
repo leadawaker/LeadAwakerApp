@@ -478,7 +478,7 @@ const generateLeadsForAccount = (accId: number) => {
         custom_field_1: "",
         custom_field_2: "",
         custom_field_3: "",
-        tags: ["Hot", "Pricing"],
+        tags: [pick(tagPool, i), pick(tagPool, i + 1)].filter((v, i, a) => a.indexOf(v) === i),
       });
     }
   });

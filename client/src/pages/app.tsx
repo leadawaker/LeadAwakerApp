@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 
 import AppDashboard from "@/pages/AppDashboard";
 import AppLeads from "@/pages/AppLeads";
-import ConversionsPage from "@/pages/Conversations";
+import ConversationsPage from "@/pages/Conversations";
 import LeadDetailPage from "@/pages/LeadDetail";
 import AppCampaigns from "@/pages/AppCampaigns";
 import AppAccounts from "@/pages/AppAccounts";
@@ -45,7 +45,7 @@ export default function AppArea() {
           <Route path="/agency/dashboard" component={AppDashboard} />
           <Route path="/agency/contacts" component={AppLeads} />
           <Route path="/agency/leads" component={AppLeads} />
-          <Route path="/agency/conversions" component={ConversionsPage} />
+          <Route path="/agency/conversations" component={ConversationsPage} />
           <Route path="/agency/contacts/:id" component={LeadDetailPage} />
           <Route path="/agency/campaigns" component={AppCampaigns} />
           <Route path="/agency/accounts" component={AppAccounts} />
@@ -60,7 +60,7 @@ export default function AppArea() {
           <Route path="/subaccount/dashboard" component={AppDashboard} />
           <Route path="/subaccount/contacts" component={AppLeads} />
           <Route path="/subaccount/leads" component={AppLeads} />
-          <Route path="/subaccount/conversions" component={ConversionsPage} />
+          <Route path="/subaccount/conversations" component={ConversationsPage} />
           <Route path="/subaccount/contacts/:id" component={LeadDetailPage} />
           <Route path="/subaccount/campaigns" component={AppCampaigns} />
           <Route path="/subaccount/accounts" component={AppAccounts} />
