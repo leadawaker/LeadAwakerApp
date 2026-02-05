@@ -19,7 +19,7 @@ import AppArea from "@/pages/app";
 import Canvas from "@/pages/canvas";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsOfService from "@/pages/terms-of-service";
-import NocoTable from "../NocoTable";
+import TestTable from "@/pages/TestTable";
 import NotFound from "@/pages/not-found";
 
 /* ------------------------------------------------------------------ */
@@ -94,7 +94,7 @@ function AppRoutes() {
       <Route path="/canvas" component={Canvas} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />
-      <Route path="/test-table" component={NocoTable} />
+      <Route path="/test-table" component={TestTable} />
       <Route component={NotFound} />
     </Switch>
   );
