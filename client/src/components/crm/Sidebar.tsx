@@ -73,7 +73,7 @@ export function Sidebar() {
                   <Icon className={cn("h-4 w-4 shrink-0", active && isAgencyView && "text-white")} />
                   <span className="truncate group-[[data-state=collapsed]]/sidebar-wrapper:hidden">{it.label}</span>
                 </Link>
-                <div className="absolute left-[calc(100%-8px)] top-1/2 -translate-y-1/2 px-2 py-1.5 bg-muted text-foreground text-xs rounded-r-md opacity-0 group-hover/nav-item:opacity-100 pointer-events-none transition-all z-50 whitespace-nowrap hidden group-[[data-state=collapsed]]/sidebar-wrapper:block font-bold border-y border-r border-slate-200 shadow-sm">
+                <div className="absolute left-10 top-1/2 -translate-y-1/2 px-2 py-1.5 bg-muted text-foreground text-xs rounded-md opacity-0 group-hover/nav-item:opacity-100 pointer-events-none transition-all z-50 whitespace-nowrap hidden group-[[data-state=collapsed]]/sidebar-wrapper:block font-bold border border-slate-200 shadow-sm">
                   {it.label}
                 </div>
               </div>
