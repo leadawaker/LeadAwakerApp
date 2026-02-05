@@ -54,13 +54,11 @@ export default function AppArea() {
           <Route path="/agency/campaigns" component={AppCampaigns} />
           <Route path="/agency/accounts" component={AppAccounts} />
           <Route path="/agency/calendar" component={CalendarPage} />
+          <Route path="/agency/users" component={UsersPage} />
 
           {/* Admin Protected Routes */}
           <Route path="/agency/automation-logs">
             {isAdmin ? <AutomationLogsPage /> : <Redirect to="/agency/dashboard" />}
-          </Route>
-          <Route path="/agency/users">
-            {isAdmin ? <UsersPage /> : <Redirect to="/agency/dashboard" />}
           </Route>
           <Route path="/agency/prompt-library">
             {isAdmin ? <PromptLibraryPage /> : <Redirect to="/agency/dashboard" />}
@@ -78,13 +76,11 @@ export default function AppArea() {
           <Route path="/subaccount/campaigns" component={AppCampaigns} />
           <Route path="/subaccount/accounts" component={AppAccounts} />
           <Route path="/subaccount/calendar" component={CalendarPage} />
+          <Route path="/subaccount/users" component={UsersPage} />
 
           {/* Admin Protected Routes */}
           <Route path="/subaccount/automation-logs">
             {isAdmin ? <AutomationLogsPage /> : <Redirect to="/subaccount/dashboard" />}
-          </Route>
-          <Route path="/subaccount/users">
-            {isAdmin ? <UsersPage /> : <Redirect to="/subaccount/dashboard" />}
           </Route>
           <Route path="/subaccount/prompt-library">
             {isAdmin ? <PromptLibraryPage /> : <Redirect to="/subaccount/dashboard" />}
