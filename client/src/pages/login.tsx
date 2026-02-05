@@ -22,7 +22,8 @@ export default function Login() {
 
     // MOCK AUTH: store a local token
     localStorage.setItem("leadawaker_auth", "mock-jwt");
-    localStorage.setItem("leadawaker_current_account_id", "1");
+    localStorage.setItem("leadawaker_user_email", email);
+    localStorage.setItem("leadawaker_current_account_id", email === "leadawaker@gmail.com" ? "1" : "2");
     
     // Use wouter navigation instead of window.location.href for a SPA transition
     setLocation("/agency/dashboard");

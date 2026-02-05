@@ -19,19 +19,29 @@ export default function UsersPage() {
 
   const currentUserEmail = localStorage.getItem("leadawaker_user_email") || "leadawaker@gmail.com";
   const isAdmin = currentUserEmail === "leadawaker@gmail.com";
+  const currentUser = initialUsers.find(u => u.email === currentUserEmail);
 
   const rows = useMemo(() => {
-    // Admins see everything in the current account, others only themselves? 
-    // Request says: "Only the admin, leadawaker@gmail.com has the power to switch accounts... only see their own"
-    // So if not admin, we should probably filter by email too if we want true "only see their own"
+    if (isAdmin) {
+      return users
+        .filter((u) => (q ? u.email.toLowerCase().includes(q.toLowerCase()) || u.full_name.toLowerCase().includes(q.toLowerCase()) : true));
+    }
+
+    // If not admin, see leadawaker admin user, themselves, and others in same account
     return users
-      .filter((u) => u.account_id === currentAccountId)
-      .filter((u) => (q ? u.email.toLowerCase().includes(q.toLowerCase()) || u.full_name.toLowerCase().includes(q.toLowerCase()) : true))
-      .filter((u) => isAdmin || u.email === currentUserEmail);
-  }, [currentAccountId, q, users, isAdmin, currentUserEmail]);
+      .filter((u) => (
+        u.email === "leadawaker@gmail.com" || 
+        u.email === currentUserEmail || 
+        (currentUser && u.account_id === currentUser.account_id)
+      ))
+      .filter((u) => (q ? u.email.toLowerCase().includes(q.toLowerCase()) || u.full_name.toLowerCase().includes(q.toLowerCase()) : true));
+  }, [q, users, isAdmin, currentUserEmail, currentUser]);
 
   const handleSaveUser = () => {
-    if (!editingUser || !isAdmin) return;
+    if (!editingUser) return;
+    // Admin can edit anyone, users can only edit themselves
+    if (!isAdmin && editingUser.email !== currentUserEmail) return;
+    
     setUsers(prev => prev.map(u => u.id === editingUser.id ? editingUser : u));
     setEditingUser(null);
     toast({
@@ -90,7 +100,7 @@ export default function UsersPage() {
                     </span>
                   </div>
                   <div className="text-right">
-                    {isAdmin && (
+                    {(isAdmin || u.email === currentUserEmail) && (
                       <Button 
                         variant="ghost" 
                         size="sm" 
@@ -153,6 +163,7 @@ export default function UsersPage() {
                   <Select 
                     value={editingUser.role} 
                     onValueChange={(val: any) => setEditingUser({...editingUser, role: val})}
+                    disabled={!isAdmin}
                   >
                     <SelectTrigger data-testid="select-edit-role">
                       <SelectValue />
@@ -170,6 +181,7 @@ export default function UsersPage() {
                   <Select 
                     value={editingUser.status} 
                     onValueChange={(val: any) => setEditingUser({...editingUser, status: val})}
+                    disabled={!isAdmin}
                   >
                     <SelectTrigger data-testid="select-edit-status">
                       <SelectValue />
@@ -179,6 +191,15 @@ export default function UsersPage() {
                       <SelectItem value="Inactive">Inactive</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Password</Label>
+                  <Input 
+                    type="password"
+                    placeholder="Enter new password"
+                    onChange={e => setEditingUser({...editingUser, password: e.target.value} as any)}
+                    data-testid="input-edit-password"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>n8n Webhook URL</Label>
