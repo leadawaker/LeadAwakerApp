@@ -544,14 +544,35 @@ function PipelineCol({
 
   return (
     <div className="w-full bg-white flex flex-col h-full rounded-[32px] overflow-hidden shadow-sm border border-slate-100" data-testid={`col-${stage.id}`}>
+      {/* 🔹 COLUMN HEADER */}
+      <div className="p-4 border-b border-slate-100 bg-white/50 backdrop-blur-sm sticky top-0 z-20">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div 
+              className="p-1.5 rounded-lg" 
+              style={{ backgroundColor: `${stage.fill}15`, color: stage.fill }}
+            >
+              {stage.icon && React.cloneElement(stage.icon as React.ReactElement, { size: 14, strokeWidth: 2.5 })}
+            </div>
+            <h3 className="text-xs font-bold text-slate-800 tracking-tight">{stage.label}</h3>
+          </div>
+          <div 
+            className="px-2 py-0.5 rounded-full text-[10px] font-black"
+            style={{ backgroundColor: `${stage.fill}10`, color: stage.fill }}
+          >
+            {items.length}
+          </div>
+        </div>
+      </div>
+
       <div className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-hide">
       {items.map((l) => (
       <div
         key={l.id}
         className={cn(
-          "rounded-xl cursor-pointer relative",
-          "transition-[max-height] duration-200 ease-out",
-          "max-h-10 group-hover:max-h-[500px]",
+          "rounded-xl cursor-pointer relative group",
+          "transition-all duration-300 ease-in-out",
+          "min-h-10 hover:shadow-lg hover:shadow-slate-200/50",
           "overflow-hidden",
           "p-2"
         )}
@@ -566,7 +587,7 @@ function PipelineCol({
       >
         {/* 🔹 HOVER OVERLAY */}
         <div
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
           style={{
             backgroundColor: `${stage.fill}1A`, // hover ~10–12%
           }}
@@ -596,36 +617,41 @@ function PipelineCol({
             </span>
           </div>
 
-          <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 space-y-2">
-            <div className="space-y-0.5">
-              {l.email && (
-                <div className="text-[13px] text-slate-700 truncate font-medium">
-                  {l.email}
-                </div>
-              )}
-              {l.phone && (
-                <div className="text-[13px] text-slate-700 font-medium">
-                  {l.phone}
-                </div>
-              )}
-            </div>
+          <div className="max-h-0 group-hover:max-h-[500px] opacity-0 group-hover:opacity-100 transition-all duration-500 ease-in-out overflow-hidden">
+            <div className="mt-3 space-y-2.5 pb-1">
+              <div className="space-y-1">
+                {l.email && (
+                  <div className="flex items-center gap-2 text-[11px] text-slate-600 font-medium bg-white/40 px-2 py-1 rounded-md border border-slate-200/20">
+                    <span className="opacity-50">@</span>
+                    <span className="truncate">{l.email}</span>
+                  </div>
+                )}
+                {l.phone && (
+                  <div className="flex items-center gap-2 text-[11px] text-slate-600 font-medium bg-white/40 px-2 py-1 rounded-md border border-slate-200/20">
+                    <span className="opacity-50">#</span>
+                    <span>{l.phone}</span>
+                  </div>
+                )}
+              </div>
 
-            <div className="flex flex-wrap gap-1.5 max-h-[90px] overflow-hidden">
-              {(l.tags || []).slice(0, 8).map((tag, idx) => {
-                const color = getTagColor(tag);
-                return (
-                  <span
-                    key={idx}
-                    className="px-2.5 py-1 rounded-full text-[10px] font-black"
-                    style={{
-                      backgroundColor: `${color}15`,
-                      color: color,
-                    }}
-                  >
-                    {tag}
-                  </span>
-                );
-              })}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {(l.tags || []).map((tag, idx) => {
+                  const color = getTagColor(tag);
+                  return (
+                    <span
+                      key={idx}
+                      className="px-2 py-0.5 rounded-md text-[9px] font-bold border"
+                      style={{
+                        backgroundColor: `${color}10`,
+                        color: color,
+                        borderColor: `${color}20`
+                      }}
+                    >
+                      {tag}
+                    </span>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
