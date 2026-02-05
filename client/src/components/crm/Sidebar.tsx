@@ -23,7 +23,8 @@ export function Sidebar() {
     ]),
     ...(isAdmin ? [
       { href: `${prefix}/automation-logs`, label: "Automations", icon: ListTodo, testId: "link-nav-automations" },
-      { href: `${prefix}/prompt-library`, label: "Library", icon: Library, testId: "link-nav-library" }
+      { href: `${prefix}/prompt-library`, label: "Library", icon: Library, testId: "link-nav-library" },
+      { href: `${prefix}/users`, label: "Users", icon: Users, testId: "link-nav-users" }
     ] : [])
   ];
 

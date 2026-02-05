@@ -52,10 +52,9 @@ export default function UsersPage() {
 
   return (
     <CrmShell>
-      <div className="bg-[#F6F5FA] min-h-full p-8" data-testid="page-users">
-        <div className="max-w-[1200px] mx-auto">
+      <div className="bg-[#F6F5FA] min-h-full p-0" data-testid="page-users">
+        <div className="max-w-[1600px] mx-auto p-8">
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Users</h1>
             <div className="flex items-center gap-2" data-testid="bar-users">
               <input
                 className="h-11 w-[320px] rounded-xl border border-slate-200 bg-white px-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
