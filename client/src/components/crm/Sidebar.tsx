@@ -18,9 +18,6 @@ export function Sidebar() {
     { href: `${prefix}/leads`, label: "Contacts", icon: Users, testId: "link-nav-leads" },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "link-nav-calendar" },
     { href: `${prefix}/conversations`, label: "Conversations", icon: MessageSquare, testId: "link-nav-conversations" },
-    ...(isAgencyView ? [] : [
-      { href: `${prefix}/campaigns`, label: "Campaigns", icon: Target, testId: "link-nav-campaigns" }
-    ]),
     ...(isAdmin ? [
       { href: `${prefix}/automation-logs`, label: "Automations", icon: ListTodo, testId: "link-nav-automations" },
       { href: `${prefix}/prompt-library`, label: "Library", icon: Library, testId: "link-nav-library" }

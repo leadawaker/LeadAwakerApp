@@ -37,6 +37,10 @@ function PageLoader() {
 }
 
 export default function AppArea() {
+  // Admin check
+  const currentUserEmail = localStorage.getItem("leadawaker_user_email") || "leadawaker@gmail.com";
+  const isAdmin = currentUserEmail === "leadawaker@gmail.com";
+
   return (
     <Protected>
       <Suspense fallback={<PageLoader />}>
@@ -50,10 +54,19 @@ export default function AppArea() {
           <Route path="/agency/campaigns" component={AppCampaigns} />
           <Route path="/agency/accounts" component={AppAccounts} />
           <Route path="/agency/calendar" component={CalendarPage} />
-          <Route path="/agency/automation-logs" component={AutomationLogsPage} />
-          <Route path="/agency/users" component={UsersPage} />
+
+          {/* Admin Protected Routes */}
+          <Route path="/agency/automation-logs">
+            {isAdmin ? <AutomationLogsPage /> : <Redirect to="/agency/dashboard" />}
+          </Route>
+          <Route path="/agency/users">
+            {isAdmin ? <UsersPage /> : <Redirect to="/agency/dashboard" />}
+          </Route>
+          <Route path="/agency/prompt-library">
+            {isAdmin ? <PromptLibraryPage /> : <Redirect to="/agency/dashboard" />}
+          </Route>
+
           <Route path="/agency/tags" component={TagsPage} />
-          <Route path="/agency/prompt-library" component={PromptLibraryPage} />
           <Route path="/agency/settings" component={SettingsPage} />
 
           <Route path="/subaccount" component={() => <Redirect to="/subaccount/dashboard" />} />
@@ -65,10 +78,19 @@ export default function AppArea() {
           <Route path="/subaccount/campaigns" component={AppCampaigns} />
           <Route path="/subaccount/accounts" component={AppAccounts} />
           <Route path="/subaccount/calendar" component={CalendarPage} />
-          <Route path="/subaccount/automation-logs" component={AutomationLogsPage} />
-          <Route path="/subaccount/users" component={UsersPage} />
+
+          {/* Admin Protected Routes */}
+          <Route path="/subaccount/automation-logs">
+            {isAdmin ? <AutomationLogsPage /> : <Redirect to="/subaccount/dashboard" />}
+          </Route>
+          <Route path="/subaccount/users">
+            {isAdmin ? <UsersPage /> : <Redirect to="/subaccount/dashboard" />}
+          </Route>
+          <Route path="/subaccount/prompt-library">
+            {isAdmin ? <PromptLibraryPage /> : <Redirect to="/subaccount/dashboard" />}
+          </Route>
+
           <Route path="/subaccount/tags" component={TagsPage} />
-          <Route path="/subaccount/prompt-library" component={PromptLibraryPage} />
           <Route path="/subaccount/settings" component={SettingsPage} />
           <Route component={() => (
             <CrmShell>
