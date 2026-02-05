@@ -176,7 +176,7 @@ export function RightSidebar({
                     collapsed ? "h-12 justify-center" : "px-3 py-3",
                     active
                       ? "bg-blue-600 text-white"
-                      : "text-muted-foreground hover:bg-muted/40"
+                      : "text-muted-foreground hover:bg-muted"
                   )}
                   data-testid={`link-${it.testId}`}
                 >
@@ -189,8 +189,15 @@ export function RightSidebar({
 
                   {/* 🔹 COLLAPSED TOOLTIP (RESTORED) */}
                   {collapsed && (
-                    <div className="absolute left-[70px] opacity-0 group-hover:opacity-100 transition-opacity z-[120] pointer-events-none">
-                      <div className="bg-black text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-xl whitespace-nowrap">
+                    <div className="absolute left-[40px] opacity-0 group-hover:opacity-100 transition-opacity z-[120] pointer-events-none">
+                      <div
+                        className={cn(
+                          "px-3 py-3.5 rounded-xl text-sm font-semibold whitespace-nowrap",
+                          active
+                            ? "bg-blue-600 text-white"
+                            : "bg-muted text-foreground"
+                        )}
+                      >
                         {it.label}
                       </div>
                     </div>
