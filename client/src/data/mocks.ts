@@ -600,7 +600,7 @@ export const users: AppUser[] = [
   {
     id: 1,
     account_id: 1,
-    full_name: "Admin User",
+    full_name: "Gabriel Fronza",
     email: "leadawaker@gmail.com",
     phone: "+31612345678",
     timezone: "Europe/Amsterdam",

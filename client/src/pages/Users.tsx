@@ -52,12 +52,12 @@ export default function UsersPage() {
 
   return (
     <CrmShell>
-      <div className="bg-[#F6F5FA] min-h-full p-0" data-testid="page-users">
-        <div className="max-w-[1600px] mx-auto p-8">
-          <div className="flex items-center justify-between mb-8">
+      <div className="bg-[#F6F5FA] h-full overflow-hidden flex flex-col" data-testid="page-users">
+        <div className="flex-1 min-h-0 px-6 py-6 flex flex-col">
+          <div className="flex items-center justify-between mb-6 shrink-0">
             <div className="flex items-center gap-2" data-testid="bar-users">
               <input
-                className="h-11 w-[320px] rounded-xl border border-slate-200 bg-white px-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                className="h-10 w-[320px] rounded-xl border border-slate-200 bg-white px-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                 placeholder="Search name or email…"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -66,27 +66,30 @@ export default function UsersPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden" data-testid="table-users">
-            <div className="grid grid-cols-[80px_1.5fr_1.5fr_1.2fr_1fr_1fr_100px_100px] text-[11px] uppercase tracking-wider font-bold text-muted-foreground bg-slate-50 border-b border-slate-100 px-6 py-4">
+          <div className="flex-1 min-h-0 bg-white rounded-[32px] border border-slate-200 shadow-sm flex flex-col overflow-hidden" data-testid="table-users">
+            <div className="shrink-0 grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_100px_100px] text-[11px] uppercase tracking-wider font-bold text-muted-foreground bg-slate-50 border-b border-slate-100 px-6 py-4 z-10">
               <div>ID</div>
               <div>Name</div>
-              <div>Email</div>
               <div>Account</div>
+              <div>Email</div>
               <div>Phone</div>
               <div>Role</div>
               <div>Status</div>
               <div className="text-right">Actions</div>
             </div>
-            <div className="divide-y divide-slate-100">
+            <div className="flex-1 overflow-y-auto divide-y divide-slate-100 pb-4">
               {rows.map((u) => (
-                <div key={u.id} className="grid grid-cols-[80px_1.5fr_1.5fr_1.2fr_1fr_1fr_100px_100px] px-6 py-5 text-sm items-center hover:bg-slate-50/50 transition-colors" data-testid={`row-user-${u.id}`}>
+                <div key={u.id} className="grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_100px_100px] px-6 py-5 text-sm items-center hover:bg-slate-50/50 transition-colors" data-testid={`row-user-${u.id}`}>
                   <div className="text-muted-foreground font-mono text-xs">#{u.users_id}</div>
                   <div className="font-semibold text-slate-900">{u.full_name}</div>
+                  <div className="text-slate-500 truncate pr-4">{u.Accounts}</div>
                   <div className="text-slate-500 truncate pr-4">{u.email}</div>
-                  <div className="text-slate-500">{u.Accounts}</div>
                   <div className="text-slate-500">{u.phone}</div>
                   <div>
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-xs font-medium">
+                    <span className={cn(
+                      "px-2.5 py-1 rounded-lg text-xs font-medium",
+                      u.role === 'Admin' ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-100 text-slate-600'
+                    )}>
                       {u.role}
                     </span>
                   </div>
