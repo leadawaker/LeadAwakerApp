@@ -117,43 +117,45 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                className="h-11 px-4 w-[180px] justify-between hover:bg-white border border-border bg-white rounded-xl text-sm font-semibold flex items-center gap-2"
-                data-testid="select-campaign-topbar-custom"
-              >
-                <span className="truncate">
-                  {campaignOptions.find(c => c.id === Number(localStorage.getItem("leadawaker_selected_campaign")))?.name || "All campaigns"}
-                </span>
-                <ChevronDown className="h-4 w-4 opacity-60 shrink-0" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64 rounded-2xl shadow-xl border-border bg-background mt-2">
-              <DropdownMenuItem 
-                onClick={() => {
-                  localStorage.setItem("leadawaker_selected_campaign", "all");
-                  window.dispatchEvent(new Event("storage"));
-                }}
-                className="py-3 rounded-xl m-1 cursor-pointer"
-              >
-                All campaigns
-              </DropdownMenuItem>
-              {campaignOptions.map((c) => (
-                <DropdownMenuItem
-                  key={c.id}
+          {!isAgencyView && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  className="h-11 px-4 w-[180px] justify-between hover:bg-white border border-border bg-white rounded-xl text-sm font-semibold flex items-center gap-2"
+                  data-testid="select-campaign-topbar-custom"
+                >
+                  <span className="truncate">
+                    {campaignOptions.find(c => c.id === Number(localStorage.getItem("leadawaker_selected_campaign")))?.name || "All campaigns"}
+                  </span>
+                  <ChevronDown className="h-4 w-4 opacity-60 shrink-0" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64 rounded-2xl shadow-xl border-border bg-background mt-2">
+                <DropdownMenuItem 
                   onClick={() => {
-                    localStorage.setItem("leadawaker_selected_campaign", String(c.id));
+                    localStorage.setItem("leadawaker_selected_campaign", "all");
                     window.dispatchEvent(new Event("storage"));
                   }}
                   className="py-3 rounded-xl m-1 cursor-pointer"
                 >
-                  {c.name}
+                  All campaigns
                 </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                {campaignOptions.map((c) => (
+                  <DropdownMenuItem
+                    key={c.id}
+                    onClick={() => {
+                      localStorage.setItem("leadawaker_selected_campaign", String(c.id));
+                      window.dispatchEvent(new Event("storage"));
+                    }}
+                    className="py-3 rounded-xl m-1 cursor-pointer"
+                  >
+                    {c.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
 
 
