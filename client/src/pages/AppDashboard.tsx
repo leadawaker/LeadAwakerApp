@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { campaigns, leads, interactions, automationLogs } from "@/data/mocks";
+import { campaigns, leads, interactions, automationLogs, accounts } from "@/data/mocks";
 import { 
   LineChart, 
   Line, 
