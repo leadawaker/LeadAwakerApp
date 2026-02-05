@@ -38,7 +38,7 @@ function PageLoader() {
 
 export default function AppArea() {
   // Admin check
-  const currentUserEmail = localStorage.getItem("leadawaker_user_email") || "leadawaker@gmail.com";
+  const currentUserEmail = localStorage.getItem("leadawaker_user_email") || "";
   const isAdmin = currentUserEmail === "leadawaker@gmail.com";
 
   return (

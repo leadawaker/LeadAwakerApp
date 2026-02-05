@@ -10,7 +10,7 @@ export function Sidebar() {
   const prefix = isAgencyView ? "/agency" : "/subaccount";
 
   // Check if current user is admin
-  const currentUserEmail = localStorage.getItem("leadawaker_user_email") || "leadawaker@gmail.com";
+  const currentUserEmail = localStorage.getItem("leadawaker_user_email") || "";
   const isAdmin = currentUserEmail === "leadawaker@gmail.com";
 
   const items = [
