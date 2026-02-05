@@ -543,7 +543,7 @@ function PipelineCol({
   };
 
   return (
-    <div className="w-full bg-white flex flex-col h-full rounded-[32px] overflow-hidden shadow-sm border border-slate-100" data-testid={`col-${stage.id}`}>
+    <div className="w-full bg-white flex flex-col h-full rounded-t-[32px] overflow-hidden shadow-sm border border-slate-100" data-testid={`col-${stage.id}`}>
       {/* 🔹 COLUMN HEADER */}
       <div className="p-4 border-b border-slate-100 bg-white/50 backdrop-blur-sm sticky top-0 z-20">
         <div className="flex items-center justify-between">
@@ -554,10 +554,10 @@ function PipelineCol({
             >
               {stage.icon && React.cloneElement(stage.icon as React.ReactElement, { size: 14, strokeWidth: 2.5 })}
             </div>
-            <h3 className="text-xs font-bold text-slate-800 tracking-tight">{stage.label}</h3>
+            <h3 className="text-[15px] font-bold text-slate-800 tracking-tight">{stage.label}</h3>
           </div>
           <div 
-            className="px-2 py-0.5 rounded-full text-[10px] font-black"
+            className="px-2.5 py-1 rounded-full text-[12px] font-black"
             style={{ backgroundColor: `${stage.fill}10`, color: stage.fill }}
           >
             {items.length}
@@ -612,7 +612,7 @@ function PipelineCol({
             >
               {l.full_name}
             </div>
-            <span className="text-[9px] text-muted-foreground whitespace-nowrap opacity-30 font-bold uppercase">
+            <span className="text-[9px] text-muted-foreground group-hover:text-black transition-colors whitespace-nowrap opacity-30 group-hover:opacity-100 font-bold uppercase">
               {formatTimeAgo(l.created_at)}
             </span>
           </div>
@@ -642,9 +642,9 @@ function PipelineCol({
                       key={idx}
                       className="px-2 py-0.5 rounded-md text-[9px] font-bold border"
                       style={{
-                        backgroundColor: `${color}10`,
-                        color: color,
-                        borderColor: `${color}20`
+                        backgroundColor: color,
+                        color: "#fff",
+                        borderColor: color
                       }}
                     >
                       {tag}
