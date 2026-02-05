@@ -106,7 +106,7 @@ export default function AppLeads() {
 
   return (
     <CrmShell>
-      <div className="h-full flex flex-col pt-6 -mt-10" data-testid="page-leads">
+      <div className="h-full flex flex-col pt-6 -mt-2 pb-2" data-testid="page-leads">
         <div className="shrink-0 mb-6" data-testid="card-page-leads">
           <div className="p-0">
             <div className="flex flex-wrap items-center gap-3" data-testid="bar-filters">

@@ -28,7 +28,6 @@ import {
   ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { LeadCard } from "@/components/crm/LeadCard";
 
 const TAG_CATEGORIES = [
   {
@@ -128,12 +127,16 @@ export default function AppDashboard() {
             </div>
             <h3 className="text-[12px] font-bold text-slate-700">{stage.label}</h3>
           </div>
-          <span className="text-[12px] font-bold text-slate-400">{items.length}</span>
-        </div>
-        <div className="flex-1 overflow-y-auto space-y-3 scrollbar-hide">
-          {items.map((lead: any) => (
-            <LeadCard key={lead.id} lead={lead} active={false} />
-          ))}
+          <span
+            className="text-[12px] font-black px-2 py-0.5 rounded-md"
+            style={{
+              backgroundColor: `${stage.fill}15`,
+              color: stage.id === 'Booked' ? '#ca8a04' : stage.fill,
+              border: `1px solid ${stage.fill}30`,
+            }}
+          >
+            {items.length}
+          </span>
         </div>
       </div>
     );
@@ -341,7 +344,7 @@ function SubaccountDashboard({
             <div className="mb-4">
               <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Performance Over Time</h3>
             </div>
-            <div className="flex-grow rounded-[32px] border border-slate-200 bg-white p-6 overflow-hidden flex flex-col">
+            <div className="flex-grow rounded-[32px] border border-slate-200 bg-white p-6 overflow-hidden pb-4 flex flex-col">
               <div className="flex items-center justify-end mb-4 shrink-0">
                 <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold">
                   <TrendingUp className="w-3 h-3" />
@@ -451,7 +454,7 @@ function SubaccountDashboard({
           <div 
             ref={scrollRef}
             onScroll={checkScroll}
-            className="overflow-x-auto overflow-y-hidden pb-0 scrollbar-hide -mx-10 px-10" 
+            className="overflow-x-auto overflow-y-hidden pb-4 scrollbar-hide -mx-10 px-10" 
             data-testid="scroll-pipeline"
           >
             <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-[calc(100vh-170px)]" data-testid="grid-pipeline">
@@ -543,98 +546,95 @@ function PipelineCol({
     <div className="w-full bg-white flex flex-col h-full rounded-[32px] overflow-hidden shadow-sm border border-slate-100" data-testid={`col-${stage.id}`}>
       <div
         className={cn(
-          "p-4 flex items-center justify-between z-10 shrink-0 sticky top-0 bg-white dark:bg-slate-900",
+          "rounded-xl cursor-pointer relative",
+          "transition-[max-height] duration-200 ease-out",
+          "max-h-10 group-hover:max-h-[500px]",
+          "overflow-hidden",
+          "p-2"
         )}
-        data-testid={`col-head-${stage.id}`}
+        style={{
+          backgroundColor: `${stage.fill}0D`, // base ~5–8%
+        }}
+        onClick={() => {
+          window.history.pushState({}, "", `/app/contacts/${l.id}`);
+          window.dispatchEvent(new PopStateEvent("popstate"));
+        }}
+        data-testid={`pill-contact-${stage.id}-${l.id}`}
       >
-        <div className="flex items-center justify-between w-full min-w-0">
-          <div className="flex items-center gap-2.5 min-w-0">
+        {/* 🔹 HOVER OVERLAY */}
+        <div
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+          style={{
+            backgroundColor: `${stage.fill}1A`, // hover ~10–12%
+          }}
+        />
+
+        {/* 🔹 CARD CONTENT */}
+        <div className="relative z-10">
+          <div className="flex items-center gap-2" data-testid={`row-pill-header-${stage.id}-${l.id}`}>
             <div 
+              className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 opacity-60"
               style={{ 
+                backgroundColor: `${stage.fill}15`,
                 color: stage.id === 'Booked' ? '#ca8a04' : stage.fill,
+                border: `1px solid ${stage.fill}30`
               }}
             >
-              {stage.icon}
+              {getInitials(l.full_name)}
             </div>
-            <span className="text-[16px] font-black uppercase tracking-tight text-slate-900 truncate">{stage.label}</span>
+            <div
+              className="font-semibold text-xs truncate flex-grow"
+              style={{ color: stage.id === 'Booked' ? '#ca8a04' : stage.fill }}
+            >
+              {l.full_name}
+            </div>
+            <span className="text-[9px] text-muted-foreground whitespace-nowrap opacity-30 font-bold uppercase">
+              {formatTimeAgo(l.created_at)}
+            </span>
           </div>
-          <span
-            className="text-[14px] font-black px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 ml-2"
-            data-testid={`col-count-${stage.id}`}
-          >
-            {items.length}
-          </span>
-        </div>
-      </div>
-      <div className="p-3 pt-0 space-y-2 flex-grow overflow-y-auto scrollbar-hide" data-testid={`col-body-${stage.id}`}>
-        {items.slice(0, 50).map((l) => (
-          <div key={l.id} className="group relative w-full" data-testid={`row-contact-pill-${stage.id}-${l.id}`}>
-              <div
-                className={cn(
-                  "rounded-xl border border-slate-200/40 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm cursor-pointer relative",
-                  "transition-[height,transform,box-shadow,background-color,border-color] duration-150 ease-out",
-                  "hover:shadow-md hover:border-slate-300/60",
-                  "h-10 group-hover:h-[145px]",
-                  "p-2"
-                )}
-                onClick={() => {
-                  window.history.pushState({}, "", `/app/contacts/${l.id}`);
-                  window.dispatchEvent(new PopStateEvent("popstate"));
-                }}
-                data-testid={`pill-contact-${stage.id}-${l.id}`}
-              >
-                <div className="flex items-center gap-2" data-testid={`row-pill-header-${stage.id}-${l.id}`}>
-                  <div 
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 opacity-60"
-                    style={{ 
-                      backgroundColor: `${stage.fill}15`,
-                      color: stage.id === 'Booked' ? '#ca8a04' : stage.fill,
-                      border: `1px solid ${stage.fill}30`
+
+          <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 space-y-2">
+            <div className="space-y-0.5">
+              {l.email && (
+                <div className="text-[13px] text-slate-700 truncate font-medium">
+                  {l.email}
+                </div>
+              )}
+              {l.phone && (
+                <div className="text-[13px] text-slate-700 font-medium">
+                  {l.phone}
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 max-h-[90px] overflow-hidden">
+              {(l.tags || []).slice(0, 8).map((tag, idx) => {
+                const color = getTagColor(tag);
+                return (
+                  <span
+                    key={idx}
+                    className="px-2.5 py-1 rounded-full text-[10px] font-black"
+                    style={{
+                      backgroundColor: `${color}15`,
+                      color: color,
                     }}
                   >
-                    {getInitials(l.full_name)}
-                  </div>
-                  <div
-                    className="font-semibold text-xs truncate flex-grow"
-                    style={{ color: stage.id === 'Booked' ? '#ca8a04' : stage.fill }}
-                    data-testid={`text-pipe-name-${stage.id}-${l.id}`}
-                  >
-                    {l.full_name}
-                  </div>
-                  <span className="text-[9px] text-muted-foreground whitespace-nowrap opacity-30 font-bold uppercase">
-                    {formatTimeAgo(l.created_at)}
+                    {tag}
                   </span>
-                </div>
-
-                <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <div className="flex flex-wrap gap-1.5 max-h-[90px] overflow-hidden">
-                    {(l.tags || []).slice(0, 8).map((tag: string, idx: number) => {
-                      const color = getTagColor(tag);
-                      return (
-                        <span 
-                          key={idx}
-                          className="px-2.5 py-1 rounded-full text-[10px] font-black border shadow-sm"
-                          style={{ 
-                            backgroundColor: `${color}15`,
-                            color: color,
-                            borderColor: `${color}30`
-                          }}
-                        >
-                          {tag}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
+                );
+              })}
+            </div>
           </div>
-        ))}
+        </div>
+      </div>
+        ))
         {items.length === 0 ? (
           <div className="flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-slate-400 text-xs italic bg-slate-50/50 dark:bg-slate-900/50 p-3">
             No contacts.
           </div>
         ) : null}
       </div>
-    </div>
+  
+    
   );
 }

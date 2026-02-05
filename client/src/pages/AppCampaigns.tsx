@@ -1,119 +1,213 @@
 import { useMemo, useState } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { campaigns, interactions, leads, accounts } from "@/data/mocks";
-import { FiltersBar } from "@/components/crm/FiltersBar";
 import { cn } from "@/lib/utils";
-import { Target, Zap, MessageSquare, TrendingUp, Filter, Eye } from "lucide-react";
+import {
+  Filter,
+  ChevronDown,
+  Eye,
+} from "lucide-react";
+
+/* ------------------------------------------------------------------ */
+/* Mock reference data (NOT using your existing mocks)                 */
+/* ------------------------------------------------------------------ */
+
+const mockAccounts = [
+  { id: 1, name: "LeadAwaker Agency" },
+  { id: 2, name: "FitnessGym ABC" },
+  { id: 3, name: "LawFirm XYZ" },
+];
+
+const mockCampaigns = [
+  {
+    id: 101,
+    name: "Client Reactivation Q1",
+    description: "Re-engage cold leads from last quarter",
+    status: "Active",
+    type: "Reactivation",
+    account_id: 1,
+    ai_prompt_template: "Reactivation AI prompt v1",
+    bump_1_template: "Just checking back in 🙂",
+    daily_lead_limit: 120,
+    leads_total: 340,
+    messages_sent: 890,
+  },
+  {
+    id: 102,
+    name: "Outbound Scale – Lawyers",
+    description: "Cold outreach to small law firms",
+    status: "Active",
+    type: "Outbound",
+    account_id: 3,
+    ai_prompt_template: "Law firm pitch prompt",
+    bump_1_template: "Any thoughts?",
+    daily_lead_limit: 80,
+    leads_total: 210,
+    messages_sent: 540,
+  },
+  {
+    id: 103,
+    name: "Black Friday Promo",
+    description: "Seasonal promo campaign",
+    status: "Inactive",
+    type: "Broadcast",
+    account_id: 2,
+    ai_prompt_template: "Promo announcement template",
+    bump_1_template: "",
+    daily_lead_limit: 0,
+    leads_total: 95,
+    messages_sent: 190,
+  },
+  {
+    id: 104,
+    name: "Warm Leads Follow-Up",
+    description: "Follow-up with inbound website leads",
+    status: "Finished",
+    type: "Follow-up",
+    account_id: 1,
+    ai_prompt_template: "Warm inbound AI script",
+    bump_1_template: "Still interested?",
+    daily_lead_limit: 60,
+    leads_total: 180,
+    messages_sent: 320,
+  },
+];
+
+/* ------------------------------------------------------------------ */
 
 export default function AppCampaigns() {
-  const { currentAccountId, isAgencyView } = useWorkspace();
-  const [showAllAccounts, setShowAllAccounts] = useState(isAgencyView);
-  const [onlyActive, setOnlyActive] = useState(false);
-  const [q, setQ] = useState("");
+  const { isAgencyView } = useWorkspace();
 
-  const rows = useMemo(() => {
-    return campaigns
-      .filter((c) => (showAllAccounts ? true : c.account_id === currentAccountId))
-      .filter((c) => (onlyActive ? c.status === "Active" : true))
-      .filter((c) => (q ? c.name.toLowerCase().includes(q.toLowerCase()) : true));
-  }, [currentAccountId, showAllAccounts, onlyActive, q]);
+  const [search, setSearch] = useState("");
+  const [accountFilter, setAccountFilter] = useState<number | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "Active" | "Inactive">("all");
+
+  const filteredCampaigns = useMemo(() => {
+    return mockCampaigns
+      .filter(c =>
+        accountFilter === "all" ? true : c.account_id === accountFilter
+      )
+      .filter(c =>
+        statusFilter === "all" ? true : c.status === statusFilter
+      )
+      .filter(c =>
+        search
+          ? c.name.toLowerCase().includes(search.toLowerCase())
+          : true
+      );
+  }, [search, accountFilter, statusFilter]);
 
   return (
     <CrmShell>
-      <div className="flex flex-col h-full bg-[#F6F5FA]/30" data-testid="page-campaigns">
-        <div className="flex items-center justify-between mb-8 -mt-4">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900">Campaign Manager</h1>
-            <p className="text-slate-500 font-medium text-sm mt-1">Monitor and control outreach performance</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="bg-white p-1.5 rounded-2xl border border-slate-200 flex gap-1">
-              {isAgencyView && (
-                <ToggleButton 
-                  active={showAllAccounts} 
-                  onClick={() => setShowAllAccounts(!showAllAccounts)}
-                  label="All Accounts"
-                />
-              )}
-              <ToggleButton 
-                active={onlyActive} 
-                onClick={() => setOnlyActive(!onlyActive)}
-                label="Active Only"
-              />
-            </div>
-          </div>
-        </div>
+      <div className="flex flex-col h-full pb-4 bg-[#F6F5FA]/30">
 
-        <div className="mb-6 flex gap-4">
-          <div className="relative flex-1">
+        {/* FILTER BAR */}
+        <div className="flex items-center gap-3 mb-6 mt-[2px]">
+
+          {/* Search */}
+          <div className="relative w-[320px]">
             <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input 
-              className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-4 text-sm font-medium focus:ring-2 focus:ring-blue-500/20 outline-none shadow-sm transition-all"
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Search campaigns by name..."
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
+              className="h-11 w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-4 text-sm font-medium shadow-sm outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
+
+          {/* Account dropdown */}
+          <Dropdown
+            label={
+              accountFilter === "all"
+                ? "All accounts"
+                : mockAccounts.find(a => a.id === accountFilter)?.name
+            }
+          >
+            <DropdownItem onClick={() => setAccountFilter("all")}>
+              All accounts
+            </DropdownItem>
+            {mockAccounts.map(acc => (
+              <DropdownItem
+                key={acc.id}
+                onClick={() => setAccountFilter(acc.id)}
+              >
+                {acc.name}
+              </DropdownItem>
+            ))}
+          </Dropdown>
+
+          {/* Status dropdown */}
+          <Dropdown
+            label={
+              statusFilter === "all"
+                ? "All campaigns"
+                : statusFilter
+            }
+          >
+            <DropdownItem onClick={() => setStatusFilter("all")}>
+              All campaigns
+            </DropdownItem>
+            <DropdownItem onClick={() => setStatusFilter("Active")}>
+              Active
+            </DropdownItem>
+            <DropdownItem onClick={() => setStatusFilter("Inactive")}>
+              Inactive
+            </DropdownItem>
+          </Dropdown>
+
         </div>
 
+        {/* TABLE */}
         <div className="flex-1 bg-white rounded-[32px] border border-slate-200 overflow-hidden shadow-sm flex flex-col">
-          <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr_100px] text-[11px] font-bold text-slate-400 bg-slate-50/50 border-b border-slate-100 px-8 py-4 uppercase tracking-wider">
-            <div>Campaign Details</div>
+
+          {/* Header */}
+          <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_100px] px-8 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 border-b">
+            <div>Campaign</div>
             <div>Account</div>
             <div>Status</div>
-            <div>Audience</div>
-            <div>Volume</div>
-            <div className="text-right">Metrics</div>
+            <div>Leads</div>
+            <div className="text-right">Actions</div>
           </div>
 
-          <div className="divide-y divide-slate-50 overflow-y-auto">
-            {rows.map((c) => {
-              const account = accounts.find(a => a.id === c.account_id);
-              const leadCount = leads.filter(l => l.campaign_id === c.id).length;
-              const sent = interactions.filter(i => i.campaign_id === c.id && i.direction === "Outbound").length;
-              const received = interactions.filter(i => i.campaign_id === c.id && i.direction === "Inbound").length;
-
+          {/* Rows */}
+          <div className="overflow-y-auto divide-y divide-slate-50">
+            {filteredCampaigns.map(c => {
+              const account = mockAccounts.find(a => a.id === c.account_id);
               return (
-                <div key={c.id} className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr_100px] px-8 py-6 text-sm items-center hover:bg-slate-50/30 transition-colors group">
-                  <div className="min-w-0 pr-4">
-                    <div className="font-bold text-slate-900 truncate flex items-center gap-2">
-                      {c.name}
-                      <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px] font-black uppercase tracking-tighter">
-                        {c.type}
-                      </span>
-                    </div>
-                    <div className="text-xs text-slate-500 font-medium truncate mt-1">
+                <div
+                  key={c.id}
+                  className="grid grid-cols-[1.5fr_1fr_1fr_1fr_100px] px-8 py-6 text-sm items-center hover:bg-slate-50/40 transition-colors"
+                >
+                  <div>
+                    <div className="font-bold text-slate-900">{c.name}</div>
+                    <div className="text-xs text-slate-500 mt-1 truncate">
                       {c.description}
                     </div>
                   </div>
 
-                  <div className="font-bold text-slate-700">
-                    {account?.name || "Unknown"}
+                  <div className="font-semibold text-slate-700">
+                    {account?.name}
                   </div>
 
                   <div>
-                    <div className={cn(
-                      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tight border",
-                      c.status === "Active" ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-slate-50 text-slate-500 border-slate-100"
-                    )}>
-                      <div className={cn("w-1.5 h-1.5 rounded-full", c.status === "Active" ? "bg-blue-500 animate-pulse" : "bg-slate-400")} />
+                    <span
+                      className={cn(
+                        "px-2.5 py-1 rounded-full text-[10px] font-black uppercase border",
+                        c.status === "Active"
+                          ? "bg-blue-50 text-blue-700 border-blue-100"
+                          : "bg-slate-50 text-slate-500 border-slate-100"
+                      )}
+                    >
                       {c.status}
-                    </div>
+                    </span>
                   </div>
 
-                  <div className="flex flex-col">
-                    <div className="font-bold text-slate-900">{leadCount}</div>
-                    <div className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Total Leads</div>
-                  </div>
-
-                  <div className="flex flex-col">
-                    <div className="font-bold text-slate-900">{sent}</div>
-                    <div className="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Messages Sent</div>
+                  <div className="font-bold text-slate-900">
+                    {c.leads_total}
                   </div>
 
                   <div className="text-right">
-                    <button className="p-2.5 rounded-xl hover:bg-white hover:shadow-md text-slate-400 hover:text-blue-600 transition-all border border-transparent hover:border-slate-100">
+                    <button className="p-2.5 rounded-xl hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100 text-slate-400 hover:text-blue-600">
                       <Eye className="w-4 h-4" />
                     </button>
                   </div>
@@ -127,18 +221,51 @@ export default function AppCampaigns() {
   );
 }
 
-function ToggleButton({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+/* ------------------------------------------------------------------ */
+/* Small dropdown components                                           */
+/* ------------------------------------------------------------------ */
+
+function Dropdown({
+  label,
+  children,
+}: {
+  label: string | undefined;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="h-11 px-4 rounded-2xl border border-slate-200 bg-white flex items-center gap-2 text-sm font-semibold shadow-sm hover:bg-slate-50"
+      >
+        {label}
+        <ChevronDown className="w-4 h-4 text-slate-400" />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-2 min-w-full bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DropdownItem({
+  children,
+  onClick,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
   return (
     <button
       onClick={onClick}
-      className={cn(
-        "px-4 py-1.5 rounded-xl text-xs font-bold transition-all",
-        active 
-          ? "bg-slate-900 text-white shadow-lg" 
-          : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-      )}
+      className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 font-medium"
     >
-      {label}
+      {children}
     </button>
   );
 }
