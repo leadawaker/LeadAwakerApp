@@ -598,6 +598,26 @@ export const automationLogs: AutomationLog[] = Array.from({ length: 60 }).map((_
 
 export const users: AppUser[] = [
   {
+    id: 1,
+    account_id: 1,
+    full_name: "Admin User",
+    email: "leadawaker@gmail.com",
+    phone: "+31612345678",
+    timezone: "Europe/Amsterdam",
+    role: "Admin",
+    status: "Active",
+    avatar_url: "",
+    n8n_webhook_url: "",
+    notification_email: true,
+    notification_sms: true,
+    last_login_at: iso(new Date()),
+    users_id: "1",
+    Accounts: "LeadAwaker Agency",
+    accounts_id: "1",
+    created_time: "2026-01-01 10:00:00+00:00",
+    last_modified_time: "2026-01-01 10:00:00+00:00"
+  },
+  {
     id: 2,
     account_id: 2,
     full_name: "Danique van de Kerkhof",
@@ -612,31 +632,31 @@ export const users: AppUser[] = [
     notification_sms: false,
     last_login_at: iso(new Date(Date.now() - 2 * 60 * 60 * 1000)),
     users_id: "2",
-    Accounts: "van de Kerkhof",
+    Accounts: "FitnessGym ABC",
     accounts_id: "2",
     created_time: "2026-01-29 10:16:33+00:00",
     last_modified_time: "2026-01-29 10:20:15+00:00"
   },
   {
-    id: 4,
-    account_id: 1,
-    full_name: "Gabriel Barbosa Fronza",
-    email: "leadawaker@gmail.com",
-    phone: "+5547974002162",
-    timezone: "America/Sao_Paulo",
-    role: "Admin",
+    id: 3,
+    account_id: 3,
+    full_name: "Lawyer Bob",
+    email: "bob@lawfirmxyz.com",
+    phone: "+31670000002",
+    timezone: "Europe/Amsterdam",
+    role: "Agent",
     status: "Active",
     avatar_url: "",
     n8n_webhook_url: "",
     notification_email: true,
-    notification_sms: false,
-    last_login_at: iso(new Date(Date.now() - 5 * 60 * 60 * 1000)),
-    users_id: "4",
-    Accounts: "Wow",
-    accounts_id: "1",
-    created_time: "2026-01-29 10:20:15+00:00",
-    last_modified_time: "2026-01-29 10:21:06+00:00"
-  },
+    notification_sms: true,
+    last_login_at: iso(new Date(Date.now() - 7 * 60 * 60 * 1000)),
+    users_id: "3",
+    Accounts: "LawFirm XYZ",
+    accounts_id: "3",
+    created_time: "2026-01-30 11:00:00+00:00",
+    last_modified_time: "2026-01-30 11:00:00+00:00"
+  }
 ];
 
 export const tags: TagItem[] = [

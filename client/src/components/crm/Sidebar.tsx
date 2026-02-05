@@ -1,14 +1,17 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, Calendar, MessageSquare, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Calendar, MessageSquare, LogOut, Target, ListTodo, Library } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
-
-const items = []; // Handled inside component for dynamic prefixing
+import { users } from "@/data/mocks";
 
 export function Sidebar() {
   const [location] = useLocation();
   const { currentAccount, isAgencyView } = useWorkspace();
   const prefix = isAgencyView ? "/agency" : "/subaccount";
+
+  // Check if current user is admin
+  const currentUserEmail = localStorage.getItem("leadawaker_user_email") || "leadawaker@gmail.com";
+  const isAdmin = currentUserEmail === "leadawaker@gmail.com";
 
   const items = [
     { href: `${prefix}/dashboard`, label: "Dashboard", icon: LayoutDashboard, testId: "link-nav-dashboard" },
@@ -17,7 +20,11 @@ export function Sidebar() {
     { href: `${prefix}/conversations`, label: "Conversations", icon: MessageSquare, testId: "link-nav-conversations" },
     ...(isAgencyView ? [] : [
       { href: `${prefix}/campaigns`, label: "Campaigns", icon: Target, testId: "link-nav-campaigns" }
-    ])
+    ]),
+    ...(isAdmin ? [
+      { href: `${prefix}/automation-logs`, label: "Automations", icon: ListTodo, testId: "link-nav-automations" },
+      { href: `${prefix}/prompt-library`, label: "Library", icon: Library, testId: "link-nav-library" }
+    ] : [])
   ];
 
   return (

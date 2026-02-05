@@ -64,6 +64,9 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
 
   const currentTitle = titles[location] || "";
 
+  const currentUserEmail = localStorage.getItem("leadawaker_user_email") || "leadawaker@gmail.com";
+  const isAdmin = currentUserEmail === "leadawaker@gmail.com";
+
   return (
     <header
       className={cn(
@@ -78,44 +81,53 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
 
       <div className="absolute right-10 flex items-center gap-6">
         <div className="flex items-center gap-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                className={cn(
-                  "h-11 px-4 w-56 justify-between hover:bg-white border border-border bg-white rounded-xl text-sm font-semibold flex items-center gap-2",
-                  isAgencyView ? "text-yellow-600" : "text-blue-600"
-                )}
-                data-testid="button-account-selector"
-              >
-                <span className="truncate">{currentAccount.name}</span>
-                <ChevronDown className="h-4 w-4 opacity-60 shrink-0" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64 rounded-2xl shadow-xl border-border bg-background mt-2">
-              {accounts.map((acc) => (
-                <DropdownMenuItem
-                  key={acc.id}
-                  onClick={() => handleAccountSelect(acc.id)}
+          {isAdmin ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
                   className={cn(
-                    "flex items-center gap-2 cursor-pointer py-3 rounded-xl m-1",
-                    currentAccountId === acc.id && "bg-muted font-bold"
+                    "h-11 px-4 w-56 justify-between hover:bg-white border border-border bg-white rounded-xl text-sm font-semibold flex items-center gap-2",
+                    isAgencyView ? "text-yellow-600" : "text-blue-600"
                   )}
+                  data-testid="button-account-selector"
                 >
-                  <div
+                  <span className="truncate">{currentAccount.name}</span>
+                  <ChevronDown className="h-4 w-4 opacity-60 shrink-0" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64 rounded-2xl shadow-xl border-border bg-background mt-2">
+                {accounts.map((acc) => (
+                  <DropdownMenuItem
+                    key={acc.id}
+                    onClick={() => handleAccountSelect(acc.id)}
                     className={cn(
-                      "h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-bold",
-                      acc.id === 1 ? "bg-yellow-500 text-black" : "bg-blue-600 text-white",
+                      "flex items-center gap-2 cursor-pointer py-3 rounded-xl m-1",
+                      currentAccountId === acc.id && "bg-muted font-bold"
                     )}
                   >
-                    {acc.name[0]}
-                  </div>
-                  {acc.name}
-                  {acc.id === 1 && <span className="ml-auto text-[10px] bg-yellow-100 text-yellow-900 px-1 rounded uppercase font-bold tracking-tighter">Agency</span>}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                    <div
+                      className={cn(
+                        "h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-bold",
+                        acc.id === 1 ? "bg-yellow-500 text-black" : "bg-blue-600 text-white",
+                      )}
+                    >
+                      {acc.name[0]}
+                    </div>
+                    {acc.name}
+                    {acc.id === 1 && <span className="ml-auto text-[10px] bg-yellow-100 text-yellow-900 px-1 rounded uppercase font-bold tracking-tighter">Agency</span>}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className={cn(
+              "h-11 px-4 w-56 justify-start border border-border bg-white rounded-xl text-sm font-semibold flex items-center gap-2",
+              isAgencyView ? "text-yellow-600" : "text-blue-600"
+            )}>
+              <span className="truncate">{currentAccount.name}</span>
+            </div>
+          )}
 
           {!isAgencyView && (
             <DropdownMenu>
