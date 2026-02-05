@@ -93,6 +93,7 @@ function AppRoutes() {
       <Route path="/canvas" component={Canvas} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />
+      <Route path="/test-table" component={TestTable} />
       <Route component={NotFound} />
     </Switch>
   );
