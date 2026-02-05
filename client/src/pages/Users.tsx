@@ -15,10 +15,10 @@ export default function UsersPage() {
 
   return (
     <CrmShell>
-      <div className="px-6 py-6 bg-white min-h-full" data-testid="page-users">
+      <div className="bg-white min-h-full" data-testid="page-users">
         <h1 className="text-2xl font-extrabold tracking-tight hidden" data-testid="text-title">Users</h1>
 
-        <div className="mt-4 flex items-center gap-2" data-testid="bar-users">
+        <div className="flex items-center gap-2" data-testid="bar-users">
           <input
             className="h-10 w-[280px] max-w-full rounded-xl border border-border bg-muted/20 px-3 text-sm"
             placeholder="Search email…"
