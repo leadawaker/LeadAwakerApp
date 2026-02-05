@@ -78,7 +78,7 @@ export default function ConversationsPage() {
         </div>
 
         <div
-          className="flex-1 min-h-0 pb-4 md:pb-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[400px_1fr_340px] gap-4"
+          className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[400px_1fr_340px] gap-4"
           data-testid="layout-conversations"
         >
           {/* Left: inbox list */}

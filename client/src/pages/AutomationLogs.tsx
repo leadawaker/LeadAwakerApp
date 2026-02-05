@@ -51,7 +51,7 @@ export default function AutomationLogsPage() {
           <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
         </div>
 
-        <div className="flex-1 min-h-0 bg-white rounded-2xl border border-border flex flex-col overflow-hidden mb-6" data-testid="table-logs">
+        <div className="flex-1 min-h-0 bg-white rounded-2xl border border-border flex flex-col overflow-hidden" data-testid="table-logs">
           <div className="shrink-0 grid grid-cols-[100px_160px_1fr_1fr_1fr_180px] gap-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-white border-b border-border/50 px-6 py-4 sticky top-0 z-10">
             <div>Execution</div>
             <div>Status</div>
@@ -110,7 +110,7 @@ export default function AutomationLogsPage() {
           </div>
         </div>
 
-        <div className="flex items-center justify-center gap-2 pb-6">
+        <div className="flex items-center justify-center gap-2 py-4">
           {Array.from({ length: totalPages }).map((_, i) => (
             <button
               key={i}

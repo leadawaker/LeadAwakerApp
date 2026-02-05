@@ -21,7 +21,7 @@ export default function AppCampaigns() {
 
   return (
     <CrmShell>
-      <div className="px-10 py-8 flex flex-col h-full bg-[#F6F5FA]/30" data-testid="page-campaigns">
+      <div className="flex flex-col h-full bg-[#F6F5FA]/30" data-testid="page-campaigns">
         <div className="flex items-center justify-between mb-8 -mt-4">
           <div>
             <h1 className="text-3xl font-black tracking-tight text-slate-900">Campaign Manager</h1>
