@@ -139,9 +139,22 @@ export type AutomationLog = {
 export type AppUser = {
   id: number;
   account_id: number;
+  full_name: string;
   email: string;
-  role: "Admin" | "Manager" | "Agent";
+  phone: string;
+  timezone: string;
+  role: "Admin" | "Manager" | "Agent" | "Viewer";
+  status: "Active" | "Inactive";
+  avatar_url: string;
+  n8n_webhook_url: string;
+  notification_email: boolean;
+  notification_sms: boolean;
   last_login_at: string;
+  users_id: string;
+  Accounts: string;
+  accounts_id: string;
+  created_time: string;
+  last_modified_time: string;
 };
 
 export type TagItem = {
@@ -584,9 +597,46 @@ export const automationLogs: AutomationLog[] = Array.from({ length: 60 }).map((_
 });
 
 export const users: AppUser[] = [
-  { id: 1, account_id: 1, email: "leadawaker@gmail.com", role: "Admin", last_login_at: iso(new Date(Date.now() - 2 * 60 * 60 * 1000)) },
-  { id: 2, account_id: 2, email: "owner@fitnessgymabc.com", role: "Admin", last_login_at: iso(new Date(Date.now() - 5 * 60 * 60 * 1000)) },
-  { id: 3, account_id: 3, email: "owner@lawfirmxyz.com", role: "Admin", last_login_at: iso(new Date(Date.now() - 7 * 60 * 60 * 1000)) },
+  {
+    id: 2,
+    account_id: 2,
+    full_name: "Danique van de Kerkhof",
+    email: "elfronza@gmail.com",
+    phone: "+31649522693",
+    timezone: "Europe/Amsterdam",
+    role: "Viewer",
+    status: "Active",
+    avatar_url: "",
+    n8n_webhook_url: "",
+    notification_email: true,
+    notification_sms: false,
+    last_login_at: iso(new Date(Date.now() - 2 * 60 * 60 * 1000)),
+    users_id: "2",
+    Accounts: "van de Kerkhof",
+    accounts_id: "2",
+    created_time: "2026-01-29 10:16:33+00:00",
+    last_modified_time: "2026-01-29 10:20:15+00:00"
+  },
+  {
+    id: 4,
+    account_id: 1,
+    full_name: "Gabriel Barbosa Fronza",
+    email: "leadawaker@gmail.com",
+    phone: "+5547974002162",
+    timezone: "America/Sao_Paulo",
+    role: "Admin",
+    status: "Active",
+    avatar_url: "",
+    n8n_webhook_url: "",
+    notification_email: true,
+    notification_sms: false,
+    last_login_at: iso(new Date(Date.now() - 5 * 60 * 60 * 1000)),
+    users_id: "4",
+    Accounts: "Wow",
+    accounts_id: "1",
+    created_time: "2026-01-29 10:20:15+00:00",
+    last_modified_time: "2026-01-29 10:21:06+00:00"
+  },
 ];
 
 export const tags: TagItem[] = [
