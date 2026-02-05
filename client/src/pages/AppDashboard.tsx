@@ -543,9 +543,9 @@ function PipelineCol({
   };
 
   return (
-    <div className="w-full bg-white flex flex-col h-full rounded-t-[32px] overflow-hidden shadow-sm border border-slate-100" data-testid={`col-${stage.id}`}>
+    <div className="w-full bg-white flex flex-col h-full rounded-[32px] overflow-hidden shadow-sm border border-slate-100" data-testid={`col-${stage.id}`}>
       {/* 🔹 COLUMN HEADER */}
-      <div className="p-4 border-b border-slate-100 bg-white/50 backdrop-blur-sm sticky top-0 z-20">
+      <div className="p-4 border-b border-slate-100 bg-white/50  sticky top-0 z-20">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div 
