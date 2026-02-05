@@ -544,7 +544,10 @@ function PipelineCol({
 
   return (
     <div className="w-full bg-white flex flex-col h-full rounded-[32px] overflow-hidden shadow-sm border border-slate-100" data-testid={`col-${stage.id}`}>
+      <div className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-hide">
+      {items.map((l) => (
       <div
+        key={l.id}
         className={cn(
           "rounded-xl cursor-pointer relative",
           "transition-[max-height] duration-200 ease-out",
@@ -627,13 +630,14 @@ function PipelineCol({
           </div>
         </div>
       </div>
-        ))
+        ))}
         {items.length === 0 ? (
           <div className="flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-slate-400 text-xs italic bg-slate-50/50 dark:bg-slate-900/50 p-3">
             No contacts.
           </div>
         ) : null}
       </div>
+    </div>
   
     
   );
