@@ -77,7 +77,7 @@ export default function UsersPage() {
               <div>Status</div>
               <div className="text-right">Actions</div>
             </div>
-            <div className="flex-1 overflow-y-auto divide-y divide-slate-100 pb-4">
+            <div className="flex-1 overflow-y-auto divide-y divide-slate-100 ">
               {rows.map((u) => (
                 <div key={u.id} className="grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_100px_100px] px-6 py-5 text-sm items-center hover:bg-slate-50/50 transition-colors" data-testid={`row-user-${u.id}`}>
                   <div className="text-muted-foreground font-mono text-xs">#{u.users_id}</div>
