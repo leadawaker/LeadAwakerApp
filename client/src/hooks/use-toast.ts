@@ -179,7 +179,7 @@ function useToast() {
         listeners.splice(index, 1)
       }
     }
-  }, []) // Remove 'state' from dependency array
+  }, [])
 
   return {
     ...state,
