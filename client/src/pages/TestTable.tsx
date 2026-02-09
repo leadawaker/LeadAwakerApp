@@ -22,7 +22,20 @@ interface Row {
 const NOCODB_BASE_URL = "https://nocodb.leadawaker.com/api/v2";
 const TABLE_ID = "m8hflvkkfj25aio";
 const NOCODB_TOKEN = "2dHOteiGjwqUTj35QyZd932j-QwxJSlUeEXCTaLp";
-
+const EDITABLE_COLUMNS = [
+  "name",
+  "owner_email",
+  "phone",
+  "website",
+  "type",
+  "timezone",
+  "notes",
+  "status",
+  "business hours start",
+  "business hours end",
+  "max_daily_sends",
+  "business_niche",
+];
 export default function TestTable() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
@@ -67,6 +80,15 @@ export default function TestTable() {
 
   const handleSaveEdit = async () => {
     if (!editingRow) return;
+
+    const payload: Record<string, any> = { Id: editingRow.Id };
+
+    EDITABLE_COLUMNS.forEach((col) => {
+      if (editingRow[col] !== undefined) {
+        payload[col] = editingRow[col];
+      }
+    });
+
     try {
       const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
         method: "PATCH",
@@ -74,12 +96,20 @@ export default function TestTable() {
           "Content-Type": "application/json",
           "xc-token": NOCODB_TOKEN,
         },
-        body: JSON.stringify(editingRow),
+        body: JSON.stringify([payload]),
       });
 
-      if (!res.ok) throw new Error("Update failed");
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("NocoDB PATCH error:", errText);
+        throw new Error("Update failed");
+      }
 
-      toast({ title: "Success", description: "Record updated successfully." });
+      toast({
+        title: "Success",
+        description: "Record updated successfully.",
+      });
+
       setEditingRow(null);
       fetchData();
     } catch (err) {
@@ -90,7 +120,6 @@ export default function TestTable() {
       });
     }
   };
-
   const handleCreateRow = async () => {
     try {
       const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
@@ -122,7 +151,7 @@ export default function TestTable() {
   }, []);
 
   return (
-    <div className="w-screen min-h-screen bg-background py-6 px-4 md:px-8">
+    <div className="w-screen min-h-screen bg-background pt-24 pb-6 px-4 md:px-8">
       <div className="flex flex-col gap-6 w-full">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-6">
           <div>
@@ -179,7 +208,7 @@ export default function TestTable() {
                       </TableHead>
                     ))}
                     <TableHead className="text-right font-bold py-4 pr-6 sticky right-0 bg-muted/50 z-10 shadow-[-10px_0_15px_-5px_rgba(0,0,0,0.05)]">Actions</TableHead>
-                  </TableRow>
+                  </TableRow>handleSaveEdit 
                 </TableHeader>
                 <TableBody>
                   {loading ? (
