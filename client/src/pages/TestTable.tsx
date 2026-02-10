@@ -103,6 +103,7 @@ const HIDDEN_FIELDS = [
   "Account ID",
   "ID",
   "account_id",
+  "account_ID",
   "Automation Logs",
   "Prompt Libraries",
   "CreatedAt",
@@ -110,7 +111,8 @@ const HIDDEN_FIELDS = [
   "created_at",
   "updated_at",
   "Created Time",
-  "Last Modified Time"
+  "Last Modified Time",
+  "ACC"
 ];
 
 const STATUS_OPTIONS = ["Active", "Inactive", "Trial", "Suspended", "Unknown"];
@@ -222,9 +224,9 @@ export default function TestTable() {
         // Initialize widths
         const initialWidths: { [key: string]: number } = {};
         ordered.forEach(col => {
-          if (col === 'Id') initialWidths[col] = 60;
-          else if (SMALL_WIDTH_COLS.includes(col)) initialWidths[col] = 100;
-          else initialWidths[col] = 200; // Default size
+          if (col === 'Id' || col === 'ACC') initialWidths[col] = 40;
+          else if (SMALL_WIDTH_COLS.includes(col)) initialWidths[col] = 70;
+          else initialWidths[col] = 140; 
         });
         setColWidths(initialWidths);
       }
@@ -337,7 +339,7 @@ export default function TestTable() {
       const systemKeys = [
         "Created Time", "Last Modified Time", "Account ID", "ID", "account_id", 
         "Automation Logs", "Prompt Libraries", "CreatedAt", "UpdatedAt", 
-        "created_at", "updated_at", "Tags", "Leads", "Campaigns", "Interactions", "Users"
+        "created_at", "updated_at", "Tags", "Leads", "Campaigns", "Interactions", "Users", "ACC", "Account ID", "account_ID"
       ];
 
       Object.keys(rest).forEach(key => {
@@ -439,8 +441,8 @@ export default function TestTable() {
   };
 
   return (
-    <div className="w-screen min-h-screen bg-[#f8fafc] pt-24 pb-12 px-4 md:px-12">
-      <div className="max-w-[1600px] mx-auto space-y-8">
+    <div className="w-full min-h-screen bg-[#f8fafc] pt-24 pb-12 px-4 md:px-6">
+      <div className="w-full mx-auto space-y-8 px-2">
         <header className="flex flex-col md:flex-row justify-between items-end gap-6">
           <div className="space-y-1">
             <h1 className="text-4xl font-black tracking-tight text-slate-900 flex items-center gap-3">
@@ -537,7 +539,7 @@ export default function TestTable() {
             <Table className="w-full table-fixed">
               <TableHeader className="bg-slate-50/50 border-b border-slate-100">
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-12 px-6 border-r border-slate-100/50">
+                  <TableHead className="w-10 px-0 border-r border-slate-100/50">
                     <div className="flex justify-center">
                       <Checkbox 
                         checked={selectedIds.length === rows.length && rows.length > 0} 
@@ -598,7 +600,7 @@ export default function TestTable() {
                         selectedIds.includes(row.Id) && "bg-primary/[0.01]"
                       )}
                     >
-                      <TableCell className="px-6 border-r border-slate-100/50">
+                      <TableCell className="px-0 border-r border-slate-100/50">
                         <div className="flex justify-center items-center h-full w-full">
                           <Checkbox 
                             checked={selectedIds.includes(row.Id)} 
