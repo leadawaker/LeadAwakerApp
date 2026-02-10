@@ -58,6 +58,25 @@ const SMALL_WIDTH_COLS = [
 ];
 
 const SYSTEM_FIELDS = ["created_at", "updated_at", "Created Time", "Last Modified Time"];
+const NON_EDITABLE_FIELDS = [
+  "Id",
+  "Tags",
+  "Leads",
+  "Campaigns",
+  "Interactions",
+  "Automation Logs",
+  "Users",
+  "Prompt Libraries",
+  "Created Time",
+  "Last Modified Time",
+  "created_at",
+  "updated_at",
+  "Account ID",
+  "CreatedAt",
+  "UpdatedAt"
+];
+
+const HIDDEN_FIELDS = ["Account ID", "CreatedAt", "UpdatedAt", "created_at", "updated_at"];
 
 export default function TestTable() {
   const [rows, setRows] = useState<Row[]>([]);
@@ -86,8 +105,8 @@ export default function TestTable() {
       if (list.length > 0) {
         const allKeys = Object.keys(list[0]);
         const keys = allKeys.filter(k => 
-          k !== "Id" && 
-          !SYSTEM_FIELDS.includes(k)
+          !HIDDEN_FIELDS.includes(k) &&
+          k !== "Id"
         );
         
         const ordered: string[] = ["Id"];
@@ -108,23 +127,22 @@ export default function TestTable() {
           "twilio_auth_token", 
           "twilio_messaging_service_sid", 
           "twilio_default_from_number", 
-          "webhook_url",
-          ...SYSTEM_FIELDS
+          "webhook_url"
         ];
         
         keys.forEach(k => {
-          if (!ordered.includes(k) && !endCols.includes(k) && k !== "Id") {
+          if (!ordered.includes(k) && !endCols.includes(k) && !SYSTEM_FIELDS.includes(k)) {
             ordered.push(k);
           }
         });
         
-        // Add requested time fields at the end
-        SYSTEM_FIELDS.forEach(k => {
-          if (allKeys.includes(k)) ordered.push(k);
+        // Add tech stuff
+        endCols.forEach(k => {
+          if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k);
         });
 
-        // Add tech stuff at very end
-        endCols.filter(k => !SYSTEM_FIELDS.includes(k)).forEach(k => {
+        // Add requested time fields at the very end
+        ["Created Time", "Last Modified Time"].forEach(k => {
           if (allKeys.includes(k)) ordered.push(k);
         });
 
@@ -151,6 +169,7 @@ export default function TestTable() {
   };
 
   const handleInlineUpdate = async (rowId: number, col: string, value: any) => {
+    if (NON_EDITABLE_FIELDS.includes(col)) return;
     const payload = { Id: rowId, [col]: value };
     try {
       const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
@@ -204,13 +223,21 @@ export default function TestTable() {
 
   const handleCreateRow = async () => {
     try {
+      // Clean data for creation - remove all non-editable/system fields
+      const cleanData: any = {};
+      Object.keys(newRowData).forEach(key => {
+        if (!NON_EDITABLE_FIELDS.includes(key) && !HIDDEN_FIELDS.includes(key)) {
+          cleanData[key] = newRowData[key];
+        }
+      });
+
       const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "xc-token": NOCODB_TOKEN,
         },
-        body: JSON.stringify(newRowData),
+        body: JSON.stringify(cleanData),
       });
 
       if (!res.ok) throw new Error("Creation failed");
@@ -235,7 +262,8 @@ export default function TestTable() {
       const { Id, ...rest } = editingRow;
       const cleanData: any = { Id };
       Object.keys(rest).forEach(key => {
-        if (!SYSTEM_FIELDS.includes(key)) {
+        // Only include fields that are actually editable
+        if (!NON_EDITABLE_FIELDS.includes(key) && !HIDDEN_FIELDS.includes(key)) {
           cleanData[key] = rest[key];
         }
       });
@@ -304,6 +332,22 @@ export default function TestTable() {
     return (name[0] + (name[1] || name[0])).toUpperCase();
   };
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "-";
+    try {
+      const d = new Date(dateStr);
+      const year = d.getFullYear().toString().slice(-2);
+      const month = (d.getMonth() + 1).toString().padStart(2, '0');
+      const day = d.getDate().toString().padStart(2, '0');
+      const hours = d.getHours().toString().padStart(2, '0');
+      const minutes = d.getMinutes().toString().padStart(2, '0');
+      const seconds = d.getSeconds().toString().padStart(2, '0');
+      return `${day}/${month}/${year} - ${hours}:${minutes}:${seconds}`;
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   const handleResize = (col: string, width: number) => {
     setColWidths(prev => ({ ...prev, [col]: width }));
   };
@@ -343,7 +387,7 @@ export default function TestTable() {
                 </DialogHeader>
                 <ScrollArea className="flex-1 p-6">
                   <div className="grid grid-cols-2 gap-4 pb-4">
-                    {columns.filter(c => c !== "Id" && !SYSTEM_FIELDS.includes(c)).map(col => (
+                    {columns.filter(c => !NON_EDITABLE_FIELDS.includes(c) && !HIDDEN_FIELDS.includes(c)).map(col => (
                       <div key={col} className="space-y-1.5">
                         <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{col.replace(/_/g, ' ')}</label>
                         {col === 'timezone' ? (
@@ -385,10 +429,15 @@ export default function TestTable() {
               <TableHeader className="bg-slate-50/50 border-b border-slate-100">
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="w-12 px-6 border-r border-slate-100/50">
-                    <Checkbox 
-                      checked={selectedIds.length === rows.length && rows.length > 0} 
-                      onCheckedChange={toggleSelectAll}
-                    />
+                    <div className="flex justify-center">
+                      <Checkbox 
+                        checked={selectedIds.length === rows.length && rows.length > 0} 
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </div>
+                  </TableHead>
+                  <TableHead className="w-16 px-4 border-r border-slate-100/50">
+                    <div className="flex justify-center text-[10px] font-black uppercase tracking-widest text-slate-400">Acc</div>
                   </TableHead>
                   {columns.map(col => (
                     <TableHead 
@@ -425,7 +474,7 @@ export default function TestTable() {
               <TableBody>
                 {loading && rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={columns.length + 1} className="h-96 text-center">
+                    <TableCell colSpan={columns.length + 2} className="h-96 text-center">
                       <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/40" />
                     </TableCell>
                   </TableRow>
@@ -440,10 +489,25 @@ export default function TestTable() {
                       )}
                     >
                       <TableCell className="px-6 border-r border-slate-100/50">
-                        <Checkbox 
-                          checked={selectedIds.includes(row.Id)} 
-                          onCheckedChange={() => toggleSelect(row.Id)}
-                        />
+                        <div className="flex justify-center">
+                          <Checkbox 
+                            checked={selectedIds.includes(row.Id)} 
+                            onCheckedChange={() => toggleSelect(row.Id)}
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 border-r border-slate-100/50">
+                        <div className="flex justify-center">
+                          <div 
+                            className={cn(
+                              "h-8 w-8 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white cursor-pointer shadow-sm hover:scale-110 transition-transform",
+                              colors.bg
+                            )}
+                            onClick={() => setEditingRow(row)}
+                          >
+                            {getInitials(row.name)}
+                          </div>
+                        </div>
                       </TableCell>
                       {columns.map(col => (
                         <TableCell 
@@ -455,22 +519,9 @@ export default function TestTable() {
                           )}
                         >
                           <div className="flex items-center gap-3">
-                            {col === 'Id' && (
-                              <>
-                                <span className="text-slate-400 font-mono text-xs">{row.Id}</span>
-                                <div 
-                                  className={cn(
-                                    "h-8 w-8 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white cursor-pointer shadow-sm hover:scale-110 transition-transform",
-                                    colors.bg
-                                  )}
-                                  onClick={() => setEditingRow(row)}
-                                >
-                                  {getInitials(row.name)}
-                                </div>
-                              </>
-                            )}
-                            
-                            {col !== 'Id' && (
+                            {col === 'Id' ? (
+                              <span className="text-slate-400 font-mono text-xs">{row.Id}</span>
+                            ) : (
                               <div className="w-full flex-1 min-w-0">
                                 {col === "status" ? (
                                   <Badge variant="outline" className={cn("font-bold text-[10px] uppercase tracking-wider", getStatusColor(row[col]))}>
@@ -480,10 +531,15 @@ export default function TestTable() {
                                   <Badge variant="outline" className={cn("font-bold text-[10px] uppercase tracking-wider", getTypeColor(row[col]))}>
                                     {row[col] || "Unknown"}
                                   </Badge>
+                                ) : ["Created Time", "Last Modified Time"].includes(col) ? (
+                                  <span className="text-blue-600 font-mono text-xs whitespace-nowrap">
+                                    {formatDate(row[col])}
+                                  </span>
                                 ) : (
                                   <div 
-                                    className="min-h-[20px] w-full cursor-text"
+                                    className={cn("min-h-[20px] w-full", !NON_EDITABLE_FIELDS.includes(col) && "cursor-text")}
                                     onClick={(e) => {
+                                      if (NON_EDITABLE_FIELDS.includes(col)) return;
                                       e.stopPropagation();
                                       setCellEditing({ rowId: row.Id, col });
                                     }}
@@ -569,7 +625,7 @@ export default function TestTable() {
             </DialogHeader>
             <ScrollArea className="flex-1 p-6">
               <div className="grid grid-cols-2 gap-6 pb-6">
-                {columns.filter(c => !SYSTEM_FIELDS.includes(c)).map(col => (
+                {columns.filter(c => !NON_EDITABLE_FIELDS.includes(c) && !HIDDEN_FIELDS.includes(c)).map(col => (
                   <div key={col} className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{col.replace(/_/g, ' ')}</label>
                     {col === 'timezone' ? (
@@ -587,7 +643,6 @@ export default function TestTable() {
                       </Select>
                     ) : (
                       <Input
-                        disabled={col === 'Id'}
                         value={editingRow[col] || ""}
                         onChange={(e) => setEditingRow(prev => prev ? ({ ...prev, [col]: e.target.value }) : null)}
                         className="bg-slate-50 border-slate-200 h-11"
