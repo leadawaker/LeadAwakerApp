@@ -160,7 +160,7 @@ export default function TestTable() {
           // we will add Id manually and show Created/LastModified only in table
           !["Id", "Automation Logs", "Prompt Libraries"].includes(k)
         );
-        const ordered: string[] = ["Id"];
+        const ordered: string[] = ["Id", "ACC"];
         if (keys.includes("name")) ordered.push("name");
         
         // Status, Type, Owner email, Phone, Business Niche, Website, Notes, Timezone
@@ -332,9 +332,16 @@ export default function TestTable() {
       // Filter out system fields to avoid NocoDB errors
       const { Id, ...rest } = editingRow;
       const cleanData: any = { Id };
+      
+      // EXPLICITLY filter out system fields from the payload
+      const systemKeys = [
+        "Created Time", "Last Modified Time", "Account ID", "ID", "account_id", 
+        "Automation Logs", "Prompt Libraries", "CreatedAt", "UpdatedAt", 
+        "created_at", "updated_at", "Tags", "Leads", "Campaigns", "Interactions", "Users"
+      ];
+
       Object.keys(rest).forEach(key => {
-        // Only include fields that are actually editable
-        if (!NON_EDITABLE_FIELDS.includes(key) && !HIDDEN_FIELDS.includes(key)) {
+        if (!systemKeys.includes(key) && !NON_EDITABLE_FIELDS.includes(key)) {
           cleanData[key] = rest[key];
         }
       });
@@ -538,7 +545,7 @@ export default function TestTable() {
                       />
                     </div>
                   </TableHead>
-                  <TableHead className="w-16 px-4 border-r border-slate-100/50">
+                  <TableHead className="hidden">
                     <div className="flex justify-center text-[10px] font-black uppercase tracking-widest text-slate-400">Acc</div>
                   </TableHead>
                   {columns.map(col => (
@@ -546,7 +553,8 @@ export default function TestTable() {
                       key={col} 
                       style={{ width: colWidths[col] || 200 }}
                       className={cn(
-                        "px-4 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap border-r border-slate-100/50 relative group table-fixed"
+                        "px-4 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap border-r border-slate-100/50 relative group table-fixed",
+                        col === "Id" && "text-center"
                       )}
                     >
                       <div className="flex items-center justify-between overflow-hidden">
@@ -591,14 +599,14 @@ export default function TestTable() {
                       )}
                     >
                       <TableCell className="px-6 border-r border-slate-100/50">
-                        <div className="flex justify-center">
+                        <div className="flex justify-center items-center h-full w-full">
                           <Checkbox 
                             checked={selectedIds.includes(row.Id)} 
                             onCheckedChange={() => toggleSelect(row.Id)}
                           />
                         </div>
                       </TableCell>
-                      <TableCell className="px-4 border-r border-slate-100/50">
+                      <TableCell className="hidden">
                         <div className="flex justify-center">
                           <div 
                             className={cn(
@@ -622,7 +630,19 @@ export default function TestTable() {
                         >
                           <div className="flex items-center gap-3">
                             {col === 'Id' ? (
-                              <span className="text-slate-400 font-mono text-xs">{row.Id}</span>
+                              <span className="text-slate-400 font-mono text-xs block text-center">{row.Id}</span>
+                            ) : col === 'ACC' ? (
+                              <div className="flex justify-center">
+                                <div 
+                                  className={cn(
+                                    "h-8 w-8 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white cursor-pointer shadow-sm hover:scale-110 transition-transform",
+                                    colors.bg
+                                  )}
+                                  onClick={() => setEditingRow(row)}
+                                >
+                                  {getInitials(row.name)}
+                                </div>
+                              </div>
                             ) : (
                               <div className="w-full flex-1 min-w-0">
                                 {col === "status" ? (
@@ -689,7 +709,7 @@ export default function TestTable() {
                                     }}
                                   >
                                     {cellEditing?.rowId === row.Id && cellEditing?.col === col ? (
-                                      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm" onClick={() => setCellEditing(null)}>
+                                      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setCellEditing(null)}>
                                         <div 
                                           className="bg-white shadow-2xl rounded-xl border border-primary/20 ring-4 ring-primary/5 p-4 w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col"
                                           onClick={(e) => e.stopPropagation()}
@@ -703,7 +723,12 @@ export default function TestTable() {
                                           <Textarea
                                             autoFocus
                                             defaultValue={row[col] || ""}
-                                            className="flex-1 min-h-[120px] max-h-[70vh] w-full text-sm p-3 bg-slate-50 border-slate-200 focus-visible:ring-primary/20 resize-y"
+                                            className="flex-1 min-h-[120px] max-h-[70vh] w-full text-sm p-3 bg-slate-50 border-slate-200 focus-visible:ring-primary/20 resize-none overflow-hidden"
+                                            onInput={(e) => {
+                                              const target = e.target as HTMLTextAreaElement;
+                                              target.style.height = 'auto';
+                                              target.style.height = target.scrollHeight + 'px';
+                                            }}
                                             onKeyDown={(e) => {
                                               if (e.key === 'Escape') setCellEditing(null);
                                               if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
