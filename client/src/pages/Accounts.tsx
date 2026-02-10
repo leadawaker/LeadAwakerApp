@@ -137,7 +137,7 @@ const TIMEZONES = [
   "UTC"
 ];
 
-export default function TestTable() {
+export default function Accounts() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
   const [editingRow, setEditingRow] = useState<Row | null>(null);
@@ -470,15 +470,8 @@ export default function TestTable() {
   };
 
   return (
-    <div className="w-full h-full bg-transparent pb-12 px-0 overflow-y-auto">
+    <div className="w-full h-full bg-transparent pb-12 px-0 overflow-y-auto pt-4">
       <div className="w-full mx-auto space-y-6">
-        <div className="pt-6 -mt-2 mb-8 px-2">
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3" data-testid="text-title">
-            <div className="h-8 w-1.5 bg-blue-600 rounded-full" />
-            Accounts
-          </h1>
-        </div>
-
         <div className="flex items-center gap-3 px-2">
           {selectedIds.length > 0 && (
             <Button 

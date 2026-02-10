@@ -4,7 +4,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { accounts, campaigns, leads, interactions } from "@/data/mocks";
 import { Edit2, ExternalLink, Shield, CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import TestTable from "@/pages/TestTable";
+import Accounts from "@/pages/Accounts";
 
 export default function AppAccounts() {
   const { isAgencyView } = useWorkspace();
@@ -22,8 +22,8 @@ export default function AppAccounts() {
 
   return (
     <CrmShell>
-      <div className="flex flex-col h-full bg-[#F6F5FA]/30 pt-6 -mt-2 pb-2" data-testid="page-accounts">
-        <TestTable />
+      <div className="flex flex-col h-full bg-[#F6F5FA]/30" data-testid="page-accounts">
+        <Accounts />
       </div>
     </CrmShell>
   );
