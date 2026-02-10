@@ -35,6 +35,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Row {
   Id: number;
@@ -159,10 +165,9 @@ export default function TestTable() {
         const allKeys = Object.keys(list[0]);
         const keys = allKeys.filter(k => 
           !HIDDEN_FIELDS.includes(k) &&
-          // we will add Id manually and show Created/LastModified only in table
           !["Id", "Automation Logs", "Prompt Libraries"].includes(k)
         );
-        const ordered: string[] = ["Id", "ACC"];
+        const ordered: string[] = ["ACC"]; // Removed Id from being first 4
         if (keys.includes("name")) ordered.push("name");
         
         // Status, Type, Owner email, Phone, Business Niche, Website, Notes, Timezone
@@ -185,32 +190,50 @@ export default function TestTable() {
           "max_daily_sends"
         ];
         
-        // Leads, Campaigns, Interactions, Users, Tags after Max Daily Sends
+        // Final columns order: ... Tags, Slug, Automation Logs, Prompt Library
+        const endCols = [
+          "Tags",
+          "Slug",
+          "Automation Logs",
+          "Prompt Libraries"
+        ];
+
+        keys.forEach(k => {
+          if (!ordered.includes(k) && !techCols.includes(k) && !SYSTEM_FIELDS.includes(k) && !endCols.includes(k)) {
+            ordered.push(k);
+          }
+        });
+
+        // Add tech stuff
+        techCols.forEach(k => {
+          if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k);
+        });
+        
+        // Reorder for: Max Daily Sends after Business Hours Close
+        const businessHoursCloseIdx = ordered.indexOf("business_hours_close");
+        const maxDailySendsIdx = ordered.indexOf("max_daily_sends");
+        if (businessHoursCloseIdx !== -1 && maxDailySendsIdx !== -1) {
+          ordered.splice(maxDailySendsIdx, 1);
+          const newIdx = ordered.indexOf("business_hours_close") + 1;
+          ordered.splice(newIdx, 0, "max_daily_sends");
+        }
+
+        // Leads, Campaigns, Interactions, Users before the end columns
         const middleCols = [
           "number of leads",
           "number of campaigns",
           "Leads",
           "Campaigns",
           "Interactions",
-          "Automation Logs",
           "Users",
-          "Tags",
-          "Prompt Libraries"
         ];
 
-        keys.forEach(k => {
-          if (!ordered.includes(k) && !techCols.includes(k) && !SYSTEM_FIELDS.includes(k) && !middleCols.includes(k)) {
-            ordered.push(k);
-          }
-        });
-
-        // Add tech stuff including max_daily_sends
-        techCols.forEach(k => {
+        middleCols.forEach(k => {
           if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k);
         });
 
-        // Add middle cols in order (Leads, Campaigns, Interactions, Users, Tags)
-        middleCols.forEach(k => {
+        // Add requested end cols
+        endCols.forEach(k => {
           if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k);
         });
 
@@ -536,10 +559,10 @@ export default function TestTable() {
 
         <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white overflow-hidden rounded-3xl">
           <div className="overflow-x-auto">
-            <Table className="w-full table-fixed">
-              <TableHeader className="bg-slate-50/50 border-b border-slate-100">
+            <Table className="w-full table-fixed border-separate border-spacing-0">
+              <TableHeader className="bg-slate-50/50 border-b border-slate-100 sticky top-0 z-20">
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-10 px-0 border-r border-slate-100/50">
+                  <TableHead className="w-10 px-0 border-r border-slate-100/50 sticky left-0 z-30 bg-slate-50/50">
                     <div className="flex justify-center">
                       <Checkbox 
                         checked={selectedIds.length === rows.length && rows.length > 0} 
@@ -547,16 +570,17 @@ export default function TestTable() {
                       />
                     </div>
                   </TableHead>
-                  <TableHead className="hidden">
-                    <div className="flex justify-center text-[10px] font-black uppercase tracking-widest text-slate-400">Acc</div>
-                  </TableHead>
-                  {columns.map(col => (
+                  {columns.map((col, idx) => (
                     <TableHead 
                       key={col} 
-                      style={{ width: colWidths[col] || 200 }}
+                      style={{ 
+                        width: colWidths[col] || 200,
+                        left: idx < 3 ? (40 + columns.slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined
+                      }}
                       className={cn(
                         "px-4 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap border-r border-slate-100/50 relative group table-fixed",
-                        col === "Id" && "text-center"
+                        col === "Id" && "text-center",
+                        idx < 3 && "sticky z-30 bg-slate-50/50"
                       )}
                     >
                       <div className="flex items-center justify-between overflow-hidden">
@@ -586,7 +610,7 @@ export default function TestTable() {
               <TableBody>
                 {loading && rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={columns.length + 2} className="h-96 text-center">
+                    <TableCell colSpan={columns.length + 1} className="h-96 text-center">
                       <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/40" />
                     </TableCell>
                   </TableRow>
@@ -600,7 +624,7 @@ export default function TestTable() {
                         selectedIds.includes(row.Id) && "bg-primary/[0.01]"
                       )}
                     >
-                      <TableCell className="px-0 border-r border-slate-100/50">
+                      <TableCell className="px-0 border-r border-slate-100/50 sticky left-0 z-10 bg-white group-hover:bg-slate-50/50">
                         <div className="flex justify-center items-center h-full w-full">
                           <Checkbox 
                             checked={selectedIds.includes(row.Id)} 
@@ -608,33 +632,24 @@ export default function TestTable() {
                           />
                         </div>
                       </TableCell>
-                      <TableCell className="hidden">
-                        <div className="flex justify-center">
-                          <div 
-                            className={cn(
-                              "h-8 w-8 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white cursor-pointer shadow-sm hover:scale-110 transition-transform",
-                              colors.bg
-                            )}
-                            onClick={() => setEditingRow(row)}
-                          >
-                            {getInitials(row.name)}
-                          </div>
-                        </div>
-                      </TableCell>
-                      {columns.map(col => (
+                      {columns.map((col, idx) => (
                         <TableCell 
                           key={col} 
-                          style={{ width: colWidths[col] || 200 }}
+                          style={{ 
+                            width: colWidths[col] || 200,
+                            left: idx < 3 ? (40 + columns.slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined
+                          }}
                           className={cn(
                             "px-4 py-4 text-sm transition-all relative border-r border-slate-100/50",
-                            col === "name" && "font-bold"
+                            col === "name" && "font-bold",
+                            idx < 3 && "sticky z-10 bg-white group-hover:bg-slate-50/50"
                           )}
                         >
                           <div className="flex items-center gap-3">
                             {col === 'Id' ? (
-                              <span className="text-slate-400 font-mono text-xs block text-center">{row.Id}</span>
+                              <span className="text-slate-400 font-mono text-xs block text-center w-full">{row.Id}</span>
                             ) : col === 'ACC' ? (
-                              <div className="flex justify-center">
+                              <div className="flex justify-center w-full">
                                 <div 
                                   className={cn(
                                     "h-8 w-8 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white cursor-pointer shadow-sm hover:scale-110 transition-transform",
@@ -711,21 +726,14 @@ export default function TestTable() {
                                     }}
                                   >
                                     {cellEditing?.rowId === row.Id && cellEditing?.col === col ? (
-                                      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setCellEditing(null)}>
+                                      <div className="absolute top-0 left-0 z-[100] w-full min-w-[300px]" onClick={(e) => e.stopPropagation()}>
                                         <div 
-                                          className="bg-white shadow-2xl rounded-xl border border-primary/20 ring-4 ring-primary/5 p-4 w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col"
-                                          onClick={(e) => e.stopPropagation()}
+                                          className="bg-white shadow-2xl rounded-xl border border-primary/20 ring-4 ring-primary/5 p-4 flex flex-col"
                                         >
-                                          <div className="flex justify-between items-center mb-3">
-                                            <span className="text-xs font-black uppercase text-slate-400 tracking-widest">{col.replace(/_/g, ' ')}</span>
-                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCellEditing(null)}>
-                                              <X className="h-4 w-4" />
-                                            </Button>
-                                          </div>
                                           <Textarea
                                             autoFocus
                                             defaultValue={row[col] || ""}
-                                            className="flex-1 min-h-[120px] max-h-[70vh] w-full text-sm p-3 bg-slate-50 border-slate-200 focus-visible:ring-primary/20 resize-none overflow-hidden"
+                                            className="min-h-[100px] w-full text-sm p-3 bg-slate-50 border-slate-200 focus-visible:ring-primary/20 resize-none"
                                             onInput={(e) => {
                                               const target = e.target as HTMLTextAreaElement;
                                               target.style.height = 'auto';
@@ -742,7 +750,7 @@ export default function TestTable() {
                                               }
                                             }}
                                           />
-                                          <div className="flex justify-end gap-2 mt-4">
+                                          <div className="flex justify-end gap-2 mt-3">
                                             <Button variant="ghost" size="sm" onClick={() => setCellEditing(null)}>Cancel</Button>
                                             <Button size="sm" onClick={(e) => {
                                               const container = (e.currentTarget.parentElement?.parentElement);
@@ -756,9 +764,23 @@ export default function TestTable() {
                                         </div>
                                       </div>
                                     ) : (
-                                      <span className="block truncate max-w-full" title={row[col] || ""}>
-                                        {col.toLowerCase().includes('hour') || col.toLowerCase().includes('time') ? formatDate(row[col]) : (row[col] || "")}
-                                      </span>
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className="block truncate max-w-full cursor-pointer">
+                                              {col.toLowerCase().includes('hour') || col.toLowerCase().includes('time') ? formatDate(row[col]) : (row[col] || "")}
+                                            </span>
+                                          </TooltipTrigger>
+                                          <TooltipContent side="top" className="max-w-[400px] break-words p-3 bg-slate-900 text-white font-medium border-none shadow-xl">
+                                            <div className="flex flex-col gap-1">
+                                              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-700 pb-1 mb-1">
+                                                {col.replace(/_/g, ' ')}
+                                              </span>
+                                              <p className="text-sm leading-relaxed">{row[col] || "Empty field"}</p>
+                                            </div>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
                                     )}
                                   </div>
                                 )}
