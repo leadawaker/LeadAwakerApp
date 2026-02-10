@@ -76,7 +76,35 @@ const NON_EDITABLE_FIELDS = [
   "UpdatedAt"
 ];
 
+const DISPLAY_ONLY_FIELDS = [
+  "Tags",
+  "Leads",
+  "Campaigns",
+  "Interactions",
+  "Automation Logs",
+  "Users",
+  "Prompt Libraries",
+  "Created Time",
+  "Last Modified Time"
+];
+
 const HIDDEN_FIELDS = ["Account ID", "CreatedAt", "UpdatedAt", "created_at", "updated_at"];
+
+const STATUS_OPTIONS = ["Active", "Inactive", "Trial", "Suspended", "Unknown"];
+const TYPE_OPTIONS = ["Agency", "Client"];
+
+const TIMEZONES = [
+  "America/New_York",
+  "America/Chicago",
+  "America/Denver",
+  "America/Los_Angeles",
+  "America/Sao_Paulo",
+  "Europe/London",
+  "Europe/Paris",
+  "Europe/Amsterdam",
+  "Asia/Tokyo",
+  "UTC"
+];
 
 export default function TestTable() {
   const [rows, setRows] = useState<Row[]>([]);
@@ -122,22 +150,23 @@ export default function TestTable() {
         if (keys.includes("status")) ordered.push("status");
         if (keys.includes("timezone")) ordered.push("timezone");
 
-        const endCols = [
+        const techCols = [
           "twilio_account_sid", 
           "twilio_auth_token", 
           "twilio_messaging_service_sid", 
-          "twilio_default_from_number", 
-          "webhook_url"
+          "twilio_default_from_number",
+          "webhook_url",
+          "webhook_secret"
         ];
         
         keys.forEach(k => {
-          if (!ordered.includes(k) && !endCols.includes(k) && !SYSTEM_FIELDS.includes(k)) {
+          if (!ordered.includes(k) && !techCols.includes(k) && !SYSTEM_FIELDS.includes(k)) {
             ordered.push(k);
           }
         });
         
         // Add tech stuff
-        endCols.forEach(k => {
+        techCols.forEach(k => {
           if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k);
         });
 
@@ -305,16 +334,16 @@ export default function TestTable() {
     switch (status?.toLowerCase()) {
       case 'active': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
       case 'inactive': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+      case 'trial': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
       case 'suspended': return 'bg-destructive/10 text-destructive border-destructive/20';
-      default: return 'bg-primary/10 text-primary border-primary/20';
+      default: return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
     }
   };
 
   const getTypeColor = (type: string) => {
     switch (type?.toLowerCase()) {
-      case 'agency': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-      case 'enterprise': return 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20';
-      case 'starter': return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
+      case 'agency': return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
+      case 'client': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
       default: return 'bg-primary/10 text-primary border-primary/20';
     }
   };
@@ -332,17 +361,18 @@ export default function TestTable() {
     return (name[0] + (name[1] || name[0])).toUpperCase();
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string, timezone: string = 'UTC') => {
     if (!dateStr) return "-";
     try {
       const d = new Date(dateStr);
+      
+      // Basic formatting as requested: 09/02/26 - 18:41
       const year = d.getFullYear().toString().slice(-2);
       const month = (d.getMonth() + 1).toString().padStart(2, '0');
       const day = d.getDate().toString().padStart(2, '0');
       const hours = d.getHours().toString().padStart(2, '0');
       const minutes = d.getMinutes().toString().padStart(2, '0');
-      const seconds = d.getSeconds().toString().padStart(2, '0');
-      return `${day}/${month}/${year} - ${hours}:${minutes}:${seconds}`;
+      return `${day}/${month}/${year} - ${hours}:${minutes}`;
     } catch (e) {
       return dateStr;
     }
@@ -387,7 +417,7 @@ export default function TestTable() {
                 </DialogHeader>
                 <ScrollArea className="flex-1 p-6">
                   <div className="grid grid-cols-2 gap-4 pb-4">
-                    {columns.filter(c => !NON_EDITABLE_FIELDS.includes(c) && !HIDDEN_FIELDS.includes(c)).map(col => (
+                    {columns.filter(c => !NON_EDITABLE_FIELDS.includes(c) && !HIDDEN_FIELDS.includes(c) && !DISPLAY_ONLY_FIELDS.includes(c)).map(col => (
                       <div key={col} className="space-y-1.5">
                         <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{col.replace(/_/g, ' ')}</label>
                         {col === 'timezone' ? (
@@ -396,8 +426,31 @@ export default function TestTable() {
                               <SelectValue placeholder="Select timezone" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="America/Sao_Paulo">America/Sao_Paulo</SelectItem>
-                              <SelectItem value="Europe/Amsterdam">Europe/Amsterdam</SelectItem>
+                              {TIMEZONES.map(tz => (
+                                <SelectItem key={tz} value={tz}>{tz}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : col === 'status' ? (
+                          <Select onValueChange={(val) => setNewRowData(prev => ({ ...prev, [col]: val }))}>
+                            <SelectTrigger className="bg-slate-50 border-slate-200">
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {STATUS_OPTIONS.map(opt => (
+                                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : col === 'type' ? (
+                          <Select onValueChange={(val) => setNewRowData(prev => ({ ...prev, [col]: val }))}>
+                            <SelectTrigger className="bg-slate-50 border-slate-200">
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {TYPE_OPTIONS.map(opt => (
+                                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         ) : (
@@ -524,16 +577,54 @@ export default function TestTable() {
                             ) : (
                               <div className="w-full flex-1 min-w-0">
                                 {col === "status" ? (
-                                  <Badge variant="outline" className={cn("font-bold text-[10px] uppercase tracking-wider", getStatusColor(row[col]))}>
-                                    {row[col] || "Unknown"}
-                                  </Badge>
+                                  <Select 
+                                    defaultValue={row[col] || "Unknown"} 
+                                    onValueChange={(val) => handleInlineUpdate(row.Id, col, val)}
+                                  >
+                                    <SelectTrigger className={cn("h-7 w-fit min-w-[100px] border-none shadow-none font-bold text-[10px] uppercase tracking-wider", getStatusColor(row[col]))}>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {STATUS_OPTIONS.map(opt => (
+                                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
                                 ) : col === "type" ? (
-                                  <Badge variant="outline" className={cn("font-bold text-[10px] uppercase tracking-wider", getTypeColor(row[col]))}>
-                                    {row[col] || "Unknown"}
-                                  </Badge>
+                                  <Select 
+                                    defaultValue={row[col]} 
+                                    onValueChange={(val) => handleInlineUpdate(row.Id, col, val)}
+                                  >
+                                    <SelectTrigger className={cn("h-7 w-fit min-w-[100px] border-none shadow-none font-bold text-[10px] uppercase tracking-wider", getTypeColor(row[col]))}>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {TYPE_OPTIONS.map(opt => (
+                                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                ) : col === "timezone" ? (
+                                  <Select 
+                                    defaultValue={row[col]} 
+                                    onValueChange={(val) => handleInlineUpdate(row.Id, col, val)}
+                                  >
+                                    <SelectTrigger className="h-7 w-full border-none shadow-none bg-transparent">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {TIMEZONES.map(tz => (
+                                        <SelectItem key={tz} value={tz}>{tz}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
                                 ) : ["Created Time", "Last Modified Time"].includes(col) ? (
-                                  <span className="text-blue-600 font-mono text-xs whitespace-nowrap">
-                                    {formatDate(row[col])}
+                                  <span className="text-blue-600 font-bold font-mono text-xs whitespace-nowrap">
+                                    {formatDate(row[col], row['timezone'])}
+                                  </span>
+                                ) : DISPLAY_ONLY_FIELDS.includes(col) ? (
+                                  <span className="text-orange-500 font-bold text-xs">
+                                    {row[col] || "-"}
                                   </span>
                                 ) : (
                                   <div 
@@ -625,7 +716,7 @@ export default function TestTable() {
             </DialogHeader>
             <ScrollArea className="flex-1 p-6">
               <div className="grid grid-cols-2 gap-6 pb-6">
-                {columns.filter(c => !NON_EDITABLE_FIELDS.includes(c) && !HIDDEN_FIELDS.includes(c)).map(col => (
+                {columns.filter(c => !NON_EDITABLE_FIELDS.includes(c) && !HIDDEN_FIELDS.includes(c) && !DISPLAY_ONLY_FIELDS.includes(c)).map(col => (
                   <div key={col} className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{col.replace(/_/g, ' ')}</label>
                     {col === 'timezone' ? (
@@ -637,8 +728,37 @@ export default function TestTable() {
                           <SelectValue placeholder="Select timezone" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="America/Sao_Paulo">America/Sao_Paulo</SelectItem>
-                          <SelectItem value="Europe/Amsterdam">Europe/Amsterdam</SelectItem>
+                          {TIMEZONES.map(tz => (
+                            <SelectItem key={tz} value={tz}>{tz}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : col === 'status' ? (
+                      <Select 
+                        defaultValue={editingRow[col]} 
+                        onValueChange={(val) => setEditingRow(prev => prev ? ({ ...prev, [col]: val }) : null)}
+                      >
+                        <SelectTrigger className="bg-slate-50 border-slate-200 h-11">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {STATUS_OPTIONS.map(opt => (
+                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : col === 'type' ? (
+                      <Select 
+                        defaultValue={editingRow[col]} 
+                        onValueChange={(val) => setEditingRow(prev => prev ? ({ ...prev, [col]: val }) : null)}
+                      >
+                        <SelectTrigger className="bg-slate-50 border-slate-200 h-11">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TYPE_OPTIONS.map(opt => (
+                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     ) : (
