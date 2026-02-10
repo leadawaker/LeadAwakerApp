@@ -157,63 +157,61 @@ export default function AppCampaigns() {
         </div>
 
         {/* TABLE */}
-        <div className="flex-1 bg-white rounded-[32px] border border-slate-200 overflow-hidden shadow-sm flex flex-col p-8">
-          <div className="flex-1 bg-white rounded-[32px] border border-slate-200 overflow-hidden shadow-sm flex flex-col">
-            {/* Header */}
-            <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_100px] px-8 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 border-b">
-              <div>Campaign</div>
-              <div>Account</div>
-              <div>Status</div>
-              <div>Leads</div>
-              <div className="text-right">Actions</div>
-            </div>
+        <div className="flex-1 bg-white rounded-[32px] border border-slate-200 overflow-hidden shadow-sm flex flex-col">
+          {/* Header */}
+          <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_100px] px-8 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 border-b">
+            <div>Campaign</div>
+            <div>Account</div>
+            <div>Status</div>
+            <div>Leads</div>
+            <div className="text-right">Actions</div>
+          </div>
 
-            {/* Rows */}
-            <div className="overflow-y-auto divide-y divide-slate-50">
-              {filteredCampaigns.map(c => {
-                const account = mockAccounts.find(a => a.id === c.account_id);
-                return (
-                  <div
-                    key={c.id}
-                    className="grid grid-cols-[1.5fr_1fr_1fr_1fr_100px] px-8 py-6 text-sm items-center hover:bg-slate-50/40 transition-colors"
-                  >
-                    <div>
-                      <div className="font-bold text-slate-900">{c.name}</div>
-                      <div className="text-xs text-slate-500 mt-1 truncate">
-                        {c.description}
-                      </div>
-                    </div>
-
-                    <div className="font-semibold text-slate-700">
-                      {account?.name}
-                    </div>
-
-                    <div>
-                      <span
-                        className={cn(
-                          "px-2.5 py-1 rounded-full text-[10px] font-black uppercase border",
-                          c.status === "Active"
-                            ? "bg-blue-50 text-blue-700 border-blue-100"
-                            : "bg-slate-50 text-slate-500 border-slate-100"
-                        )}
-                      >
-                        {c.status}
-                      </span>
-                    </div>
-
-                    <div className="font-bold text-slate-900">
-                      {c.leads_total}
-                    </div>
-
-                    <div className="text-right">
-                      <button className="p-2.5 rounded-xl hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100 text-slate-400 hover:text-blue-600">
-                        <Eye className="w-4 h-4" />
-                      </button>
+          {/* Rows */}
+          <div className="overflow-y-auto divide-y divide-slate-50">
+            {filteredCampaigns.map(c => {
+              const account = mockAccounts.find(a => a.id === c.account_id);
+              return (
+                <div
+                  key={c.id}
+                  className="grid grid-cols-[1.5fr_1fr_1fr_1fr_100px] px-8 py-6 text-sm items-center hover:bg-slate-50/40 transition-colors"
+                >
+                  <div>
+                    <div className="font-bold text-slate-900">{c.name}</div>
+                    <div className="text-xs text-slate-500 mt-1 truncate">
+                      {c.description}
                     </div>
                   </div>
-                );
-              })}
-            </div>
+
+                  <div className="font-semibold text-slate-700">
+                    {account?.name}
+                  </div>
+
+                  <div>
+                    <span
+                      className={cn(
+                        "px-2.5 py-1 rounded-full text-[10px] font-black uppercase border",
+                        c.status === "Active"
+                          ? "bg-blue-50 text-blue-700 border-blue-100"
+                          : "bg-slate-50 text-slate-500 border-slate-100"
+                      )}
+                    >
+                      {c.status}
+                    </span>
+                  </div>
+
+                  <div className="font-bold text-slate-900">
+                    {c.leads_total}
+                  </div>
+
+                  <div className="text-right">
+                    <button className="p-2.5 rounded-xl hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100 text-slate-400 hover:text-blue-600">
+                      <Eye className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

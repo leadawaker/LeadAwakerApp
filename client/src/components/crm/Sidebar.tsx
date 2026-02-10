@@ -15,7 +15,9 @@ export function Sidebar() {
 
   const items = [
     { href: `${prefix}/dashboard`, label: "Dashboard", icon: LayoutDashboard, testId: "link-nav-dashboard" },
-    { href: `${prefix}/accounts`, label: "Accounts", icon: Target, testId: "link-nav-accounts" },
+    ...(isAgencyView ? [
+      { href: `${prefix}/accounts`, label: "Accounts", icon: Target, testId: "link-nav-accounts" }
+    ] : []),
     { href: `${prefix}/campaigns`, label: "Campaigns", icon: Target, testId: "link-nav-campaigns" },
     { href: `${prefix}/leads`, label: "Contacts", icon: Users, testId: "link-nav-leads" },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "link-nav-calendar" },
