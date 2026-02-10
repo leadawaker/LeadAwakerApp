@@ -99,7 +99,13 @@ export default function AppCampaigns() {
 
   return (
     <CrmShell>
-      <div className="flex flex-col h-full pb-4 bg-[#F6F5FA]/30">
+      <div className="flex flex-col h-full pb-4 bg-white">
+        <div className="pt-6 -mt-2 mb-8">
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3" data-testid="text-title">
+            <div className="h-8 w-1.5 bg-blue-600 rounded-full" />
+            Campaigns
+          </h1>
+        </div>
 
         {/* FILTER BAR */}
         <div className="flex items-center gap-3 mb-6 mt-[2px]">

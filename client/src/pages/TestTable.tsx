@@ -470,100 +470,98 @@ export default function TestTable() {
   };
 
   return (
-    <div className="w-full h-full bg-[#f8fafc] pb-12 px-4 md:px-6 overflow-y-auto">
-      <div className="w-full mx-auto space-y-8 px-2 pt-8">
-        <header className="flex flex-col md:flex-row justify-between items-end gap-6">
-          <div className="space-y-1">
-            <h1 className="text-4xl font-black tracking-tight text-slate-900 flex items-center gap-3">
-              <div className="h-10 w-2 bg-primary rounded-full" />
-              Accounts Command Center
-            </h1>
-            <p className="text-slate-500 font-medium">Real-time NocoDB management with inline editing.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            {selectedIds.length > 0 && (
-              <Button 
-                variant="destructive" 
-                className="gap-2 font-bold animate-in fade-in slide-in-from-right-4"
-                onClick={() => setIsDeleteDialogOpen(true)}
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete Selected ({selectedIds.length})
-              </Button>
-            )}
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2 shadow-lg shadow-primary/20 font-bold px-6">
-                  <Plus className="h-4 w-4" />
-                  New Record
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl h-[calc(100vh-80px)] p-0 gap-0 overflow-hidden flex flex-col">
-                <DialogHeader className="p-6 border-b">
-                  <DialogTitle>Add New Account</DialogTitle>
-                </DialogHeader>
-                <ScrollArea className="flex-1 p-6">
-                  <div className="grid grid-cols-2 gap-4 pb-4">
-                    {columns.filter(c => !NON_EDITABLE_FIELDS.includes(c) && !HIDDEN_FIELDS.includes(c) && !DISPLAY_ONLY_FIELDS.includes(c)).map(col => (
-                      <div key={col} className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{col.replace(/_/g, ' ')}</label>
-                        {col === 'timezone' ? (
-                          <Select onValueChange={(val) => setNewRowData(prev => ({ ...prev, [col]: val }))}>
-                            <SelectTrigger className="bg-slate-50 border-slate-200">
-                              <SelectValue placeholder="Select timezone" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {TIMEZONES.map(tz => (
-                                <SelectItem key={tz} value={tz}>{tz}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : col === 'status' ? (
-                          <Select onValueChange={(val) => setNewRowData(prev => ({ ...prev, [col]: val }))}>
-                            <SelectTrigger className="bg-slate-50 border-slate-200">
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {STATUS_OPTIONS.map(opt => (
-                                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : col === 'type' ? (
-                          <Select onValueChange={(val) => setNewRowData(prev => ({ ...prev, [col]: val }))}>
-                            <SelectTrigger className="bg-slate-50 border-slate-200">
-                              <SelectValue placeholder="Select type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {TYPE_OPTIONS.map(opt => (
-                                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <Input
-                            value={newRowData[col] || ""}
-                            onChange={(e) => setNewRowData(prev => ({ ...prev, [col]: e.target.value }))}
-                            className="bg-slate-50 border-slate-200"
-                          />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-                <DialogFooter className="p-6 border-t bg-slate-50/50">
-                  <Button variant="ghost" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
-                  <Button onClick={handleCreateRow}>Create</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            <Button variant="outline" size="icon" onClick={fetchData} disabled={loading} className="bg-white">
-              <RefreshCw className={cn("h-4 w-4 text-slate-400", loading && "animate-spin")} />
-            </Button>
-          </div>
-        </header>
+    <div className="w-full h-full bg-transparent pb-12 px-0 overflow-y-auto">
+      <div className="w-full mx-auto space-y-6">
+        <div className="pt-6 -mt-2 mb-8 px-2">
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3" data-testid="text-title">
+            <div className="h-8 w-1.5 bg-blue-600 rounded-full" />
+            Accounts
+          </h1>
+        </div>
 
-        <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white overflow-hidden rounded-3xl">
+        <div className="flex items-center gap-3 px-2">
+          {selectedIds.length > 0 && (
+            <Button 
+              variant="destructive" 
+              className="h-10 rounded-xl gap-2 font-bold animate-in fade-in slide-in-from-right-4"
+              onClick={() => setIsDeleteDialogOpen(true)}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete Selected ({selectedIds.length})
+            </Button>
+          )}
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogTrigger asChild>
+              <Button className="h-10 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold transition-colors gap-2 shadow-none">
+                <Plus className="h-4 w-4" />
+                +Add
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl h-[calc(100vh-80px)] p-0 gap-0 overflow-hidden flex flex-col">
+              <DialogHeader className="p-6 border-b">
+                <DialogTitle>Add New Account</DialogTitle>
+              </DialogHeader>
+              <ScrollArea className="flex-1 p-6">
+                <div className="grid grid-cols-2 gap-4 pb-4">
+                  {columns.filter(c => !NON_EDITABLE_FIELDS.includes(c) && !HIDDEN_FIELDS.includes(c) && !DISPLAY_ONLY_FIELDS.includes(c)).map(col => (
+                    <div key={col} className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{col.replace(/_/g, ' ')}</label>
+                      {col === 'timezone' ? (
+                        <Select onValueChange={(val) => setNewRowData(prev => ({ ...prev, [col]: val }))}>
+                          <SelectTrigger className="bg-slate-50 border-slate-200">
+                            <SelectValue placeholder="Select timezone" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TIMEZONES.map(tz => (
+                              <SelectItem key={tz} value={tz}>{tz}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : col === 'status' ? (
+                        <Select onValueChange={(val) => setNewRowData(prev => ({ ...prev, [col]: val }))}>
+                          <SelectTrigger className="bg-slate-50 border-slate-200">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STATUS_OPTIONS.map(opt => (
+                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : col === 'type' ? (
+                        <Select onValueChange={(val) => setNewRowData(prev => ({ ...prev, [col]: val }))}>
+                          <SelectTrigger className="bg-slate-50 border-slate-200">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TYPE_OPTIONS.map(opt => (
+                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          value={newRowData[col] || ""}
+                          onChange={(e) => setNewRowData(prev => ({ ...prev, [col]: e.target.value }))}
+                          className="bg-slate-50 border-slate-200"
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+              <DialogFooter className="p-6 border-t bg-slate-50/50">
+                <Button variant="ghost" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
+                <Button onClick={handleCreateRow}>Create</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Button variant="outline" size="icon" onClick={fetchData} disabled={loading} className="h-10 w-10 rounded-xl bg-white">
+            <RefreshCw className={cn("h-4 w-4 text-slate-400", loading && "animate-spin")} />
+          </Button>
+        </div>
+
+        <div className="flex-1 min-h-0 bg-white rounded-[32px] border border-slate-200 flex flex-col overflow-hidden shadow-none">
           <div className="overflow-x-auto">
             <Table className="w-full table-fixed border-separate border-spacing-0">
               <TableHeader className="bg-slate-50 border-b border-slate-100 sticky top-0 z-20">

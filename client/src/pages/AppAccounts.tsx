@@ -22,7 +22,7 @@ export default function AppAccounts() {
 
   return (
     <CrmShell>
-      <div className="flex flex-col h-full bg-white overflow-hidden" data-testid="page-accounts">
+      <div className="flex flex-col h-full bg-[#F6F5FA]/30 pt-6 -mt-2 pb-2" data-testid="page-accounts">
         <TestTable />
       </div>
     </CrmShell>
