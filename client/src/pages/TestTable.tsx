@@ -167,9 +167,12 @@ export default function TestTable() {
           !HIDDEN_FIELDS.includes(k) &&
           !["Id", "Automation Logs", "Prompt Libraries"].includes(k)
         );
-        const ordered: string[] = ["ACC"]; // Removed Id from being first 4
+        const ordered: string[] = ["ACC"]; 
         if (keys.includes("name")) ordered.push("name");
         
+        // Add Account ID after Company Name and rename it to ID in header
+        if (allKeys.includes("Account ID")) ordered.push("Account ID");
+
         // Status, Type, Owner email, Phone, Business Niche, Website, Notes, Timezone
         if (keys.includes("status")) ordered.push("status");
         if (keys.includes("type")) ordered.push("type");
@@ -209,12 +212,12 @@ export default function TestTable() {
           if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k);
         });
         
-        // Reorder for: Max Daily Sends after Business Hours Close
-        const businessHoursCloseIdx = ordered.indexOf("business_hours_close");
+        // Reorder for: Max Daily Sends after Business Hours Start
+        const businessHoursStartIdx = ordered.indexOf("business_hours_open");
         const maxDailySendsIdx = ordered.indexOf("max_daily_sends");
-        if (businessHoursCloseIdx !== -1 && maxDailySendsIdx !== -1) {
+        if (businessHoursStartIdx !== -1 && maxDailySendsIdx !== -1) {
           ordered.splice(maxDailySendsIdx, 1);
-          const newIdx = ordered.indexOf("business_hours_close") + 1;
+          const newIdx = ordered.indexOf("business_hours_open") + 1;
           ordered.splice(newIdx, 0, "max_daily_sends");
         }
 
@@ -233,6 +236,13 @@ export default function TestTable() {
         });
 
         // Add requested end cols
+        const endCols = [
+          "Automation Logs",
+          "Prompt Libraries",
+          "Tags",
+          "Slug"
+        ];
+
         endCols.forEach(k => {
           if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k);
         });
@@ -560,9 +570,9 @@ export default function TestTable() {
         <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white overflow-hidden rounded-3xl">
           <div className="overflow-x-auto">
             <Table className="w-full table-fixed border-separate border-spacing-0">
-              <TableHeader className="bg-slate-50/50 border-b border-slate-100 sticky top-0 z-20">
+              <TableHeader className="bg-slate-50 border-b border-slate-100 sticky top-0 z-20">
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-10 px-0 border-r border-slate-100/50 sticky left-0 z-30 bg-slate-50/50">
+                  <TableHead className="w-10 px-0 border-r border-slate-100/50 sticky left-0 z-30 bg-slate-50">
                     <div className="flex justify-center">
                       <Checkbox 
                         checked={selectedIds.length === rows.length && rows.length > 0} 
@@ -575,16 +585,16 @@ export default function TestTable() {
                       key={col} 
                       style={{ 
                         width: colWidths[col] || 200,
-                        left: idx < 3 ? (40 + columns.slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined
+                        left: idx < 4 ? (40 + columns.slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined
                       }}
                       className={cn(
                         "px-4 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap border-r border-slate-100/50 relative group table-fixed",
                         col === "Id" && "text-center",
-                        idx < 3 && "sticky z-30 bg-slate-50/50"
+                        idx < 4 && "sticky z-30 bg-slate-50"
                       )}
                     >
                       <div className="flex items-center justify-between overflow-hidden">
-                        <span className="truncate">{col === "name" ? "Company Name" : col.replace(/_/g, ' ')}</span>
+                        <span className="truncate">{col === "name" ? "Company Name" : col === "Account ID" ? "ID" : col.replace(/_/g, ' ')}</span>
                         <div 
                           className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/30 transition-colors z-10"
                           onMouseDown={(e) => {
@@ -624,7 +634,7 @@ export default function TestTable() {
                         selectedIds.includes(row.Id) && "bg-primary/[0.01]"
                       )}
                     >
-                      <TableCell className="px-0 border-r border-slate-100/50 sticky left-0 z-10 bg-white group-hover:bg-slate-50/50">
+                      <TableCell className="px-0 border-r border-slate-100/50 sticky left-0 z-10 bg-white group-hover:bg-slate-50">
                         <div className="flex justify-center items-center h-full w-full">
                           <Checkbox 
                             checked={selectedIds.includes(row.Id)} 
@@ -637,12 +647,12 @@ export default function TestTable() {
                           key={col} 
                           style={{ 
                             width: colWidths[col] || 200,
-                            left: idx < 3 ? (40 + columns.slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined
+                            left: idx < 4 ? (40 + columns.slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined
                           }}
                           className={cn(
                             "px-4 py-4 text-sm transition-all relative border-r border-slate-100/50",
                             col === "name" && "font-bold",
-                            idx < 3 && "sticky z-10 bg-white group-hover:bg-slate-50/50"
+                            idx < 4 && "sticky z-10 bg-white group-hover:bg-slate-50"
                           )}
                         >
                           <div className="flex items-center gap-3">
@@ -708,12 +718,15 @@ export default function TestTable() {
                                   <span className="text-blue-600 font-bold font-mono text-xs whitespace-nowrap block overflow-hidden text-ellipsis">
                                     {formatDate(row[col], row['timezone'])}
                                   </span>
-                                ) : ["Automation Logs", "Prompt Libraries"].includes(col) ? (
+                                ) : ["Automation Logs", "Prompt Libraries", "Tags"].includes(col) ? (
                                   <span className="text-orange-500 font-bold text-xs whitespace-nowrap block overflow-hidden text-ellipsis">
                                     {row[col] || ""}
                                   </span>
-                                ) : DISPLAY_ONLY_FIELDS.includes(col) ? (
-                                  <span className="text-orange-500 font-bold text-xs whitespace-nowrap block overflow-hidden text-ellipsis">
+                                ) : DISPLAY_ONLY_FIELDS.includes(col) || col === "Account ID" ? (
+                                  <span className={cn(
+                                    "font-bold text-xs whitespace-nowrap block overflow-hidden text-ellipsis",
+                                    col === "Account ID" ? "text-slate-600" : "text-orange-500"
+                                  )}>
                                     {row[col] || ""}
                                   </span>
                                 ) : (
