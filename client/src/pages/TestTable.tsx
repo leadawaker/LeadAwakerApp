@@ -236,14 +236,14 @@ export default function TestTable() {
         });
 
         // Add requested end cols
-        const endCols = [
+        const finalEndCols = [
           "Automation Logs",
           "Prompt Libraries",
           "Tags",
           "Slug"
         ];
 
-        endCols.forEach(k => {
+        finalEndCols.forEach(k => {
           if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k);
         });
 
