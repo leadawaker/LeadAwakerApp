@@ -172,16 +172,9 @@ export default function TestTable() {
         
         // Add Account ID after Company Name and rename it to ID in header
         if (allKeys.includes("Account ID")) ordered.push("Account ID");
-
-        // Status, Type, Owner email, Phone, Business Niche, Website, Notes, Timezone
-        if (keys.includes("status")) ordered.push("status");
-        if (keys.includes("type")) ordered.push("type");
-        if (keys.includes("owner_email")) ordered.push("owner_email");
-        if (keys.includes("phone")) ordered.push("phone");
-        if (keys.includes("business_niche")) ordered.push("business_niche");
-        if (keys.includes("website")) ordered.push("website");
-        if (keys.includes("notes")) ordered.push("notes");
-        if (keys.includes("timezone")) ordered.push("timezone");
+        
+        // Add ID field
+        if (allKeys.includes("Id")) ordered.push("Id");
 
         const techCols = [
           "twilio_account_sid", 
@@ -192,17 +185,19 @@ export default function TestTable() {
           "webhook_secret",
           "max_daily_sends"
         ];
-        
-        // Final columns order: ... Tags, Slug, Automation Logs, Prompt Library
-        const endCols = [
-          "Tags",
-          "Slug",
-          "Automation Logs",
-          "Prompt Libraries"
-        ];
 
+        // Status, Type, Owner email, Phone, Business Niche, Website, Notes, Timezone
+        if (keys.includes("status")) ordered.push("status");
+        if (keys.includes("type")) ordered.push("type");
+        if (keys.includes("owner_email")) ordered.push("owner_email");
+        if (keys.includes("phone")) ordered.push("phone");
+        if (keys.includes("business_niche")) ordered.push("business_niche");
+        if (keys.includes("website")) ordered.push("website");
+        if (keys.includes("notes")) ordered.push("notes");
+        if (keys.includes("timezone")) ordered.push("timezone");
+        
         keys.forEach(k => {
-          if (!ordered.includes(k) && !techCols.includes(k) && !SYSTEM_FIELDS.includes(k) && !endCols.includes(k)) {
+          if (!ordered.includes(k) && !techCols.includes(k) && !SYSTEM_FIELDS.includes(k)) {
             ordered.push(k);
           }
         });
@@ -237,9 +232,9 @@ export default function TestTable() {
 
         // Add requested end cols
         const finalEndCols = [
-          "Automation Logs",
           "Prompt Libraries",
           "Tags",
+          "Automation Logs",
           "Slug"
         ];
 
@@ -257,8 +252,9 @@ export default function TestTable() {
         // Initialize widths
         const initialWidths: { [key: string]: number } = {};
         ordered.forEach(col => {
-          if (col === 'Id' || col === 'ACC') initialWidths[col] = 40;
+          if (col === 'Id' || col === 'ACC' || col === 'Account ID') initialWidths[col] = 40;
           else if (SMALL_WIDTH_COLS.includes(col)) initialWidths[col] = 70;
+          else if (["Leads", "Campaigns", "Interactions", "Users", "Automation Logs", "Prompt Libraries", "Tags"].includes(col)) initialWidths[col] = 140;
           else initialWidths[col] = 140; 
         });
         setColWidths(initialWidths);
@@ -585,12 +581,12 @@ export default function TestTable() {
                       key={col} 
                       style={{ 
                         width: colWidths[col] || 200,
-                        left: idx < 4 ? (40 + columns.slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined
+                        left: idx < 3 ? (40 + columns.slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined
                       }}
                       className={cn(
                         "px-4 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap border-r border-slate-100/50 relative group table-fixed",
                         col === "Id" && "text-center",
-                        idx < 4 && "sticky z-30 bg-slate-50"
+                        idx < 3 && "sticky z-30 bg-slate-50"
                       )}
                     >
                       <div className="flex items-center justify-between overflow-hidden">
@@ -719,9 +715,9 @@ export default function TestTable() {
                                     {formatDate(row[col], row['timezone'])}
                                   </span>
                                 ) : ["Automation Logs", "Prompt Libraries", "Tags"].includes(col) ? (
-                                  <span className="text-orange-500 font-bold text-xs whitespace-nowrap block overflow-hidden text-ellipsis">
-                                    {row[col] || ""}
-                                  </span>
+                                  <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200 font-black text-[10px] px-2 py-0.5 rounded-lg border-2 w-full justify-center">
+                                    {row[col] || "0"}
+                                  </Badge>
                                 ) : DISPLAY_ONLY_FIELDS.includes(col) || col === "Account ID" ? (
                                   <span className={cn(
                                     "font-bold text-xs whitespace-nowrap block overflow-hidden text-ellipsis",
