@@ -99,16 +99,9 @@ export default function AppCampaigns() {
 
   return (
     <CrmShell>
-      <div className="flex flex-col h-full pb-4 bg-white">
-        <div className="pt-6 -mt-2 mb-8">
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3" data-testid="text-title">
-            <div className="h-8 w-1.5 bg-blue-600 rounded-full" />
-            Campaigns
-          </h1>
-        </div>
-
+      <div className="flex flex-col h-full pb-4">
         {/* FILTER BAR */}
-        <div className="flex items-center gap-3 mb-6 mt-[2px]">
+        <div className="flex items-center gap-3 mb-6 mt-4">
 
           {/* Search */}
           <div className="relative w-[320px]">
@@ -164,7 +157,7 @@ export default function AppCampaigns() {
         </div>
 
         {/* TABLE */}
-        <div className="flex-1 bg-white rounded-[32px] border border-slate-200 overflow-hidden shadow-sm flex flex-col">
+        <div className="flex-1 overflow-hidden flex flex-col">
 
           {/* Header */}
           <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_100px] px-8 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 border-b">

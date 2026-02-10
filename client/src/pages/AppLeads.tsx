@@ -107,12 +107,6 @@ export default function AppLeads() {
   return (
     <CrmShell>
       <div className="h-full flex flex-col pt-6 -mt-2 pb-2" data-testid="page-leads">
-        <div className="mb-8">
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3" data-testid="text-title">
-            <div className="h-8 w-1.5 bg-blue-600 rounded-full" />
-            Contacts
-          </h1>
-        </div>
         <div className="shrink-0 mb-6" data-testid="card-page-leads">
           <div className="p-0">
             <div className="flex flex-wrap items-center gap-3" data-testid="bar-filters">
@@ -177,7 +171,7 @@ export default function AppLeads() {
         </div>
 
         <div className="flex-1 min-h-0 bg-white rounded-[32px] border border-border flex flex-col overflow-hidden" data-testid="table-contacts">
-          <div className="shrink-0 grid grid-cols-[40px_44px_1.5fr_1fr_1fr_1fr] items-center gap-3 bg-white px-6 py-4 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider z-20" data-testid="row-contacts-head">
+          <div className="shrink-0 grid grid-cols-[40px_44px_1.5fr_1fr_1fr_1fr_1fr] items-center gap-3 bg-white px-6 py-4 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider z-20" data-testid="row-contacts-head">
             <div className="flex justify-center">
               <input 
                 type="checkbox" 
@@ -190,7 +184,8 @@ export default function AppLeads() {
             <div className="sticky left-0 bg-white z-30 px-2">name</div>
             <div>conversion</div>
             <div>tags</div>
-            <div className="text-right">details</div>
+            <div>email</div>
+            <div>phone</div>
           </div>
 
           <div className="flex-1 overflow-y-auto divide-y divide-border/30" data-testid="list-contacts">
@@ -216,7 +211,7 @@ export default function AppLeads() {
               return (
                 <div
                   key={l.id}
-                  className="grid grid-cols-[40px_44px_1.5fr_1fr_1fr_1fr] items-center gap-3 px-6 py-4 hover:bg-muted/5 group bg-white transition-colors"
+                  className="grid grid-cols-[40px_44px_1.5fr_1fr_1fr_1fr_1fr] items-center gap-3 px-6 py-4 hover:bg-muted/5 group bg-white transition-colors"
                   data-testid={`row-contact-${l.id}`}
                 >
                   <div className="flex justify-center">
@@ -281,9 +276,11 @@ export default function AppLeads() {
                     })}
                   </div>
 
-                  <div className="flex flex-col items-end gap-0.5">
-                    <div className="text-[11px] text-muted-foreground font-medium truncate max-w-full">{l.phone}</div>
-                    <div className="text-[11px] text-muted-foreground font-medium truncate max-w-full">{l.email}</div>
+                  <div className="text-[11px] text-muted-foreground font-medium truncate max-w-full">
+                    {l.email}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground font-medium truncate max-w-full">
+                    {l.phone}
                   </div>
                 </div>
               );

@@ -219,12 +219,6 @@ function AgencyDashboard() {
 
   return (
     <div className="mt-6 space-y-12" data-testid="agency-dashboard">
-      <div className="mb-8 -mt-4">
-        <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3" data-testid="text-title">
-          <div className="h-8 w-1.5 bg-blue-600 rounded-full" />
-          Dashboard
-        </h1>
-      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {subaccounts.map(acc => {
           const accCampaigns = campaigns.filter(c => c.account_id === acc.id);
@@ -333,12 +327,6 @@ function SubaccountDashboard({
 
   return (
     <div className="mt-0 space-y-12 flex flex-col" data-testid="subaccount-dashboard">
-      <div className="mb-8 -mt-4">
-        <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3" data-testid="text-title">
-          <div className="h-8 w-1.5 bg-blue-600 rounded-full" />
-          Dashboard
-        </h1>
-      </div>
       <div className="flex items-start justify-between -mt-10 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 flex-grow" data-testid="grid-kpis">
           <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" icon={<Users className="w-4 h-4" />} />

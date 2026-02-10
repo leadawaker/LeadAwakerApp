@@ -75,7 +75,8 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
       )}
       data-testid="header-crm-topbar"
     >
-      <div className="flex-1 flex items-center justify-start">
+      <div className="flex-1 flex items-center justify-start gap-3">
+        <div className="h-8 w-1.5 bg-blue-600 rounded-full" />
         <h1 className="text-3xl font-bold tracking-tight text-foreground">{currentTitle}</h1>
       </div>
 
