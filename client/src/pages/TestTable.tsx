@@ -57,7 +57,9 @@ const SMALL_WIDTH_COLS = [
   'Prompt Libraries'
 ];
 
+// SYSTEM_FIELDS stays as-is or can be simplified to just labels used in your table
 const SYSTEM_FIELDS = ["created_at", "updated_at", "Created Time", "Last Modified Time"];
+
 const NON_EDITABLE_FIELDS = [
   "Id",
   "Tags",
@@ -96,7 +98,16 @@ const DISPLAY_ONLY_FIELDS = [
   "updated_at"
 ];
 
-const HIDDEN_FIELDS = ["Account ID", "CreatedAt", "UpdatedAt", "created_at", "updated_at"];
+const HIDDEN_FIELDS = [
+  "Id",            // hide Id from popup
+  "Account ID",
+  "Automation Logs",
+  "Prompt Libraries",
+  "CreatedAt",
+  "UpdatedAt",
+  "created_at",
+  "updated_at"
+];
 
 const STATUS_OPTIONS = ["Active", "Inactive", "Trial", "Suspended", "Unknown"];
 const TYPE_OPTIONS = ["Agency", "Client"];
@@ -142,9 +153,9 @@ export default function TestTable() {
         const allKeys = Object.keys(list[0]);
         const keys = allKeys.filter(k => 
           !HIDDEN_FIELDS.includes(k) &&
-          k !== "Id"
+          // we will add Id manually and show Created/LastModified only in table
+          !["Id", "Automation Logs", "Prompt Libraries"].includes(k)
         );
-        
         const ordered: string[] = ["Id"];
         if (keys.includes("name")) ordered.push("name");
         
