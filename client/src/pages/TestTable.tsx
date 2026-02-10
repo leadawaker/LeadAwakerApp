@@ -73,7 +73,8 @@ const NON_EDITABLE_FIELDS = [
   "updated_at",
   "Account ID",
   "CreatedAt",
-  "UpdatedAt"
+  "UpdatedAt",
+  "account_id"
 ];
 
 const DISPLAY_ONLY_FIELDS = [
@@ -85,7 +86,10 @@ const DISPLAY_ONLY_FIELDS = [
   "Users",
   "Prompt Libraries",
   "Created Time",
-  "Last Modified Time"
+  "Last Modified Time",
+  "Id",
+  "Account ID",
+  "account_id"
 ];
 
 const HIDDEN_FIELDS = ["Account ID", "CreatedAt", "UpdatedAt", "created_at", "updated_at"];
@@ -140,14 +144,14 @@ export default function TestTable() {
         const ordered: string[] = ["Id"];
         if (keys.includes("name")) ordered.push("name");
         
-        if (keys.includes("number of leads")) ordered.push("number of leads");
-        if (keys.includes("number of campaigns")) ordered.push("number of campaigns");
+        // Status, Type, Owner email, Phone, Business Niche, Website, Notes, Timezone
+        if (keys.includes("status")) ordered.push("status");
+        if (keys.includes("type")) ordered.push("type");
         if (keys.includes("owner_email")) ordered.push("owner_email");
         if (keys.includes("phone")) ordered.push("phone");
         if (keys.includes("business_niche")) ordered.push("business_niche");
-        
-        // Status before timezone
-        if (keys.includes("status")) ordered.push("status");
+        if (keys.includes("website")) ordered.push("website");
+        if (keys.includes("notes")) ordered.push("notes");
         if (keys.includes("timezone")) ordered.push("timezone");
 
         const techCols = [
@@ -159,10 +163,28 @@ export default function TestTable() {
           "webhook_secret"
         ];
         
+        // Users then Tags
+        const middleCols = [
+          "number of leads",
+          "number of campaigns",
+          "Leads",
+          "Campaigns",
+          "Interactions",
+          "Automation Logs",
+          "Users",
+          "Tags",
+          "Prompt Libraries"
+        ];
+
         keys.forEach(k => {
-          if (!ordered.includes(k) && !techCols.includes(k) && !SYSTEM_FIELDS.includes(k)) {
+          if (!ordered.includes(k) && !techCols.includes(k) && !SYSTEM_FIELDS.includes(k) && !middleCols.includes(k)) {
             ordered.push(k);
           }
+        });
+
+        // Add middle cols in order
+        middleCols.forEach(k => {
+          if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k);
         });
         
         // Add tech stuff
@@ -364,7 +386,14 @@ export default function TestTable() {
   const formatDate = (dateStr: string, timezone: string = 'UTC') => {
     if (!dateStr) return "-";
     try {
+      // If it's a time string like "17:00:00", just strip the seconds
+      if (dateStr.includes(':') && !dateStr.includes('-') && !dateStr.includes('/')) {
+        const parts = dateStr.split(':');
+        if (parts.length >= 2) return `${parts[0]}:${parts[1]}`;
+      }
+
       const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
       
       // Basic formatting as requested: 09/02/26 - 18:41
       const year = d.getFullYear().toString().slice(-2);
@@ -622,13 +651,17 @@ export default function TestTable() {
                                   <span className="text-blue-600 font-bold font-mono text-xs whitespace-nowrap">
                                     {formatDate(row[col], row['timezone'])}
                                   </span>
+                                ) : ["Automation Logs", "Prompt Libraries"].includes(col) ? (
+                                  <span className="text-orange-500 font-bold text-xs whitespace-nowrap">
+                                    {row[col] || "-"}
+                                  </span>
                                 ) : DISPLAY_ONLY_FIELDS.includes(col) ? (
-                                  <span className="text-orange-500 font-bold text-xs">
+                                  <span className="text-orange-500 font-bold text-xs whitespace-nowrap">
                                     {row[col] || "-"}
                                   </span>
                                 ) : (
                                   <div 
-                                    className={cn("min-h-[20px] w-full", !NON_EDITABLE_FIELDS.includes(col) && "cursor-text")}
+                                    className={cn("min-h-[20px] w-full truncate max-w-full overflow-hidden whitespace-nowrap", !NON_EDITABLE_FIELDS.includes(col) && "cursor-text")}
                                     onClick={(e) => {
                                       if (NON_EDITABLE_FIELDS.includes(col)) return;
                                       e.stopPropagation();
@@ -648,25 +681,13 @@ export default function TestTable() {
                                             setCellEditing(null);
                                           }}
                                           onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                                              handleInlineUpdate(row.Id, col, e.currentTarget.value);
-                                              setCellEditing(null);
-                                            }
                                             if (e.key === 'Escape') setCellEditing(null);
                                           }}
                                         />
-                                        <div className="flex justify-between items-center mt-2 px-1">
-                                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ctrl+Enter to save</span>
-                                          <Button size="sm" className="h-7 text-[10px] font-bold" onClick={(e) => {
-                                            const textarea = (e.currentTarget.parentElement?.previousSibling as HTMLTextAreaElement);
-                                            handleInlineUpdate(row.Id, col, textarea.value);
-                                            setCellEditing(null);
-                                          }}>Save</Button>
-                                        </div>
                                       </div>
                                     ) : (
-                                      <span className={cn("truncate block", col === "name" ? colors.text : "text-slate-600")} title={row[col]}>
-                                        {row[col] ?? <span className="text-slate-300 italic">-</span>}
+                                      <span className="truncate block">
+                                        {col.toLowerCase().includes('hour') || col.toLowerCase().includes('time') ? formatDate(row[col]) : (row[col] || "-")}
                                       </span>
                                     )}
                                   </div>
