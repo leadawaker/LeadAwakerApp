@@ -714,7 +714,7 @@ export default function TestTable() {
                                   <span className="text-blue-600 font-bold font-mono text-xs whitespace-nowrap block overflow-hidden text-ellipsis">
                                     {formatDate(row[col], row['timezone'])}
                                   </span>
-                                ) : ["Automation Logs", "Prompt Libraries", "Tags"].includes(col) ? (
+                                ) : ["Leads", "Campaigns", "Interactions", "Users", "Automation Logs", "Prompt Libraries", "Tags"].includes(col) ? (
                                   <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200 font-black text-[10px] px-2 py-0.5 rounded-lg border-2 w-full justify-center">
                                     {row[col] || "0"}
                                   </Badge>
