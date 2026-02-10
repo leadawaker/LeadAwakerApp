@@ -802,7 +802,7 @@ export default function TestTable() {
               </TableBody>
             </Table>
           </div>
-        </Card>
+        </div>
       </div>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

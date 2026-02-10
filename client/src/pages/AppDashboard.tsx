@@ -123,7 +123,7 @@ export default function AppDashboard() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-xl" style={{ backgroundColor: stage.fill + '20', color: stage.fill }}>
-              {React.cloneElement(stage.icon as React.ReactElement, { className: "w-4 h-4" })}
+              {React.cloneElement(stage.icon as React.ReactElement<any>, { className: "w-4 h-4" })}
             </div>
             <h3 className="text-[12px] font-bold text-slate-700">{stage.label}</h3>
           </div>
@@ -564,7 +564,7 @@ function PipelineCol({
               className="p-1.5 rounded-lg" 
               style={{ backgroundColor: `${stage.fill}15`, color: stage.fill }}
             >
-              {stage.icon && React.cloneElement(stage.icon as React.ReactElement, { size: 14, strokeWidth: 2.5 })}
+              {stage.icon && React.cloneElement(stage.icon as React.ReactElement<any>, { size: 14, strokeWidth: 2.5 })}
             </div>
             <h3 className="text-[15px] font-bold text-slate-800 tracking-tight">{stage.label}</h3>
           </div>
