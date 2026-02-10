@@ -89,7 +89,11 @@ const DISPLAY_ONLY_FIELDS = [
   "Last Modified Time",
   "Id",
   "Account ID",
-  "account_id"
+  "account_id",
+  "CreatedAt",
+  "UpdatedAt",
+  "created_at",
+  "updated_at"
 ];
 
 const HIDDEN_FIELDS = ["Account ID", "CreatedAt", "UpdatedAt", "created_at", "updated_at"];
@@ -160,10 +164,11 @@ export default function TestTable() {
           "twilio_messaging_service_sid", 
           "twilio_default_from_number",
           "webhook_url",
-          "webhook_secret"
+          "webhook_secret",
+          "max_daily_sends"
         ];
         
-        // Users then Tags
+        // Leads, Campaigns, Interactions, Users, Tags after Max Daily Sends
         const middleCols = [
           "number of leads",
           "number of campaigns",
@@ -182,13 +187,13 @@ export default function TestTable() {
           }
         });
 
-        // Add middle cols in order
-        middleCols.forEach(k => {
+        // Add tech stuff including max_daily_sends
+        techCols.forEach(k => {
           if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k);
         });
-        
-        // Add tech stuff
-        techCols.forEach(k => {
+
+        // Add middle cols in order (Leads, Campaigns, Interactions, Users, Tags)
+        middleCols.forEach(k => {
           if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k);
         });
 
@@ -648,20 +653,20 @@ export default function TestTable() {
                                     </SelectContent>
                                   </Select>
                                 ) : ["Created Time", "Last Modified Time"].includes(col) ? (
-                                  <span className="text-blue-600 font-bold font-mono text-xs whitespace-nowrap">
+                                  <span className="text-blue-600 font-bold font-mono text-xs whitespace-nowrap overflow-hidden text-ellipsis block">
                                     {formatDate(row[col], row['timezone'])}
                                   </span>
                                 ) : ["Automation Logs", "Prompt Libraries"].includes(col) ? (
-                                  <span className="text-orange-500 font-bold text-xs whitespace-nowrap">
-                                    {row[col] || "-"}
+                                  <span className="text-orange-500 font-bold text-xs whitespace-nowrap overflow-hidden text-ellipsis block">
+                                    {row[col] || ""}
                                   </span>
                                 ) : DISPLAY_ONLY_FIELDS.includes(col) ? (
-                                  <span className="text-orange-500 font-bold text-xs whitespace-nowrap">
-                                    {row[col] || "-"}
+                                  <span className="text-orange-500 font-bold text-xs whitespace-nowrap overflow-hidden text-ellipsis block">
+                                    {row[col] || ""}
                                   </span>
                                 ) : (
                                   <div 
-                                    className={cn("min-h-[20px] w-full truncate max-w-full overflow-hidden whitespace-nowrap", !NON_EDITABLE_FIELDS.includes(col) && "cursor-text")}
+                                    className={cn("min-h-[20px] w-full", !NON_EDITABLE_FIELDS.includes(col) && "cursor-text")}
                                     onClick={(e) => {
                                       if (NON_EDITABLE_FIELDS.includes(col)) return;
                                       e.stopPropagation();
@@ -686,8 +691,8 @@ export default function TestTable() {
                                         />
                                       </div>
                                     ) : (
-                                      <span className="truncate block">
-                                        {col.toLowerCase().includes('hour') || col.toLowerCase().includes('time') ? formatDate(row[col]) : (row[col] || "-")}
+                                      <span className="block truncate" title={row[col] || ""}>
+                                        {col.toLowerCase().includes('hour') || col.toLowerCase().includes('time') ? formatDate(row[col]) : (row[col] || "")}
                                       </span>
                                     )}
                                   </div>
