@@ -101,12 +101,16 @@ const DISPLAY_ONLY_FIELDS = [
 const HIDDEN_FIELDS = [
   "Id",            // hide Id from popup
   "Account ID",
+  "ID",
+  "account_id",
   "Automation Logs",
   "Prompt Libraries",
   "CreatedAt",
   "UpdatedAt",
   "created_at",
-  "updated_at"
+  "updated_at",
+  "Created Time",
+  "Last Modified Time"
 ];
 
 const STATUS_OPTIONS = ["Active", "Inactive", "Trial", "Suspended", "Unknown"];
@@ -523,7 +527,7 @@ export default function TestTable() {
 
         <Card className="border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white overflow-hidden rounded-3xl">
           <div className="overflow-x-auto">
-            <Table className="w-full">
+            <Table className="w-full table-fixed">
               <TableHeader className="bg-slate-50/50 border-b border-slate-100">
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="w-12 px-6 border-r border-slate-100/50">
@@ -542,11 +546,11 @@ export default function TestTable() {
                       key={col} 
                       style={{ width: colWidths[col] || 200 }}
                       className={cn(
-                        "px-4 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap border-r border-slate-100/50 relative group"
+                        "px-4 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap border-r border-slate-100/50 relative group table-fixed"
                       )}
                     >
-                      <div className="flex items-center justify-between">
-                        <span>{col === "name" ? "Company Name" : col.replace(/_/g, ' ')}</span>
+                      <div className="flex items-center justify-between overflow-hidden">
+                        <span className="truncate">{col === "name" ? "Company Name" : col.replace(/_/g, ' ')}</span>
                         <div 
                           className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/30 transition-colors z-10"
                           onMouseDown={(e) => {
@@ -664,15 +668,15 @@ export default function TestTable() {
                                     </SelectContent>
                                   </Select>
                                 ) : ["Created Time", "Last Modified Time"].includes(col) ? (
-                                  <span className="text-blue-600 font-bold font-mono text-xs whitespace-nowrap overflow-hidden text-ellipsis block">
+                                  <span className="text-blue-600 font-bold font-mono text-xs whitespace-nowrap block overflow-hidden text-ellipsis">
                                     {formatDate(row[col], row['timezone'])}
                                   </span>
                                 ) : ["Automation Logs", "Prompt Libraries"].includes(col) ? (
-                                  <span className="text-orange-500 font-bold text-xs whitespace-nowrap overflow-hidden text-ellipsis block">
+                                  <span className="text-orange-500 font-bold text-xs whitespace-nowrap block overflow-hidden text-ellipsis">
                                     {row[col] || ""}
                                   </span>
                                 ) : DISPLAY_ONLY_FIELDS.includes(col) ? (
-                                  <span className="text-orange-500 font-bold text-xs whitespace-nowrap overflow-hidden text-ellipsis block">
+                                  <span className="text-orange-500 font-bold text-xs whitespace-nowrap block overflow-hidden text-ellipsis">
                                     {row[col] || ""}
                                   </span>
                                 ) : (
@@ -685,24 +689,47 @@ export default function TestTable() {
                                     }}
                                   >
                                     {cellEditing?.rowId === row.Id && cellEditing?.col === col ? (
-                                      <div className="absolute inset-x-0 top-0 z-50 p-2 min-w-[300px] bg-white shadow-2xl rounded-lg border border-primary/20 ring-4 ring-primary/5">
-                                        <Textarea
-                                          autoFocus
-                                          defaultValue={row[col] || ""}
-                                          className="min-h-[100px] w-full text-sm p-3 bg-white border-none focus-visible:ring-0 resize-y"
-                                          onBlur={(e) => {
-                                            if (e.target.value !== row[col]) {
-                                              handleInlineUpdate(row.Id, col, e.target.value);
-                                            }
-                                            setCellEditing(null);
-                                          }}
-                                          onKeyDown={(e) => {
-                                            if (e.key === 'Escape') setCellEditing(null);
-                                          }}
-                                        />
+                                      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm" onClick={() => setCellEditing(null)}>
+                                        <div 
+                                          className="bg-white shadow-2xl rounded-xl border border-primary/20 ring-4 ring-primary/5 p-4 w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <div className="flex justify-between items-center mb-3">
+                                            <span className="text-xs font-black uppercase text-slate-400 tracking-widest">{col.replace(/_/g, ' ')}</span>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCellEditing(null)}>
+                                              <X className="h-4 w-4" />
+                                            </Button>
+                                          </div>
+                                          <Textarea
+                                            autoFocus
+                                            defaultValue={row[col] || ""}
+                                            className="flex-1 min-h-[120px] max-h-[70vh] w-full text-sm p-3 bg-slate-50 border-slate-200 focus-visible:ring-primary/20 resize-y"
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Escape') setCellEditing(null);
+                                              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                                                const target = e.target as HTMLTextAreaElement;
+                                                if (target.value !== row[col]) {
+                                                  handleInlineUpdate(row.Id, col, target.value);
+                                                }
+                                                setCellEditing(null);
+                                              }
+                                            }}
+                                          />
+                                          <div className="flex justify-end gap-2 mt-4">
+                                            <Button variant="ghost" size="sm" onClick={() => setCellEditing(null)}>Cancel</Button>
+                                            <Button size="sm" onClick={(e) => {
+                                              const container = (e.currentTarget.parentElement?.parentElement);
+                                              const textarea = container?.querySelector('textarea');
+                                              if (textarea && textarea.value !== row[col]) {
+                                                handleInlineUpdate(row.Id, col, textarea.value);
+                                              }
+                                              setCellEditing(null);
+                                            }}>Save</Button>
+                                          </div>
+                                        </div>
                                       </div>
                                     ) : (
-                                      <span className="block truncate" title={row[col] || ""}>
+                                      <span className="block truncate max-w-full" title={row[col] || ""}>
                                         {col.toLowerCase().includes('hour') || col.toLowerCase().includes('time') ? formatDate(row[col]) : (row[col] || "")}
                                       </span>
                                     )}
@@ -753,7 +780,7 @@ export default function TestTable() {
             </DialogHeader>
             <ScrollArea className="flex-1 p-6">
               <div className="grid grid-cols-2 gap-6 pb-6">
-                {columns.filter(c => !NON_EDITABLE_FIELDS.includes(c) && !HIDDEN_FIELDS.includes(c) && !DISPLAY_ONLY_FIELDS.includes(c)).map(col => (
+                {columns.filter(c => !NON_EDITABLE_FIELDS.includes(c) && !HIDDEN_FIELDS.includes(c)).map(col => (
                   <div key={col} className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{col.replace(/_/g, ' ')}</label>
                     {col === 'timezone' ? (
