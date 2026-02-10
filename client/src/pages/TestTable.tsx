@@ -470,8 +470,8 @@ export default function TestTable() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#f8fafc] pt-24 pb-12 px-4 md:px-6">
-      <div className="w-full mx-auto space-y-8 px-2">
+    <div className="w-full h-full bg-[#f8fafc] pb-12 px-4 md:px-6 overflow-y-auto">
+      <div className="w-full mx-auto space-y-8 px-2 pt-8">
         <header className="flex flex-col md:flex-row justify-between items-end gap-6">
           <div className="space-y-1">
             <h1 className="text-4xl font-black tracking-tight text-slate-900 flex items-center gap-3">
