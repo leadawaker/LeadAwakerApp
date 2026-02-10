@@ -73,8 +73,16 @@ export function RightSidebar({
     icon: any;
     testId: string;
     adminOnly?: boolean;
+    agencyOnly?: boolean;
   }[] = [
     { href: `${prefix}/dashboard`, label: "Dashboard", icon: LayoutDashboard, testId: "nav-home" },
+    {
+      href: `${prefix}/accounts`,
+      label: "Accounts",
+      icon: Megaphone,
+      testId: "nav-accounts",
+      agencyOnly: true,
+    },
     { href: `${prefix}/contacts`, label: "Contacts", icon: BookUser, testId: "nav-contacts" },
     { href: `${prefix}/conversations`, label: "Chats", icon: MessageSquare, testId: "nav-chats" },
     { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
@@ -99,9 +107,11 @@ export function RightSidebar({
     },
   ];
 
-  const visibleNavItems = navItems.filter(
-    (it) => !it.adminOnly || isAdmin
-  );
+  const visibleNavItems = navItems.filter((it) => {
+    if (it.adminOnly && !isAdmin) return false;
+    if (it.agencyOnly && !(isAdmin || isAgencyView)) return false;
+    return true;
+  });
 
   return (
     <>
