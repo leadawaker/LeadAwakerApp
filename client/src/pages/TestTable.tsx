@@ -224,6 +224,9 @@ export default function TestTable() {
           "Campaigns",
           "Interactions",
           "Users",
+          "Prompt Libraries",
+          "Tags",
+          "Automation Logs"
         ];
 
         middleCols.forEach(k => {
@@ -232,9 +235,6 @@ export default function TestTable() {
 
         // Add requested end cols
         const finalEndCols = [
-          "Prompt Libraries",
-          "Tags",
-          "Automation Logs",
           "Slug"
         ];
 
@@ -643,12 +643,12 @@ export default function TestTable() {
                           key={col} 
                           style={{ 
                             width: colWidths[col] || 200,
-                            left: idx < 4 ? (40 + columns.slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined
+                            left: idx < 3 ? (40 + columns.slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined
                           }}
                           className={cn(
                             "px-4 py-4 text-sm transition-all relative border-r border-slate-100/50",
                             col === "name" && "font-bold",
-                            idx < 4 && "sticky z-10 bg-white group-hover:bg-slate-50"
+                            idx < 3 && "sticky z-10 bg-white group-hover:bg-slate-50"
                           )}
                         >
                           <div className="flex items-center gap-3">
