@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { leads } from "@/data/mocks";
+import { leads, campaigns } from "@/data/mocks";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const TAG_CATEGORIES = [
   {
@@ -66,16 +67,24 @@ const TAG_CATEGORIES = [
 ];
 
 export default function TagsPage() {
-  const { currentAccountId } = useWorkspace();
-  const [campaignId] = useState<number | "all">("all");
+  const { currentAccountId, currentAccount } = useWorkspace();
+  const [campaignId, setCampaignId] = useState<number | "all">("all");
   const [q, setQ] = useState("");
   const [selectedTagName, setSelectedTagName] = useState<string | null>(null);
 
+  // Mock accounts for filter (since we are in agency/subaccount view)
+  const accounts = [{ id: 1, name: "Agency" }, { id: 2, name: "Subaccount" }];
+  const [selectedAccountId, setSelectedAccountId] = useState<number | "all">("all");
+
   const accountLeads = useMemo(() => {
     return leads
-      .filter(l => l.account_id === currentAccountId)
+      .filter(l => (selectedAccountId === "all" ? true : l.account_id === selectedAccountId))
       .filter(l => (campaignId === "all" ? true : l.campaign_id === campaignId));
-  }, [currentAccountId, campaignId]);
+  }, [selectedAccountId, campaignId]);
+
+  const campaignOptions = useMemo(() => {
+    return campaigns.filter(c => (selectedAccountId === "all" ? true : c.account_id === selectedAccountId));
+  }, [selectedAccountId]);
 
   const tagCounts = useMemo(() => {
     const map = new Map<string, number>();
@@ -120,94 +129,120 @@ export default function TagsPage() {
   return (
     <CrmShell>
       <div className="py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-6 items-start">
-
-          {/* LEFT — TAGS (NATURAL SCROLL, NO CROPPING) */}
-          <div className="space-y-8">
-            {sortedCategories.map(cat => (
-              <div key={cat.type} className="space-y-3">
-                <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-1">
-                  {cat.type}
-                </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 bg-white p-4 rounded-3xl">
-                  {cat.tags.map(t => (
-                    <button
-                      key={t.id}
-                      onClick={() => setSelectedTagName(t.name === selectedTagName ? null : t.name)}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-xl transition text-left border border-transparent",
-                        selectedTagName === t.name
-                          ? "ring-2 ring-primary bg-white"
-                          : "hover:bg-muted/5"
-                      )}
-                      style={{ 
-                        backgroundColor: `${t.color}05`
-                      }}
-                    >
-                      <div
-                        className="h-7 w-7 rounded-full text-[11px] font-bold flex items-center justify-center text-white shrink-0 shadow-sm"
-                        style={{ backgroundColor: t.color }}
-                      >
-                        {t.count}
-                      </div>
-
-                      <div
-                        className="truncate font-semibold text-[14px] text-black"
-                      >
-                        {t.name}
-                      </div>
-                    </button>
+        <div className="flex flex-col gap-6">
+          {/* TOP SEARCH & FILTERS */}
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex flex-1 gap-2 items-center w-full">
+              <input
+                className="h-10 flex-1 max-w-md rounded-xl border border-border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                placeholder="Search tags…"
+                value={q}
+                onChange={e => setQ(e.target.value)}
+              />
+              <Select value={selectedAccountId.toString()} onValueChange={v => setSelectedAccountId(v === "all" ? "all" : Number(v))}>
+                <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white">
+                  <SelectValue placeholder="All Accounts" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Accounts</SelectItem>
+                  {accounts.map(acc => (
+                    <SelectItem key={acc.id} value={acc.id.toString()}>{acc.name}</SelectItem>
                   ))}
-                </div>
-              </div>
-            ))}
+                </SelectContent>
+              </Select>
+              <Select value={campaignId.toString()} onValueChange={v => setCampaignId(v === "all" ? "all" : Number(v))}>
+                <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white">
+                  <SelectValue placeholder="All Campaigns" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Campaigns</SelectItem>
+                  {campaignOptions.map(c => (
+                    <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          {/* RIGHT — STICKY */}
-          <div className="space-y-4 sticky top-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-6 items-start">
+            {/* LEFT — TAGS */}
+            <div className="space-y-8">
+              {sortedCategories.map(cat => (
+                <div key={cat.type} className="space-y-3">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-1">
+                    {cat.type}
+                  </h3>
 
-            <input
-              className="h-10 w-full rounded-xl border border-border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-              placeholder="Search tags…"
-              value={q}
-              onChange={e => setQ(e.target.value)}
-            />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 bg-white p-4 rounded-3xl">
+                    {cat.tags.map(t => (
+                      <button
+                        key={t.id}
+                        onClick={() => setSelectedTagName(t.name === selectedTagName ? null : t.name)}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-2 rounded-xl transition text-left border border-transparent",
+                          selectedTagName === t.name
+                            ? "ring-2 ring-primary bg-white"
+                            : "hover:bg-muted/5"
+                        )}
+                        style={{ 
+                          backgroundColor: `${t.color}05`
+                        }}
+                      >
+                        <div
+                          className="h-7 w-7 rounded-full text-[11px] font-bold flex items-center justify-center text-white shrink-0 shadow-sm"
+                          style={{ backgroundColor: t.color }}
+                        >
+                          {t.count}
+                        </div>
 
-            <div className="bg-white rounded-2xl flex flex-col max-h-[calc(100vh-200px)]">
-              <div className="p-4 border-b space-y-1">
-                <div className="font-bold text-sm">
-                  {selectedTagName ? `Leads: ${selectedTagName}` : "Tag Insights"}
+                        <div
+                          className="truncate font-semibold text-[14px] text-black"
+                        >
+                          {t.name}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                {selectedTag?.description && (
-                  <div className="text-xs text-muted-foreground">
-                    {selectedTag.description}
-                  </div>
-                )}
-              </div>
-
-              <div className="overflow-y-auto divide-y">
-                {!selectedTagName ? (
-                  <div className="p-8 text-center text-muted-foreground opacity-40">
-                    Click a tag to see associated leads
-                  </div>
-                ) : selectedLeads.length === 0 ? (
-                  <div className="p-8 text-center text-muted-foreground opacity-40">
-                    No leads found with this tag
-                  </div>
-                ) : (
-                  selectedLeads.map(l => (
-                    <div key={l.id} className="p-4 hover:bg-muted/10">
-                      <div className="font-bold text-sm truncate">{l.full_name}</div>
-                      <div className="text-[10px] text-muted-foreground mt-1">
-                        Last message: {l.last_message_sent_at ? "01 Feb 2026" : "No messages yet"}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+              ))}
             </div>
 
+            {/* RIGHT — STICKY */}
+            <div className="space-y-4 sticky top-6">
+              <div className="bg-white rounded-2xl flex flex-col max-h-[calc(100vh-200px)]">
+                <div className="p-4 border-b space-y-1">
+                  <div className="font-bold text-sm">
+                    {selectedTagName ? `Leads: ${selectedTagName}` : "Tag Insights"}
+                  </div>
+                  {selectedTag?.description && (
+                    <div className="text-xs text-muted-foreground">
+                      {selectedTag.description}
+                    </div>
+                  )}
+                </div>
+
+                <div className="overflow-y-auto divide-y">
+                  {!selectedTagName ? (
+                    <div className="p-8 text-center text-muted-foreground opacity-40">
+                      Click a tag to see associated leads
+                    </div>
+                  ) : selectedLeads.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground opacity-40">
+                      No leads found with this tag
+                    </div>
+                  ) : (
+                    selectedLeads.map(l => (
+                      <div key={l.id} className="p-4 hover:bg-muted/10">
+                        <div className="font-bold text-sm truncate">{l.full_name}</div>
+                        <div className="text-[10px] text-muted-foreground mt-1">
+                          Last message: {l.last_message_sent_at ? "01 Feb 2026" : "No messages yet"}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

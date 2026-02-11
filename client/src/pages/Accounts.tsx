@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Plus, RefreshCw, Save, X, Edit2, Trash2, AlertCircle } from "lucide-react";
+import { Loader2, Plus, RefreshCw, Save, X, Edit2, Trash2, AlertCircle, Eye, GripVertical, Building2, LayoutGrid } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +41,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface Row {
   Id: number;
@@ -144,10 +145,12 @@ export default function Accounts() {
   const [newRowData, setNewRowData] = useState<Partial<Row>>({});
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [columns, setColumns] = useState<string[]>([]);
+  const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [cellEditing, setCellEditing] = useState<{ rowId: number, col: string } | null>(null);
   const [colWidths, setColWidths] = useState<{ [key: string]: number }>({});
+  const [statusFilter, setStatusFilter] = useState<string>("All");
   const { toast } = useToast();
 
   const fetchData = async () => {
@@ -248,6 +251,7 @@ export default function Accounts() {
         });
 
         setColumns(ordered);
+        setVisibleColumns(ordered);
         
         // Initialize widths
         const initialWidths: { [key: string]: number } = {};
@@ -268,6 +272,24 @@ export default function Accounts() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const filteredRows = statusFilter === "All" ? rows : rows.filter(r => r.status === statusFilter);
+
+  const toggleColumnVisibility = (col: string) => {
+    const colIdx = columns.indexOf(col);
+    if (colIdx >= 0 && colIdx < 4) return; // Protect first 4 columns
+    setVisibleColumns(prev => prev.includes(col) ? prev.filter(c => c !== col) : [...prev, col]);
+  };
+
+  const moveColumn = (draggedCol: string, targetCol: string) => {
+    const newColumns = [...columns];
+    const draggedIdx = newColumns.indexOf(draggedCol);
+    const targetIdx = newColumns.indexOf(targetCol);
+    if (draggedIdx < 4 || targetIdx < 4) return;
+    newColumns.splice(draggedIdx, 1);
+    newColumns.splice(targetIdx, 0, draggedCol);
+    setColumns(newColumns);
   };
 
   const handleInlineUpdate = async (rowId: number, col: string, value: any) => {
@@ -312,7 +334,7 @@ export default function Accounts() {
       );
 
       await Promise.all(deletePromises);
-      toast({ title: "Deleted", description: `Successfully deleted ${selectedIds.length} records.` });
+      toast({ title: "Deleted", description: `Successfully deleted \${selectedIds.length} records.` });
       setSelectedIds([]);
       fetchData();
     } catch (err) {
@@ -441,30 +463,6 @@ export default function Accounts() {
     return (name[0] + (name[1] || name[0])).toUpperCase();
   };
 
-  const formatDate = (dateStr: string, timezone: string = 'UTC') => {
-    if (!dateStr) return "-";
-    try {
-      // If it's a time string like "17:00:00", just strip the seconds
-      if (dateStr.includes(':') && !dateStr.includes('-') && !dateStr.includes('/')) {
-        const parts = dateStr.split(':');
-        if (parts.length >= 2) return `${parts[0]}:${parts[1]}`;
-      }
-
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return dateStr;
-      
-      // Basic formatting as requested: 09/02/26 - 18:41
-      const year = d.getFullYear().toString().slice(-2);
-      const month = (d.getMonth() + 1).toString().padStart(2, '0');
-      const day = d.getDate().toString().padStart(2, '0');
-      const hours = d.getHours().toString().padStart(2, '0');
-      const minutes = d.getMinutes().toString().padStart(2, '0');
-      return `${day}/${month}/${year} - ${hours}:${minutes}`;
-    } catch (e) {
-      return dateStr;
-    }
-  };
-
   const handleResize = (col: string, width: number) => {
     setColWidths(prev => ({ ...prev, [col]: width }));
   };
@@ -473,6 +471,18 @@ export default function Accounts() {
     <div className="w-full h-full bg-transparent pb-12 px-0 overflow-y-auto pt-4">
       <div className="w-full mx-auto space-y-6">
         <div className="flex items-center gap-3 px-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white shadow-none border-slate-200">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Statuses</SelectItem>
+              {STATUS_OPTIONS.map(opt => (
+                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           {selectedIds.length > 0 && (
             <Button 
               variant="destructive" 
@@ -483,11 +493,12 @@ export default function Accounts() {
               Delete Selected ({selectedIds.length})
             </Button>
           )}
+
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="h-10 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold transition-colors gap-2 shadow-none">
+              <Button className="h-10 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold transition-colors gap-2 shadow-none border-none">
                 <Plus className="h-4 w-4" />
-                +Add
+                Add
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl h-[calc(100vh-80px)] p-0 gap-0 overflow-hidden flex flex-col">
@@ -549,7 +560,55 @@ export default function Accounts() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          <Button variant="outline" size="icon" onClick={fetchData} disabled={loading} className="h-10 w-10 rounded-xl bg-white">
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none">
+                <Eye className="h-4 w-4" />
+                Fields
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-2">
+              <ScrollArea className="h-80">
+                <div className="space-y-1">
+                  {columns.map((col, idx) => {
+                    const isProtected = idx < 4;
+                    return (
+                      <div 
+                        key={col} 
+                        className={cn(
+                          "flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 group",
+                          !visibleColumns.includes(col) && "opacity-50"
+                        )}
+                        draggable={!isProtected}
+                        onDragStart={(e) => e.dataTransfer.setData("col", col)}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          const draggedCol = e.dataTransfer.getData("col");
+                          if (draggedCol && !isProtected) moveColumn(draggedCol, col);
+                        }}
+                      >
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          {!isProtected && <GripVertical className="h-3 w-3 text-slate-400 cursor-grab" />}
+                          <span className="text-sm font-medium truncate">{col.replace(/_/g, ' ')}</span>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className={cn("h-6 w-6", isProtected && "hidden")}
+                          onClick={() => toggleColumnVisibility(col)}
+                        >
+                          <Eye className={cn("h-3 w-3", !visibleColumns.includes(col) && "text-slate-300")} />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </PopoverContent>
+          </Popover>
+
+          <Button variant="outline" size="icon" onClick={fetchData} disabled={loading} className="h-10 w-10 rounded-xl bg-white border-slate-200 shadow-none">
             <RefreshCw className={cn("h-4 w-4 text-slate-400", loading && "animate-spin")} />
           </Button>
         </div>
@@ -567,12 +626,12 @@ export default function Accounts() {
                       />
                     </div>
                   </TableHead>
-                  {columns.map((col, idx) => (
+                  {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => (
                     <TableHead 
                       key={col} 
                       style={{ 
                         width: colWidths[col] || 200,
-                        left: idx < 3 ? (40 + columns.slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined
+                        left: idx < 3 ? (40 + columns.filter(c => visibleColumns.includes(c)).slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined
                       }}
                       className={cn(
                         "px-4 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap border-r border-slate-100/50 relative group table-fixed",
@@ -611,290 +670,78 @@ export default function Accounts() {
                       <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/40" />
                     </TableCell>
                   </TableRow>
-                ) : rows.map((row) => {
-                  const colors = getAccountColor(row.Id);
-                  return (
+                ) : filteredRows.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={columns.length + 1} className="h-96 text-center text-slate-400">
+                      No accounts found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredRows.map((row) => (
                     <TableRow 
                       key={row.Id} 
                       className={cn(
-                        "group border-b border-slate-50 transition-all hover:bg-slate-50/50",
-                        selectedIds.includes(row.Id) && "bg-primary/[0.01]"
+                        "group transition-colors",
+                        selectedIds.includes(row.Id) ? "bg-blue-50/50" : "hover:bg-slate-50/50"
                       )}
                     >
-                      <TableCell className="px-0 border-r border-slate-100/50 sticky left-0 z-10 bg-white group-hover:bg-slate-50">
-                        <div className="flex justify-center items-center h-full w-full">
+                      <TableCell className="w-10 px-0 border-r border-slate-100/30 sticky left-0 z-10 bg-inherit">
+                        <div className="flex justify-center">
                           <Checkbox 
                             checked={selectedIds.includes(row.Id)} 
                             onCheckedChange={() => toggleSelect(row.Id)}
                           />
                         </div>
                       </TableCell>
-                      {columns.map((col, idx) => (
-                        <TableCell 
-                          key={col} 
-                          style={{ 
-                            width: colWidths[col] || 200,
-                            left: idx < 3 ? (40 + columns.slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined
-                          }}
-                          className={cn(
-                            "px-4 py-4 text-sm transition-all relative border-r border-slate-100/50",
-                            col === "name" && "font-bold",
-                            idx < 3 && "sticky z-10 bg-white group-hover:bg-slate-50"
-                          )}
-                        >
-                          <div className="flex items-center gap-3">
-                            {col === 'Id' ? (
-                              <span className="text-slate-400 font-mono text-xs block text-center w-full">{row.Id}</span>
-                            ) : col === 'ACC' ? (
-                              <div className="flex justify-center w-full">
-                                <div 
-                                  className={cn(
-                                    "h-8 w-8 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white cursor-pointer shadow-sm hover:scale-110 transition-transform",
-                                    colors.bg
-                                  )}
-                                  onClick={() => setEditingRow(row)}
-                                >
-                                  {getInitials(row.name)}
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="w-full flex-1 min-w-0">
-                                {col === "status" ? (
-                                  <Select 
-                                    defaultValue={row[col] || "Unknown"} 
-                                    onValueChange={(val) => handleInlineUpdate(row.Id, col, val)}
-                                  >
-                                    <SelectTrigger className={cn("h-7 w-fit min-w-[100px] border-none shadow-none font-bold text-[10px] uppercase tracking-wider", getStatusColor(row[col]))}>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {STATUS_OPTIONS.map(opt => (
-                                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                ) : col === "type" ? (
-                                  <Select 
-                                    defaultValue={row[col]} 
-                                    onValueChange={(val) => handleInlineUpdate(row.Id, col, val)}
-                                  >
-                                    <SelectTrigger className={cn("h-7 w-fit min-w-[100px] border-none shadow-none font-bold text-[10px] uppercase tracking-wider", getTypeColor(row[col]))}>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {TYPE_OPTIONS.map(opt => (
-                                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                ) : col === "timezone" ? (
-                                  <Select 
-                                    defaultValue={row[col]} 
-                                    onValueChange={(val) => handleInlineUpdate(row.Id, col, val)}
-                                  >
-                                    <SelectTrigger className="h-7 w-full border-none shadow-none bg-transparent">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {TIMEZONES.map(tz => (
-                                        <SelectItem key={tz} value={tz}>{tz}</SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                ) : ["Created Time", "Last Modified Time"].includes(col) ? (
-                                  <span className="text-blue-600 font-bold font-mono text-xs whitespace-nowrap block overflow-hidden text-ellipsis">
-                                    {formatDate(row[col], row['timezone'])}
-                                  </span>
-                                ) : ["Leads", "Campaigns", "Interactions", "Users", "Automation Logs", "Prompt Libraries", "Tags"].includes(col) ? (
-                                  <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200 font-black text-[10px] px-2 py-0.5 rounded-lg border-2 w-full justify-center">
-                                    {row[col] || "0"}
-                                  </Badge>
-                                ) : DISPLAY_ONLY_FIELDS.includes(col) || col === "Account ID" ? (
-                                  <span className={cn(
-                                    "font-bold text-xs whitespace-nowrap block overflow-hidden text-ellipsis",
-                                    col === "Account ID" ? "text-slate-600" : "text-orange-500"
-                                  )}>
-                                    {row[col] || ""}
-                                  </span>
-                                ) : (
-                                  <div 
-                                    className={cn("min-h-[20px] w-full", !NON_EDITABLE_FIELDS.includes(col) && "cursor-text")}
-                                    onClick={(e) => {
-                                      if (NON_EDITABLE_FIELDS.includes(col)) return;
-                                      e.stopPropagation();
-                                      setCellEditing({ rowId: row.Id, col });
-                                    }}
-                                  >
-                                    {cellEditing?.rowId === row.Id && cellEditing?.col === col ? (
-                                      <div className="absolute top-0 left-0 z-[100] w-full min-w-[300px]" onClick={(e) => e.stopPropagation()}>
-                                        <div 
-                                          className="bg-white shadow-2xl rounded-xl border border-primary/20 ring-4 ring-primary/5 p-4 flex flex-col"
-                                        >
-                                          <Textarea
-                                            autoFocus
-                                            defaultValue={row[col] || ""}
-                                            className="min-h-[100px] w-full text-sm p-3 bg-slate-50 border-slate-200 focus-visible:ring-primary/20 resize-none"
-                                            onInput={(e) => {
-                                              const target = e.target as HTMLTextAreaElement;
-                                              target.style.height = 'auto';
-                                              target.style.height = target.scrollHeight + 'px';
-                                            }}
-                                            onKeyDown={(e) => {
-                                              if (e.key === 'Escape') setCellEditing(null);
-                                              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                                                const target = e.target as HTMLTextAreaElement;
-                                                if (target.value !== row[col]) {
-                                                  handleInlineUpdate(row.Id, col, target.value);
-                                                }
-                                                setCellEditing(null);
-                                              }
-                                            }}
-                                          />
-                                          <div className="flex justify-end gap-2 mt-3">
-                                            <Button variant="ghost" size="sm" onClick={() => setCellEditing(null)}>Cancel</Button>
-                                            <Button size="sm" onClick={(e) => {
-                                              const container = (e.currentTarget.parentElement?.parentElement);
-                                              const textarea = container?.querySelector('textarea');
-                                              if (textarea && textarea.value !== row[col]) {
-                                                handleInlineUpdate(row.Id, col, textarea.value);
-                                              }
-                                              setCellEditing(null);
-                                            }}>Save</Button>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <span className="block truncate max-w-full cursor-pointer">
-                                              {col.toLowerCase().includes('hour') || col.toLowerCase().includes('time') ? formatDate(row[col]) : (row[col] || "")}
-                                            </span>
-                                          </TooltipTrigger>
-                                          <TooltipContent side="top" className="max-w-[400px] break-words p-3 bg-slate-900 text-white font-medium border-none shadow-xl">
-                                            <div className="flex flex-col gap-1">
-                                              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-700 pb-1 mb-1">
-                                                {col.replace(/_/g, ' ')}
-                                              </span>
-                                              <p className="text-sm leading-relaxed">{row[col] || "Empty field"}</p>
-                                            </div>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
+                      {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => {
+                        const val = row[col];
+                        const isSticky = idx < 3;
+                        const leftPos = isSticky ? (40 + columns.filter(c => visibleColumns.includes(c)).slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined;
+
+                        return (
+                          <TableCell 
+                            key={col} 
+                            style={{ width: colWidths[col] || 200, left: leftPos }}
+                            className={cn(
+                              "px-4 py-3 text-sm border-r border-slate-100/30 truncate",
+                              isSticky && "sticky z-10 bg-inherit"
                             )}
-                          </div>
-                        </TableCell>
-                      ))}
+                          >
+                            <TooltipProvider delayDuration={0}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="truncate">
+                                    {col === 'status' ? (
+                                      <Badge className={cn("font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getStatusColor(val))}>
+                                        {val || "Unknown"}
+                                      </Badge>
+                                    ) : col === 'type' ? (
+                                      <Badge className={cn("font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getTypeColor(val))}>
+                                        {val || "Client"}
+                                      </Badge>
+                                    ) : col === 'ACC' ? (
+                                      <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-none", getAccountColor(row.Id).bg)}>
+                                        {getInitials(row.name)}
+                                      </div>
+                                    ) : val}
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="max-w-[300px] break-words">
+                                  {val}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </TableCell>
+                        );
+                      })}
                     </TableRow>
-                  );
-                })}
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
         </div>
       </div>
-
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-destructive" />
-              Confirm Deletion
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete {selectedIds.length} selected record(s)? This action is permanent and will remove the data from NocoDB.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete Forever
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {editingRow && (
-        <Dialog open={!!editingRow} onOpenChange={(open) => !open && setEditingRow(null)}>
-          <DialogContent className="max-w-3xl h-[calc(100vh-80px)] p-0 gap-0 overflow-hidden flex flex-col">
-            <DialogHeader className="p-6 border-b">
-              <DialogTitle className="flex items-center gap-2 text-2xl font-black">
-                <Edit2 className="h-6 w-6 text-primary" />
-                Edit Record
-              </DialogTitle>
-            </DialogHeader>
-            <ScrollArea className="flex-1 p-6">
-              <div className="grid grid-cols-2 gap-6 pb-6">
-                {columns.filter(c => !NON_EDITABLE_FIELDS.includes(c) && !HIDDEN_FIELDS.includes(c)).map(col => (
-                  <div key={col} className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{col.replace(/_/g, ' ')}</label>
-                    {col === 'timezone' ? (
-                      <Select 
-                        defaultValue={editingRow[col]} 
-                        onValueChange={(val) => setEditingRow(prev => prev ? ({ ...prev, [col]: val }) : null)}
-                      >
-                        <SelectTrigger className="bg-slate-50 border-slate-200 h-11">
-                          <SelectValue placeholder="Select timezone" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {TIMEZONES.map(tz => (
-                            <SelectItem key={tz} value={tz}>{tz}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : col === 'status' ? (
-                      <Select 
-                        defaultValue={editingRow[col]} 
-                        onValueChange={(val) => setEditingRow(prev => prev ? ({ ...prev, [col]: val }) : null)}
-                      >
-                        <SelectTrigger className="bg-slate-50 border-slate-200 h-11">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {STATUS_OPTIONS.map(opt => (
-                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : col === 'type' ? (
-                      <Select 
-                        defaultValue={editingRow[col]} 
-                        onValueChange={(val) => setEditingRow(prev => prev ? ({ ...prev, [col]: val }) : null)}
-                      >
-                        <SelectTrigger className="bg-slate-50 border-slate-200 h-11">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {TYPE_OPTIONS.map(opt => (
-                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <Input
-                        value={editingRow[col] || ""}
-                        onChange={(e) => setEditingRow(prev => prev ? ({ ...prev, [col]: e.target.value }) : null)}
-                        className="bg-slate-50 border-slate-200 h-11"
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-            <DialogFooter className="p-6 border-t bg-slate-50/50">
-              <Button variant="ghost" onClick={() => setEditingRow(null)} className="h-11 px-6">Cancel</Button>
-              <Button onClick={handleSaveEditDialog} className="h-11 px-8 font-bold shadow-lg shadow-primary/20">
-                <Save className="h-4 w-4 mr-2" />
-                Update
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
     </div>
   );
 }

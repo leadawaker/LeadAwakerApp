@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, Calendar, MessageSquare, LogOut, Target, ListTodo, Library } from "lucide-react";
+import { LayoutDashboard, Users, Calendar, MessageSquare, LogOut, Target, ListTodo, Library, Building2, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { users } from "@/data/mocks";
@@ -16,12 +16,12 @@ export function Sidebar() {
   const items = [
     { href: `${prefix}/dashboard`, label: "Dashboard", icon: LayoutDashboard, testId: "link-nav-dashboard" },
     ...(isAdmin || isAgencyView ? [
-      { href: `${prefix}/accounts`, label: "Accounts", icon: Target, testId: "link-nav-accounts" }
+      { href: `${prefix}/accounts`, label: "Accounts", icon: Building2, testId: "link-nav-accounts" }
     ] : []),
     { href: `${prefix}/campaigns`, label: "Campaigns", icon: Target, testId: "link-nav-campaigns" },
     { href: `${prefix}/leads`, label: "Contacts", icon: Users, testId: "link-nav-leads" },
-    { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "link-nav-calendar" },
     { href: `${prefix}/conversations`, label: "Conversations", icon: MessageSquare, testId: "link-nav-conversations" },
+    { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "link-nav-calendar" },
     ...(isAdmin ? [
       { href: `${prefix}/automation-logs`, label: "Automations", icon: ListTodo, testId: "link-nav-automations" },
       { href: `${prefix}/prompt-library`, label: "Library", icon: Library, testId: "link-nav-library" }
@@ -65,7 +65,7 @@ export function Sidebar() {
                 key={it.href}
                 href={it.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all relative",
                   active
                     ? isAgencyView
                       ? "bg-yellow-500 text-black shadow-lg shadow-yellow-500/20"
@@ -74,8 +74,12 @@ export function Sidebar() {
                 )}
                 data-testid={it.testId}
               >
-                <Icon className={cn("h-4 w-4", active && isAgencyView && "text-white")} />
-                {it.label}
+                {active ? (
+                  <LayoutGrid className="h-4 w-4 absolute -left-1 opacity-40" />
+                ) : (
+                  <Icon className={cn("h-4 w-4", active && isAgencyView && "text-white")} />
+                )}
+                <span className={cn(active && "ml-4")}>{it.label}</span>
               </Link>
             );
           })}
