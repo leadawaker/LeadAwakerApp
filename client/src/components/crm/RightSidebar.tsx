@@ -89,6 +89,13 @@ export function RightSidebar({
     { href: `${prefix}/conversations`, label: "Chats", icon: MessageSquare, testId: "nav-chats" },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "nav-calendar" },
     { href: `${prefix}/tags`, label: "Tags", icon: Tag, testId: "nav-tags" },
+    {
+      href: `${prefix}/prompt-library`,
+      label: "Library",
+      icon: BookOpen,
+      testId: "nav-library",
+      adminOnly: true,
+    },
     { href: `${prefix}/users`, label: "Users", icon: Users, testId: "nav-users" },
 
     // 🔒 ADMIN ONLY
@@ -97,13 +104,6 @@ export function RightSidebar({
       label: "Automations",
       icon: ScrollText,
       testId: "nav-automations",
-      adminOnly: true,
-    },
-    {
-      href: `${prefix}/prompt-library`,
-      label: "Library",
-      icon: BookOpen,
-      testId: "nav-library",
       adminOnly: true,
     },
   ];
@@ -186,7 +186,7 @@ export function RightSidebar({
                     "relative group flex items-center gap-3 rounded-xl transition-colors",
                     collapsed ? "h-12 justify-center" : "px-3 py-3",
                     active
-                      ? "bg-blue-600 text-white"
+                      ? (isAgencyView ? "bg-yellow-500 text-black shadow-sm" : "bg-blue-600 text-white shadow-sm")
                       : "text-muted-foreground hover:bg-muted"
                   )}
                   data-testid={`link-${it.testId}`}

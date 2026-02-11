@@ -354,25 +354,92 @@ export default function Accounts() {
   };
 
   const getAccountColor = (id: number) => {
-    const bgColors = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-cyan-500', 'bg-orange-500'];
-    return { bg: bgColors[id % bgColors.length] };
+    const initialsColors = [
+      { text: "text-blue-600", bg: "bg-blue-50" },
+      { text: "text-emerald-600", bg: "bg-emerald-50" },
+      { text: "text-amber-600", bg: "bg-amber-50" },
+      { text: "text-indigo-600", bg: "bg-indigo-50" },
+      { text: "text-rose-600", bg: "bg-rose-50" },
+      { text: "text-violet-600", bg: "bg-violet-50" },
+    ];
+    const colorIdx = (id % initialsColors.length);
+    return initialsColors[colorIdx];
   };
 
   const getInitials = (name: string) => {
-    if (!name) return "??";
+    if (!name) return "?";
     const parts = name.split(' ');
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return (name[0] + (name[1] || name[0])).toUpperCase();
+    return (name[0] + (name[1] || name[0])).toUpperCase().slice(0, 2);
   };
 
   const handleResize = (col: string, width: number) => {
     setColWidths(prev => ({ ...prev, [col]: width }));
   };
 
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  const handleExportCSV = () => {
+    const headers = columns.filter(c => visibleColumns.includes(c));
+    const csvRows = filteredRows.map(row => 
+      headers.map(header => JSON.stringify(row[header] || "")).join(",")
+    );
+    const csvContent = [headers.join(","), ...csvRows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "accounts_export.csv");
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const moveColumn = (idx: number, direction: 'up' | 'down') => {
+    if (idx < 4) return;
+    const newColumns = [...columns];
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 4 || targetIdx >= columns.length) return;
+    
+    const item = newColumns.splice(idx, 1)[0];
+    newColumns.splice(targetIdx, 0, item);
+    setColumns(newColumns);
+  };
+
+  const formatHeader = (col: string) => {
+    if (col === "name") return "Company Name";
+    if (col === "Account ID") return "ID";
+    return col.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  };
+
+  const formatDate = (dateStr: any) => {
+    if (!dateStr) return "-";
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+      const year = date.getFullYear().toString().slice(-2);
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${day}.${month}.${year} - ${hours}:${minutes}`;
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   return (
     <div className="w-full h-full bg-transparent pb-12 px-0 overflow-y-auto pt-4">
       <div className="w-full mx-auto space-y-6">
         <div className="flex items-center gap-3 px-2">
+          <Input 
+            placeholder="Search accounts..." 
+            className="w-[240px] h-10 rounded-xl bg-white shadow-none border-slate-200"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white shadow-none border-slate-200">
               <SelectValue placeholder="Status" />
@@ -382,6 +449,14 @@ export default function Accounts() {
               {STATUS_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
             </SelectContent>
           </Select>
+
+          <Button 
+            variant="outline" 
+            className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none"
+            onClick={handleExportCSV}
+          >
+            Export CSV
+          </Button>
 
           {selectedIds.length > 0 && (
             <Button variant="destructive" className="h-10 rounded-xl gap-2 font-bold" onClick={() => setIsDeleteDialogOpen(true)}>
@@ -401,7 +476,7 @@ export default function Accounts() {
                 <div className="grid grid-cols-2 gap-4 pb-4">
                   {columns.filter(c => !DISPLAY_ONLY_FIELDS.includes(c)).map(col => (
                     <div key={col} className="space-y-1.5">
-                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{col.replace(/_/g, ' ')}</label>
+                      <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{formatHeader(col)}</label>
                       <Input value={newRowData[col] || ""} onChange={(e) => setNewRowData(prev => ({ ...prev, [col]: e.target.value }))} className="bg-slate-50 border-slate-200" />
                     </div>
                   ))}
@@ -429,18 +504,41 @@ export default function Accounts() {
                       <div 
                         key={col} 
                         className={cn("flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 group", !visibleColumns.includes(col) && "opacity-50")}
-                        draggable={!isProtected}
-                        onDragStart={() => handleDragStart(idx)}
-                        onDragOver={(e) => handleDragOver(e, idx)}
-                        onDragEnd={() => setDraggedIdx(null)}
                       >
                         <div className="flex items-center gap-2 overflow-hidden flex-1">
-                          {!isProtected && <GripVertical className="h-3 w-3 text-slate-400 cursor-grab shrink-0" />}
-                          <span className="text-sm font-medium truncate">{col.replace(/_/g, ' ')}</span>
+                          {!isProtected ? (
+                            <div className="flex flex-col gap-0.5 shrink-0">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-4 w-4 text-slate-400 hover:text-blue-600" 
+                                onClick={() => moveColumn(idx, 'up')}
+                                disabled={idx === 4}
+                              >
+                                <Plus className="h-2 w-2 rotate-45 scale-75" />
+                                <span className="sr-only">Move Up</span>
+                                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M4 1.5L1.5 4H6.5L4 1.5Z" fill="currentColor"/>
+                                </svg>
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-4 w-4 text-slate-400 hover:text-blue-600" 
+                                onClick={() => moveColumn(idx, 'down')}
+                                disabled={idx === columns.length - 1}
+                              >
+                                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M4 6.5L6.5 4H1.5L4 6.5Z" fill="currentColor"/>
+                                </svg>
+                              </Button>
+                            </div>
+                          ) : <div className="w-4 shrink-0" />}
+                          <Button variant="ghost" size="icon" className={cn("h-6 w-6 shrink-0", isProtected && "hidden")} onClick={() => toggleColumnVisibility(col)}>
+                            <Eye className={cn("h-3 w-3", !visibleColumns.includes(col) && "text-slate-300")} />
+                          </Button>
+                          <span className="text-sm font-medium truncate">{formatHeader(col)}</span>
                         </div>
-                        <Button variant="ghost" size="icon" className={cn("h-6 w-6 shrink-0", isProtected && "hidden")} onClick={() => toggleColumnVisibility(col)}>
-                          <Eye className={cn("h-3 w-3", !visibleColumns.includes(col) && "text-slate-300")} />
-                        </Button>
                       </div>
                     );
                   })}
@@ -472,7 +570,7 @@ export default function Accounts() {
                       className={cn("px-4 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap border-r border-slate-100/50 relative group table-fixed", col === "Id" && "text-center", idx < 3 && "sticky z-30 bg-slate-50")}
                     >
                       <div className="flex items-center justify-between overflow-hidden">
-                        <span className="truncate">{col === "name" ? "Company Name" : col === "Account ID" ? "ID" : col.replace(/_/g, ' ')}</span>
+                        <span className="truncate">{formatHeader(col)}</span>
                         <div className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/30 transition-colors z-10" onMouseDown={(e) => {
                           const startX = e.pageX; const startWidth = colWidths[col] || 200;
                           const onMouseMove = (me: MouseEvent) => handleResize(col, Math.max(50, startWidth + (me.pageX - startX)));
@@ -488,45 +586,44 @@ export default function Accounts() {
                 {loading && rows.length === 0 ? (
                   <TableRow><TableCell colSpan={columns.length + 1} className="h-96 text-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/40" /></TableCell></TableRow>
                 ) : (
-                  filteredRows.map((row) => (
-                    <TableRow key={row.Id} className={cn("group transition-colors", selectedIds.includes(row.Id) ? "bg-blue-50/50" : "hover:bg-slate-50/50")}>
-                      <TableCell className="w-10 px-0 border-r border-slate-100/30 sticky left-0 z-10 bg-inherit"><div className="flex justify-center"><Checkbox checked={selectedIds.includes(row.Id)} onCheckedChange={() => toggleSelect(row.Id)} /></div></TableCell>
+                  (searchTerm ? filteredRows.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(searchTerm.toLowerCase()))) : filteredRows).map((row) => (
+                    <TableRow key={row.Id} className={cn("group transition-colors border-b border-slate-100 last:border-0", selectedIds.includes(row.Id) ? "bg-blue-50/50" : "hover:bg-slate-50/50")}>
+                      <TableCell className="w-10 px-0 border-r border-slate-100/30 sticky left-0 z-10 bg-white group-hover:bg-slate-50/50 transition-colors"><div className="flex justify-center"><Checkbox checked={selectedIds.includes(row.Id)} onCheckedChange={() => toggleSelect(row.Id)} /></div></TableCell>
                       {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => {
                         const val = row[col]; const isSticky = idx < 3;
                         const leftPos = isSticky ? (40 + columns.filter(c => visibleColumns.includes(c)).slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined;
+                        const isDate = col.toLowerCase().includes('time') || col.toLowerCase().includes('at') || col === 'CreatedAt' || col === 'UpdatedAt';
                         return (
-                          <TableCell key={col} style={{ width: colWidths[col] || 200, left: leftPos }} className={cn("px-4 py-3 text-sm border-r border-slate-100/30 truncate", isSticky && "sticky z-10 bg-inherit")}>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <div className="truncate cursor-pointer hover:bg-slate-100/50 rounded px-1 -mx-1 transition-colors">
-                                  {col === 'status' ? <Badge className={cn("font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getStatusColor(val))}>{val || "Unknown"}</Badge> : 
-                                   col === 'type' ? <Badge className={cn("font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getTypeColor(val))}>{val || "Client"}</Badge> : 
-                                   col === 'ACC' ? <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-none", getAccountColor(row.Id).bg)}>{getInitials(row.name)}</div> : val}
-                                </div>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-80 p-4">
-                                <div className="space-y-4">
-                                  <h4 className="font-bold text-sm">Edit {col.replace(/_/g, ' ')}</h4>
-                                  {!NON_EDITABLE_FIELDS.includes(col) ? (
-                                    <div className="space-y-2">
-                                      {col === 'status' ? (
-                                        <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
-                                          <SelectTrigger><SelectValue /></SelectTrigger>
-                                          <SelectContent>{STATUS_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                                        </Select>
-                                      ) : col === 'type' ? (
-                                        <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
-                                          <SelectTrigger><SelectValue /></SelectTrigger>
-                                          <SelectContent>{TYPE_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                                        </Select>
-                                      ) : (
-                                        <Input defaultValue={val} onBlur={(e) => { if(e.target.value !== val) handleInlineUpdate(row.Id, col, e.target.value); }} />
-                                      )}
-                                    </div>
-                                  ) : <p className="text-xs text-muted-foreground">This field is read-only.</p>}
-                                </div>
-                              </PopoverContent>
-                            </Popover>
+                          <TableCell key={col} style={{ width: colWidths[col] || 200, left: leftPos }} className={cn("px-4 py-3 text-sm border-r border-slate-100/30 truncate", isSticky && "sticky z-10 bg-white group-hover:bg-slate-50/50 transition-colors")}>
+                            {col === 'status' ? (
+                              <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
+                                <SelectTrigger className={cn("h-7 w-auto min-w-[80px] font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getStatusColor(val))}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>{STATUS_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                              </Select>
+                            ) : col === 'type' ? (
+                              <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
+                                <SelectTrigger className={cn("h-7 w-auto min-w-[80px] font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getTypeColor(val))}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>{TYPE_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                              </Select>
+                            ) : col === 'ACC' ? (
+                              <div className={cn("h-9 w-9 rounded-full font-bold grid place-items-center text-xs border border-transparent shadow-none", getAccountColor(row.Id).text, getAccountColor(row.Id).bg)}>
+                                {getInitials(row.name)}
+                              </div>
+                            ) : isDate ? (
+                              <span className="text-slate-600 font-medium">{formatDate(val)}</span>
+                            ) : (
+                              <div className="truncate group/cell relative">
+                                <input 
+                                  className="bg-transparent border-none focus:ring-0 w-full p-0 h-auto cursor-text text-sm"
+                                  defaultValue={val}
+                                  onBlur={(e) => { if(e.target.value !== val) handleInlineUpdate(row.Id, col, e.target.value); }}
+                                />
+                              </div>
+                            )}
                           </TableCell>
                         );
                       })}
@@ -534,6 +631,7 @@ export default function Accounts() {
                   ))
                 )}
               </TableBody>
+
             </Table>
           </div>
         </div>
