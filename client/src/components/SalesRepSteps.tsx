@@ -264,6 +264,44 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
         <div className="relative mb-6 rounded-lg overflow-hidden group">
           <img src={step.cardImage} alt="Step illustration" className="w-full h-auto object-cover rounded-lg" />
 
+          {/* CRM Logos Carousel overlaying the image */}
+          <motion.div
+            initial={false}
+            animate={{ opacity: isActive ? 1 : 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute top-[5%] left-0 right-0 h-1/4 flex items-center px-4 pt-4 z-10"
+            style={{
+              maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
+              WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)'
+            }}
+          >
+            <style>{`
+              @keyframes crmScroll {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(-50%); }
+              }
+              .crm-carousel-track {
+                animation: crmScroll 52.3s linear infinite;
+                display: flex;
+                gap: 1rem;
+                width: max-content;
+              }
+              .crm-carousel-track:hover {
+                animation-play-state: paused;
+              }
+              .crm-logo-item {
+                flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.375rem 0.75rem;
+                background: rgba(255, 255, 255, 0.35);
+                border-radius: 0.375rem;
+                border: 1px solid rgba(226, 232, 240, 0.3);
+                backdrop-filter: blur(4px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+              }
+            `}</style>
             <div className="crm-carousel-track">
               {[
                 { name: 'Salesforce', url: 'https://www.vectorlogo.zone/logos/salesforce/salesforce-icon.svg' },
@@ -292,6 +330,7 @@ const StepCarousel = ({ steps, onStepInView }: { steps: any[], onStepInView: () 
                 </div>
               ))}
             </div>
+          </motion.div>
 
           {/* Navigation Controls - On top of image for desktop, hidden on mobile */}
           <div className="hidden md:flex absolute bottom-4 left-0 right-0 z-20 items-center justify-center gap-4">
@@ -627,7 +666,7 @@ export const SalesRepSteps = () => {
                 </span>
              
               <span 
-                className="hologram-glitch animate"
+                className={`hologram-glitch ${glitchAnimating ? 'animate' : ''}`}
                 data-testid="text-broken"
                 data-text={t('painPoints.titleBroken')}
               >
