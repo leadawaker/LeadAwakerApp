@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { RightSidebar } from "@/components/crm/RightSidebar";
+import { HeaderBar } from "./HeaderBar";
+import { RightSidebar } from "./RightSidebar";
 import { Topbar } from "@/components/crm/Topbar";
 import { SupportChat } from "@/components/crm/SupportChat";
 import { SearchModal } from "@/components/crm/SearchModal";
@@ -28,6 +29,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#F6F5FA]" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
+      <HeaderBar />
       <Topbar onOpenPanel={(p) => setActivePanel(p)} collapsed={collapsed} />
       <div className="fixed left-0 top-0 bottom-0 z-40" data-testid="wrap-left-nav">
         <RightSidebar 
@@ -37,9 +39,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
           onOpenSearch={() => setActivePanel('search')}
           onOpenNotifications={() => setActivePanel('notifications')}
           notificationsCount={unreadCount}
-          onOpenEdgeSettings={() => setActivePanel('settings')}
           onToggleHelp={() => setActivePanel('help')}
-          onGoHome={() => setLocation("/")}
         />
       </div>
 

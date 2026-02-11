@@ -64,9 +64,6 @@ const SMALL_WIDTH_COLS = [
   'Prompt Libraries'
 ];
 
-// SYSTEM_FIELDS stays as-is or can be simplified to just labels used in your table
-const SYSTEM_FIELDS = ["created_at", "updated_at", "Created Time", "Last Modified Time"];
-
 const NON_EDITABLE_FIELDS = [
   "Id",
   "Tags",
@@ -106,7 +103,7 @@ const DISPLAY_ONLY_FIELDS = [
 ];
 
 const HIDDEN_FIELDS = [
-  "Id",            // hide Id from popup
+  "Id",
   "Account ID",
   "ID",
   "account_id",
@@ -125,32 +122,21 @@ const HIDDEN_FIELDS = [
 const STATUS_OPTIONS = ["Active", "Inactive", "Trial", "Suspended", "Unknown"];
 const TYPE_OPTIONS = ["Agency", "Client"];
 
-const TIMEZONES = [
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Los_Angeles",
-  "America/Sao_Paulo",
-  "Europe/London",
-  "Europe/Paris",
-  "Europe/Amsterdam",
-  "Asia/Tokyo",
-  "UTC"
-];
-
 export default function Accounts() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
-  const [editingRow, setEditingRow] = useState<Row | null>(null);
   const [newRowData, setNewRowData] = useState<Partial<Row>>({});
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [columns, setColumns] = useState<string[]>([]);
-  const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
+    const saved = localStorage.getItem("accounts_visible_columns");
+    return saved ? JSON.parse(saved) : [];
+  });
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [cellEditing, setCellEditing] = useState<{ rowId: number, col: string } | null>(null);
   const [colWidths, setColWidths] = useState<{ [key: string]: number }>({});
   const [statusFilter, setStatusFilter] = useState<string>("All");
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
   const { toast } = useToast();
 
   const fetchData = async () => {
@@ -170,126 +156,111 @@ export default function Accounts() {
           !HIDDEN_FIELDS.includes(k) &&
           !["Id", "Automation Logs", "Prompt Libraries"].includes(k)
         );
-        const ordered: string[] = ["ACC"]; 
-        if (keys.includes("name")) ordered.push("name");
         
-        // Add Account ID after Company Name and rename it to ID in header
-        if (allKeys.includes("Account ID")) ordered.push("Account ID");
-        
-        // Add ID field
-        if (allKeys.includes("Id")) ordered.push("Id");
+        const savedOrder = localStorage.getItem("accounts_column_order");
+        let ordered: string[] = savedOrder ? JSON.parse(savedOrder) : ["ACC"];
 
-        const techCols = [
-          "twilio_account_sid", 
-          "twilio_auth_token", 
-          "twilio_messaging_service_sid", 
-          "twilio_default_from_number",
-          "webhook_url",
-          "webhook_secret",
-          "max_daily_sends"
-        ];
+        if (!savedOrder) {
+          if (keys.includes("name")) ordered.push("name");
+          if (allKeys.includes("Account ID")) ordered.push("Account ID");
+          if (allKeys.includes("Id")) ordered.push("Id");
 
-        // Status, Type, Owner email, Phone, Business Niche, Website, Notes, Timezone
-        if (keys.includes("status")) ordered.push("status");
-        if (keys.includes("type")) ordered.push("type");
-        if (keys.includes("owner_email")) ordered.push("owner_email");
-        if (keys.includes("phone")) ordered.push("phone");
-        if (keys.includes("business_niche")) ordered.push("business_niche");
-        if (keys.includes("website")) ordered.push("website");
-        if (keys.includes("notes")) ordered.push("notes");
-        if (keys.includes("timezone")) ordered.push("timezone");
-        
-        keys.forEach(k => {
-          if (!ordered.includes(k) && !techCols.includes(k) && !SYSTEM_FIELDS.includes(k)) {
-            ordered.push(k);
-          }
-        });
+          const techCols = [
+            "twilio_account_sid", "twilio_auth_token", "twilio_messaging_service_sid", 
+            "twilio_default_from_number", "webhook_url", "webhook_secret", "max_daily_sends"
+          ];
 
-        // Add tech stuff
-        techCols.forEach(k => {
-          if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k);
-        });
-        
-        // Reorder for: Max Daily Sends after Business Hours Start
-        const businessHoursStartIdx = ordered.indexOf("business_hours_open");
-        const maxDailySendsIdx = ordered.indexOf("max_daily_sends");
-        if (businessHoursStartIdx !== -1 && maxDailySendsIdx !== -1) {
-          ordered.splice(maxDailySendsIdx, 1);
-          const newIdx = ordered.indexOf("business_hours_open") + 1;
-          ordered.splice(newIdx, 0, "max_daily_sends");
+          if (keys.includes("status")) ordered.push("status");
+          if (keys.includes("type")) ordered.push("type");
+          if (keys.includes("owner_email")) ordered.push("owner_email");
+          if (keys.includes("phone")) ordered.push("phone");
+          if (keys.includes("business_niche")) ordered.push("business_niche");
+          if (keys.includes("website")) ordered.push("website");
+          if (keys.includes("notes")) ordered.push("notes");
+          if (keys.includes("timezone")) ordered.push("timezone");
+          
+          keys.forEach(k => {
+            if (!ordered.includes(k) && !techCols.includes(k) && !["created_at", "updated_at", "Created Time", "Last Modified Time"].includes(k)) {
+              ordered.push(k);
+            }
+          });
+
+          techCols.forEach(k => {
+            if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k);
+          });
+          
+          const middleCols = [
+            "number of leads", "number of campaigns", "Leads", "Campaigns", 
+            "Interactions", "Users", "Prompt Libraries", "Tags", "Automation Logs"
+          ];
+
+          middleCols.forEach(k => {
+            if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k);
+          });
+
+          ["Created Time", "Last Modified Time"].forEach(k => {
+            if (allKeys.includes(k)) ordered.push(k);
+          });
         }
 
-        // Leads, Campaigns, Interactions, Users before the end columns
-        const middleCols = [
-          "number of leads",
-          "number of campaigns",
-          "Leads",
-          "Campaigns",
-          "Interactions",
-          "Users",
-          "Prompt Libraries",
-          "Tags",
-          "Automation Logs"
-        ];
-
-        middleCols.forEach(k => {
-          if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k);
-        });
-
-        // Add requested end cols
-        const finalEndCols = [
-          "Slug"
-        ];
-
-        finalEndCols.forEach(k => {
-          if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k);
-        });
-
-        // Add requested time fields at the very end
-        ["Created Time", "Last Modified Time"].forEach(k => {
-          if (allKeys.includes(k)) ordered.push(k);
-        });
-
         setColumns(ordered);
-        setVisibleColumns(ordered);
+        if (visibleColumns.length === 0) {
+          setVisibleColumns(ordered);
+        }
         
-        // Initialize widths
         const initialWidths: { [key: string]: number } = {};
         ordered.forEach(col => {
           if (col === 'Id' || col === 'ACC' || col === 'Account ID') initialWidths[col] = 40;
           else if (SMALL_WIDTH_COLS.includes(col)) initialWidths[col] = 70;
-          else if (["Leads", "Campaigns", "Interactions", "Users", "Automation Logs", "Prompt Libraries", "Tags"].includes(col)) initialWidths[col] = 140;
           else initialWidths[col] = 140; 
         });
         setColWidths(initialWidths);
       }
     } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Error fetching data",
-        description: "Could not connect to NocoDB.",
-      });
+      toast({ variant: "destructive", title: "Error fetching data", description: "Could not connect to NocoDB." });
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (visibleColumns.length > 0) {
+      localStorage.setItem("accounts_visible_columns", JSON.stringify(visibleColumns));
+    }
+  }, [visibleColumns]);
+
+  useEffect(() => {
+    if (columns.length > 0) {
+      localStorage.setItem("accounts_column_order", JSON.stringify(columns));
+    }
+  }, [columns]);
+
   const filteredRows = statusFilter === "All" ? rows : rows.filter(r => r.status === statusFilter);
 
   const toggleColumnVisibility = (col: string) => {
     const colIdx = columns.indexOf(col);
-    if (colIdx >= 0 && colIdx < 4) return; // Protect first 4 columns
+    if (colIdx >= 0 && colIdx < 4) return;
     setVisibleColumns(prev => prev.includes(col) ? prev.filter(c => c !== col) : [...prev, col]);
   };
 
-  const moveColumn = (draggedCol: string, targetCol: string) => {
+  const handleDragStart = (idx: number) => {
+    if (idx < 4) return;
+    setDraggedIdx(idx);
+  };
+
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (draggedIdx === null || idx < 4 || draggedIdx === idx) return;
+    
     const newColumns = [...columns];
-    const draggedIdx = newColumns.indexOf(draggedCol);
-    const targetIdx = newColumns.indexOf(targetCol);
-    if (draggedIdx < 4 || targetIdx < 4) return;
-    newColumns.splice(draggedIdx, 1);
-    newColumns.splice(targetIdx, 0, draggedCol);
+    const item = newColumns.splice(draggedIdx, 1)[0];
+    newColumns.splice(idx, 0, item);
     setColumns(newColumns);
+    setDraggedIdx(idx);
   };
 
   const handleInlineUpdate = async (rowId: number, col: string, value: any) => {
@@ -298,23 +269,14 @@ export default function Accounts() {
     try {
       const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "xc-token": NOCODB_TOKEN,
-        },
+        headers: { "Content-Type": "application/json", "xc-token": NOCODB_TOKEN },
         body: JSON.stringify([payload]),
       });
-
       if (!res.ok) throw new Error("Update failed");
-      
       setRows(prev => prev.map(r => r.Id === rowId ? { ...r, [col]: value } : r));
       toast({ title: "Updated", description: "Changes saved to NocoDB." });
     } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Update Failed",
-        description: "Could not save changes to NocoDB.",
-      });
+      toast({ variant: "destructive", title: "Update Failed", description: "Could not save changes to NocoDB." });
       fetchData();
     }
   };
@@ -325,16 +287,12 @@ export default function Accounts() {
       const deletePromises = selectedIds.map(id => 
         fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
           method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            "xc-token": NOCODB_TOKEN,
-          },
+          headers: { "Content-Type": "application/json", "xc-token": NOCODB_TOKEN },
           body: JSON.stringify({ Id: id }),
         })
       );
-
       await Promise.all(deletePromises);
-      toast({ title: "Deleted", description: `Successfully deleted \${selectedIds.length} records.` });
+      toast({ title: "Deleted", description: `Successfully deleted ${selectedIds.length} records.` });
       setSelectedIds([]);
       fetchData();
     } catch (err) {
@@ -347,85 +305,30 @@ export default function Accounts() {
 
   const handleCreateRow = async () => {
     try {
-      // Clean data for creation - remove all non-editable/system fields
       const cleanData: any = {};
       Object.keys(newRowData).forEach(key => {
         if (!NON_EDITABLE_FIELDS.includes(key) && !HIDDEN_FIELDS.includes(key)) {
           cleanData[key] = newRowData[key];
         }
       });
-
       const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "xc-token": NOCODB_TOKEN,
-        },
+        headers: { "Content-Type": "application/json", "xc-token": NOCODB_TOKEN },
         body: JSON.stringify(cleanData),
       });
-
       if (!res.ok) throw new Error("Creation failed");
-
       toast({ title: "Success", description: "New account created." });
       setIsCreateOpen(false);
       setNewRowData({});
       fetchData();
     } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Creation Failed",
-        description: "Could not create the new record.",
-      });
+      toast({ variant: "destructive", title: "Creation Failed", description: "Could not create the new record." });
     }
   };
-
-  const handleSaveEditDialog = async () => {
-    if (!editingRow) return;
-    try {
-      // Filter out system fields to avoid NocoDB errors
-      const { Id, ...rest } = editingRow;
-      const cleanData: any = { Id };
-      
-      // EXPLICITLY filter out system fields from the payload
-      const systemKeys = [
-        "Created Time", "Last Modified Time", "Account ID", "ID", "account_id", 
-        "Automation Logs", "Prompt Libraries", "CreatedAt", "UpdatedAt", 
-        "created_at", "updated_at", "Tags", "Leads", "Campaigns", "Interactions", "Users", "ACC", "Account ID", "account_ID"
-      ];
-
-      Object.keys(rest).forEach(key => {
-        if (!systemKeys.includes(key) && !NON_EDITABLE_FIELDS.includes(key)) {
-          cleanData[key] = rest[key];
-        }
-      });
-
-      const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "xc-token": NOCODB_TOKEN,
-        },
-        body: JSON.stringify([cleanData]),
-      });
-      if (!res.ok) throw new Error("Update failed");
-      toast({ title: "Success", description: "Record updated." });
-      setEditingRow(null);
-      fetchData();
-    } catch (err) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to update record." });
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const toggleSelectAll = () => {
-    if (selectedIds.length === rows.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(rows.map(r => r.Id));
-    }
+    if (selectedIds.length === rows.length) setSelectedIds([]);
+    else setSelectedIds(rows.map(r => r.Id));
   };
 
   const toggleSelect = (id: number) => {
@@ -452,8 +355,7 @@ export default function Accounts() {
 
   const getAccountColor = (id: number) => {
     const bgColors = ['bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-cyan-500', 'bg-orange-500'];
-    const textColors = ['text-blue-600', 'text-purple-600', 'text-pink-600', 'text-indigo-600', 'text-cyan-600', 'text-orange-600'];
-    return { bg: bgColors[id % bgColors.length], text: textColors[id % textColors.length] };
+    return { bg: bgColors[id % bgColors.length] };
   };
 
   const getInitials = (name: string) => {
@@ -477,79 +379,30 @@ export default function Accounts() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Statuses</SelectItem>
-              {STATUS_OPTIONS.map(opt => (
-                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-              ))}
+              {STATUS_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
             </SelectContent>
           </Select>
 
           {selectedIds.length > 0 && (
-            <Button 
-              variant="destructive" 
-              className="h-10 rounded-xl gap-2 font-bold animate-in fade-in slide-in-from-right-4"
-              onClick={() => setIsDeleteDialogOpen(true)}
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete Selected ({selectedIds.length})
+            <Button variant="destructive" className="h-10 rounded-xl gap-2 font-bold" onClick={() => setIsDeleteDialogOpen(true)}>
+              <Trash2 className="h-4 w-4" /> Delete Selected ({selectedIds.length})
             </Button>
           )}
 
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="h-10 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold transition-colors gap-2 shadow-none border-none">
-                <Plus className="h-4 w-4" />
-                Add
+              <Button className="h-10 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold gap-2 shadow-none border-none">
+                <Plus className="h-4 w-4" /> Add
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl h-[calc(100vh-80px)] p-0 gap-0 overflow-hidden flex flex-col">
-              <DialogHeader className="p-6 border-b">
-                <DialogTitle>Add New Account</DialogTitle>
-              </DialogHeader>
+              <DialogHeader className="p-6 border-b"><DialogTitle>Add New Account</DialogTitle></DialogHeader>
               <ScrollArea className="flex-1 p-6">
                 <div className="grid grid-cols-2 gap-4 pb-4">
-                  {columns.filter(c => !NON_EDITABLE_FIELDS.includes(c) && !HIDDEN_FIELDS.includes(c) && !DISPLAY_ONLY_FIELDS.includes(c)).map(col => (
+                  {columns.filter(c => !DISPLAY_ONLY_FIELDS.includes(c)).map(col => (
                     <div key={col} className="space-y-1.5">
                       <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{col.replace(/_/g, ' ')}</label>
-                      {col === 'timezone' ? (
-                        <Select onValueChange={(val) => setNewRowData(prev => ({ ...prev, [col]: val }))}>
-                          <SelectTrigger className="bg-slate-50 border-slate-200">
-                            <SelectValue placeholder="Select timezone" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {TIMEZONES.map(tz => (
-                              <SelectItem key={tz} value={tz}>{tz}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : col === 'status' ? (
-                        <Select onValueChange={(val) => setNewRowData(prev => ({ ...prev, [col]: val }))}>
-                          <SelectTrigger className="bg-slate-50 border-slate-200">
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {STATUS_OPTIONS.map(opt => (
-                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : col === 'type' ? (
-                        <Select onValueChange={(val) => setNewRowData(prev => ({ ...prev, [col]: val }))}>
-                          <SelectTrigger className="bg-slate-50 border-slate-200">
-                            <SelectValue placeholder="Select type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {TYPE_OPTIONS.map(opt => (
-                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Input
-                          value={newRowData[col] || ""}
-                          onChange={(e) => setNewRowData(prev => ({ ...prev, [col]: e.target.value }))}
-                          className="bg-slate-50 border-slate-200"
-                        />
-                      )}
+                      <Input value={newRowData[col] || ""} onChange={(e) => setNewRowData(prev => ({ ...prev, [col]: e.target.value }))} className="bg-slate-50 border-slate-200" />
                     </div>
                   ))}
                 </div>
@@ -564,11 +417,10 @@ export default function Accounts() {
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none">
-                <Eye className="h-4 w-4" />
-                Fields
+                <Eye className="h-4 w-4" /> Fields
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-2">
+            <PopoverContent className="w-[320px] p-2">
               <ScrollArea className="h-80">
                 <div className="space-y-1">
                   {columns.map((col, idx) => {
@@ -576,28 +428,17 @@ export default function Accounts() {
                     return (
                       <div 
                         key={col} 
-                        className={cn(
-                          "flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 group",
-                          !visibleColumns.includes(col) && "opacity-50"
-                        )}
+                        className={cn("flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 group", !visibleColumns.includes(col) && "opacity-50")}
                         draggable={!isProtected}
-                        onDragStart={(e) => e.dataTransfer.setData("col", col)}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={(e) => {
-                          const draggedCol = e.dataTransfer.getData("col");
-                          if (draggedCol && !isProtected) moveColumn(draggedCol, col);
-                        }}
+                        onDragStart={() => handleDragStart(idx)}
+                        onDragOver={(e) => handleDragOver(e, idx)}
+                        onDragEnd={() => setDraggedIdx(null)}
                       >
-                        <div className="flex items-center gap-2 overflow-hidden">
-                          {!isProtected && <GripVertical className="h-3 w-3 text-slate-400 cursor-grab" />}
+                        <div className="flex items-center gap-2 overflow-hidden flex-1">
+                          {!isProtected && <GripVertical className="h-3 w-3 text-slate-400 cursor-grab shrink-0" />}
                           <span className="text-sm font-medium truncate">{col.replace(/_/g, ' ')}</span>
                         </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className={cn("h-6 w-6", isProtected && "hidden")}
-                          onClick={() => toggleColumnVisibility(col)}
-                        >
+                        <Button variant="ghost" size="icon" className={cn("h-6 w-6 shrink-0", isProtected && "hidden")} onClick={() => toggleColumnVisibility(col)}>
                           <Eye className={cn("h-3 w-3", !visibleColumns.includes(col) && "text-slate-300")} />
                         </Button>
                       </div>
@@ -619,12 +460,7 @@ export default function Accounts() {
               <TableHeader className="bg-slate-50 border-b border-slate-100 sticky top-0 z-20">
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="w-10 px-0 border-r border-slate-100/50 sticky left-0 z-30 bg-slate-50">
-                    <div className="flex justify-center">
-                      <Checkbox 
-                        checked={selectedIds.length === rows.length && rows.length > 0} 
-                        onCheckedChange={toggleSelectAll}
-                      />
-                    </div>
+                    <div className="flex justify-center"><Checkbox checked={selectedIds.length === rows.length && rows.length > 0} onCheckedChange={toggleSelectAll} /></div>
                   </TableHead>
                   {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => (
                     <TableHead 
@@ -633,31 +469,16 @@ export default function Accounts() {
                         width: colWidths[col] || 200,
                         left: idx < 3 ? (40 + columns.filter(c => visibleColumns.includes(c)).slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined
                       }}
-                      className={cn(
-                        "px-4 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap border-r border-slate-100/50 relative group table-fixed",
-                        col === "Id" && "text-center",
-                        idx < 3 && "sticky z-30 bg-slate-50"
-                      )}
+                      className={cn("px-4 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap border-r border-slate-100/50 relative group table-fixed", col === "Id" && "text-center", idx < 3 && "sticky z-30 bg-slate-50")}
                     >
                       <div className="flex items-center justify-between overflow-hidden">
                         <span className="truncate">{col === "name" ? "Company Name" : col === "Account ID" ? "ID" : col.replace(/_/g, ' ')}</span>
-                        <div 
-                          className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/30 transition-colors z-10"
-                          onMouseDown={(e) => {
-                            const startX = e.pageX;
-                            const startWidth = colWidths[col] || 200;
-                            const onMouseMove = (moveEvent: MouseEvent) => {
-                              const newWidth = Math.max(50, startWidth + (moveEvent.pageX - startX));
-                              handleResize(col, newWidth);
-                            };
-                            const onMouseUp = () => {
-                              document.removeEventListener('mousemove', onMouseMove);
-                              document.removeEventListener('mouseup', onMouseUp);
-                            };
-                            document.addEventListener('mousemove', onMouseMove);
-                            document.addEventListener('mouseup', onMouseUp);
-                          }}
-                        />
+                        <div className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/30 transition-colors z-10" onMouseDown={(e) => {
+                          const startX = e.pageX; const startWidth = colWidths[col] || 200;
+                          const onMouseMove = (me: MouseEvent) => handleResize(col, Math.max(50, startWidth + (me.pageX - startX)));
+                          const onMouseUp = () => { document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); };
+                          document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp);
+                        }} />
                       </div>
                     </TableHead>
                   ))}
@@ -665,72 +486,47 @@ export default function Accounts() {
               </TableHeader>
               <TableBody>
                 {loading && rows.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={columns.length + 1} className="h-96 text-center">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/40" />
-                    </TableCell>
-                  </TableRow>
-                ) : filteredRows.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={columns.length + 1} className="h-96 text-center text-slate-400">
-                      No accounts found.
-                    </TableCell>
-                  </TableRow>
+                  <TableRow><TableCell colSpan={columns.length + 1} className="h-96 text-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/40" /></TableCell></TableRow>
                 ) : (
                   filteredRows.map((row) => (
-                    <TableRow 
-                      key={row.Id} 
-                      className={cn(
-                        "group transition-colors",
-                        selectedIds.includes(row.Id) ? "bg-blue-50/50" : "hover:bg-slate-50/50"
-                      )}
-                    >
-                      <TableCell className="w-10 px-0 border-r border-slate-100/30 sticky left-0 z-10 bg-inherit">
-                        <div className="flex justify-center">
-                          <Checkbox 
-                            checked={selectedIds.includes(row.Id)} 
-                            onCheckedChange={() => toggleSelect(row.Id)}
-                          />
-                        </div>
-                      </TableCell>
+                    <TableRow key={row.Id} className={cn("group transition-colors", selectedIds.includes(row.Id) ? "bg-blue-50/50" : "hover:bg-slate-50/50")}>
+                      <TableCell className="w-10 px-0 border-r border-slate-100/30 sticky left-0 z-10 bg-inherit"><div className="flex justify-center"><Checkbox checked={selectedIds.includes(row.Id)} onCheckedChange={() => toggleSelect(row.Id)} /></div></TableCell>
                       {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => {
-                        const val = row[col];
-                        const isSticky = idx < 3;
+                        const val = row[col]; const isSticky = idx < 3;
                         const leftPos = isSticky ? (40 + columns.filter(c => visibleColumns.includes(c)).slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined;
-
                         return (
-                          <TableCell 
-                            key={col} 
-                            style={{ width: colWidths[col] || 200, left: leftPos }}
-                            className={cn(
-                              "px-4 py-3 text-sm border-r border-slate-100/30 truncate",
-                              isSticky && "sticky z-10 bg-inherit"
-                            )}
-                          >
-                            <TooltipProvider delayDuration={0}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="truncate">
-                                    {col === 'status' ? (
-                                      <Badge className={cn("font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getStatusColor(val))}>
-                                        {val || "Unknown"}
-                                      </Badge>
-                                    ) : col === 'type' ? (
-                                      <Badge className={cn("font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getTypeColor(val))}>
-                                        {val || "Client"}
-                                      </Badge>
-                                    ) : col === 'ACC' ? (
-                                      <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-none", getAccountColor(row.Id).bg)}>
-                                        {getInitials(row.name)}
-                                      </div>
-                                    ) : val}
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="max-w-[300px] break-words">
-                                  {val}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                          <TableCell key={col} style={{ width: colWidths[col] || 200, left: leftPos }} className={cn("px-4 py-3 text-sm border-r border-slate-100/30 truncate", isSticky && "sticky z-10 bg-inherit")}>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <div className="truncate cursor-pointer hover:bg-slate-100/50 rounded px-1 -mx-1 transition-colors">
+                                  {col === 'status' ? <Badge className={cn("font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getStatusColor(val))}>{val || "Unknown"}</Badge> : 
+                                   col === 'type' ? <Badge className={cn("font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getTypeColor(val))}>{val || "Client"}</Badge> : 
+                                   col === 'ACC' ? <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-none", getAccountColor(row.Id).bg)}>{getInitials(row.name)}</div> : val}
+                                </div>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-80 p-4">
+                                <div className="space-y-4">
+                                  <h4 className="font-bold text-sm">Edit {col.replace(/_/g, ' ')}</h4>
+                                  {!NON_EDITABLE_FIELDS.includes(col) ? (
+                                    <div className="space-y-2">
+                                      {col === 'status' ? (
+                                        <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
+                                          <SelectTrigger><SelectValue /></SelectTrigger>
+                                          <SelectContent>{STATUS_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                        </Select>
+                                      ) : col === 'type' ? (
+                                        <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
+                                          <SelectTrigger><SelectValue /></SelectTrigger>
+                                          <SelectContent>{TYPE_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                        </Select>
+                                      ) : (
+                                        <Input defaultValue={val} onBlur={(e) => { if(e.target.value !== val) handleInlineUpdate(row.Id, col, e.target.value); }} />
+                                      )}
+                                    </div>
+                                  ) : <p className="text-xs text-muted-foreground">This field is read-only.</p>}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
                           </TableCell>
                         );
                       })}

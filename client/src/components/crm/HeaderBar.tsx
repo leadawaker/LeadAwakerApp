@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { users } from "@/data/mocks";
 
-export function Sidebar() {
+export function HeaderBar() {
   const [location] = useLocation();
   const { currentAccount, isAgencyView } = useWorkspace();
   const prefix = isAgencyView ? "/agency" : "/subaccount";

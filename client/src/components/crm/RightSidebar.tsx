@@ -20,6 +20,7 @@ import {
   ChevronDown,
   Menu,
   X,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -79,13 +80,13 @@ export function RightSidebar({
     {
       href: `${prefix}/accounts`,
       label: "Accounts",
-      icon: Megaphone,
+      icon: Building2,
       testId: "nav-accounts",
       agencyOnly: true,
     },
+    { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
     { href: `${prefix}/contacts`, label: "Contacts", icon: BookUser, testId: "nav-contacts" },
     { href: `${prefix}/conversations`, label: "Chats", icon: MessageSquare, testId: "nav-chats" },
-    { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "nav-calendar" },
     { href: `${prefix}/tags`, label: "Tags", icon: Tag, testId: "nav-tags" },
     { href: `${prefix}/users`, label: "Users", icon: Users, testId: "nav-users" },
