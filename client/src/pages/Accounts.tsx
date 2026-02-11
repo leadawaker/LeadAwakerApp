@@ -210,9 +210,10 @@ export default function Accounts() {
         
         const initialWidths: { [key: string]: number } = {};
         ordered.forEach(col => {
-          if (col === 'Id' || col === 'ACC' || col === 'Account ID') initialWidths[col] = 40;
-          else if (SMALL_WIDTH_COLS.includes(col)) initialWidths[col] = 70;
-          else initialWidths[col] = 140; 
+          if (col === 'Id' || col === 'Account ID') initialWidths[col] = 60;
+          else if (col === 'ACC') initialWidths[col] = 60;
+          else if (SMALL_WIDTH_COLS.includes(col)) initialWidths[col] = 80;
+          else initialWidths[col] = 160; 
         });
         setColWidths(initialWidths);
       }
@@ -407,6 +408,32 @@ export default function Accounts() {
     setColumns(newColumns);
   };
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split("\n");
+      const headers = lines[0].split(",");
+      const newRows = lines.slice(1).map((line, index) => {
+        const values = line.split(",");
+        const row: any = { Id: Date.now() + index };
+        headers.forEach((header, i) => {
+          row[header.trim().replace(/^"|"$/g, "")] = values[i]?.trim().replace(/^"|"$/g, "");
+        });
+        return row;
+      });
+      setRows(prev => [...prev, ...newRows]);
+      toast({ title: "Imported", description: `Successfully imported ${newRows.length} records.` });
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const formatHeader = (col: string) => {
     if (col === "name") return "Company Name";
     if (col === "Account ID") return "ID";
@@ -433,37 +460,6 @@ export default function Accounts() {
     <div className="w-full h-full bg-transparent pb-12 px-0 overflow-y-auto pt-4">
       <div className="w-full mx-auto space-y-6">
         <div className="flex items-center gap-3 px-2">
-          <Input 
-            placeholder="Search accounts..." 
-            className="w-[240px] h-10 rounded-xl bg-white shadow-none border-slate-200"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white shadow-none border-slate-200">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All">All Statuses</SelectItem>
-              {STATUS_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
-            </SelectContent>
-          </Select>
-
-          <Button 
-            variant="outline" 
-            className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none"
-            onClick={handleExportCSV}
-          >
-            Export CSV
-          </Button>
-
-          {selectedIds.length > 0 && (
-            <Button variant="destructive" className="h-10 rounded-xl gap-2 font-bold" onClick={() => setIsDeleteDialogOpen(true)}>
-              <Trash2 className="h-4 w-4" /> Delete Selected ({selectedIds.length})
-            </Button>
-          )}
-
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
               <Button className="h-10 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold gap-2 shadow-none border-none">
@@ -489,6 +485,54 @@ export default function Accounts() {
             </DialogContent>
           </Dialog>
 
+          <Input 
+            placeholder="Search accounts..." 
+            className="w-[240px] h-10 rounded-xl bg-white shadow-none border-slate-200"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white shadow-none border-slate-200">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Statuses</SelectItem>
+              {STATUS_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+            </SelectContent>
+          </Select>
+
+          <div className="flex-1" />
+
+          <input
+            type="file"
+            accept=".csv"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={handleImportCSV}
+          />
+          <Button 
+            variant="outline" 
+            className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            Import CSV
+          </Button>
+
+          <Button 
+            variant="outline" 
+            className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none"
+            onClick={handleExportCSV}
+          >
+            Export CSV
+          </Button>
+
+          {selectedIds.length > 0 && (
+            <Button variant="destructive" className="h-10 rounded-xl gap-2 font-bold" onClick={() => setIsDeleteDialogOpen(true)}>
+              <Trash2 className="h-4 w-4" /> Delete Selected ({selectedIds.length})
+            </Button>
+          )}
+
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none">
@@ -503,42 +547,38 @@ export default function Accounts() {
                     return (
                       <div 
                         key={col} 
-                        className={cn("flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 group", !visibleColumns.includes(col) && "opacity-50")}
+                        className={cn("flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 group", !visibleColumns.includes(col) && "opacity-50")}
                       >
-                        <div className="flex items-center gap-2 overflow-hidden flex-1">
-                          {!isProtected ? (
-                            <div className="flex flex-col gap-0.5 shrink-0">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-4 w-4 text-slate-400 hover:text-blue-600" 
-                                onClick={() => moveColumn(idx, 'up')}
-                                disabled={idx === 4}
-                              >
-                                <Plus className="h-2 w-2 rotate-45 scale-75" />
-                                <span className="sr-only">Move Up</span>
-                                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <path d="M4 1.5L1.5 4H6.5L4 1.5Z" fill="currentColor"/>
-                                </svg>
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-4 w-4 text-slate-400 hover:text-blue-600" 
-                                onClick={() => moveColumn(idx, 'down')}
-                                disabled={idx === columns.length - 1}
-                              >
-                                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <path d="M4 6.5L6.5 4H1.5L4 6.5Z" fill="currentColor"/>
-                                </svg>
-                              </Button>
-                            </div>
-                          ) : <div className="w-4 shrink-0" />}
-                          <Button variant="ghost" size="icon" className={cn("h-6 w-6 shrink-0", isProtected && "hidden")} onClick={() => toggleColumnVisibility(col)}>
-                            <Eye className={cn("h-3 w-3", !visibleColumns.includes(col) && "text-slate-300")} />
-                          </Button>
-                          <span className="text-sm font-medium truncate">{formatHeader(col)}</span>
-                        </div>
+                        {!isProtected ? (
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-5 w-5 text-slate-400 hover:text-blue-600 p-0" 
+                              onClick={() => moveColumn(idx, 'up')}
+                              disabled={idx === 4}
+                            >
+                              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M5 2L2 6H8L5 2Z" fill="currentColor"/>
+                              </svg>
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-5 w-5 text-slate-400 hover:text-blue-600 p-0" 
+                              onClick={() => moveColumn(idx, 'down')}
+                              disabled={idx === columns.length - 1}
+                            >
+                              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M5 8L8 4H2L5 8Z" fill="currentColor"/>
+                              </svg>
+                            </Button>
+                          </div>
+                        ) : <div className="w-11 shrink-0" />}
+                        <Button variant="ghost" size="icon" className={cn("h-6 w-6 shrink-0", isProtected && "hidden")} onClick={() => toggleColumnVisibility(col)}>
+                          <Eye className={cn("h-3 w-3", !visibleColumns.includes(col) && "text-slate-300")} />
+                        </Button>
+                        <span className="text-sm font-medium truncate">{formatHeader(col)}</span>
                       </div>
                     );
                   })}
@@ -589,44 +629,60 @@ export default function Accounts() {
                   (searchTerm ? filteredRows.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(searchTerm.toLowerCase()))) : filteredRows).map((row) => (
                     <TableRow key={row.Id} className={cn("group transition-colors border-b border-slate-100 last:border-0", selectedIds.includes(row.Id) ? "bg-blue-50/50" : "hover:bg-slate-50/50")}>
                       <TableCell className="w-10 px-0 border-r border-slate-100/30 sticky left-0 z-10 bg-white group-hover:bg-slate-50/50 transition-colors"><div className="flex justify-center"><Checkbox checked={selectedIds.includes(row.Id)} onCheckedChange={() => toggleSelect(row.Id)} /></div></TableCell>
-                      {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => {
-                        const val = row[col]; const isSticky = idx < 3;
-                        const leftPos = isSticky ? (40 + columns.filter(c => visibleColumns.includes(c)).slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined;
-                        const isDate = col.toLowerCase().includes('time') || col.toLowerCase().includes('at') || col === 'CreatedAt' || col === 'UpdatedAt';
-                        return (
-                          <TableCell key={col} style={{ width: colWidths[col] || 200, left: leftPos }} className={cn("px-4 py-3 text-sm border-r border-slate-100/30 truncate", isSticky && "sticky z-10 bg-white group-hover:bg-slate-50/50 transition-colors")}>
-                            {col === 'status' ? (
-                              <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
-                                <SelectTrigger className={cn("h-7 w-auto min-w-[80px] font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getStatusColor(val))}>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>{STATUS_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                              </Select>
-                            ) : col === 'type' ? (
-                              <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
-                                <SelectTrigger className={cn("h-7 w-auto min-w-[80px] font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getTypeColor(val))}>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>{TYPE_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                              </Select>
-                            ) : col === 'ACC' ? (
-                              <div className={cn("h-9 w-9 rounded-full font-bold grid place-items-center text-xs border border-transparent shadow-none", getAccountColor(row.Id).text, getAccountColor(row.Id).bg)}>
-                                {getInitials(row.name)}
+                  {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => {
+                    const val = row[col]; const isSticky = idx < 3;
+                    const leftPos = isSticky ? (40 + columns.filter(c => visibleColumns.includes(c)).slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined;
+                    const isDate = col.toLowerCase().includes('time') || col.toLowerCase().includes('at') || col === 'CreatedAt' || col === 'UpdatedAt';
+                    return (
+                      <TableCell 
+                        key={col} 
+                        style={{ width: colWidths[col] || 200, left: leftPos }} 
+                        className={cn(
+                          "px-4 py-3 text-sm border-r border-slate-100/30 truncate relative", 
+                          isSticky && "sticky z-10 bg-white group-hover:bg-slate-50/50 transition-colors"
+                        )}
+                      >
+                        {col === 'status' ? (
+                          <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
+                            <SelectTrigger className={cn("h-7 w-auto min-w-[80px] font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getStatusColor(val))}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>{STATUS_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                          </Select>
+                        ) : col === 'type' ? (
+                          <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
+                            <SelectTrigger className={cn("h-7 w-auto min-w-[80px] font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getTypeColor(val))}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>{TYPE_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                          </Select>
+                        ) : col === 'ACC' ? (
+                          <div className={cn("h-9 w-9 rounded-full font-bold grid place-items-center text-xs border border-transparent shadow-none", getAccountColor(row.Id).text, getAccountColor(row.Id).bg)}>
+                            {getInitials(row.name)}
+                          </div>
+                        ) : isDate ? (
+                          <span className="text-slate-600 font-medium truncate block">{formatDate(val)}</span>
+                        ) : (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <div className="truncate cursor-text hover:bg-slate-100/50 rounded transition-colors w-full">
+                                {val || <span className="text-slate-300 italic">empty</span>}
                               </div>
-                            ) : isDate ? (
-                              <span className="text-slate-600 font-medium">{formatDate(val)}</span>
-                            ) : (
-                              <div className="truncate group/cell relative">
-                                <input 
-                                  className="bg-transparent border-none focus:ring-0 w-full p-0 h-auto cursor-text text-sm"
-                                  defaultValue={val}
-                                  onBlur={(e) => { if(e.target.value !== val) handleInlineUpdate(row.Id, col, e.target.value); }}
-                                />
-                              </div>
-                            )}
-                          </TableCell>
-                        );
-                      })}
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto min-w-[200px] p-2 bg-white shadow-xl border border-slate-200">
+                              <Input 
+                                className="border-none focus-visible:ring-0 shadow-none p-0 h-auto text-sm w-full bg-transparent"
+                                defaultValue={val}
+                                autoFocus
+                                onBlur={(e) => { if(e.target.value !== val) handleInlineUpdate(row.Id, col, e.target.value); }}
+                                onKeyDown={(e) => { if(e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                      </TableCell>
+                    );
+                  })}
                     </TableRow>
                   ))
                 )}
