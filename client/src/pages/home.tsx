@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { 
@@ -31,6 +31,21 @@ export default function Home() {
   const isDefaultLang = lang === "en";
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [isFinished, setIsFinished] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (window.innerWidth > 768) {
+        setMousePos({
+          x: (window.innerWidth / 2 - e.clientX) / 50,
+          y: (window.innerHeight / 2 - e.clientY) / 50,
+        });
+      }
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
 
   return (
     <div className="min-h-screen pt-32 overflow-x-hidden md:overflow-visible">
@@ -359,7 +374,58 @@ export default function Home() {
       </section>
 
       {/* Bottom Demo CTA Section */}
-      <section className="py-32 bg-primary text-primary-foreground relative overflow-hidden">
+      <section 
+        ref={sectionRef}
+        className="py-32 bg-[#0f1115] text-primary-foreground relative overflow-hidden flex items-center justify-center min-h-[80vh]"
+        style={{
+          background: "radial-gradient(circle at 50% 20%, #1a1d24, #0f1115)"
+        }}
+      >
+        {/* Parallax Overlay */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <motion.div 
+            className="absolute w-[140%] h-[140%] -top-[20%] -left-[20%] opacity-40 blur-[8px]"
+            animate={{ 
+              x: mousePos.x * 15, 
+              y: mousePos.y * 15,
+            }}
+            transition={{ type: "spring", damping: 50, stiffness: 200 }}
+            style={{
+              background: `
+                radial-gradient(circle at 20% 30%, rgba(255,255,255,0.15) 0px, rgba(255,255,255,0.08) 120px, transparent 250px),
+                radial-gradient(circle at 80% 70%, rgba(255,255,255,0.12) 0px, rgba(255,255,255,0.06) 100px, transparent 220px)
+              `
+            }}
+          />
+          <motion.div 
+            className="absolute w-[140%] h-[140%] -top-[20%] -left-[20%] opacity-30 blur-[25px]"
+            animate={{ 
+              x: mousePos.x * 30, 
+              y: mousePos.y * 30,
+            }}
+            transition={{ type: "spring", damping: 50, stiffness: 200 }}
+            style={{
+              background: `
+                radial-gradient(circle at 40% 60%, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.05) 150px, transparent 300px),
+                radial-gradient(circle at 70% 20%, rgba(255,255,255,0.12) 0px, rgba(255,255,255,0.07) 180px, transparent 320px)
+              `
+            }}
+          />
+          <motion.div 
+            className="absolute w-[140%] h-[140%] -top-[20%] -left-[20%] opacity-20 blur-[40px]"
+            animate={{ 
+              x: mousePos.x * 45, 
+              y: mousePos.y * 45,
+            }}
+            transition={{ type: "spring", damping: 50, stiffness: 200 }}
+            style={{
+              background: `
+                radial-gradient(circle at 50% 50%, rgba(255,255,255,0.08) 0px, rgba(255,255,255,0.04) 220px, transparent 400px)
+              `
+            }}
+          />
+        </div>
+
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -373,7 +439,7 @@ export default function Home() {
             </h2>
             <div className="max-w-3xl mx-auto mb-10">
               <div className="relative pl-6 py-1 border-l-4 border-[#FEB800] text-left">
-                <p className="md:text-[21px] text-[#FEB8800] font-medium opacity-90 text-justify text-[20px]">
+                <p className="md:text-[21px] text-[#FEB800] font-medium opacity-90 text-justify text-[20px]">
                   {t("bottomCta.quote")}
                 </p>
 
@@ -389,7 +455,7 @@ export default function Home() {
               <Link href={isDefaultLang ? "/book-demo" : `/${lang}/book-demo`}>
                 <Button
                   size="lg"
-                  className="h-14 px-10 text-lg rounded-full shadow-xl shadow-primary/20 bg-white text-primary hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all font-bold"
+                  className="h-14 px-10 text-lg rounded-full shadow-xl shadow-white/5 bg-white text-black hover:bg-yellow-400 hover:text-black hover:shadow-yellow-400/35 transition-all font-bold"
                 >
                   {t("bottomCta.button")}
                   <ArrowRight className="ml-2 w-5 h-5" />
