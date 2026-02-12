@@ -302,13 +302,20 @@ export default function Accounts() {
     
     try {
       // Direct update attempt with simpler payload
+      // Use "Id" if that's the primary key, or adjust based on actual table schema
+      const payloads = idsToUpdate.map(id => ({ Id: id, [col]: cleanValue }));
+
       const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         body: JSON.stringify(payloads),
       });
 
-      if (!res.ok) throw new Error(`Update failed: ${res.status}`);
+      const resText = await res.text();
+      if (!res.ok) throw new Error(`Update failed: ${res.status} - ${resText}`);
 
       setRows(prev => prev.map(r => idsToUpdate.includes(r.Id) ? { ...r, [col]: cleanValue } : r));
       toast({ title: "Updated", description: "Changes saved to database." });
@@ -638,14 +645,29 @@ export default function Accounts() {
                           <TableCell 
                             key={col} 
                             style={{ width: colWidths[col] || 200, left: leftPos }}
-                            className={cn("px-4 py-3 border-r border-slate-100/50 truncate align-middle", isSticky && "sticky z-10 bg-inherit")}
+                            className={cn(
+                              "px-4 py-3 border-r border-b border-slate-200 truncate align-middle bg-white", 
+                              isSticky && "sticky z-10"
+                            )}
                           >
                             {col === "Account ID" ? (
                               <span className="text-xs font-mono font-bold text-slate-400">#{val}</span>
-                            ) : col === "ACC" ? (
-                              <div className="flex items-center justify-center py-1">
-                                <div className={cn("h-9 w-9 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm shrink-0 border border-slate-100", getAccountColor(row.Id).bg, getAccountColor(row.Id).text)}>
-                                  {getInitials(row.name)}
+                            ) : col === "ACC" || col === "Company Name" ? (
+                              <div className="flex items-center gap-3">
+                                {col === "Company Name" && (
+                                  <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm shrink-0 border border-slate-100", getAccountColor(row.Id).bg, getAccountColor(row.Id).text)}>
+                                    {getInitials(row.name || "")}
+                                  </div>
+                                )}
+                                <div className="relative group/cell w-full h-full min-h-[1.5rem] flex items-center">
+                                  <input 
+                                    type="text"
+                                    value={val || ""}
+                                    readOnly={NON_EDITABLE_FIELDS.includes(col)}
+                                    onChange={(e) => setRows(prev => prev.map(r => r.Id === row.Id ? { ...r, [col]: e.target.value } : r))}
+                                    onBlur={(e) => handleInlineUpdate(row.Id, col, e.target.value)}
+                                    className="bg-transparent border-none focus:ring-0 w-full text-[11px] font-medium text-slate-700 p-0 h-auto focus:bg-white focus:px-2 focus:py-1 focus:rounded focus:shadow-sm transition-all"
+                                  />
                                 </div>
                               </div>
                             ) : col === "status" ? (
@@ -663,7 +685,7 @@ export default function Accounts() {
                                 <SelectTrigger className="h-7 w-full text-[11px] px-2 rounded-lg border-slate-200 shadow-none bg-white/50"><SelectValue /></SelectTrigger>
                                 <SelectContent className="min-w-[var(--radix-select-trigger-width)]">{TIMEZONE_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                               </Select>
-                            ) : ["Created Time", "Last Modified Time", "CreatedAt", "UpdatedAt", "created_at", "updated_at"].includes(col) ? (
+                            ) : ["Created Time", "Last Modified Time", "CreatedAt", "UpdatedAt", "created_at", "updated_at", "Created time", "Last modified time"].includes(col) ? (
                               <span className="text-[11px] font-bold text-blue-600 font-mono whitespace-nowrap">{formatDate(val)}</span>
                             ) : (
                               <div className="relative group/cell w-full h-full min-h-[1.5rem] flex items-center">
