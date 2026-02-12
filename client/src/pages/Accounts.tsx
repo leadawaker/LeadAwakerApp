@@ -332,8 +332,20 @@ export default function Accounts() {
     // Logic for multi-row sync: if current row is part of selection, update all selected
     const idsToUpdate = selectedIds.includes(rowId) ? selectedIds : [rowId];
     
-    setRows(prev => prev.map(r => idsToUpdate.includes(r.Id) ? { ...r, [col]: cleanValue } : r));
-    if (detailRow && idsToUpdate.includes(detailRow.Id)) setDetailRow(prev => prev ? { ...prev, [col]: cleanValue } : null);
+    setRows(prev => {
+      const newRows = [...prev];
+      idsToUpdate.forEach(id => {
+        const idx = newRows.findIndex(r => r.Id === id);
+        if (idx !== -1) {
+          newRows[idx] = { ...newRows[idx], [col]: cleanValue };
+        }
+      });
+      return newRows;
+    });
+
+    if (detailRow && idsToUpdate.includes(detailRow.Id)) {
+      setDetailRow(prev => prev ? { ...prev, [col]: cleanValue } : null);
+    }
 
     try {
       const updatePromises = idsToUpdate.map(id => 
@@ -864,7 +876,7 @@ export default function Accounts() {
                               key={col}
                               style={{ width: colWidths[col] }}
                               className={cn(
-                                "px-4 font-medium text-slate-600 transition-all overflow-hidden whitespace-nowrap text-ellipsis",
+                                "px-4 font-medium text-slate-600 transition-all",
                                 rowPadding,
                                 showVerticalLines && idx < visibleColumns.length - 1 && "border-r border-slate-50"
                               )}
@@ -991,13 +1003,16 @@ export default function Accounts() {
                                 </SelectTrigger>
                                 <SelectContent>{TIMEZONE_OPTIONS.map(o => <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">{o}</SelectItem>)}</SelectContent>
                               </Select>
-                            ) : ["Created Time", "Last Modified Time", "CreatedAt", "UpdatedAt", "created_at", "updated_at"].includes(col) ? (
-                              <TruncatedCell value={formatDate(row[col])} />
+                            ) : ["Created Time", "Last Modified Time", "CreatedAt", "UpdatedAt", "created_at", "updated_at", "business_hours_open", "business_hours_closed"].includes(col) ? (
+                              <div className="text-sm">
+                                {formatDate(row[col])}
+                              </div>
                             ) : (
                               <Input 
                                 defaultValue={row[col] || ""} 
+                                key={`${row.Id}-${col}-${row[col]}`}
                                 onBlur={(e) => handleInlineUpdate(row.Id, col, e.target.value)}
-                                className="h-8 border-none bg-transparent shadow-none hover:bg-slate-100/50 transition-colors focus:bg-white focus:ring-1 focus:ring-blue-200 px-2 text-sm w-full truncate"
+                                className="h-8 border-none bg-transparent shadow-none hover:bg-slate-100/50 transition-colors focus:bg-white focus:ring-1 focus:ring-blue-200 px-2 text-sm w-full"
                               />
                             )}
                           </TableCell>
