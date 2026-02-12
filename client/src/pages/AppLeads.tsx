@@ -104,6 +104,14 @@ export default function AppLeads() {
     return statusColors[status] || { text: "text-muted-foreground", bg: "bg-muted/10", border: "border-border", icon: null };
   };
 
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: leads.length };
+    leads.forEach(l => {
+      counts[l.conversion_status] = (counts[l.conversion_status] || 0) + 1;
+    });
+    return counts;
+  }, [leads]);
+
   return (
     <CrmShell>
       <div className="h-full flex flex-col pt-6 -mt-2 pb-2" data-testid="page-leads">
@@ -111,19 +119,29 @@ export default function AppLeads() {
           <div className="p-0">
             <div className="flex flex-wrap items-center gap-3" data-testid="bar-filters">
               <div className="flex items-center gap-2">
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="h-10 rounded-xl border border-border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none min-w-[140px]"
-                  data-testid="select-status"
-                >
-                  <option value="all">All statuses</option>
-                  {Object.keys(statusColors).filter(s => s !== "Lost").map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="h-10 rounded-xl border border-border bg-white pl-10 pr-4 text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none min-w-[160px] appearance-none cursor-pointer"
+                    data-testid="select-status"
+                  >
+                    <option value="all">All statuses</option>
+                    {Object.keys(statusColors).filter(s => s !== "Lost").map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute left-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600 border border-slate-200 pointer-events-none">
+                    {statusCounts[status] || 0}
+                  </div>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                    {status !== 'all' && (
+                      <div className={cn("w-2.5 h-2.5 rounded-full border border-black/10", getStatusColor(status).bg.replace('/10', ''))} />
+                    )}
+                  </div>
+                </div>
 
                 <select
                   value={priority}
@@ -171,8 +189,8 @@ export default function AppLeads() {
         </div>
 
         <div className="flex-1 min-h-0 bg-white rounded-[32px] border border-border flex flex-col overflow-hidden" data-testid="table-contacts">
-          <div className="shrink-0 grid grid-cols-[40px_44px_1.5fr_1fr_1fr_1fr_1fr] items-center gap-3 bg-white px-6 py-4 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider z-20" data-testid="row-contacts-head">
-            <div className="flex justify-center">
+          <div className="shrink-0 grid grid-cols-[40px_44px_60px_1.5fr_1fr_1fr_1fr_1fr] items-center gap-3 bg-white px-6 py-4 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider z-20" data-testid="row-contacts-head">
+            <div className="flex justify-center border-r border-border/12 h-full flex items-center">
               <input 
                 type="checkbox" 
                 className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
@@ -180,15 +198,16 @@ export default function AppLeads() {
                 onChange={toggleSelectAll}
               />
             </div>
-            <div />
-            <div className="sticky left-0 bg-white z-30 px-2">name</div>
-            <div>conversion</div>
-            <div>tags</div>
-            <div>email</div>
-            <div>phone</div>
+            <div className="border-r border-border/20 h-full" />
+            <div className="border-r border-border/20 h-full flex items-center px-2">ID</div>
+            <div className="sticky left-0 bg-white z-30 px-2 border-r border-border/20 h-full flex items-center">name</div>
+            <div className="border-r border-border/20 h-full flex items-center px-2">conversion</div>
+            <div className="border-r border-border/20 h-full flex items-center px-2">tags</div>
+            <div className="border-r border-border/20 h-full flex items-center px-2">email</div>
+            <div className="flex items-center px-2">phone</div>
           </div>
 
-          <div className="flex-1 overflow-y-auto divide-y divide-border/30" data-testid="list-contacts">
+          <div className="flex-1 overflow-y-auto divide-y divide-border/12" data-testid="list-contacts">
             {isLoading ? (
               <div className="px-4 py-6 text-sm text-muted-foreground" data-testid="status-leads-loading">
                 Loading contacts…
@@ -211,10 +230,10 @@ export default function AppLeads() {
               return (
                 <div
                   key={l.id}
-                  className="grid grid-cols-[40px_44px_1.5fr_1fr_1fr_1fr_1fr] items-center gap-3 px-6 py-4 hover:bg-muted/5 group bg-white transition-colors"
+                  className="grid grid-cols-[40px_44px_60px_1.5fr_1fr_1fr_1fr_1fr] items-center gap-3 px-6 py-4 hover:bg-muted/5 group bg-white transition-colors"
                   data-testid={`row-contact-${l.id}`}
                 >
-                  <div className="flex justify-center">
+                  <div className="flex justify-center border-r border-border/12 h-full flex items-center">
                     <input 
                       type="checkbox" 
                       className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
@@ -222,14 +241,20 @@ export default function AppLeads() {
                       onChange={() => toggleSelectLead(l.id)}
                     />
                   </div>
-                  <div 
-                    className={cn("h-9 w-9 rounded-full font-bold grid place-items-center text-xs border border-transparent", avatarColor.text, avatarColor.bg)} 
-                    data-testid={`avatar-contact-${l.id}`}
-                  >
-                    {initials || "?"}
+                  <div className="flex justify-center border-r border-border/20 h-full flex items-center">
+                    <div 
+                      className={cn("h-8 w-8 rounded-full font-bold grid place-items-center text-[10px] border border-transparent shadow-sm", avatarColor.text, avatarColor.bg)} 
+                      data-testid={`avatar-contact-${l.id}`}
+                    >
+                      {initials || "?"}
+                    </div>
                   </div>
 
-                  <div className="min-w-0 sticky left-0 bg-white group-hover:bg-muted/5 transition-colors z-10 px-2" data-testid={`cell-name-${l.id}`}>
+                  <div className="text-[11px] font-mono text-muted-foreground border-r border-border/20 h-full flex items-center px-2">
+                    #{l.id}
+                  </div>
+
+                  <div className="min-w-0 sticky left-0 bg-white group-hover:bg-muted/5 transition-colors z-10 px-2 border-r border-border/20 h-full flex items-center" data-testid={`cell-name-${l.id}`}>
                     <div className="flex flex-col">
                       <a
                         href={`${isAgencyView ? "/agency" : "/subaccount"}/contacts/${l.id}`}
@@ -239,31 +264,28 @@ export default function AppLeads() {
                           window.history.pushState({}, "", href);
                           window.dispatchEvent(new PopStateEvent("popstate"));
                         }}
-                        className="text-base font-bold truncate hover:underline block leading-tight text-slate-900/90"
+                        className="text-sm font-bold truncate hover:underline block leading-tight text-slate-900/90"
                         data-testid={`link-contact-${l.id}`}
                       >
                         {l.full_name}
                       </a>
-                      <div className="text-[10px] text-muted-foreground font-medium mt-0.5">
-                        Last update: {new Date(l.updated_at).toLocaleDateString()}
-                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center shrink-0" data-testid={`cell-status-${l.id}`}>
-                    <div className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold uppercase whitespace-nowrap", statusInfo.text, statusInfo.bg, statusInfo.border)}>
+                  <div className="flex items-center shrink-0 border-r border-border/20 h-full px-2" data-testid={`cell-status-${l.id}`}>
+                    <div className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase whitespace-nowrap", statusInfo.text, statusInfo.bg, statusInfo.border)}>
                       {statusInfo.icon}
                       {l.conversion_status}
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-x-2 gap-y-1" data-testid={`cell-tags-${l.id}`}>
-                    {(l.tags ?? []).map((t: string, i: number) => {
+                  <div className="flex flex-wrap gap-x-2 gap-y-1 border-r border-border/20 h-full items-center px-2" data-testid={`cell-tags-${l.id}`}>
+                    {(l.tags ?? []).slice(0, 1).map((t: string, i: number) => {
                       const color = tagColors[t] || "#64748B";
                       return (
                         <span 
                           key={i} 
-                          className="text-[10px] font-bold px-1.5 py-0.5 rounded-md border"
+                          className="text-[9px] font-bold px-1.5 py-0.5 rounded-md border"
                           style={{ 
                             color: "#000",
                             backgroundColor: `${color}08`,
@@ -276,10 +298,10 @@ export default function AppLeads() {
                     })}
                   </div>
 
-                  <div className="text-[11px] text-muted-foreground font-medium truncate max-w-full">
+                  <div className="text-[11px] text-muted-foreground font-medium truncate max-w-full border-r border-border/20 h-full flex items-center px-2">
                     {l.email}
                   </div>
-                  <div className="text-[11px] text-muted-foreground font-medium truncate max-w-full">
+                  <div className="text-[11px] text-muted-foreground font-medium truncate max-w-full flex items-center px-2">
                     {l.phone}
                   </div>
                 </div>
