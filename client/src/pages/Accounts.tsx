@@ -128,7 +128,7 @@ export default function Accounts() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [columns, setColumns] = useState<string[]>([]);
   const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
-    const saved = localStorage.getItem("accounts_visible_columns");
+    const saved = null;
     return saved ? JSON.parse(saved) : [];
   });
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -222,10 +222,11 @@ export default function Accounts() {
       setRows(list);
       
       if (list.length > 0) {
-        const allKeys = Object.keys(list[0]);
-        const keys = allKeys.filter(k => !HIDDEN_FIELDS.includes(k));
-        const savedOrder = localStorage.getItem("accounts_column_order");
-        let ordered: string[] = savedOrder ? JSON.parse(savedOrder) : ["Account ID", "ACC"];
+        const allKeys = Object.keys(list[0]); console.log("Keys found:", allKeys);
+        // Remove HIDDEN_FIELDS check here to ensure we get everything first
+        const keys = allKeys; 
+        const savedOrder = null; null;
+        let ordered: string[] = savedOrder ? JSON.parse(savedOrder) : ["Id", "ACC"];
 
         if (!savedOrder) {
           if (keys.includes("name")) ordered.push("name");
@@ -238,22 +239,28 @@ export default function Accounts() {
           if (keys.includes("website")) ordered.push("website");
           if (keys.includes("notes")) ordered.push("notes");
           if (keys.includes("timezone")) ordered.push("timezone");
-          keys.forEach(k => { if (!ordered.includes(k) && !techCols.includes(k) && !["created_at", "updated_at", "Created Time", "Last Modified Time"].includes(k)) ordered.push(k); });
+          keys.forEach(k => { if (!ordered.includes(k) && !techCols.includes(k) && !["created_at", "updated_at", "Created Time", "Last Modified Time", "Id", "Account ID"].includes(k)) ordered.push(k); });
           techCols.forEach(k => { if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k); });
           const middleCols = ["number of leads", "number of campaigns", "Leads", "Campaigns", "Interactions", "Users", "Prompt Libraries", "Tags", "Automation Logs"];
           middleCols.forEach(k => { if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k); });
           ["Created Time", "Last Modified Time"].forEach(k => { if (allKeys.includes(k)) ordered.push(k); });
         }
-        setColumns(["Id", ...ordered.filter(c => c !== "Account ID" && c !== "ID" && c !== "account_id" && c !== "Id")]);
-        if (visibleColumns.length === 0) setVisibleColumns(["Id", ...ordered.filter(c => c !== "Account ID" && c !== "ID" && c !== "account_id" && c !== "Id")]);
+        
+        // Ensure "Id" is always first and not filtered out
+        const finalCols = ["Id", ...ordered.filter(c => c !== "Id" && !HIDDEN_FIELDS.includes(c))];
+        setColumns(finalCols);
+        
+        // Always reset visible columns if "Id" is missing from current view
+        setVisibleColumns(finalCols);
+        localStorage.setItem("accounts_visible_columns", JSON.stringify(finalCols));
         
         const savedWidths = localStorage.getItem("accounts_col_widths");
         const initialWidths: { [key: string]: number } = savedWidths ? JSON.parse(savedWidths) : {};
-        ordered.forEach(col => {
+        finalCols.forEach(col => {
           if (!initialWidths[col]) {
-            if (col === 'Id' || col === 'Account ID') initialWidths[col] = 60;
+            if (col === 'Id' || col === 'Account ID') initialWidths[col] = 80;
             else if (col === 'ACC') initialWidths[col] = 60;
-            else if (SMALL_WIDTH_COLS.includes(col)) initialWidths[col] = 80;
+            else if (SMALL_WIDTH_COLS.includes(col)) initialWidths[col] = 100;
             else initialWidths[col] = 160; 
           }
         });
@@ -290,42 +297,30 @@ export default function Accounts() {
   const handleInlineUpdate = async (rowId: number, col: string, value: any) => {
     if (NON_EDITABLE_FIELDS.includes(col)) return;
     const idsToUpdate = selectedIds.includes(rowId) ? selectedIds : [rowId];
-    
-    // Ensure value is correctly handled for the API
     const cleanValue = value === null || value === undefined ? "" : value;
-    
-    // NocoDB records endpoint typically uses 'Id' as primary key by default in this setup
     const payloads = idsToUpdate.map(id => ({ Id: id, [col]: cleanValue }));
     
     try {
-      // Trying the patch records endpoint directly on the table
+      // Direct update attempt with simpler payload
       const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
         method: "PATCH",
-        headers: { 
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payloads),
       });
-      
-      if (!res.ok) {
-        // Fallback to bulk update if the above doesn't work for specific setups
-        const bulkRes = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payloads),
-        });
-        if (!bulkRes.ok) throw new Error(`Update failed: ${bulkRes.status}`);
-      }
+
+      if (!res.ok) throw new Error(`Update failed: ${res.status}`);
 
       setRows(prev => prev.map(r => idsToUpdate.includes(r.Id) ? { ...r, [col]: cleanValue } : r));
-      toast({ title: "Updated", description: `Updated ${idsToUpdate.length} record(s).` });
+      toast({ title: "Updated", description: "Changes saved to database." });
     } catch (err) {
       console.error("Update error:", err);
-      // Even if API fails, update UI for the mockup feel as requested, 
-      // but the above fetch is the "fix" for the database connection
+      // Ensure UI is updated anyway for UX, but notify about sync failure
       setRows(prev => prev.map(r => idsToUpdate.includes(r.Id) ? { ...r, [col]: cleanValue } : r));
-      toast({ title: "Updated", description: "Changes applied." });
+      toast({ 
+        variant: "destructive", 
+        title: "Sync Error", 
+        description: "Failed to save to database. Check your connection." 
+      });
     }
   };
 
@@ -504,7 +499,6 @@ export default function Accounts() {
       const year = date.getFullYear().toString().slice(-2);
       const hours = date.getHours().toString().padStart(2, '0');
       const minutes = date.getMinutes().toString().padStart(2, '0');
-      // Format: DD/MMM/YY HH:mm
       return `${day}/${month}/${year}    ${hours}:${minutes}`;
     } catch (e) { return dateStr; }
   };
@@ -583,7 +577,7 @@ export default function Accounts() {
                       onDragStart={() => handleColDragStart(idx)}
                       onDragOver={(e) => handleColDragOver(e, idx)}
                       style={{ width: colWidths[col] || 200, left: idx < 3 ? (40 + columns.filter(c => visibleColumns.includes(c)).slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined }}
-                      className={cn("px-4 py-3 border-r border-slate-100/50 relative group select-none transition-colors hover:bg-slate-100/50", idx < 3 && "sticky z-30 bg-slate-50")}
+                      className={cn("px-4 py-3 border-r border-slate-100/50 relative group select-none transition-colors hover:bg-slate-100/50", idx < 3 && "sticky z-30 bg-slate-50", !visibleColumns.includes(col) && "hidden")}
                     >
                       <div className="flex items-center justify-between w-full h-full cursor-pointer" onClick={() => handleSort(col)}>
                         <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider truncate mr-2">
