@@ -224,7 +224,7 @@ export default function Accounts() {
         // Remove HIDDEN_FIELDS check here to ensure we get everything first
         const keys = allKeys; 
         const savedOrder = null; null;
-        let ordered: string[] = savedOrder ? JSON.parse(savedOrder) : ["Id", "Img"];
+        let ordered: string[] = savedOrder ? JSON.parse(savedOrder) : ["Id", "Image"];
 
         if (!savedOrder) {
           if (keys.includes("name")) ordered.push("name");
@@ -257,7 +257,7 @@ export default function Accounts() {
         finalCols.forEach(col => {
           if (!initialWidths[col]) {
             if (col === 'Id' || col === 'Account ID') initialWidths[col] = 80;
-            else if (col === 'Img') initialWidths[col] = 70;
+            else if (col === 'Image') initialWidths[col] = 60;
             else if (SMALL_WIDTH_COLS.includes(col)) initialWidths[col] = 100;
             else initialWidths[col] = 160; 
           }
@@ -488,7 +488,7 @@ export default function Accounts() {
     const iconMap: { [key: string]: any } = {
       "Account ID": <LayoutGrid className="h-3 w-3" />,
       "ACC": <GripVertical className="h-3 w-3" />,
-      "Img": <GripVertical className="h-3 w-3" />,
+      "Image": <GripVertical className="h-3 w-3" />,
       "name": <Building2 className="h-3 w-3" />,
       "owner_email": <Eye className="h-3 w-3" />,
       "phone": <Plus className="h-3 w-3" />,
@@ -565,31 +565,6 @@ export default function Accounts() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none">
-                <Filter className="h-4 w-4" /> Filter
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-2">
-              <div className="space-y-1">
-                {columns.map(col => (
-                  <Button 
-                    key={col} 
-                    variant="ghost" 
-                    className="w-full justify-start text-xs h-8"
-                    onClick={() => {
-                      setSearchTerm(col + ":");
-                      searchInputRef.current?.focus();
-                    }}
-                  >
-                    Filter by {formatHeader(col)}
-                  </Button>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-
           <div className="relative">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white shadow-none border-slate-200 pl-10 pr-4 font-bold appearance-none">
@@ -623,157 +598,143 @@ export default function Accounts() {
         </div>
 
         <div className="flex-1 min-h-0 bg-white rounded-[32px] border border-slate-200 flex flex-col overflow-hidden shadow-none">
-          <div className="overflow-x-auto no-scrollbar scroll-smooth" id="table-header-scroll">
-            <div className="shrink-0 flex items-center bg-white border-b border-slate-200 uppercase tracking-wider z-20 w-max" data-testid="row-contacts-head">
-              <div className="w-[40px] flex justify-center border-r border-slate-200 shrink-0 py-4 sticky left-0 z-50 bg-white">
-                <Checkbox 
-                  checked={selectedIds.length === rows.length && rows.length > 0} 
-                  onCheckedChange={toggleSelectAll}
-                  className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 cursor-pointer"
+          <div className="shrink-0 flex items-center bg-white border-b border-slate-200 uppercase tracking-wider z-20 overflow-x-auto no-scrollbar" data-testid="row-contacts-head">
+            <div className="w-[40px] flex justify-center border-r border-slate-200 shrink-0 py-4">
+              <Checkbox 
+                checked={selectedIds.length === rows.length && rows.length > 0} 
+                onCheckedChange={toggleSelectAll}
+                className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 cursor-pointer"
+              />
+            </div>
+            {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => (
+              <div 
+                key={col}
+                draggable={idx >= 3}
+                onDragStart={() => handleColDragStart(columns.indexOf(col))}
+                onDragOver={(e) => handleColDragOver(e, columns.indexOf(col))}
+                className={cn(
+                  "border-r border-slate-200 h-full flex items-center px-4 relative group/col text-[11px] font-bold text-muted-foreground shrink-0 py-4 transition-colors",
+                  idx < 3 && "sticky z-40 bg-white border-blue-100",
+                  idx === 0 && "left-0",
+                  idx === 1 && "left-[80px]",
+                  idx === 2 && "left-[140px]",
+                )}
+                style={{ width: colWidths[col] || 160 }}
+              >
+                <div className="flex-1 truncate cursor-pointer" onClick={() => handleSort(col)}>
+                  {formatHeader(col)}
+                </div>
+                <div 
+                  className="absolute right-0 top-0 w-1 h-full cursor-col-resize hover:bg-blue-500 opacity-0 group-hover/col:opacity-100 transition-opacity"
+                  onMouseDown={(e) => {
+                    const startX = e.pageX;
+                    const startWidth = colWidths[col] || 160;
+                    const onMouseMove = (moveEvent: MouseEvent) => {
+                      handleResize(col, Math.max(50, startWidth + (moveEvent.pageX - startX)));
+                    };
+                    const onMouseUp = () => {
+                      window.removeEventListener('mousemove', onMouseMove);
+                      window.removeEventListener('mouseup', onMouseUp);
+                    };
+                    window.addEventListener('mousemove', onMouseMove);
+                    window.addEventListener('mouseup', onMouseUp);
+                  }}
                 />
               </div>
-              {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => (
-                <div 
-                  key={col}
-                  draggable={idx >= 3}
-                  onDragStart={() => handleColDragStart(columns.indexOf(col))}
-                  onDragOver={(e) => handleColDragOver(e, columns.indexOf(col))}
-                  className={cn(
-                    "border-r border-slate-200 h-full flex items-center px-4 relative group/col text-[11px] font-bold text-muted-foreground shrink-0 py-4 transition-colors",
-                    idx < 3 && "sticky z-40 bg-white border-blue-100 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]",
-                    idx === 0 && "left-[40px]",
-                    idx === 1 && "left-[120px]",
-                    idx === 2 && "left-[190px]",
-                  )}
-                  style={{ width: colWidths[col] || 160 }}
-                >
-                  <div className="flex-1 truncate cursor-pointer flex items-center gap-2" onClick={() => handleSort(col)}>
-                    {formatHeader(col)}
-                    {sortConfig.key === col && sortConfig.direction && (
-                      sortConfig.direction === 'asc' ? <ChevronUp className="h-3 w-3 text-blue-500" /> : <ChevronDown className="h-3 w-3 text-blue-500" />
-                    )}
-                  </div>
-                  <div 
-                    className="absolute right-0 top-0 w-1 h-full cursor-col-resize hover:bg-blue-500 opacity-0 group-hover/col:opacity-100 transition-opacity"
-                    onMouseDown={(e) => {
-                      const startX = e.pageX;
-                      const startWidth = colWidths[col] || 160;
-                      const onMouseMove = (moveEvent: MouseEvent) => {
-                        handleResize(col, Math.max(50, startWidth + (moveEvent.pageX - startX)));
-                      };
-                      const onMouseUp = () => {
-                        window.removeEventListener('mousemove', onMouseMove);
-                        window.removeEventListener('mouseup', onMouseUp);
-                      };
-                      window.addEventListener('mousemove', onMouseMove);
-                      window.addEventListener('mouseup', onMouseUp);
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
-          <div 
-            className="flex-1 overflow-auto divide-y divide-slate-200 no-scrollbar" 
-            data-testid="list-contacts"
-            onScroll={(e) => {
-              const header = document.getElementById('table-header-scroll');
-              if (header) header.scrollLeft = (e.target as HTMLDivElement).scrollLeft;
-            }}
-          >
-            <div className="w-max">
-              {loading && rows.length === 0 ? (
-                <div className="h-96 text-center flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/40" /></div>
-              ) : (
-                finalRows.map((row) => {
-                  const accountColor = getAccountColor(row.Id);
-                  const isSelected = selectedIds.includes(row.Id);
-                  return (
-                    <div 
-                      key={row.Id} 
-                      id={`row-${row.Id}`}
-                      className={cn(
-                        "flex items-center group transition-all duration-200 h-12 bg-white hover:bg-slate-50/50",
-                        isSelected && "bg-blue-50/80"
-                      )}
-                    >
-                      <div className="w-[40px] flex justify-center border-r border-slate-200 shrink-0 h-full items-center sticky left-0 z-10 bg-inherit">
-                        <Checkbox 
-                          checked={isSelected} 
-                          onCheckedChange={() => toggleSelect(row.Id)} 
-                          className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 cursor-pointer"
-                        />
-                      </div>
-                      
-                      {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => (
-                        <div 
-                          key={col}
-                          className={cn(
-                            "px-4 border-r border-slate-200 h-full flex items-center shrink-0 transition-colors",
-                            idx < 3 && "sticky z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]",
-                            idx === 0 && "left-[40px]",
-                            idx === 1 && "left-[120px]",
-                            idx === 2 && "left-[190px]",
-                            idx < 3 ? "bg-inherit" : "",
-                            isSelected && col === "name" && "text-blue-700"
-                          )}
-                          style={{ width: colWidths[col] || 160 }}
-                        >
-                          {col === "Id" ? (
-                            <span className="text-xs font-mono font-bold text-slate-400">#{row.Id}</span>
-                          ) : col === "Img" ? (
-                            <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm border border-slate-100 shrink-0", accountColor.bg, accountColor.text)}>
-                              {getInitials(row.name || "")}
-                            </div>
-                          ) : col === "status" ? (
-                            <select
-                              value={row.status}
-                              onChange={(e) => handleInlineUpdate(row.Id, "status", e.target.value)}
-                              className={cn(
-                                "h-7 w-full font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none appearance-none cursor-pointer text-center",
-                                statusColors[row.status]?.bg || "bg-muted/10",
-                                statusColors[row.status]?.text || "text-muted-foreground",
-                                statusColors[row.status]?.border || "border-border"
-                              )}
-                            >
-                              {STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                            </select>
-                          ) : col === "type" ? (
-                            <select
-                              value={row.type}
-                              onChange={(e) => handleInlineUpdate(row.Id, "type", e.target.value)}
-                              className={cn(
-                                "h-7 w-full font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none appearance-none cursor-pointer text-center",
-                                getTypeColor(row.type)
-                              )}
-                            >
-                              {TYPE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                            </select>
-                          ) : col.toLowerCase().includes('time') || col.toLowerCase().includes('at') || col === 'CreatedAt' || col === 'UpdatedAt' ? (
-                            <div className="text-[11px] font-medium truncate">
-                              {formatDate(row[col])}
-                            </div>
-                          ) : (
-                            <input 
-                              type="text"
-                              value={row[col] || ""}
-                              readOnly={NON_EDITABLE_FIELDS.includes(col)}
-                              onChange={(e) => setRows(prev => prev.map(r => r.Id === row.Id ? { ...r, [col]: e.target.value } : r))}
-                              onBlur={(e) => handleInlineUpdate(row.Id, col, e.target.value)}
-                              className={cn(
-                                "bg-transparent border-none focus:ring-0 w-full text-[11px] p-0 h-auto focus:bg-white focus:px-2 focus:py-1 focus:rounded focus:shadow-sm transition-all truncate",
-                                col === "name" ? "font-bold text-slate-900 text-[13px]" : "font-medium text-slate-700",
-                                isSelected && col === "name" && "text-blue-700"
-                              )}
-                            />
-                          )}
-                        </div>
-                      ))}
+          <div className="flex-1 overflow-auto divide-y divide-slate-200" data-testid="list-contacts">
+            {loading && rows.length === 0 ? (
+              <div className="h-96 text-center flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/40" /></div>
+            ) : (
+              finalRows.map((row) => {
+                const accountColor = getAccountColor(row.Id);
+                const isSelected = selectedIds.includes(row.Id);
+                return (
+                  <div 
+                    key={row.Id} 
+                    id={`row-${row.Id}`}
+                    className={cn(
+                      "flex items-center group transition-all duration-200 h-12 bg-white hover:bg-slate-50/50",
+                      isSelected && "bg-blue-50/80"
+                    )}
+                  >
+                    <div className="w-[40px] flex justify-center border-r border-slate-200 shrink-0 h-full items-center">
+                      <Checkbox 
+                        checked={isSelected} 
+                        onCheckedChange={() => toggleSelect(row.Id)} 
+                        className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 cursor-pointer"
+                      />
                     </div>
-                  );
-                })
-              )}
-            </div>
+                    
+                    {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => (
+                      <div 
+                        key={col}
+                        className={cn(
+                          "px-4 border-r border-slate-200 h-full flex items-center shrink-0 transition-colors",
+                          idx < 3 && "sticky z-10",
+                          idx === 0 && "left-0",
+                          idx === 1 && "left-[80px]",
+                          idx === 2 && "left-[140px]",
+                          isSelected ? "bg-blue-50/80" : (idx < 3 ? "bg-white group-hover:bg-slate-50/50" : ""),
+                          isSelected && col === "name" && "text-blue-700"
+                        )}
+                        style={{ width: colWidths[col] || 160 }}
+                      >
+                        {col === "Id" ? (
+                          <span className="text-xs font-mono font-bold text-slate-400">#{row.Id}</span>
+                        ) : col === "Image" ? (
+                          <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm border border-slate-100", accountColor.bg, accountColor.text)}>
+                            {getInitials(row.name || "")}
+                          </div>
+                        ) : col === "status" ? (
+                          <select
+                            value={row.status}
+                            onChange={(e) => handleInlineUpdate(row.Id, "status", e.target.value)}
+                            className={cn(
+                              "h-7 w-full font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none appearance-none cursor-pointer text-center",
+                              statusColors[row.status]?.bg || "bg-muted/10",
+                              statusColors[row.status]?.text || "text-muted-foreground",
+                              statusColors[row.status]?.border || "border-border"
+                            )}
+                          >
+                            {STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                          </select>
+                        ) : col === "type" ? (
+                          <select
+                            value={row.type}
+                            onChange={(e) => handleInlineUpdate(row.Id, "type", e.target.value)}
+                            className={cn(
+                              "h-7 w-full font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none appearance-none cursor-pointer text-center",
+                              getTypeColor(row.type)
+                            )}
+                          >
+                            {TYPE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                          </select>
+                        ) : col.toLowerCase().includes('time') || col.toLowerCase().includes('at') || col === 'CreatedAt' || col === 'UpdatedAt' ? (
+                          <div className="text-[11px] font-medium truncate">
+                            {formatDate(row[col])}
+                          </div>
+                        ) : (
+                          <input 
+                            type="text"
+                            value={row[col] || ""}
+                            readOnly={NON_EDITABLE_FIELDS.includes(col)}
+                            onChange={(e) => setRows(prev => prev.map(r => r.Id === row.Id ? { ...r, [col]: e.target.value } : r))}
+                            onBlur={(e) => handleInlineUpdate(row.Id, col, e.target.value)}
+                            className={cn(
+                              "bg-transparent border-none focus:ring-0 w-full text-[11px] p-0 h-auto focus:bg-white focus:px-2 focus:py-1 focus:rounded focus:shadow-sm transition-all truncate",
+                              col === "name" ? "font-bold text-slate-900 text-[13px]" : "font-medium text-slate-700",
+                              isSelected && col === "name" && "text-blue-700"
+                            )}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
