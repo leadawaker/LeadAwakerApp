@@ -287,7 +287,7 @@ export default function Accounts() {
         if (allKeys.includes("timezone")) ordered.push("timezone");
         allKeys.forEach(k => { if (!ordered.includes(k) && !techCols.includes(k) && !["created_at", "updated_at", "Created Time", "Last Modified Time", "Id", "Account ID"].includes(k)) ordered.push(k); });
         techCols.forEach(k => { if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k); });
-        const middleCols = ["number of leads", "number of campaigns", "Leads", "Campaigns", "Interactions", "Users", "Prompt Libraries", "Tags", "Automation Logs"];
+        const middleCols = ["Leads", "Campaigns", "Automation Logs", "Users", "Prompt Libraries", "Tags"];
         middleCols.forEach(k => { if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k); });
         ["Created Time", "Last Modified Time"].forEach(k => { if (allKeys.includes(k)) ordered.push(k); });
         
@@ -517,7 +517,22 @@ export default function Accounts() {
     if (!dateStr) return "-";
     try {
       const date = new Date(dateStr);
-      if (isNaN(date.getTime())) return dateStr;
+      if (isNaN(date.getTime())) {
+        // Handle business hours format HH:mm:ss -> HH:mm
+        if (typeof dateStr === 'string' && dateStr.includes(':')) {
+          const parts = dateStr.split(':');
+          if (parts.length >= 2) return `${parts[0]}:${parts[1]}`;
+        }
+        return dateStr;
+      }
+
+      // Check if it's a date or just time
+      const isOnlyTime = typeof dateStr === 'string' && dateStr.length <= 8 && dateStr.includes(':');
+      if (isOnlyTime) {
+        const hours = date.getHours().toString().padStart(2, "0");
+        const minutes = date.getMinutes().toString().padStart(2, "0");
+        return `${hours}:${minutes}`;
+      }
 
       const day = date.getDate().toString().padStart(2, "0");
       const months = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
@@ -915,6 +930,36 @@ export default function Accounts() {
                                 </SelectTrigger>
                                 <SelectContent>{STATUS_OPTIONS.map(o => <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">{o}</SelectItem>)}</SelectContent>
                               </Select>
+                            ) : ["Leads", "Campaigns", "Automation Logs", "Users", "Prompt Libraries", "Tags"].includes(col) ? (
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <div className="cursor-pointer hover:bg-slate-100 p-1 rounded transition-colors w-full">
+                                    <Badge variant="secondary" className="font-normal">
+                                      {row[col] ? (Array.isArray(row[col]) ? row[col].length : 1) : 0} {col.toLowerCase()}
+                                    </Badge>
+                                  </div>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-64 p-2">
+                                  <div className="space-y-2">
+                                    <h4 className="font-medium text-sm border-b pb-1">{col}</h4>
+                                    <div className="text-xs text-muted-foreground">
+                                      {row[col] ? (
+                                        <ul className="list-disc list-inside">
+                                          {Array.isArray(row[col]) ? (
+                                            row[col].map((item: any, i: number) => (
+                                              <li key={i}>{typeof item === 'object' ? (item.Name || item.title || JSON.stringify(item)) : String(item)}</li>
+                                            ))
+                                          ) : (
+                                            <li>{String(row[col])}</li>
+                                          )}
+                                        </ul>
+                                      ) : (
+                                        <p>No {col.toLowerCase()} connected to this account ID</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
                             ) : col === "type" ? (
                               <Badge variant="outline" className={cn("font-bold uppercase tracking-wider text-[9px] border-none shadow-none", row[col]?.toLowerCase() === 'agency' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700')}>
                                 {row[col] || "Unknown"}
