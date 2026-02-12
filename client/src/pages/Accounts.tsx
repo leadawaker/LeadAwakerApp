@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -381,39 +381,6 @@ export default function Accounts() {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
-  const getAccountColor = (id: number) => {
-    const initialsColors = [
-      { text: "text-[#1a3a6f]", bg: "bg-[#1a3a6f]/10" },
-      { text: "text-[#2d5aa8]", bg: "bg-[#2d5aa8]/10" },
-      { text: "text-[#1E90FF]", bg: "bg-[#1E90FF]/10" },
-      { text: "text-[#17A398]", bg: "bg-[#17A398]/10" },
-      { text: "text-[#10b981]", bg: "bg-[#10b981]/10" },
-      { text: "text-[#ca8a04]", bg: "bg-[#facc15]/20" },
-    ];
-    return initialsColors[id % initialsColors.length];
-  };
-
-  const statusColors: Record<string, { text: string, bg: string, border: string }> = {
-    "Active": { text: "text-[#10b981]", bg: "bg-[#10b981]/10", border: "border-[#10b981]/20" },
-    "Inactive": { text: "text-[#ef4444]", bg: "bg-[#ef4444]/10", border: "border-[#ef4444]/20" },
-    "Trial": { text: "text-[#1E90FF]", bg: "bg-[#1E90FF]/10", border: "border-[#1E90FF]/20" },
-    "Suspended": { text: "text-[#ef4444]", bg: "bg-[#ef4444]/10", border: "border-[#ef4444]/20" },
-    "Unknown": { text: "text-muted-foreground", bg: "bg-muted/10", border: "border-border" },
-  };
-
-  const getStatusColor = (status: string) => {
-    const info = statusColors[status] || statusColors["Unknown"];
-    return `${info.bg} ${info.text} ${info.border}`;
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type?.toLowerCase()) {
-      case 'agency': return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
-      case 'client': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-      default: return 'bg-primary/10 text-primary border-primary/20';
-    }
-  };
-
   const getInitials = (name: string) => {
     if (!name) return "?";
     const parts = name.split(' ');
@@ -439,10 +406,6 @@ export default function Accounts() {
     { text: "text-[#ca8a04]", bg: "bg-[#facc15]/20", dot: "bg-[#facc15]" },
   ];
 
-  const getAccountColor = (id: number) => {
-    return initialsColors[id % initialsColors.length];
-  };
-
   const statusColors: Record<string, { text: string, bg: string, border: string, dot: string }> = {
     "Active": { text: "text-[#10b981]", bg: "bg-[#10b981]/10", border: "border-[#10b981]/20", dot: "bg-[#10b981]" },
     "Inactive": { text: "text-[#ef4444]", bg: "bg-[#ef4444]/10", border: "border-[#ef4444]/20", dot: "bg-[#ef4444]" },
@@ -451,9 +414,21 @@ export default function Accounts() {
     "Unknown": { text: "text-muted-foreground", bg: "bg-muted/10", border: "border-border", dot: "bg-slate-400" },
   };
 
+  const getAccountColor = (id: number) => {
+    return initialsColors[id % initialsColors.length];
+  };
+
   const getStatusColor = (status: string) => {
     const info = statusColors[status] || statusColors["Unknown"];
     return `${info.bg} ${info.text} ${info.border}`;
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type?.toLowerCase()) {
+      case 'agency': return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
+      case 'client': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+      default: return 'bg-primary/10 text-primary border-primary/20';
+    }
   };
 
   const handleResize = (col: string, width: number) => { 
