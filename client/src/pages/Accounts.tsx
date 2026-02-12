@@ -1,14 +1,13 @@
 import { useEffect, useState, useRef, useMemo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
-  Loader2, Plus, RefreshCw, Save, X, Edit2, Trash2, AlertCircle, Eye, 
-  GripVertical, Building2, LayoutGrid, Filter, ChevronUp, ChevronDown,
-  MoreVertical, Settings, Globe, Phone, Mail, FileText, Calendar as CalendarIcon,
-  Briefcase, Hash, Link as LinkIcon, User, Tag, Activity, Clock, Shield,
-  Database, Server, Bell, Zap, MoreHorizontal
+  Plus, RefreshCw, Save, Eye, 
+  Building2, LayoutGrid, Filter, ChevronUp, ChevronDown,
+  Globe, Phone, Mail, FileText, Clock, 
+  Briefcase, Hash, Link as LinkIcon, User, Tag, Activity,
+  Database, Zap, MoreHorizontal
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,7 +32,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -41,12 +39,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { 
   DropdownMenu, 
@@ -60,7 +52,6 @@ import {
   DropdownMenuRadioItem
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface Row {
   Id: number;
@@ -164,7 +155,12 @@ export default function Accounts() {
     const saved = localStorage.getItem("accounts_col_widths");
     return saved ? JSON.parse(saved) : {};
   });
-  const [statusFilter, setStatusFilter] = useState<string>("All");
+
+  const [activeView, setActiveView] = useState("Default View");
+  const VIEWS = ["Default View", "Sales Pipeline", "Customer Success", "Admin Dashboard"];
+
+  const [filterConfig, setFilterConfig] = useState<Record<string, string>>({});
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [groupBy, setGroupBy] = useState<string>("Type");
   const [rowSpacing, setRowSpacing] = useState<"tight" | "medium" | "spacious">("medium");
   const [showVerticalLines, setShowVerticalLines] = useState(true);
@@ -179,7 +175,16 @@ export default function Accounts() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const filteredRows = statusFilter === "All" ? rows : rows.filter(r => r.status === statusFilter);
+  const finalFilteredRows = useMemo(() => {
+    return rows.filter(row => {
+      const matchesFilter = Object.entries(filterConfig).every(([col, val]) => {
+        if (!val) return true;
+        return String(row[col] || "").toLowerCase().includes(val.toLowerCase());
+      });
+      const matchesSearch = !searchTerm || Object.values(row).some(v => String(v).toLowerCase().includes(searchTerm.toLowerCase()));
+      return matchesFilter && matchesSearch;
+    });
+  }, [rows, filterConfig, searchTerm]);
 
   const handleSort = (key: string) => {
     setSortConfig(prev => {
@@ -195,8 +200,8 @@ export default function Accounts() {
   };
 
   const sortedRows = useMemo(() => {
-    if (!sortConfig.direction || !sortConfig.key) return [...filteredRows];
-    return [...filteredRows].sort((a, b) => {
+    if (!sortConfig.direction || !sortConfig.key) return [...finalFilteredRows];
+    return [...finalFilteredRows].sort((a, b) => {
       const aVal = a[sortConfig.key];
       const bVal = b[sortConfig.key];
       if (aVal === bVal) return 0;
@@ -211,23 +216,19 @@ export default function Accounts() {
       }
       return sortConfig.direction === 'asc' ? comparison : -comparison;
     });
-  }, [filteredRows, sortConfig]);
-
-  const finalRows = searchTerm 
-    ? sortedRows.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(searchTerm.toLowerCase()))) 
-    : sortedRows;
+  }, [finalFilteredRows, sortConfig]);
 
   const groupedRows = useMemo(() => {
-    if (groupBy === "None") return { "All": finalRows };
+    if (groupBy === "None") return { "All": sortedRows };
     const groups: Record<string, Row[]> = {};
     const field = groupBy.toLowerCase();
-    finalRows.forEach(row => {
+    sortedRows.forEach(row => {
       const val = row[field] || "Unknown";
       if (!groups[val]) groups[val] = [];
       groups[val].push(row);
     });
     return groups;
-  }, [finalRows, groupBy]);
+  }, [sortedRows, groupBy]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -306,7 +307,6 @@ export default function Accounts() {
     if (NON_EDITABLE_FIELDS.includes(col)) return;
     const cleanValue = value === null || value === undefined ? "" : value;
     
-    // Bulk apply if current row is selected
     const idsToUpdate = selectedIds.includes(rowId) ? selectedIds : [rowId];
     
     setRows(prev => prev.map(r => idsToUpdate.includes(r.Id) ? { ...r, [col]: cleanValue } : r));
@@ -372,8 +372,8 @@ export default function Accounts() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.length === rows.length) setSelectedIds([]);
-    else setSelectedIds(rows.map(r => r.Id));
+    if (selectedIds.length === sortedRows.length) setSelectedIds([]);
+    else setSelectedIds(sortedRows.map(r => r.Id));
   };
 
   const toggleSelect = (id: number) => {
@@ -386,15 +386,6 @@ export default function Accounts() {
     if (parts.length >= 2) return (parts[0][0] + (parts[1] ? parts[1][0] : parts[0][1] || "")).toUpperCase();
     return (name[0] + (name[1] || name[0])).toUpperCase().slice(0, 2);
   };
-
-  const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = { All: rows.length };
-    rows.forEach(r => {
-      const s = r.status || "Unknown";
-      counts[s] = (counts[s] || 0) + 1;
-    });
-    return counts;
-  }, [rows]);
 
   const initialsColors = [
     { text: "text-[#1a3a6f]", bg: "bg-[#1a3a6f]/10", dot: "bg-[#1a3a6f]" },
@@ -417,7 +408,7 @@ export default function Accounts() {
 
   const handleExportCSV = () => {
     const headers = columns.filter(c => visibleColumns.includes(c));
-    const csvRows = filteredRows.map(row => headers.map(header => JSON.stringify(row[header] || "")).join(","));
+    const csvRows = sortedRows.map(row => headers.map(header => JSON.stringify(row[header] || "")).join(","));
     const csvContent = [headers.join(","), ...csvRows].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
@@ -567,7 +558,8 @@ export default function Accounts() {
     const startWidth = colWidths[col] || 180;
 
     const onMouseMove = (moveEvent: MouseEvent) => {
-      const newWidth = Math.max(50, startWidth + (moveEvent.pageX - startX));
+      const delta = moveEvent.pageX - startX;
+      const newWidth = Math.max(50, startWidth + delta);
       setColWidths(prev => {
         const updated = { ...prev, [col]: newWidth };
         localStorage.setItem("accounts_col_widths", JSON.stringify(updated));
@@ -576,16 +568,18 @@ export default function Accounts() {
     };
 
     const onMouseUp = () => {
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      document.body.style.cursor = 'default';
     };
 
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
+    document.body.style.cursor = 'col-resize';
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
   };
 
   return (
-    <div className="w-full h-full bg-[#f8fafc] pb-12 px-4 overflow-y-auto pt-4">
+    <div className="w-full h-full pb-12 px-4 overflow-y-auto pt-4 bg-white">
       <div className="w-full mx-auto space-y-6">
         <div className="flex items-center gap-3">
           <Button variant="outline" className="h-10 w-10 p-0 rounded-xl bg-white border-slate-200 shadow-none" onClick={fetchData}>
@@ -611,20 +605,52 @@ export default function Accounts() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
 
-          <div className="relative">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white shadow-none border-slate-200 pl-10 pr-4 font-bold">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All Statuses</SelectItem>
-                {STATUS_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <div className="absolute left-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600 border border-slate-200 pointer-events-none">
-              {statusCounts[statusFilter] || 0}
-            </div>
-          </div>
+          <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none relative">
+                <Filter className="h-4 w-4" />
+                <span>Filter</span>
+                {Object.values(filterConfig).filter(Boolean).length > 0 && (
+                  <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-blue-600">
+                    {Object.values(filterConfig).filter(Boolean).length}
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-4">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold">Filters</h4>
+                  <Button variant="ghost" size="sm" onClick={() => setFilterConfig({})} className="h-8 text-xs">Clear all</Button>
+                </div>
+                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                  {columns.map(col => (
+                    <div key={col} className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-slate-500">{col}</label>
+                      <Input 
+                        placeholder={`Filter ${col}...`}
+                        className="h-8 text-sm"
+                        value={filterConfig[col] || ""}
+                        onChange={(e) => setFilterConfig(prev => ({ ...prev, [col]: e.target.value }))}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Select value={activeView} onValueChange={setActiveView}>
+            <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white shadow-none border-slate-200 font-bold">
+              <div className="flex items-center gap-2">
+                <LayoutGrid className="h-4 w-4" />
+                <span>{activeView}</span>
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              {VIEWS.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
 
           <Select value={groupBy} onValueChange={setGroupBy}>
             <SelectTrigger className="w-[160px] h-10 rounded-xl bg-white shadow-none border-slate-200 font-bold">
@@ -742,7 +768,7 @@ export default function Accounts() {
             <div key={groupName} className="space-y-2">
               <div className="flex items-center justify-between px-2">
                 <h2 className="text-sm font-bold text-slate-800 uppercase tracking-tight">
-                  {groupBy === "None" ? "All Accounts" : groupName}
+                  {groupBy === "None" ? `ALL ACCOUNTS - ${groupRows.length}` : `${groupName.toUpperCase()} - ${groupRows.length}`}
                 </h2>
                 {groupBy !== "None" && (
                   <Badge variant="outline" className={cn("font-bold uppercase tracking-wider text-[10px] px-2 py-0.5", getGroupColor(groupName))}>
@@ -754,7 +780,7 @@ export default function Accounts() {
                 <Table>
                   <TableHeader className="bg-slate-50/50">
                     <TableRow className="hover:bg-transparent border-b border-slate-200">
-                      <TableHead className="w-[40px] px-4"><Checkbox checked={selectedIds.length === rows.length} onCheckedChange={toggleSelectAll} /></TableHead>
+                      <TableHead className="w-[40px] px-4"><Checkbox checked={selectedIds.length === sortedRows.length} onCheckedChange={toggleSelectAll} /></TableHead>
                       {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => (
                         <TableHead key={col} className={cn(
                           "px-4 text-[11px] font-black uppercase text-slate-500 tracking-wider relative group/head",
@@ -762,7 +788,7 @@ export default function Accounts() {
                         )} style={{ width: colWidths[col] }}>
                           {formatHeader(col, idx)}
                           <div 
-                            className="absolute right-[-2px] top-0 bottom-0 w-[4px] cursor-col-resize hover:bg-blue-400/50 active:bg-blue-500 z-10"
+                            className="absolute right-[-4px] top-0 bottom-0 w-[8px] cursor-col-resize hover:bg-blue-400/50 active:bg-blue-500 z-10"
                             onMouseDown={(e) => handleResize(col, e)}
                           />
                         </TableHead>
