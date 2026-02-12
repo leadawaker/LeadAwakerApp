@@ -58,6 +58,19 @@ interface Row {
   [key: string]: any;
 }
 
+
+const TruncatedCell = ({ value }: { value: any }) => {
+  const text = value ? String(value) : "";
+
+  return (
+    <div
+      className="truncate w-full"
+      title={text}
+    >
+      {text}
+    </div>
+  );
+};
 const TABLE_ID = "m8hflvkkfj25aio";
 const NOCODB_BASE_URL = "https://api-leadawaker.netlify.app/.netlify/functions/api";
 
@@ -488,7 +501,9 @@ export default function Accounts() {
         }}
       >
         <span className="text-slate-400 group-hover:text-blue-500 transition-colors">{getIconForField(col)}</span>
-        <span className="font-semibold whitespace-nowrap">{title}</span>
+        <div className="truncate" title={title}>
+          {title}
+        </div>
         {sortConfig.key === col && (
           <span className="text-blue-500 ml-auto">
             {sortConfig.direction === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -503,18 +518,27 @@ export default function Accounts() {
     try {
       const date = new Date(dateStr);
       if (isNaN(date.getTime())) return dateStr;
-      const day = date.getDate().toString().padStart(2, '0');
-      const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+
+      const day = date.getDate().toString().padStart(2, "0");
+      const months = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
       const month = months[date.getMonth()];
       const year = date.getFullYear().toString().slice(-2);
-      const hours = date.getHours().toString().padStart(2, '0');
-      const minutes = date.getMinutes().toString().padStart(2, '0');
+      const hours = date.getHours().toString().padStart(2, "0");
+      const minutes = date.getMinutes().toString().padStart(2, "0");
+
+      const today = new Date();
+      const isToday = date.getDate() === today.getDate() &&
+                      date.getMonth() === today.getMonth() &&
+                      date.getFullYear() === today.getFullYear();
+
       return (
-        <span className="text-blue-500 font-bold">
-          {day}/{month}/{year}    {hours}:{minutes}
+        <span className={isToday ? "text-blue-500 font-bold" : "text-slate-400"}>
+          {day}/{month}/{year} {hours}:{minutes}
         </span>
       );
-    } catch (e) { return dateStr; }
+    } catch (e) {
+      return dateStr;
+    }
   };
 
   const rowPadding = {
@@ -579,7 +603,7 @@ export default function Accounts() {
   };
 
   return (
-    <div className="w-full h-full pb-12 px-4 overflow-y-auto pt-4 bg-white">
+    <div className="w-full h-full overflow-y-auto">
       <div className="w-full mx-auto space-y-6">
         <div className="flex items-center gap-3">
           <Button variant="outline" className="h-10 w-10 p-0 rounded-xl bg-white border-slate-200 shadow-none" onClick={fetchData}>
@@ -777,15 +801,19 @@ export default function Accounts() {
                 )}
               </div>
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <Table>
+                <Table className="table-fixed w-full">
                   <TableHeader className="bg-slate-50/50">
                     <TableRow className="hover:bg-transparent border-b border-slate-200">
                       <TableHead className="w-[40px] px-4"><Checkbox checked={selectedIds.length === sortedRows.length} onCheckedChange={toggleSelectAll} /></TableHead>
                       {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => (
-                        <TableHead key={col} className={cn(
-                          "px-4 text-[11px] font-black uppercase text-slate-500 tracking-wider relative group/head",
-                          showVerticalLines && idx < visibleColumns.length - 1 && "border-r border-slate-100"
-                        )} style={{ width: colWidths[col] }}>
+                          <TableHead
+                            key={col}
+                            style={{ width: colWidths[col] }}
+                            className={cn(
+                              "relative px-4 text-[11px] font-black uppercase text-slate-500 tracking-wider overflow-hidden whitespace-nowrap text-ellipsis",
+                              showVerticalLines && idx < visibleColumns.length - 1 && "border-r border-slate-100"
+                            )}
+                          >
                           {formatHeader(col, idx)}
                           <div 
                             className="absolute right-[-4px] top-0 bottom-0 w-[8px] cursor-col-resize hover:bg-blue-400/50 active:bg-blue-500 z-10"
@@ -803,11 +831,15 @@ export default function Accounts() {
                       )}>
                         <TableCell className="px-4"><Checkbox checked={selectedIds.includes(row.Id)} onCheckedChange={() => toggleSelect(row.Id)} /></TableCell>
                         {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => (
-                          <TableCell key={col} className={cn(
-                            "px-4 font-medium text-slate-600 transition-all",
-                            rowPadding,
-                            showVerticalLines && idx < visibleColumns.length - 1 && "border-r border-slate-50"
-                          )}>
+                            <TableCell
+                              key={col}
+                              style={{ width: colWidths[col] }}
+                              className={cn(
+                                "px-4 font-medium text-slate-600 transition-all overflow-hidden whitespace-nowrap text-ellipsis",
+                                rowPadding,
+                                showVerticalLines && idx < visibleColumns.length - 1 && "border-r border-slate-50"
+                              )}
+                            >
                             {col === "Image" || col === "ACC" ? (
                               <Sheet>
                                 <SheetTrigger asChild>
@@ -898,12 +930,12 @@ export default function Accounts() {
                                 <SelectContent>{TIMEZONE_OPTIONS.map(o => <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">{o}</SelectItem>)}</SelectContent>
                               </Select>
                             ) : ["Created Time", "Last Modified Time", "CreatedAt", "UpdatedAt", "created_at", "updated_at"].includes(col) ? (
-                              formatDate(row[col])
+                              <TruncatedCell value={formatDate(row[col])} />
                             ) : (
                               <Input 
                                 defaultValue={row[col] || ""} 
                                 onBlur={(e) => handleInlineUpdate(row.Id, col, e.target.value)}
-                                className="h-8 border-none bg-transparent shadow-none hover:bg-slate-100/50 transition-colors focus:bg-white focus:ring-1 focus:ring-blue-200 px-2 text-sm"
+                                className="h-8 border-none bg-transparent shadow-none hover:bg-slate-100/50 transition-colors focus:bg-white focus:ring-1 focus:ring-blue-200 px-2 text-sm w-full truncate"
                               />
                             )}
                           </TableCell>
