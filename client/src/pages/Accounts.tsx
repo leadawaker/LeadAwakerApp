@@ -293,13 +293,11 @@ export default function Accounts() {
 
     try {
       for (const id of idsToUpdate) {
-        const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records/${id}`, {
+        await fetch(`${NOCODB_BASE_URL}?tableId=${TABLE_ID}&id=${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ [col]: cleanValue }),
         });
-
-        if (!res.ok) throw new Error("Update failed");
       }
       toast({ title: "Updated", description: "Changes saved to database." });
     } catch (err) {
@@ -311,11 +309,9 @@ export default function Accounts() {
     try {
       setLoading(true);
       for (const id of selectedIds) {
-        const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records/${id}`, {
+        await fetch(`${NOCODB_BASE_URL}?tableId=${TABLE_ID}&id=${id}`, {
           method: "DELETE",
         });
-
-        if (!res.ok) throw new Error("Delete failed");
       }
       toast({ title: "Deleted", description: `Successfully deleted ${selectedIds.length} records.` });
       setSelectedIds([]);
@@ -332,12 +328,11 @@ export default function Accounts() {
     try {
       const cleanData: any = {};
       Object.keys(newRowData).forEach(key => { if (!NON_EDITABLE_FIELDS.includes(key) && !HIDDEN_FIELDS.includes(key)) cleanData[key] = newRowData[key]; });
-      const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
+      await fetch(`${NOCODB_BASE_URL}?tableId=${TABLE_ID}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fields: cleanData }),
+        body: JSON.stringify(cleanData),
       });
-      if (!res.ok) throw new Error("Creation failed");
       toast({ title: "Success", description: "New account created." });
       setIsCreateOpen(false);
       setNewRowData({});
