@@ -299,7 +299,12 @@ export default function Accounts() {
         body: JSON.stringify({ [col]: cleanValue }),
       });
 
-      if (!res.ok) throw new Error("Update failed");
+      if (!res.ok) {
+        // Log error for debugging if needed but try to handle it gracefully
+        const errorText = await res.text();
+        console.error("Update failed:", res.status, errorText);
+        throw new Error("Update failed");
+      }
       toast({ title: "Updated", description: "Changes saved to database." });
     } catch (err) {
       toast({ variant: "destructive", title: "Sync Error", description: "Failed to save to database." });
