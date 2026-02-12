@@ -124,6 +124,15 @@ const initialsColors = [
   { text: "text-[#ca8a04]", bg: "bg-[#facc15]/20", dot: "bg-[#facc15]" },
 ];
 
+const getInitials = (name: string) => {
+  if (!name) return "?";
+  const parts = name.split(" ");
+  if (parts.length >= 2) return (parts[0][0] + (parts[1] ? parts[1][0] : parts[0][1] || "")).toUpperCase();
+  return (name[0] + (name[1] || name[0])).toUpperCase().slice(0, 2);
+};
+
+const getAccountColor = (id: number) => initialsColors[id % initialsColors.length];
+
 const statusColors: Record<string, { text: string; bg: string; border: string; dot: string }> = {
   Active: { text: "text-[#10b981]", bg: "bg-[#10b981]/10", border: "border-[#10b981]/20", dot: "bg-[#10b981]" },
   Inactive: { text: "text-[#ef4444]", bg: "bg-[#ef4444]/10", border: "border-[#ef4444]/20", dot: "bg-[#ef4444]" },
@@ -592,215 +601,211 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(prop
                   </TableRow>
                 </TableHeader>
 
-              <TableBody>
-                {groupRows.map((row: any) => (
-                  <TableRow
-                    key={row.Id}
-                    id={`row-${row.Id}`}
-                    className={cn(
-                      "group hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0",
-                      selectedIds.includes(row.Id) && "bg-blue-50/30 hover:bg-blue-50/50",
-                    )}
-                  >
-                    <TableCell className="px-4">
-                      <Checkbox checked={selectedIds.includes(row.Id)} onCheckedChange={() => toggleSelect(row.Id)} />
-                    </TableCell>
+                <TableBody>
+                  {groupRows.map((row: any) => (
+                    <TableRow
+                      key={row.Id}
+                      id={`row-${row.Id}`}
+                      className={cn(
+                        "group hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0",
+                        selectedIds.includes(row.Id) && "bg-blue-50/30 hover:bg-blue-50/50",
+                      )}
+                    >
+                      <TableCell className="px-4">
+                        <Checkbox checked={selectedIds.includes(row.Id)} onCheckedChange={() => toggleSelect(row.Id)} />
+                      </TableCell>
 
-                    {visibleCols.map((col, idx) => (
-                      <TableCell
-                        key={col}
-                        style={{ width: colWidths[col] }}
-                        className={cn(
-                          "px-4 font-medium text-slate-600 transition-all overflow-hidden",
-                          rowPadding,
-                          showVerticalLines && idx < visibleCols.length - 1 && "border-r border-slate-50",
-                        )}
-                      >
-                        {col === "Image" || col === "ACC" ? (
-                          <Sheet>
-                            <SheetTrigger asChild>
-                              <div
+                      {visibleCols.map((col, idx) => (
+                        <TableCell
+                          key={col}
+                          style={{ width: colWidths[col] }}
+                          className={cn(
+                            "px-4 font-medium text-slate-600 transition-all overflow-hidden",
+                            rowPadding,
+                            showVerticalLines && idx < visibleCols.length - 1 && "border-r border-slate-50",
+                          )}
+                        >
+                          {col === "Image" || col === "ACC" ? (
+                            <Sheet>
+                              <SheetTrigger asChild>
+                                <div
+                                  className={cn(
+                                    "w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer transition-transform hover:scale-110",
+                                    getAccountColor(row.Id).bg,
+                                    getAccountColor(row.Id).text,
+                                  )}
+                                >
+                                  {getInitials(row.name)}
+                                </div>
+                              </SheetTrigger>
+
+                              <SheetContent className="sm:max-w-lg w-[400px]">
+                                <SheetHeader className="border-b pb-6">
+                                  <div className="flex items-center gap-4">
+                                    <div
+                                      className={cn(
+                                        "w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold",
+                                        getAccountColor(row.Id).bg,
+                                        getAccountColor(row.Id).text,
+                                      )}
+                                    >
+                                      {getInitials(row.name)}
+                                    </div>
+                                    <div>
+                                      <SheetTitle className="text-xl">{row.name || "Account Details"}</SheetTitle>
+                                      <SheetDescription>View and edit account information</SheetDescription>
+                                    </div>
+                                  </div>
+                                </SheetHeader>
+
+                                <ScrollArea className="h-[calc(100vh-140px)] py-6 pr-4">
+                                  <div className="space-y-6">
+                                    {columns.filter((c) => !hiddenFields.includes(c)).map((c) => (
+                                      <div key={c} className="space-y-1.5">
+                                        <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                          {getIconForField(c)}
+                                          <span>{c.replace(/_/g, " ")}</span>
+                                        </div>
+
+                                        {nonEditableFields.includes(c) ? (
+                                          <div className="px-3 py-2 bg-slate-50 rounded-lg text-sm font-medium text-slate-500 border border-slate-100">
+                                            {DATE_COLS.has(c) ? formatDateTime(row[c]) : TIME_COLS.has(c) ? formatHHmm(row[c]) : row[c] || "-"}
+                                          </div>
+                                        ) : c === "status" ? (
+                                          <Select value={row[c] || ""} onValueChange={(v) => onUpdate(row.Id, c, v)}>
+                                            <SelectTrigger className="w-full bg-white border-slate-200">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {statusOptions.map((o) => (
+                                                <SelectItem key={o} value={o}>
+                                                  {o}
+                                                </SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        ) : c === "type" ? (
+                                          <Select value={row[c] || ""} onValueChange={(v) => onUpdate(row.Id, c, v)}>
+                                            <SelectTrigger className="w-full bg-white border-slate-200">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {typeOptions.map((o) => (
+                                                <SelectItem key={o} value={o}>
+                                                  {o}
+                                                </SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        ) : c === "timezone" ? (
+                                          <Select value={row[c] || ""} onValueChange={(v) => onUpdate(row.Id, c, v)}>
+                                            <SelectTrigger className="w-full bg-white border-slate-200">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {timezoneOptions.map((o) => (
+                                                <SelectItem key={o} value={o}>
+                                                  {o}
+                                                </SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        ) : (
+                                          <Input
+                                            value={row[c] || ""}
+                                            onChange={(e) => onUpdate(row.Id, c, e.target.value)}
+                                            className="bg-white border-slate-200 focus:ring-blue-500"
+                                          />
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </ScrollArea>
+                              </SheetContent>
+                            </Sheet>
+                          ) : col === "status" ? (
+                            <Select value={row[col] || ""} onValueChange={(v) => onUpdate(row.Id, col, v)}>
+                              <SelectTrigger
                                 className={cn(
-                                  "w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer transition-transform hover:scale-110",
-                                  getAccountColor(row.Id).bg,
-                                  getAccountColor(row.Id).text,
+                                  "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
+                                  statusColors[row[col]]?.bg,
+                                  statusColors[row[col]]?.text,
                                 )}
                               >
-                                {getInitials(row.name)}
-                              </div>
-                            </SheetTrigger>
-
-                            <SheetContent className="sm:max-w-lg w-[400px]">
-                              <SheetHeader className="border-b pb-6">
-                                <div className="flex items-center gap-4">
-                                  <div
-                                    className={cn(
-                                      "w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold",
-                                      getAccountColor(row.Id).bg,
-                                      getAccountColor(row.Id).text,
-                                    )}
-                                  >
-                                    {getInitials(row.name)}
-                                  </div>
-                                  <div>
-                                    <SheetTitle className="text-xl">{row.name || "Account Details"}</SheetTitle>
-                                    <SheetDescription>View and edit account information</SheetDescription>
-                                  </div>
+                                <div className="flex items-center gap-1.5">
+                                  <div className={cn("w-1.5 h-1.5 rounded-full", statusColors[row[col]]?.dot)} />
+                                  <SelectValue />
                                 </div>
-                              </SheetHeader>
-
-                              <ScrollArea className="h-[calc(100vh-140px)] py-6 pr-4">
-                                <div className="space-y-6">
-                                  {columns.filter((c) => !hiddenFields.includes(c)).map((c) => (
-                                    <div key={c} className="space-y-1.5">
-                                      <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                        {getIconForField(c)}
-                                        <span>{c.replace(/_/g, " ")}</span>
-                                      </div>
-
-                                      {nonEditableFields.includes(c) ? (
-                                        <div className="px-3 py-2 bg-slate-50 rounded-lg text-sm font-medium text-slate-500 border border-slate-100">
-                                          {c.toLowerCase().includes("time") || c.toLowerCase().includes("at") ? formatDate(row[c]) : row[c] || "-"}
-                                        </div>
-                                      ) : c === "status" ? (
-                                        <Select value={row[c] || ""} onValueChange={(v) => onUpdate(row.Id, c, v)}>
-                                          <SelectTrigger className="w-full bg-white border-slate-200">
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {statusOptions.map((o) => (
-                                              <SelectItem key={o} value={o}>
-                                                {o}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
-                                      ) : c === "type" ? (
-                                        <Select value={row[c] || ""} onValueChange={(v) => onUpdate(row.Id, c, v)}>
-                                          <SelectTrigger className="w-full bg-white border-slate-200">
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {typeOptions.map((o) => (
-                                              <SelectItem key={o} value={o}>
-                                                {o}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
-                                      ) : c === "timezone" ? (
-                                        <Select value={row[c] || ""} onValueChange={(v) => onUpdate(row.Id, c, v)}>
-                                          <SelectTrigger className="w-full bg-white border-slate-200">
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {timezoneOptions.map((o) => (
-                                              <SelectItem key={o} value={o}>
-                                                {o}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
-                                      ) : (
-                                        <Input
-                                          value={row[c] || ""}
-                                          onChange={(e) => onUpdate(row.Id, c, e.target.value)}
-                                          className="bg-white border-slate-200 focus:ring-blue-500"
-                                        />
-                                      )}
-                                    </div>
-                                  ))}
+                              </SelectTrigger>
+                              <SelectContent>
+                                {statusOptions.map((o) => (
+                                  <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">
+                                    {o}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : ROLLUP_COLS.has(col) ? (
+                            <RollupCell value={row[col]} type={col} />
+                          ) : DATE_COLS.has(col) ? (
+                            <TruncatedCell value={formatDateTime(row[col])} />
+                          ) : TIME_COLS.has(col) ? (
+                            <TruncatedCell value={formatHHmm(row[col])} />
+                          ) : col === "type" ? (
+                            <Select value={row[col] || ""} onValueChange={(v) => onUpdate(row.Id, col, v)}>
+                              <SelectTrigger
+                                className={cn(
+                                  "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
+                                  row[col]?.toLowerCase() === "agency" ? "bg-yellow-100 text-yellow-700" : "bg-blue-100 text-blue-700",
+                                )}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {typeOptions.map((o) => (
+                                  <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">
+                                    {o}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : col === "timezone" ? (
+                            <Select value={row[col] || ""} onValueChange={(v) => onUpdate(row.Id, col, v)}>
+                              <SelectTrigger
+                                className={cn(
+                                  "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
+                                  timezoneColors[row[col]]?.bg || "bg-slate-100",
+                                  timezoneColors[row[col]]?.text || "text-slate-700",
+                                )}
+                              >
+                                <div className="flex items-center gap-1.5">
+                                  <Clock className="h-3 w-3" />
+                                  <SelectValue />
                                 </div>
-                              </ScrollArea>
-                            </SheetContent>
-                          </Sheet>
-                        ) : col === "status" ? (
-                          <Select value={row[col] || ""} onValueChange={(v) => onUpdate(row.Id, col, v)}>
-                            <SelectTrigger
-                              className={cn(
-                                "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
-                                statusColors[row[col]]?.bg,
-                                statusColors[row[col]]?.text,
-                              )}
-                            >
-                              <div className="flex items-center gap-1.5">
-                                <div className={cn("w-1.5 h-1.5 rounded-full", statusColors[row[col]]?.dot)} />
-                                <SelectValue />
-                              </div>
-                            </SelectTrigger>
-                            <SelectContent>
-                              {statusOptions.map((o) => (
-                                <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">
-                                  {o}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : ROLLUP_COLS.has(col) ? (
-                          <RollupCell value={row[col]} type={col} />
-                        ) : DATE_COLS.has(col) ? (
-                          <TruncatedCell value={formatDateTime(row[col])} />
-                        ) : TIME_COLS.has(col) ? (
-                          <TruncatedCell value={formatHHmm(row[col])} />
-                        ) : col === "type" ? (
-                          <Select value={row[col] || ""} onValueChange={(v) => onUpdate(row.Id, col, v)}>
-                            <SelectTrigger
-                              className={cn(
-                                "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
-                                row[col]?.toLowerCase() === "agency" ? "bg-yellow-100 text-yellow-700" : "bg-blue-100 text-blue-700",
-                              )}
-                            >
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {typeOptions.map((o) => (
-                                <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">
-                                  {o}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : col === "timezone" ? (
-                          <Select value={row[col] || ""} onValueChange={(v) => onUpdate(row.Id, col, v)}>
-                            <SelectTrigger
-                              className={cn(
-                                "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
-                                timezoneColors[row[col]]?.bg,
-                                timezoneColors[row[col]]?.text,
-                              )}
-                            >
-                              <div className="flex items-center gap-1.5">
-                                <Clock className="h-3 w-3" />
-                                <SelectValue />
-                              </div>
-                            </SelectTrigger>
-                            <SelectContent>
-                              {timezoneOptions.map((o) => (
-                                <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">
-                                  {o}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : DATE_COLS.has(col) ? (
-                          <div className="text-sm">
-                            <TruncatedCell value={formatDate(row[col])} />
-                          </div>
-                        ) : (
-                          <Input
-                            defaultValue={row[col] || ""}
-                            key={`${row.Id}-${col}-${row[col]}`}
-                            onBlur={(e) => onUpdate(row.Id, col, e.target.value)}
-                            disabled={nonEditableFields.includes(col)}
-                            className="h-8 border-none bg-transparent shadow-none hover:bg-slate-100/50 transition-colors focus:bg-white focus:ring-1 focus:ring-blue-200 px-2 text-sm w-full truncate disabled:opacity-60"
-                          />
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {timezoneOptions.map((o) => (
+                                  <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">
+                                    {o}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <TruncatedCell 
+                              value={row[col]} 
+                              onUpdate={onUpdate} 
+                              rowId={row.Id} 
+                              col={col} 
+                            />
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </DndContext>
           </div>
         </div>
       ))}
