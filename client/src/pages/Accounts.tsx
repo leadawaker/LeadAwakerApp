@@ -59,16 +59,23 @@ interface Row {
 }
 
 
-const TruncatedCell = ({ value }: { value: any }) => {
+const TruncatedCell = ({ value, title: tooltipTitle }: { value: any, title?: string }) => {
   const text = value ? String(value) : "";
+  const displayTitle = tooltipTitle || text;
 
   return (
-    <div
-      className="truncate w-full"
-      title={text}
-    >
-      {text}
-    </div>
+    <Popover>
+      <PopoverTrigger asChild>
+        <div
+          className="truncate w-full cursor-help"
+        >
+          {text}
+        </div>
+      </PopoverTrigger>
+      <PopoverContent className="w-fit max-w-xs p-2 text-xs">
+        {displayTitle}
+      </PopoverContent>
+    </Popover>
   );
 };
 const TABLE_ID = "m8hflvkkfj25aio";
@@ -285,7 +292,9 @@ export default function Accounts() {
         if (allKeys.includes("website")) ordered.push("website");
         if (allKeys.includes("notes")) ordered.push("notes");
         if (allKeys.includes("timezone")) ordered.push("timezone");
-        allKeys.forEach(k => { if (!ordered.includes(k) && !techCols.includes(k) && !["created_at", "updated_at", "Created Time", "Last Modified Time", "Id", "Account ID"].includes(k)) ordered.push(k); });
+        if (allKeys.includes("business_hours_open")) ordered.push("business_hours_open");
+        if (allKeys.includes("business_hours_closed")) ordered.push("business_hours_closed");
+        allKeys.forEach(k => { if (!ordered.includes(k) && !techCols.includes(k) && !["created_at", "updated_at", "Created Time", "Last Modified Time", "Id", "Account ID", "business_hours_open", "business_hours_closed"].includes(k)) ordered.push(k); });
         techCols.forEach(k => { if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k); });
         const middleCols = ["Leads", "Campaigns", "Automation Logs", "Users", "Prompt Libraries", "Tags"];
         middleCols.forEach(k => { if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k); });
@@ -320,6 +329,7 @@ export default function Accounts() {
     if (NON_EDITABLE_FIELDS.includes(col)) return;
     const cleanValue = value === null || value === undefined ? "" : value;
     
+    // Logic for multi-row sync: if current row is part of selection, update all selected
     const idsToUpdate = selectedIds.includes(rowId) ? selectedIds : [rowId];
     
     setRows(prev => prev.map(r => idsToUpdate.includes(r.Id) ? { ...r, [col]: cleanValue } : r));
@@ -501,9 +511,16 @@ export default function Accounts() {
         }}
       >
         <span className="text-slate-400 group-hover:text-blue-500 transition-colors">{getIconForField(col)}</span>
-        <div className="truncate" title={title}>
-          {title}
-        </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <div className="truncate cursor-help">
+              {title}
+            </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-fit p-2 text-xs">
+            {title}
+          </PopoverContent>
+        </Popover>
         {sortConfig.key === col && (
           <span className="text-blue-500 ml-auto">
             {sortConfig.direction === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -546,9 +563,11 @@ export default function Accounts() {
                       date.getMonth() === today.getMonth() &&
                       date.getFullYear() === today.getFullYear();
 
+      const formatted = `${day}/${month}/${year} ${hours}:${minutes}`;
+
       return (
         <span className={isToday ? "text-blue-500 font-bold" : "text-slate-400"}>
-          {day}/{month}/{year} {hours}:{minutes}
+          {formatted}
         </span>
       );
     } catch (e) {
@@ -809,11 +828,6 @@ export default function Accounts() {
                 <h2 className="text-sm font-bold text-slate-800 uppercase tracking-tight">
                   {groupBy === "None" ? `ALL ACCOUNTS - ${groupRows.length}` : `${groupName.toUpperCase()} - ${groupRows.length}`}
                 </h2>
-                {groupBy !== "None" && (
-                  <Badge variant="outline" className={cn("font-bold uppercase tracking-wider text-[10px] px-2 py-0.5", getGroupColor(groupName))}>
-                    {groupName} ({groupRows.length})
-                  </Badge>
-                )}
               </div>
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <Table className="table-fixed w-full">
@@ -961,9 +975,12 @@ export default function Accounts() {
                                 </PopoverContent>
                               </Popover>
                             ) : col === "type" ? (
-                              <Badge variant="outline" className={cn("font-bold uppercase tracking-wider text-[9px] border-none shadow-none", row[col]?.toLowerCase() === 'agency' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700')}>
-                                {row[col] || "Unknown"}
-                              </Badge>
+                              <Select value={row[col] || ""} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
+                                <SelectTrigger className={cn("h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-fit min-w-[100px]", row[col]?.toLowerCase() === 'agency' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700')}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>{TYPE_OPTIONS.map(o => <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">{o}</SelectItem>)}</SelectContent>
+                              </Select>
                             ) : col === "timezone" ? (
                               <Select value={row[col] || ""} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
                                 <SelectTrigger className={cn("h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-fit min-w-[120px]", timezoneColors[row[col]]?.bg, timezoneColors[row[col]]?.text)}>
