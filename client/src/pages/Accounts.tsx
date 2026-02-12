@@ -120,7 +120,7 @@ const HIDDEN_FIELDS = [
 
 const STATUS_OPTIONS = ["Active", "Inactive", "Trial", "Suspended", "Unknown"];
 const TYPE_OPTIONS = ["Agency", "Client"];
-const TIMEZONE_OPTIONS = ["UTC", "Europe/London", "Europe/Paris", "Europe/Berlin", "America/New_York", "America/Los_Angeles", "Asia/Tokyo", "Asia/Dubai"];
+const TIMEZONE_OPTIONS = ["UTC", "Europe/London", "Europe/Paris", "Europe/Berlin", "America/New_York", "America/Los_Angeles", "America/Sao_Paulo", "Asia/Tokyo", "Asia/Dubai"];
 
 export default function Accounts() {
   const [rows, setRows] = useState<Row[]>([]);
@@ -134,11 +134,17 @@ export default function Accounts() {
   });
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [colWidths, setColWidths] = useState<{ [key: string]: number }>({});
+  const [colWidths, setColWidths] = useState<{ [key: string]: number }>(() => {
+    const saved = localStorage.getItem("accounts_col_widths");
+    return saved ? JSON.parse(saved) : {};
+  });
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' | null }>({ key: '', direction: null });
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' | null }>(() => {
+    const saved = localStorage.getItem("accounts_sort");
+    return saved ? JSON.parse(saved) : { key: '', direction: null };
+  });
   const [draggedColIdx, setDraggedColIdx] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -151,7 +157,9 @@ export default function Accounts() {
       if (sortConfig.direction === 'asc') direction = 'desc';
       else if (sortConfig.direction === 'desc') direction = null;
     }
-    setSortConfig({ key, direction });
+    const newSort = { key, direction };
+    setSortConfig(newSort);
+    localStorage.setItem("accounts_sort", JSON.stringify(newSort));
   };
 
   const sortedRows = [...filteredRows].sort((a, b) => {
@@ -222,7 +230,6 @@ export default function Accounts() {
 
         if (!savedOrder) {
           if (keys.includes("name")) ordered.push("name");
-          if (allKeys.includes("Id")) ordered.push("Id");
           const techCols = ["twilio_account_sid", "twilio_auth_token", "twilio_messaging_service_sid", "twilio_default_from_number", "webhook_url", "webhook_secret", "max_daily_sends"];
           if (keys.includes("status")) ordered.push("status");
           if (keys.includes("type")) ordered.push("type");
@@ -240,12 +247,16 @@ export default function Accounts() {
         }
         setColumns(ordered);
         if (visibleColumns.length === 0) setVisibleColumns(ordered);
-        const initialWidths: { [key: string]: number } = {};
+        
+        const savedWidths = localStorage.getItem("accounts_col_widths");
+        const initialWidths: { [key: string]: number } = savedWidths ? JSON.parse(savedWidths) : {};
         ordered.forEach(col => {
-          if (col === 'Id' || col === 'Account ID') initialWidths[col] = 60;
-          else if (col === 'ACC') initialWidths[col] = 60;
-          else if (SMALL_WIDTH_COLS.includes(col)) initialWidths[col] = 80;
-          else initialWidths[col] = 160; 
+          if (!initialWidths[col]) {
+            if (col === 'Id' || col === 'Account ID') initialWidths[col] = 60;
+            else if (col === 'ACC') initialWidths[col] = 60;
+            else if (SMALL_WIDTH_COLS.includes(col)) initialWidths[col] = 80;
+            else initialWidths[col] = 160; 
+          }
         });
         setColWidths(initialWidths);
       }
@@ -383,7 +394,13 @@ export default function Accounts() {
     return (name[0] + (name[1] || name[0])).toUpperCase().slice(0, 2);
   };
 
-  const handleResize = (col: string, width: number) => { setColWidths(prev => ({ ...prev, [col]: width })); };
+  const handleResize = (col: string, width: number) => { 
+    setColWidths(prev => {
+      const next = { ...prev, [col]: width };
+      localStorage.setItem("accounts_col_widths", JSON.stringify(next));
+      return next;
+    }); 
+  };
 
   const handleExportCSV = () => {
     const headers = columns.filter(c => visibleColumns.includes(c));
@@ -426,6 +443,8 @@ export default function Accounts() {
     else title = col.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
     const iconMap: { [key: string]: string } = {
+      "Account ID": "🆔",
+      "ACC": "🔑",
       "Company Name": "🏢",
       "owner_email": "📧",
       "phone": "📞",
@@ -436,9 +455,19 @@ export default function Accounts() {
       "CreatedAt": "🕒",
       "UpdatedAt": "🕒",
       "notes": "📝",
-      "timezone": "🌐"
+      "timezone": "🌐",
+      "status": "📊",
+      "type": "👤",
+      "business_niche": "🎯",
+      "Leads": "👥",
+      "Campaigns": "🚀",
+      "Interactions": "💬",
+      "Users": "👥",
+      "Automation Logs": "📋",
+      "Prompt Libraries": "📚"
     };
-    return iconMap[col] ? `${iconMap[col]} ${title}` : title;
+    const emoji = iconMap[col] || "🔹";
+    return `${emoji} ${title}`;
   };
 
   const formatDate = (dateStr: any) => {
@@ -518,7 +547,7 @@ export default function Accounts() {
           <div className="overflow-x-auto">
             <Table className="w-full table-fixed border-separate border-spacing-0">
               <TableHeader className="bg-slate-50 border-b border-slate-100 sticky top-0 z-20">
-                <TableRow className="hover:bg-transparent">
+                <TableRow className="hover:bg-transparent border-none">
                   <TableHead className="w-10 px-0 border-r border-slate-100/50 sticky left-0 z-30 bg-slate-50">
                     <div className="flex justify-center"><Checkbox checked={selectedIds.length === rows.length && rows.length > 0} onCheckedChange={toggleSelectAll} /></div>
                   </TableHead>
@@ -528,17 +557,41 @@ export default function Accounts() {
                       draggable
                       onDragStart={() => handleColDragStart(idx)}
                       onDragOver={(e) => handleColDragOver(e, idx)}
-                      onClick={() => handleSort(col)}
                       style={{ width: colWidths[col] || 200, left: idx < 3 ? (40 + columns.filter(c => visibleColumns.includes(c)).slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined }}
-                      className={cn("px-4 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap border-r border-slate-100/50 relative group table-fixed cursor-pointer select-none transition-colors hover:bg-slate-100/50", col === "Id" && "text-center", idx < 3 && "sticky z-30 bg-slate-50")}
+                      className={cn("px-4 py-3 border-r border-slate-100/50 relative group select-none transition-colors hover:bg-slate-100/50", idx < 3 && "sticky z-30 bg-slate-50")}
                     >
-                      <div className="flex items-center justify-between overflow-hidden gap-1">
-                        <span className="truncate">{formatHeader(col)}</span>
-                        <div className="flex items-center gap-1 shrink-0">
-                          {sortConfig.key === col && sortConfig.direction && (<div className="text-blue-500">{sortConfig.direction === 'asc' ? (<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>) : (<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>)}</div>)}
-                          <div className="w-1 cursor-col-resize hover:bg-primary/30 transition-colors h-4" onMouseDown={(e) => { e.stopPropagation(); const startX = e.pageX; const startWidth = colWidths[col] || 200; const onMouseMove = (me: MouseEvent) => handleResize(col, Math.max(50, startWidth + (me.pageX - startX))); const onMouseUp = () => { document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); }; document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp); }} />
-                        </div>
+                      <div className="flex items-center justify-between w-full h-full cursor-pointer" onClick={() => handleSort(col)}>
+                        <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider truncate mr-2">
+                          {formatHeader(col)}
+                        </span>
+                        {sortConfig.key === col && (
+                          <div className="text-blue-500 shrink-0">
+                            {sortConfig.direction === 'asc' ? (
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                            ) : (
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                            )}
+                          </div>
+                        )}
                       </div>
+                      <div 
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          const startX = e.pageX;
+                          const startWidth = colWidths[col] || 200;
+                          const onMouseMove = (me: MouseEvent) => {
+                            const newWidth = Math.max(50, startWidth + (me.pageX - startX));
+                            handleResize(col, newWidth);
+                          };
+                          const onMouseUp = () => {
+                            document.removeEventListener('mousemove', onMouseMove);
+                            document.removeEventListener('mouseup', onMouseUp);
+                          };
+                          document.addEventListener('mousemove', onMouseMove);
+                          document.addEventListener('mouseup', onMouseUp);
+                        }}
+                        className="absolute right-0 top-0 w-1.5 h-full cursor-col-resize hover:bg-blue-400 z-10 transition-colors bg-transparent"
+                      />
                     </TableHead>
                   ))}
                 </TableRow>
@@ -548,59 +601,66 @@ export default function Accounts() {
                   <TableRow><TableCell colSpan={columns.length + 1} className="h-96 text-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/40" /></TableCell></TableRow>
                 ) : (
                   finalRows.map((row) => (
-                    <TableRow id={`row-${row.Id}`} key={row.Id} className={cn("group transition-colors border-b border-slate-100 last:border-0", selectedIds.includes(row.Id) ? "bg-blue-50" : "hover:bg-slate-50/50")}>
-                      <TableCell className={cn("w-10 px-0 border-r border-slate-100/30 sticky left-0 z-10 transition-colors", selectedIds.includes(row.Id) ? "bg-blue-50" : "bg-white group-hover:bg-slate-50/50")}>
+                    <TableRow 
+                      key={row.Id} 
+                      id={`row-${row.Id}`}
+                      className={cn(
+                        "group transition-all duration-200 border-b border-slate-100",
+                        selectedIds.includes(row.Id) ? "bg-blue-50/50" : "hover:bg-slate-50/50"
+                      )}
+                    >
+                      <TableCell className="w-10 px-0 border-r border-slate-100/50 sticky left-0 z-10 bg-inherit">
                         <div className="flex justify-center"><Checkbox checked={selectedIds.includes(row.Id)} onCheckedChange={() => toggleSelect(row.Id)} /></div>
                       </TableCell>
                       {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => {
                         const val = row[col]; const isSticky = idx < 3;
                         const leftPos = isSticky ? (40 + columns.filter(c => visibleColumns.includes(c)).slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined;
-                        const isDate = col.toLowerCase().includes('time') || col.toLowerCase().includes('at') || col === 'CreatedAt' || col === 'UpdatedAt';
                         return (
-                          <TableCell key={col} style={{ width: colWidths[col] || 200, left: leftPos }} className={cn("px-4 py-3 text-sm border-r border-slate-100/30 truncate relative transition-colors", isSticky && (selectedIds.includes(row.Id) ? "sticky z-10 bg-blue-50" : "sticky z-10 bg-white group-hover:bg-slate-50/50"), selectedIds.includes(row.Id) && !isSticky && "bg-blue-50")}>
-                            {col === 'status' ? (
+                          <TableCell 
+                            key={col} 
+                            style={{ width: colWidths[col] || 200, left: leftPos }}
+                            className={cn("px-4 py-3 border-r border-slate-100/50 truncate align-middle", isSticky && "sticky z-10 bg-inherit")}
+                          >
+                            {col === "Account ID" ? (
+                              <span className="text-xs font-mono font-bold text-slate-400">#{val}</span>
+                            ) : col === "ACC" ? (
+                              <div className="flex items-center gap-2">
+                                <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center text-[10px] font-black shadow-sm", getAccountColor(row.Id).bg, getAccountColor(row.Id).text)}>
+                                  {getInitials(row.name)}
+                                </div>
+                                <span className="text-[13px] font-bold text-slate-700 truncate">{row.name}</span>
+                              </div>
+                            ) : col === "status" ? (
                               <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
                                 <SelectTrigger className={cn("h-7 w-auto min-w-[80px] font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getStatusColor(val))}><SelectValue /></SelectTrigger>
                                 <SelectContent>{STATUS_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                               </Select>
-                            ) : col === 'type' ? (
+                            ) : col === "type" ? (
                               <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
                                 <SelectTrigger className={cn("h-7 w-auto min-w-[80px] font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getTypeColor(val))}><SelectValue /></SelectTrigger>
                                 <SelectContent>{TYPE_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                               </Select>
-                            ) : col === 'timezone' ? (
+                            ) : col === "timezone" ? (
                               <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
                                 <SelectTrigger className="h-7 w-full text-[11px] px-2 rounded-lg border-slate-200 shadow-none bg-white/50"><SelectValue /></SelectTrigger>
                                 <SelectContent>{TIMEZONE_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                               </Select>
-                            ) : col === 'ACC' ? (
-                              <div className={cn("h-9 w-9 rounded-full font-bold grid place-items-center text-xs border border-transparent shadow-none", getAccountColor(row.Id).text, getAccountColor(row.Id).bg)}>{getInitials(row.name)}</div>
-                            ) : isDate ? (
-                              <span className="text-slate-600 font-medium truncate block">{formatDate(val)}</span>
+                            ) : ["Created Time", "Last Modified Time", "CreatedAt", "UpdatedAt", "created_at", "updated_at"].includes(col) ? (
+                              <span className="text-[11px] font-medium text-slate-500">{formatDate(val)}</span>
                             ) : (
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <div className="truncate cursor-text hover:bg-slate-100/50 rounded transition-colors w-full group/cell relative">
-                                    {val || <span className="text-slate-300 italic">empty</span>}
-                                    <div className="absolute inset-0 z-50 opacity-0 group-hover/cell:opacity-100 transition-opacity bg-slate-900/90 text-white p-2 rounded text-xs pointer-events-none whitespace-normal break-words min-w-[200px] -top-1 left-full ml-2 shadow-xl border border-slate-700 hidden group-hover/cell:block">{val || "No content"}</div>
-                                  </div>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto max-w-[500px] p-2 bg-white shadow-xl border border-slate-200">
-                                  <div className="flex flex-col gap-2">
-                                    <Textarea 
-                                      className="border-none focus-visible:ring-0 shadow-none p-0 h-auto text-sm w-full bg-transparent resize-none min-h-[20px]"
-                                      defaultValue={val}
-                                      autoFocus
-                                      onInput={(e) => { const target = e.target as HTMLTextAreaElement; target.style.height = 'auto'; target.style.height = target.scrollHeight + 'px'; }}
-                                      onBlur={(e) => { const target = e.target as HTMLTextAreaElement; if(target.value !== val) handleInlineUpdate(row.Id, col, target.value); }}
-                                      onKeyDown={(e) => { 
-                                        if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); }
-                                        if(e.key === 'Escape') (e.target as HTMLTextAreaElement).blur();
-                                      }}
-                                    />
-                                  </div>
-                                </PopoverContent>
-                              </Popover>
+                              <div className="relative group/cell">
+                                <input 
+                                  type="text"
+                                  value={val || ""}
+                                  readOnly={NON_EDITABLE_FIELDS.includes(col)}
+                                  onChange={(e) => setRows(prev => prev.map(r => r.Id === row.Id ? { ...r, [col]: e.target.value } : r))}
+                                  onBlur={(e) => handleInlineUpdate(row.Id, col, e.target.value)}
+                                  className={cn(
+                                    "w-full bg-transparent text-[13px] text-slate-600 focus:outline-none focus:text-blue-600 transition-colors",
+                                    NON_EDITABLE_FIELDS.includes(col) ? "cursor-default" : "cursor-text hover:bg-slate-100/50 rounded px-1 -mx-1"
+                                  )}
+                                />
+                              </div>
                             )}
                           </TableCell>
                         );
