@@ -127,10 +127,7 @@ export default function Accounts() {
   const [newRowData, setNewRowData] = useState<Partial<Row>>({});
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [columns, setColumns] = useState<string[]>([]);
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
-    const saved = null;
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [colWidths, setColWidths] = useState<{ [key: string]: number }>(() => {
@@ -145,6 +142,7 @@ export default function Accounts() {
     return saved ? JSON.parse(saved) : { key: '', direction: null };
   });
   const [draggedColIdx, setDraggedColIdx] = useState<number | null>(null);
+  const [resizingCol, setResizingCol] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -298,13 +296,17 @@ export default function Accounts() {
     if (NON_EDITABLE_FIELDS.includes(col)) return;
     const idsToUpdate = selectedIds.includes(rowId) ? selectedIds : [rowId];
     const cleanValue = value === null || value === undefined ? "" : value;
-    const payloads = idsToUpdate.map(id => ({ Id: id, [col]: cleanValue }));
     
-    try {
-      // Direct update attempt with simpler payload
-      // Use "Id" if that's the primary key, or adjust based on actual table schema
-      const payloads = idsToUpdate.map(id => ({ Id: id, [col]: cleanValue }));
+    // Optimistic UI update
+    setRows(prev => prev.map(r => idsToUpdate.includes(r.Id) ? { ...r, [col]: cleanValue } : r));
 
+    try {
+      const payloads = idsToUpdate.map(id => ({ 
+        id: id, 
+        fields: { [col]: cleanValue } 
+      }));
+
+      // If the backend expects a list of updates
       const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
         method: "PATCH",
         headers: { 
@@ -314,19 +316,23 @@ export default function Accounts() {
         body: JSON.stringify(payloads),
       });
 
-      const resText = await res.text();
-      if (!res.ok) throw new Error(`Update failed: ${res.status} - ${resText}`);
+      if (!res.ok) {
+        // Try fallback if the above format is not accepted (some NocoDB versions expect single object or different array structure)
+        const fallbackRes = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(idsToUpdate.map(id => ({ Id: id, [col]: cleanValue }))),
+        });
+        if (!fallbackRes.ok) throw new Error("Update failed");
+      }
 
-      setRows(prev => prev.map(r => idsToUpdate.includes(r.Id) ? { ...r, [col]: cleanValue } : r));
       toast({ title: "Updated", description: "Changes saved to database." });
     } catch (err) {
       console.error("Update error:", err);
-      // Ensure UI is updated anyway for UX, but notify about sync failure
-      setRows(prev => prev.map(r => idsToUpdate.includes(r.Id) ? { ...r, [col]: cleanValue } : r));
       toast({ 
         variant: "destructive", 
         title: "Sync Error", 
-        description: "Failed to save to database. Check your connection." 
+        description: "Failed to save to database." 
       });
     }
   };
@@ -479,33 +485,25 @@ export default function Accounts() {
     else if (col === "Account ID") title = "ID";
     else title = col.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
-    const iconMap: { [key: string]: string } = {
-      "Account ID": "🆔",
-      "ACC": "🔑",
-      "Company Name": "🏢",
-      "owner_email": "📧",
-      "phone": "📞",
-      "website": "🌍",
-      "Tags": "🏷",
-      "Created Time": "🕒",
-      "Last Modified Time": "🕒",
-      "CreatedAt": "🕒",
-      "UpdatedAt": "🕒",
-      "notes": "📝",
-      "timezone": "🌐",
-      "status": "📊",
-      "type": "👤",
-      "business_niche": "🎯",
-      "Leads": "👥",
-      "Campaigns": "🚀",
-      "Interactions": "💬",
-      "Users": "👥",
-      "Automation Logs": "📋",
-      "Prompt Libraries": "📚"
+    const iconMap: { [key: string]: any } = {
+      "Account ID": <LayoutGrid className="h-3 w-3" />,
+      "ACC": <GripVertical className="h-3 w-3" />,
+      "name": <Building2 className="h-3 w-3" />,
+      "owner_email": <Eye className="h-3 w-3" />,
+      "phone": <Plus className="h-3 w-3" />,
+      "status": <AlertCircle className="h-3 w-3" />,
+      "type": <Building2 className="h-3 w-3" />,
+      "CreatedAt": <RefreshCw className="h-3 w-3" />,
+      "UpdatedAt": <RefreshCw className="h-3 w-3" />,
     };
-    const emoji = iconMap[col] || "🔹";
-    if (col === "ACC") return emoji;
-    return `${emoji} ${title}`;
+    const icon = iconMap[col] || <LayoutGrid className="h-3 w-3" />;
+    
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-slate-400">{icon}</span>
+        <span>{title}</span>
+      </div>
+    );
   };
 
   const formatDate = (dateStr: any) => {
@@ -593,119 +591,137 @@ export default function Accounts() {
         </div>
 
         <div className="flex-1 min-h-0 bg-white rounded-[32px] border border-slate-200 flex flex-col overflow-hidden shadow-none">
-          <div className="shrink-0 grid grid-cols-[40px_44px_60px_1.5fr_1fr_1fr_1fr_1fr] items-center gap-3 bg-white px-6 py-4 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider z-20" data-testid="row-contacts-head">
-            <div className="flex justify-center border-r border-border/12 h-full flex items-center">
+          <div className="shrink-0 flex items-center bg-white border-b border-border uppercase tracking-wider z-20 overflow-x-auto no-scrollbar" data-testid="row-contacts-head">
+            <div className="w-[40px] flex justify-center border-r border-border/12 shrink-0 py-4">
               <Checkbox 
                 checked={selectedIds.length === rows.length && rows.length > 0} 
                 onCheckedChange={toggleSelectAll}
                 className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 cursor-pointer"
               />
             </div>
-            <div className="border-r border-border/20 h-full" />
-            <div className="border-r border-border/20 h-full flex items-center px-2">ID</div>
-            <div className="sticky left-0 bg-white z-30 px-2 border-r border-border/20 h-full flex items-center">Company name</div>
-            <div className="border-r border-border/20 h-full flex items-center px-2">Status</div>
-            <div className="border-r border-border/20 h-full flex items-center px-2">Type</div>
-            <div className="border-r border-border/20 h-full flex items-center px-2">Email</div>
-            <div className="flex items-center px-2">Phone</div>
+            {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => (
+              <div 
+                key={col}
+                draggable={idx >= 4}
+                onDragStart={() => handleColDragStart(columns.indexOf(col))}
+                onDragOver={(e) => handleColDragOver(e, columns.indexOf(col))}
+                className={cn(
+                  "border-r border-border/20 h-full flex items-center px-4 relative group/col text-[11px] font-bold text-muted-foreground shrink-0 py-4",
+                  idx < 4 && "sticky z-40 bg-white border-blue-100",
+                  idx === 0 && "left-0",
+                  idx === 1 && "left-[80px]",
+                  idx === 2 && "left-[160px]",
+                  idx === 3 && "left-[240px]",
+                )}
+                style={{ width: colWidths[col] || 160 }}
+              >
+                <div className="flex-1 truncate cursor-pointer" onClick={() => handleSort(col)}>
+                  {formatHeader(col)}
+                </div>
+                <div 
+                  className="absolute right-0 top-0 w-1 h-full cursor-col-resize hover:bg-blue-500 opacity-0 group-hover/col:opacity-100 transition-opacity"
+                  onMouseDown={(e) => {
+                    const startX = e.pageX;
+                    const startWidth = colWidths[col] || 160;
+                    const onMouseMove = (moveEvent: MouseEvent) => {
+                      handleResize(col, Math.max(50, startWidth + (moveEvent.pageX - startX)));
+                    };
+                    const onMouseUp = () => {
+                      window.removeEventListener('mousemove', onMouseMove);
+                      window.removeEventListener('mouseup', onMouseUp);
+                    };
+                    window.addEventListener('mousemove', onMouseMove);
+                    window.addEventListener('mouseup', onMouseUp);
+                  }}
+                />
+              </div>
+            ))}
           </div>
-          <div className="flex-1 overflow-y-auto divide-y divide-border/12" data-testid="list-contacts">
+          <div className="flex-1 overflow-auto divide-y divide-border/12" data-testid="list-contacts">
             {loading && rows.length === 0 ? (
               <div className="h-96 text-center flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/40" /></div>
             ) : (
               finalRows.map((row) => {
                 const accountColor = getAccountColor(row.Id);
+                const isSelected = selectedIds.includes(row.Id);
                 return (
                   <div 
                     key={row.Id} 
                     id={`row-${row.Id}`}
                     className={cn(
-                      "grid grid-cols-[40px_44px_60px_1.5fr_1fr_1fr_1fr_1fr] items-center gap-3 px-6 py-0 group transition-all duration-200 border-b border-slate-200/12 h-12 bg-white hover:bg-slate-50/50",
-                      selectedIds.includes(row.Id) && "bg-blue-50/50"
+                      "flex items-center group transition-all duration-200 border-b border-slate-200/12 h-12 bg-white hover:bg-slate-50/50",
+                      isSelected && "bg-blue-50/80"
                     )}
                   >
-                    <div className="flex justify-center border-r border-border/12 h-full flex items-center">
+                    <div className="w-[40px] flex justify-center border-r border-border/12 shrink-0">
                       <Checkbox 
-                        checked={selectedIds.includes(row.Id)} 
+                        checked={isSelected} 
                         onCheckedChange={() => toggleSelect(row.Id)} 
                         className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 cursor-pointer"
                       />
                     </div>
                     
-                    <div className="flex justify-center border-r border-border/20 h-full flex items-center">
-                      <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm border border-slate-100", accountColor.bg, accountColor.text)}>
-                        {getInitials(row.name || "")}
+                    {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => (
+                      <div 
+                        key={col}
+                        className={cn(
+                          "px-4 border-r border-border/20 h-full flex items-center shrink-0",
+                          idx < 4 && "sticky z-10",
+                          idx === 0 && "left-0",
+                          idx === 1 && "left-[80px]",
+                          idx === 2 && "left-[160px]",
+                          idx === 3 && "left-[240px]",
+                          isSelected ? "bg-blue-50/80" : (idx < 4 ? "bg-white group-hover:bg-slate-50/50" : ""),
+                          isSelected && col === "name" && "text-blue-700"
+                        )}
+                        style={{ width: colWidths[col] || 160 }}
+                      >
+                        {col === "Id" ? (
+                          <span className="text-xs font-mono font-bold text-slate-400">#{row.Id}</span>
+                        ) : col === "ACC" ? (
+                          <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm border border-slate-100", accountColor.bg, accountColor.text)}>
+                            {getInitials(row.name || "")}
+                          </div>
+                        ) : col === "status" ? (
+                          <select
+                            value={row.status}
+                            onChange={(e) => handleInlineUpdate(row.Id, "status", e.target.value)}
+                            className={cn(
+                              "h-7 w-full font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none appearance-none cursor-pointer text-center",
+                              statusColors[row.status]?.bg || "bg-muted/10",
+                              statusColors[row.status]?.text || "text-muted-foreground",
+                              statusColors[row.status]?.border || "border-border"
+                            )}
+                          >
+                            {STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                          </select>
+                        ) : col === "type" ? (
+                          <select
+                            value={row.type}
+                            onChange={(e) => handleInlineUpdate(row.Id, "type", e.target.value)}
+                            className={cn(
+                              "h-7 w-full font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none appearance-none cursor-pointer text-center",
+                              getTypeColor(row.type)
+                            )}
+                          >
+                            {TYPE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                          </select>
+                        ) : (
+                          <input 
+                            type="text"
+                            value={row[col] || ""}
+                            readOnly={NON_EDITABLE_FIELDS.includes(col)}
+                            onChange={(e) => setRows(prev => prev.map(r => r.Id === row.Id ? { ...r, [col]: e.target.value } : r))}
+                            onBlur={(e) => handleInlineUpdate(row.Id, col, e.target.value)}
+                            className={cn(
+                              "bg-transparent border-none focus:ring-0 w-full text-[11px] p-0 h-auto focus:bg-white focus:px-2 focus:py-1 focus:rounded focus:shadow-sm transition-all truncate",
+                              col === "name" ? "font-bold text-slate-900" : "font-medium text-slate-700",
+                              isSelected && col === "name" && "text-blue-700"
+                            )}
+                          />
+                        )}
                       </div>
-                    </div>
-
-                    <div className="flex h-full items-center px-2 border-r border-border/20">
-                      <span className="text-xs font-mono font-bold text-slate-400">#{row.Id}</span>
-                    </div>
-
-                    <div className="sticky left-0 bg-white group-hover:bg-slate-50/50 transition-colors z-10 px-2 border-r border-border/20 h-full flex items-center">
-                      <input 
-                        type="text"
-                        value={row.name || ""}
-                        readOnly={NON_EDITABLE_FIELDS.includes("name")}
-                        onChange={(e) => setRows(prev => prev.map(r => r.Id === row.Id ? { ...r, name: e.target.value } : r))}
-                        onBlur={(e) => handleInlineUpdate(row.Id, "name", e.target.value)}
-                        className="bg-transparent border-none focus:ring-0 w-full text-[11px] font-bold text-slate-900 p-0 h-auto focus:bg-white focus:px-2 focus:py-1 focus:rounded focus:shadow-sm transition-all"
-                      />
-                    </div>
-
-                    <div className="px-2 flex items-center h-full w-full border-r border-border/20">
-                      <div className="relative w-full flex justify-center">
-                        <select
-                          value={row.status}
-                          onChange={(e) => handleInlineUpdate(row.Id, "status", e.target.value)}
-                          className={cn(
-                            "h-7 w-full font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none appearance-none cursor-pointer text-center",
-                            statusColors[row.status]?.bg || "bg-muted/10",
-                            statusColors[row.status]?.text || "text-muted-foreground",
-                            statusColors[row.status]?.border || "border-border"
-                          )}
-                        >
-                          {STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="px-2 flex items-center h-full w-full border-r border-border/20">
-                      <div className="relative w-full flex justify-center">
-                        <select
-                          value={row.type}
-                          onChange={(e) => handleInlineUpdate(row.Id, "type", e.target.value)}
-                          className={cn(
-                            "h-7 w-full font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none appearance-none cursor-pointer text-center",
-                            getTypeColor(row.type)
-                          )}
-                        >
-                          {TYPE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="px-2 flex items-center h-full w-full border-r border-border/20">
-                      <input 
-                        type="text"
-                        value={row.owner_email || ""}
-                        readOnly={NON_EDITABLE_FIELDS.includes("owner_email")}
-                        onChange={(e) => setRows(prev => prev.map(r => r.Id === row.Id ? { ...r, owner_email: e.target.value } : r))}
-                        onBlur={(e) => handleInlineUpdate(row.Id, "owner_email", e.target.value)}
-                        className="bg-transparent border-none focus:ring-0 w-full text-[11px] font-medium text-slate-700 p-0 h-auto focus:bg-white focus:px-2 focus:py-1 focus:rounded focus:shadow-sm transition-all truncate"
-                      />
-                    </div>
-
-                    <div className="px-2 flex items-center h-full w-full">
-                      <input 
-                        type="text"
-                        value={row.phone || ""}
-                        readOnly={NON_EDITABLE_FIELDS.includes("phone")}
-                        onChange={(e) => setRows(prev => prev.map(r => r.Id === row.Id ? { ...r, phone: e.target.value } : r))}
-                        onBlur={(e) => handleInlineUpdate(row.Id, "phone", e.target.value)}
-                        className="bg-transparent border-none focus:ring-0 w-full text-[11px] font-medium text-slate-700 p-0 h-auto focus:bg-white focus:px-2 focus:py-1 focus:rounded focus:shadow-sm transition-all truncate"
-                      />
-                    </div>
+                    ))}
                   </div>
                 );
               })
