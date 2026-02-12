@@ -48,9 +48,9 @@ interface Row {
   [key: string]: any;
 }
 
-
 const TABLE_ID = "m8hflvkkfj25aio";
-
+const NOCODB_BASE_URL = "https://api-leadawaker.netlify.app/.netlify/functions/api";
+const NOCODB_TOKEN = ""; // Not needed for proxy
 
 const SMALL_WIDTH_COLS = [
   'Id',
@@ -138,9 +138,12 @@ export default function Accounts() {
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
   const { toast } = useToast();
-
+  const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' | null }>({ key: '', direction: null });
   const [draggedColIdx, setDraggedColIdx] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const filteredRows = statusFilter === "All" ? rows : rows.filter(r => r.status === statusFilter);
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' | null = 'asc';
@@ -175,73 +178,6 @@ export default function Accounts() {
   const finalRows = searchTerm 
     ? sortedRows.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(searchTerm.toLowerCase()))) 
     : sortedRows;
-
-  const handleColDragStart = (idx: number) => {
-    setDraggedColIdx(idx);
-  };
-
-  const handleColDragOver = (e: React.DragEvent, idx: number) => {
-    e.preventDefault();
-    if (draggedColIdx === null || draggedColIdx === idx) return;
-    
-    const newColumns = [...columns];
-    const item = newColumns.splice(draggedColIdx, 1)[0];
-    newColumns.splice(idx, 0, item);
-    setColumns(newColumns);
-    setDraggedColIdx(idx);
-  };
-
-  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' | null }>({ key: '', direction: null });
-  const [draggedColIdx, setDraggedColIdx] = useState<number | null>(null);
-
-  const handleSort = (key: string) => {
-    let direction: 'asc' | 'desc' | null = 'asc';
-    if (sortConfig.key === key) {
-      if (sortConfig.direction === 'asc') direction = 'desc';
-      else if (sortConfig.direction === 'desc') direction = null;
-    }
-    setSortConfig({ key, direction });
-  };
-
-  const sortedRows = [...filteredRows].sort((a, b) => {
-    if (!sortConfig.direction || !sortConfig.key) return 0;
-    const aVal = a[sortConfig.key];
-    const bVal = b[sortConfig.key];
-    
-    if (aVal === bVal) return 0;
-    
-    let comparison = 0;
-    const isDate = sortConfig.key.toLowerCase().includes('time') || sortConfig.key.toLowerCase().includes('at') || sortConfig.key === 'CreatedAt' || sortConfig.key === 'UpdatedAt';
-    
-    if (isDate) {
-      comparison = new Date(aVal || 0).getTime() - new Date(bVal || 0).getTime();
-    } else if (typeof aVal === 'number' && typeof bVal === 'number') {
-      comparison = aVal - bVal;
-    } else {
-      comparison = String(aVal || '').localeCompare(String(bVal || ''));
-    }
-    
-    return sortConfig.direction === 'asc' ? comparison : -comparison;
-  });
-
-  const finalRows = searchTerm 
-    ? sortedRows.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(searchTerm.toLowerCase()))) 
-    : sortedRows;
-
-  const handleColDragStart = (idx: number) => {
-    setDraggedColIdx(idx);
-  };
-
-  const handleColDragOver = (e: React.DragEvent, idx: number) => {
-    e.preventDefault();
-    if (draggedColIdx === null || draggedColIdx === idx) return;
-    
-    const newColumns = [...columns];
-    const item = newColumns.splice(draggedColIdx, 1)[0];
-    newColumns.splice(idx, 0, item);
-    setColumns(newColumns);
-    setDraggedColIdx(idx);
-  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -266,7 +202,6 @@ export default function Accounts() {
 
         if (!savedOrder) {
           if (keys.includes("name")) ordered.push("name");
-          // if (allKeys.includes("Account ID")) ordered.push("Account ID"); // Moved up
           if (allKeys.includes("Id")) ordered.push("Id");
 
           const techCols = [
@@ -344,41 +279,37 @@ export default function Accounts() {
     }
   }, [columns]);
 
-  const filteredRows = statusFilter === "All" ? rows : rows.filter(r => r.status === statusFilter);
-
   const toggleColumnVisibility = (col: string) => {
     const colIdx = columns.indexOf(col);
     if (colIdx >= 0 && colIdx < 4) return;
     setVisibleColumns(prev => prev.includes(col) ? prev.filter(c => c !== col) : [...prev, col]);
   };
 
-  const handleDragStart = (idx: number) => {
-    if (idx < 4) return;
-    setDraggedIdx(idx);
+  const handleColDragStart = (idx: number) => {
+    setDraggedColIdx(idx);
   };
 
-  const handleDragOver = (e: React.DragEvent, idx: number) => {
+  const handleColDragOver = (e: React.DragEvent, idx: number) => {
     e.preventDefault();
-    if (draggedIdx === null || idx < 4 || draggedIdx === idx) return;
+    if (draggedColIdx === null || draggedColIdx === idx) return;
     
     const newColumns = [...columns];
-    const item = newColumns.splice(draggedIdx, 1)[0];
+    const item = newColumns.splice(draggedColIdx, 1)[0];
     newColumns.splice(idx, 0, item);
     setColumns(newColumns);
-    setDraggedIdx(idx);
+    setDraggedColIdx(idx);
   };
 
   const handleInlineUpdate = async (rowId: number, col: string, value: any) => {
     if (NON_EDITABLE_FIELDS.includes(col)) return;
     
-    // If multiple rows are selected, update all of them
     const idsToUpdate = selectedIds.includes(rowId) ? selectedIds : [rowId];
     const payloads = idsToUpdate.map(id => ({ Id: id, [col]: value }));
     
     try {
       const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "xc-token": NOCODB_TOKEN },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payloads),
       });
       if (!res.ok) throw new Error("Update failed");
@@ -397,7 +328,7 @@ export default function Accounts() {
       const deletePromises = selectedIds.map(id => 
         fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
           method: "DELETE",
-          headers: { "Content-Type": "application/json", "xc-token": NOCODB_TOKEN },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ Id: id }),
         })
       );
@@ -423,7 +354,7 @@ export default function Accounts() {
       });
       const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "xc-token": NOCODB_TOKEN },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(cleanData),
       });
       if (!res.ok) throw new Error("Creation failed");
@@ -487,8 +418,6 @@ export default function Accounts() {
     setColWidths(prev => ({ ...prev, [col]: width }));
   };
 
-  const [searchTerm, setSearchTerm] = useState("");
-  
   const handleExportCSV = () => {
     const headers = columns.filter(c => visibleColumns.includes(c));
     const csvRows = filteredRows.map(row => 
@@ -505,19 +434,6 @@ export default function Accounts() {
     link.click();
     document.body.removeChild(link);
   };
-
-  const moveColumn = (idx: number, direction: 'up' | 'down') => {
-    if (idx < 4) return;
-    const newColumns = [...columns];
-    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
-    if (targetIdx < 4 || targetIdx >= columns.length) return;
-    
-    const item = newColumns.splice(idx, 1)[0];
-    newColumns.splice(targetIdx, 0, item);
-    setColumns(newColumns);
-  };
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -658,32 +574,6 @@ export default function Accounts() {
                         key={col} 
                         className={cn("flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 group", !visibleColumns.includes(col) && "opacity-50")}
                       >
-                        {!isProtected ? (
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-5 w-5 text-slate-400 hover:text-blue-600 p-0" 
-                              onClick={() => moveColumn(idx, 'up')}
-                              disabled={idx === 4}
-                            >
-                              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M5 2L2 6H8L5 2Z" fill="currentColor"/>
-                              </svg>
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-5 w-5 text-slate-400 hover:text-blue-600 p-0" 
-                              onClick={() => moveColumn(idx, 'down')}
-                              disabled={idx === columns.length - 1}
-                            >
-                              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M5 8L8 4H2L5 8Z" fill="currentColor"/>
-                              </svg>
-                            </Button>
-                          </div>
-                        ) : <div className="w-11 shrink-0" />}
                         <Button variant="ghost" size="icon" className={cn("h-6 w-6 shrink-0", isProtected && "hidden")} onClick={() => toggleColumnVisibility(col)}>
                           <Eye className={cn("h-3 w-3", !visibleColumns.includes(col) && "text-slate-300")} />
                         </Button>
@@ -836,14 +726,26 @@ export default function Accounts() {
                   ))
                 )}
               </TableBody>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-
             </Table>
           </div>
         </div>
+
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action will delete {selectedIds.length} selected account(s). This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
