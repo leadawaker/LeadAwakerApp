@@ -224,7 +224,7 @@ export default function Accounts() {
         // Remove HIDDEN_FIELDS check here to ensure we get everything first
         const keys = allKeys; 
         const savedOrder = null; null;
-        let ordered: string[] = savedOrder ? JSON.parse(savedOrder) : ["Id", "ACC"];
+        let ordered: string[] = savedOrder ? JSON.parse(savedOrder) : ["Id", "Image"];
 
         if (!savedOrder) {
           if (keys.includes("name")) ordered.push("name");
@@ -257,7 +257,7 @@ export default function Accounts() {
         finalCols.forEach(col => {
           if (!initialWidths[col]) {
             if (col === 'Id' || col === 'Account ID') initialWidths[col] = 80;
-            else if (col === 'ACC') initialWidths[col] = 60;
+            else if (col === 'Image') initialWidths[col] = 60;
             else if (SMALL_WIDTH_COLS.includes(col)) initialWidths[col] = 100;
             else initialWidths[col] = 160; 
           }
@@ -488,6 +488,7 @@ export default function Accounts() {
     const iconMap: { [key: string]: any } = {
       "Account ID": <LayoutGrid className="h-3 w-3" />,
       "ACC": <GripVertical className="h-3 w-3" />,
+      "Image": <GripVertical className="h-3 w-3" />,
       "name": <Building2 className="h-3 w-3" />,
       "owner_email": <Eye className="h-3 w-3" />,
       "phone": <Plus className="h-3 w-3" />,
@@ -495,12 +496,14 @@ export default function Accounts() {
       "type": <Building2 className="h-3 w-3" />,
       "CreatedAt": <RefreshCw className="h-3 w-3" />,
       "UpdatedAt": <RefreshCw className="h-3 w-3" />,
+      "Created Time": <RefreshCw className="h-3 w-3" />,
+      "Last Modified Time": <RefreshCw className="h-3 w-3" />,
     };
     const icon = iconMap[col] || <LayoutGrid className="h-3 w-3" />;
     
     return (
       <div className="flex items-center gap-2">
-        <span className="text-slate-400">{icon}</span>
+        <span className="text-slate-400 group-hover:text-blue-500 transition-colors">{icon}</span>
         <span>{title}</span>
       </div>
     );
@@ -517,7 +520,11 @@ export default function Accounts() {
       const year = date.getFullYear().toString().slice(-2);
       const hours = date.getHours().toString().padStart(2, '0');
       const minutes = date.getMinutes().toString().padStart(2, '0');
-      return `${day}/${month}/${year}    ${hours}:${minutes}`;
+      return (
+        <span className="text-blue-500 font-bold">
+          {day}/{month}/{year}    {hours}:{minutes}
+        </span>
+      );
     } catch (e) { return dateStr; }
   };
 
@@ -564,7 +571,7 @@ export default function Accounts() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="All">All Statuses ({rows.length})</SelectItem>
+                <SelectItem value="All">All Statuses</SelectItem>
                 {STATUS_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -591,8 +598,8 @@ export default function Accounts() {
         </div>
 
         <div className="flex-1 min-h-0 bg-white rounded-[32px] border border-slate-200 flex flex-col overflow-hidden shadow-none">
-          <div className="shrink-0 flex items-center bg-white border-b border-border uppercase tracking-wider z-20 overflow-x-auto no-scrollbar" data-testid="row-contacts-head">
-            <div className="w-[40px] flex justify-center border-r border-border/12 shrink-0 py-4">
+          <div className="shrink-0 flex items-center bg-white border-b border-slate-200 uppercase tracking-wider z-20 overflow-x-auto no-scrollbar" data-testid="row-contacts-head">
+            <div className="w-[40px] flex justify-center border-r border-slate-200 shrink-0 py-4">
               <Checkbox 
                 checked={selectedIds.length === rows.length && rows.length > 0} 
                 onCheckedChange={toggleSelectAll}
@@ -602,16 +609,15 @@ export default function Accounts() {
             {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => (
               <div 
                 key={col}
-                draggable={idx >= 4}
+                draggable={idx >= 3}
                 onDragStart={() => handleColDragStart(columns.indexOf(col))}
                 onDragOver={(e) => handleColDragOver(e, columns.indexOf(col))}
                 className={cn(
-                  "border-r border-border/20 h-full flex items-center px-4 relative group/col text-[11px] font-bold text-muted-foreground shrink-0 py-4",
-                  idx < 4 && "sticky z-40 bg-white border-blue-100",
+                  "border-r border-slate-200 h-full flex items-center px-4 relative group/col text-[11px] font-bold text-muted-foreground shrink-0 py-4 transition-colors",
+                  idx < 3 && "sticky z-40 bg-white border-blue-100",
                   idx === 0 && "left-0",
                   idx === 1 && "left-[80px]",
-                  idx === 2 && "left-[160px]",
-                  idx === 3 && "left-[240px]",
+                  idx === 2 && "left-[140px]",
                 )}
                 style={{ width: colWidths[col] || 160 }}
               >
@@ -637,7 +643,7 @@ export default function Accounts() {
               </div>
             ))}
           </div>
-          <div className="flex-1 overflow-auto divide-y divide-border/12" data-testid="list-contacts">
+          <div className="flex-1 overflow-auto divide-y divide-slate-200" data-testid="list-contacts">
             {loading && rows.length === 0 ? (
               <div className="h-96 text-center flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/40" /></div>
             ) : (
@@ -649,11 +655,11 @@ export default function Accounts() {
                     key={row.Id} 
                     id={`row-${row.Id}`}
                     className={cn(
-                      "flex items-center group transition-all duration-200 border-b border-slate-200/12 h-12 bg-white hover:bg-slate-50/50",
+                      "flex items-center group transition-all duration-200 h-12 bg-white hover:bg-slate-50/50",
                       isSelected && "bg-blue-50/80"
                     )}
                   >
-                    <div className="w-[40px] flex justify-center border-r border-border/12 shrink-0">
+                    <div className="w-[40px] flex justify-center border-r border-slate-200 shrink-0 h-full items-center">
                       <Checkbox 
                         checked={isSelected} 
                         onCheckedChange={() => toggleSelect(row.Id)} 
@@ -665,20 +671,19 @@ export default function Accounts() {
                       <div 
                         key={col}
                         className={cn(
-                          "px-4 border-r border-border/20 h-full flex items-center shrink-0",
-                          idx < 4 && "sticky z-10",
+                          "px-4 border-r border-slate-200 h-full flex items-center shrink-0 transition-colors",
+                          idx < 3 && "sticky z-10",
                           idx === 0 && "left-0",
                           idx === 1 && "left-[80px]",
-                          idx === 2 && "left-[160px]",
-                          idx === 3 && "left-[240px]",
-                          isSelected ? "bg-blue-50/80" : (idx < 4 ? "bg-white group-hover:bg-slate-50/50" : ""),
+                          idx === 2 && "left-[140px]",
+                          isSelected ? "bg-blue-50/80" : (idx < 3 ? "bg-white group-hover:bg-slate-50/50" : ""),
                           isSelected && col === "name" && "text-blue-700"
                         )}
                         style={{ width: colWidths[col] || 160 }}
                       >
                         {col === "Id" ? (
                           <span className="text-xs font-mono font-bold text-slate-400">#{row.Id}</span>
-                        ) : col === "ACC" ? (
+                        ) : col === "Image" ? (
                           <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm border border-slate-100", accountColor.bg, accountColor.text)}>
                             {getInitials(row.name || "")}
                           </div>
@@ -706,6 +711,10 @@ export default function Accounts() {
                           >
                             {TYPE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                           </select>
+                        ) : col.toLowerCase().includes('time') || col.toLowerCase().includes('at') || col === 'CreatedAt' || col === 'UpdatedAt' ? (
+                          <div className="text-[11px] font-medium truncate">
+                            {formatDate(row[col])}
+                          </div>
                         ) : (
                           <input 
                             type="text"
@@ -715,7 +724,7 @@ export default function Accounts() {
                             onBlur={(e) => handleInlineUpdate(row.Id, col, e.target.value)}
                             className={cn(
                               "bg-transparent border-none focus:ring-0 w-full text-[11px] p-0 h-auto focus:bg-white focus:px-2 focus:py-1 focus:rounded focus:shadow-sm transition-all truncate",
-                              col === "name" ? "font-bold text-slate-900" : "font-medium text-slate-700",
+                              col === "name" ? "font-bold text-slate-900 text-[13px]" : "font-medium text-slate-700",
                               isSelected && col === "name" && "text-blue-700"
                             )}
                           />
