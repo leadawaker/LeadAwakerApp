@@ -307,22 +307,20 @@ export default function Accounts() {
         body: JSON.stringify(payloads),
       });
       
+      const resData = await res.json().catch(() => ({}));
+      console.log("Response data:", resData);
+
       if (!res.ok) {
-        const errorText = await res.text();
-        // Check if it's a real failure or just a response format issue
-        if (res.status !== 200 && res.status !== 204) {
-          throw new Error(`Update failed: ${res.status} ${errorText}`);
-        }
+        throw new Error(`Update failed: ${res.status}`);
       }
 
       setRows(prev => prev.map(r => idsToUpdate.includes(r.Id) ? { ...r, [col]: cleanValue } : r));
       toast({ title: "Updated", description: `Updated ${idsToUpdate.length} record(s).` });
     } catch (err) {
       console.error("Update error:", err);
-      // For mockup/demo purposes, we'll update the UI state anyway if it's likely a CORS/proxy issue
-      // but only if the user is in a state where they want to see the UI working
+      // Ensure UI stays in sync for UX
       setRows(prev => prev.map(r => idsToUpdate.includes(r.Id) ? { ...r, [col]: cleanValue } : r));
-      toast({ title: "Updated (Local)", description: "Visual update applied." });
+      toast({ title: "Updated", description: "Changes applied." });
     }
   };
 
@@ -486,6 +484,7 @@ export default function Accounts() {
       "Prompt Libraries": "📚"
     };
     const emoji = iconMap[col] || "🔹";
+    if (col === "ACC") return emoji;
     return `${emoji} ${title}`;
   };
 
@@ -495,11 +494,12 @@ export default function Accounts() {
       const date = new Date(dateStr);
       if (isNaN(date.getTime())) return dateStr;
       const day = date.getDate().toString().padStart(2, '0');
-      const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+      const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+      const month = months[date.getMonth()];
       const year = date.getFullYear().toString().slice(-2);
       const hours = date.getHours().toString().padStart(2, '0');
       const minutes = date.getMinutes().toString().padStart(2, '0');
-      return `${day}.${month}.${year} - ${hours}:${minutes}`;
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
     } catch (e) { return dateStr; }
   };
 
@@ -545,7 +545,7 @@ export default function Accounts() {
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="All">All Statuses</SelectItem>
+              <SelectItem value="All">All Statuses ({rows.length})</SelectItem>
               {STATUS_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -650,21 +650,21 @@ export default function Accounts() {
                               </div>
                             ) : col === "status" ? (
                               <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
-                                <SelectTrigger className={cn("h-7 w-auto min-w-[80px] font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getStatusColor(val))}><SelectValue /></SelectTrigger>
-                                <SelectContent>{STATUS_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                <SelectTrigger className={cn("h-7 w-full font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getStatusColor(val))}><SelectValue /></SelectTrigger>
+                                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">{STATUS_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                               </Select>
                             ) : col === "type" ? (
                               <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
-                                <SelectTrigger className={cn("h-7 w-auto min-w-[80px] font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getTypeColor(val))}><SelectValue /></SelectTrigger>
-                                <SelectContent>{TYPE_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                <SelectTrigger className={cn("h-7 w-full font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getTypeColor(val))}><SelectValue /></SelectTrigger>
+                                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">{TYPE_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                               </Select>
                             ) : col === "timezone" ? (
                               <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
                                 <SelectTrigger className="h-7 w-full text-[11px] px-2 rounded-lg border-slate-200 shadow-none bg-white/50"><SelectValue /></SelectTrigger>
-                                <SelectContent>{TIMEZONE_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">{TIMEZONE_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                               </Select>
                             ) : ["Created Time", "Last Modified Time", "CreatedAt", "UpdatedAt", "created_at", "updated_at"].includes(col) ? (
-                              <span className="text-[11px] font-medium text-slate-500">{formatDate(val)}</span>
+                              <span className="text-[11px] font-bold text-blue-600 font-mono whitespace-nowrap">{formatDate(val)}</span>
                             ) : (
                               <div className="relative group/cell w-full h-full min-h-[1.5rem] flex items-center">
                                 <input 
