@@ -381,14 +381,29 @@ export default function Accounts() {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
+  const getAccountColor = (id: number) => {
+    const initialsColors = [
+      { text: "text-[#1a3a6f]", bg: "bg-[#1a3a6f]/10" },
+      { text: "text-[#2d5aa8]", bg: "bg-[#2d5aa8]/10" },
+      { text: "text-[#1E90FF]", bg: "bg-[#1E90FF]/10" },
+      { text: "text-[#17A398]", bg: "bg-[#17A398]/10" },
+      { text: "text-[#10b981]", bg: "bg-[#10b981]/10" },
+      { text: "text-[#ca8a04]", bg: "bg-[#facc15]/20" },
+    ];
+    return initialsColors[id % initialsColors.length];
+  };
+
+  const statusColors: Record<string, { text: string, bg: string, border: string }> = {
+    "Active": { text: "text-[#10b981]", bg: "bg-[#10b981]/10", border: "border-[#10b981]/20" },
+    "Inactive": { text: "text-[#ef4444]", bg: "bg-[#ef4444]/10", border: "border-[#ef4444]/20" },
+    "Trial": { text: "text-[#1E90FF]", bg: "bg-[#1E90FF]/10", border: "border-[#1E90FF]/20" },
+    "Suspended": { text: "text-[#ef4444]", bg: "bg-[#ef4444]/10", border: "border-[#ef4444]/20" },
+    "Unknown": { text: "text-muted-foreground", bg: "bg-muted/10", border: "border-border" },
+  };
+
   const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'active': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
-      case 'inactive': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
-      case 'trial': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-      case 'suspended': return 'bg-destructive/10 text-destructive border-destructive/20';
-      default: return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
-    }
+    const info = statusColors[status] || statusColors["Unknown"];
+    return `${info.bg} ${info.text} ${info.border}`;
   };
 
   const getTypeColor = (type: string) => {
@@ -399,23 +414,46 @@ export default function Accounts() {
     }
   };
 
-  const getAccountColor = (id: number) => {
-    const initialsColors = [
-      { text: "text-blue-600", bg: "bg-blue-50" },
-      { text: "text-emerald-600", bg: "bg-emerald-50" },
-      { text: "text-amber-600", bg: "bg-amber-50" },
-      { text: "text-indigo-600", bg: "bg-indigo-50" },
-      { text: "text-rose-600", bg: "bg-rose-50" },
-      { text: "text-violet-600", bg: "bg-violet-50" },
-    ];
-    return initialsColors[id % initialsColors.length];
-  };
-
   const getInitials = (name: string) => {
     if (!name) return "?";
     const parts = name.split(' ');
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    if (parts.length >= 2) return (parts[0][0] + (parts[1] ? parts[1][0] : parts[0][1] || "")).toUpperCase();
     return (name[0] + (name[1] || name[0])).toUpperCase().slice(0, 2);
+  };
+
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: rows.length };
+    rows.forEach(r => {
+      const s = r.status || "Unknown";
+      counts[s] = (counts[s] || 0) + 1;
+    });
+    return counts;
+  }, [rows]);
+
+  const initialsColors = [
+    { text: "text-[#1a3a6f]", bg: "bg-[#1a3a6f]/10", dot: "bg-[#1a3a6f]" },
+    { text: "text-[#2d5aa8]", bg: "bg-[#2d5aa8]/10", dot: "bg-[#2d5aa8]" },
+    { text: "text-[#1E90FF]", bg: "bg-[#1E90FF]/10", dot: "bg-[#1E90FF]" },
+    { text: "text-[#17A398]", bg: "bg-[#17A398]/10", dot: "bg-[#17A398]" },
+    { text: "text-[#10b981]", bg: "bg-[#10b981]/10", dot: "bg-[#10b981]" },
+    { text: "text-[#ca8a04]", bg: "bg-[#facc15]/20", dot: "bg-[#facc15]" },
+  ];
+
+  const getAccountColor = (id: number) => {
+    return initialsColors[id % initialsColors.length];
+  };
+
+  const statusColors: Record<string, { text: string, bg: string, border: string, dot: string }> = {
+    "Active": { text: "text-[#10b981]", bg: "bg-[#10b981]/10", border: "border-[#10b981]/20", dot: "bg-[#10b981]" },
+    "Inactive": { text: "text-[#ef4444]", bg: "bg-[#ef4444]/10", border: "border-[#ef4444]/20", dot: "bg-[#ef4444]" },
+    "Trial": { text: "text-[#1E90FF]", bg: "bg-[#1E90FF]/10", border: "border-[#1E90FF]/20", dot: "bg-[#1E90FF]" },
+    "Suspended": { text: "text-[#ef4444]", bg: "bg-[#ef4444]/10", border: "border-[#ef4444]/20", dot: "bg-[#ef4444]" },
+    "Unknown": { text: "text-muted-foreground", bg: "bg-muted/10", border: "border-border", dot: "bg-slate-400" },
+  };
+
+  const getStatusColor = (status: string) => {
+    const info = statusColors[status] || statusColors["Unknown"];
+    return `${info.bg} ${info.text} ${info.border}`;
   };
 
   const handleResize = (col: string, width: number) => { 
@@ -547,15 +585,25 @@ export default function Accounts() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
 
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white shadow-none border-slate-200">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All">All Statuses ({rows.length})</SelectItem>
-              {STATUS_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <div className="relative">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white shadow-none border-slate-200 pl-10 pr-4 font-bold appearance-none">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Statuses ({rows.length})</SelectItem>
+                {STATUS_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <div className="absolute left-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600 border border-slate-200 pointer-events-none">
+              {statusCounts[statusFilter] || 0}
+            </div>
+            <div className="absolute right-8 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+              {statusFilter !== 'All' && (
+                <div className={cn("w-2.5 h-2.5 rounded-full border border-black/10", statusColors[statusFilter]?.dot || "bg-slate-400")} />
+              )}
+            </div>
+          </div>
 
           <div className="flex-1" />
           <input type="file" accept=".csv" className="hidden" ref={fileInputRef} onChange={handleImportCSV} />
@@ -570,147 +618,123 @@ export default function Accounts() {
         </div>
 
         <div className="flex-1 min-h-0 bg-white rounded-[32px] border border-slate-200 flex flex-col overflow-hidden shadow-none">
-          <div className="overflow-x-auto">
-            <Table className="w-full table-fixed border-separate border-spacing-0">
-              <TableHeader className="bg-slate-50 border-b border-slate-100 sticky top-0 z-20">
-                <TableRow className="hover:bg-transparent border-none">
-                  <TableHead className="w-10 px-0 border-r border-slate-100/50 sticky left-0 z-30 bg-slate-50">
-                    <div className="flex justify-center"><Checkbox checked={selectedIds.length === rows.length && rows.length > 0} onCheckedChange={toggleSelectAll} /></div>
-                  </TableHead>
-                  {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => (
-                    <TableHead 
-                      key={col} 
-                      draggable
-                      onDragStart={() => handleColDragStart(idx)}
-                      onDragOver={(e) => handleColDragOver(e, idx)}
-                      style={{ width: colWidths[col] || 200, left: idx < 3 ? (40 + columns.filter(c => visibleColumns.includes(c)).slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined }}
-                      className={cn("px-4 py-3 border-r border-slate-100/50 relative group select-none transition-colors hover:bg-slate-100/50", idx < 3 && "sticky z-30 bg-slate-50", !visibleColumns.includes(col) && "hidden")}
-                    >
-                      <div className="flex items-center justify-between w-full h-full cursor-pointer" onClick={() => handleSort(col)}>
-                        <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider truncate mr-2">
-                          {formatHeader(col)}
-                        </span>
-                        {sortConfig.key === col && (
-                          <div className="text-blue-500 shrink-0">
-                            {sortConfig.direction === 'asc' ? (
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-                            ) : (
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      <div 
-                        onMouseDown={(e) => {
-                          e.stopPropagation();
-                          const startX = e.pageX;
-                          const startWidth = colWidths[col] || 200;
-                          const onMouseMove = (me: MouseEvent) => {
-                            const newWidth = Math.max(50, startWidth + (me.pageX - startX));
-                            handleResize(col, newWidth);
-                          };
-                          const onMouseUp = () => {
-                            document.removeEventListener('mousemove', onMouseMove);
-                            document.removeEventListener('mouseup', onMouseUp);
-                          };
-                          document.addEventListener('mousemove', onMouseMove);
-                          document.addEventListener('mouseup', onMouseUp);
-                        }}
-                        className="absolute right-0 top-0 w-1.5 h-full cursor-col-resize hover:bg-blue-400 z-10 transition-colors bg-transparent"
+          <div className="shrink-0 grid grid-cols-[40px_44px_60px_1.5fr_1fr_1fr_1fr_1fr] items-center gap-3 bg-white px-6 py-4 text-[11px] font-bold text-muted-foreground border-b border-border uppercase tracking-wider z-20" data-testid="row-contacts-head">
+            <div className="flex justify-center border-r border-border/12 h-full flex items-center">
+              <Checkbox 
+                checked={selectedIds.length === rows.length && rows.length > 0} 
+                onCheckedChange={toggleSelectAll}
+                className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 cursor-pointer"
+              />
+            </div>
+            <div className="border-r border-border/20 h-full" />
+            <div className="border-r border-border/20 h-full flex items-center px-2">ID</div>
+            <div className="sticky left-0 bg-white z-30 px-2 border-r border-border/20 h-full flex items-center">Company name</div>
+            <div className="border-r border-border/20 h-full flex items-center px-2">Status</div>
+            <div className="border-r border-border/20 h-full flex items-center px-2">Type</div>
+            <div className="border-r border-border/20 h-full flex items-center px-2">Email</div>
+            <div className="flex items-center px-2">Phone</div>
+          </div>
+          <div className="flex-1 overflow-y-auto divide-y divide-border/12" data-testid="list-contacts">
+            {loading && rows.length === 0 ? (
+              <div className="h-96 text-center flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/40" /></div>
+            ) : (
+              finalRows.map((row) => {
+                const accountColor = getAccountColor(row.Id);
+                return (
+                  <div 
+                    key={row.Id} 
+                    id={`row-${row.Id}`}
+                    className={cn(
+                      "grid grid-cols-[40px_44px_60px_1.5fr_1fr_1fr_1fr_1fr] items-center gap-3 px-6 py-0 group transition-all duration-200 border-b border-slate-200/12 h-12 bg-white hover:bg-slate-50/50",
+                      selectedIds.includes(row.Id) && "bg-blue-50/50"
+                    )}
+                  >
+                    <div className="flex justify-center border-r border-border/12 h-full flex items-center">
+                      <Checkbox 
+                        checked={selectedIds.includes(row.Id)} 
+                        onCheckedChange={() => toggleSelect(row.Id)} 
+                        className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 cursor-pointer"
                       />
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading && rows.length === 0 ? (
-                  <TableRow><TableCell colSpan={columns.length + 1} className="h-96 text-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/40" /></TableCell></TableRow>
-                ) : (
-                  finalRows.map((row) => (
-                    <TableRow 
-                      key={row.Id} 
-                      id={`row-${row.Id}`}
-                      className={cn(
-                        "group transition-all duration-200 border-b border-slate-100",
-                        selectedIds.includes(row.Id) ? "bg-blue-50/50" : "hover:bg-slate-50/50"
-                      )}
-                    >
-                      <TableCell className="w-10 px-0 border-r border-slate-100/50 sticky left-0 z-10 bg-inherit">
-                        <div className="flex justify-center"><Checkbox checked={selectedIds.includes(row.Id)} onCheckedChange={() => toggleSelect(row.Id)} /></div>
-                      </TableCell>
-                      {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => {
-                        const val = row[col]; const isSticky = idx < 3;
-                        const leftPos = isSticky ? (40 + columns.filter(c => visibleColumns.includes(c)).slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 200), 0)) : undefined;
-                        return (
-                          <TableCell 
-                            key={col} 
-                            style={{ width: colWidths[col] || 200, left: leftPos }}
-                            className={cn(
-                              "px-4 py-3 border-r border-b border-slate-200 truncate align-middle bg-white", 
-                              isSticky && "sticky z-10"
-                            )}
-                          >
-                            {col === "Account ID" ? (
-                              <span className="text-xs font-mono font-bold text-slate-400">#{val}</span>
-                            ) : col === "ACC" || col === "Company Name" ? (
-                              <div className="flex items-center gap-3">
-                                {col === "Company Name" && (
-                                  <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm shrink-0 border border-slate-100", getAccountColor(row.Id).bg, getAccountColor(row.Id).text)}>
-                                    {getInitials(row.name || "")}
-                                  </div>
-                                )}
-                                <div className="relative group/cell w-full h-full min-h-[1.5rem] flex items-center">
-                                  <input 
-                                    type="text"
-                                    value={val || ""}
-                                    readOnly={NON_EDITABLE_FIELDS.includes(col)}
-                                    onChange={(e) => setRows(prev => prev.map(r => r.Id === row.Id ? { ...r, [col]: e.target.value } : r))}
-                                    onBlur={(e) => handleInlineUpdate(row.Id, col, e.target.value)}
-                                    className="bg-transparent border-none focus:ring-0 w-full text-[11px] font-medium text-slate-700 p-0 h-auto focus:bg-white focus:px-2 focus:py-1 focus:rounded focus:shadow-sm transition-all"
-                                  />
-                                </div>
-                              </div>
-                            ) : col === "status" ? (
-                              <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
-                                <SelectTrigger className={cn("h-7 w-full font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getStatusColor(val))}><SelectValue /></SelectTrigger>
-                                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">{STATUS_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                              </Select>
-                            ) : col === "type" ? (
-                              <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
-                                <SelectTrigger className={cn("h-7 w-full font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none", getTypeColor(val))}><SelectValue /></SelectTrigger>
-                                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">{TYPE_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                              </Select>
-                            ) : col === "timezone" ? (
-                              <Select defaultValue={val} onValueChange={(v) => handleInlineUpdate(row.Id, col, v)}>
-                                <SelectTrigger className="h-7 w-full text-[11px] px-2 rounded-lg border-slate-200 shadow-none bg-white/50"><SelectValue /></SelectTrigger>
-                                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">{TIMEZONE_OPTIONS.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                              </Select>
-                            ) : ["Created Time", "Last Modified Time", "CreatedAt", "UpdatedAt", "created_at", "updated_at", "Created time", "Last modified time"].includes(col) ? (
-                              <span className="text-[11px] font-bold text-blue-600 font-mono whitespace-nowrap">{formatDate(val)}</span>
-                            ) : (
-                              <div className="relative group/cell w-full h-full min-h-[1.5rem] flex items-center">
-                                <input 
-                                  type="text"
-                                  value={val || ""}
-                                  readOnly={NON_EDITABLE_FIELDS.includes(col)}
-                                  onChange={(e) => setRows(prev => prev.map(r => r.Id === row.Id ? { ...r, [col]: e.target.value } : r))}
-                                  onBlur={(e) => handleInlineUpdate(row.Id, col, e.target.value)}
-                                  title={val || ""}
-                                  className={cn(
-                                    "w-full bg-transparent text-[13px] text-slate-600 focus:outline-none focus:text-blue-600 transition-colors truncate",
-                                    NON_EDITABLE_FIELDS.includes(col) ? "cursor-default" : "cursor-text hover:bg-slate-100/50 rounded px-1 -mx-1"
-                                  )}
-                                />
-                              </div>
-                            )}
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                    </div>
+                    
+                    <div className="flex justify-center border-r border-border/20 h-full flex items-center">
+                      <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm border border-slate-100", accountColor.bg, accountColor.text)}>
+                        {getInitials(row.name || "")}
+                      </div>
+                    </div>
+
+                    <div className="flex h-full items-center px-2 border-r border-border/20">
+                      <span className="text-xs font-mono font-bold text-slate-400">#{row.Id}</span>
+                    </div>
+
+                    <div className="sticky left-0 bg-white group-hover:bg-slate-50/50 transition-colors z-10 px-2 border-r border-border/20 h-full flex items-center">
+                      <input 
+                        type="text"
+                        value={row.name || ""}
+                        readOnly={NON_EDITABLE_FIELDS.includes("name")}
+                        onChange={(e) => setRows(prev => prev.map(r => r.Id === row.Id ? { ...r, name: e.target.value } : r))}
+                        onBlur={(e) => handleInlineUpdate(row.Id, "name", e.target.value)}
+                        className="bg-transparent border-none focus:ring-0 w-full text-[11px] font-bold text-slate-900 p-0 h-auto focus:bg-white focus:px-2 focus:py-1 focus:rounded focus:shadow-sm transition-all"
+                      />
+                    </div>
+
+                    <div className="px-2 flex items-center h-full w-full border-r border-border/20">
+                      <div className="relative w-full flex justify-center">
+                        <select
+                          value={row.status}
+                          onChange={(e) => handleInlineUpdate(row.Id, "status", e.target.value)}
+                          className={cn(
+                            "h-7 w-full font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none appearance-none cursor-pointer text-center",
+                            statusColors[row.status]?.bg || "bg-muted/10",
+                            statusColors[row.status]?.text || "text-muted-foreground",
+                            statusColors[row.status]?.border || "border-border"
+                          )}
+                        >
+                          {STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="px-2 flex items-center h-full w-full border-r border-border/20">
+                      <div className="relative w-full flex justify-center">
+                        <select
+                          value={row.type}
+                          onChange={(e) => handleInlineUpdate(row.Id, "type", e.target.value)}
+                          className={cn(
+                            "h-7 w-full font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none appearance-none cursor-pointer text-center",
+                            getTypeColor(row.type)
+                          )}
+                        >
+                          {TYPE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="px-2 flex items-center h-full w-full border-r border-border/20">
+                      <input 
+                        type="text"
+                        value={row.owner_email || ""}
+                        readOnly={NON_EDITABLE_FIELDS.includes("owner_email")}
+                        onChange={(e) => setRows(prev => prev.map(r => r.Id === row.Id ? { ...r, owner_email: e.target.value } : r))}
+                        onBlur={(e) => handleInlineUpdate(row.Id, "owner_email", e.target.value)}
+                        className="bg-transparent border-none focus:ring-0 w-full text-[11px] font-medium text-slate-700 p-0 h-auto focus:bg-white focus:px-2 focus:py-1 focus:rounded focus:shadow-sm transition-all truncate"
+                      />
+                    </div>
+
+                    <div className="px-2 flex items-center h-full w-full">
+                      <input 
+                        type="text"
+                        value={row.phone || ""}
+                        readOnly={NON_EDITABLE_FIELDS.includes("phone")}
+                        onChange={(e) => setRows(prev => prev.map(r => r.Id === row.Id ? { ...r, phone: e.target.value } : r))}
+                        onBlur={(e) => handleInlineUpdate(row.Id, "phone", e.target.value)}
+                        className="bg-transparent border-none focus:ring-0 w-full text-[11px] font-medium text-slate-700 p-0 h-auto focus:bg-white focus:px-2 focus:py-1 focus:rounded focus:shadow-sm transition-all truncate"
+                      />
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
