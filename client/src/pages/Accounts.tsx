@@ -292,21 +292,14 @@ export default function Accounts() {
     setRows(prev => prev.map(r => idsToUpdate.includes(r.Id) ? { ...r, [col]: cleanValue } : r));
 
     try {
-      const payloads = idsToUpdate.map(id => ({ id: id, fields: { [col]: cleanValue } }));
-      const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
+      // Use the query parameter pattern as requested
+      const res = await fetch(`${NOCODB_BASE_URL}?tableId=${TABLE_ID}&id=${rowId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify(payloads),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [col]: cleanValue }),
       });
 
-      if (!res.ok) {
-        const fallbackRes = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(idsToUpdate.map(id => ({ Id: id, [col]: cleanValue }))),
-        });
-        if (!fallbackRes.ok) throw new Error("Update failed");
-      }
+      if (!res.ok) throw new Error("Update failed");
       toast({ title: "Updated", description: "Changes saved to database." });
     } catch (err) {
       toast({ variant: "destructive", title: "Sync Error", description: "Failed to save to database." });
@@ -317,10 +310,8 @@ export default function Accounts() {
     try {
       setLoading(true);
       const deletePromises = selectedIds.map(id => 
-        fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
+        fetch(`${NOCODB_BASE_URL}?tableId=${TABLE_ID}&id=${id}`, {
           method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ Id: id }),
         })
       );
       await Promise.all(deletePromises);
@@ -339,7 +330,7 @@ export default function Accounts() {
     try {
       const cleanData: any = {};
       Object.keys(newRowData).forEach(key => { if (!NON_EDITABLE_FIELDS.includes(key) && !HIDDEN_FIELDS.includes(key)) cleanData[key] = newRowData[key]; });
-      const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
+      const res = await fetch(`${NOCODB_BASE_URL}?tableId=${TABLE_ID}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(cleanData),
