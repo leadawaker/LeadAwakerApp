@@ -1,0 +1,70 @@
+ have a React/TypeScript page (accounts.tsx) that reads data from NocoDB correctly through a Netlify function proxy, but create, update, and delete operations fail.
+Important context:
+The frontend calls a Netlify function at:
+/.netlify/functions/api
+The Netlify function injects:
+NOCODB_TOKEN
+NOCODB_BASE_URL
+GET requests work perfectly.
+POST, PATCH, DELETE all fail with a “failed” message.
+This started happening without frontend changes after a NocoDB update.
+Root Cause
+The code is using outdated / Airtable-style NocoDB endpoints.
+NocoDB v2 API requires record IDs in the URL for PATCH and DELETE, and POST requires a { fields: ... } body.
+The current code incorrectly calls:
+Copy code
+
+/tables/{tableId}/records        (for PATCH, POST, DELETE)
+This no longer works in modern NocoDB.
+Correct NocoDB v2 API format
+Copy code
+
+GET    /tables/{tableId}/records
+POST   /tables/{tableId}/records
+PATCH  /tables/{tableId}/records/{recordId}
+DELETE /tables/{tableId}/records/{recordId}
+And:
+POST body must be: { fields: {...} }
+PATCH body must be just the fields object: { fieldName: value }
+DELETE has no body
+Required Code Fixes in accounts.tsx
+1) Fix inline update (PATCH)
+Replace the existing PATCH logic with:
+Ts
+Copy code
+for (const id of idsToUpdate) {
+  const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ [col]: cleanValue }),
+  });
+
+  if (!res.ok) throw new Error("Update failed");
+}
+2) Fix delete
+Replace delete logic with:
+Ts
+Copy code
+for (const id of selectedIds) {
+  const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) throw new Error("Delete failed");
+}
+3) Fix create (POST)
+Replace create logic with:
+Ts
+Copy code
+const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ fields: cleanData }),
+});
+Do NOT change:
+Netlify function
+Environment variables
+Authentication logic
+Table ID
+Fetch URL base
+Only update the API paths and request bodies as described.

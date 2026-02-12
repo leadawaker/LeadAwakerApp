@@ -292,20 +292,14 @@ export default function Accounts() {
     setRows(prev => prev.map(r => idsToUpdate.includes(r.Id) ? { ...r, [col]: cleanValue } : r));
 
     try {
-      const payloads = idsToUpdate.map(id => ({ id: id, fields: { [col]: cleanValue } }));
-      const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify(payloads),
-      });
-
-      if (!res.ok) {
-        const fallbackRes = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
+      for (const id of idsToUpdate) {
+        const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records/${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(idsToUpdate.map(id => ({ Id: id, [col]: cleanValue }))),
+          body: JSON.stringify({ [col]: cleanValue }),
         });
-        if (!fallbackRes.ok) throw new Error("Update failed");
+
+        if (!res.ok) throw new Error("Update failed");
       }
       toast({ title: "Updated", description: "Changes saved to database." });
     } catch (err) {
@@ -316,14 +310,13 @@ export default function Accounts() {
   const handleDelete = async () => {
     try {
       setLoading(true);
-      const deletePromises = selectedIds.map(id => 
-        fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
+      for (const id of selectedIds) {
+        const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records/${id}`, {
           method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ Id: id }),
-        })
-      );
-      await Promise.all(deletePromises);
+        });
+
+        if (!res.ok) throw new Error("Delete failed");
+      }
       toast({ title: "Deleted", description: `Successfully deleted ${selectedIds.length} records.` });
       setSelectedIds([]);
       fetchData();
@@ -342,7 +335,7 @@ export default function Accounts() {
       const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(cleanData),
+        body: JSON.stringify({ fields: cleanData }),
       });
       if (!res.ok) throw new Error("Creation failed");
       toast({ title: "Success", description: "New account created." });
@@ -696,7 +689,7 @@ export default function Accounts() {
                               <input 
                                 type="text"
                                 value={row[col] || ""}
-                                readOnly={NON_EDITABLE_FIELDS.includes(col)}
+                                readOnly={false}
                                 onChange={(e) => setRows(prev => prev.map(r => r.Id === row.Id ? { ...r, [col]: e.target.value } : r))}
                                 onBlur={(e) => handleInlineUpdate(row.Id, col, e.target.value)}
                                 className={cn(
