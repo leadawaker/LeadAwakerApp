@@ -220,35 +220,28 @@ export default function Accounts() {
       setRows(list);
       
       if (list.length > 0) {
-        const allKeys = Object.keys(list[0]); console.log("Keys found:", allKeys);
-        // Remove HIDDEN_FIELDS check here to ensure we get everything first
+        const allKeys = Object.keys(list[0]);
         const keys = allKeys; 
-        const savedOrder = null; null;
-        let ordered: string[] = savedOrder ? JSON.parse(savedOrder) : ["Id", "Image"];
+        let ordered: string[] = ["Id", "Image"];
 
-        if (!savedOrder) {
-          if (keys.includes("name")) ordered.push("name");
-          const techCols = ["twilio_account_sid", "twilio_auth_token", "twilio_messaging_service_sid", "twilio_default_from_number", "webhook_url", "webhook_secret", "max_daily_sends"];
-          if (keys.includes("status")) ordered.push("status");
-          if (keys.includes("type")) ordered.push("type");
-          if (keys.includes("owner_email")) ordered.push("owner_email");
-          if (keys.includes("phone")) ordered.push("phone");
-          if (keys.includes("business_niche")) ordered.push("business_niche");
-          if (keys.includes("website")) ordered.push("website");
-          if (keys.includes("notes")) ordered.push("notes");
-          if (keys.includes("timezone")) ordered.push("timezone");
-          keys.forEach(k => { if (!ordered.includes(k) && !techCols.includes(k) && !["created_at", "updated_at", "Created Time", "Last Modified Time", "Id", "Account ID"].includes(k)) ordered.push(k); });
-          techCols.forEach(k => { if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k); });
-          const middleCols = ["number of leads", "number of campaigns", "Leads", "Campaigns", "Interactions", "Users", "Prompt Libraries", "Tags", "Automation Logs"];
-          middleCols.forEach(k => { if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k); });
-          ["Created Time", "Last Modified Time"].forEach(k => { if (allKeys.includes(k)) ordered.push(k); });
-        }
+        if (keys.includes("name")) ordered.push("name");
+        const techCols = ["twilio_account_sid", "twilio_auth_token", "twilio_messaging_service_sid", "twilio_default_from_number", "webhook_url", "webhook_secret", "max_daily_sends"];
+        if (keys.includes("status")) ordered.push("status");
+        if (keys.includes("type")) ordered.push("type");
+        if (keys.includes("owner_email")) ordered.push("owner_email");
+        if (keys.includes("phone")) ordered.push("phone");
+        if (keys.includes("business_niche")) ordered.push("business_niche");
+        if (keys.includes("website")) ordered.push("website");
+        if (keys.includes("notes")) ordered.push("notes");
+        if (keys.includes("timezone")) ordered.push("timezone");
+        keys.forEach(k => { if (!ordered.includes(k) && !techCols.includes(k) && !["created_at", "updated_at", "Created Time", "Last Modified Time", "Id", "Account ID"].includes(k)) ordered.push(k); });
+        techCols.forEach(k => { if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k); });
+        const middleCols = ["number of leads", "number of campaigns", "Leads", "Campaigns", "Interactions", "Users", "Prompt Libraries", "Tags", "Automation Logs"];
+        middleCols.forEach(k => { if (allKeys.includes(k) && !ordered.includes(k)) ordered.push(k); });
+        ["Created Time", "Last Modified Time"].forEach(k => { if (allKeys.includes(k)) ordered.push(k); });
         
-        // Ensure "Id" is always first and not filtered out
         const finalCols = ["Id", ...ordered.filter(c => c !== "Id" && !HIDDEN_FIELDS.includes(c))];
         setColumns(finalCols);
-        
-        // Always reset visible columns if "Id" is missing from current view
         setVisibleColumns(finalCols);
         localStorage.setItem("accounts_visible_columns", JSON.stringify(finalCols));
         
@@ -296,28 +289,17 @@ export default function Accounts() {
     if (NON_EDITABLE_FIELDS.includes(col)) return;
     const idsToUpdate = selectedIds.includes(rowId) ? selectedIds : [rowId];
     const cleanValue = value === null || value === undefined ? "" : value;
-    
-    // Optimistic UI update
     setRows(prev => prev.map(r => idsToUpdate.includes(r.Id) ? { ...r, [col]: cleanValue } : r));
 
     try {
-      const payloads = idsToUpdate.map(id => ({ 
-        id: id, 
-        fields: { [col]: cleanValue } 
-      }));
-
-      // If the backend expects a list of updates
+      const payloads = idsToUpdate.map(id => ({ id: id, fields: { [col]: cleanValue } }));
       const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
         method: "PATCH",
-        headers: { 
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
         body: JSON.stringify(payloads),
       });
 
       if (!res.ok) {
-        // Try fallback if the above format is not accepted (some NocoDB versions expect single object or different array structure)
         const fallbackRes = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -325,15 +307,9 @@ export default function Accounts() {
         });
         if (!fallbackRes.ok) throw new Error("Update failed");
       }
-
       toast({ title: "Updated", description: "Changes saved to database." });
     } catch (err) {
-      console.error("Update error:", err);
-      toast({ 
-        variant: "destructive", 
-        title: "Sync Error", 
-        description: "Failed to save to database." 
-      });
+      toast({ variant: "destructive", title: "Sync Error", description: "Failed to save to database." });
     }
   };
 
@@ -422,11 +398,6 @@ export default function Accounts() {
 
   const getAccountColor = (id: number) => {
     return initialsColors[id % initialsColors.length];
-  };
-
-  const getStatusColor = (status: string) => {
-    const info = statusColors[status] || statusColors["Unknown"];
-    return `${info.bg} ${info.text} ${info.border}`;
   };
 
   const getTypeColor = (type: string) => {
@@ -598,143 +569,151 @@ export default function Accounts() {
         </div>
 
         <div className="flex-1 min-h-0 bg-white rounded-[32px] border border-slate-200 flex flex-col overflow-hidden shadow-none">
-          <div className="shrink-0 flex items-center bg-white border-b border-slate-200 uppercase tracking-wider z-20 overflow-x-auto no-scrollbar" data-testid="row-contacts-head">
-            <div className="w-[40px] flex justify-center border-r border-slate-200 shrink-0 py-4">
-              <Checkbox 
-                checked={selectedIds.length === rows.length && rows.length > 0} 
-                onCheckedChange={toggleSelectAll}
-                className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 cursor-pointer"
-              />
-            </div>
-            {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => (
-              <div 
-                key={col}
-                draggable={idx >= 3}
-                onDragStart={() => handleColDragStart(columns.indexOf(col))}
-                onDragOver={(e) => handleColDragOver(e, columns.indexOf(col))}
-                className={cn(
-                  "border-r border-slate-200 h-full flex items-center px-4 relative group/col text-[11px] font-bold text-muted-foreground shrink-0 py-4 transition-colors",
-                  idx < 3 && "sticky z-40 bg-white border-blue-100",
-                  idx === 0 && "left-0",
-                  idx === 1 && "left-[80px]",
-                  idx === 2 && "left-[140px]",
-                )}
-                style={{ width: colWidths[col] || 160 }}
-              >
-                <div className="flex-1 truncate cursor-pointer" onClick={() => handleSort(col)}>
-                  {formatHeader(col)}
+          <div className="flex-1 overflow-auto divide-y divide-slate-200 no-scrollbar" data-testid="list-contacts">
+            <div className="min-w-fit">
+              <div className="flex items-center bg-white border-b border-slate-200 uppercase tracking-wider z-20 sticky top-0" data-testid="row-contacts-head">
+                <div className="w-[40px] flex justify-center border-r border-slate-200 shrink-0 py-4 sticky left-0 z-50 bg-white">
+                  <Checkbox 
+                    checked={selectedIds.length === rows.length && rows.length > 0} 
+                    onCheckedChange={toggleSelectAll}
+                    className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 cursor-pointer"
+                  />
                 </div>
-                <div 
-                  className="absolute right-0 top-0 w-1 h-full cursor-col-resize hover:bg-blue-500 opacity-0 group-hover/col:opacity-100 transition-opacity"
-                  onMouseDown={(e) => {
-                    const startX = e.pageX;
-                    const startWidth = colWidths[col] || 160;
-                    const onMouseMove = (moveEvent: MouseEvent) => {
-                      handleResize(col, Math.max(50, startWidth + (moveEvent.pageX - startX)));
-                    };
-                    const onMouseUp = () => {
-                      window.removeEventListener('mousemove', onMouseMove);
-                      window.removeEventListener('mouseup', onMouseUp);
-                    };
-                    window.addEventListener('mousemove', onMouseMove);
-                    window.addEventListener('mouseup', onMouseUp);
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="flex-1 overflow-auto divide-y divide-slate-200" data-testid="list-contacts">
-            {loading && rows.length === 0 ? (
-              <div className="h-96 text-center flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/40" /></div>
-            ) : (
-              finalRows.map((row) => {
-                const accountColor = getAccountColor(row.Id);
-                const isSelected = selectedIds.includes(row.Id);
-                return (
-                  <div 
-                    key={row.Id} 
-                    id={`row-${row.Id}`}
-                    className={cn(
-                      "flex items-center group transition-all duration-200 h-12 bg-white hover:bg-slate-50/50",
-                      isSelected && "bg-blue-50/80"
-                    )}
-                  >
-                    <div className="w-[40px] flex justify-center border-r border-slate-200 shrink-0 h-full items-center">
-                      <Checkbox 
-                        checked={isSelected} 
-                        onCheckedChange={() => toggleSelect(row.Id)} 
-                        className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 cursor-pointer"
+                {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => {
+                  const stickyOffset = 40 + columns.filter(c => visibleColumns.includes(c)).slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 160), 0);
+                  return (
+                    <div 
+                      key={col}
+                      draggable={idx >= 3}
+                      onDragStart={() => handleColDragStart(columns.indexOf(col))}
+                      onDragOver={(e) => handleColDragOver(e, columns.indexOf(col))}
+                      className={cn(
+                        "border-r border-slate-200 h-full flex items-center px-4 relative group/col text-[11px] font-bold text-muted-foreground shrink-0 py-4 transition-colors",
+                        idx < 3 && "sticky z-40 bg-white border-blue-100",
+                      )}
+                      style={{ 
+                        width: colWidths[col] || 160,
+                        left: idx < 3 ? stickyOffset : undefined
+                      }}
+                    >
+                      <div className="flex-1 truncate cursor-pointer" onClick={() => handleSort(col)}>
+                        {formatHeader(col)}
+                      </div>
+                      <div 
+                        className="absolute right-0 top-0 w-1 h-full cursor-col-resize hover:bg-blue-500 opacity-0 group-hover/col:opacity-100 transition-opacity"
+                        onMouseDown={(e) => {
+                          const startX = e.pageX;
+                          const startWidth = colWidths[col] || 160;
+                          const onMouseMove = (moveEvent: MouseEvent) => {
+                            handleResize(col, Math.max(50, startWidth + (moveEvent.pageX - startX)));
+                          };
+                          const onMouseUp = () => {
+                            window.removeEventListener('mousemove', onMouseMove);
+                            window.removeEventListener('mouseup', onMouseUp);
+                          };
+                          window.addEventListener('mousemove', onMouseMove);
+                          window.addEventListener('mouseup', onMouseUp);
+                        }}
                       />
                     </div>
-                    
-                    {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => (
-                      <div 
-                        key={col}
-                        className={cn(
-                          "px-4 border-r border-slate-200 h-full flex items-center shrink-0 transition-colors",
-                          idx < 3 && "sticky z-10",
-                          idx === 0 && "left-0",
-                          idx === 1 && "left-[80px]",
-                          idx === 2 && "left-[140px]",
-                          isSelected ? "bg-blue-50/80" : (idx < 3 ? "bg-white group-hover:bg-slate-50/50" : ""),
-                          isSelected && col === "name" && "text-blue-700"
-                        )}
-                        style={{ width: colWidths[col] || 160 }}
-                      >
-                        {col === "Id" ? (
-                          <span className="text-xs font-mono font-bold text-slate-400">#{row.Id}</span>
-                        ) : col === "Image" ? (
-                          <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm border border-slate-100", accountColor.bg, accountColor.text)}>
-                            {getInitials(row.name || "")}
-                          </div>
-                        ) : col === "status" ? (
-                          <select
-                            value={row.status}
-                            onChange={(e) => handleInlineUpdate(row.Id, "status", e.target.value)}
+                  );
+                })}
+              </div>
+              {loading && rows.length === 0 ? (
+                <div className="h-96 text-center flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary/40" /></div>
+              ) : (
+                finalRows.map((row) => {
+                  const accountColor = getAccountColor(row.Id);
+                  const isSelected = selectedIds.includes(row.Id);
+                  return (
+                    <div 
+                      key={row.Id} 
+                      id={`row-${row.Id}`}
+                      className={cn(
+                        "flex items-center group transition-all duration-200 h-12 bg-white hover:bg-slate-50/50",
+                        isSelected && "bg-blue-50/80"
+                      )}
+                    >
+                      <div className="w-[40px] flex justify-center border-r border-slate-200 shrink-0 h-full items-center sticky left-0 z-30 bg-inherit">
+                        <Checkbox 
+                          checked={isSelected} 
+                          onCheckedChange={() => toggleSelect(row.Id)} 
+                          className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 cursor-pointer"
+                        />
+                      </div>
+                      
+                      {columns.filter(c => visibleColumns.includes(c)).map((col, idx) => {
+                        const stickyOffset = 40 + columns.filter(c => visibleColumns.includes(c)).slice(0, idx).reduce((acc, c) => acc + (colWidths[c] || 160), 0);
+                        return (
+                          <div 
+                            key={col}
                             className={cn(
-                              "h-7 w-full font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none appearance-none cursor-pointer text-center",
-                              statusColors[row.status]?.bg || "bg-muted/10",
-                              statusColors[row.status]?.text || "text-muted-foreground",
-                              statusColors[row.status]?.border || "border-border"
-                            )}
-                          >
-                            {STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                          </select>
-                        ) : col === "type" ? (
-                          <select
-                            value={row.type}
-                            onChange={(e) => handleInlineUpdate(row.Id, "type", e.target.value)}
-                            className={cn(
-                              "h-7 w-full font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none appearance-none cursor-pointer text-center",
-                              getTypeColor(row.type)
-                            )}
-                          >
-                            {TYPE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                          </select>
-                        ) : col.toLowerCase().includes('time') || col.toLowerCase().includes('at') || col === 'CreatedAt' || col === 'UpdatedAt' ? (
-                          <div className="text-[11px] font-medium truncate">
-                            {formatDate(row[col])}
-                          </div>
-                        ) : (
-                          <input 
-                            type="text"
-                            value={row[col] || ""}
-                            readOnly={NON_EDITABLE_FIELDS.includes(col)}
-                            onChange={(e) => setRows(prev => prev.map(r => r.Id === row.Id ? { ...r, [col]: e.target.value } : r))}
-                            onBlur={(e) => handleInlineUpdate(row.Id, col, e.target.value)}
-                            className={cn(
-                              "bg-transparent border-none focus:ring-0 w-full text-[11px] p-0 h-auto focus:bg-white focus:px-2 focus:py-1 focus:rounded focus:shadow-sm transition-all truncate",
-                              col === "name" ? "font-bold text-slate-900 text-[13px]" : "font-medium text-slate-700",
+                              "px-4 border-r border-slate-200 h-full flex items-center shrink-0 transition-colors",
+                              idx < 3 && "sticky z-10",
+                              isSelected ? "bg-inherit" : (idx < 3 ? "bg-white group-hover:bg-slate-50/50" : ""),
                               isSelected && col === "name" && "text-blue-700"
                             )}
-                          />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                );
-              })
-            )}
+                            style={{ 
+                              width: colWidths[col] || 160,
+                              left: idx < 3 ? stickyOffset : undefined
+                            }}
+                          >
+                            {col === "Id" ? (
+                              <span className="text-xs font-mono font-bold text-slate-400">#{row.Id}</span>
+                            ) : col === "Image" ? (
+                              <div className={cn("h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm border border-slate-100", accountColor.bg, accountColor.text)}>
+                                {getInitials(row.name || "")}
+                              </div>
+                            ) : col === "status" ? (
+                              <select
+                                value={row.status}
+                                onChange={(e) => handleInlineUpdate(row.Id, "status", e.target.value)}
+                                className={cn(
+                                  "h-7 w-full font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none appearance-none cursor-pointer text-center",
+                                  statusColors[row.status]?.bg || "bg-muted/10",
+                                  statusColors[row.status]?.text || "text-muted-foreground",
+                                  statusColors[row.status]?.border || "border-border"
+                                )}
+                              >
+                                {STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                              </select>
+                            ) : col === "type" ? (
+                              <select
+                                value={row.type}
+                                onChange={(e) => handleInlineUpdate(row.Id, "type", e.target.value)}
+                                className={cn(
+                                  "h-7 w-full font-bold uppercase tracking-tighter text-[10px] px-2 py-0.5 rounded-full border shadow-none appearance-none cursor-pointer text-center",
+                                  getTypeColor(row.type)
+                                )}
+                              >
+                                {TYPE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                              </select>
+                            ) : col.toLowerCase().includes('time') || col.toLowerCase().includes('at') || col === 'CreatedAt' || col === 'UpdatedAt' ? (
+                              <div className="text-[11px] font-medium truncate">
+                                {formatDate(row[col])}
+                              </div>
+                            ) : (
+                              <input 
+                                type="text"
+                                value={row[col] || ""}
+                                readOnly={NON_EDITABLE_FIELDS.includes(col)}
+                                onChange={(e) => setRows(prev => prev.map(r => r.Id === row.Id ? { ...r, [col]: e.target.value } : r))}
+                                onBlur={(e) => handleInlineUpdate(row.Id, col, e.target.value)}
+                                className={cn(
+                                  "bg-transparent border-none focus:ring-0 w-full text-[11px] p-0 h-auto focus:bg-white focus:px-2 focus:py-1 focus:rounded focus:shadow-sm transition-all truncate",
+                                  col === "name" ? "font-bold text-slate-900 text-[13px]" : "font-medium text-slate-700",
+                                  isSelected && col === "name" && "text-blue-700"
+                                )}
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
         </div>
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
