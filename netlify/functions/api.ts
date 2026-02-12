@@ -26,9 +26,7 @@ export const handler: Handler = async (event) => {
     };
   }
 
-  const url = recordId 
-    ? `${NOCODB_BASE_URL}/tables/${tableId}/records/${recordId}`
-    : `${NOCODB_BASE_URL}/tables/${tableId}/records`;
+  const url = `${NOCODB_BASE_URL}/tables/${tableId}/records`;
 
   try {
     const options: RequestInit = {
