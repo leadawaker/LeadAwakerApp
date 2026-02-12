@@ -11,6 +11,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  horizontalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+import {
   Activity,
   Briefcase,
   Building2,
@@ -27,6 +45,7 @@ import {
   Tag,
   User,
   Zap,
+  GripVertical,
 } from "lucide-react";
 
 export interface DataTableRow {
@@ -160,7 +179,7 @@ const formatDateTime = (value: any) => {
   if (Number.isNaN(d.getTime())) return String(value);
 
   const day = String(d.getDate()).padStart(2, "0");
-  const months = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+  const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
   const mon = months[d.getMonth()];
   const yr = String(d.getFullYear()).slice(-2);
   const hh = String(d.getHours()).padStart(2, "0");
@@ -170,63 +189,124 @@ const formatDateTime = (value: any) => {
 
 const formatHHmm = (value: any) => {
   if (!value) return "-";
-  // Accept "HH:mm:ss" or "HH:mm"
   if (typeof value === "string" && value.includes(":")) {
-    const [h, m] = value.split(":");
-    if (h != null && m != null) return `${h.padStart(2,"0")}:${m.padStart(2,"0")}`;
+    const parts = value.split(":");
+    return `${parts[0].padStart(2, "0")}:${parts[1].padStart(2, "0")}`;
   }
-  // Fallback if backend returns a date
   const d = new Date(value);
   if (!Number.isNaN(d.getTime())) {
-    return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   }
   return String(value);
 };
 
-const getInitials = (name: string) => {
-  if (!name) return "?";
-  const parts = name.split(" ");
-  if (parts.length >= 2) return (parts[0][0] + (parts[1] ? parts[1][0] : parts[0][1] || "")).toUpperCase();
-  return (name[0] + (name[1] || name[0])).toUpperCase().slice(0, 2);
-};
-
-const getAccountColor = (id: number) => initialsColors[id % initialsColors.length];
-
-const TruncatedCell = ({ value, title }: { value: any; title?: string }) => {
+const TruncatedCell = ({ value, title, onUpdate, rowId, col }: { value: any; title?: string; onUpdate?: any; rowId?: number; col?: string }) => {
   const text = value === null || value === undefined ? "" : String(value);
   const tooltipTitle = title || text;
 
   const ref = useRef<HTMLDivElement>(null);
   const [isTruncated, setIsTruncated] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-
     const check = () => {
-      const truncated = el.scrollWidth - el.clientWidth > 1;
+      const truncated = el.scrollWidth > el.clientWidth;
       setIsTruncated(truncated);
     };
-
     check();
-
     const observer = new ResizeObserver(check);
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [text]);
+
+  if (isEditing && onUpdate && rowId && col) {
+    return (
+      <Input
+        autoFocus
+        className="h-8 min-w-[200px] w-full bg-white shadow-lg border-blue-400 focus:ring-2 focus:ring-blue-100"
+        value={text}
+        onChange={(e) => onUpdate(rowId, col, e.target.value)}
+        onBlur={() => setIsEditing(false)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === 'Escape') {
+            setIsEditing(false);
+            e.currentTarget.blur();
+          }
+        }}
+      />
+    );
+  }
 
   const content = (
-    <div ref={ref} className="w-full overflow-hidden whitespace-nowrap text-ellipsis">
+    <div 
+      ref={ref} 
+      className="w-full overflow-hidden whitespace-nowrap text-ellipsis cursor-text"
+      onClick={() => setIsEditing(true)}
+    >
       {text}
     </div>
   );
 
-  if (!isTruncated) return content;
+  return (
+    <Popover open={isTruncated ? undefined : false}>
+      <PopoverTrigger asChild>{content}</PopoverTrigger>
+      <PopoverContent className="w-fit max-w-[420px] p-2 text-xs break-words shadow-xl border border-slate-200 bg-white z-[100]">
+        {tooltipTitle}
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+const RollupCell = ({ value, type }: { value: any; type: string }) => {
+  const list = useMemo(() => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    if (typeof value === "string") {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [value];
+      } catch {
+        return value.split(",").map((s: string) => s.trim()).filter(Boolean);
+      }
+    }
+    return [String(value)];
+  }, [value]);
+
+  const count = list.length;
 
   return (
     <Popover>
-      <PopoverTrigger asChild>{content}</PopoverTrigger>
-      <PopoverContent className="w-fit max-w-[420px] p-2 text-xs break-words">{tooltipTitle}</PopoverContent>
+      <PopoverTrigger asChild>
+        <div className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity bg-slate-50/50 p-1 rounded border border-transparent hover:border-slate-200">
+          <Badge variant="secondary" className="bg-slate-100 text-slate-600 border-slate-200 font-bold px-1.5 h-5 min-w-[24px] justify-center">
+            {count}
+          </Badge>
+          <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold whitespace-nowrap">{type}</span>
+        </div>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 p-3 shadow-2xl border border-slate-200 bg-white z-[100]">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between border-b pb-2">
+            <h4 className="font-black text-[10px] uppercase tracking-widest text-slate-500">{type}</h4>
+            <Badge className="bg-blue-50 text-blue-600 border-blue-100">{count}</Badge>
+          </div>
+          <ScrollArea className="max-h-[200px]">
+            <div className="space-y-1">
+              {list.length > 0 ? (
+                list.map((item: any, i: number) => (
+                  <div key={i} className="text-xs py-1 px-2 rounded hover:bg-slate-50 text-slate-600 border border-transparent hover:border-slate-100">
+                    {typeof item === "object" ? (item.name || item.title || JSON.stringify(item)) : String(item)}
+                  </div>
+                ))
+              ) : (
+                <div className="text-xs text-slate-400 italic p-2">No items</div>
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+      </PopoverContent>
     </Popover>
   );
 };
@@ -238,9 +318,79 @@ const DATE_COLS = new Set([
   "UpdatedAt",
   "created_at",
   "updated_at",
+]);
+
+const TIME_COLS = new Set([
   "business_hours_open",
   "business_hours_closed",
 ]);
+
+const ROLLUP_COLS = new Set([
+  "Leads",
+  "Campaigns",
+  "Automation Logs",
+  "Interactions",
+  "Prompt Libraries",
+  "Tags",
+]);
+
+const SortableTableHead = ({
+  col,
+  idx,
+  style,
+  className,
+  children,
+  handleResize,
+}: {
+  col: string;
+  idx: number;
+  style: any;
+  className: string;
+  children: React.ReactNode;
+  handleResize: (col: string, e: React.MouseEvent) => void;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: col });
+
+  const combinedStyle = {
+    ...style,
+    transform: CSS.Translate.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    opacity: isDragging ? 0.8 : undefined,
+  };
+
+  return (
+    <TableHead
+      ref={setNodeRef}
+      style={combinedStyle}
+      className={cn(className, isDragging && "bg-slate-100 shadow-inner")}
+    >
+      <div className="flex items-center gap-2 h-full">
+        <div 
+          {...attributes} 
+          {...listeners} 
+          className="cursor-grab active:cursor-grabbing p-1 -ml-2 text-slate-300 hover:text-slate-500 transition-colors"
+        >
+          <GripVertical className="h-3 w-3" />
+        </div>
+        <div className="flex-1 min-w-0">
+          {children}
+        </div>
+      </div>
+      <div
+        className="absolute right-[-4px] top-0 bottom-0 w-[8px] cursor-col-resize hover:bg-blue-400/50 active:bg-blue-500 z-20"
+        onMouseDown={(e) => handleResize(col, e)}
+      />
+    </TableHead>
+  );
+};
 
 export default function DataTable<TRow extends DataTableRow = DataTableRow>(props: DataTableProps<TRow>) {
   const {
@@ -265,6 +415,26 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(prop
     hiddenFields,
     nonEditableFields,
   } = props;
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = visibleColumns.indexOf(active.id as string);
+      const newIndex = visibleColumns.indexOf(over.id as string);
+      onVisibleColumnsChange(arrayMove(visibleColumns, oldIndex, newIndex));
+    }
+  };
 
   const rowPadding = defaultRowPadding[rowSpacing];
 
@@ -348,41 +518,26 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(prop
     window.addEventListener("mouseup", onMouseUp);
   };
 
-  const renderHeader = (col: string, idx: number) => {
+  const renderHeader = (col: string) => {
     const title = formatHeaderTitle(col);
 
     return (
       <div
-        className="flex items-center gap-2 group cursor-grab active:cursor-grabbing"
+        className="flex items-center gap-2 group cursor-pointer h-full"
         onClick={() => handleSortClick(col)}
-        draggable
-        onDragStart={(e) => {
-          e.dataTransfer.setData("colIdx", idx.toString());
-        }}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => {
-          e.preventDefault();
-          const fromIdx = parseInt(e.dataTransfer.getData("colIdx"));
-          const toIdx = idx;
-          if (fromIdx === toIdx) return;
-          const newCols = [...visibleColumns];
-          const [moved] = newCols.splice(fromIdx, 1);
-          newCols.splice(toIdx, 0, moved);
-          onVisibleColumnsChange(newCols);
-        }}
       >
-        <span className="text-slate-400 group-hover:text-blue-500 transition-colors">{getIconForField(col)}</span>
+        <span className="text-slate-400 group-hover:text-blue-500 transition-colors shrink-0">{getIconForField(col)}</span>
 
         <Popover>
           <PopoverTrigger asChild>
-            <div className="truncate cursor-help">{title}</div>
+            <div className="truncate cursor-help font-black uppercase text-[10px] tracking-wider text-slate-500">{title}</div>
           </PopoverTrigger>
-          <PopoverContent className="w-fit p-2 text-xs">{title}</PopoverContent>
+          <PopoverContent className="w-fit p-2 text-xs shadow-xl border border-slate-200 bg-white z-[100]">{title}</PopoverContent>
         </Popover>
 
         {sortConfig.key === col && sortConfig.direction && (
-          <span className="text-blue-500 ml-auto">
-            {sortConfig.direction === "asc" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          <span className="text-blue-500 ml-auto shrink-0">
+            {sortConfig.direction === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
           </span>
         )}
       </div>
@@ -402,31 +557,40 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(prop
           </div>
 
           <div className={cn("bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden", loading && "opacity-70")}>
-            <Table className="table-fixed w-full">
-              <TableHeader className="bg-slate-50/50">
-                <TableRow className="hover:bg-transparent border-b border-slate-200">
-                  <TableHead className="w-[40px] px-4">
-                    <Checkbox checked={selectedIds.length === sortedRows.length && sortedRows.length > 0} onCheckedChange={toggleSelectAll} />
-                  </TableHead>
-
-                  {visibleCols.map((col, idx) => (
-                    <TableHead
-                      key={col}
-                      style={{ width: colWidths[col] }}
-                      className={cn(
-                        "relative px-4 text-[11px] font-black uppercase text-slate-500 tracking-wider overflow-hidden whitespace-nowrap text-ellipsis",
-                        showVerticalLines && idx < visibleCols.length - 1 && "border-r border-slate-100",
-                      )}
-                    >
-                      {renderHeader(col, idx)}
-                      <div
-                        className="absolute right-[-4px] top-0 bottom-0 w-[8px] cursor-col-resize hover:bg-blue-400/50 active:bg-blue-500 z-10"
-                        onMouseDown={(e) => handleResize(col, e)}
-                      />
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <Table className="table-fixed w-full">
+                <TableHeader className="bg-slate-50/50">
+                  <TableRow className="hover:bg-transparent border-b border-slate-200">
+                    <TableHead className="w-[40px] px-4">
+                      <Checkbox checked={selectedIds.length === sortedRows.length && sortedRows.length > 0} onCheckedChange={toggleSelectAll} />
                     </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
+
+                    <SortableContext
+                      items={visibleCols}
+                      strategy={horizontalListSortingStrategy}
+                    >
+                      {visibleCols.map((col, idx) => (
+                        <SortableTableHead
+                          key={col}
+                          col={col}
+                          idx={idx}
+                          style={{ width: colWidths[col] }}
+                          className={cn(
+                            "relative px-4 overflow-visible whitespace-nowrap",
+                            showVerticalLines && idx < visibleCols.length - 1 && "border-r border-slate-100",
+                          )}
+                          handleResize={handleResize}
+                        >
+                          {renderHeader(col)}
+                        </SortableTableHead>
+                      ))}
+                    </SortableContext>
+                  </TableRow>
+                </TableHeader>
 
               <TableBody>
                 {groupRows.map((row: any) => (
@@ -572,36 +736,12 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(prop
                               ))}
                             </SelectContent>
                           </Select>
-                        ) : ["Leads", "Campaigns", "Automation Logs", "Users", "Prompt Libraries", "Tags"].includes(col) ? (
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <div className="cursor-pointer hover:bg-slate-100 p-1 rounded transition-colors w-full">
-                                <Badge variant="secondary" className="font-normal">
-                                  {row[col] ? (Array.isArray(row[col]) ? row[col].length : 1) : 0} {col.toLowerCase()}
-                                </Badge>
-                              </div>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-64 p-2">
-                              <div className="space-y-2">
-                                <h4 className="font-medium text-sm border-b pb-1">{col}</h4>
-                                <div className="text-xs text-muted-foreground">
-                                  {row[col] ? (
-                                    <ul className="list-disc list-inside">
-                                      {Array.isArray(row[col]) ? (
-                                        row[col].map((item: any, i: number) => (
-                                          <li key={i}>{typeof item === "object" ? item.Name || item.title || JSON.stringify(item) : String(item)}</li>
-                                        ))
-                                      ) : (
-                                        <li>{String(row[col])}</li>
-                                      )}
-                                    </ul>
-                                  ) : (
-                                    <p>No {col.toLowerCase()} connected to this account ID</p>
-                                  )}
-                                </div>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
+                        ) : ROLLUP_COLS.has(col) ? (
+                          <RollupCell value={row[col]} type={col} />
+                        ) : DATE_COLS.has(col) ? (
+                          <TruncatedCell value={formatDateTime(row[col])} />
+                        ) : TIME_COLS.has(col) ? (
+                          <TruncatedCell value={formatHHmm(row[col])} />
                         ) : col === "type" ? (
                           <Select value={row[col] || ""} onValueChange={(v) => onUpdate(row.Id, col, v)}>
                             <SelectTrigger
