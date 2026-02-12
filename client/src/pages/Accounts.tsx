@@ -292,12 +292,20 @@ export default function Accounts() {
     setRows(prev => prev.map(r => idsToUpdate.includes(r.Id) ? { ...r, [col]: cleanValue } : r));
 
     try {
-      for (const id of idsToUpdate) {
-        await fetch(`${NOCODB_BASE_URL}?tableId=${TABLE_ID}&id=${id}`, {
+      const payloads = idsToUpdate.map(id => ({ id: id, fields: { [col]: cleanValue } }));
+      const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(payloads),
+      });
+
+      if (!res.ok) {
+        const fallbackRes = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ [col]: cleanValue }),
+          body: JSON.stringify(idsToUpdate.map(id => ({ Id: id, [col]: cleanValue }))),
         });
+        if (!fallbackRes.ok) throw new Error("Update failed");
       }
       toast({ title: "Updated", description: "Changes saved to database." });
     } catch (err) {
@@ -308,11 +316,14 @@ export default function Accounts() {
   const handleDelete = async () => {
     try {
       setLoading(true);
-      for (const id of selectedIds) {
-        await fetch(`${NOCODB_BASE_URL}?tableId=${TABLE_ID}&id=${id}`, {
+      const deletePromises = selectedIds.map(id => 
+        fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
           method: "DELETE",
-        });
-      }
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ Id: id }),
+        })
+      );
+      await Promise.all(deletePromises);
       toast({ title: "Deleted", description: `Successfully deleted ${selectedIds.length} records.` });
       setSelectedIds([]);
       fetchData();
@@ -328,11 +339,12 @@ export default function Accounts() {
     try {
       const cleanData: any = {};
       Object.keys(newRowData).forEach(key => { if (!NON_EDITABLE_FIELDS.includes(key) && !HIDDEN_FIELDS.includes(key)) cleanData[key] = newRowData[key]; });
-      await fetch(`${NOCODB_BASE_URL}?tableId=${TABLE_ID}`, {
+      const res = await fetch(`${NOCODB_BASE_URL}/tables/${TABLE_ID}/records`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(cleanData),
       });
+      if (!res.ok) throw new Error("Creation failed");
       toast({ title: "Success", description: "New account created." });
       setIsCreateOpen(false);
       setNewRowData({});
@@ -684,7 +696,7 @@ export default function Accounts() {
                               <input 
                                 type="text"
                                 value={row[col] || ""}
-                                readOnly={false}
+                                readOnly={NON_EDITABLE_FIELDS.includes(col)}
                                 onChange={(e) => setRows(prev => prev.map(r => r.Id === row.Id ? { ...r, [col]: e.target.value } : r))}
                                 onBlur={(e) => handleInlineUpdate(row.Id, col, e.target.value)}
                                 className={cn(
