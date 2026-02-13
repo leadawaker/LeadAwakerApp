@@ -819,16 +819,24 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     const startX = e.pageX;
     const startWidth = colWidths[col] || 180;
 
-    const onMouseUp = () => {
-          window.removeEventListener("mousemove", onMouseMove);
-          window.removeEventListener("mouseup", onMouseUp);
-          document.body.style.cursor = "default";
-        };
+    const onMouseMove = (moveE: MouseEvent) => {
+      const deltaX = moveE.pageX - startX;
+      onColWidthsChange({
+        ...colWidths,
+        [col]: Math.max(50, startWidth + deltaX),
+      });
+    };
 
-        document.body.style.cursor = "col-resize";
-        window.addEventListener("mousemove", onMouseMove);
-        window.addEventListener("mouseup", onMouseUp);
-      };
+    const onMouseUp = () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+      document.body.style.cursor = "default";
+    };
+
+    document.body.style.cursor = "col-resize";
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  };
 
       const renderHeader = (
         col: string,
@@ -1300,7 +1308,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                               )}
                             >
                               {isRollupCol(col) ? (
-                                <RollupCell value={row[col]} type={col} />
+                                <RollupCell value={row[col]} type={col === "Automation Logs" ? "automations" : col === "Prompt Libraries" ? "prompts" : col} />
                               ) : col === "Image" || col === "ACC" ? (
                                 <Sheet>
                                   <SheetTrigger asChild>
