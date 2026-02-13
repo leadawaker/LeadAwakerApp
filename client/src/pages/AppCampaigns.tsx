@@ -102,6 +102,18 @@ export default function AppCampaigns() {
   const [groupBy, setGroupBy] = useState<string>("None");
   const [rowSpacing, setRowSpacing] = useState<RowSpacing>("medium");
   const [showVerticalLines, setShowVerticalLines] = useState<boolean>(true);
+  const [filterConfig, setFilterConfig] = useState<Record<string, string>>({});
+
+  const GROUP_OPTIONS = [
+    { value: "None", label: "No Grouping" },
+    { value: "status", label: "By Status" },
+    { value: "account_id", label: "By Account" },
+  ];
+
+  const handleRefresh = () => {
+    setLoading(true);
+    setTimeout(() => setLoading(false), 1000);
+  };
 
   const [colWidths, setColWidths] = useState<Record<string, number>>({});
 
@@ -222,43 +234,6 @@ export default function AppCampaigns() {
   return (
     <CrmShell>
       <div className="flex flex-col h-full pb-4">
-        {/* FILTER BAR */}
-        <div className="flex items-center gap-3 mb-6 mt-4">
-          {/* Search */}
-          <div className="relative w-[320px]">
-            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search campaigns by name..."
-              className="h-11 w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-4 text-sm font-medium shadow-sm outline-none focus:ring-2 focus:ring-blue-500/20"
-            />
-          </div>
-
-          {/* Account dropdown */}
-          <Dropdown
-            label={
-              accountFilter === "all"
-                ? "All accounts"
-                : mockAccounts.find((a) => a.id === accountFilter)?.name
-            }
-          >
-            <DropdownItem onClick={() => setAccountFilter("all")}>All accounts</DropdownItem>
-            {mockAccounts.map((acc) => (
-              <DropdownItem key={acc.id} onClick={() => setAccountFilter(acc.id)}>
-                {acc.name}
-              </DropdownItem>
-            ))}
-          </Dropdown>
-
-          {/* Status dropdown */}
-          <Dropdown label={statusFilter === "all" ? "All campaigns" : statusFilter}>
-            <DropdownItem onClick={() => setStatusFilter("all")}>All campaigns</DropdownItem>
-            <DropdownItem onClick={() => setStatusFilter("Active")}>Active</DropdownItem>
-            <DropdownItem onClick={() => setStatusFilter("Inactive")}>Inactive</DropdownItem>
-          </Dropdown>
-        </div>
-
         {/* TABLE */}
         <div className="flex-1">
           <DataTable
@@ -272,10 +247,14 @@ export default function AppCampaigns() {
             sortConfig={sortConfig}
             onSortChange={setSortConfig}
             groupBy={groupBy}
+            onGroupByChange={setGroupBy}
+            groupOptions={GROUP_OPTIONS}
             colWidths={colWidths}
             onColWidthsChange={setColWidths}
             rowSpacing={rowSpacing}
+            onRowSpacingChange={setRowSpacing}
             showVerticalLines={showVerticalLines}
+            onShowVerticalLinesChange={setShowVerticalLines}
             onUpdate={handleUpdate}
             statusOptions={statusOptions}
             typeOptions={typeOptions}
@@ -283,6 +262,12 @@ export default function AppCampaigns() {
             hiddenFields={hiddenFields}
             nonEditableFields={nonEditableFields}
             smallWidthCols={[...SMALL_WIDTH_COLS]}
+            searchValue={search}
+            onSearchValueChange={setSearch}
+            onRefresh={handleRefresh}
+            isRefreshing={loading}
+            filterConfig={filterConfig}
+            onFilterConfigChange={setFilterConfig}
           />
         </div>
       </div>
