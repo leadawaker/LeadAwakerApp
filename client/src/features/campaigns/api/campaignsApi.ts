@@ -8,7 +8,7 @@ export const fetchAccounts = async () => {
 
 export const fetchCampaigns = async () => {
   const res = await fetch(
-    "https://api-leadawaker.netlify.app/.netlify/functions/api?tableId=vwalnb0wa9mna9tn"
+    "https://api-leadawaker.netlify.app/.netlify/functions/api?tableId=m18yh52xz04y3gj"
   );
   const data = await res.json();
   return Array.isArray(data) ? data : (data?.list || []);
