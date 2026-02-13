@@ -1,142 +1,152 @@
 import { useMemo, useState, useEffect } from "react";
 import DataTable, { SortConfig, RowSpacing } from "@/components/DataTable/DataTable";
-import { useLeads } from "@/hooks/useLeads";
-import { useWorkspace } from "@/hooks/useWorkspace";
+import { useLeadsData } from "../hooks/useLeadsData";
 
-const GLOBAL_COLUMNS = ["Id", "Image", "full_name", "conversion_status"];
+const LEAD_COLUMNS = [
+  /* Core */
+  "Id",
+  "Image",
+  "full_name",
+  "first_name",
+  "last_name",
 
-const ALL_FIELDS = [
-  ...GLOBAL_COLUMNS,
-  "first_name", "last_name", "email", "phone", "language", "timezone",
-  "priority", "automation_status", "manual_takeover", "opted_out", "dnc_reason",
-  "Account", "Campaign", "Interactions", "last_interaction_at", "last_message_sent_at",
-  "last_message_received_at", "message_count_sent", "message_count_received",
-  "booked_call_date", "booking_confirmed_at", "booking_confirmation_sent",
-  "no_show", "re-scheduled_count", "current_bump_stage", "next_action_at",
-  "first_message_sent_at", "bump_1_sent_at", "bump_2_sent_at", "bump_3_sent_at",
-  "ai_sentiment", "ai_memory", "notes", "created_at", "updated_at",
-  "account_id", "campaign_id"
+  /* Contact */
+  "email",
+  "phone",
+  "language",
+  "timezone",
+
+  /* Status */
+  "conversion_status",
+  "priority",
+  "automation_status",
+  "manual_takeover",
+  "opted_out",
+  "dnc_reason",
+
+  /* Relations */
+  "Account",
+  "Campaign",
+
+  /* Activity */
+  "Interactions",
+  "last_interaction_at",
+  "last_message_sent_at",
+  "last_message_received_at",
+  "message_count_sent",
+  "message_count_received",
+
+  /* Booking */
+  "booked_call_date",
+  "booking_confirmed_at",
+  "booking_confirmation_sent",
+  "no_show",
+  "re-scheduled_count",
+
+  /* Automation */
+  "current_bump_stage",
+  "next_action_at",
+  "first_message_sent_at",
+  "bump_1_sent_at",
+  "bump_2_sent_at",
+  "bump_3_sent_at",
+
+  /* AI */
+  "ai_sentiment",
+  "ai_memory",
+
+  /* Notes */
+  "notes",
+
+  /* Meta */
+  "created_at",
+  "updated_at",
 ];
 
-const BASICS_FIELDS = [
-  ...GLOBAL_COLUMNS,
-  "first_name", "last_name", "email", "phone", "Leads_Tags",
-  "automation_status", "priority", "Account", "Campaign", "notes"
-];
-
-const ENGAGEMENT_FIELDS = [
-  ...GLOBAL_COLUMNS,
-  "Interactions", "last_interaction_at", "last_message_sent_at",
-  "last_message_received_at", "message_count_sent", "message_count_received",
-  "current_bump_stage", "next_action_at", "manual_takeover", "opted_out"
-];
-
-const BOOKING_FIELDS = [
-  ...GLOBAL_COLUMNS,
-  "booked_call_date", "booking_confirmed_at", "booking_confirmation_sent",
-  "no_show", "re-scheduled_count", "automation_status", "current_bump_stage",
-  "next_action_at", "Campaign", "Account"
-];
-
-const VIEW_PRESETS = [
-  { key: "all_fields", label: "All Fields", columns: ALL_FIELDS },
-  { key: "basics", label: "Basics", columns: BASICS_FIELDS },
-  { key: "engagement", label: "Engagement", columns: ENGAGEMENT_FIELDS },
-  { key: "booking", label: "Booking & Automation", columns: BOOKING_FIELDS }
-];
+const SMALL_WIDTH_COLS = new Set([
+  "Id",
+  "Image",
+  "conversion_status",
+  "priority",
+  "Interactions",
+  "current_bump_stage",
+  "manual_takeover",
+  "opted_out",
+  "booking_confirmation_sent",
+  "no_show",
+]);
 
 export function LeadsTable() {
-  const { currentAccountId } = useWorkspace();
-  const { leads, isLoading, handleRefresh } = useLeads({ accountId: currentAccountId });
+  const { leads, loading, handleRefresh, updateLeadRow } = useLeadsData();
   const [search, setSearch] = useState("");
-  const [activePreset, setActivePreset] = useState(VIEW_PRESETS[0]);
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(VIEW_PRESETS[0].columns);
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(LEAD_COLUMNS);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "created_at", direction: "desc" });
-  const [groupBy, setGroupBy] = useState<string>("None");
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "", direction: null });
+  const [groupBy, setGroupBy] = useState<string>("Account");
   const [rowSpacing, setRowSpacing] = useState<RowSpacing>("medium");
   const [showVerticalLines, setShowVerticalLines] = useState<boolean>(true);
+  const [filterConfig, setFilterConfig] = useState<Record<string, string>>({});
   const [colWidths, setColWidths] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    setVisibleColumns(activePreset.columns);
-  }, [activePreset]);
+    const defaults = LEAD_COLUMNS.reduce((acc, c) => {
+      acc[c] = SMALL_WIDTH_COLS.has(c) ? 120 : 200;
+      return acc;
+    }, {} as Record<string, number>);
+    setColWidths((prev) => ({ ...defaults, ...prev }));
+  }, []);
 
-  const rows = useMemo(() => {
-    return leads.map(l => ({
-      ...l,
-      Id: l.id,
-      Account: l.account_name || `Account ${l.account_id}`,
-      Campaign: l.campaign_name || `Campaign ${l.campaign_id}`,
-      Interactions: (l.message_count_sent || 0) + (l.message_count_received || 0),
-      Leads_Tags: l.tags?.join(", ") || "",
-      account_id: l.account_id,
-      campaign_id: l.campaign_id
-    }));
-  }, [leads]);
-
-  const filteredRows = useMemo(() => {
-    return rows.filter(r => 
-      !search || 
-      r.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-      r.email?.toLowerCase().includes(search.toLowerCase())
+  const filteredLeads = useMemo(() => {
+    return leads.filter((l) => 
+      search ? String(l.full_name || l.email || "").toLowerCase().includes(search.toLowerCase()) : true
     );
-  }, [rows, search]);
+  }, [leads, search]);
 
-  const handleUpdate = (id: number, col: string, val: any) => {
-    console.log("Update", id, col, val);
+  const handleUpdate = async (rowId: number, col: string, value: any) => {
+    try {
+      await updateLeadRow(rowId, col, value);
+    } catch (err) {}
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
-      <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-slate-50/50">
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {VIEW_PRESETS.map(preset => (
-            <button
-              key={preset.key}
-              onClick={() => setActivePreset(preset)}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
-                activePreset.key === preset.key 
-                ? "bg-white shadow-sm border border-border text-primary" 
-                : "text-muted-foreground hover:bg-white/50"
-              }`}
-            >
-              {preset.label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="flex-1 overflow-hidden">
-        <DataTable
-          loading={isLoading}
-          rows={filteredRows}
-          columns={ALL_FIELDS}
-          visibleColumns={visibleColumns}
-          onVisibleColumnsChange={setVisibleColumns}
-          selectedIds={selectedIds}
-          onSelectedIdsChange={setSelectedIds}
-          sortConfig={sortConfig}
-          onSortChange={setSortConfig}
-          groupBy={groupBy}
-          onGroupByChange={setGroupBy}
-          colWidths={colWidths}
-          onColWidthsChange={setColWidths}
-          rowSpacing={rowSpacing}
-          onRowSpacingChange={setRowSpacing}
-          showVerticalLines={showVerticalLines}
-          onShowVerticalLinesChange={setShowVerticalLines}
-          onUpdate={handleUpdate}
-          statusOptions={["New", "Contacted", "Responded", "Multiple Responses", "Qualified", "Booked", "DND"]}
-          typeOptions={[]}
-          timezoneOptions={["Europe/Amsterdam", "America/New_York", "UTC", "America/Los_Angeles", "Asia/Tokyo"]}
-          hiddenFields={[]}
-          nonEditableFields={["Id", "Interactions", "account_id", "campaign_id"]}
-          searchValue={search}
-          onSearchValueChange={setSearch}
-          onRefresh={handleRefresh}
-          isRefreshing={isLoading}
-        />
-      </div>
-    </div>
+    <DataTable
+      loading={loading}
+      rows={filteredLeads}
+      columns={LEAD_COLUMNS}
+      visibleColumns={visibleColumns}
+      onVisibleColumnsChange={setVisibleColumns}
+      selectedIds={selectedIds}
+      onSelectedIdsChange={setSelectedIds}
+      sortConfig={sortConfig}
+      onSortChange={setSortConfig}
+      groupBy={groupBy}
+      onGroupByChange={setGroupBy}
+      groupOptions={[
+        { value: "None", label: "No Grouping" },
+        { value: "conversion_status", label: "By Status" },
+        { value: "priority", label: "By Priority" },
+        { value: "Account", label: "By Account" },
+        { value: "Campaign", label: "By Campaign" },
+      ]}
+      colWidths={colWidths}
+      onColWidthsChange={setColWidths}
+      rowSpacing={rowSpacing}
+      onRowSpacingChange={setRowSpacing}
+      showVerticalLines={showVerticalLines}
+      onShowVerticalLinesChange={setShowVerticalLines}
+      onUpdate={handleUpdate}
+      statusOptions={["New", "Contacted", "Responded", "Qualified", "Booked", "DND"]}
+      typeOptions={[]}
+      timezoneOptions={[]}
+      hiddenFields={[]}
+      nonEditableFields={["created_at", "updated_at"]}
+      smallWidthCols={Array.from(SMALL_WIDTH_COLS)}
+      searchValue={search}
+      onSearchValueChange={setSearch}
+      onRefresh={handleRefresh}
+      isRefreshing={loading}
+      filterConfig={filterConfig}
+      onFilterConfigChange={setFilterConfig}
+    />
   );
 }
