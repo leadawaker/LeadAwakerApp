@@ -282,7 +282,7 @@ const getIconForField = (col: string) => {
 };
 
 const formatHeaderTitle = (col: string) => {
-  if (col === "name") return "Company Name";
+  if (col === "name") return "Campaign Name";
   if (col === "Account ID") return "ID";
   return col
     .split("_")
@@ -1290,6 +1290,13 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                         >
                           {isRollupCol(col) ? (
                             <RollupCell value={row[col]} type={col === "Automation Logs" ? "automations" : col === "Prompt Libraries" ? "prompts" : col} />
+                          ) : (col.toLowerCase().includes("use") || typeof row[col] === "boolean") && (row[col] === 0 || row[col] === 1 || row[col] === true || row[col] === false) ? (
+                            <div className="flex justify-center w-full">
+                              <Checkbox
+                                checked={Boolean(row[col])}
+                                onCheckedChange={(checked) => handleUpdate(row.Id, col, !!checked)}
+                              />
+                            </div>
                           ) : col === "Image" || col === "ACC" ? (
                             <Sheet>
                               <SheetTrigger asChild>

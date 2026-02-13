@@ -3,7 +3,7 @@ import DataTable, { SortConfig, RowSpacing } from "@/components/DataTable/DataTa
 import { useCampaignsData } from "../hooks/useCampaignsData";
 
 const CAMPAIGN_COLUMNS = [
-  "Id", "name", "account_name", "status", "type", "Leads", "Interactions",
+  "Id", "Image", "name", "Account", "status", "Leads", "Interactions",
   "leads_total", "Created time", "Last modified time", "description",
   "account_id", "n8n_workflow_id", "ai_prompt_template", "total_cost",
   "bump_1_template", "bump_2_template", "bump_3_template",
@@ -19,7 +19,7 @@ const CAMPAIGN_COLUMNS = [
 ];
 
 const SMALL_WIDTH_COLS = new Set([
-  "Id", "status", "type", "Leads", "Interactions", "leads_total",
+  "Id", "Image", "status", "Leads", "Interactions", "leads_total",
   "use_ai_bumps", "max_bumps", "stop_on_response", "daily_lead_limit",
 ]);
 
@@ -31,7 +31,7 @@ export function CampaignsTable() {
   const [visibleColumns, setVisibleColumns] = useState<string[]>(CAMPAIGN_COLUMNS);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "", direction: null });
-  const [groupBy, setGroupBy] = useState<string>("None");
+  const [groupBy, setGroupBy] = useState<string>("Account");
   const [rowSpacing, setRowSpacing] = useState<RowSpacing>("medium");
   const [showVerticalLines, setShowVerticalLines] = useState<boolean>(true);
   const [filterConfig, setFilterConfig] = useState<Record<string, string>>({});
@@ -45,12 +45,19 @@ export function CampaignsTable() {
     setColWidths((prev) => ({ ...defaults, ...prev }));
   }, []);
 
+  const campaignsWithAccount = useMemo(() => {
+    return campaigns.map(c => ({
+      ...c,
+      Account: c.account_name
+    }));
+  }, [campaigns]);
+
   const filteredCampaigns = useMemo(() => {
-    return campaigns
+    return campaignsWithAccount
       .filter((c) => (accountFilter === "all" ? true : c.account_id === accountFilter))
       .filter((c) => (statusFilter === "all" ? true : c.status === statusFilter))
       .filter((c) => (search ? String(c.name || "").toLowerCase().includes(search.toLowerCase()) : true));
-  }, [campaigns, search, accountFilter, statusFilter]);
+  }, [campaignsWithAccount, search, accountFilter, statusFilter]);
 
   const handleUpdate = async (rowId: number, col: string, value: any) => {
     try {
@@ -61,7 +68,6 @@ export function CampaignsTable() {
   };
 
   const statusOptions = Array.from(new Set(campaigns.map((c) => c.status).filter(Boolean)));
-  const typeOptions = Array.from(new Set(campaigns.map((c) => c.type).filter(Boolean)));
 
   return (
     <DataTable
@@ -79,7 +85,7 @@ export function CampaignsTable() {
       groupOptions={[
         { value: "None", label: "No Grouping" },
         { value: "status", label: "By Status" },
-        { value: "account_name", label: "By Account" },
+        { value: "Account", label: "By Account" },
       ]}
       colWidths={colWidths}
       onColWidthsChange={setColWidths}
@@ -89,7 +95,7 @@ export function CampaignsTable() {
       onShowVerticalLinesChange={setShowVerticalLines}
       onUpdate={handleUpdate}
       statusOptions={statusOptions.length ? statusOptions : ["Active", "Inactive"]}
-      typeOptions={typeOptions.length ? typeOptions : ["Outbound", "Inbound"]}
+      typeOptions={[]}
       timezoneOptions={[]}
       hiddenFields={[]}
       nonEditableFields={["Created time", "Last modified time", "Leads", "Interactions", "Automation Logs"]}
