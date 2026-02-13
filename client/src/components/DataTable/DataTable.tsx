@@ -1240,7 +1240,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
             </TableHeader>
 
             <TableBody>
-              {Object.entries(groupedRows).map(([groupName, groupRows], groupIdx, groupArr) => (
+              {Object.entries(groupedRows).map(([groupName, groupRows]) => (
                 <React.Fragment key={groupName}>
                   {groupBy !== "None" && (
                     <TableRow className="bg-slate-50/30 hover:bg-slate-50/30 border-y border-slate-200/60">
@@ -1448,6 +1448,35 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                 ))}
                               </SelectContent>
                             </Select>
+                          ) : col === "type" ? (
+                            <Select
+                              value={row[col] || ""}
+                              onValueChange={(v) =>
+                                handleUpdate(row.Id, col, v)
+                              }
+                            >
+                              <SelectTrigger
+                                className={cn(
+                                  "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
+                                  row[col]?.toLowerCase() === "agency"
+                                    ? "bg-yellow-200 text-yellow-800"
+                                    : "bg-blue-200 text-blue-800",
+                                )}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {typeOptions.map((o) => (
+                                  <SelectItem
+                                    key={o}
+                                    value={o}
+                                    className="text-[10px] font-bold uppercase tracking-wider"
+                                  >
+                                    {o}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           ) : col === "timezone" ? (
                             <Select
                               value={row[col] || ""}
@@ -1492,11 +1521,6 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                       ))}
                     </TableRow>
                   ))}
-                  {groupIdx < groupArr.length - 1 && (
-                    <TableRow className="bg-background hover:bg-background border-none h-4">
-                      <TableCell colSpan={visibleCols.length + 1} className="p-0 border-none" />
-                    </TableRow>
-                  )}
                 </React.Fragment>
               ))}
             </TableBody>
