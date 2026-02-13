@@ -14,7 +14,6 @@ const LEAD_COLUMNS = [
   "email",
   "phone",
   "language",
-  "timezone",
 
   /* Status */
   "conversion_status",
@@ -82,7 +81,7 @@ export function LeadsTable() {
   const [visibleColumns, setVisibleColumns] = useState<string[]>(LEAD_COLUMNS);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "", direction: null });
-  const [groupBy, setGroupBy] = useState<string>("Account");
+  const [groupBy, setGroupBy] = useState<string>("conversion_status");
   const [rowSpacing, setRowSpacing] = useState<RowSpacing>("medium");
   const [showVerticalLines, setShowVerticalLines] = useState<boolean>(true);
   const [filterConfig, setFilterConfig] = useState<Record<string, string>>({});
@@ -90,7 +89,7 @@ export function LeadsTable() {
 
   useEffect(() => {
     const defaults = LEAD_COLUMNS.reduce((acc, c) => {
-      acc[c] = SMALL_WIDTH_COLS.has(c) ? 120 : 200;
+      acc[c] = c === "conversion_status" ? 180 : SMALL_WIDTH_COLS.has(c) ? 120 : 200;
       return acc;
     }, {} as Record<string, number>);
     setColWidths((prev) => ({ ...defaults, ...prev }));
@@ -123,8 +122,8 @@ export function LeadsTable() {
       onGroupByChange={setGroupBy}
       groupOptions={[
         { value: "None", label: "No Grouping" },
-        { value: "conversion_status", label: "By Status" },
-        { value: "priority", label: "By Priority" },
+        { value: "conversion_status", label: "By Conversion" },
+        { value: "automation_status", label: "By Automation Status" },
         { value: "Account", label: "By Account" },
         { value: "Campaign", label: "By Campaign" },
       ]}

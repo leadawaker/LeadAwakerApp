@@ -644,7 +644,7 @@ const conversionColors: Record<string, { text: string; bg: string; border: strin
   "Qualified": { text: "text-[#10b981]", bg: "bg-[#10b981]/10", border: "border-[#10b981]/20", dot: "bg-[#10b981]" },
   "Booked": { text: "text-[#ca8a04]", bg: "bg-[#facc15]/20", border: "border-[#facc15]/30", dot: "bg-[#ca8a04]" },
   "DND": { text: "text-[#ef4444]", bg: "bg-[#ef4444]/10", border: "border-[#ef4444]/20", dot: "bg-[#ef4444]" },
-  "Lost": { text: "text-slate-500", bg: "bg-slate-100", border: "border-slate-200", dot: "bg-slate-500" },
+  "Lost": { text: "text-pink-700", bg: "bg-pink-50", border: "border-pink-200", dot: "bg-pink-500" },
 };
 
 const automationStatusColors: Record<string, { text: string; bg: string; border: string; dot: string }> = {
@@ -1514,12 +1514,6 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                 )}
                               >
                                 <div className="flex items-center gap-1.5 overflow-hidden">
-                                  <div
-                                    className={cn(
-                                      "h-1.5 w-1.5 rounded-full shrink-0",
-                                      conversionColors[row[col]]?.dot || "bg-slate-400",
-                                    )}
-                                  />
                                   <SelectValue />
                                 </div>
                               </SelectTrigger>
