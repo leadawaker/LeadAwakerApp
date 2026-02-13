@@ -4,7 +4,7 @@ import { CrmShell } from "@/components/crm/CrmShell";
 import { Loader2 } from "lucide-react";
 
 import AppDashboard from "@/pages/AppDashboard";
-import AppLeads from "@/pages/AppLeads";
+import AppLeads from "@/features/leads/pages/LeadsPage";
 import ConversationsPage from "@/pages/Conversations";
 import LeadDetailPage from "@/pages/LeadDetail";
 import AppCampaigns from "@/pages/AppCampaigns";
