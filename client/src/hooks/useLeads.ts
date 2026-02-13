@@ -154,20 +154,21 @@ function toNum(v: unknown, fallback = 0) {
 }
 
 function normalizeLeadRow(row: Record<string, any>): Lead {
-  const id = toNum(row.leads_id || row.id, 0) || 0;
-  const account_id = toNum(row.account_id, 0);
-  const campaign_id = toNum(row.campaign_id, 0);
+  const id = toNum(row.leads_id || row.Id || row.id, 0);
+  const account_id = toNum(row.account_id || (row.Account && row.Account.Id) || row.Accounts_id, 0);
+  const campaign_id = toNum(row.campaign_id || (row.Campaign && row.Campaign.Id) || row.Campaigns_id, 0);
 
   const first = String(row.first_name ?? "").trim();
   const last = String(row.last_name ?? "").trim();
   const full = String(row.full_name ?? "").trim() || `${first} ${last}`.trim();
-  const created_at = String(row.Created_time || row['Created time'] || '');
-  const updated_at = String(row.Last_modified_time || row["Last modified time"] || created_at || "");
+  const created_at = String(row.Created_time || row['Created time'] || row.CreatedAt || '');
+  const updated_at = String(row.Last_modified_time || row["Last modified time"] || row.UpdatedAt || created_at || "");
 
-  const email = String(row.Email ?? "").trim();
+  const email = String(row.Email || row.email || "").trim();
+  const phone = String(row.phone || row.Phone || "").trim();
 
-  const conversion_status = String(row.Conversion_Status || row["Conversion Status"] || "").trim();
-  const source = String(row.Source ?? "").trim();
+  const conversion_status = String(row.Conversion_Status || row["Conversion Status"] || row["Conversion_Status"] || "").trim();
+  const source = String(row.Source || row.source || "").trim();
 
   const last_interaction_at = String(row.last_interaction_at ?? "").trim();
   const notes = String(row.notes ?? "").trim();
@@ -187,7 +188,7 @@ function normalizeLeadRow(row: Record<string, any>): Lead {
     first_name: first,
     last_name: last,
     full_name: full,
-    phone: String(row.phone ?? "").trim(),
+    phone,
     email,
     conversion_status: conversion_status || "New",
     source: source || "Import",
@@ -197,8 +198,8 @@ function normalizeLeadRow(row: Record<string, any>): Lead {
     automation_status: String(row.automation_status ?? "").trim() || "queued",
     last_message_sent_at: last_message_sent_at_raw ? last_message_sent_at_raw : null,
     last_message_received_at: last_message_received_at_raw ? last_message_received_at_raw : null,
-    message_count_sent: toNum(row.message_count_sent, 0),
-    message_count_received: toNum(row.message_count_received, 0),
+    message_count_sent: toNum(row.message_count_sent || row.message_count_sent, 0),
+    message_count_received: toNum(row.message_count_received || row.message_count_received, 0),
     ai_memory: String(row.ai_memory ?? "").trim(),
     bump_1_sent_at: String(row.bump_1_sent_at ?? "").trim() || null,
     bump_2_sent_at: String(row.bump_2_sent_at ?? "").trim() || null,
@@ -212,7 +213,7 @@ function normalizeLeadRow(row: Record<string, any>): Lead {
     priority: String(row.priority ?? "").trim() || "Medium",
     manual_takeover: toBool(row.manual_takeover),
     dnc_reason: String(row.dnc_reason ?? "").trim(),
-    tags: [],
+    tags: Array.isArray(row.tags) ? row.tags : [],
   };
 }
 

@@ -214,7 +214,10 @@ export default function AppLeads() {
               </div>
             ) : null}
             {leads.map((l: any) => {
-              const initials = `${(l.first_name ?? "").slice(0, 1)}${(l.last_name ?? "").slice(0, 1)}`.toUpperCase();
+              const names = (l.full_name || `${l.first_name} ${l.last_name}`).trim().split(/\s+/);
+              const initials = names.length >= 2 
+                ? (names[0][0] + names[names.length - 1][0]).toUpperCase()
+                : names[0] ? names[0][0].toUpperCase() : "?";
               const statusInfo = getStatusColor(l.conversion_status);
               const initialsColors = [
                 { text: "text-blue-600", bg: "bg-blue-50" },
