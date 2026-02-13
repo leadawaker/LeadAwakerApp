@@ -760,242 +760,149 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
       canUndo: historyState.canUndo,
       canRedo: historyState.canRedo,
     });
-  }, [historyState.canUndo, historyState.canRedo, onUndoRedoReady]);
+  }, [historyState]);
 
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (!e.ctrlKey) return;
-      const key = e.key.toLowerCase();
-      if (key === "z" && !e.shiftKey) {
-        e.preventDefault();
-        undo();
-      } else if (key === "z" && e.shiftKey) {
-        e.preventDefault();
-        redo();
-      }
+  const toggleSelect = (id: number) => {
+    if (selectedIds.includes(id)) {
+      onSelectedIdsChange(selectedIds.filter((x) => x !== id));
+    } else {
+      onSelectedIdsChange([...selectedIds, id]);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === rows.length) {
+      onSelectedIdsChange([]);
+    } else {
+      onSelectedIdsChange(rows.map((r) => r.Id));
+    }
+  };
+
+  const handleResize = (col: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.pageX;
+    const startW = colWidths[col] || 150;
+
+    const onMove = (me: MouseEvent) => {
+      const nextW = Math.max(50, startW + (me.pageX - startX));
+      onColWidthsChange({ ...colWidths, [col]: nextW });
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [rows]);
+
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  };
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      const oldIndex = visibleColumns.indexOf(active.id as string);
-      const newIndex = visibleColumns.indexOf(over.id as string);
-      onVisibleColumnsChange(arrayMove(visibleColumns, oldIndex, newIndex));
+      const oldIdx = visibleColumns.indexOf(active.id as string);
+      const newIdx = visibleColumns.indexOf(over.id as string);
+      onVisibleColumnsChange(arrayMove(visibleColumns, oldIdx, newIdx));
     }
   };
 
-  const rowPadding = defaultRowPadding[rowSpacing];
-
   const sortedRows = useMemo(() => {
-    if (!sortConfig.direction || !sortConfig.key) return [...rows];
+    if (!sortConfig.key || !sortConfig.direction) return rows;
+    const key = sortConfig.key;
+    const dir = sortConfig.direction === "asc" ? 1 : -1;
 
-    return [...rows].sort((a: any, b: any) => {
-      const aVal = a[sortConfig.key];
-      const bVal = b[sortConfig.key];
-      if (aVal === bVal) return 0;
-
-      let comparison = 0;
-      const isDate =
-        isDateCol(sortConfig.key) || sortConfig.key.toLowerCase().includes("time");
-
-      if (isDate) {
-        comparison =
-          new Date(aVal || 0).getTime() - new Date(bVal || 0).getTime();
-      } else if (typeof aVal === "number" && typeof bVal === "number") {
-        comparison = aVal - bVal;
-      } else {
-        comparison = String(aVal || "").localeCompare(String(bVal || ""));
-      }
-
-      return sortConfig.direction === "asc" ? comparison : -comparison;
+    return [...rows].sort((a, b) => {
+      const valA = a[key];
+      const valB = b[key];
+      if (valA < valB) return -1 * dir;
+      if (valA > valB) return 1 * dir;
+      return 0;
     });
   }, [rows, sortConfig]);
 
   const groupedRows = useMemo(() => {
-    if (groupBy === "None") return { All: sortedRows } as Record<string, TRow[]>;
+    if (groupBy === "None") return { "All Records": sortedRows };
     const groups: Record<string, TRow[]> = {};
-    const field = groupBy.toLowerCase();
-    sortedRows.forEach((row: any) => {
-      const val = row[field] || "Unknown";
-      if (!groups[val]) groups[val] = [];
-      groups[val].push(row);
+    sortedRows.forEach((r) => {
+      const key = String(r[groupBy.toLowerCase()] || "Unknown");
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(r);
     });
     return groups;
   }, [sortedRows, groupBy]);
 
-  const toggleSelectAll = () => {
-    if (selectedIds.length === sortedRows.length) onSelectedIdsChange([]);
-    else onSelectedIdsChange(sortedRows.map((r) => r.Id));
+  const visibleCols = visibleColumns.filter((c) => !hiddenFields.includes(c));
+  const rowPadding = defaultRowPadding[rowSpacing];
+
+  const applyView = (key: string) => {
+    let next: string[] = [];
+    if (key === "all") {
+      next = columns;
+    } else if (key === "rollups") {
+      next = columns.filter((c) => matchesAny(c, ALWAYS_VISIBLE_MATCH) || isRollupCol(c));
+    } else if (key === "twilio") {
+      next = columns.filter((c) => matchesAny(c, ALWAYS_VISIBLE_MATCH) || includesAny(c, ["twilio", "twillio", "webhook"]));
+    } else if (key === "basic") {
+      next = columns.filter((c) => matchesAny(c, ALWAYS_VISIBLE_MATCH) || matchesAny(c, ["status", "type", "timezone"]));
+    } else if (key === "automation") {
+      next = columns.filter((c) => matchesAny(c, ALWAYS_VISIBLE_MATCH) || includesAny(c, AUTOMATION_MATCH));
+    }
+    if (next.length > 0) onVisibleColumnsChange(next);
   };
 
-  const toggleSelect = (id: number) => {
-    onSelectedIdsChange(
-      selectedIds.includes(id)
-        ? selectedIds.filter((i) => i !== id)
-        : [...selectedIds, id],
+  const renderHeader = (col: string, drag: { attributes: any; listeners: any }) => {
+    const isSorted = sortConfig.key === col;
+    const title = formatHeaderTitle(col);
+
+    return (
+      <div className="flex items-center gap-2 group/h">
+        <div
+          {...drag.attributes}
+          {...drag.listeners}
+          className="cursor-grab active:cursor-grabbing hover:text-blue-600 transition-colors"
+        >
+          {getIconForField(col)}
+        </div>
+        <span
+          className="flex-1 cursor-pointer select-none"
+          onClick={() => {
+            const nextDir =
+              sortConfig.key === col
+                ? sortConfig.direction === "asc"
+                  ? "desc"
+                  : sortConfig.direction === "desc"
+                    ? null
+                    : "asc"
+                : "asc";
+            onSortChange({ key: col, direction: nextDir });
+          }}
+        >
+          {title}
+        </span>
+        {isSorted && (
+          <span className="text-blue-600 font-bold">
+            {sortConfig.direction === "asc" ? (
+              <ChevronUp className="h-3 w-3" />
+            ) : (
+              <ChevronDown className="h-3 w-3" />
+            )}
+          </span>
+        )}
+      </div>
     );
   };
 
-  const handleSortClick = (key: string) => {
-    const prev = sortConfig;
-    let direction: SortDirection = "asc";
-    if (prev.key === key) {
-      if (prev.direction === "asc") direction = "desc";
-      else if (prev.direction === "desc") direction = null;
-    }
-    onSortChange({ key, direction });
-  };
-
-  const handleResize = (col: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const startX = e.pageX;
-    const startWidth = colWidths[col] || 180;
-
-    const onMouseMove = (moveE: MouseEvent) => {
-      const deltaX = moveE.pageX - startX;
-      onColWidthsChange({
-        ...colWidths,
-        [col]: Math.max(50, startWidth + deltaX),
-      });
-    };
-
-    const onMouseUp = () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-      document.body.style.cursor = "default";
-    };
-
-    document.body.style.cursor = "col-resize";
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-  };
-
-      const renderHeader = (
-        col: string,
-        drag: {
-          attributes: DraggableAttributes;
-          listeners: DraggableSyntheticListeners;
-        },
-      ) => {
-        const title = formatHeaderTitle(col);
-
-        return (
-          <div
-            className="flex items-center gap-2 group cursor-pointer h-full"
-            onClick={() => handleSortClick(col)}
-          >
-            <span
-              {...drag.attributes}
-              {...drag.listeners}
-              className="text-slate-400 group-hover:text-blue-500 transition-colors shrink-0 cursor-grab active:cursor-grabbing"
-            >
-              {getIconForField(col)}
-            </span>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <div className="truncate cursor-help font-black uppercase text-[10px] tracking-wider text-slate-500">
-                  {title}
-                </div>
-              </PopoverTrigger>
-              <PopoverContent className="w-fit p-2 text-xs shadow-xl border border-slate-200 bg-white z-[100]">
-                {title}
-              </PopoverContent>
-            </Popover>
-
-            {sortConfig.key === col && sortConfig.direction && (
-              <span className="text-blue-500 ml-auto shrink-0">
-                {sortConfig.direction === "asc" ? (
-                  <ChevronUp className="h-3 w-3" />
-                ) : (
-                  <ChevronDown className="h-3 w-3" />
-                )}
-              </span>
-            )}
-          </div>
-        );
-      };
-
-      const orderedVisible = useMemo(
-        () => visibleColumns.filter((c) => columns.includes(c)),
-        [visibleColumns, columns],
-      );
-
-      const visibleCols = useMemo(() => {
-        const rollupsInVisible = orderedVisible.filter((c) => isRollupCol(c));
-        if (rollupsInVisible.length === 0) return orderedVisible;
-
-        const orderedRollups = ROLLUP_COLS_ORDER.map((r) =>
-          orderedVisible.find((c) => normalizeCol(c) === normalizeCol(r)),
-        ).filter(Boolean) as string[];
-
-        const firstRollupIndex = orderedVisible.findIndex((c) => isRollupCol(c));
-        const nonRollup = orderedVisible.filter((c) => !isRollupCol(c));
-        const before = nonRollup.slice(0, firstRollupIndex);
-        const after = nonRollup.slice(firstRollupIndex);
-        return [...before, ...orderedRollups, ...after];
-      }, [orderedVisible]);
-
-      const applyView = (key: string) => {
-        if (!onVisibleColumnsChange) return;
-
-        if (key === "all") {
-          onVisibleColumnsChange(columns);
-          return;
-        }
-
-        const alwaysCols = columns.filter((c) => matchesAny(c, ALWAYS_VISIBLE_MATCH));
-        let viewCols: string[] = [];
-
-        if (key === "rollups") {
-          viewCols = columns.filter((c) => isRollupCol(c));
-        } else if (key === "twilio") {
-          viewCols = columns.filter((c) => includesAny(c, ["twilio", "twillio"]));
-        } else if (key === "basic") {
-          viewCols = columns.filter((c) =>
-            matchesAny(c, [
-              "email",
-              "phone",
-              "business_hours_open",
-              "business_hours_closed",
-              "last modified time",
-              "updatedat",
-              "updated_at",
-            ]),
-          );
-        } else if (key === "automation") {
-          viewCols = columns.filter((c) =>
-            includesAny(c, AUTOMATION_MATCH),
-          );
-        }
-
-        const combined = Array.from(new Set([...alwaysCols, ...viewCols]));
-        const ordered = columns.filter((c) => combined.includes(c));
-        onVisibleColumnsChange(ordered.length ? ordered : columns);
-      };
-
   const viewMenuGroups = useMemo(() => {
-    const presets = VIEW_PRESETS.map((preset) => ({
+    const presets = VIEW_PRESETS.map((p) => ({
       type: "preset" as const,
-      value: preset.key,
-      label: preset.label,
-      presetKey: preset.key,
+      value: p.label,
+      label: p.label,
+      presetKey: p.key,
     }));
 
     const groups: { label: string; options: ViewMenuOption[] }[] = [];
@@ -1050,566 +957,552 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     onExportCSV;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-0">
       {toolbarHasControls && (
-          <div className="flex flex-wrap items-center gap-3">
-            {onRefresh && (
-              <Button
-                variant="outline"
-                className="h-10 w-10 p-0 rounded-xl bg-white border-slate-200 shadow-none"
-                onClick={onRefresh}
-              >
-                <RefreshCw
-                  className={cn("h-4 w-4", isRefreshing && "animate-spin")}
-                />
-              </Button>
-            )}
-
-            {onSearchValueChange && (
-              <Input
-                ref={searchInputRef}
-                placeholder="Search records (Ctrl+K)"
-                className="w-[240px] h-10 rounded-xl bg-white shadow-none border-slate-200"
-                value={searchValue ?? ""}
-                onChange={(e) => onSearchValueChange(e.target.value)}
+        <div className="flex flex-wrap items-center gap-3 mb-6">
+          {onRefresh && (
+            <Button
+              variant="outline"
+              className="h-10 w-10 p-0 rounded-xl bg-white border-slate-200 shadow-none"
+              onClick={onRefresh}
+            >
+              <RefreshCw
+                className={cn("h-4 w-4", isRefreshing && "animate-spin")}
               />
-            )}
+            </Button>
+          )}
 
-            {onFilterConfigChange && (
-              <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none relative"
-                  >
-                    <Filter className="h-4 w-4" />
-                    <span>Filter</span>
-                    {filterCount > 0 && (
-                      <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-blue-600">
-                        {filterCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 p-4">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold">Filters</h4>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onFilterConfigChange?.({})}
-                        className="h-8 text-xs"
-                      >
-                        Clear all
-                      </Button>
-                    </div>
-                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
-                      {columns.map((col) => (
-                        <div key={col} className="space-y-1">
-                          <label className="text-[10px] font-bold uppercase text-slate-500">
-                            {col}
-                          </label>
-                          <Input
-                            placeholder={`Filter ${col}...`}
-                            className="h-8 text-sm"
-                            value={filterValues[col] || ""}
-                            onChange={(e) =>
-                              handleFilterInputChange(col, e.target.value)
-                            }
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            )}
+          {onSearchValueChange && (
+            <Input
+              ref={searchInputRef}
+              placeholder="Search records (Ctrl+K)"
+              className="w-[240px] h-10 rounded-xl bg-white shadow-none border-slate-200"
+              value={searchValue ?? ""}
+              onChange={(e) => onSearchValueChange(e.target.value)}
+            />
+          )}
 
-            <div className="flex-1" />
-
-            {viewMenuGroups.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="w-[160px] h-10 rounded-xl bg-white shadow-none border-slate-200 font-bold flex items-center gap-2 text-slate-900">
-                    {VIEW_PRESETS.find(p => p.key === viewKey)?.icon || <LayoutGrid className="h-4 w-4" />}
-                    <span className="truncate">{viewLabel}</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48">
-                  {viewMenuGroups.map((group, idx) => (
-                    <div key={idx}>
-                      {group.label && <DropdownMenuLabel>{group.label}</DropdownMenuLabel>}
-                      {group.options.map((option) => {
-                        const preset = option.type === 'preset' ? VIEW_PRESETS.find(p => p.key === option.presetKey) : null;
-                        return (
-                          <DropdownMenuItem
-                            key={`${group.label}-${option.value}`}
-                            onClick={() => handleViewMenuSelect(option)}
-                            className="flex items-center gap-2"
-                          >
-                            {preset?.icon}
-                            {option.label}
-                          </DropdownMenuItem>
-                        );
-                      })}
-                      {idx < viewMenuGroups.length - 1 && (
-                        <DropdownMenuSeparator />
-                      )}
-                    </div>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
-            <Popover>
+          {onFilterConfigChange && (
+            <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none text-slate-900"
+                  className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none relative"
                 >
-                  Fields
+                  <Filter className="h-4 w-4" />
+                  <span>Filter</span>
+                  {filterCount > 0 && (
+                    <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-blue-600">
+                      {filterCount}
+                    </Badge>
+                  )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-56 p-2">
-                <ScrollArea className="h-72">
-                  <div className="space-y-1">
+              <PopoverContent className="w-80 p-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold">Filters</h4>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onFilterConfigChange?.({})}
+                      className="h-8 text-xs"
+                    >
+                      Clear all
+                    </Button>
+                  </div>
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
                     {columns.map((col) => (
-                      <div
-                        key={col}
-                        className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded-lg cursor-pointer"
-                        onClick={() => {
-                          if (visibleColumns.includes(col)) {
-                            onVisibleColumnsChange(
-                              visibleColumns.filter((c) => c !== col),
-                            );
-                          } else {
-                            onVisibleColumnsChange([...visibleColumns, col]);
+                      <div key={col} className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase text-slate-500">
+                          {col}
+                        </label>
+                        <Input
+                          placeholder={`Filter ${col}...`}
+                          className="h-8 text-sm"
+                          value={filterValues[col] || ""}
+                          onChange={(e) =>
+                            handleFilterInputChange(col, e.target.value)
                           }
-                        }}
-                      >
-                        <Checkbox checked={visibleColumns.includes(col)} />
-                        <span className="text-sm font-medium">{col}</span>
+                        />
                       </div>
                     ))}
                   </div>
-                </ScrollArea>
+                </div>
               </PopoverContent>
             </Popover>
-
-            {onAdd && (
-              <Button
-                className="h-10 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold gap-2 shadow-none border-none"
-                onClick={onAdd}
-              >
-                <Plus className="h-4 w-4" /> {addLabel}
-              </Button>
-            )}
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="h-10 w-10 p-0 rounded-xl bg-white border-slate-200 shadow-none"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Settings</DropdownMenuLabel>
-                {onImportCSV && (
-                  <DropdownMenuItem onClick={handleImportClick}>
-                    <Plus className="h-4 w-4 mr-2" /> Import CSV
-                  </DropdownMenuItem>
-                )}
-                {onExportCSV && (
-                  <DropdownMenuItem onClick={onExportCSV}>
-                    <FileText className="h-4 w-4 mr-2" /> Export CSV
-                  </DropdownMenuItem>
-                )}
-                {(onImportCSV || onExportCSV) && <DropdownMenuSeparator />}
-                <DropdownMenuCheckboxItem
-                  checked={showVerticalLines}
-                  disabled={!onShowVerticalLinesChange}
-                  onCheckedChange={(checked) =>
-                    onShowVerticalLinesChange?.(!!checked)
-                  }
-                >
-                  Show Vertical Lines
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel>Row Spacing</DropdownMenuLabel>
-                <DropdownMenuRadioGroup
-                  value={rowSpacing}
-                  onValueChange={(value) =>
-                    onRowSpacingChange?.(value as RowSpacing)
-                  }
-                >
-                  <DropdownMenuRadioItem value="tight" disabled={!onRowSpacingChange}>
-                    Tight
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="medium" disabled={!onRowSpacingChange}>
-                    Medium
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="spacious" disabled={!onRowSpacingChange}>
-                    Spacious
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <input
-              type="file"
-              accept=".csv"
-              className="hidden"
-              ref={fileInputRef}
-              onChange={(event) => {
-                const file = event.target.files?.[0] || null;
-                if (file && onImportCSV) onImportCSV(file);
-                if (fileInputRef.current) fileInputRef.current.value = "";
-              }}
-            />
-          </div>
           )}
 
-          {Object.entries(groupedRows).map(([groupName, groupRows]) => (
-            <div key={groupName} className="space-y-2">
-              <div className="flex items-center justify-between px-2">
-                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-tight">
-                  {groupBy === "None"
-                    ? `ALL ROWS - ${groupRows.length}`
-                    : `${groupName.toUpperCase()} - ${groupRows.length}`}
-                </h2>
-              </div>
+          {onGroupByChange && effectiveGroupOptions.length > 0 && (
+            <Select value={groupBy} onValueChange={onGroupByChange}>
+              <SelectTrigger className="h-10 w-[160px] rounded-xl bg-white shadow-none border-slate-200 font-semibold gap-2">
+                <LayoutGrid className="h-4 w-4" />
+                <SelectValue placeholder="Group by..." />
+              </SelectTrigger>
+              <SelectContent>
+                {effectiveGroupOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
 
-              <div
-                className={cn(
-                  "bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden",
-                  loading && "opacity-70",
-                )}
-              >
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <Table className="table-fixed w-full">
-                    <TableHeader className="bg-slate-50/50">
-                      <TableRow className="hover:bg-transparent border-b border-slate-200">
-                        <TableHead className="w-[40px] px-4">
-                          <Checkbox
-                            checked={
-                              selectedIds.length === sortedRows.length &&
-                              sortedRows.length > 0
-                            }
-                            onCheckedChange={toggleSelectAll}
-                          />
-                        </TableHead>
+          <div className="flex-1" />
 
-                        <SortableContext
-                          items={visibleCols}
-                          strategy={horizontalListSortingStrategy}
+          {viewMenuGroups.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="w-[160px] h-10 rounded-xl bg-white shadow-none border-slate-200 font-bold flex items-center gap-2 text-slate-900">
+                  {VIEW_PRESETS.find(p => p.key === viewKey)?.icon || <LayoutGrid className="h-4 w-4" />}
+                  <span className="truncate">{viewLabel}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48">
+                {viewMenuGroups.map((group, idx) => (
+                  <div key={idx}>
+                    {group.label && <DropdownMenuLabel>{group.label}</DropdownMenuLabel>}
+                    {group.options.map((option) => {
+                      const preset = option.type === 'preset' ? VIEW_PRESETS.find(p => p.key === option.presetKey) : null;
+                      return (
+                        <DropdownMenuItem
+                          key={`${group.label}-${option.value}`}
+                          onClick={() => handleViewMenuSelect(option)}
+                          className="flex items-center gap-2"
                         >
-                          {visibleCols.map((col, idx) => (
-                            <SortableTableHead
-                              key={col}
-                              col={col}
-                              idx={idx}
-                              style={{ width: colWidths[col] }}
-                              className={cn(
-                                "relative px-4 overflow-visible whitespace-nowrap",
-                                showVerticalLines &&
-                                  idx < visibleCols.length - 1 &&
-                                  "border-r border-slate-100",
-                              )}
-                              handleResize={handleResize}
-                            >
-                              {(drag) => renderHeader(col, drag)}
-                            </SortableTableHead>
-                          ))}
-                        </SortableContext>
-                      </TableRow>
-                    </TableHeader>
+                          {preset?.icon}
+                          {option.label}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                    {idx < viewMenuGroups.length - 1 && (
+                      <DropdownMenuSeparator />
+                    )}
+                  </div>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
-                    <TableBody>
-                      {groupRows.map((row: any) => (
-                        <TableRow
-                          key={row.Id}
-                          id={`row-${row.Id}`}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none text-slate-900"
+              >
+                Fields
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-2">
+              <ScrollArea className="h-72">
+                <div className="space-y-1">
+                  {columns.map((col) => (
+                    <div
+                      key={col}
+                      className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded-lg cursor-pointer"
+                      onClick={() => {
+                        if (visibleColumns.includes(col)) {
+                          onVisibleColumnsChange(
+                            visibleColumns.filter((c) => c !== col),
+                          );
+                        } else {
+                          onVisibleColumnsChange([...visibleColumns, col]);
+                        }
+                      }}
+                    >
+                      <Checkbox checked={visibleColumns.includes(col)} />
+                      <span className="text-sm font-medium">{col}</span>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </PopoverContent>
+          </Popover>
+
+          {onAdd && (
+            <Button
+              className="h-10 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold gap-2 shadow-none border-none"
+              onClick={onAdd}
+            >
+              <Plus className="h-4 w-4" /> {addLabel}
+            </Button>
+          )}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="h-10 w-10 p-0 rounded-xl bg-white border-slate-200 shadow-none"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Settings</DropdownMenuLabel>
+              {onImportCSV && (
+                <DropdownMenuItem onClick={handleImportClick}>
+                  <Plus className="h-4 w-4 mr-2" /> Import CSV
+                </DropdownMenuItem>
+              )}
+              {onExportCSV && (
+                <DropdownMenuItem onClick={onExportCSV}>
+                  <FileText className="h-4 w-4 mr-2" /> Export CSV
+                </DropdownMenuItem>
+              )}
+              {(onImportCSV || onExportCSV) && <DropdownMenuSeparator />}
+              <DropdownMenuCheckboxItem
+                checked={showVerticalLines}
+                disabled={!onShowVerticalLinesChange}
+                onCheckedChange={(checked) =>
+                  onShowVerticalLinesChange?.(!!checked)
+                }
+              >
+                Show Vertical Lines
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Row Spacing</DropdownMenuLabel>
+              <DropdownMenuRadioGroup
+                value={rowSpacing}
+                onValueChange={(value) =>
+                  onRowSpacingChange?.(value as RowSpacing)
+                }
+              >
+                <DropdownMenuRadioItem value="tight" disabled={!onRowSpacingChange}>
+                  Tight
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="medium" disabled={!onRowSpacingChange}>
+                  Medium
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="spacious" disabled={!onRowSpacingChange}>
+                  Spacious
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <input
+            type="file"
+            accept=".csv"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={(event) => {
+              const file = event.target.files?.[0] || null;
+              if (file && onImportCSV) onImportCSV(file);
+              if (fileInputRef.current) fileInputRef.current.value = "";
+            }}
+          />
+        </div>
+      )}
+
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <Table className="table-fixed w-full">
+            <TableHeader className="bg-slate-50/50">
+              <TableRow className="hover:bg-transparent border-b border-slate-200">
+                <TableHead className="w-[40px] px-4">
+                  <Checkbox
+                    checked={
+                      selectedIds.length === sortedRows.length &&
+                      sortedRows.length > 0
+                    }
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
+
+                <SortableContext
+                  items={visibleCols}
+                  strategy={horizontalListSortingStrategy}
+                >
+                  {visibleCols.map((col, idx) => (
+                    <SortableTableHead
+                      key={col}
+                      col={col}
+                      idx={idx}
+                      style={{ width: colWidths[col] }}
+                      className={cn(
+                        "relative px-4 overflow-visible whitespace-nowrap",
+                        showVerticalLines &&
+                          idx < visibleCols.length - 1 &&
+                          "border-r border-slate-100",
+                      )}
+                      handleResize={handleResize}
+                    >
+                      {(drag) => renderHeader(col, drag)}
+                    </SortableTableHead>
+                  ))}
+                </SortableContext>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {Object.entries(groupedRows).map(([groupName, groupRows], groupIdx, groupArr) => (
+                <React.Fragment key={groupName}>
+                  {groupBy !== "None" && (
+                    <TableRow className="bg-slate-50/30 hover:bg-slate-50/30 border-y border-slate-200/60">
+                      <TableCell
+                        colSpan={visibleCols.length + 1}
+                        className="py-2 px-4"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                            {groupName}
+                          </span>
+                          <Badge variant="secondary" className="bg-slate-100 text-slate-500 h-4 px-1.5 text-[9px] font-bold">
+                            {groupRows.length}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {groupRows.map((row: any) => (
+                    <TableRow
+                      key={row.Id}
+                      id={`row-${row.Id}`}
+                      className={cn(
+                        "group hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0",
+                        selectedIds.includes(row.Id) &&
+                          "bg-blue-50/30 hover:bg-blue-50/50",
+                      )}
+                    >
+                      <TableCell className="px-4">
+                        <Checkbox
+                          checked={selectedIds.includes(row.Id)}
+                          onCheckedChange={() => toggleSelect(row.Id)}
+                        />
+                      </TableCell>
+
+                      {visibleCols.map((col, idx) => (
+                        <TableCell
+                          key={col}
+                          style={{ width: colWidths[col] }}
                           className={cn(
-                            "group hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0",
-                            selectedIds.includes(row.Id) &&
-                              "bg-blue-50/30 hover:bg-blue-50/50",
+                            "px-4 font-medium text-slate-600 transition-all overflow-visible",
+                            rowPadding,
+                            showVerticalLines &&
+                              idx < visibleCols.length - 1 &&
+                              "border-r border-slate-50",
                           )}
                         >
-                          <TableCell className="px-4">
-                            <Checkbox
-                              checked={selectedIds.includes(row.Id)}
-                              onCheckedChange={() => toggleSelect(row.Id)}
-                            />
-                          </TableCell>
-
-                          {visibleCols.map((col, idx) => (
-                            <TableCell
-                              key={col}
-                              style={{ width: colWidths[col] }}
-                              className={cn(
-                                "px-4 font-medium text-slate-600 transition-all overflow-visible",
-                                rowPadding,
-                                showVerticalLines &&
-                                  idx < visibleCols.length - 1 &&
-                                  "border-r border-slate-50",
-                              )}
-                            >
-                              {isRollupCol(col) ? (
-                                <RollupCell value={row[col]} type={col === "Automation Logs" ? "automations" : col === "Prompt Libraries" ? "prompts" : col} />
-                              ) : col === "Image" || col === "ACC" ? (
-                                <Sheet>
-                                  <SheetTrigger asChild>
+                          {isRollupCol(col) ? (
+                            <RollupCell value={row[col]} type={col === "Automation Logs" ? "automations" : col === "Prompt Libraries" ? "prompts" : col} />
+                          ) : col === "Image" || col === "ACC" ? (
+                            <Sheet>
+                              <SheetTrigger asChild>
+                                <div
+                                  className={cn(
+                                    "w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer transition-transform hover:scale-110",
+                                    getAccountColor(row.Id).bg,
+                                    getAccountColor(row.Id).text,
+                                  )}
+                                >
+                                  {getInitials(row.name)}
+                                </div>
+                              </SheetTrigger>
+                              <SheetContent className="sm:max-w-lg w-[400px]">
+                                <SheetHeader className="border-b pb-6">
+                                  <div className="flex items-center gap-4">
                                     <div
                                       className={cn(
-                                        "w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer transition-transform hover:scale-110",
+                                        "w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold",
                                         getAccountColor(row.Id).bg,
                                         getAccountColor(row.Id).text,
                                       )}
                                     >
                                       {getInitials(row.name)}
                                     </div>
-                                  </SheetTrigger>
-                                  <SheetContent className="sm:max-w-lg w-[400px]">
-                                    <SheetHeader className="border-b pb-6">
-                                      <div className="flex items-center gap-4">
-                                        <div
-                                          className={cn(
-                                            "w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold",
-                                            getAccountColor(row.Id).bg,
-                                            getAccountColor(row.Id).text,
-                                          )}
-                                        >
-                                          {getInitials(row.name)}
-                                        </div>
-                                        <div>
-                                          <SheetTitle className="text-xl">
-                                            {row.name || "Record Details"}
-                                          </SheetTitle>
-                                          <SheetDescription>
-                                            View and edit information
-                                          </SheetDescription>
-                                        </div>
-                                      </div>
-                                    </SheetHeader>
-                                    <ScrollArea className="h-[calc(100vh-140px)] py-6 pr-4">
-                                      <div className="space-y-6">
-                                        {columns
-                                          .filter((c) => !hiddenFields.includes(c))
-                                          .map((c) => (
-                                            <div key={c} className="space-y-1.5">
-                                              <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                                {getIconForField(c)}
-                                                <span>{c.replace(/_/g, " ")}</span>
-                                              </div>
-                                              {nonEditableFields.includes(c) ? (
-                                                <div className="px-3 py-2 bg-slate-50 rounded-lg text-sm font-medium text-slate-500 border border-slate-100">
-                                                  {isDateCol(c)
-                                                    ? formatDateTime(row[c])
-                                                    : isTimeCol(c)
-                                                      ? formatHHmm(row[c])
-                                                      : row[c] || "-"}
-                                                </div>
-                                              ) : c === "status" ? (
-                                                <Select
-                                                  value={row[c] || ""}
-                                                  onValueChange={(v) =>
-                                                    handleUpdate(row.Id, c, v)
-                                                  }
-                                                >
-                                                  <SelectTrigger className="w-full bg-white border-slate-200">
-                                                    <SelectValue />
-                                                  </SelectTrigger>
-                                                  <SelectContent>
-                                                    {statusOptions.map((o) => (
-                                                      <SelectItem key={o} value={o}>
-                                                        {o}
-                                                      </SelectItem>
-                                                    ))}
-                                                  </SelectContent>
-                                                </Select>
-                                              ) : c === "type" ? (
-                                                <Select
-                                                  value={row[c] || ""}
-                                                  onValueChange={(v) =>
-                                                    handleUpdate(row.Id, c, v)
-                                                  }
-                                                >
-                                                  <SelectTrigger className="w-full bg-white border-slate-200">
-                                                    <SelectValue />
-                                                  </SelectTrigger>
-                                                  <SelectContent>
-                                                    {typeOptions.map((o) => (
-                                                      <SelectItem key={o} value={o}>
-                                                        {o}
-                                                      </SelectItem>
-                                                    ))}
-                                                  </SelectContent>
-                                                </Select>
-                                              ) : c === "timezone" ? (
-                                                <Select
-                                                  value={row[c] || ""}
-                                                  onValueChange={(v) =>
-                                                    handleUpdate(row.Id, c, v)
-                                                  }
-                                                >
-                                                  <SelectTrigger className="w-full bg-white border-slate-200">
-                                                    <SelectValue />
-                                                  </SelectTrigger>
-                                                  <SelectContent>
-                                                    {timezoneOptions.map((o) => (
-                                                      <SelectItem key={o} value={o}>
-                                                        {o}
-                                                      </SelectItem>
-                                                    ))}
-                                                  </SelectContent>
-                                                </Select>
-                                              ) : (
-                                                <Input
-                                                  value={row[c] || ""}
-                                                  onChange={(e) =>
-                                                    handleUpdate(
-                                                      row.Id,
-                                                      c,
-                                                      e.target.value,
-                                                    )
-                                                  }
-                                                  className="bg-white border-slate-200 focus:ring-blue-500"
-                                                />
-                                              )}
+                                    <div>
+                                      <SheetTitle className="text-xl">
+                                        {row.name || "Record Details"}
+                                      </SheetTitle>
+                                      <SheetDescription>
+                                        View and edit information
+                                      </SheetDescription>
+                                    </div>
+                                  </div>
+                                </SheetHeader>
+                                <ScrollArea className="h-[calc(100vh-140px)] py-6 pr-4">
+                                  <div className="space-y-6">
+                                    {columns
+                                      .filter((c) => !hiddenFields.includes(c))
+                                      .map((c) => (
+                                        <div key={c} className="space-y-1.5">
+                                          <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                            {getIconForField(c)}
+                                            <span>{c.replace(/_/g, " ")}</span>
+                                          </div>
+                                          {nonEditableFields.includes(c) ? (
+                                            <div className="px-3 py-2 bg-slate-50 rounded-lg text-sm font-medium text-slate-500 border border-slate-100">
+                                              {isDateCol(c)
+                                                ? formatDateTime(row[c])
+                                                : isTimeCol(c)
+                                                  ? formatHHmm(row[c])
+                                                  : row[c] || "-"}
                                             </div>
-                                          ))}
-                                      </div>
-                                    </ScrollArea>
-                                  </SheetContent>
-                                </Sheet>
-                              ) : col === "status" ? (
-                                <Select
-                                  value={row[col] || ""}
-                                  onValueChange={(v) =>
-                                    handleUpdate(row.Id, col, v)
-                                  }
-                                >
-                                  <SelectTrigger
+                                          ) : c === "status" ? (
+                                            <Select
+                                              value={row[c] || ""}
+                                              onValueChange={(v) =>
+                                                handleUpdate(row.Id, c, v)
+                                              }
+                                            >
+                                              <SelectTrigger className="w-full bg-white border-slate-200">
+                                                <SelectValue />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                {statusOptions.map((o) => (
+                                                  <SelectItem key={o} value={o}>
+                                                    {o}
+                                                  </SelectItem>
+                                                ))}
+                                              </SelectContent>
+                                            </Select>
+                                          ) : c === "type" ? (
+                                            <Select
+                                              value={row[c] || ""}
+                                              onValueChange={(v) =>
+                                                handleUpdate(row.Id, c, v)
+                                              }
+                                            >
+                                              <SelectTrigger className="w-full bg-white border-slate-200">
+                                                <SelectValue />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                {typeOptions.map((o) => (
+                                                  <SelectItem key={o} value={o}>
+                                                    {o}
+                                                  </SelectItem>
+                                                ))}
+                                              </SelectContent>
+                                            </Select>
+                                          ) : c === "timezone" ? (
+                                            <Select
+                                              value={row[c] || ""}
+                                              onValueChange={(v) =>
+                                                handleUpdate(row.Id, c, v)
+                                              }
+                                            >
+                                              <SelectTrigger className="w-full bg-white border-slate-200">
+                                                <SelectValue />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                {timezoneOptions.map((o) => (
+                                                  <SelectItem key={o} value={o}>
+                                                    {o}
+                                                  </SelectItem>
+                                                ))}
+                                              </SelectContent>
+                                            </Select>
+                                          ) : (
+                                            <Input
+                                              value={row[c] || ""}
+                                              onChange={(e) =>
+                                                handleUpdate(
+                                                  row.Id,
+                                                  c,
+                                                  e.target.value,
+                                                )
+                                              }
+                                              className="bg-white border-slate-200 focus:ring-blue-500"
+                                            />
+                                          )}
+                                        </div>
+                                      ))}
+                                  </div>
+                                </ScrollArea>
+                              </SheetContent>
+                            </Sheet>
+                          ) : col === "status" ? (
+                            <Select
+                              value={row[col] || ""}
+                              onValueChange={(v) =>
+                                handleUpdate(row.Id, col, v)
+                              }
+                            >
+                              <SelectTrigger
+                                className={cn(
+                                  "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
+                                  statusColors[row[col]]?.bg,
+                                  statusColors[row[col]]?.text,
+                                )}
+                              >
+                                <div className="flex items-center gap-1.5 overflow-hidden">
+                                  <div
                                     className={cn(
-                                      "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
-                                      statusColors[row[col]]?.bg,
-                                      statusColors[row[col]]?.text,
+                                      "h-1.5 w-1.5 rounded-full shrink-0",
+                                      statusColors[row[col]]?.dot,
                                     )}
-                                  >
-                                    <div className="flex items-center gap-1.5">
-                                      <div
-                                        className={cn(
-                                          "w-1.5 h-1.5 rounded-full",
-                                          statusColors[row[col]]?.dot,
-                                        )}
-                                      />
-                                      <SelectValue />
-                                    </div>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {statusOptions.map((o) => (
-                                      <SelectItem
-                                        key={o}
-                                        value={o}
-                                        className="text-[10px] font-bold uppercase tracking-wider"
-                                      >
-                                        {o}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              ) : isRollupCol(col) ? (
-                                <RollupCell value={row[col]} type={col} />
-                              ) : isDateCol(col) ? (
-                                <DateTimeCell value={row[col]} />
-                              ) : isTimeCol(col) ? (
-                                <TruncatedCell value={formatHHmm(row[col])} />
-                              ) : col === "type" ? (
-                                <Select
-                                  value={row[col] || ""}
-                                  onValueChange={(v) =>
-                                    handleUpdate(row.Id, col, v)
-                                  }
-                                >
-                                  <SelectTrigger
-                                    className={cn(
-                                      "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
-                                      row[col]?.toLowerCase() === "agency"
-                                        ? "bg-yellow-100 text-yellow-700"
-                                        : "bg-blue-100 text-blue-700",
-                                    )}
-                                  >
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {typeOptions.map((o) => (
-                                      <SelectItem
-                                        key={o}
-                                        value={o}
-                                        className="text-[10px] font-bold uppercase tracking-wider"
-                                      >
-                                        {o}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              ) : col === "timezone" ? (
-                                <Select
-                                  value={row[col] || ""}
-                                  onValueChange={(v) =>
-                                    handleUpdate(row.Id, col, v)
-                                  }
-                                >
-                                  <SelectTrigger
-                                    className={cn(
-                                      "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
-                                      timezoneColors[row[col]]?.bg || "bg-slate-100",
-                                      timezoneColors[row[col]]?.text ||
-                                        "text-slate-700",
-                                    )}
-                                  >
-                                    <div className="flex items-center gap-1.5">
-                                      <Clock className="h-3 w-3" />
-                                      <SelectValue />
-                                    </div>
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {timezoneOptions.map((o) => (
-                                      <SelectItem
-                                        key={o}
-                                        value={o}
-                                        className="text-[10px] font-bold uppercase tracking-wider"
-                                      >
-                                        {o}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              ) : (
-                                <TruncatedCell
-                                  value={row[col]}
-                                  onUpdate={handleUpdate}
-                                  rowId={row.Id}
-                                  col={col}
-                                />
-                              )}
-                            </TableCell>
-                          ))}
-                        </TableRow>
+                                  />
+                                  <SelectValue />
+                                </div>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {statusOptions.map((o) => (
+                                  <SelectItem key={o} value={o}>
+                                    {o}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : col === "timezone" ? (
+                            <Select
+                              value={row[col] || ""}
+                              onValueChange={(v) =>
+                                handleUpdate(row.Id, col, v)
+                              }
+                            >
+                              <SelectTrigger
+                                className={cn(
+                                  "h-7 px-2 rounded-lg border border-transparent shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate bg-slate-50 text-slate-500",
+                                  timezoneColors[row[col]]?.bg,
+                                  timezoneColors[row[col]]?.text,
+                                  timezoneColors[row[col]]?.border,
+                                )}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {timezoneOptions.map((o) => (
+                                  <SelectItem key={o} value={o}>
+                                    {o}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : isDateCol(col) ? (
+                            <DateTimeCell value={row[col]} />
+                          ) : isTimeCol(col) ? (
+                            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-bold bg-slate-50/50 px-2 py-1 rounded">
+                              <Clock className="h-3 w-3" />
+                              {formatHHmm(row[col])}
+                            </div>
+                          ) : (
+                            <TruncatedCell
+                              value={row[col]}
+                              onUpdate={handleUpdate}
+                              rowId={row.Id}
+                              col={col}
+                            />
+                          )}
+                        </TableCell>
                       ))}
-                    </TableBody>
-                  </Table>
-                </DndContext>
-              </div>
-            </div>
-          ))}
-        </div>
-      );
-    }
+                    </TableRow>
+                  ))}
+                  {groupIdx < groupArr.length - 1 && (
+                    <TableRow className="bg-background hover:bg-background border-none h-4">
+                      <TableCell colSpan={visibleCols.length + 1} className="p-0 border-none" />
+                    </TableRow>
+                  )}
+                </React.Fragment>
+              ))}
+            </TableBody>
+          </Table>
+        </DndContext>
+      </div>
+    </div>
+  );
+}
