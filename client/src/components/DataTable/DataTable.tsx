@@ -132,7 +132,7 @@ export interface DataTableProps<TRow extends DataTableRow = DataTableRow> {
 
   groupBy: string;
   onGroupByChange?: (next: string) => void;
-  groupOptions?: LabeledOption[];
+  groupOptions?: { value: string; label: string }[];
 
   colWidths: Record<string, number>;
   onColWidthsChange: (next: Record<string, number>) => void;
@@ -152,8 +152,16 @@ export interface DataTableProps<TRow extends DataTableRow = DataTableRow> {
   nonEditableFields: string[];
   smallWidthCols?: string[];
 
-  onUndoRedoReady?: (api: { undo: () => void; redo: () => void; canUndo: boolean; canRedo: boolean }) => void;
+  onUndoRedoReady?: (api: {
+    undo: () => void;
+    redo: () => void;
+    canUndo: boolean;
+    canRedo: boolean;
+  }) => void;
 
+  // ─────────────────────
+  // Toolbar-related props
+  // ─────────────────────
   filterConfig?: Record<string, string>;
   onFilterConfigChange?: (next: Record<string, string>) => void;
   searchValue?: string;
@@ -161,8 +169,15 @@ export interface DataTableProps<TRow extends DataTableRow = DataTableRow> {
   onRefresh?: () => void;
   isRefreshing?: boolean;
 
+  workspaceViewOptions?: { value: string; label: string }[];
+  activeWorkspaceView?: string;
+  onWorkspaceViewChange?: (value: string) => void;
+
   onAdd?: () => void;
   addLabel?: string;
+  onViewSelected?: () => void;
+  canViewSelected?: boolean;
+
   onImportCSV?: (file: File) => void;
   onExportCSV?: () => void;
 }

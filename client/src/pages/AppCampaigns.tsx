@@ -3,7 +3,7 @@ import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
 import { Filter, ChevronDown, Eye } from "lucide-react";
-import DataTable, { SortConfig, RowSpacing } from "@/pages/DataTable";
+import DataTable, { SortConfig, RowSpacing } from "@/components/DataTable/DataTable";
 
 /* ------------------------------------------------------------------ */
 /* Dropdown components                                                 */
