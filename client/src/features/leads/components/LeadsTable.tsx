@@ -4,7 +4,7 @@ import { useLeadsData } from "../hooks/useLeadsData";
 
 const LEAD_COLUMNS = [
   "Id", "Image", "full_name", "email", "phone", "conversion_status", "priority", 
-  "source", "notes", "tags", "created_at", "updated_at"
+  "account_name", "campaign_name", "source", "notes", "tags", "created_at", "updated_at"
 ];
 
 const SMALL_WIDTH_COLS = new Set([
@@ -17,7 +17,7 @@ export function LeadsTable() {
   const [visibleColumns, setVisibleColumns] = useState<string[]>(LEAD_COLUMNS);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "", direction: null });
-  const [groupBy, setGroupBy] = useState<string>("None");
+  const [groupBy, setGroupBy] = useState<string>("account_name");
   const [rowSpacing, setRowSpacing] = useState<RowSpacing>("medium");
   const [showVerticalLines, setShowVerticalLines] = useState<boolean>(true);
   const [filterConfig, setFilterConfig] = useState<Record<string, string>>({});
@@ -46,7 +46,7 @@ export function LeadsTable() {
   return (
     <DataTable
       loading={loading}
-      rows={filteredLeads}
+      rows={leads}
       columns={LEAD_COLUMNS}
       visibleColumns={visibleColumns}
       onVisibleColumnsChange={setVisibleColumns}
@@ -60,6 +60,8 @@ export function LeadsTable() {
         { value: "None", label: "No Grouping" },
         { value: "conversion_status", label: "By Status" },
         { value: "priority", label: "By Priority" },
+        { value: "account_name", label: "By Account" },
+        { value: "campaign_name", label: "By Campaign" },
       ]}
       colWidths={colWidths}
       onColWidthsChange={setColWidths}

@@ -15,6 +15,10 @@ export function useLeadsData() {
       const normalized = leadsList.map((l: any) => ({
         ...l,
         Id: l.Id || l.id || l.id_number || Math.random(),
+        email: l.Email || l.email,
+        conversion_status: l.conversion_status || l["Conversion Status"],
+        created_at: l.created_at || l.CreatedAt || l["Created time"],
+        updated_at: l.updated_at || l.UpdatedAt || l["Last modified time"],
       }));
       setLeads(normalized);
     } catch (err) {
