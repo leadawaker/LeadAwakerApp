@@ -3,6 +3,7 @@ import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
 import { Filter, ChevronDown, Eye } from "lucide-react";
+import DataTable, { SortConfig, RowSpacing } from "@/pages/DataTable";
 
 /* ------------------------------------------------------------------ */
 /* Mock accounts for mapping account_id to account name               */
@@ -20,6 +21,71 @@ const TABLE_ID = "vwalnb0wa9mna9tn"; // campaigns table
 const API_URL = "https://api-leadawaker.netlify.app/.netlify/functions/api";
 
 /* ------------------------------------------------------------------ */
+/* Column definitions                                                 */
+/* ------------------------------------------------------------------ */
+const CAMPAIGN_COLUMNS = [
+  "id_number",
+  "name",
+  "Created time",
+  "Last modified time",
+  "status",
+  "description",
+  "type",
+  "account_id",
+  "n8n_workflow_id",
+  "ai_prompt_template",
+  "total_cost",
+  "bump_1_template",
+  "bump_2_template",
+  "bump_3_template",
+  "bump_1_delay_hours",
+  "bump_2_delay_hours copy",
+  "bump_3_delay_hours",
+  "daily_lead_limit",
+  "message_interval_minutes",
+  "active_hours_start",
+  "active_hours_end",
+  "calendar_link",
+  "webhook_url",
+  "ai_model",
+  "use_ai_bumps",
+  "max_bumps",
+  "stop_on_response",
+  "Leads",
+  "Interactions",
+  "leads_total",
+  "Automation Logs",
+  "campaign_niche_override",
+  "campaign_service",
+  "campaign_usp",
+  "target_audience",
+  "niche_question",
+  "qualification_criteria",
+  "booking_mode_override",
+  "calendar_link_override",
+  "inquiries_source",
+  "inquiry_timeframe",
+  "what_lead_did",
+  "ai_prompt_template_id",
+  "First_Message",
+  "agent_name",
+  "service_name",
+];
+
+const SMALL_WIDTH_COLS = new Set([
+  "id_number",
+  "status",
+  "type",
+  "Leads",
+  "Interactions",
+  "leads_total",
+  "use_ai_bumps",
+  "max_bumps",
+  "stop_on_response",
+  "daily_lead_limit",
+]);
+
+/* ------------------------------------------------------------------ */
 
 export default function AppCampaigns() {
   const { isAgencyView } = useWorkspace();
@@ -29,6 +95,23 @@ export default function AppCampaigns() {
   const [search, setSearch] = useState("");
   const [accountFilter, setAccountFilter] = useState<number | "all">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "Active" | "Inactive">("all");
+
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(CAMPAIGN_COLUMNS);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "", direction: null });
+  const [groupBy, setGroupBy] = useState<string>("None");
+  const [rowSpacing, setRowSpacing] = useState<RowSpacing>("medium");
+  const [showVerticalLines, setShowVerticalLines] = useState<boolean>(true);
+
+  const [colWidths, setColWidths] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const defaults = CAMPAIGN_COLUMNS.reduce((acc, c) => {
+      acc[c] = SMALL_WIDTH_COLS.has(c) ? 120 : 200;
+      return acc;
+    }, {} as Record<string, number>);
+    setColWidths((prev) => ({ ...defaults, ...prev }));
+  }, []);
 
   /* ------------------------------------------------------------------ */
   /* Fetch campaigns from NocoDB via Netlify function                   */
@@ -41,17 +124,53 @@ export default function AppCampaigns() {
         const data = await res.json();
 
         const normalized = (data?.list || []).map((c: any) => ({
-          id: c.id_number || c.id || c.ID, // fallback for ID
+          Id: c.id_number || c.id || c.ID,
+          id_number: c.id_number || c.id || c.ID,
           name: c.name || "",
-          description: c.description || "",
+          "Created time": c["Created time"] || c.created_time || c.created_at || "",
+          "Last modified time": c["Last modified time"] || c.updated_at || c.updatedAt || "",
           status: c.status || "",
+          description: c.description || "",
           type: c.type || "",
-          account_id: c.account_id,
+          account_id: c.account_id || "",
+          n8n_workflow_id: c.n8n_workflow_id || "",
           ai_prompt_template: c.ai_prompt_template || "",
+          total_cost: c.total_cost || 0,
           bump_1_template: c.bump_1_template || "",
+          bump_2_template: c.bump_2_template || "",
+          bump_3_template: c.bump_3_template || "",
+          bump_1_delay_hours: c.bump_1_delay_hours || "",
+          "bump_2_delay_hours copy": c["bump_2_delay_hours copy"] || "",
+          bump_3_delay_hours: c.bump_3_delay_hours || "",
           daily_lead_limit: c.daily_lead_limit || 0,
+          message_interval_minutes: c.message_interval_minutes || 0,
+          active_hours_start: c.active_hours_start || "",
+          active_hours_end: c.active_hours_end || "",
+          calendar_link: c.calendar_link || "",
+          webhook_url: c.webhook_url || "",
+          ai_model: c.ai_model || "",
+          use_ai_bumps: c.use_ai_bumps ?? "",
+          max_bumps: c.max_bumps ?? "",
+          stop_on_response: c.stop_on_response ?? "",
+          Leads: c.Leads || c.leads || [],
+          Interactions: c.Interactions || c.interactions || [],
           leads_total: c.leads_total || 0,
-          messages_sent: c.Interactions || 0, // or map accordingly
+          "Automation Logs": c.Automation_Logs || c["Automation Logs"] || [],
+          campaign_niche_override: c.campaign_niche_override || "",
+          campaign_service: c.campaign_service || "",
+          campaign_usp: c.campaign_usp || "",
+          target_audience: c.target_audience || "",
+          niche_question: c.niche_question || "",
+          qualification_criteria: c.qualification_criteria || "",
+          booking_mode_override: c.booking_mode_override || "",
+          calendar_link_override: c.calendar_link_override || "",
+          inquiries_source: c.inquiries_source || "",
+          inquiry_timeframe: c.inquiry_timeframe || "",
+          what_lead_did: c.what_lead_did || "",
+          ai_prompt_template_id: c.ai_prompt_template_id || "",
+          First_Message: c.First_Message || "",
+          agent_name: c.agent_name || "",
+          service_name: c.service_name || "",
         }));
 
         setCampaigns(normalized);
@@ -67,14 +186,35 @@ export default function AppCampaigns() {
   }, []);
 
   /* ------------------------------------------------------------------ */
-  /* Apply search and filters                                            */
+  /* Apply search and filters                                           */
   /* ------------------------------------------------------------------ */
   const filteredCampaigns = useMemo(() => {
     return campaigns
-      .filter(c => accountFilter === "all" ? true : c.account_id === accountFilter)
-      .filter(c => statusFilter === "all" ? true : c.status === statusFilter)
-      .filter(c => search ? c.name.toLowerCase().includes(search.toLowerCase()) : true);
+      .filter((c) => (accountFilter === "all" ? true : c.account_id === accountFilter))
+      .filter((c) => (statusFilter === "all" ? true : c.status === statusFilter))
+      .filter((c) => (search ? String(c.name || "").toLowerCase().includes(search.toLowerCase()) : true));
   }, [campaigns, search, accountFilter, statusFilter]);
+
+  const statusOptions = useMemo(() => {
+    const set = new Set(filteredCampaigns.map((c) => c.status).filter(Boolean));
+    return set.size ? Array.from(set) : ["Active", "Inactive"];
+  }, [filteredCampaigns]);
+
+  const typeOptions = useMemo(() => {
+    const set = new Set(filteredCampaigns.map((c) => c.type).filter(Boolean));
+    return set.size ? Array.from(set) : ["Outbound", "Inbound"];
+  }, [filteredCampaigns]);
+
+  const timezoneOptions: string[] = [];
+
+  const hiddenFields: string[] = [];
+  const nonEditableFields: string[] = ["Created time", "Last modified time", "Leads", "Interactions", "Automation Logs"];
+
+  const handleUpdate = (rowId: number, col: string, value: any) => {
+    setCampaigns((prev) =>
+      prev.map((r) => (r.Id === rowId ? { ...r, [col]: value } : r))
+    );
+  };
 
   /* ------------------------------------------------------------------ */
   /* Render                                                             */
@@ -100,13 +240,11 @@ export default function AppCampaigns() {
             label={
               accountFilter === "all"
                 ? "All accounts"
-                : mockAccounts.find(a => a.id === accountFilter)?.name
+                : mockAccounts.find((a) => a.id === accountFilter)?.name
             }
           >
-            <DropdownItem onClick={() => setAccountFilter("all")}>
-              All accounts
-            </DropdownItem>
-            {mockAccounts.map(acc => (
+            <DropdownItem onClick={() => setAccountFilter("all")}>All accounts</DropdownItem>
+            {mockAccounts.map((acc) => (
               <DropdownItem key={acc.id} onClick={() => setAccountFilter(acc.id)}>
                 {acc.name}
               </DropdownItem>
@@ -114,9 +252,7 @@ export default function AppCampaigns() {
           </Dropdown>
 
           {/* Status dropdown */}
-          <Dropdown
-            label={statusFilter === "all" ? "All campaigns" : statusFilter}
-          >
+          <Dropdown label={statusFilter === "all" ? "All campaigns" : statusFilter}>
             <DropdownItem onClick={() => setStatusFilter("all")}>All campaigns</DropdownItem>
             <DropdownItem onClick={() => setStatusFilter("Active")}>Active</DropdownItem>
             <DropdownItem onClick={() => setStatusFilter("Inactive")}>Inactive</DropdownItem>
@@ -124,56 +260,30 @@ export default function AppCampaigns() {
         </div>
 
         {/* TABLE */}
-        <div className="flex-1 bg-white rounded-[32px] border border-slate-200 overflow-hidden shadow-sm flex flex-col">
-          {/* Header */}
-          <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_100px] px-8 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 border-b">
-            <div>Campaign</div>
-            <div>Account</div>
-            <div>Status</div>
-            <div>Leads</div>
-            <div className="text-right">Actions</div>
-          </div>
-
-          {/* Rows */}
-          <div className="overflow-y-auto divide-y divide-slate-50">
-            {filteredCampaigns.map(c => {
-              const account = mockAccounts.find(a => a.id === c.account_id);
-              return (
-                <div
-                  key={c.id}
-                  className="grid grid-cols-[1.5fr_1fr_1fr_1fr_100px] px-8 py-6 text-sm items-center hover:bg-slate-50/40 transition-colors"
-                >
-                  <div>
-                    <div className="font-bold text-slate-900">{c.name}</div>
-                    <div className="text-xs text-slate-500 mt-1 truncate">{c.description}</div>
-                  </div>
-
-                  <div className="font-semibold text-slate-700">{account?.name}</div>
-
-                  <div>
-                    <span
-                      className={cn(
-                        "px-2.5 py-1 rounded-full text-[10px] font-black uppercase border",
-                        c.status === "Active"
-                          ? "bg-blue-50 text-blue-700 border-blue-100"
-                          : "bg-slate-50 text-slate-500 border-slate-100"
-                      )}
-                    >
-                      {c.status}
-                    </span>
-                  </div>
-
-                  <div className="font-bold text-slate-900">{c.leads_total || 0}</div>
-
-                  <div className="text-right">
-                    <button className="p-2.5 rounded-xl hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100 text-slate-400 hover:text-blue-600">
-                      <Eye className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        <div className="flex-1">
+          <DataTable
+            loading={loading}
+            rows={filteredCampaigns}
+            columns={CAMPAIGN_COLUMNS}
+            visibleColumns={visibleColumns}
+            onVisibleColumnsChange={setVisibleColumns}
+            selectedIds={selectedIds}
+            onSelectedIdsChange={setSelectedIds}
+            sortConfig={sortConfig}
+            onSortChange={setSortConfig}
+            groupBy={groupBy}
+            colWidths={colWidths}
+            onColWidthsChange={setColWidths}
+            rowSpacing={rowSpacing}
+            showVerticalLines={showVerticalLines}
+            onUpdate={handleUpdate}
+            statusOptions={statusOptions}
+            typeOptions={typeOptions}
+            timezoneOptions={timezoneOptions}
+            hiddenFields={hiddenFields}
+            nonEditableFields={nonEditableFields}
+            smallWidthCols={[...SMALL_WIDTH_COLS]}
+          />
         </div>
       </div>
     </CrmShell>
@@ -188,7 +298,7 @@ function Dropdown({ label, children }: { label: string | undefined; children: Re
   return (
     <div className="relative">
       <button
-        onClick={() => setOpen(v => !v)}
+        onClick={() => setOpen((v) => !v)}
         className="h-11 px-4 rounded-2xl border border-slate-200 bg-white flex items-center gap-2 text-sm font-semibold shadow-sm hover:bg-slate-50"
       >
         {label}
