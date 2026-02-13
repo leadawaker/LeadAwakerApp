@@ -931,7 +931,6 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
       };
 
   const viewMenuGroups = useMemo(() => {
-    const groups: { label: string; options: ViewMenuOption[] }[] = [];
     const presets = VIEW_PRESETS.map((preset) => ({
       type: "preset" as const,
       value: preset.key,
@@ -939,9 +938,10 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
       presetKey: preset.key,
     }));
 
+    const groups: { label: string; options: ViewMenuOption[] }[] = [];
     if (presets.length > 0) {
       groups.push({
-        label: "Column Presets",
+        label: "",
         options: presets,
       });
     }
@@ -1065,18 +1065,20 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
               </Popover>
             )}
 
+            <div className="flex-1" />
+
             {viewMenuGroups.length > 0 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button className="w-[180px] h-10 rounded-xl bg-white shadow-none border-slate-200 font-bold flex items-center gap-2">
+                  <Button className="w-[140px] h-10 rounded-xl bg-white shadow-none border-slate-200 font-bold flex items-center gap-2 text-slate-900">
                     <LayoutGrid className="h-4 w-4" />
-                    <span>{viewLabel}</span>
+                    <span className="truncate">{viewLabel}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56">
+                <DropdownMenuContent className="w-48">
                   {viewMenuGroups.map((group, idx) => (
-                    <div key={group.label}>
-                      <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
+                    <div key={idx}>
+                      {group.label && <DropdownMenuLabel>{group.label}</DropdownMenuLabel>}
                       {group.options.map((option) => (
                         <DropdownMenuItem
                           key={`${group.label}-${option.value}`}
@@ -1094,35 +1096,11 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
               </DropdownMenu>
             )}
 
-            {effectiveGroupOptions.length > 0 && (
-              <Select
-                value={groupBy}
-                onValueChange={(value) => onGroupByChange?.(value)}
-                disabled={!onGroupByChange}
-              >
-                <SelectTrigger className="w-[160px] h-10 rounded-xl bg-white shadow-none border-slate-200 font-bold">
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4" />
-                    <span>Group: {groupBy}</span>
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  {effectiveGroupOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            <div className="flex-1" />
-
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none"
+                  className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none text-slate-900"
                 >
                   Fields
                 </Button>
