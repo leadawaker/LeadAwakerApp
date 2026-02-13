@@ -16,7 +16,7 @@ export const fetchCampaigns = async () => {
 
 export const updateCampaign = async (rowId: string | number, data: any) => {
   const res = await fetch(
-    `https://api-leadawaker.netlify.app/.netlify/functions/api?tableId=m18yh52xz04y3gj&rowId=${rowId}`,
+    `https://api-leadawaker.netlify.app/.netlify/functions/api?tableId=m18yh52xz04y3gj&id=${rowId}`,
     {
       method: "PATCH",
       headers: {

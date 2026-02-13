@@ -1,10 +1,13 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { fetchAccounts, fetchCampaigns, updateCampaign } from "../api/campaignsApi";
+import { useToast } from "@/hooks/use-toast";
 
 export function useCampaignsData() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+  const pendingSaves = useRef<Record<string, number>>({});
 
   const handleRefresh = async () => {
     setLoading(true);
@@ -40,19 +43,41 @@ export function useCampaignsData() {
   };
 
   const updateCampaignRow = async (rowId: string | number, col: string, value: any) => {
-    try {
-      // Optimistic update
-      setCampaigns((prev) =>
-        prev.map((r) => (r.Id === rowId ? { ...r, [col]: value } : r))
-      );
-      
-      await updateCampaign(rowId, { [col]: value });
-    } catch (err) {
-      console.error("Failed to update campaign row", err);
-      // Revert on error
-      handleRefresh();
-      throw err;
+    const cleanValue = value === null || value === undefined ? "" : value;
+
+    // Optimistic update
+    setCampaigns((prev) =>
+      prev.map((r) => (r.Id === rowId ? { ...r, [col]: cleanValue } : r))
+    );
+
+    // debounce server save per (rowId, col)
+    const key = `${rowId}:${col}`;
+    if (pendingSaves.current[key]) {
+      window.clearTimeout(pendingSaves.current[key]);
     }
+
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        await updateCampaign(rowId, { [col]: cleanValue });
+        toast({
+          title: "Updated",
+          description: "Saved changes to database.",
+        });
+      } catch (err) {
+        console.error("Failed to update campaign row", err);
+        toast({
+          variant: "destructive",
+          title: "Sync Error",
+          description: "Failed to save to database.",
+        });
+        // Revert on error
+        handleRefresh();
+      } finally {
+        delete pendingSaves.current[key];
+      }
+    }, 500);
+
+    pendingSaves.current[key] = timeoutId;
   };
 
   useEffect(() => {
