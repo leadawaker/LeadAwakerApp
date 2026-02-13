@@ -333,6 +333,13 @@ const DATE_COLS = new Set([
   "updatedat",
   "created_at",
   "updated_at",
+  "next_action_at",
+  "first_message_sent_at",
+  "bump_1_sent_at",
+  "bump_2_sent_at",
+  "bump_3_sent_at",
+  "last_message_sent_at",
+  "booking_confirmed_at",
 ]);
 
 const TIME_COLS = new Set(["business_hours_open", "business_hours_closed"]);
@@ -1320,18 +1327,33 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                 onCheckedChange={(checked) => handleUpdate(row.Id, col, !!checked)}
                               />
                             </div>
-                          ) : col === "Image" || col === "ACC" ? (
+                          ) : col === "Image" || col === "ACC" || col === "full_name" ? (
                             <Sheet>
                               <SheetTrigger asChild>
-                                <div
-                                  className={cn(
-                                    "w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer transition-transform hover:scale-110",
-                                    getAccountColor(row.Id).bg,
-                                    getAccountColor(row.Id).text,
-                                  )}
-                                >
-                                  {getInitials(row.name)}
-                                </div>
+                                {col === "full_name" ? (
+                                  <div className="font-bold text-blue-600 cursor-pointer hover:text-blue-800 transition-colors">
+                                    {row[col]}
+                                  </div>
+                                ) : (
+                                  <div
+                                    className={cn(
+                                      "w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer transition-transform hover:scale-110",
+                                      getAccountColor(row.Id).bg,
+                                      getAccountColor(row.Id).text,
+                                    )}
+                                  >
+                                    {row.image ? (
+                                      <img 
+                                        src={row.image} 
+                                        alt={row.full_name || row.name} 
+                                        className="w-full h-full rounded-full object-cover"
+                                        onError={(e) => {
+                                          (e.target as HTMLImageElement).style.display = 'none';
+                                        }}
+                                      />
+                                    ) : getInitials(row.full_name || row.name)}
+                                  </div>
+                                )}
                               </SheetTrigger>
                               <SheetContent className="sm:max-w-lg w-[400px]">
                                 <SheetHeader className="border-b pb-6">
