@@ -102,6 +102,13 @@ const HIDDEN_FIELDS = [
   "Created Time",
   "Last Modified Time",
   "ACC",
+  "lead_relations",
+  "automation_logs_relations",
+  "campaigns_relations",
+  "interactions_relations",
+  "prompt_libraries_relations",
+  "users_relations",
+  "tags_relations",
 ];
 
 const STATUS_OPTIONS = ["Active", "Inactive", "Trial", "Suspended", "Unknown"];

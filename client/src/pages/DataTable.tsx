@@ -80,11 +80,13 @@ import {
   Hash,
   LayoutGrid,
   Link as LinkIcon,
+  ListFilter,
   Mail,
   MoreHorizontal,
   Phone,
   Plus,
   RefreshCw,
+  Settings,
   Tag,
   User,
   Zap,
@@ -361,11 +363,11 @@ const ALWAYS_VISIBLE_MATCH = [
 ];
 
 const VIEW_PRESETS = [
-  { key: "all", label: "All Fields" },
-  { key: "rollups", label: "Roll ups" },
-  { key: "twilio", label: "Twilio" },
-  { key: "basic", label: "Basic View" },
-  { key: "automation", label: "Automation" },
+  { key: "all", label: "All Fields", icon: <LayoutGrid className="h-4 w-4" /> },
+  { key: "rollups", label: "Roll ups", icon: <ListFilter className="h-4 w-4" /> },
+  { key: "twilio", label: "Twilio", icon: <Zap className="h-4 w-4" /> },
+  { key: "basic", label: "Basic View", icon: <Eye className="h-4 w-4" /> },
+  { key: "automation", label: "Automation", icon: <Settings className="h-4 w-4" /> },
 ];
 
 const matchesAny = (col: string, list: string[]) => {
@@ -496,14 +498,14 @@ const RollupCell = ({ value, type }: { value: any; type: string }) => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <div className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity bg-slate-50/50 p-1 rounded border border-transparent hover:border-slate-200">
+        <div className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity bg-slate-50/50 p-1 rounded border border-transparent hover:border-slate-200 overflow-hidden w-full">
           <Badge
             variant="secondary"
-            className="bg-slate-100 text-slate-600 border-slate-200 font-bold px-1.5 h-5 min-w-[24px] justify-center"
+            className="bg-slate-100 text-slate-600 border-slate-200 font-bold px-1.5 h-5 min-w-[24px] justify-center shrink-0"
           >
             {count}
           </Badge>
-          <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold whitespace-nowrap">
+          <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold truncate">
             {type}
           </span>
         </div>
@@ -635,9 +637,21 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     return localStorage.getItem("dataTable_viewLabel") || "Default View";
   });
 
+  const [viewKey, setViewKey] = useState(() => {
+    return localStorage.getItem("dataTable_viewKey") || "all";
+  });
+
   useEffect(() => {
     localStorage.setItem("dataTable_viewLabel", viewLabel);
-  }, [viewLabel]);
+    localStorage.setItem("dataTable_viewKey", viewKey);
+  }, [viewLabel, viewKey]);
+
+  useEffect(() => {
+    if (viewKey) {
+      applyView(viewKey);
+    }
+  }, [rows, viewKey]);
+
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -962,6 +976,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
 
   const handleViewMenuSelect = (option: ViewMenuOption) => {
     if (option.type === "preset") {
+      setViewKey(option.presetKey);
       applyView(option.presetKey);
     }
     setViewLabel(option.label);
@@ -1082,8 +1097,8 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
             {viewMenuGroups.length > 0 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button className="w-[140px] h-10 rounded-xl bg-white shadow-none border-slate-200 font-bold flex items-center gap-2 text-slate-900">
-                    <LayoutGrid className="h-4 w-4" />
+                  <Button className="w-[160px] h-10 rounded-xl bg-white shadow-none border-slate-200 font-bold flex items-center gap-2 text-slate-900">
+                    {VIEW_PRESETS.find(p => p.key === viewKey)?.icon || <LayoutGrid className="h-4 w-4" />}
                     <span className="truncate">{viewLabel}</span>
                   </Button>
                 </DropdownMenuTrigger>
@@ -1091,14 +1106,19 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                   {viewMenuGroups.map((group, idx) => (
                     <div key={idx}>
                       {group.label && <DropdownMenuLabel>{group.label}</DropdownMenuLabel>}
-                      {group.options.map((option) => (
-                        <DropdownMenuItem
-                          key={`${group.label}-${option.value}`}
-                          onClick={() => handleViewMenuSelect(option)}
-                        >
-                          {option.label}
-                        </DropdownMenuItem>
-                      ))}
+                      {group.options.map((option) => {
+                        const preset = option.type === 'preset' ? VIEW_PRESETS.find(p => p.key === option.presetKey) : null;
+                        return (
+                          <DropdownMenuItem
+                            key={`${group.label}-${option.value}`}
+                            onClick={() => handleViewMenuSelect(option)}
+                            className="flex items-center gap-2"
+                          >
+                            {preset?.icon}
+                            {option.label}
+                          </DropdownMenuItem>
+                        );
+                      })}
                       {idx < viewMenuGroups.length - 1 && (
                         <DropdownMenuSeparator />
                       )}
