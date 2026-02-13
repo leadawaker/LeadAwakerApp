@@ -1,11 +1,10 @@
 // src/features/accounts/pages/AccountsPage.tsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef } from "react";
 import { useAccountsData } from "../hooks/useAccountsData";
 import { AccountsTable } from "../components/AccountsTable";
 
-  const accountId = undefined;
 export default function AccountsPage() {
-  const accountId = undefined; // Or get from context/params if needed
+  const accountId = undefined;
 
   const {
     rows,
@@ -24,7 +23,7 @@ export default function AccountsPage() {
   } = useAccountsData(accountId);
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [groupBy, setGroupBy] = useState<string>("Type");
+  const [groupBy, setGroupBy] = useState<string>("None");
   const [rowSpacing, setRowSpacing] = useState<"tight" | "medium" | "spacious">(
     "medium",
   );

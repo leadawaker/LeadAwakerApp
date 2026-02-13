@@ -436,6 +436,12 @@ const TruncatedCell = ({
   const ref = useRef<HTMLDivElement>(null);
   const [isTruncated, setIsTruncated] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(text);
+
+  // Keep draft in sync when the external value changes
+  useEffect(() => {
+    setDraft(text);
+  }, [text]);
 
   useEffect(() => {
     const el = ref.current;
@@ -451,17 +457,29 @@ const TruncatedCell = ({
   }, [text]);
 
   if (isEditing && onUpdate && rowId && col) {
-    const widthCh = Math.max(12, text.length + 2);
+    const widthCh = Math.max(12, draft.length + 2);
     return (
       <Input
         autoFocus
         className="h-8 w-auto min-w-[200px] max-w-none bg-white shadow-lg border-blue-400 focus:ring-2 focus:ring-blue-100 relative z-30"
         style={{ width: `${widthCh}ch` }}
-        value={text}
-        onChange={(e) => onUpdate(rowId, col, e.target.value)}
-        onBlur={() => setIsEditing(false)}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => {
+          if (draft !== text) {
+            onUpdate(rowId, col, draft);
+          }
+          setIsEditing(false);
+        }}
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === "Escape") {
+          if (e.key === "Enter") {
+            if (draft !== text) {
+              onUpdate(rowId, col, draft);
+            }
+            setIsEditing(false);
+            e.currentTarget.blur();
+          }
+          if (e.key === "Escape") {
             setIsEditing(false);
             e.currentTarget.blur();
           }
@@ -489,6 +507,7 @@ const TruncatedCell = ({
     </Popover>
   );
 };
+
 
 const RollupCell = ({ value, type }: { value: any; type: string }) => {
   const list = useMemo(() => {
