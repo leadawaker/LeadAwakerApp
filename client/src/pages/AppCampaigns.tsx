@@ -6,14 +6,7 @@ import { Filter, ChevronDown, Eye } from "lucide-react";
 import DataTable, { SortConfig, RowSpacing } from "@/pages/DataTable";
 
 /* ------------------------------------------------------------------ */
-/* Mock accounts for mapping account_id to account name               */
-/* ------------------------------------------------------------------ */
-const mockAccounts = [
-  { id: 1, name: "LeadAwaker Agency" },
-  { id: 2, name: "FitnessGym ABC" },
-  { id: 3, name: "LawFirm XYZ" },
-];
-
+/* Dropdown components                                                 */
 /* ------------------------------------------------------------------ */
 /* NocoDB API settings                                                */
 /* ------------------------------------------------------------------ */
@@ -25,13 +18,17 @@ const NOCODB_BASE_URL =
 /* Column definitions                                                 */
 /* ------------------------------------------------------------------ */
 const CAMPAIGN_COLUMNS = [
-  "id_number",
+  "Id",
   "name",
+  "account_name",
+  "status",
+  "type",
+  "Leads",
+  "Interactions",
+  "leads_total",
   "Created time",
   "Last modified time",
-  "status",
   "description",
-  "type",
   "account_id",
   "n8n_workflow_id",
   "ai_prompt_template",
@@ -52,9 +49,6 @@ const CAMPAIGN_COLUMNS = [
   "use_ai_bumps",
   "max_bumps",
   "stop_on_response",
-  "Leads",
-  "Interactions",
-  "leads_total",
   "Automation Logs",
   "campaign_niche_override",
   "campaign_service",
@@ -67,14 +61,13 @@ const CAMPAIGN_COLUMNS = [
   "inquiries_source",
   "inquiry_timeframe",
   "what_lead_did",
-  "ai_prompt_template_id",
   "First_Message",
   "agent_name",
   "service_name",
 ];
 
 const SMALL_WIDTH_COLS = new Set([
-  "id_number",
+  "Id",
   "status",
   "type",
   "Leads",
@@ -92,6 +85,7 @@ export default function AppCampaigns() {
   const { isAgencyView } = useWorkspace();
 
   const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [accountFilter, setAccountFilter] = useState<number | "all">("all");
@@ -108,7 +102,7 @@ export default function AppCampaigns() {
   const GROUP_OPTIONS = [
     { value: "None", label: "No Grouping" },
     { value: "status", label: "By Status" },
-    { value: "account_id", label: "By Account" },
+    { value: "account_name", label: "By Account" },
   ];
 
   const [colWidths, setColWidths] = useState<Record<string, number>>({});
@@ -116,57 +110,39 @@ export default function AppCampaigns() {
   const handleRefresh = async () => {
     setLoading(true);
     try {
+      // 1. Fetch Accounts from accounts table to map names correctly
+      const accountsRes = await fetch(
+        "https://api-leadawaker.netlify.app/.netlify/functions/api?tableId=m8hflvkkfj25aio"
+      );
+      const accountsData = await accountsRes.json();
+      const accountsList = accountsData?.list || [];
+      setAccounts(accountsList);
+
+      // 2. Fetch Campaigns
       const res = await fetch(`${NOCODB_BASE_URL}?tableId=${TABLE_ID}`);
       const data = await res.json();
-      const normalized = (data?.list || []).map((c: any) => ({
-        Id: c.id_number || c.id || c.ID,
-        id_number: c.id_number || c.id || c.ID,
-        name: c.name || "",
-        "Created time": c["Created time"] || c.created_time || c.created_at || "",
-        "Last modified time": c["Last modified time"] || c.updated_at || c.updatedAt || "",
-        status: c.status || "",
-        description: c.description || "",
-        type: c.type || "",
-        account_id: c.account_id || "",
-        n8n_workflow_id: c.n8n_workflow_id || "",
-        ai_prompt_template: c.ai_prompt_template || "",
-        total_cost: c.total_cost || 0,
-        bump_1_template: c.bump_1_template || "",
-        bump_2_template: c.bump_2_template || "",
-        bump_3_template: c.bump_3_template || "",
-        bump_1_delay_hours: c.bump_1_delay_hours || "",
-        "bump_2_delay_hours copy": c["bump_2_delay_hours copy"] || "",
-        bump_3_delay_hours: c.bump_3_delay_hours || "",
-        daily_lead_limit: c.daily_lead_limit || 0,
-        message_interval_minutes: c.message_interval_minutes || 0,
-        active_hours_start: c.active_hours_start || "",
-        active_hours_end: c.active_hours_end || "",
-        calendar_link: c.calendar_link || "",
-        webhook_url: c.webhook_url || "",
-        ai_model: c.ai_model || "",
-        use_ai_bumps: c.use_ai_bumps ?? "",
-        max_bumps: c.max_bumps ?? "",
-        stop_on_response: c.stop_on_response ?? "",
-        Leads: c.Leads || c.leads || [],
-        Interactions: c.Interactions || c.interactions || [],
-        leads_total: c.leads_total || 0,
-        "Automation Logs": c.Automation_Logs || c["Automation Logs"] || [],
-        campaign_niche_override: c.campaign_niche_override || "",
-        campaign_service: c.campaign_service || "",
-        campaign_usp: c.campaign_usp || "",
-        target_audience: c.target_audience || "",
-        niche_question: c.niche_question || "",
-        qualification_criteria: c.qualification_criteria || "",
-        booking_mode_override: c.booking_mode_override || "",
-        calendar_link_override: c.calendar_link_override || "",
-        inquiries_source: c.inquiries_source || "",
-        inquiry_timeframe: c.inquiry_timeframe || "",
-        what_lead_did: c.what_lead_did || "",
-        ai_prompt_template_id: c.ai_prompt_template_id || "",
-        First_Message: c.First_Message || "",
-        agent_name: c.agent_name || "",
-        service_name: c.service_name || "",
-      }));
+      
+      // 3. Normalize list (NocoDB often returns {list: [...]})
+      const list = Array.isArray(data) ? data : (data?.list || []);
+      
+      const normalized = list.map((c: any) => {
+        const account = accountsList.find(
+          (a: any) =>
+            String(a.Id || a.id) === String(c.account_id)
+        );
+        
+        const rowId = c.Id || c.id || c.id_number || c.ID || Math.random();
+        
+        return {
+          ...c,
+          Id: rowId,
+          id: rowId,
+          account_name: account?.name || account?.Name || c.account_id || "Unknown Account",
+          Leads: Array.isArray(c.Leads) ? c.Leads.length : (typeof c.Leads === 'number' ? c.Leads : 0),
+          Interactions: Array.isArray(c.Interactions) ? c.Interactions.length : (typeof c.Interactions === 'number' ? c.Interactions : 0),
+          "Automation Logs": Array.isArray(c["Automation Logs"]) ? c["Automation Logs"].length : 0,
+        };
+      });
       setCampaigns(normalized);
     } catch (err) {
       console.error("Failed to refresh campaigns", err);
@@ -201,14 +177,16 @@ export default function AppCampaigns() {
   }, [campaigns, search, accountFilter, statusFilter]);
 
   const statusOptions = useMemo(() => {
-    const set = new Set(filteredCampaigns.map((c) => c.status).filter(Boolean));
-    return set.size ? Array.from(set) : ["Active", "Inactive"];
-  }, [filteredCampaigns]);
+    const set = new Set(campaigns.map((c) => c.status).filter(Boolean));
+    const list = Array.from(set);
+    return list.length ? list : ["Active", "Inactive"];
+  }, [campaigns]);
 
   const typeOptions = useMemo(() => {
-    const set = new Set(filteredCampaigns.map((c) => c.type).filter(Boolean));
-    return set.size ? Array.from(set) : ["Outbound", "Inbound"];
-  }, [filteredCampaigns]);
+    const set = new Set(campaigns.map((c) => c.type).filter(Boolean));
+    const list = Array.from(set);
+    return list.length ? list : ["Outbound", "Inbound"];
+  }, [campaigns]);
 
   const timezoneOptions: string[] = [];
 
@@ -273,6 +251,7 @@ export default function AppCampaigns() {
 /* ------------------------------------------------------------------ */
 function Dropdown({ label, children }: { label: string | undefined; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  
   return (
     <div className="relative">
       <button
@@ -283,9 +262,12 @@ function Dropdown({ label, children }: { label: string | undefined; children: Re
         <ChevronDown className="w-4 h-4 text-slate-400" />
       </button>
       {open && (
-        <div className="absolute z-50 mt-2 min-w-full bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
-          {children}
-        </div>
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute z-50 mt-2 min-w-full bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+            {children}
+          </div>
+        </>
       )}
     </div>
   );
