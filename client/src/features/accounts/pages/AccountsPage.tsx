@@ -3,7 +3,9 @@ import React, { useMemo, useState } from "react";
 import { useAccountsData } from "../hooks/useAccountsData";
 import { AccountsTable } from "../components/AccountsTable";
 
+  const accountId = undefined;
 export default function AccountsPage() {
+  const accountId = undefined; // Or get from context/params if needed
 
   const {
     rows,
