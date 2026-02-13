@@ -148,6 +148,7 @@ export interface DataTableProps<TRow extends DataTableRow = DataTableRow> {
   typeOptions: string[];
   timezoneOptions: string[];
 
+  automationStatusOptions?: string[];
   hiddenFields: string[];
   nonEditableFields: string[];
   smallWidthCols?: string[];
@@ -637,6 +638,15 @@ const conversionColors: Record<string, { text: string; bg: string; border: strin
   "Booked": { text: "text-[#ca8a04]", bg: "bg-[#facc15]/20", border: "border-[#facc15]/30", dot: "bg-[#ca8a04]" },
   "DND": { text: "text-[#ef4444]", bg: "bg-[#ef4444]/10", border: "border-[#ef4444]/20", dot: "bg-[#ef4444]" },
   "Lost": { text: "text-slate-500", bg: "bg-slate-100", border: "border-slate-200", dot: "bg-slate-500" },
+};
+
+const automationStatusColors: Record<string, { text: string; bg: string; border: string; dot: string }> = {
+  completed: { text: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", dot: "bg-emerald-500" },
+  queued: { text: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200", dot: "bg-blue-500" },
+  active: { text: "text-indigo-700", bg: "bg-indigo-50", border: "border-indigo-200", dot: "bg-indigo-500" },
+  paused: { text: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200", dot: "bg-amber-500" },
+  dnd: { text: "text-rose-700", bg: "bg-rose-50", border: "border-rose-200", dot: "bg-rose-500" },
+  error: { text: "text-red-700", bg: "bg-red-50", border: "border-red-200", dot: "bg-red-500" },
 };
 
 export default function DataTable<TRow extends DataTableRow = DataTableRow>(
@@ -1436,6 +1446,72 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                 </ScrollArea>
                               </SheetContent>
                             </Sheet>
+                          ) : col === "automation_status" && props.automationStatusOptions ? (
+                            <Select
+                              value={row[col] || ""}
+                              onValueChange={(v) => handleUpdate(row.Id, col, v)}
+                            >
+                              <SelectTrigger
+                                className={cn(
+                                  "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
+                                  automationStatusColors[row[col]]?.bg || "bg-slate-100",
+                                  automationStatusColors[row[col]]?.text || "text-slate-600",
+                                )}
+                              >
+                                <div className="flex items-center gap-1.5 overflow-hidden">
+                                  <div
+                                    className={cn(
+                                      "h-1.5 w-1.5 rounded-full shrink-0",
+                                      automationStatusColors[row[col]]?.dot || "bg-slate-400",
+                                    )}
+                                  />
+                                  <SelectValue />
+                                </div>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {props.automationStatusOptions.map((o) => (
+                                  <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">
+                                    <div className="flex items-center gap-2">
+                                      <div className={cn("h-1.5 w-1.5 rounded-full", automationStatusColors[o]?.dot || "bg-slate-400")} />
+                                      {o}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : col === "conversion_status" ? (
+                            <Select
+                              value={row[col] || ""}
+                              onValueChange={(v) => handleUpdate(row.Id, col, v)}
+                            >
+                              <SelectTrigger
+                                className={cn(
+                                  "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
+                                  conversionColors[row[col]]?.bg || "bg-slate-100",
+                                  conversionColors[row[col]]?.text || "text-slate-600",
+                                )}
+                              >
+                                <div className="flex items-center gap-1.5 overflow-hidden">
+                                  <div
+                                    className={cn(
+                                      "h-1.5 w-1.5 rounded-full shrink-0",
+                                      conversionColors[row[col]]?.dot || "bg-slate-400",
+                                    )}
+                                  />
+                                  <SelectValue />
+                                </div>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {statusOptions.map((o) => (
+                                  <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">
+                                    <div className="flex items-center gap-2">
+                                      <div className={cn("h-1.5 w-1.5 rounded-full", conversionColors[o]?.dot || "bg-slate-400")} />
+                                      {o}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           ) : col === "status" ? (
                             <Select
                               value={row[col] || ""}

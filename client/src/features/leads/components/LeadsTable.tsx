@@ -135,7 +135,8 @@ export function LeadsTable() {
       showVerticalLines={showVerticalLines}
       onShowVerticalLinesChange={setShowVerticalLines}
       onUpdate={handleUpdate}
-      statusOptions={["New", "Contacted", "Responded", "Qualified", "Booked", "DND"]}
+      statusOptions={["New", "Contacted", "Responded", "Multiple Responses", "Qualified", "Booked", "Lost", "DND"]}
+      automationStatusOptions={["completed", "queued", "active", "paused", "dnd", "error"]}
       typeOptions={[]}
       timezoneOptions={[]}
       hiddenFields={[]}
