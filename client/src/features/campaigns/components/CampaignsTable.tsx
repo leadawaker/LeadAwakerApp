@@ -24,7 +24,7 @@ const SMALL_WIDTH_COLS = new Set([
 ]);
 
 export function CampaignsTable() {
-  const { campaigns, loading, handleRefresh, setCampaigns } = useCampaignsData();
+  const { campaigns, loading, handleRefresh, setCampaigns, updateCampaignRow } = useCampaignsData();
   const [search, setSearch] = useState("");
   const [accountFilter, setAccountFilter] = useState<number | "all">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "Active" | "Inactive">("all");
@@ -52,10 +52,12 @@ export function CampaignsTable() {
       .filter((c) => (search ? String(c.name || "").toLowerCase().includes(search.toLowerCase()) : true));
   }, [campaigns, search, accountFilter, statusFilter]);
 
-  const handleUpdate = (rowId: number, col: string, value: any) => {
-    setCampaigns((prev) =>
-      prev.map((r) => (r.Id === rowId ? { ...r, [col]: value } : r))
-    );
+  const handleUpdate = async (rowId: number, col: string, value: any) => {
+    try {
+      await updateCampaignRow(rowId, col, value);
+    } catch (err) {
+      // Error handled in hook
+    }
   };
 
   const statusOptions = Array.from(new Set(campaigns.map((c) => c.status).filter(Boolean)));

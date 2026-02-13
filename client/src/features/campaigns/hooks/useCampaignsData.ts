@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { fetchAccounts, fetchCampaigns } from "../api/campaignsApi";
+import { fetchAccounts, fetchCampaigns, updateCampaign } from "../api/campaignsApi";
 
 export function useCampaignsData() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -39,6 +39,22 @@ export function useCampaignsData() {
     }
   };
 
+  const updateCampaignRow = async (rowId: string | number, col: string, value: any) => {
+    try {
+      // Optimistic update
+      setCampaigns((prev) =>
+        prev.map((r) => (r.Id === rowId ? { ...r, [col]: value } : r))
+      );
+      
+      await updateCampaign(rowId, { [col]: value });
+    } catch (err) {
+      console.error("Failed to update campaign row", err);
+      // Revert on error
+      handleRefresh();
+      throw err;
+    }
+  };
+
   useEffect(() => {
     handleRefresh();
   }, []);
@@ -48,6 +64,7 @@ export function useCampaignsData() {
     accounts,
     loading,
     handleRefresh,
-    setCampaigns
+    setCampaigns,
+    updateCampaignRow
   };
 }
