@@ -119,12 +119,6 @@ const TIMEZONE_OPTIONS = [
   "Asia/Dubai",
 ];
 
-const WORKSPACE_VIEWS = [
-  "Default View",
-  "Sales Pipeline",
-  "Customer Success",
-  "Admin Dashboard",
-];
 
 const GROUP_OPTIONS = [
   { value: "None", label: "No Grouping" },
@@ -149,7 +143,6 @@ export default function Accounts() {
     return saved ? JSON.parse(saved) : {};
   });
 
-  const [activeView, setActiveView] = useState("Default View");
   const [filterConfig, setFilterConfig] = useState<Record<string, string>>({});
   const [groupBy, setGroupBy] = useState<string>("Type");
   const [rowSpacing, setRowSpacing] = useState<"tight" | "medium" | "spacious">(
@@ -466,11 +459,6 @@ export default function Accounts() {
     localStorage.setItem("accounts_sort", JSON.stringify(next));
   };
 
-  const handleViewSelected = () => {
-    if (selectedIds.length !== 1) return;
-    const row = rows.find((r) => r.Id === selectedIds[0]);
-    if (row) setDetailRow(row);
-  };
 
   return (
     <div className="w-full h-full overflow-y-auto">
@@ -507,16 +495,8 @@ export default function Accounts() {
           onSearchValueChange={setSearchTerm}
           onRefresh={fetchData}
           isRefreshing={loading}
-          workspaceViewOptions={WORKSPACE_VIEWS.map((view) => ({
-            value: view,
-            label: view,
-          }))}
-          activeWorkspaceView={activeView}
-          onWorkspaceViewChange={setActiveView}
           onAdd={() => setIsCreateOpen(true)}
           addLabel="Add"
-          onViewSelected={handleViewSelected}
-          canViewSelected={selectedIds.length === 1}
           onImportCSV={handleImportCSVFile}
           onExportCSV={handleExportCSV}
         />

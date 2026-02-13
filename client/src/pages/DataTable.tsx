@@ -159,16 +159,8 @@ export interface DataTableProps<TRow extends DataTableRow = DataTableRow> {
   onRefresh?: () => void;
   isRefreshing?: boolean;
 
-  workspaceViewOptions?: LabeledOption[];
-  activeWorkspaceView?: string;
-  onWorkspaceViewChange?: (value: string) => void;
-
   onAdd?: () => void;
   addLabel?: string;
-
-  onViewSelected?: () => void;
-  canViewSelected?: boolean;
-
   onImportCSV?: (file: File) => void;
   onExportCSV?: () => void;
 }
@@ -619,13 +611,8 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     onSearchValueChange,
     onRefresh,
     isRefreshing,
-    workspaceViewOptions,
-    activeWorkspaceView,
-    onWorkspaceViewChange,
     onAdd,
     addLabel = "Add",
-    onViewSelected,
-    canViewSelected = false,
     onImportCSV,
     onExportCSV,
   } = props;
@@ -637,17 +624,6 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
 
   const filterValues = filterConfig ?? {};
   const filterCount = Object.values(filterValues).filter(Boolean).length;
-
-  const workspaceOptions = workspaceViewOptions ?? [];
-  const workspaceActive = workspaceOptions.find(
-    (option) => option.value === activeWorkspaceView,
-  );
-
-  useEffect(() => {
-    if (workspaceActive) {
-      setViewLabel(workspaceActive.label);
-    }
-  }, [workspaceActive]);
 
   useEffect(() => {
     if (!onSearchValueChange) return;
@@ -948,318 +924,301 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
         onVisibleColumnsChange(ordered.length ? ordered : columns);
       };
 
-      const viewMenuGroups: { label: string; options: ViewMenuOption[] }[] = [];
-      if (workspaceOptions.length > 0) {
-        viewMenuGroups.push({
-          label: "Workspace Views",
-          options: workspaceOptions.map((option) => ({
-            type: "workspace" as const,
-            value: option.value,
-            label: option.label,
-          })),
-        });
-      }
-      viewMenuGroups.push({
+  const viewMenuGroups = useMemo(() => {
+    const groups: { label: string; options: ViewMenuOption[] }[] = [];
+    const presets = VIEW_PRESETS.map((preset) => ({
+      type: "preset" as const,
+      value: preset.key,
+      label: preset.label,
+      presetKey: preset.key,
+    }));
+
+    if (presets.length > 0) {
+      groups.push({
         label: "Column Presets",
-        options: VIEW_PRESETS.map((preset) => ({
-          type: "preset" as const,
-          value: preset.key,
-          label: preset.label,
-          presetKey: preset.key,
-        })),
+        options: presets,
       });
+    }
+    return groups;
+  }, []);
 
-      const handleViewMenuSelect = (option: ViewMenuOption) => {
-        if (option.type === "workspace") {
-          onWorkspaceViewChange?.(option.value);
-        } else if (option.type === "preset") {
-          applyView(option.presetKey);
-        }
-        setViewLabel(option.label);
-      };
+  const handleViewMenuSelect = (option: ViewMenuOption) => {
+    if (option.type === "preset") {
+      applyView(option.presetKey);
+    }
+    setViewLabel(option.label);
+  };
 
-      const effectiveGroupOptions =
-        groupOptions ??
-        [
-          { value: "None", label: "No Grouping" },
-          { value: "Type", label: "By Type" },
-          { value: "Status", label: "By Status" },
-          { value: "Timezone", label: "By Time Zone" },
-        ];
+  const effectiveGroupOptions =
+    groupOptions ??
+    [
+      { value: "None", label: "No Grouping" },
+      { value: "Type", label: "By Type" },
+      { value: "Status", label: "By Status" },
+      { value: "Timezone", label: "By Time Zone" },
+    ];
 
-      const handleFilterInputChange = (col: string, value: string) => {
-        if (!onFilterConfigChange) return;
-        const next = { ...filterValues };
-        if (value) next[col] = value;
-        else delete next[col];
-        onFilterConfigChange(next);
-      };
+  const handleFilterInputChange = (col: string, value: string) => {
+    if (!onFilterConfigChange) return;
+    const next = { ...filterValues };
+    if (value) next[col] = value;
+    else delete next[col];
+    onFilterConfigChange(next);
+  };
 
-      const handleImportClick = () => {
-        if (!onImportCSV) return;
-        fileInputRef.current?.click();
-      };
+  const handleImportClick = () => {
+    if (!onImportCSV) return;
+    fileInputRef.current?.click();
+  };
 
-      const toolbarHasControls =
-        onRefresh ||
-        onViewSelected ||
-        onSearchValueChange ||
-        onFilterConfigChange ||
-        viewMenuGroups.length > 0 ||
-        effectiveGroupOptions.length > 0 ||
-        onAdd ||
-        onImportCSV ||
-        onExportCSV;
+  const toolbarHasControls =
+    onRefresh ||
+    onSearchValueChange ||
+    onFilterConfigChange ||
+    viewMenuGroups.length > 0 ||
+    effectiveGroupOptions.length > 0 ||
+    onAdd ||
+    onImportCSV ||
+    onExportCSV;
 
-      return (
-        <div className="space-y-6">
-          {toolbarHasControls && (
-            <div className="flex flex-wrap items-center gap-3">
-              {onRefresh && (
-                <Button
-                  variant="outline"
-                  className="h-10 w-10 p-0 rounded-xl bg-white border-slate-200 shadow-none"
-                  onClick={onRefresh}
-                >
-                  <RefreshCw
-                    className={cn("h-4 w-4", isRefreshing && "animate-spin")}
-                  />
-                </Button>
-              )}
-
-              {onViewSelected && (
-                <Button
-                  variant="outline"
-                  className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none"
-                  disabled={!canViewSelected}
-                  onClick={onViewSelected}
-                >
-                  <Eye className="h-4 w-4" /> View
-                </Button>
-              )}
-
-              {onSearchValueChange && (
-                <Input
-                  ref={searchInputRef}
-                  placeholder="Search records (Ctrl+K)"
-                  className="w-[240px] h-10 rounded-xl bg-white shadow-none border-slate-200"
-                  value={searchValue ?? ""}
-                  onChange={(e) => onSearchValueChange(e.target.value)}
+  return (
+    <div className="space-y-6">
+      {toolbarHasControls && (
+          <div className="flex flex-wrap items-center gap-3">
+            {onRefresh && (
+              <Button
+                variant="outline"
+                className="h-10 w-10 p-0 rounded-xl bg-white border-slate-200 shadow-none"
+                onClick={onRefresh}
+              >
+                <RefreshCw
+                  className={cn("h-4 w-4", isRefreshing && "animate-spin")}
                 />
-              )}
+              </Button>
+            )}
 
-              {onFilterConfigChange && (
-                <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none relative"
-                    >
-                      <Filter className="h-4 w-4" />
-                      <span>Filter</span>
-                      {filterCount > 0 && (
-                        <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-blue-600">
-                          {filterCount}
-                        </Badge>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80 p-4">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-semibold">Filters</h4>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onFilterConfigChange?.({})}
-                          className="h-8 text-xs"
-                        >
-                          Clear all
-                        </Button>
-                      </div>
-                      <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
-                        {columns.map((col) => (
-                          <div key={col} className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase text-slate-500">
-                              {col}
-                            </label>
-                            <Input
-                              placeholder={`Filter ${col}...`}
-                              className="h-8 text-sm"
-                              value={filterValues[col] || ""}
-                              onChange={(e) =>
-                                handleFilterInputChange(col, e.target.value)
-                              }
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              )}
+            {onSearchValueChange && (
+              <Input
+                ref={searchInputRef}
+                placeholder="Search records (Ctrl+K)"
+                className="w-[240px] h-10 rounded-xl bg-white shadow-none border-slate-200"
+                value={searchValue ?? ""}
+                onChange={(e) => onSearchValueChange(e.target.value)}
+              />
+            )}
 
-              {viewMenuGroups.length > 0 && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button className="w-[180px] h-10 rounded-xl bg-white shadow-none border-slate-200 font-bold flex items-center gap-2">
-                      <LayoutGrid className="h-4 w-4" />
-                      <span>{viewLabel}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56">
-                    {viewMenuGroups.map((group, idx) => (
-                      <div key={group.label}>
-                        <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
-                        {group.options.map((option) => (
-                          <DropdownMenuItem
-                            key={`${group.label}-${option.value}`}
-                            onClick={() => handleViewMenuSelect(option)}
-                          >
-                            {option.label}
-                          </DropdownMenuItem>
-                        ))}
-                        {idx < viewMenuGroups.length - 1 && (
-                          <DropdownMenuSeparator />
-                        )}
-                      </div>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-
-              {effectiveGroupOptions.length > 0 && (
-                <Select
-                  value={groupBy}
-                  onValueChange={(value) => onGroupByChange?.(value)}
-                  disabled={!onGroupByChange}
-                >
-                  <SelectTrigger className="w-[160px] h-10 rounded-xl bg-white shadow-none border-slate-200 font-bold">
-                    <div className="flex items-center gap-2">
-                      <Filter className="h-4 w-4" />
-                      <span>Group: {groupBy}</span>
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {effectiveGroupOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-
-              <div className="flex-1" />
-
-              <Popover>
+            {onFilterConfigChange && (
+              <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none"
+                    className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none relative"
                   >
-                    Fields
+                    <Filter className="h-4 w-4" />
+                    <span>Filter</span>
+                    {filterCount > 0 && (
+                      <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-blue-600">
+                        {filterCount}
+                      </Badge>
+                    )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-56 p-2">
-                  <ScrollArea className="h-72">
-                    <div className="space-y-1">
+                <PopoverContent className="w-80 p-4">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold">Filters</h4>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onFilterConfigChange?.({})}
+                        className="h-8 text-xs"
+                      >
+                        Clear all
+                      </Button>
+                    </div>
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
                       {columns.map((col) => (
-                        <div
-                          key={col}
-                          className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded-lg cursor-pointer"
-                          onClick={() => {
-                            if (visibleColumns.includes(col)) {
-                              onVisibleColumnsChange(
-                                visibleColumns.filter((c) => c !== col),
-                              );
-                            } else {
-                              onVisibleColumnsChange([...visibleColumns, col]);
+                        <div key={col} className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase text-slate-500">
+                            {col}
+                          </label>
+                          <Input
+                            placeholder={`Filter ${col}...`}
+                            className="h-8 text-sm"
+                            value={filterValues[col] || ""}
+                            onChange={(e) =>
+                              handleFilterInputChange(col, e.target.value)
                             }
-                          }}
-                        >
-                          <Checkbox checked={visibleColumns.includes(col)} />
-                          <span className="text-sm font-medium">{col}</span>
+                          />
                         </div>
                       ))}
                     </div>
-                  </ScrollArea>
+                  </div>
                 </PopoverContent>
               </Popover>
+            )}
 
-              {onAdd && (
-                <Button
-                  className="h-10 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold gap-2 shadow-none border-none"
-                  onClick={onAdd}
-                >
-                  <Plus className="h-4 w-4" /> {addLabel}
-                </Button>
-              )}
-
+            {viewMenuGroups.length > 0 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="h-10 w-10 p-0 rounded-xl bg-white border-slate-200 shadow-none"
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
+                  <Button className="w-[180px] h-10 rounded-xl bg-white shadow-none border-slate-200 font-bold flex items-center gap-2">
+                    <LayoutGrid className="h-4 w-4" />
+                    <span>{viewLabel}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>Settings</DropdownMenuLabel>
-                  {onImportCSV && (
-                    <DropdownMenuItem onClick={handleImportClick}>
-                      <Plus className="h-4 w-4 mr-2" /> Import CSV
-                    </DropdownMenuItem>
-                  )}
-                  {onExportCSV && (
-                    <DropdownMenuItem onClick={onExportCSV}>
-                      <FileText className="h-4 w-4 mr-2" /> Export CSV
-                    </DropdownMenuItem>
-                  )}
-                  {(onImportCSV || onExportCSV) && <DropdownMenuSeparator />}
-                  <DropdownMenuCheckboxItem
-                    checked={showVerticalLines}
-                    disabled={!onShowVerticalLinesChange}
-                    onCheckedChange={(checked) =>
-                      onShowVerticalLinesChange?.(!!checked)
-                    }
-                  >
-                    Show Vertical Lines
-                  </DropdownMenuCheckboxItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel>Row Spacing</DropdownMenuLabel>
-                  <DropdownMenuRadioGroup
-                    value={rowSpacing}
-                    onValueChange={(value) =>
-                      onRowSpacingChange?.(value as RowSpacing)
-                    }
-                  >
-                    <DropdownMenuRadioItem value="tight" disabled={!onRowSpacingChange}>
-                      Tight
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="medium" disabled={!onRowSpacingChange}>
-                      Medium
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="spacious" disabled={!onRowSpacingChange}>
-                      Spacious
-                    </DropdownMenuRadioItem>
-                  </DropdownMenuRadioGroup>
+                <DropdownMenuContent className="w-56">
+                  {viewMenuGroups.map((group, idx) => (
+                    <div key={group.label}>
+                      <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
+                      {group.options.map((option) => (
+                        <DropdownMenuItem
+                          key={`${group.label}-${option.value}`}
+                          onClick={() => handleViewMenuSelect(option)}
+                        >
+                          {option.label}
+                        </DropdownMenuItem>
+                      ))}
+                      {idx < viewMenuGroups.length - 1 && (
+                        <DropdownMenuSeparator />
+                      )}
+                    </div>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
+            )}
 
-              <input
-                type="file"
-                accept=".csv"
-                className="hidden"
-                ref={fileInputRef}
-                onChange={(event) => {
-                  const file = event.target.files?.[0] || null;
-                  if (file && onImportCSV) onImportCSV(file);
-                  if (fileInputRef.current) fileInputRef.current.value = "";
-                }}
-              />
-            </div>
+            {effectiveGroupOptions.length > 0 && (
+              <Select
+                value={groupBy}
+                onValueChange={(value) => onGroupByChange?.(value)}
+                disabled={!onGroupByChange}
+              >
+                <SelectTrigger className="w-[160px] h-10 rounded-xl bg-white shadow-none border-slate-200 font-bold">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4" />
+                    <span>Group: {groupBy}</span>
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  {effectiveGroupOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            <div className="flex-1" />
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none"
+                >
+                  Fields
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-2">
+                <ScrollArea className="h-72">
+                  <div className="space-y-1">
+                    {columns.map((col) => (
+                      <div
+                        key={col}
+                        className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded-lg cursor-pointer"
+                        onClick={() => {
+                          if (visibleColumns.includes(col)) {
+                            onVisibleColumnsChange(
+                              visibleColumns.filter((c) => c !== col),
+                            );
+                          } else {
+                            onVisibleColumnsChange([...visibleColumns, col]);
+                          }
+                        }}
+                      >
+                        <Checkbox checked={visibleColumns.includes(col)} />
+                        <span className="text-sm font-medium">{col}</span>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
+
+            {onAdd && (
+              <Button
+                className="h-10 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold gap-2 shadow-none border-none"
+                onClick={onAdd}
+              >
+                <Plus className="h-4 w-4" /> {addLabel}
+              </Button>
+            )}
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="h-10 w-10 p-0 rounded-xl bg-white border-slate-200 shadow-none"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Settings</DropdownMenuLabel>
+                {onImportCSV && (
+                  <DropdownMenuItem onClick={handleImportClick}>
+                    <Plus className="h-4 w-4 mr-2" /> Import CSV
+                  </DropdownMenuItem>
+                )}
+                {onExportCSV && (
+                  <DropdownMenuItem onClick={onExportCSV}>
+                    <FileText className="h-4 w-4 mr-2" /> Export CSV
+                  </DropdownMenuItem>
+                )}
+                {(onImportCSV || onExportCSV) && <DropdownMenuSeparator />}
+                <DropdownMenuCheckboxItem
+                  checked={showVerticalLines}
+                  disabled={!onShowVerticalLinesChange}
+                  onCheckedChange={(checked) =>
+                    onShowVerticalLinesChange?.(!!checked)
+                  }
+                >
+                  Show Vertical Lines
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Row Spacing</DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  value={rowSpacing}
+                  onValueChange={(value) =>
+                    onRowSpacingChange?.(value as RowSpacing)
+                  }
+                >
+                  <DropdownMenuRadioItem value="tight" disabled={!onRowSpacingChange}>
+                    Tight
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="medium" disabled={!onRowSpacingChange}>
+                    Medium
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="spacious" disabled={!onRowSpacingChange}>
+                    Spacious
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <input
+              type="file"
+              accept=".csv"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={(event) => {
+                const file = event.target.files?.[0] || null;
+                if (file && onImportCSV) onImportCSV(file);
+                if (fileInputRef.current) fileInputRef.current.value = "";
+              }}
+            />
+          </div>
           )}
 
           {Object.entries(groupedRows).map(([groupName, groupRows]) => (
