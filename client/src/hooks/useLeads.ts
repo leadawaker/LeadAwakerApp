@@ -167,7 +167,7 @@ function normalizeLeadRow(row: Record<string, any>): Lead {
   const email = String(row.Email || row.email || "").trim();
   const phone = String(row.phone || row.Phone || "").trim();
 
-  const conversion_status = String(row.Conversion_Status || row["Conversion Status"] || row["Conversion_Status"] || "").trim();
+  const conversion_status = String(row.Conversion_Status || row["Conversion Status"] || row["Conversion_Status"] || row["Conversion Status"] || "").trim();
   const source = String(row.Source || row.source || "").trim();
 
   const last_interaction_at = String(row.last_interaction_at ?? "").trim();
@@ -198,8 +198,8 @@ function normalizeLeadRow(row: Record<string, any>): Lead {
     automation_status: String(row.automation_status ?? "").trim() || "queued",
     last_message_sent_at: last_message_sent_at_raw ? last_message_sent_at_raw : null,
     last_message_received_at: last_message_received_at_raw ? last_message_received_at_raw : null,
-    message_count_sent: toNum(row.message_count_sent || row.message_count_sent, 0),
-    message_count_received: toNum(row.message_count_received || row.message_count_received, 0),
+    message_count_sent: toNum(row.message_count_sent, 0),
+    message_count_received: toNum(row.message_count_received, 0),
     ai_memory: String(row.ai_memory ?? "").trim(),
     bump_1_sent_at: String(row.bump_1_sent_at ?? "").trim() || null,
     bump_2_sent_at: String(row.bump_2_sent_at ?? "").trim() || null,
@@ -241,7 +241,7 @@ export function useLeads(args: UseLeadsArgs = {}) {
     const parsedLeads = Papa.parse<Record<string, any>>(leadsCsv ?? "", {
       header: true,
       skipEmptyLines: true,
-      transformHeader: (h) => cleanHeader(h),
+      // No transformHeader here to keep exact database field names
     });
 
     const parsedConv = Papa.parse<Record<string, any>>(convCsv ?? "", {
