@@ -189,12 +189,12 @@ const defaultRowPadding: Record<RowSpacing, string> = {
 };
 
 const initialsColors = [
-  { text: "text-[#1a3a6f]", bg: "bg-[#1a3a6f]/10", dot: "bg-[#1a3a6f]" },
-  { text: "text-[#2d5aa8]", bg: "bg-[#2d5aa8]/10", dot: "bg-[#2d5aa8]" },
-  { text: "text-[#1E90FF]", bg: "bg-[#1E90FF]/10", dot: "bg-[#1E90FF]" },
-  { text: "text-[#17A398]", bg: "bg-[#17A398]/10", dot: "bg-[#17A398]" },
-  { text: "text-[#10b981]", bg: "bg-[#10b981]/10", dot: "bg-[#10b981]" },
-  { text: "text-[#ca8a04]", bg: "bg-[#facc15]/20", dot: "bg-[#facc15]" },
+  { text: "text-[#1a3a6f]", bg: "bg-[#1a3a6f]/10", dot: "bg-[#1a3a6f]", border: "border-[#1a3a6f]/20" },
+  { text: "text-[#2d5aa8]", bg: "bg-[#2d5aa8]/10", dot: "bg-[#2d5aa8]", border: "border-[#2d5aa8]/20" },
+  { text: "text-[#1E90FF]", bg: "bg-[#1E90FF]/10", dot: "bg-[#1E90FF]", border: "border-[#1E90FF]/20" },
+  { text: "text-[#17A398]", bg: "bg-[#17A398]/10", dot: "bg-[#17A398]", border: "border-[#17A398]/20" },
+  { text: "text-[#10b981]", bg: "bg-[#10b981]/10", dot: "bg-[#10b981]", border: "border-[#10b981]/20" },
+  { text: "text-[#ca8a04]", bg: "bg-[#facc15]/20", dot: "bg-[#facc15]", border: "border-[#facc15]/30" },
 ];
 
 const normalizeCol = (col: string) =>
@@ -202,12 +202,10 @@ const normalizeCol = (col: string) =>
 
 const getInitials = (name: string) => {
   if (!name) return "?";
-  const parts = name.split(" ");
+  const parts = name.trim().split(/\s+/);
   if (parts.length >= 2)
-    return (
-      (parts[0][0] + (parts[1] ? parts[1][0] : parts[0][1] || "")).toUpperCase()
-    );
-  return (name[0] + (name[1] || name[0])).toUpperCase().slice(0, 2);
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return name[0].toUpperCase();
 };
 
 const getAccountColor = (id: number) => initialsColors[id % initialsColors.length];
@@ -271,6 +269,7 @@ const getIconForField = (col: string) => {
   if (c.includes("website")) return <Globe className="h-3.5 w-3.5" />;
   if (c.includes("notes")) return <FileText className="h-3.5 w-3.5" />;
   if (c.includes("timezone")) return <Clock className="h-3.5 w-3.5" />;
+  if (c.includes("account_id") || c.includes("campaign_id")) return <Hash className="h-3.5 w-3.5" />;
   if (c.includes("twilio") || c.includes("twillio"))
     return <Zap className="h-3.5 w-3.5" />;
   if (c.includes("webhook")) return <LinkIcon className="h-3.5 w-3.5" />;
@@ -283,7 +282,10 @@ const getIconForField = (col: string) => {
 
 const formatHeaderTitle = (col: string) => {
   if (col === "name") return "Campaign Name";
-  if (col === "Account ID") return "ID";
+  if (col === "Account ID" || col === "account_id") return "Account ID";
+  if (col === "campaign_id") return "Campaign ID";
+  if (col === "full_name") return "Full Name";
+  if (col === "conversion_status") return "Conversion";
   return col
     .split("_")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -625,6 +627,17 @@ const SortableTableHead = ({
 /* ---------------------------------------------------------------- */
 
 type HistoryEntry = { rowId: number; col: string; prev: any; next: any };
+
+const conversionColors: Record<string, { text: string; bg: string; border: string; dot: string }> = {
+  "New": { text: "text-[#1a3a6f]", bg: "bg-[#1a3a6f]/10", border: "border-[#1a3a6f]/20", dot: "bg-[#1a3a6f]" },
+  "Contacted": { text: "text-[#2d5aa8]", bg: "bg-[#2d5aa8]/10", border: "border-[#2d5aa8]/20", dot: "bg-[#2d5aa8]" },
+  "Responded": { text: "text-[#1E90FF]", bg: "bg-[#1E90FF]/10", border: "border-[#1E90FF]/20", dot: "bg-[#1E90FF]" },
+  "Multiple Responses": { text: "text-[#17A398]", bg: "bg-[#17A398]/10", border: "border-[#17A398]/20", dot: "bg-[#17A398]" },
+  "Qualified": { text: "text-[#10b981]", bg: "bg-[#10b981]/10", border: "border-[#10b981]/20", dot: "bg-[#10b981]" },
+  "Booked": { text: "text-[#ca8a04]", bg: "bg-[#facc15]/20", border: "border-[#facc15]/30", dot: "bg-[#ca8a04]" },
+  "DND": { text: "text-[#ef4444]", bg: "bg-[#ef4444]/10", border: "border-[#ef4444]/20", dot: "bg-[#ef4444]" },
+  "Lost": { text: "text-slate-500", bg: "bg-slate-100", border: "border-slate-200", dot: "bg-slate-500" },
+};
 
 export default function DataTable<TRow extends DataTableRow = DataTableRow>(
   props: DataTableProps<TRow>,
