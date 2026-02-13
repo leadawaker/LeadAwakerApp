@@ -327,6 +327,20 @@ const ROLLUP_COLS_ORDER = [
   "Tags",
 ];
 
+const AUTOMATION_MATCH = [
+  "automation",
+  "ai",
+  "prompt",
+  "assistant",
+  "model",
+  "max messages",
+  "max_messages",
+  "workflow",
+  "trigger",
+  "automation logs",
+  "prompt libraries",
+];
+
 const isDateCol = (col: string) => DATE_COLS.has(normalizeCol(col));
 const isTimeCol = (col: string) => TIME_COLS.has(normalizeCol(col));
 const isRollupCol = (col: string) =>
@@ -911,17 +925,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
           );
         } else if (key === "automation") {
           viewCols = columns.filter((c) =>
-            includesAny(c, [
-              "automation",
-              "ai",
-              "prompt",
-              "assistant",
-              "model",
-              "max messages",
-              "max_messages",
-              "workflow",
-              "trigger",
-            ]),
+            includesAny(c, AUTOMATION_MATCH),
           );
         }
 
@@ -1295,7 +1299,9 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                   "border-r border-slate-50",
                               )}
                             >
-                              {col === "Image" || col === "ACC" ? (
+                              {isRollupCol(col) ? (
+                                <RollupCell value={row[col]} type={col} />
+                              ) : col === "Image" || col === "ACC" ? (
                                 <Sheet>
                                   <SheetTrigger asChild>
                                     <div
