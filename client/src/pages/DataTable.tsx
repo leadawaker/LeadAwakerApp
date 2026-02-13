@@ -617,7 +617,13 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     onExportCSV,
   } = props;
 
-  const [viewLabel, setViewLabel] = useState("Default View");
+  const [viewLabel, setViewLabel] = useState(() => {
+    return localStorage.getItem("dataTable_viewLabel") || "Default View";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("dataTable_viewLabel", viewLabel);
+  }, [viewLabel]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -947,6 +953,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
       applyView(option.presetKey);
     }
     setViewLabel(option.label);
+    localStorage.setItem("dataTable_viewLabel", option.label);
   };
 
   const effectiveGroupOptions =
