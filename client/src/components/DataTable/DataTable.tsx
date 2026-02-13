@@ -869,7 +869,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
           {getIconForField(col)}
         </div>
         <span
-          className="flex-1 cursor-pointer select-none"
+          className="flex-1 cursor-pointer select-none truncate"
           onClick={() => {
             const nextDir =
               sortConfig.key === col
