@@ -17,8 +17,9 @@ const mockAccounts = [
 /* ------------------------------------------------------------------ */
 /* NocoDB API settings                                                */
 /* ------------------------------------------------------------------ */
-const TABLE_ID = "vwalnb0wa9mna9tn"; // campaigns table
-const API_URL = "https://api-leadawaker.netlify.app/.netlify/functions/api";
+const TABLE_ID = "vwalnb0wa9mna9tn";
+const NOCODB_BASE_URL =
+  "https://api-leadawaker.netlify.app/.netlify/functions/api";
 
 /* ------------------------------------------------------------------ */
 /* Column definitions                                                 */
@@ -110,12 +111,69 @@ export default function AppCampaigns() {
     { value: "account_id", label: "By Account" },
   ];
 
-  const handleRefresh = () => {
-    setLoading(true);
-    setTimeout(() => setLoading(false), 1000);
-  };
-
   const [colWidths, setColWidths] = useState<Record<string, number>>({});
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${NOCODB_BASE_URL}?tableId=${TABLE_ID}`);
+      const data = await res.json();
+      const normalized = (data?.list || []).map((c: any) => ({
+        Id: c.id_number || c.id || c.ID,
+        id_number: c.id_number || c.id || c.ID,
+        name: c.name || "",
+        "Created time": c["Created time"] || c.created_time || c.created_at || "",
+        "Last modified time": c["Last modified time"] || c.updated_at || c.updatedAt || "",
+        status: c.status || "",
+        description: c.description || "",
+        type: c.type || "",
+        account_id: c.account_id || "",
+        n8n_workflow_id: c.n8n_workflow_id || "",
+        ai_prompt_template: c.ai_prompt_template || "",
+        total_cost: c.total_cost || 0,
+        bump_1_template: c.bump_1_template || "",
+        bump_2_template: c.bump_2_template || "",
+        bump_3_template: c.bump_3_template || "",
+        bump_1_delay_hours: c.bump_1_delay_hours || "",
+        "bump_2_delay_hours copy": c["bump_2_delay_hours copy"] || "",
+        bump_3_delay_hours: c.bump_3_delay_hours || "",
+        daily_lead_limit: c.daily_lead_limit || 0,
+        message_interval_minutes: c.message_interval_minutes || 0,
+        active_hours_start: c.active_hours_start || "",
+        active_hours_end: c.active_hours_end || "",
+        calendar_link: c.calendar_link || "",
+        webhook_url: c.webhook_url || "",
+        ai_model: c.ai_model || "",
+        use_ai_bumps: c.use_ai_bumps ?? "",
+        max_bumps: c.max_bumps ?? "",
+        stop_on_response: c.stop_on_response ?? "",
+        Leads: c.Leads || c.leads || [],
+        Interactions: c.Interactions || c.interactions || [],
+        leads_total: c.leads_total || 0,
+        "Automation Logs": c.Automation_Logs || c["Automation Logs"] || [],
+        campaign_niche_override: c.campaign_niche_override || "",
+        campaign_service: c.campaign_service || "",
+        campaign_usp: c.campaign_usp || "",
+        target_audience: c.target_audience || "",
+        niche_question: c.niche_question || "",
+        qualification_criteria: c.qualification_criteria || "",
+        booking_mode_override: c.booking_mode_override || "",
+        calendar_link_override: c.calendar_link_override || "",
+        inquiries_source: c.inquiries_source || "",
+        inquiry_timeframe: c.inquiry_timeframe || "",
+        what_lead_did: c.what_lead_did || "",
+        ai_prompt_template_id: c.ai_prompt_template_id || "",
+        First_Message: c.First_Message || "",
+        agent_name: c.agent_name || "",
+        service_name: c.service_name || "",
+      }));
+      setCampaigns(normalized);
+    } catch (err) {
+      console.error("Failed to refresh campaigns", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const defaults = CAMPAIGN_COLUMNS.reduce((acc, c) => {
@@ -129,72 +187,7 @@ export default function AppCampaigns() {
   /* Fetch campaigns from NocoDB via Netlify function                   */
   /* ------------------------------------------------------------------ */
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`${API_URL}?tableId=${TABLE_ID}`);
-        const data = await res.json();
-
-        const normalized = (data?.list || []).map((c: any) => ({
-          Id: c.id_number || c.id || c.ID,
-          id_number: c.id_number || c.id || c.ID,
-          name: c.name || "",
-          "Created time": c["Created time"] || c.created_time || c.created_at || "",
-          "Last modified time": c["Last modified time"] || c.updated_at || c.updatedAt || "",
-          status: c.status || "",
-          description: c.description || "",
-          type: c.type || "",
-          account_id: c.account_id || "",
-          n8n_workflow_id: c.n8n_workflow_id || "",
-          ai_prompt_template: c.ai_prompt_template || "",
-          total_cost: c.total_cost || 0,
-          bump_1_template: c.bump_1_template || "",
-          bump_2_template: c.bump_2_template || "",
-          bump_3_template: c.bump_3_template || "",
-          bump_1_delay_hours: c.bump_1_delay_hours || "",
-          "bump_2_delay_hours copy": c["bump_2_delay_hours copy"] || "",
-          bump_3_delay_hours: c.bump_3_delay_hours || "",
-          daily_lead_limit: c.daily_lead_limit || 0,
-          message_interval_minutes: c.message_interval_minutes || 0,
-          active_hours_start: c.active_hours_start || "",
-          active_hours_end: c.active_hours_end || "",
-          calendar_link: c.calendar_link || "",
-          webhook_url: c.webhook_url || "",
-          ai_model: c.ai_model || "",
-          use_ai_bumps: c.use_ai_bumps ?? "",
-          max_bumps: c.max_bumps ?? "",
-          stop_on_response: c.stop_on_response ?? "",
-          Leads: c.Leads || c.leads || [],
-          Interactions: c.Interactions || c.interactions || [],
-          leads_total: c.leads_total || 0,
-          "Automation Logs": c.Automation_Logs || c["Automation Logs"] || [],
-          campaign_niche_override: c.campaign_niche_override || "",
-          campaign_service: c.campaign_service || "",
-          campaign_usp: c.campaign_usp || "",
-          target_audience: c.target_audience || "",
-          niche_question: c.niche_question || "",
-          qualification_criteria: c.qualification_criteria || "",
-          booking_mode_override: c.booking_mode_override || "",
-          calendar_link_override: c.calendar_link_override || "",
-          inquiries_source: c.inquiries_source || "",
-          inquiry_timeframe: c.inquiry_timeframe || "",
-          what_lead_did: c.what_lead_did || "",
-          ai_prompt_template_id: c.ai_prompt_template_id || "",
-          First_Message: c.First_Message || "",
-          agent_name: c.agent_name || "",
-          service_name: c.service_name || "",
-        }));
-
-        setCampaigns(normalized);
-      } catch (err) {
-        console.error("Failed to fetch campaigns", err);
-        setCampaigns([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    handleRefresh();
   }, []);
 
   /* ------------------------------------------------------------------ */
