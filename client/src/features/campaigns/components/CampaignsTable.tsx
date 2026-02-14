@@ -67,6 +67,27 @@ export function CampaignsTable() {
     }
   };
 
+  const handleAdd = () => {
+    // In a real app, this would open a dialog
+    const newId = Math.floor(Math.random() * 1000000);
+    const newCampaign = {
+      Id: newId,
+      id: newId,
+      name: "New Campaign",
+      status: "Inactive",
+      account_id: accountFilter === "all" ? 1 : accountFilter,
+      Leads: 0,
+      Interactions: 0,
+      "Automation Logs": 0,
+      created_at: new Date().toISOString()
+    };
+    setCampaigns(prev => [newCampaign, ...prev]);
+  };
+
+  const handleDelete = async (ids: number[]) => {
+    setCampaigns(prev => prev.filter(c => !ids.includes(c.Id)));
+  };
+
   const statusOptions = Array.from(new Set(campaigns.map((c) => c.status).filter(Boolean)));
 
   return (
@@ -94,6 +115,9 @@ export function CampaignsTable() {
       showVerticalLines={showVerticalLines}
       onShowVerticalLinesChange={setShowVerticalLines}
       onUpdate={handleUpdate}
+      onAdd={handleAdd}
+      onDelete={handleDelete}
+      addLabel="Add Campaign"
       statusOptions={statusOptions.length ? statusOptions : ["Active", "Inactive"]}
       typeOptions={[]}
       timezoneOptions={[]}

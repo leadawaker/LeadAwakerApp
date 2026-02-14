@@ -701,6 +701,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
 
   const [groupColoring, setGroupColoring] = useState(true);
   const [groupSortOrder, setGroupSortOrder] = useState<"asc" | "desc">("asc");
+  const [hideEmptyGroups, setHideEmptyGroups] = useState(false);
 
   const [viewLabel, setViewLabel] = useState(() => {
     return localStorage.getItem("dataTable_viewLabel") || "Default View";
@@ -1012,12 +1013,15 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     onExportCSV;
 
   const sortedGroupNames = useMemo(() => {
-    const keys = Object.keys(groupedRows);
+    let keys = Object.keys(groupedRows);
+    if (hideEmptyGroups && groupBy !== "None") {
+      keys = keys.filter(key => groupedRows[key].length > 0);
+    }
     return keys.sort((a, b) => {
       const dir = groupSortOrder === "asc" ? 1 : -1;
       return a.localeCompare(b) * dir;
     });
-  }, [groupedRows, groupSortOrder]);
+  }, [groupedRows, groupSortOrder, hideEmptyGroups, groupBy]);
 
   return (
     <div className="space-y-0">
@@ -1112,18 +1116,39 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                 </SelectContent>
               </Select>
               {groupBy !== "None" && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 hover:bg-slate-100 rounded-lg"
-                  onClick={() => setGroupSortOrder(prev => prev === "asc" ? "desc" : "asc")}
-                >
-                  {groupSortOrder === "asc" ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 hover:bg-slate-100 rounded-lg"
+                    >
+                      {groupSortOrder === "asc" ? (
+                        <ChevronUp className="h-4 w-4 text-blue-600" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-blue-600" />
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel>Group Options</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuRadioGroup 
+                      value={groupSortOrder} 
+                      onValueChange={(v) => setGroupSortOrder(v as "asc" | "desc")}
+                    >
+                      <DropdownMenuRadioItem value="asc">Sort Ascending</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="desc">Sort Descending</DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem
+                      checked={hideEmptyGroups}
+                      onCheckedChange={setHideEmptyGroups}
+                    >
+                      Hide empty groups
+                    </DropdownMenuCheckboxItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
           )}
