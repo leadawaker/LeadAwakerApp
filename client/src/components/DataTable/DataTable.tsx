@@ -1241,22 +1241,23 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Row Spacing</DropdownMenuLabel>
               {onImportCSV && (
-              <DropdownMenuRadioGroup
-                value={rowSpacing}
-                onValueChange={(value) =>
-                  onRowSpacingChange?.(value as RowSpacing)
-                }
-              >
-                <DropdownMenuRadioItem value="tight" disabled={!onRowSpacingChange}>
-                  Tight
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="medium" disabled={!onRowSpacingChange}>
-                  Medium
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="spacious" disabled={!onRowSpacingChange}>
-                  Spacious
-                </DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
+                <DropdownMenuRadioGroup
+                  value={rowSpacing}
+                  onValueChange={(value) =>
+                    onRowSpacingChange?.(value as RowSpacing)
+                  }
+                >
+                  <DropdownMenuRadioItem value="tight" disabled={!onRowSpacingChange}>
+                    Tight
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="medium" disabled={!onRowSpacingChange}>
+                    Medium
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="spacious" disabled={!onRowSpacingChange}>
+                    Spacious
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
 
