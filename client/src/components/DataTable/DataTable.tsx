@@ -1320,6 +1320,8 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
             </TableHeader>
 
             <TableBody>
+              {sortedGroupNames.map((groupName) => {
+                const groupRows = groupedRows[groupName];
                 return (
                   <React.Fragment key={groupName}>
                     {groupBy !== "None" && (
@@ -1331,10 +1333,10 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                           <div className="flex items-center gap-2">
                             {(() => {
                               const g = groupBy.toLowerCase();
-                              let color = null;
+                              let color: any = null;
                               if (groupColoring) {
-                                if (g === "conversion_status") color = conversionColors[groupName];
-                                else if (g === "automation_status") color = automationStatusColors[groupName];
+                                if (g === "conversion_status") color = (conversionColors as any)[groupName];
+                                else if (g === "automation_status") color = (automationStatusColors as any)[groupName];
                                 else if (g === "type") {
                                   if (groupName.toLowerCase() === "agency") color = { bg: "bg-yellow-200", text: "text-yellow-800" };
                                   else color = { bg: "bg-blue-200", text: "text-blue-800" };
@@ -1547,15 +1549,15 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                 <SelectTrigger
                                   className={cn(
                                     "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
-                                    automationStatusColors[row[col]]?.bg || "bg-slate-100",
-                                    automationStatusColors[row[col]]?.text || "text-slate-600",
+                                    (automationStatusColors as any)[row[col]]?.bg || "bg-slate-100",
+                                    (automationStatusColors as any)[row[col]]?.text || "text-slate-600",
                                   )}
                                 >
                                   <div className="flex items-center gap-1.5 overflow-hidden">
                                     <div
                                       className={cn(
                                         "h-1.5 w-1.5 rounded-full shrink-0",
-                                        automationStatusColors[row[col]]?.dot || "bg-slate-400",
+                                        (automationStatusColors as any)[row[col]]?.dot || "bg-slate-400",
                                       )}
                                     />
                                     <SelectValue />
@@ -1565,7 +1567,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                   {props.automationStatusOptions.map((o) => (
                                     <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">
                                       <div className="flex items-center gap-2">
-                                        <div className={cn("h-1.5 w-1.5 rounded-full", automationStatusColors[o]?.dot || "bg-slate-400")} />
+                                        <div className={cn("h-1.5 w-1.5 rounded-full", (automationStatusColors as any)[o]?.dot || "bg-slate-400")} />
                                         {o}
                                       </div>
                                     </SelectItem>
@@ -1580,8 +1582,8 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                 <SelectTrigger
                                   className={cn(
                                     "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
-                                    conversionColors[row[col]]?.bg || "bg-slate-100",
-                                    conversionColors[row[col]]?.text || "text-slate-600",
+                                    (conversionColors as any)[row[col]]?.bg || "bg-slate-100",
+                                    (conversionColors as any)[row[col]]?.text || "text-slate-600",
                                   )}
                                 >
                                   <div className="flex items-center gap-1.5 overflow-hidden">
@@ -1592,7 +1594,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                   {statusOptions.map((o) => (
                                     <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">
                                       <div className="flex items-center gap-2">
-                                        <div className={cn("h-1.5 w-1.5 rounded-full", conversionColors[o]?.dot || "bg-slate-400")} />
+                                        <div className={cn("h-1.5 w-1.5 rounded-full", (conversionColors as any)[o]?.dot || "bg-slate-400")} />
                                         {o}
                                       </div>
                                     </SelectItem>
@@ -1609,15 +1611,15 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                 <SelectTrigger
                                   className={cn(
                                     "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
-                                    statusColors[row[col]]?.bg,
-                                    statusColors[row[col]]?.text,
+                                    (statusColors as any)[row[col]]?.bg,
+                                    (statusColors as any)[row[col]]?.text,
                                   )}
                                 >
                                   <div className="flex items-center gap-1.5 overflow-hidden">
                                     <div
                                       className={cn(
                                         "h-1.5 w-1.5 rounded-full shrink-0",
-                                        statusColors[row[col]]?.dot,
+                                        (statusColors as any)[row[col]]?.dot,
                                       )}
                                     />
                                     <SelectValue />
@@ -1670,9 +1672,9 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                 <SelectTrigger
                                   className={cn(
                                     "h-7 px-2 rounded-lg border border-transparent shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate bg-slate-50 text-slate-500",
-                                    timezoneColors[row[col]]?.bg,
-                                    timezoneColors[row[col]]?.text,
-                                    timezoneColors[row[col]]?.border,
+                                    (timezoneColors as any)[row[col]]?.bg,
+                                    (timezoneColors as any)[row[col]]?.text,
+                                    (timezoneColors as any)[row[col]]?.border,
                                   )}
                                 >
                                   <SelectValue />
