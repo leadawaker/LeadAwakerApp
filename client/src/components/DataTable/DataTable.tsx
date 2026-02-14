@@ -1017,8 +1017,31 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     if (hideEmptyGroups && groupBy !== "None") {
       keys = keys.filter(key => groupedRows[key].length > 0);
     }
+
+    const conversionOrder = [
+      "New",
+      "Contacted",
+      "Responded",
+      "Multiple Responses",
+      "Qualified",
+      "Booked",
+      "DND",
+      "Lost"
+    ];
+
     return keys.sort((a, b) => {
+      const g = groupBy.toLowerCase();
       const dir = groupSortOrder === "asc" ? 1 : -1;
+
+      if (g === "conversion_status" || g === "conversion") {
+        const indexA = conversionOrder.indexOf(a);
+        const indexB = conversionOrder.indexOf(b);
+        
+        if (indexA !== -1 && indexB !== -1) {
+          return (indexA - indexB) * dir;
+        }
+      }
+
       return a.localeCompare(b) * dir;
     });
   }, [groupedRows, groupSortOrder, hideEmptyGroups, groupBy]);
@@ -1103,7 +1126,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
           {onGroupByChange && effectiveGroupOptions.length > 0 && (
             <div className="flex items-center gap-1 bg-white rounded-xl border border-slate-200 px-1">
               <Select value={groupBy} onValueChange={onGroupByChange}>
-                <SelectTrigger className="h-10 w-[160px] border-none shadow-none font-semibold gap-2 focus:ring-0">
+                <SelectTrigger className="h-10 w-[160px] border-none shadow-none font-semibold gap-2 focus:ring-0 [&>svg]:hidden">
                   <LayoutGrid className="h-4 w-4" />
                   <SelectValue placeholder="Group by..." />
                 </SelectTrigger>

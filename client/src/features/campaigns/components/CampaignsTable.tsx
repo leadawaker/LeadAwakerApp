@@ -115,9 +115,6 @@ export function CampaignsTable() {
       showVerticalLines={showVerticalLines}
       onShowVerticalLinesChange={setShowVerticalLines}
       onUpdate={handleUpdate}
-      onAdd={handleAdd}
-      onDelete={handleDelete}
-      addLabel="Add Campaign"
       statusOptions={statusOptions.length ? statusOptions : ["Active", "Inactive"]}
       typeOptions={[]}
       timezoneOptions={[]}
