@@ -1320,394 +1320,393 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
             </TableHeader>
 
             <TableBody>
-              {sortedGroupNames.map((groupName) => {
-                const groupRows = groupedRows[groupName];
                 return (
                   <React.Fragment key={groupName}>
-                  {groupBy !== "None" && (
-                    <TableRow className="bg-slate-50/30 hover:bg-slate-50/30 border-y border-slate-200/60">
-                      <TableCell
-                        colSpan={visibleCols.length + 1}
-                        className="py-2 px-4"
-                      >
-                        <div className="flex items-center gap-2">
-                          {(() => {
-                            const g = groupBy.toLowerCase();
-                            let color = null;
-                            if (groupColoring) {
-                              if (g === "conversion_status") color = conversionColors[groupName];
-                              else if (g === "automation_status") color = automationStatusColors[groupName];
-                              else if (g === "type") {
-                                if (groupName.toLowerCase() === "agency") color = { bg: "bg-yellow-200", text: "text-yellow-800" };
-                                else color = { bg: "bg-blue-200", text: "text-blue-800" };
-                              }
-                            }
-                            
-                            return (
-                              <Badge 
-                                variant="secondary" 
-                                className={cn(
-                                  "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md",
-                                  color ? cn(color.bg, color.text) : "bg-slate-100 text-slate-500"
-                                )}
-                              >
-                                {groupName}
-                              </Badge>
-                            );
-                          })()}
-                          <Badge variant="secondary" className="bg-slate-100/50 text-slate-400 h-4 px-1.5 text-[9px] font-bold border-none shadow-none">
-                            {groupRows.length}
-                          </Badge>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {groupRows.map((row: any) => (
-                    <TableRow
-                      key={row.Id}
-                      id={`row-${row.Id}`}
-                      className={cn(
-                        "group hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0",
-                        selectedIds.includes(row.Id) &&
-                          "bg-blue-50/30 hover:bg-blue-50/50",
-                      )}
-                    >
-                      <TableCell className="px-4">
-                        <Checkbox
-                          checked={selectedIds.includes(row.Id)}
-                          onCheckedChange={() => toggleSelect(row.Id)}
-                        />
-                      </TableCell>
-
-                      {visibleCols.map((col, idx) => (
+                    {groupBy !== "None" && (
+                      <TableRow className="bg-slate-50/30 hover:bg-slate-50/30 border-y border-slate-200/60">
                         <TableCell
-                          key={col}
-                          style={{ width: colWidths[col] }}
-                          className={cn(
-                            "px-4 font-medium text-slate-600 transition-all overflow-visible",
-                            rowPadding,
-                            showVerticalLines &&
-                              idx < visibleCols.length - 1 &&
-                              "border-r border-slate-50",
-                          )}
+                          colSpan={visibleCols.length + 1}
+                          className="py-2 px-4"
                         >
-                          {isRollupCol(col) ? (
-                            <RollupCell value={row[col]} type={col === "Automation Logs" ? "automations" : col === "Prompt Libraries" ? "prompts" : col} />
-                          ) : (col.toLowerCase().includes("use") || typeof row[col] === "boolean") && (row[col] === 0 || row[col] === 1 || row[col] === true || row[col] === false) ? (
-                            <div className="flex justify-center w-full">
-                              <Checkbox
-                                checked={Boolean(row[col])}
-                                onCheckedChange={(checked) => handleUpdate(row.Id, col, !!checked)}
-                              />
-                            </div>
-                          ) : col === "Image" || col === "ACC" || col === "full_name" ? (
-                            <Sheet>
-                              <SheetTrigger asChild>
-                                {col === "full_name" ? (
-                                  <div className="font-bold text-blue-600 cursor-pointer hover:text-blue-800 transition-colors">
-                                    {row[col]}
-                                  </div>
-                                ) : (
-                                  <div
-                                    className={cn(
-                                      "w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer transition-transform hover:scale-110",
-                                      getAccountColor(row.Id).bg,
-                                      getAccountColor(row.Id).text,
-                                    )}
-                                  >
-                                    {row.image ? (
-                                      <img 
-                                        src={row.image} 
-                                        alt={row.full_name || row.name} 
-                                        className="w-full h-full rounded-full object-cover"
-                                        onError={(e) => {
-                                          (e.target as HTMLImageElement).style.display = 'none';
-                                        }}
-                                      />
-                                    ) : getInitials(row.full_name || row.name)}
-                                  </div>
-                                )}
-                              </SheetTrigger>
-                              <SheetContent className="sm:max-w-lg w-[400px]">
-                                <SheetHeader className="border-b pb-6">
-                                  <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
+                            {(() => {
+                              const g = groupBy.toLowerCase();
+                              let color = null;
+                              if (groupColoring) {
+                                if (g === "conversion_status") color = conversionColors[groupName];
+                                else if (g === "automation_status") color = automationStatusColors[groupName];
+                                else if (g === "type") {
+                                  if (groupName.toLowerCase() === "agency") color = { bg: "bg-yellow-200", text: "text-yellow-800" };
+                                  else color = { bg: "bg-blue-200", text: "text-blue-800" };
+                                }
+                              }
+                              
+                              return (
+                                <Badge 
+                                  variant="secondary" 
+                                  className={cn(
+                                    "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md",
+                                    color ? cn(color.bg, color.text) : "bg-slate-100 text-slate-500"
+                                  )}
+                                >
+                                  {groupName}
+                                </Badge>
+                              );
+                            })()}
+                            <Badge variant="secondary" className="bg-slate-100/50 text-slate-400 h-4 px-1.5 text-[9px] font-bold border-none shadow-none">
+                              {groupRows.length}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {groupRows.map((row: any) => (
+                      <TableRow
+                        key={row.Id}
+                        id={`row-${row.Id}`}
+                        className={cn(
+                          "group hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0",
+                          selectedIds.includes(row.Id) &&
+                            "bg-blue-50/30 hover:bg-blue-50/50",
+                        )}
+                      >
+                        <TableCell className="px-4">
+                          <Checkbox
+                            checked={selectedIds.includes(row.Id)}
+                            onCheckedChange={() => toggleSelect(row.Id)}
+                          />
+                        </TableCell>
+
+                        {visibleCols.map((col, idx) => (
+                          <TableCell
+                            key={col}
+                            style={{ width: colWidths[col] }}
+                            className={cn(
+                              "px-4 font-medium text-slate-600 transition-all overflow-visible",
+                              rowPadding,
+                              showVerticalLines &&
+                                idx < visibleCols.length - 1 &&
+                                "border-r border-slate-50",
+                            )}
+                          >
+                            {isRollupCol(col) ? (
+                              <RollupCell value={row[col]} type={col === "Automation Logs" ? "automations" : col === "Prompt Libraries" ? "prompts" : col} />
+                            ) : (col.toLowerCase().includes("use") || typeof row[col] === "boolean") && (row[col] === 0 || row[col] === 1 || row[col] === true || row[col] === false) ? (
+                              <div className="flex justify-center w-full">
+                                <Checkbox
+                                  checked={Boolean(row[col])}
+                                  onCheckedChange={(checked) => handleUpdate(row.Id, col, !!checked)}
+                                />
+                              </div>
+                            ) : col === "Image" || col === "ACC" || col === "full_name" ? (
+                              <Sheet>
+                                <SheetTrigger asChild>
+                                  {col === "full_name" ? (
+                                    <div className="font-bold text-blue-600 cursor-pointer hover:text-blue-800 transition-colors">
+                                      {row[col]}
+                                    </div>
+                                  ) : (
                                     <div
                                       className={cn(
-                                        "w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold",
+                                        "w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer transition-transform hover:scale-110",
                                         getAccountColor(row.Id).bg,
                                         getAccountColor(row.Id).text,
                                       )}
                                     >
-                                      {getInitials(row.name)}
+                                      {row.image ? (
+                                        <img 
+                                          src={row.image} 
+                                          alt={row.full_name || row.name} 
+                                          className="w-full h-full rounded-full object-cover"
+                                          onError={(e) => {
+                                            (e.target as HTMLImageElement).style.display = 'none';
+                                          }}
+                                        />
+                                      ) : getInitials(row.full_name || row.name)}
                                     </div>
-                                    <div>
-                                      <SheetTitle className="text-xl">
-                                        {row.name || "Record Details"}
-                                      </SheetTitle>
-                                      <SheetDescription>
-                                        View and edit information
-                                      </SheetDescription>
+                                  )}
+                                </SheetTrigger>
+                                <SheetContent className="sm:max-w-lg w-[400px]">
+                                  <SheetHeader className="border-b pb-6">
+                                    <div className="flex items-center gap-4">
+                                      <div
+                                        className={cn(
+                                          "w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold",
+                                          getAccountColor(row.Id).bg,
+                                          getAccountColor(row.Id).text,
+                                        )}
+                                      >
+                                        {getInitials(row.name)}
+                                      </div>
+                                      <div>
+                                        <SheetTitle className="text-xl">
+                                          {row.name || "Record Details"}
+                                        </SheetTitle>
+                                        <SheetDescription>
+                                          View and edit information
+                                        </SheetDescription>
+                                      </div>
                                     </div>
-                                  </div>
-                                </SheetHeader>
-                                <ScrollArea className="h-[calc(100vh-140px)] py-6 pr-4">
-                                  <div className="space-y-6">
-                                    {columns
-                                      .filter((c) => !hiddenFields.includes(c))
-                                      .map((c) => (
-                                        <div key={c} className="space-y-1.5">
-                                          <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                            {getIconForField(c)}
-                                            <span>{c.replace(/_/g, " ")}</span>
-                                          </div>
-                                          {nonEditableFields.includes(c) ? (
-                                            <div className="px-3 py-2 bg-slate-50 rounded-lg text-sm font-medium text-slate-500 border border-slate-100">
-                                              {isDateCol(c)
-                                                ? formatDateTime(row[c])
-                                                : isTimeCol(c)
-                                                  ? formatHHmm(row[c])
-                                                  : row[c] || "-"}
+                                  </SheetHeader>
+                                  <ScrollArea className="h-[calc(100vh-140px)] py-6 pr-4">
+                                    <div className="space-y-6">
+                                      {columns
+                                        .filter((c) => !hiddenFields.includes(c))
+                                        .map((c) => (
+                                          <div key={c} className="space-y-1.5">
+                                            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                              {getIconForField(c)}
+                                              <span>{c.replace(/_/g, " ")}</span>
                                             </div>
-                                          ) : c === "status" ? (
-                                            <Select
-                                              value={row[c] || ""}
-                                              onValueChange={(v) =>
-                                                handleUpdate(row.Id, c, v)
-                                              }
-                                            >
-                                              <SelectTrigger className="w-full bg-white border-slate-200">
-                                                <SelectValue />
-                                              </SelectTrigger>
-                                              <SelectContent>
-                                                {statusOptions.map((o) => (
-                                                  <SelectItem key={o} value={o}>
-                                                    {o}
-                                                  </SelectItem>
-                                                ))}
-                                              </SelectContent>
-                                            </Select>
-                                          ) : c === "type" ? (
-                                            <Select
-                                              value={row[c] || ""}
-                                              onValueChange={(v) =>
-                                                handleUpdate(row.Id, c, v)
-                                              }
-                                            >
-                                              <SelectTrigger className="w-full bg-white border-slate-200">
-                                                <SelectValue />
-                                              </SelectTrigger>
-                                              <SelectContent>
-                                                {typeOptions.map((o) => (
-                                                  <SelectItem key={o} value={o}>
-                                                    {o}
-                                                  </SelectItem>
-                                                ))}
-                                              </SelectContent>
-                                            </Select>
-                                          ) : c === "timezone" ? (
-                                            <Select
-                                              value={row[c] || ""}
-                                              onValueChange={(v) =>
-                                                handleUpdate(row.Id, c, v)
-                                              }
-                                            >
-                                              <SelectTrigger className="w-full bg-white border-slate-200">
-                                                <SelectValue />
-                                              </SelectTrigger>
-                                              <SelectContent>
-                                                {timezoneOptions.map((o) => (
-                                                  <SelectItem key={o} value={o}>
-                                                    {o}
-                                                  </SelectItem>
-                                                ))}
-                                              </SelectContent>
-                                            </Select>
-                                          ) : (
-                                            <Input
-                                              value={row[c] || ""}
-                                              onChange={(e) =>
-                                                handleUpdate(
-                                                  row.Id,
-                                                  c,
-                                                  e.target.value,
-                                                )
-                                              }
-                                              className="bg-white border-slate-200 focus:ring-blue-500"
-                                            />
-                                          )}
-                                        </div>
-                                      ))}
+                                            {nonEditableFields.includes(c) ? (
+                                              <div className="px-3 py-2 bg-slate-50 rounded-lg text-sm font-medium text-slate-500 border border-slate-100">
+                                                {isDateCol(c)
+                                                  ? formatDateTime(row[c])
+                                                  : isTimeCol(c)
+                                                    ? formatHHmm(row[c])
+                                                    : row[c] || "-"}
+                                              </div>
+                                            ) : c === "status" ? (
+                                              <Select
+                                                value={row[c] || ""}
+                                                onValueChange={(v) =>
+                                                  handleUpdate(row.Id, c, v)
+                                                }
+                                              >
+                                                <SelectTrigger className="w-full bg-white border-slate-200">
+                                                  <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  {statusOptions.map((o) => (
+                                                    <SelectItem key={o} value={o}>
+                                                      {o}
+                                                    </SelectItem>
+                                                  ))}
+                                                </SelectContent>
+                                              </Select>
+                                            ) : c === "type" ? (
+                                              <Select
+                                                value={row[c] || ""}
+                                                onValueChange={(v) =>
+                                                  handleUpdate(row.Id, c, v)
+                                                }
+                                              >
+                                                <SelectTrigger className="w-full bg-white border-slate-200">
+                                                  <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  {typeOptions.map((o) => (
+                                                    <SelectItem key={o} value={o}>
+                                                      {o}
+                                                    </SelectItem>
+                                                  ))}
+                                                </SelectContent>
+                                              </Select>
+                                            ) : c === "timezone" ? (
+                                              <Select
+                                                value={row[c] || ""}
+                                                onValueChange={(v) =>
+                                                  handleUpdate(row.Id, c, v)
+                                                }
+                                              >
+                                                <SelectTrigger className="w-full bg-white border-slate-200">
+                                                  <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  {timezoneOptions.map((o) => (
+                                                    <SelectItem key={o} value={o}>
+                                                      {o}
+                                                    </SelectItem>
+                                                  ))}
+                                                </SelectContent>
+                                              </Select>
+                                            ) : (
+                                              <Input
+                                                value={row[c] || ""}
+                                                onChange={(e) =>
+                                                  handleUpdate(
+                                                    row.Id,
+                                                    c,
+                                                    e.target.value,
+                                                  )
+                                                }
+                                                className="bg-white border-slate-200 focus:ring-blue-500"
+                                              />
+                                            )}
+                                          </div>
+                                        ))}
+                                    </div>
+                                  </ScrollArea>
+                                </SheetContent>
+                              </Sheet>
+                            ) : col === "automation_status" && props.automationStatusOptions ? (
+                              <Select
+                                value={row[col] || ""}
+                                onValueChange={(v) => handleUpdate(row.Id, col, v)}
+                              >
+                                <SelectTrigger
+                                  className={cn(
+                                    "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
+                                    automationStatusColors[row[col]]?.bg || "bg-slate-100",
+                                    automationStatusColors[row[col]]?.text || "text-slate-600",
+                                  )}
+                                >
+                                  <div className="flex items-center gap-1.5 overflow-hidden">
+                                    <div
+                                      className={cn(
+                                        "h-1.5 w-1.5 rounded-full shrink-0",
+                                        automationStatusColors[row[col]]?.dot || "bg-slate-400",
+                                      )}
+                                    />
+                                    <SelectValue />
                                   </div>
-                                </ScrollArea>
-                              </SheetContent>
-                            </Sheet>
-                          ) : col === "automation_status" && props.automationStatusOptions ? (
-                            <Select
-                              value={row[col] || ""}
-                              onValueChange={(v) => handleUpdate(row.Id, col, v)}
-                            >
-                              <SelectTrigger
-                                className={cn(
-                                  "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
-                                  automationStatusColors[row[col]]?.bg || "bg-slate-100",
-                                  automationStatusColors[row[col]]?.text || "text-slate-600",
-                                )}
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {props.automationStatusOptions.map((o) => (
+                                    <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">
+                                      <div className="flex items-center gap-2">
+                                        <div className={cn("h-1.5 w-1.5 rounded-full", automationStatusColors[o]?.dot || "bg-slate-400")} />
+                                        {o}
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : col === "conversion_status" ? (
+                              <Select
+                                value={row[col] || ""}
+                                onValueChange={(v) => handleUpdate(row.Id, col, v)}
                               >
-                                <div className="flex items-center gap-1.5 overflow-hidden">
-                                  <div
-                                    className={cn(
-                                      "h-1.5 w-1.5 rounded-full shrink-0",
-                                      automationStatusColors[row[col]]?.dot || "bg-slate-400",
-                                    )}
-                                  />
-                                  <SelectValue />
-                                </div>
-                              </SelectTrigger>
-                              <SelectContent>
-                                {props.automationStatusOptions.map((o) => (
-                                  <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">
-                                    <div className="flex items-center gap-2">
-                                      <div className={cn("h-1.5 w-1.5 rounded-full", automationStatusColors[o]?.dot || "bg-slate-400")} />
+                                <SelectTrigger
+                                  className={cn(
+                                    "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
+                                    conversionColors[row[col]]?.bg || "bg-slate-100",
+                                    conversionColors[row[col]]?.text || "text-slate-600",
+                                  )}
+                                >
+                                  <div className="flex items-center gap-1.5 overflow-hidden">
+                                    <SelectValue />
+                                  </div>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {statusOptions.map((o) => (
+                                    <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">
+                                      <div className="flex items-center gap-2">
+                                        <div className={cn("h-1.5 w-1.5 rounded-full", conversionColors[o]?.dot || "bg-slate-400")} />
+                                        {o}
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : col === "status" ? (
+                              <Select
+                                value={row[col] || ""}
+                                onValueChange={(v) =>
+                                  handleUpdate(row.Id, col, v)
+                                }
+                              >
+                                <SelectTrigger
+                                  className={cn(
+                                    "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
+                                    statusColors[row[col]]?.bg,
+                                    statusColors[row[col]]?.text,
+                                  )}
+                                >
+                                  <div className="flex items-center gap-1.5 overflow-hidden">
+                                    <div
+                                      className={cn(
+                                        "h-1.5 w-1.5 rounded-full shrink-0",
+                                        statusColors[row[col]]?.dot,
+                                      )}
+                                    />
+                                    <SelectValue />
+                                  </div>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {statusOptions.map((o) => (
+                                    <SelectItem key={o} value={o}>
                                       {o}
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : col === "conversion_status" ? (
-                            <Select
-                              value={row[col] || ""}
-                              onValueChange={(v) => handleUpdate(row.Id, col, v)}
-                            >
-                              <SelectTrigger
-                                className={cn(
-                                  "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
-                                  conversionColors[row[col]]?.bg || "bg-slate-100",
-                                  conversionColors[row[col]]?.text || "text-slate-600",
-                                )}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : col === "type" ? (
+                              <Select
+                                value={row[col] || ""}
+                                onValueChange={(v) =>
+                                  handleUpdate(row.Id, col, v)
+                                }
                               >
-                                <div className="flex items-center gap-1.5 overflow-hidden">
+                                <SelectTrigger
+                                  className={cn(
+                                    "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
+                                    row[col]?.toLowerCase() === "agency"
+                                      ? "bg-yellow-200 text-yellow-800"
+                                      : "bg-blue-200 text-blue-800",
+                                  )}
+                                >
                                   <SelectValue />
-                                </div>
-                              </SelectTrigger>
-                              <SelectContent>
-                                {statusOptions.map((o) => (
-                                  <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">
-                                    <div className="flex items-center gap-2">
-                                      <div className={cn("h-1.5 w-1.5 rounded-full", conversionColors[o]?.dot || "bg-slate-400")} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {typeOptions.map((o) => (
+                                    <SelectItem
+                                      key={o}
+                                      value={o}
+                                      className="text-[10px] font-bold uppercase tracking-wider"
+                                    >
                                       {o}
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : col === "status" ? (
-                            <Select
-                              value={row[col] || ""}
-                              onValueChange={(v) =>
-                                handleUpdate(row.Id, col, v)
-                              }
-                            >
-                              <SelectTrigger
-                                className={cn(
-                                  "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
-                                  statusColors[row[col]]?.bg,
-                                  statusColors[row[col]]?.text,
-                                )}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : col === "timezone" ? (
+                              <Select
+                                value={row[col] || ""}
+                                onValueChange={(v) =>
+                                  handleUpdate(row.Id, col, v)
+                                }
                               >
-                                <div className="flex items-center gap-1.5 overflow-hidden">
-                                  <div
-                                    className={cn(
-                                      "h-1.5 w-1.5 rounded-full shrink-0",
-                                      statusColors[row[col]]?.dot,
-                                    )}
-                                  />
+                                <SelectTrigger
+                                  className={cn(
+                                    "h-7 px-2 rounded-lg border border-transparent shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate bg-slate-50 text-slate-500",
+                                    timezoneColors[row[col]]?.bg,
+                                    timezoneColors[row[col]]?.text,
+                                    timezoneColors[row[col]]?.border,
+                                  )}
+                                >
                                   <SelectValue />
-                                </div>
-                              </SelectTrigger>
-                              <SelectContent>
-                                {statusOptions.map((o) => (
-                                  <SelectItem key={o} value={o}>
-                                    {o}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : col === "type" ? (
-                            <Select
-                              value={row[col] || ""}
-                              onValueChange={(v) =>
-                                handleUpdate(row.Id, col, v)
-                              }
-                            >
-                              <SelectTrigger
-                                className={cn(
-                                  "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
-                                  row[col]?.toLowerCase() === "agency"
-                                    ? "bg-yellow-200 text-yellow-800"
-                                    : "bg-blue-200 text-blue-800",
-                                )}
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {typeOptions.map((o) => (
-                                  <SelectItem
-                                    key={o}
-                                    value={o}
-                                    className="text-[10px] font-bold uppercase tracking-wider"
-                                  >
-                                    {o}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : col === "timezone" ? (
-                            <Select
-                              value={row[col] || ""}
-                              onValueChange={(v) =>
-                                handleUpdate(row.Id, col, v)
-                              }
-                            >
-                              <SelectTrigger
-                                className={cn(
-                                  "h-7 px-2 rounded-lg border border-transparent shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate bg-slate-50 text-slate-500",
-                                  timezoneColors[row[col]]?.bg,
-                                  timezoneColors[row[col]]?.text,
-                                  timezoneColors[row[col]]?.border,
-                                )}
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {timezoneOptions.map((o) => (
-                                  <SelectItem key={o} value={o}>
-                                    {o}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : isDateCol(col) ? (
-                            <DateTimeCell value={row[col]} />
-                          ) : isTimeCol(col) ? (
-                            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-bold bg-slate-50/50 px-2 py-1 rounded">
-                              <Clock className="h-3 w-3" />
-                              {formatHHmm(row[col])}
-                            </div>
-                          ) : (
-                            <TruncatedCell
-                              value={row[col]}
-                              onUpdate={handleUpdate}
-                              rowId={row.Id}
-                              col={col}
-                            />
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </React.Fragment>
-              ))}
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {timezoneOptions.map((o) => (
+                                    <SelectItem key={o} value={o}>
+                                      {o}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : isDateCol(col) ? (
+                              <DateTimeCell value={row[col]} />
+                            ) : isTimeCol(col) ? (
+                              <div className="flex items-center gap-1.5 text-xs text-slate-500 font-bold bg-slate-50/50 px-2 py-1 rounded">
+                                <Clock className="h-3 w-3" />
+                                {formatHHmm(row[col])}
+                              </div>
+                            ) : (
+                              <TruncatedCell
+                                value={row[col]}
+                                onUpdate={handleUpdate}
+                                rowId={row.Id}
+                                col={col}
+                              />
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </React.Fragment>
+                );
+              })}
             </TableBody>
           </Table>
         </DndContext>
