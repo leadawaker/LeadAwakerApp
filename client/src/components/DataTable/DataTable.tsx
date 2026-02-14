@@ -502,7 +502,7 @@ const TruncatedCell = ({
   const content = (
     <div
       ref={ref}
-      className="w-full min-h-[1.5rem] overflow-hidden whitespace-nowrap text-ellipsis cursor-text"
+      className="w-full min-h-[1.5rem] overflow-hidden whitespace-nowrap text-ellipsis cursor-text flex items-center"
       onClick={() => setIsEditing(true)}
     >
       {text || "\u00A0"}
@@ -694,6 +694,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     isRefreshing,
     onAdd,
     addLabel = "Add",
+    onDelete,
     onImportCSV,
     onExportCSV,
   } = props;
