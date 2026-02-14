@@ -105,8 +105,8 @@ export function CampaignsTable() {
       onGroupByChange={setGroupBy}
       groupOptions={[
         { value: "None", label: "No Grouping" },
-        { value: "status", label: "By Status" },
-        { value: "Account", label: "By Account" },
+        { value: "status", label: "Group by Status" },
+        { value: "Account", label: "Group by Account" },
       ]}
       colWidths={colWidths}
       onColWidthsChange={setColWidths}

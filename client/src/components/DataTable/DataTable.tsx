@@ -702,6 +702,14 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
   const [groupColoring, setGroupColoring] = useState(true);
   const [groupSortOrder, setGroupSortOrder] = useState<"asc" | "desc">("asc");
   const [hideEmptyGroups, setHideEmptyGroups] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+
+  const toggleGroupCollapse = (groupName: string) => {
+    setCollapsedGroups(prev => ({
+      ...prev,
+      [groupName]: !prev[groupName]
+    }));
+  };
 
   const [viewLabel, setViewLabel] = useState(() => {
     return localStorage.getItem("dataTable_viewLabel") || "Default View";
@@ -1373,7 +1381,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                 return (
                   <React.Fragment key={groupName}>
                     {groupBy !== "None" && (
-                      <TableRow className="bg-slate-50/30 hover:bg-slate-50/30 border-y border-slate-200/60">
+                      <TableRow className="bg-slate-50/30 hover:bg-slate-50/30 border-y border-slate-200/60 cursor-pointer" onClick={() => toggleGroupCollapse(groupName)}>
                         <TableCell
                           colSpan={visibleCols.length + 1}
                           className="py-2 px-4"
@@ -1383,7 +1391,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                               const g = groupBy.toLowerCase();
                               let color: any = null;
                               if (groupColoring) {
-                                if (g === "conversion_status") color = (conversionColors as any)[groupName];
+                                if (g === "conversion_status" || g === "conversion") color = (conversionColors as any)[groupName];
                                 else if (g === "automation_status") color = (automationStatusColors as any)[groupName];
                                 else if (g === "type") {
                                   if (groupName.toLowerCase() === "agency") color = { bg: "bg-yellow-200", text: "text-yellow-800" };
@@ -1403,14 +1411,20 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                 </Badge>
                               );
                             })()}
-                            <Badge variant="secondary" className="bg-slate-100/50 text-slate-400 h-4 px-1.5 text-[9px] font-bold border-none shadow-none">
+                            <Badge variant="secondary" className="bg-slate-100/50 text-slate-400 h-6 px-2.5 text-xs font-bold border-none shadow-none">
                               {groupRows.length}
                             </Badge>
+                            <div className="flex-1" />
+                            {collapsedGroups[groupName] ? (
+                              <ChevronDown className="h-4 w-4 text-slate-400" />
+                            ) : (
+                              <ChevronUp className="h-4 w-4 text-slate-400" />
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
                     )}
-                    {groupRows.map((row: any) => (
+                    {!collapsedGroups[groupName] && groupRows.map((row: any) => (
                       <TableRow
                         key={row.Id}
                         id={`row-${row.Id}`}
