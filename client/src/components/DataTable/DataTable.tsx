@@ -143,6 +143,7 @@ export interface DataTableProps<TRow extends DataTableRow = DataTableRow> {
   onShowVerticalLinesChange?: (next: boolean) => void;
 
   onUpdate: (rowId: number, col: string, value: any) => void;
+  onDelete?: (ids: number[]) => void;
 
   statusOptions: string[];
   typeOptions: string[];
@@ -697,6 +698,14 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     onExportCSV,
   } = props;
 
+  const [groupColoring, setGroupColoring] = useState(() => {
+    return localStorage.getItem("dataTable_groupColoring") === "true";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("dataTable_groupColoring", String(groupColoring));
+  }, [groupColoring]);
+
   const [viewLabel, setViewLabel] = useState(() => {
     return localStorage.getItem("dataTable_viewLabel") || "Default View";
   });
@@ -858,13 +867,33 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
   const groupedRows = useMemo(() => {
     if (groupBy === "None") return { "All Records": sortedRows };
     const groups: Record<string, TRow[]> = {};
+    
+    // Determine order
+    let order: string[] = [];
+    const g = groupBy.toLowerCase();
+    if (g === "conversion_status") order = statusOptions;
+    else if (g === "automation_status") order = props.automationStatusOptions || [];
+    else if (g === "type") order = typeOptions;
+    
+    if (order.length > 0) {
+      order.forEach(opt => { groups[opt] = []; });
+    }
+
     sortedRows.forEach((r) => {
       const key = String(r[groupBy.toLowerCase()] || "Unknown");
       if (!groups[key]) groups[key] = [];
       groups[key].push(r);
     });
+    
+    // Remove empty groups that weren't in order list
+    if (order.length > 0) {
+      Object.keys(groups).forEach(k => {
+        if (groups[k].length === 0 && !order.includes(k)) delete groups[k];
+      });
+    }
+
     return groups;
-  }, [sortedRows, groupBy]);
+  }, [sortedRows, groupBy, statusOptions, props.automationStatusOptions, typeOptions]);
 
   const visibleCols = visibleColumns.filter((c) => !hiddenFields.includes(c));
   const rowPadding = defaultRowPadding[rowSpacing];
@@ -1079,6 +1108,19 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
             </Select>
           )}
 
+          {selectedIds.length > 0 && onDelete && (
+            <Button
+              variant="destructive"
+              className="h-10 px-4 rounded-xl text-sm font-semibold gap-2 shadow-none"
+              onClick={() => {
+                onDelete(selectedIds);
+                onSelectedIdsChange([]);
+              }}
+            >
+              Delete ({selectedIds.length})
+            </Button>
+          )}
+
           <div className="flex-1" />
 
           {viewMenuGroups.length > 0 && (
@@ -1190,6 +1232,12 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
               >
                 Show Vertical Lines
               </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={groupColoring}
+                onCheckedChange={setGroupColoring}
+              >
+                Group Coloring
+              </DropdownMenuCheckboxItem>
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Row Spacing</DropdownMenuLabel>
               <DropdownMenuRadioGroup
@@ -1279,10 +1327,31 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                         className="py-2 px-4"
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                            {groupName}
-                          </span>
-                          <Badge variant="secondary" className="bg-slate-100 text-slate-500 h-4 px-1.5 text-[9px] font-bold">
+                          {(() => {
+                            const g = groupBy.toLowerCase();
+                            let color = null;
+                            if (groupColoring) {
+                              if (g === "conversion_status") color = conversionColors[groupName];
+                              else if (g === "automation_status") color = automationStatusColors[groupName];
+                              else if (g === "type") {
+                                if (groupName.toLowerCase() === "agency") color = { bg: "bg-yellow-200", text: "text-yellow-800" };
+                                else color = { bg: "bg-blue-200", text: "text-blue-800" };
+                              }
+                            }
+                            
+                            return (
+                              <Badge 
+                                variant="secondary" 
+                                className={cn(
+                                  "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md",
+                                  color ? cn(color.bg, color.text) : "bg-slate-100 text-slate-500"
+                                )}
+                              >
+                                {groupName}
+                              </Badge>
+                            );
+                          })()}
+                          <Badge variant="secondary" className="bg-slate-100/50 text-slate-400 h-4 px-1.5 text-[9px] font-bold border-none shadow-none">
                             {groupRows.length}
                           </Badge>
                         </div>

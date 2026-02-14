@@ -107,6 +107,11 @@ export function LeadsTable() {
     } catch (err) {}
   };
 
+  const handleDelete = (ids: number[]) => {
+    console.log("Delete leads", ids);
+    // In mockup mode, we'd just show a toast or log
+  };
+
   return (
     <DataTable
       loading={loading}
@@ -134,6 +139,8 @@ export function LeadsTable() {
       showVerticalLines={showVerticalLines}
       onShowVerticalLinesChange={setShowVerticalLines}
       onUpdate={handleUpdate}
+      onDelete={handleDelete}
+      onAdd={() => console.log("Add lead")}
       statusOptions={["New", "Contacted", "Responded", "Multiple Responses", "Qualified", "Booked", "Lost", "DND"]}
       automationStatusOptions={["completed", "queued", "active", "paused", "dnd", "error"]}
       typeOptions={[]}
