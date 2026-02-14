@@ -502,10 +502,10 @@ const TruncatedCell = ({
   const content = (
     <div
       ref={ref}
-      className="w-full overflow-hidden whitespace-nowrap text-ellipsis cursor-text"
+      className="w-full min-h-[1.5rem] overflow-hidden whitespace-nowrap text-ellipsis cursor-text"
       onClick={() => setIsEditing(true)}
     >
-      {text}
+      {text || "\u00A0"}
     </div>
   );
 
@@ -698,13 +698,8 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     onExportCSV,
   } = props;
 
-  const [groupColoring, setGroupColoring] = useState(() => {
-    return localStorage.getItem("dataTable_groupColoring") === "true";
-  });
-
-  useEffect(() => {
-    localStorage.setItem("dataTable_groupColoring", String(groupColoring));
-  }, [groupColoring]);
+  const [groupColoring, setGroupColoring] = useState(true);
+  const [groupSortOrder, setGroupSortOrder] = useState<"asc" | "desc">("asc");
 
   const [viewLabel, setViewLabel] = useState(() => {
     return localStorage.getItem("dataTable_viewLabel") || "Default View";
@@ -1015,6 +1010,14 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     onImportCSV ||
     onExportCSV;
 
+  const sortedGroupNames = useMemo(() => {
+    const keys = Object.keys(groupedRows);
+    return keys.sort((a, b) => {
+      const dir = groupSortOrder === "asc" ? 1 : -1;
+      return a.localeCompare(b) * dir;
+    });
+  }, [groupedRows, groupSortOrder]);
+
   return (
     <div className="space-y-0">
       {toolbarHasControls && (
@@ -1093,19 +1096,35 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
           )}
 
           {onGroupByChange && effectiveGroupOptions.length > 0 && (
-            <Select value={groupBy} onValueChange={onGroupByChange}>
-              <SelectTrigger className="h-10 w-[160px] rounded-xl bg-white shadow-none border-slate-200 font-semibold gap-2">
-                <LayoutGrid className="h-4 w-4" />
-                <SelectValue placeholder="Group by..." />
-              </SelectTrigger>
-              <SelectContent>
-                {effectiveGroupOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-1 bg-white rounded-xl border border-slate-200 px-1">
+              <Select value={groupBy} onValueChange={onGroupByChange}>
+                <SelectTrigger className="h-10 w-[160px] border-none shadow-none font-semibold gap-2 focus:ring-0">
+                  <LayoutGrid className="h-4 w-4" />
+                  <SelectValue placeholder="Group by..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {effectiveGroupOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {groupBy !== "None" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 hover:bg-slate-100 rounded-lg"
+                  onClick={() => setGroupSortOrder(prev => prev === "asc" ? "desc" : "asc")}
+                >
+                  {groupSortOrder === "asc" ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
+            </div>
           )}
 
           {selectedIds.length > 0 && onDelete && (
@@ -1212,26 +1231,6 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Settings</DropdownMenuLabel>
-              {onImportCSV && (
-                <DropdownMenuItem onClick={handleImportClick}>
-                  <Plus className="h-4 w-4 mr-2" /> Import CSV
-                </DropdownMenuItem>
-              )}
-              {onExportCSV && (
-                <DropdownMenuItem onClick={onExportCSV}>
-                  <FileText className="h-4 w-4 mr-2" /> Export CSV
-                </DropdownMenuItem>
-              )}
-              {(onImportCSV || onExportCSV) && <DropdownMenuSeparator />}
-              <DropdownMenuCheckboxItem
-                checked={showVerticalLines}
-                disabled={!onShowVerticalLinesChange}
-                onCheckedChange={(checked) =>
-                  onShowVerticalLinesChange?.(!!checked)
-                }
-              >
-                Show Vertical Lines
-              </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
                 checked={groupColoring}
                 onCheckedChange={setGroupColoring}
@@ -1240,6 +1239,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
               </DropdownMenuCheckboxItem>
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Row Spacing</DropdownMenuLabel>
+              {onImportCSV && (
               <DropdownMenuRadioGroup
                 value={rowSpacing}
                 onValueChange={(value) =>
@@ -1318,8 +1318,10 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
             </TableHeader>
 
             <TableBody>
-              {Object.entries(groupedRows).map(([groupName, groupRows]) => (
-                <React.Fragment key={groupName}>
+              {sortedGroupNames.map((groupName) => {
+                const groupRows = groupedRows[groupName];
+                return (
+                  <React.Fragment key={groupName}>
                   {groupBy !== "None" && (
                     <TableRow className="bg-slate-50/30 hover:bg-slate-50/30 border-y border-slate-200/60">
                       <TableCell
