@@ -43,37 +43,47 @@ A modern, high-performance web application built with React, Express, and Drizzl
    npm run db:push
    ```
 
-### Running the App
+### Running the App Locally
 
-To start the development server:
+To start the application in development mode:
 
 ```bash
 npm run dev
 ```
 
-The app will be available at `http://localhost:5000`.
+This script:
+- Sets `NODE_ENV` to `development`.
+- Starts the backend server using `tsx` (running `server/index.ts`).
+- Automatically starts the Vite development server to serve the frontend with hot-module replacement (HMR).
+- The app will be available at `http://localhost:5000`.
+
+Other useful scripts:
+- `npm run dev:client`: Runs ONLY the Vite frontend development server on port 5000.
+- `npm run check`: Runs TypeScript compiler to check for type errors.
+- `npm run db:push`: Syncs your database schema with your Drizzle configuration.
 
 ## 📦 Deployment
 
 ### On Replit
 
 1. Click the **Deploy** button in the Replit interface.
-2. Follow the setup instructions for provisioning a database and setting environment variables.
-3. The platform handles building and hosting automatically.
+2. The platform handles building and hosting automatically using the configured scripts.
 
-### Manual Build
+### Manual Build & Production
 
-To create a production build:
+To prepare the app for production:
 
-```bash
-npm run build
-```
+1. **Build**:
+   ```bash
+   npm run build
+   ```
+   This uses a custom script (`script/build.ts`) that bundles the frontend with Vite and the backend with esbuild into the `dist` directory.
 
-Then start the production server:
-
-```bash
-npm start
-```
+2. **Start**:
+   ```bash
+   npm start
+   ```
+   This runs the production-bundled code from the `dist` folder using standard Node.js.
 
 ## 📄 License
 
