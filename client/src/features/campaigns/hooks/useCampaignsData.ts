@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { fetchAccounts, fetchCampaigns, updateCampaign } from "../api/campaignsApi";
+import { fetchCampaigns, updateCampaign } from "../api/campaignsApi";
+import { fetchAccounts } from "../../accounts/api/accountsApi";
 import { useToast } from "@/hooks/use-toast";
 
 export function useCampaignsData() {
