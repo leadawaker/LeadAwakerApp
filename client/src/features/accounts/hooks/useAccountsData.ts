@@ -9,8 +9,8 @@ interface AccountRow extends DataTableRow {
   [key: string]: any;
 }
 
-const TABLE_ID = "m8hflvkkfj25aio";
-const NOCODB_BASE_URL =
+const TABLE_ID = "accounts";
+const API_BASE_URL =
   "https://api-leadawaker.netlify.app/.netlify/functions/api";
 
 const SMALL_WIDTH_COLS = [
@@ -91,7 +91,7 @@ export function useAccountsData(currentAccountId?: number) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const url = new URL(NOCODB_BASE_URL);
+      const url = new URL(API_BASE_URL);
       url.searchParams.set("tableId", TABLE_ID);
       // If you later want to filter by currentAccountId:
       // if (currentAccountId) url.searchParams.set("account_id", String(currentAccountId));
@@ -99,7 +99,12 @@ export function useAccountsData(currentAccountId?: number) {
       const res = await fetch(url.toString());
       if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
       const data = await res.json();
-      const list = (data.list || []) as AccountRow[];
+      const list = (Array.isArray(data) ? data : data.list || []).map((row: any) => ({
+        ...row,
+        Id: row.Id ?? row.id, // normalize ID field
+        "Created Time": row["Created Time"] ?? row.created_at,
+        "Last Modified Time": row["Last Modified Time"] ?? row.updated_at,
+      }));
       setRows(list);
 
       if (list.length > 0) {
@@ -211,7 +216,7 @@ export function useAccountsData(currentAccountId?: number) {
     localStorage.setItem("accounts_sort", JSON.stringify(next));
   };
 
-  const handleInlineUpdate = (
+  const handleInlineUpdate = async (
     rowId: number,
     col: string,
     value: any,
@@ -219,74 +224,61 @@ export function useAccountsData(currentAccountId?: number) {
   ) => {
     if (NON_EDITABLE_FIELDS.includes(col)) return;
     const cleanValue = value === null || value === undefined ? "" : value;
-
     const idsToUpdate = selectedIds.includes(rowId) ? selectedIds : [rowId];
 
-    // optimistic local update
-    setRows((prev) => {
-      const newRows = [...prev];
-      idsToUpdate.forEach((id) => {
-        const idx = newRows.findIndex((r) => r.Id === id);
-        if (idx !== -1) newRows[idx] = { ...newRows[idx], [col]: cleanValue };
+    // Optimistic local update
+    setRows((prev) =>
+      prev.map((r) =>
+        idsToUpdate.includes(r.Id) ? { ...r, [col]: cleanValue } : r
+      )
+    );
+
+    try {
+      const updatePromises = idsToUpdate.map((id) =>
+        fetch(`${API_BASE_URL}?tableId=${TABLE_ID}&id=${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ [col.toLowerCase()]: cleanValue }),
+        })
+      );
+
+      const results = await Promise.all(updatePromises);
+      if (results.some((res) => !res.ok)) throw new Error("Update failed");
+
+      // Refetch or update from response if needed, for now optimistic is enough
+      // But let's verify with a toast
+      toast({
+        title: "Updated",
+        description: `Saved ${col} for ${idsToUpdate.length} record(s).`,
       });
-      return newRows;
-    });
-
-    // debounce server save per (rowId, col)
-    const key = `${rowId}:${col}`;
-    const existingTimeoutId = pendingSaves.current[key];
-    if (existingTimeoutId) {
-      window.clearTimeout(existingTimeoutId);
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Sync Error",
+        description: "Failed to save to database.",
+      });
+      fetchData(); // Rollback on error
     }
-
-    const timeoutId = window.setTimeout(async () => {
-      try {
-        const updatePromises = idsToUpdate.map((id) =>
-          fetch(`${NOCODB_BASE_URL}?tableId=${TABLE_ID}&id=${id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ [col]: cleanValue }),
-          }),
-        );
-
-        const results = await Promise.all(updatePromises);
-        if (results.some((res) => !res.ok)) throw new Error("Some updates failed");
-
-        toast({
-          title: "Updated",
-          description: `Saved changes for ${idsToUpdate.length} record(s).`,
-        });
-      } catch (err) {
-        toast({
-          variant: "destructive",
-          title: "Sync Error",
-          description: "Failed to save to database.",
-        });
-        fetchData();
-      } finally {
-        delete pendingSaves.current[key];
-      }
-    }, 500); // wait 500ms after last change to this cell
-
-    pendingSaves.current[key] = timeoutId;
   };
 
   const handleDelete = async (idsToDelete: number[]) => {
     try {
       setLoading(true);
       const deletePromises = idsToDelete.map((id) =>
-        fetch(`${NOCODB_BASE_URL}?tableId=${TABLE_ID}&id=${id}`, {
+        fetch(`${API_BASE_URL}?tableId=${TABLE_ID}&id=${id}`, {
           method: "DELETE",
-        }),
+        })
       );
       await Promise.all(deletePromises);
+      
+      setRows((prev) => prev.filter((r) => !idsToDelete.includes(r.Id)));
       toast({
         title: "Deleted",
         description: `Successfully deleted ${idsToDelete.length} records.`,
       });
-      setRows((prev) => prev.filter((r) => !idsToDelete.includes(r.Id)));
     } catch (err) {
       toast({ variant: "destructive", title: "Delete Failed" });
+      fetchData();
     } finally {
       setLoading(false);
     }
@@ -294,25 +286,28 @@ export function useAccountsData(currentAccountId?: number) {
 
   const handleCreateRow = async (newRowData: Partial<AccountRow>) => {
     try {
-      const cleanData: any = {};
+      const payload: any = {};
       Object.keys(newRowData).forEach((key) => {
-        if (
-          !NON_EDITABLE_FIELDS.includes(key) &&
-          !HIDDEN_FIELDS.includes(key)
-        ) {
-          cleanData[key] = (newRowData as any)[key];
+        if (!NON_EDITABLE_FIELDS.includes(key) && !HIDDEN_FIELDS.includes(key)) {
+          payload[key.toLowerCase()] = (newRowData as any)[key];
         }
       });
 
-      const res = await fetch(`${NOCODB_BASE_URL}?tableId=${TABLE_ID}`, {
+      const res = await fetch(`${API_BASE_URL}?tableId=${TABLE_ID}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(cleanData),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("Creation failed");
 
-      const created = (await res.json()) as AccountRow;
-      setRows((prev) => [...prev, created]);
+      const created = await res.json();
+      // Normalize and add to state
+      const normalized = {
+        ...created,
+        Id: created.id || created.Id,
+        "Created Time": created.created_at || created["Created Time"],
+      };
+      setRows((prev) => [...prev, normalized]);
       toast({ title: "Success", description: "New account created." });
     } catch (err) {
       toast({ variant: "destructive", title: "Creation Failed" });

@@ -1,56 +1,67 @@
-// src/features/accounts/api/accountsApi.ts
-const TABLE_ID = "m8hflvkkfj25aio";
-const NOCODB_BASE_URL =
-  "https://api-leadawaker.netlify.app/.netlify/functions/api";
+const API_BASE_URL = "https://api-leadawaker.netlify.app/.netlify/functions/api";
+const TABLE_ID = "accounts";
 
-export interface Account {
-  Id: number;
-  [key: string]: any;
-}
-
-export async function listAccounts(params?: { accountId?: number }) {
-  const url = new URL(NOCODB_BASE_URL);
-  url.searchParams.set("tableId", TABLE_ID);
-  if (params?.accountId) {
-    url.searchParams.set("account_id", String(params.accountId));
-  }
-  const res = await fetch(url.toString());
-  if (!res.ok) throw new Error("Failed to list accounts");
+/**
+ * Fetches all accounts.
+ * Compatible with the existing Netlify function API.
+ */
+export const fetchAccounts = async () => {
+  const res = await fetch(`${API_BASE_URL}?tableId=${TABLE_ID}`);
+  if (!res.ok) throw new Error("Failed to fetch accounts");
   const data = await res.json();
-  return (data.list || []) as Account[];
-}
+  return Array.isArray(data) ? data : data?.list || [];
+};
 
-export async function updateAccount(
-  id: number,
-  patch: Partial<Account>,
-): Promise<Account> {
-  const res = await fetch(`${NOCODB_BASE_URL}?tableId=${TABLE_ID}&id=${id}`, {
+/**
+ * Updates an account.
+ * Uses lowercase Supabase column names and 'id' as the identifier.
+ * @param {string|number} id - The identifier of the account.
+ * @param {Object} patch - The fields to update (keys must match lowercase column names).
+ */
+export const updateAccount = async (id: number | string, patch: any) => {
+  // Ensure patch keys are lowercase as per Supabase columns
+  const lowercasePatch = Object.fromEntries(
+    Object.entries(patch).map(([key, value]) => [key.toLowerCase(), value])
+  );
+
+  const res = await fetch(`${API_BASE_URL}?tableId=${TABLE_ID}&id=${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(patch),
+    body: JSON.stringify(lowercasePatch),
   });
   if (!res.ok) throw new Error("Failed to update account");
-  return (await res.json()) as Account;
-}
+  return res.json();
+};
 
-export async function createAccount(
-  payload: Partial<Account>,
-): Promise<Account> {
-  const res = await fetch(`${NOCODB_BASE_URL}?tableId=${TABLE_ID}`, {
+/**
+ * Creates a new account.
+ * @param {Object} payload - The account data (keys must match lowercase column names).
+ */
+export const createAccount = async (payload: any) => {
+  // Ensure payload keys are lowercase as per Supabase columns
+  const lowercasePayload = Object.fromEntries(
+    Object.entries(payload).map(([key, value]) => [key.toLowerCase(), value])
+  );
+
+  const res = await fetch(`${API_BASE_URL}?tableId=${TABLE_ID}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(lowercasePayload),
   });
   if (!res.ok) throw new Error("Failed to create account");
-  return (await res.json()) as Account;
-}
+  return res.json();
+};
 
-export async function deleteAccounts(ids: number[]): Promise<void> {
+/**
+ * Deletes multiple accounts by their IDs.
+ * @param {(number|string)[]} ids - Array of account IDs to delete.
+ */
+export const deleteAccounts = async (ids: (number | string)[]) => {
   await Promise.all(
     ids.map((id) =>
-      fetch(`${NOCODB_BASE_URL}?tableId=${TABLE_ID}&id=${id}`, {
-        method: "DELETE",
-      }),
-    ),
+      fetch(`${API_BASE_URL}?tableId=${TABLE_ID}&id=${id}`, { 
+        method: "DELETE" 
+      })
+    )
   );
-}
+};
