@@ -234,24 +234,34 @@ export function useAccountsData(currentAccountId?: number) {
     );
 
     try {
-      const updatePromises = idsToUpdate.map((id) =>
-        fetch(`${API_BASE_URL}?tableId=${TABLE_ID}&id=${id}`, {
+      const updatePromises = idsToUpdate.map((id) => {
+        // Build the URL carefully with lowercase tableId and id
+        const url = new URL(API_BASE_URL);
+        url.searchParams.set("tableId", "accounts");
+        url.searchParams.set("id", String(id));
+
+        return fetch(url.toString(), {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ [col.toLowerCase()]: cleanValue }),
-        })
-      );
+        });
+      });
 
       const results = await Promise.all(updatePromises);
-      if (results.some((res) => !res.ok)) throw new Error("Update failed");
+      const allOk = results.every((res) => res.ok);
+      
+      if (!allOk) {
+        const errorMsg = await results.find(r => !r.ok)?.text();
+        console.error("Update failed:", errorMsg);
+        throw new Error("Update failed");
+      }
 
-      // Refetch or update from response if needed, for now optimistic is enough
-      // But let's verify with a toast
       toast({
         title: "Updated",
         description: `Saved ${col} for ${idsToUpdate.length} record(s).`,
       });
     } catch (err) {
+      console.error("Detailed sync error:", err);
       toast({
         variant: "destructive",
         title: "Sync Error",
@@ -264,12 +274,15 @@ export function useAccountsData(currentAccountId?: number) {
   const handleDelete = async (idsToDelete: number[]) => {
     try {
       setLoading(true);
-      const deletePromises = idsToDelete.map((id) =>
-        fetch(`${API_BASE_URL}?tableId=${TABLE_ID}&id=${id}`, {
-          method: "DELETE",
-        })
-      );
-      await Promise.all(deletePromises);
+      const deletePromises = idsToDelete.map((id) => {
+        const url = new URL(API_BASE_URL);
+        url.searchParams.set("tableId", "accounts");
+        url.searchParams.set("id", String(id));
+        return fetch(url.toString(), { method: "DELETE" });
+      });
+      
+      const results = await Promise.all(deletePromises);
+      if (results.some(r => !r.ok)) throw new Error("Delete failed");
       
       setRows((prev) => prev.filter((r) => !idsToDelete.includes(r.Id)));
       toast({
@@ -293,12 +306,20 @@ export function useAccountsData(currentAccountId?: number) {
         }
       });
 
-      const res = await fetch(`${API_BASE_URL}?tableId=${TABLE_ID}`, {
+      const url = new URL(API_BASE_URL);
+      url.searchParams.set("tableId", "accounts");
+
+      const res = await fetch(url.toString(), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Creation failed");
+      
+      if (!res.ok) {
+        const errorMsg = await res.text();
+        console.error("Create failed:", errorMsg);
+        throw new Error("Creation failed");
+      }
 
       const created = await res.json();
       // Normalize and add to state
