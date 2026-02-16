@@ -70,12 +70,12 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
+  // In production, serve the pre-built static files.
+  // In development with STANDALONE_API=true, skip Vite (frontend runs separately).
+  // Otherwise, embed Vite middleware for single-port dev mode.
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
-  } else {
+  } else if (!process.env.STANDALONE_API) {
     const { setupVite } = await import("./vite");
     await setupVite(httpServer, app);
   }

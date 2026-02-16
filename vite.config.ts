@@ -2,20 +2,20 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
-import { metaImagesPlugin } from "./vite-plugin-meta-images";
+import { fileURLToPath } from "url";
 
-
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default defineConfig({
+  base: "./",
   plugins: [
     react(),
     tailwindcss(),
-    metaImagesPlugin(),
-    // No conditional plugins based on REPL_ID anymore
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "client/src"), // fixed import.meta.dirname → __dirname
+      "@": path.resolve(__dirname, "client/src"),
       "@shared": path.resolve(__dirname, "shared"),
       "@assets": path.resolve(__dirname, "attached_assets"),
     },
@@ -25,17 +25,23 @@ export default defineConfig({
       plugins: [],
     },
   },
-  root: path.resolve(__dirname, "client"), // fixed import.meta.dirname → __dirname
+  root: path.resolve(__dirname, "client"),
   build: {
-    outDir: path.resolve(__dirname, "dist/public"), // fixed import.meta.dirname → __dirname
+    outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
   },
   server: {
     host: "0.0.0.0",
+    port: 5000,
+    strictPort: true,
+    open: false,
+    cors: true,
     allowedHosts: true,
-    fs: {
-      strict: true,
-      deny: ["**/.*"],
+    proxy: {
+      "/api": {
+        target: "http://localhost:5001",
+        changeOrigin: true,
+      },
     },
   },
 });
