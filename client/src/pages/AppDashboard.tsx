@@ -1,14 +1,16 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
+import { useLocation } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { campaigns, leads, interactions, automationLogs, accounts } from "@/data/mocks";
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import { useLeads, useCampaigns, useAccounts } from "@/hooks/useApiData";
+import type { Lead, Campaign, Account } from "@/types/models";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   AreaChart,
   Area
@@ -25,7 +27,10 @@ import {
   Clock,
   Zap,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Megaphone,
+  Inbox,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -91,11 +96,95 @@ const CSV_TAGS = [
 
 type DashboardTab = "pipeline" | "funnel";
 
+/* ------------------------------------------------------------------ */
+/* Quick-Jump Shortcut Cards                                           */
+/* ------------------------------------------------------------------ */
+const QUICK_JUMP_ITEMS = [
+  {
+    label: "Leads",
+    route: "/contacts",
+    icon: Users,
+    color: "#3b82f6",
+    description: "Manage contacts",
+    testId: "quick-jump-leads",
+  },
+  {
+    label: "Campaigns",
+    route: "/campaigns",
+    icon: Megaphone,
+    color: "#8b5cf6",
+    description: "View campaigns",
+    testId: "quick-jump-campaigns",
+  },
+  {
+    label: "Inbox",
+    route: "/conversations",
+    icon: Inbox,
+    color: "#10b981",
+    description: "Conversations",
+    testId: "quick-jump-inbox",
+  },
+  {
+    label: "Calendar",
+    route: "/calendar",
+    icon: CalendarIcon,
+    color: "#f59e0b",
+    description: "Scheduled calls",
+    testId: "quick-jump-calendar",
+  },
+];
+
+function QuickJumpCards() {
+  const [, setLocation] = useLocation();
+  const { isAgencyView } = useWorkspace();
+  const prefix = isAgencyView ? "/agency" : "/subaccount";
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6" data-testid="quick-jump-cards">
+      {QUICK_JUMP_ITEMS.map((item) => {
+        const Icon = item.icon;
+        return (
+          <button
+            key={item.route}
+            type="button"
+            data-testid={item.testId}
+            onClick={() => setLocation(`${prefix}${item.route}`)}
+            className={cn(
+              "group relative flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4",
+              "hover:shadow-md hover:border-slate-300 transition-all duration-200",
+              "text-left cursor-pointer"
+            )}
+          >
+            <div
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-110"
+              style={{ backgroundColor: `${item.color}15`, color: item.color }}
+            >
+              <Icon className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-bold text-slate-800">{item.label}</div>
+              <div className="text-[11px] text-slate-400 truncate">{item.description}</div>
+            </div>
+            <ArrowUpRight
+              className="ml-auto h-4 w-4 text-slate-300 group-hover:text-slate-500 transition-colors shrink-0"
+            />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function AppDashboard() {
   const { currentAccountId, isAgencyView, currentAccount } = useWorkspace();
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | "all">("all");
   const [dashboardTab, setDashboardTab] = useState<DashboardTab>("pipeline");
   const [isBookedReportOpen, setIsBookedReportOpen] = useState(false);
+
+  // Fetch real data from API
+  const { leads, loading: leadsLoading } = useLeads();
+  const { campaigns, loading: campaignsLoading } = useCampaigns();
+  const { accounts, loading: accountsLoading } = useAccounts();
 
   const stagePalette = useMemo(() => [
     { id: "New" as const, label: "New", icon: <Zap className="w-5 h-5" />, fill: "#1a3a6f", textColor: "white" as const },
@@ -107,79 +196,46 @@ export default function AppDashboard() {
     { id: "DND" as const, label: "DND", icon: <Target className="w-5 h-5" />, fill: "#ef4444", textColor: "white" as const },
   ], []);
 
-  const PipelineCol = ({ stage, accountId, campaignId }: any) => {
-    const items = useMemo(() => {
-      const filtered = leads
-        .filter((l) => l.account_id === accountId)
-        .filter((l) => (campaignId === "all" ? true : l.campaign_id === campaignId));
-
-      const isMatch = (s: string) => s === stage.id;
-
-      return filtered.filter((l) => isMatch(l.conversion_status));
-    }, [accountId, campaignId, stage.id]);
-
-    return (
-      <div className="flex flex-col h-full bg-muted/30 rounded-2xl p-3">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl" style={{ backgroundColor: stage.fill + '20', color: stage.fill }}>
-              {React.cloneElement(stage.icon as React.ReactElement<any>, { className: "w-4 h-4" })}
-            </div>
-            <h3 className="text-[12px] font-bold text-slate-700">{stage.label}</h3>
-          </div>
-          <span
-            className="text-[12px] font-black px-2 py-0.5 rounded-md"
-            style={{
-              backgroundColor: `${stage.fill}15`,
-              color: stage.id === 'Booked' ? '#ca8a04' : stage.fill,
-              border: `1px solid ${stage.fill}30`,
-            }}
-          >
-            {items.length}
-          </span>
-        </div>
-      </div>
-    );
-  };
-
   const funnel = useMemo(() => {
     const accountLeads = leads
-      .filter((l) => l.account_id === currentAccountId)
-      .filter((l) => (selectedCampaignId === "all" ? true : l.campaign_id === selectedCampaignId));
+      .filter((l: any) => (l.account_id || l.accounts_id) === currentAccountId)
+      .filter((l: any) => (selectedCampaignId === "all" ? true : (l.campaign_id || l.campaigns_id) === selectedCampaignId));
 
     const counts: Record<string, number> = {
-      New: accountLeads.filter((l) => l.conversion_status === "New").length,
-      Contacted: accountLeads.filter((l) => l.conversion_status === "Contacted").length,
-      Responded: accountLeads.filter((l) => l.conversion_status === "Responded").length,
-      "Multiple Responses": accountLeads.filter((l) => l.conversion_status === "Multiple Responses").length,
-      Qualified: accountLeads.filter((l) => l.conversion_status === "Qualified").length,
-      Booked: accountLeads.filter((l) => l.conversion_status === "Booked").length,
-      DND: accountLeads.filter((l) => l.conversion_status === "DND").length,
+      New: accountLeads.filter((l: any) => l.conversion_status === "New").length,
+      Contacted: accountLeads.filter((l: any) => l.conversion_status === "Contacted").length,
+      Responded: accountLeads.filter((l: any) => l.conversion_status === "Responded").length,
+      "Multiple Responses": accountLeads.filter((l: any) => l.conversion_status === "Multiple Responses").length,
+      Qualified: accountLeads.filter((l: any) => l.conversion_status === "Qualified").length,
+      Booked: accountLeads.filter((l: any) => l.conversion_status === "Booked").length,
+      DND: accountLeads.filter((l: any) => l.conversion_status === "DND").length,
     };
 
     return stagePalette
-      .map((s) => ({ name: s.label, value: counts[s.id], fill: s.fill }));
-  }, [currentAccountId, selectedCampaignId, stagePalette]);
+      .map((s) => ({ name: s.label, value: counts[s.id] || 0, fill: s.fill }));
+  }, [leads, currentAccountId, selectedCampaignId, stagePalette]);
 
   const stats = useMemo(() => {
     const accountLeads = leads
-      .filter((l) => l.account_id === currentAccountId)
-      .filter((l) => (selectedCampaignId === "all" ? true : l.campaign_id === selectedCampaignId));
+      .filter((l: any) => (l.account_id || l.accounts_id) === currentAccountId)
+      .filter((l: any) => (selectedCampaignId === "all" ? true : (l.campaign_id || l.campaigns_id) === selectedCampaignId));
 
-    const accountCampaigns = campaigns.filter((c) => c.account_id === currentAccountId);
-    const bookingsMo = accountLeads.filter((l) => l.conversion_status === "Booked").length;
-    const aiCost = accountCampaigns.reduce((sum, c) => sum + c.total_cost, 0);
+    const accountCampaigns = campaigns.filter((c: any) => (c.account_id || c.accounts_id) === currentAccountId);
+    const bookingsMo = accountLeads.filter((l: any) => l.conversion_status === "Booked").length;
+    const aiCost = accountCampaigns.reduce((sum: number, c: any) => sum + (Number(c.total_cost) || 0), 0);
     return {
       totalLeads: accountLeads.length,
-      activeCampaigns: accountCampaigns.filter((c) => c.status === "Active").length,
+      activeCampaigns: accountCampaigns.filter((c: any) => c.status === "Active").length,
       bookingsMo,
       aiCost,
     };
-  }, [currentAccountId, selectedCampaignId]);
+  }, [leads, campaigns, currentAccountId, selectedCampaignId]);
 
   const campaignOptions = useMemo(() => {
-    return campaigns.filter((c) => c.account_id === currentAccountId);
-  }, [currentAccountId]);
+    return campaigns.filter((c: any) => (c.account_id || c.accounts_id) === currentAccountId);
+  }, [campaigns, currentAccountId]);
+
+  const isLoading = leadsLoading || campaignsLoading || accountsLoading;
 
   return (
     <CrmShell>
@@ -188,8 +244,13 @@ export default function AppDashboard() {
           <div className="px-1 md:px-0 mb-6 flex items-center justify-end">
             <FiltersBar selectedCampaignId={selectedCampaignId} setSelectedCampaignId={setSelectedCampaignId} />
           </div>
-          {isAgencyView ? (
-            <AgencyDashboard />
+          {isLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+              <span className="ml-3 text-sm text-slate-500 font-medium">Loading dashboard...</span>
+            </div>
+          ) : isAgencyView ? (
+            <AgencyDashboard accounts={accounts} campaigns={campaigns} />
           ) : (
             <SubaccountDashboard
               accountId={currentAccountId}
@@ -202,6 +263,7 @@ export default function AppDashboard() {
               isBookedReportOpen={isBookedReportOpen}
               setIsBookedReportOpen={setIsBookedReportOpen}
               dashboardTab={dashboardTab}
+              leads={leads}
             />
           )}
         </div>
@@ -210,18 +272,19 @@ export default function AppDashboard() {
   );
 }
 
-function AgencyDashboard() {
+function AgencyDashboard({ accounts, campaigns }: { accounts: Account[]; campaigns: Campaign[] }) {
   const { currentAccountId } = useWorkspace();
-  
+
   const subaccounts = useMemo(() => {
-    return accounts.filter(a => a.id !== 1).slice(0, 2);
-  }, []);
+    return accounts.filter((a: any) => a.id !== 1);
+  }, [accounts]);
 
   return (
     <div className="mt-6 space-y-12" data-testid="agency-dashboard">
+      <QuickJumpCards />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {subaccounts.map(acc => {
-          const accCampaigns = campaigns.filter(c => c.account_id === acc.id);
+        {subaccounts.map((acc: any) => {
+          const accCampaigns = campaigns.filter((c: any) => (c.account_id || c.accounts_id) === acc.id);
           return (
             <div key={acc.id} className="rounded-[32px] border border-slate-200 bg-white p-8 flex flex-col shadow-sm">
               <div className="flex items-center justify-between mb-6">
@@ -237,18 +300,22 @@ function AgencyDashboard() {
               <div className="space-y-4">
                 <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Active Campaigns</h3>
                 <div className="space-y-3">
-                  {accCampaigns.map(c => (
-                    <div key={c.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-                      <div>
-                        <div className="font-semibold text-sm text-slate-800">{c.name}</div>
-                        <div className="text-xs text-slate-500">{c.type}</div>
+                  {accCampaigns.length === 0 ? (
+                    <div className="text-xs text-slate-400 italic p-4">No campaigns yet</div>
+                  ) : (
+                    accCampaigns.map((c: any) => (
+                      <div key={c.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                        <div>
+                          <div className="font-semibold text-sm text-slate-800">{c.name}</div>
+                          <div className="text-xs text-slate-500">{c.type}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-bold text-slate-900">${Number(c.total_cost) || 0}</div>
+                          <div className="text-[10px] text-slate-400">spend</div>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm font-bold text-slate-900">${c.total_cost}</div>
-                        <div className="text-[10px] text-slate-400">spend</div>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
             </div>
@@ -259,18 +326,19 @@ function AgencyDashboard() {
   );
 }
 
-function SubaccountDashboard({ 
-  accountId, 
-  selectedCampaignId, 
-  setSelectedCampaignId, 
-  campaignOptions, 
-  stats, 
-  funnel, 
-  stagePalette, 
-  isBookedReportOpen, 
+function SubaccountDashboard({
+  accountId,
+  selectedCampaignId,
+  setSelectedCampaignId,
+  campaignOptions,
+  stats,
+  funnel,
+  stagePalette,
+  isBookedReportOpen,
   setIsBookedReportOpen,
-  dashboardTab
-}: { 
+  dashboardTab,
+  leads,
+}: {
   accountId: number;
   selectedCampaignId: number | "all";
   setSelectedCampaignId: (v: number | "all") => void;
@@ -281,6 +349,7 @@ function SubaccountDashboard({
   isBookedReportOpen: boolean;
   setIsBookedReportOpen: (v: boolean) => void;
   dashboardTab: DashboardTab;
+  leads: Lead[];
 }) {
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
@@ -327,6 +396,7 @@ function SubaccountDashboard({
 
   return (
     <div className="mt-0 space-y-12 flex flex-col" data-testid="subaccount-dashboard">
+      <QuickJumpCards />
       <div className="flex items-start justify-between -mt-10 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 flex-grow" data-testid="grid-kpis">
           <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" icon={<Users className="w-4 h-4" />} />
@@ -361,30 +431,30 @@ function SubaccountDashboard({
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis 
-                      dataKey="name" 
-                      axisLine={false} 
-                      tickLine={false} 
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
                       tick={{fontSize: 10, fill: '#64748b'}}
                       dy={5}
                     />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false} 
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
                       tick={{fontSize: 10, fill: '#64748b'}}
                       tickFormatter={(val) => `${val}%`}
                     />
-                    <Tooltip 
+                    <Tooltip
                       contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                       formatter={(value: number) => [`${value}%`, 'Growth']}
                     />
-                    <Area 
-                      type="monotone" 
-                      dataKey="leads" 
-                      stroke="#3b82f6" 
+                    <Area
+                      type="monotone"
+                      dataKey="leads"
+                      stroke="#3b82f6"
                       strokeWidth={3}
-                      fillOpacity={1} 
-                      fill="url(#colorLeads)" 
+                      fillOpacity={1}
+                      fill="url(#colorLeads)"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -397,23 +467,26 @@ function SubaccountDashboard({
             </div>
             <div className="flex-grow rounded-[32px] border border-slate-200 bg-white p-6 flex flex-col">
               <div className="flex-grow flex flex-col justify-between py-2">
-                {funnel.map((stage: any, idx: number) => (
-                  <div key={stage.name} className="space-y-1.5">
-                    <div className="flex justify-between text-[13px] font-bold">
-                      <span className="text-slate-600">{stage.name}</span>
-                      <span className="text-slate-900">{stage.value}</span>
+                {funnel.map((stage: any, idx: number) => {
+                  const maxVal = Math.max(...funnel.map((s: any) => s.value), 1);
+                  return (
+                    <div key={stage.name} className="space-y-1.5">
+                      <div className="flex justify-between text-[13px] font-bold">
+                        <span className="text-slate-600">{stage.name}</span>
+                        <span className="text-slate-900">{stage.value}</span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-1000 ease-out"
+                          style={{
+                            width: `${(stage.value / maxVal) * 100}%`,
+                            backgroundColor: stage.fill,
+                          }}
+                        />
+                      </div>
                     </div>
-                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full rounded-full transition-all duration-1000 ease-out" 
-                        style={{ 
-                          width: `${(stage.value / Math.max(...funnel.map((s: any) => s.value))) * 100}%`,
-                          backgroundColor: stage.fill,
-                        }} 
-                      />
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -427,10 +500,10 @@ function SubaccountDashboard({
         <div className="flex items-center justify-between mb-4 px-1 md:px-0">
           <h2 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sales Pipeline</h2>
         </div>
-        
+
         <div className="relative group/pipeline">
           {showLeftArrow && (
-            <button 
+            <button
               onClick={() => scroll('left')}
               className="absolute left-0 top-0 bottom-0 z-20 w-12 flex items-center justify-start pl-2 text-slate-400 hover:text-slate-900 transition-all pointer-events-auto"
             >
@@ -441,7 +514,7 @@ function SubaccountDashboard({
           )}
 
           {showRightArrow && (
-            <button 
+            <button
               onClick={() => scroll('right')}
               className="absolute right-0 top-0 bottom-0 z-20 w-12 flex items-center justify-end pr-2 text-slate-400 hover:text-slate-900 transition-all pointer-events-auto"
             >
@@ -451,15 +524,15 @@ function SubaccountDashboard({
             </button>
           )}
 
-          <div 
+          <div
             ref={scrollRef}
             onScroll={checkScroll}
-            className="overflow-x-auto overflow-y-hidden pb-4 scrollbar-hide -mx-10 px-10" 
+            className="overflow-x-auto overflow-y-hidden pb-4 scrollbar-hide -mx-10 px-10"
             data-testid="scroll-pipeline"
           >
             <div className="min-w-[1610px] grid grid-cols-7 gap-3 h-[calc(100vh-170px)]" data-testid="grid-pipeline">
               {stagePalette.map((s) => (
-                <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} />
+                <PipelineCol key={s.id} stage={s} accountId={accountId} campaignId={selectedCampaignId} leads={leads} />
               ))}
             </div>
           </div>
@@ -495,20 +568,22 @@ function PipelineCol({
   stage,
   accountId,
   campaignId,
+  leads,
 }: {
   stage: { id: string; label: string; icon?: React.ReactNode; fill: string; textColor: "black" | "white" };
   accountId: number;
   campaignId: number | "all";
+  leads: Lead[];
 }) {
   const items = useMemo(() => {
     const filtered = leads
-      .filter((l) => l.account_id === accountId)
-      .filter((l) => (campaignId === "all" ? true : l.campaign_id === campaignId));
+      .filter((l: any) => (l.account_id || l.accounts_id) === accountId)
+      .filter((l: any) => (campaignId === "all" ? true : (l.campaign_id || l.campaigns_id) === campaignId));
 
     const isMatch = (s: string) => s === stage.id;
 
-    return filtered.filter((l) => isMatch(l.conversion_status));
-  }, [accountId, campaignId, stage.id]);
+    return filtered.filter((l: any) => isMatch(l.conversion_status));
+  }, [leads, accountId, campaignId, stage.id]);
 
   const formatTimeAgo = (timestamp: string | number) => {
     const date = typeof timestamp === 'string' ? new Date(timestamp).getTime() : timestamp;
@@ -544,19 +619,19 @@ function PipelineCol({
 
   return (
     <div className="w-full bg-white flex flex-col h-full rounded-[32px] overflow-hidden shadow-sm border border-slate-100" data-testid={`col-${stage.id}`}>
-      {/* 🔹 COLUMN HEADER */}
+      {/* COLUMN HEADER */}
       <div className="p-4 border-b border-slate-100 bg-white/50  sticky top-0 z-20">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div 
-              className="p-1.5 rounded-lg" 
+            <div
+              className="p-1.5 rounded-lg"
               style={{ backgroundColor: `${stage.fill}15`, color: stage.fill }}
             >
               {stage.icon && React.cloneElement(stage.icon as React.ReactElement<any>, { size: 14, strokeWidth: 2.5 })}
             </div>
             <h3 className="text-[15px] font-bold text-slate-800 tracking-tight">{stage.label}</h3>
           </div>
-          <div 
+          <div
             className="px-2.5 py-1 rounded-full text-[12px] font-black"
             style={{ backgroundColor: `${stage.fill}10`, color: stage.fill }}
           >
@@ -566,7 +641,7 @@ function PipelineCol({
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-hide">
-      {items.map((l) => (
+      {items.map((l: any) => (
       <div
         key={l.id}
         className={cn(
@@ -577,7 +652,7 @@ function PipelineCol({
           "p-2"
         )}
         style={{
-          backgroundColor: `${stage.fill}0D`, // base ~5–8%
+          backgroundColor: `${stage.fill}0D`,
         }}
         onClick={() => {
           window.history.pushState({}, "", `/app/contacts/${l.id}`);
@@ -585,26 +660,26 @@ function PipelineCol({
         }}
         data-testid={`pill-contact-${stage.id}-${l.id}`}
       >
-        {/* 🔹 HOVER OVERLAY */}
+        {/* HOVER OVERLAY */}
         <div
           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
           style={{
-            backgroundColor: `${stage.fill}1A`, // hover ~10–12%
+            backgroundColor: `${stage.fill}1A`,
           }}
         />
 
-        {/* 🔹 CARD CONTENT */}
+        {/* CARD CONTENT */}
         <div className="relative z-10">
           <div className="flex items-center gap-2" data-testid={`row-pill-header-${stage.id}-${l.id}`}>
-            <div 
+            <div
               className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 opacity-60"
-              style={{ 
+              style={{
                 backgroundColor: `${stage.fill}15`,
                 color: stage.id === 'Booked' ? '#ca8a04' : stage.fill,
                 border: `1px solid ${stage.fill}30`
               }}
             >
-              {getInitials(l.full_name)}
+              {getInitials(l.full_name || "")}
             </div>
             <div
               className="font-semibold text-xs truncate flex-grow"
@@ -613,7 +688,7 @@ function PipelineCol({
               {l.full_name}
             </div>
             <span className="text-[9px] text-muted-foreground group-hover:text-black transition-colors whitespace-nowrap opacity-30 group-hover:opacity-100 font-bold uppercase">
-              {formatTimeAgo(l.created_at)}
+              {l.created_at ? formatTimeAgo(l.created_at) : ""}
             </span>
           </div>
 
@@ -635,7 +710,7 @@ function PipelineCol({
               </div>
 
               <div className="flex flex-wrap gap-1.5 pt-1">
-                {(l.tags || []).map((tag, idx) => {
+                {(l.tags || []).map((tag: string, idx: number) => {
                   const color = getTagColor(tag);
                   return (
                     <span
@@ -664,7 +739,7 @@ function PipelineCol({
         ) : null}
       </div>
     </div>
-  
-    
+
+
   );
 }

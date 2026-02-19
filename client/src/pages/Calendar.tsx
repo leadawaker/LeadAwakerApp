@@ -1,9 +1,9 @@
 import { useMemo, useState, useEffect } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { leads } from "@/data/mocks";
+import { useLeads } from "@/hooks/useApiData";
 import { FiltersBar } from "@/components/crm/FiltersBar";
-import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
@@ -21,6 +21,7 @@ type ViewMode = "month" | "week" | "day";
 
 export default function CalendarPage() {
   const { currentAccountId } = useWorkspace();
+  const { leads, loading: leadsLoading } = useLeads();
   const [campaignId, setCampaignId] = useState<number | "all">("all");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("month");
@@ -35,10 +36,10 @@ export default function CalendarPage() {
 
   const appts = useMemo(() => {
     return leads
-      .filter((l) => l.account_id === currentAccountId)
-      .filter((l) => (campaignId === "all" ? true : l.campaign_id === campaignId))
-      .filter((l) => Boolean(l.booked_call_date))
-      .map((l) => {
+      .filter((l: any) => (l.account_id || l.accounts_id) === currentAccountId)
+      .filter((l: any) => (campaignId === "all" ? true : (l.campaign_id || l.campaigns_id) === campaignId))
+      .filter((l: any) => Boolean(l.booked_call_date))
+      .map((l: any) => {
         const d = new Date(l.booked_call_date as string);
         return {
           id: l.id,
@@ -53,7 +54,7 @@ export default function CalendarPage() {
         };
       })
       .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
-  }, [currentAccountId, campaignId]);
+  }, [leads, currentAccountId, campaignId]);
 
   const [anchorDate, setAnchorDate] = useState(() => {
     const d = new Date();
@@ -127,6 +128,17 @@ export default function CalendarPage() {
   }, [viewMode, anchorDate, weekDays]);
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
+
+  if (leadsLoading) {
+    return (
+      <CrmShell>
+        <div className="flex items-center justify-center py-20" data-testid="page-calendar">
+          <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+          <span className="ml-3 text-sm text-slate-500 font-medium">Loading calendar...</span>
+        </div>
+      </CrmShell>
+    );
+  }
 
   return (
     <CrmShell>

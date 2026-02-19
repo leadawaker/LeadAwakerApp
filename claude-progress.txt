@@ -1,3 +1,34 @@
+## Session 2026-02-19 (10th) - Coding Agent
+
+### Completed Features:
+- Feature #39: Lead search (name, email, phone, notes) - PASSING
+  - Search bar in DataTable toolbar filters leads across name, email, phone, and notes fields
+  - Client-side filtering using useMemo in LeadsTable.tsx (lines 103-122)
+  - Searches across: full_name, first_name, last_name, email, phone, notes
+  - Case-insensitive matching with .toLowerCase().includes()
+  - No code changes needed - feature was already fully implemented
+
+### Verification:
+- Playwright browser automation confirmed all 4 feature steps:
+  1. Search by name "Gabriel" → filtered from 9 leads to 1 (Gabriel Fronza)
+  2. Search by phone "+1555123456" → filtered to 1 result (Michael Thompson)
+  3. Search by email "michael@company.com" → filtered to 1 result (Michael Thompson)
+  4. Clear search → all 9 leads returned
+- Also tested search by notes: "follow up" → filtered to 1 result (Gabriel Fronza)
+- Data comes from real PostgreSQL database via /api/leads
+- No mock data patterns found in leads or DataTable components
+- Pre-existing console errors (Conversations.tsx 500, Popover warnings) not related to search
+
+### Environment Notes:
+- Server on port 5001, Vite on port 5173
+- DB reachable, login via API worked (leadawaker@gmail.com / test123)
+- Playwright working via /home/gabriel/.npm-global/bin/playwright-cli
+- Temporarily added email/phone/notes to leads 1 and 8 for testing, then cleaned up
+
+### Current Status:
+- 19/207 features passing (18 at session start, +1 this session)
+- Feature #39 marked passing after browser verification
+
 ## Session 2026-02-19 (9th) - Coding Agent
 
 ### Completed Features:
