@@ -182,6 +182,11 @@ export interface DataTableProps<TRow extends DataTableRow = DataTableRow> {
 
   onImportCSV?: (file: File) => void;
   onExportCSV?: () => void;
+
+  // ─────────────────────
+  // Pagination
+  // ─────────────────────
+  pageSize?: number; // If set, enables client-side pagination (e.g. 50)
 }
 
 const defaultRowPadding: Record<RowSpacing, string> = {
@@ -697,7 +702,13 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     onDelete,
     onImportCSV,
     onExportCSV,
+    pageSize,
   } = props;
+
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset page when rows change (e.g. search/filter)
+  useEffect(() => { setCurrentPage(1); }, [rows.length, searchValue]);
 
   const [groupColoring, setGroupColoring] = useState(true);
   const [groupSortOrder, setGroupSortOrder] = useState<"asc" | "desc">("asc");
@@ -869,8 +880,19 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     });
   }, [rows, sortConfig]);
 
+  // Pagination: slice sorted rows if pageSize is set
+  const totalRows = sortedRows.length;
+  const totalPages = pageSize ? Math.max(1, Math.ceil(totalRows / pageSize)) : 1;
+  const safePage = Math.min(currentPage, totalPages);
+
+  const displayRows = useMemo(() => {
+    if (!pageSize) return sortedRows;
+    const start = (safePage - 1) * pageSize;
+    return sortedRows.slice(start, start + pageSize);
+  }, [sortedRows, pageSize, safePage]);
+
   const groupedRows = useMemo(() => {
-    if (groupBy === "None") return { "All Records": sortedRows };
+    if (groupBy === "None") return { "All Records": displayRows };
     const groups: Record<string, TRow[]> = {};
     
     // Determine order
@@ -884,7 +906,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
       order.forEach(opt => { groups[opt] = []; });
     }
 
-    sortedRows.forEach((r) => {
+    displayRows.forEach((r) => {
       const key = String(r[groupBy.toLowerCase()] || "Unknown");
       if (!groups[key]) groups[key] = [];
       groups[key].push(r);
@@ -898,7 +920,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     }
 
     return groups;
-  }, [sortedRows, groupBy, statusOptions, props.automationStatusOptions, typeOptions]);
+  }, [displayRows, groupBy, statusOptions, props.automationStatusOptions, typeOptions]);
 
   const visibleCols = visibleColumns.filter((c) => !hiddenFields.includes(c));
   const rowPadding = defaultRowPadding[rowSpacing];
@@ -1184,17 +1206,32 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
             </div>
           )}
 
-          {selectedIds.length > 0 && onDelete && (
-            <Button
-              variant="destructive"
-              className="h-10 px-4 rounded-xl text-sm font-semibold gap-2 shadow-none"
-              onClick={() => {
-                onDelete(selectedIds);
-                onSelectedIdsChange([]);
-              }}
-            >
-              Delete ({selectedIds.length})
-            </Button>
+          {selectedIds.length > 0 && (
+            <div className="flex items-center gap-2" data-testid="bulk-selection-bar">
+              <Badge className="h-7 px-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-full">
+                {selectedIds.length} selected
+              </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs text-slate-500 hover:text-slate-700"
+                onClick={() => onSelectedIdsChange([])}
+              >
+                Clear
+              </Button>
+              {onDelete && (
+                <Button
+                  variant="destructive"
+                  className="h-8 px-3 rounded-xl text-sm font-semibold gap-2 shadow-none"
+                  onClick={() => {
+                    onDelete(selectedIds);
+                    onSelectedIdsChange([]);
+                  }}
+                >
+                  Delete ({selectedIds.length})
+                </Button>
+              )}
+            </div>
           )}
 
           <div className="flex-1" />
@@ -1775,6 +1812,52 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
           </Table>
         </DndContext>
       </div>
+
+      {/* Pagination footer */}
+      {pageSize && totalPages > 1 && (
+        <div className="flex items-center justify-between px-4 py-2 border-t border-border bg-muted/10 text-sm">
+          <div className="text-muted-foreground">
+            Showing {((safePage - 1) * pageSize) + 1}–{Math.min(safePage * pageSize, totalRows)} of {totalRows} rows
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={safePage <= 1}
+              onClick={() => setCurrentPage(1)}
+            >
+              First
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={safePage <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            >
+              Prev
+            </Button>
+            <span className="px-2 font-medium">
+              Page {safePage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={safePage >= totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Next
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={safePage >= totalPages}
+              onClick={() => setCurrentPage(totalPages)}
+            >
+              Last
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

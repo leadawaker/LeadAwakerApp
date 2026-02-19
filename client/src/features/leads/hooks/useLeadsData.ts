@@ -5,11 +5,13 @@ import { useToast } from "@/hooks/use-toast";
 export function useLeadsData(accountId?: number) {
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
   const pendingSaves = useRef<Record<string, number>>({});
 
   const handleRefresh = async () => {
     setLoading(true);
+    setError(null);
 
     try {
       const leadsList = await fetchLeads(accountId);
@@ -87,7 +89,7 @@ export function useLeadsData(accountId?: number) {
             l.updated_at || l.UpdatedAt || l["Last modified time"],
 
           conversion_status:
-            l.conversion_status || l["Conversion Status"],
+            l.conversion_status || l.Conversion_Status || l["Conversion Status"],
 
           email: l.Email || l.email,
         };
@@ -96,6 +98,7 @@ export function useLeadsData(accountId?: number) {
       setLeads(normalized);
     } catch (err) {
       console.error("Failed to refresh leads", err);
+      setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setLoading(false);
     }
@@ -155,6 +158,7 @@ export function useLeadsData(accountId?: number) {
   return {
     leads,
     loading,
+    error,
     handleRefresh,
     setLeads,
     updateLeadRow,
