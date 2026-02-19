@@ -6,10 +6,12 @@ import { SupportChat } from "@/components/crm/SupportChat";
 import { SearchModal } from "@/components/crm/SearchModal";
 import { NotificationsPanel } from "@/components/crm/NotificationsPanel";
 import { PageTransition } from "@/components/crm/PageTransition";
+import { CommandPalette } from "@/components/crm/CommandPalette";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
 import { X, Search, Bell, HelpCircle, Headphones, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
+import { logout } from "@/hooks/useSession";
 
 export function CrmShell({ children }: { children: React.ReactNode }) {
   const [, setLocation] = useLocation();
@@ -29,6 +31,11 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   };
 
   const closePanel = () => setActivePanel(null);
+
+  const handleLogout = async () => {
+    await logout();
+    setLocation("/login");
+  };
 
   return (
     <div className="min-h-screen bg-[#F6F5FA] dark:bg-background" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
@@ -51,6 +58,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
           isMobileMenuOpen={isMobileMenuOpen}
           onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
           onToggleMobileMenu={() => setIsMobileMenuOpen((v) => !v)}
+          onLogout={handleLogout}
         />
       </div>
 
@@ -105,9 +113,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
                         <span className="text-xs font-semibold">{isDark ? "Light Mode" : "Dark Mode"}</span>
                       </button>
                       <button
-                        onClick={() => {
-                          setLocation("/login");
-                        }}
+                        onClick={handleLogout}
                         className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-red-500/10 hover:bg-red-500/20 transition-colors col-span-2 mt-2"
                       >
                         <span className="text-xs font-bold text-red-600">Logout</span>
@@ -158,12 +164,12 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      <main 
+      <main
         className={cn(
           "h-screen flex flex-col bg-[#F6F5FA] dark:bg-background transition-all duration-200 overflow-hidden",
           collapsed ? "md:pl-[80px]" : "md:pl-[200px]",
           "pb-[64px] md:pb-0 pt-[80px]"
-        )} 
+        )}
         data-testid="main-crm"
       >
         <div className="h-full w-full px-4 md:pl-10 md:pr-10 pt-4 pb-0 overflow-y-auto">
@@ -172,6 +178,9 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
           </PageTransition>
         </div>
       </main>
+
+      {/* Global Command Palette (Cmd+K / Ctrl+K) */}
+      <CommandPalette />
     </div>
   );
 }
