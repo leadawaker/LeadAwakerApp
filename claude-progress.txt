@@ -127,3 +127,71 @@
 ### Current Status:
 - 11/207 features passing (10 at session start, +1 this session)
 - Feature #17 marked passing after thorough browser verification
+
+## Session 2026-02-19 (6th) - Coding Agent
+
+### Completed Features:
+- Feature #11: Account switcher dropdown for agency users - PASSING
+  - Sidebar already had account switcher UI (RightSidebar.tsx) with useWorkspace hook
+  - Wired accountId filtering through the full data pipeline:
+    - leadsApi.ts / campaignsApi.ts: accept optional accountId, pass as ?accountId=X query param
+    - useLeadsData.ts / useCampaignsData.ts: accept accountId, re-fetch on change via useEffect
+    - LeadsTable.tsx / CampaignsTable.tsx: derive filterAccountId from useWorkspace
+  - Agency users with "all accounts" (accountId=1) see unfiltered data
+  - Selecting a specific client account filters leads and campaigns
+  - Client (Viewer) users don't see the account switcher at all
+  - Verified all 3 steps via Playwright:
+    1. Admin login: account switcher visible with all 6 accounts
+    2. Selected "van de Kerkhof" (account 2): contacts page showed 6 filtered leads
+    3. Viewer login (viewer@test.com): account switcher hidden in sidebar
+
+### Code Changes:
+- MODIFIED: client/src/features/leads/api/leadsApi.ts - Added accountId param to fetchLeads
+- MODIFIED: client/src/features/campaigns/api/campaignsApi.ts - Added accountId param to fetchCampaigns
+- MODIFIED: client/src/features/leads/hooks/useLeadsData.ts - Accept accountId, re-fetch on change
+- MODIFIED: client/src/features/campaigns/hooks/useCampaignsData.ts - Accept accountId, re-fetch on change
+- MODIFIED: client/src/features/leads/components/LeadsTable.tsx - Pass filterAccountId from useWorkspace
+- MODIFIED: client/src/features/campaigns/components/CampaignsTable.tsx - Pass filterAccountId from useWorkspace
+
+### Environment Notes:
+- Server on port 5001 (started fresh this session)
+- DB reachable (login via API worked, leads/campaigns data loaded)
+- Playwright working via /home/gabriel/.npm-global/bin/playwright-cli
+- Had to run seed-users.ts to create viewer@test.com test user
+- Port conflicts resolved by killing stale node processes
+
+### Current Status:
+- Feature #11 marked passing after browser verification
+- Changes already committed (included in commit f9529c5)
+
+## Session 2026-02-19 (7th) - Coding Agent
+
+### Completed Features:
+- Feature #2: Database schema applied correctly - PASSING
+  - All 11 tables (Accounts, Leads, Campaigns, Interactions, Users, Tags, Leads_Tags,
+    Automation_Logs, Prompt_Library, Lead_Score_History, Campaign_Metrics_History) are
+    accessible and queryable through the API
+  - Added missing Lead_Score_History and Campaign_Metrics_History table definitions to schema.ts
+  - Added storage methods (getLeadScoreHistory, getCampaignMetricsHistory, etc.)
+  - Added /api/lead-score-history and /api/campaign-metrics-history API endpoints
+  - Added /api/health endpoint that verifies all 11 tables with row counts
+  - Verified all 11 endpoints return HTTP 200 with data
+  - Server restart persistence test passed (PostgreSQL, no in-memory stores)
+  - Zero console errors, zero mock data patterns
+
+### Code Changes:
+- MODIFIED: shared/schema.ts - Added leadScoreHistory and campaignMetricsHistory table definitions
+- MODIFIED: server/storage.ts - Added Lead_Score_History and Campaign_Metrics_History query methods
+- MODIFIED: server/routes.ts - Added /api/health, /api/lead-score-history, /api/campaign-metrics-history routes
+
+### Verification:
+- All 11 API endpoints tested via curl: Accounts(200), Leads(200), Campaigns(200),
+  Interactions(200), Users(200), Tags(200), Leads_Tags(200), Automation_Logs(200),
+  Prompt_Library(200), Lead_Score_History(200), Campaign_Metrics_History(200)
+- /api/health returns: {"status":"healthy","totalTables":11,"accessibleTables":11}
+- Browser automation screenshot confirmed health endpoint output
+- Server restart test confirmed data persistence
+
+### Current Status:
+- 15/207 features passing (14 at session start, +1 this session)
+- Git commit: d97106b
