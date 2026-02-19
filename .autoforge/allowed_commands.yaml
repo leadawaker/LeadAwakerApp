@@ -1,0 +1,9 @@
+allowed_commands:
+  - nohup
+  - tsx
+  - npx
+  - npm
+  - node
+  - pkill
+  - kill
+  - lsof
