@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { fetchAccounts, updateAccount, createAccount, deleteAccount } from "../api/accountsApi";
 import type {
   DataTableRow,
   SortConfig,
@@ -8,10 +9,6 @@ import type {
 interface AccountRow extends DataTableRow {
   [key: string]: any;
 }
-
-const TABLE_ID = "accounts";
-const API_BASE_URL =
-  "https://api-leadawaker.netlify.app/.netlify/functions/api";
 
 const SMALL_WIDTH_COLS = [
   "Id",
@@ -30,6 +27,7 @@ const HIDDEN_FIELDS = [
   "ID",
   "account_id",
   "account_ID",
+  "accounts_id",
   "Automation Logs",
   "Prompt Libraries",
   "CreatedAt",
@@ -46,6 +44,10 @@ const HIDDEN_FIELDS = [
   "prompt_libraries_relations",
   "users_relations",
   "tags_relations",
+  "password_hash",
+  "passwordHash",
+  "nc_order",
+  "ncOrder",
 ];
 
 const NON_EDITABLE_FIELDS = [
@@ -70,6 +72,7 @@ const NON_EDITABLE_FIELDS = [
 export function useAccountsData(currentAccountId?: number) {
   const [rows, setRows] = useState<AccountRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   const [columns, setColumns] = useState<string[]>([]);
   const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
 
@@ -84,26 +87,18 @@ export function useAccountsData(currentAccountId?: number) {
   });
 
   const { toast } = useToast();
-
-  // key -> timeoutId, used for debouncing PATCH per (rowId, col)
   const pendingSaves = useRef<Record<string, number>>({});
 
   const fetchData = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const url = new URL(API_BASE_URL);
-      url.searchParams.set("tableId", TABLE_ID);
-      // If you later want to filter by currentAccountId:
-      // if (currentAccountId) url.searchParams.set("account_id", String(currentAccountId));
-
-      const res = await fetch(url.toString());
-      if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
-      const data = await res.json();
-      const list = (Array.isArray(data) ? data : data.list || []).map((row: any) => ({
+      const data = await fetchAccounts();
+      const list = data.map((row: any) => ({
         ...row,
-        Id: row.Id ?? row.id, // normalize ID field
-        "Created Time": row["Created Time"] ?? row.created_at,
-        "Last Modified Time": row["Last Modified Time"] ?? row.updated_at,
+        Id: row.Id ?? row.id,
+        "Created Time": row["Created Time"] ?? row.created_at ?? row.createdAt,
+        "Last Modified Time": row["Last Modified Time"] ?? row.updated_at ?? row.updatedAt,
       }));
       setRows(list);
 
@@ -141,13 +136,17 @@ export function useAccountsData(currentAccountId?: number) {
             ![
               "created_at",
               "updated_at",
+              "createdAt",
+              "updatedAt",
               "Created Time",
               "Last Modified Time",
               "Id",
+              "id",
               "Account ID",
               "business_hours_open",
               "business_hours_closed",
-            ].includes(k)
+            ].includes(k) &&
+            !HIDDEN_FIELDS.includes(k)
           ) {
             ordered.push(k);
           }
@@ -195,6 +194,7 @@ export function useAccountsData(currentAccountId?: number) {
         setColWidths(initialWidths);
       }
     } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
       toast({ variant: "destructive", title: "Error fetching data" });
     } finally {
       setLoading(false);
@@ -234,27 +234,11 @@ export function useAccountsData(currentAccountId?: number) {
     );
 
     try {
-      const updatePromises = idsToUpdate.map((id) => {
-        // Build the URL carefully with lowercase tableId and id
-        const url = new URL(API_BASE_URL);
-        url.searchParams.set("tableId", "accounts");
-        url.searchParams.set("id", String(id));
+      const updatePromises = idsToUpdate.map((id) =>
+        updateAccount(id, { [col]: cleanValue })
+      );
 
-        return fetch(url.toString(), {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ [col.toLowerCase()]: cleanValue }),
-        });
-      });
-
-      const results = await Promise.all(updatePromises);
-      const allOk = results.every((res) => res.ok);
-      
-      if (!allOk) {
-        const errorMsg = await results.find(r => !r.ok)?.text();
-        console.error("Update failed:", errorMsg);
-        throw new Error("Update failed");
-      }
+      await Promise.all(updatePromises);
 
       toast({
         title: "Updated",
@@ -274,16 +258,9 @@ export function useAccountsData(currentAccountId?: number) {
   const handleDelete = async (idsToDelete: number[]) => {
     try {
       setLoading(true);
-      const deletePromises = idsToDelete.map((id) => {
-        const url = new URL(API_BASE_URL);
-        url.searchParams.set("tableId", "accounts");
-        url.searchParams.set("id", String(id));
-        return fetch(url.toString(), { method: "DELETE" });
-      });
-      
-      const results = await Promise.all(deletePromises);
-      if (results.some(r => !r.ok)) throw new Error("Delete failed");
-      
+      const deletePromises = idsToDelete.map((id) => deleteAccount(id));
+      await Promise.all(deletePromises);
+
       setRows((prev) => prev.filter((r) => !idsToDelete.includes(r.Id)));
       toast({
         title: "Deleted",
@@ -302,27 +279,11 @@ export function useAccountsData(currentAccountId?: number) {
       const payload: any = {};
       Object.keys(newRowData).forEach((key) => {
         if (!NON_EDITABLE_FIELDS.includes(key) && !HIDDEN_FIELDS.includes(key)) {
-          payload[key.toLowerCase()] = (newRowData as any)[key];
+          payload[key] = (newRowData as any)[key];
         }
       });
 
-      const url = new URL(API_BASE_URL);
-      url.searchParams.set("tableId", "accounts");
-
-      const res = await fetch(url.toString(), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      
-      if (!res.ok) {
-        const errorMsg = await res.text();
-        console.error("Create failed:", errorMsg);
-        throw new Error("Creation failed");
-      }
-
-      const created = await res.json();
-      // Normalize and add to state
+      const created = await createAccount(payload);
       const normalized = {
         ...created,
         Id: created.id || created.Id,
@@ -338,6 +299,7 @@ export function useAccountsData(currentAccountId?: number) {
   return {
     rows,
     loading,
+    error,
     columns,
     visibleColumns,
     setVisibleColumns,

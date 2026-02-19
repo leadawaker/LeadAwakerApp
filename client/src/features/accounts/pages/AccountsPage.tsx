@@ -2,6 +2,7 @@
 import React, { useMemo, useState, useRef } from "react";
 import { useAccountsData } from "../hooks/useAccountsData";
 import { AccountsTable } from "../components/AccountsTable";
+import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 
 export default function AccountsPage() {
   const accountId = undefined;
@@ -9,6 +10,7 @@ export default function AccountsPage() {
   const {
     rows,
     loading,
+    error,
     columns,
     visibleColumns,
     setVisibleColumns,
@@ -53,6 +55,17 @@ export default function AccountsPage() {
       }),
     [rows, filterConfig, searchTerm],
   );
+
+  // Show error fallback when data fetch fails and we have no cached data
+  if (error && rows.length === 0 && !loading) {
+    return (
+      <ApiErrorFallback
+        error={error}
+        onRetry={fetchData}
+        isRetrying={loading}
+      />
+    );
+  }
 
   return (
     <div className="w-full h-full overflow-y-auto">

@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { leads, campaigns } from "@/data/mocks";
+import { apiFetch } from "@/lib/apiUtils";
+import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -71,27 +72,63 @@ export default function TagsPage() {
   const [campaignId, setCampaignId] = useState<number | "all">("all");
   const [q, setQ] = useState("");
   const [selectedTagName, setSelectedTagName] = useState<string | null>(null);
+  const [leads, setLeads] = useState<any[]>([]);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   // Mock accounts for filter (since we are in agency/subaccount view)
   const accounts = [{ id: 1, name: "Agency" }, { id: 2, name: "Subaccount" }];
   const [selectedAccountId, setSelectedAccountId] = useState<number | "all">("all");
 
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [leadsRes, campaignsRes] = await Promise.all([
+        apiFetch("/api/leads"),
+        apiFetch("/api/campaigns"),
+      ]);
+
+      if (!leadsRes.ok && !campaignsRes.ok) {
+        throw new Error(`${leadsRes.status}: Failed to fetch tags data`);
+      }
+
+      const leadsData = leadsRes.ok ? await leadsRes.json() : [];
+      const campaignsData = campaignsRes.ok ? await campaignsRes.json() : [];
+      setLeads(Array.isArray(leadsData) ? leadsData : []);
+      setCampaigns(Array.isArray(campaignsData) ? campaignsData : []);
+    } catch (err) {
+      console.error("Failed to fetch tags data:", err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
   const accountLeads = useMemo(() => {
     return leads
-      .filter(l => (selectedAccountId === "all" ? true : l.account_id === selectedAccountId))
-      .filter(l => (campaignId === "all" ? true : l.campaign_id === campaignId));
-  }, [selectedAccountId, campaignId]);
+      .filter((l: any) => (selectedAccountId === "all" ? true : (l.account_id || l.accounts_id || l.Accounts_id) === selectedAccountId))
+      .filter((l: any) => (campaignId === "all" ? true : (l.campaign_id || l.campaigns_id || l.Campaigns_id) === campaignId));
+  }, [leads, selectedAccountId, campaignId]);
 
   const campaignOptions = useMemo(() => {
-    return campaigns.filter(c => (selectedAccountId === "all" ? true : c.account_id === selectedAccountId));
-  }, [selectedAccountId]);
+    return campaigns.filter((c: any) => (selectedAccountId === "all" ? true : (c.account_id || c.accounts_id || c.Accounts_id) === selectedAccountId));
+  }, [campaigns, selectedAccountId]);
 
   const tagCounts = useMemo(() => {
     const map = new Map<string, number>();
-    accountLeads.forEach(l => {
-      l.tags?.forEach(t => {
-        map.set(t, (map.get(t) ?? 0) + 1);
-      });
+    accountLeads.forEach((l: any) => {
+      const tags = l.tags || l.Tags || [];
+      if (Array.isArray(tags)) {
+        tags.forEach((t: string) => {
+          map.set(t, (map.get(t) ?? 0) + 1);
+        });
+      }
     });
     return map;
   }, [accountLeads]);
@@ -115,7 +152,10 @@ export default function TagsPage() {
 
   const selectedLeads = useMemo(() => {
     if (!selectedTagName) return [];
-    return accountLeads.filter(l => l.tags?.includes(selectedTagName));
+    return accountLeads.filter((l: any) => {
+      const tags = l.tags || l.Tags || [];
+      return Array.isArray(tags) && tags.includes(selectedTagName);
+    });
   }, [selectedTagName, accountLeads]);
 
   const sortedCategories = useMemo(() => {
@@ -125,6 +165,26 @@ export default function TagsPage() {
       return colorA.localeCompare(colorB);
     });
   }, [categoriesWithCounts]);
+
+  if (error && leads.length === 0 && !loading) {
+    return (
+      <CrmShell>
+        <ApiErrorFallback
+          error={error}
+          onRetry={fetchData}
+          isRetrying={loading}
+        />
+      </CrmShell>
+    );
+  }
+
+  if (loading) {
+    return (
+      <CrmShell>
+        <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm py-12">Loading tags…</div>
+      </CrmShell>
+    );
+  }
 
   return (
     <CrmShell>
@@ -156,8 +216,8 @@ export default function TagsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Campaigns</SelectItem>
-                  {campaignOptions.map(c => (
-                    <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                  {campaignOptions.map((c: any) => (
+                    <SelectItem key={c.id || c.Id} value={(c.id || c.Id).toString()}>{c.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -184,7 +244,7 @@ export default function TagsPage() {
                             ? "ring-2 ring-primary bg-white"
                             : "hover:bg-muted/5"
                         )}
-                        style={{ 
+                        style={{
                           backgroundColor: `${t.color}05`
                         }}
                       >
@@ -231,11 +291,11 @@ export default function TagsPage() {
                       No leads found with this tag
                     </div>
                   ) : (
-                    selectedLeads.map(l => (
-                      <div key={l.id} className="p-4 hover:bg-muted/10">
-                        <div className="font-bold text-sm truncate">{l.full_name}</div>
+                    selectedLeads.map((l: any) => (
+                      <div key={l.id || l.Id} className="p-4 hover:bg-muted/10">
+                        <div className="font-bold text-sm truncate">{l.full_name || l.name}</div>
                         <div className="text-[10px] text-muted-foreground mt-1">
-                          Last message: {l.last_message_sent_at ? "01 Feb 2026" : "No messages yet"}
+                          Last message: {(l.last_message_sent_at || l.Last_Message_Sent_At) ? new Date(l.last_message_sent_at || l.Last_Message_Sent_At).toLocaleDateString() : "No messages yet"}
                         </div>
                       </div>
                     ))

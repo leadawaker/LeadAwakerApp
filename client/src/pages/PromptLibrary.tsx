@@ -1,17 +1,44 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { promptLibrary } from "@/data/mocks";
+import { apiFetch } from "@/lib/apiUtils";
+import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 
 export default function PromptLibraryPage() {
   const { currentAccountId } = useWorkspace();
   const [q, setQ] = useState("");
+  const [promptLibrary, setPromptLibrary] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchPrompts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      if (currentAccountId) params.set("accountId", String(currentAccountId));
+      const qs = params.toString();
+      const url = qs ? `/api/prompts?${qs}` : "/api/prompts";
+      const res = await apiFetch(url);
+      if (!res.ok) throw new Error(`${res.status}: Failed to fetch prompts`);
+      const data = await res.json();
+      setPromptLibrary(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch prompts:", err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setLoading(false);
+    }
+  }, [currentAccountId]);
+
+  useEffect(() => {
+    fetchPrompts();
+  }, [fetchPrompts]);
 
   const rows = useMemo(() => {
     return promptLibrary
-      .filter((p) => p.account_id === currentAccountId)
-      .filter((p) => (q ? p.name.toLowerCase().includes(q.toLowerCase()) : true));
-  }, [currentAccountId, q]);
+      .filter((p: any) => (q ? (p.name || "").toLowerCase().includes(q.toLowerCase()) : true));
+  }, [promptLibrary, q]);
 
   return (
     <CrmShell>
@@ -26,19 +53,28 @@ export default function PromptLibraryPage() {
           />
         </div>
 
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-2" data-testid="grid-prompts">
-          {rows.map((p) => (
-            <div key={p.id} className="rounded-2xl border border-border bg-white p-4 h-fit shadow-sm" data-testid={`card-prompt-${p.id}`}>
-              <div className="font-semibold text-slate-900" data-testid={`text-prompt-name-${p.id}`}>{p.name}</div>
-              <div className="mt-1 text-xs text-muted-foreground" data-testid={`text-prompt-usecase-${p.id}`}>{p.use_case}</div>
-              <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-                <span className="font-medium" data-testid={`text-prompt-model-${p.id}`}>model: {p.model}</span>
-                <span className="font-medium" data-testid={`text-prompt-score-${p.id}`}>score: {p.performance_score}</span>
+        {error && promptLibrary.length === 0 && !loading ? (
+          <ApiErrorFallback
+            error={error}
+            onRetry={fetchPrompts}
+            isRetrying={loading}
+          />
+        ) : loading ? (
+          <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">Loading prompts…</div>
+        ) : (
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-2" data-testid="grid-prompts">
+            {rows.map((p: any) => (
+              <div key={p.id || p.Id} className="rounded-2xl border border-border bg-white p-4 h-fit shadow-sm" data-testid={`card-prompt-${p.id || p.Id}`}>
+                <div className="font-semibold text-slate-900" data-testid={`text-prompt-name-${p.id || p.Id}`}>{p.name}</div>
+                <div className="mt-1 text-xs text-muted-foreground" data-testid={`text-prompt-usecase-${p.id || p.Id}`}>{p.use_case}</div>
+                <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="font-medium" data-testid={`text-prompt-model-${p.id || p.Id}`}>model: {p.model}</span>
+                  <span className="font-medium" data-testid={`text-prompt-score-${p.id || p.Id}`}>score: {p.performance_score}</span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-
+            ))}
+          </div>
+        )}
       </div>
     </CrmShell>
   );
