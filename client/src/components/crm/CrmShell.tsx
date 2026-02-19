@@ -5,15 +5,19 @@ import { Topbar } from "@/components/crm/Topbar";
 import { SupportChat } from "@/components/crm/SupportChat";
 import { SearchModal } from "@/components/crm/SearchModal";
 import { NotificationsPanel } from "@/components/crm/NotificationsPanel";
+import { PageTransition } from "@/components/crm/PageTransition";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
-import { X, Search, Bell, HelpCircle, Headphones, Moon } from "lucide-react";
+import { X, Search, Bell, HelpCircle, Headphones, Moon, Sun } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
 
 export function CrmShell({ children }: { children: React.ReactNode }) {
   const [, setLocation] = useLocation();
   const { isAgencyView, currentAccountId, currentAccount } = useWorkspace();
+  const { isDark, toggleTheme } = useTheme();
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(3);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     const saved = localStorage.getItem("sidebar-collapsed");
     return saved === "true";
@@ -27,17 +31,26 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   const closePanel = () => setActivePanel(null);
 
   return (
-    <div className="min-h-screen bg-[#F6F5FA]" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
-      <Topbar onOpenPanel={(p) => setActivePanel(p)} collapsed={collapsed} />
+    <div className="min-h-screen bg-[#F6F5FA] dark:bg-background" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
+      <Topbar
+        onOpenPanel={(p) => setActivePanel(p)}
+        collapsed={collapsed}
+        isMobileMenuOpen={isMobileMenuOpen}
+        onToggleMobileMenu={() => setIsMobileMenuOpen((v) => !v)}
+        notificationsCount={unreadCount}
+      />
       <div className="fixed left-0 top-0 bottom-0 z-40" data-testid="wrap-left-nav">
-        <RightSidebar 
-          collapsed={collapsed} 
+        <RightSidebar
+          collapsed={collapsed}
           onCollapse={handleCollapse}
           onOpenSupport={() => setActivePanel('support')}
           onOpenSearch={() => setActivePanel('search')}
           onOpenNotifications={() => setActivePanel('notifications')}
           notificationsCount={unreadCount}
           onToggleHelp={() => setActivePanel('help')}
+          isMobileMenuOpen={isMobileMenuOpen}
+          onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
+          onToggleMobileMenu={() => setIsMobileMenuOpen((v) => !v)}
         />
       </div>
 
@@ -65,7 +78,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
               )}
               {activePanel === 'settings' && (
                 <div className="p-6 space-y-8 overflow-auto h-full">
-                  <section className="bg-white rounded-2xl p-6 border border-border/40">
+                  <section className="bg-card rounded-2xl p-6 border border-border/40">
                     <h3 className="text-xs font-bold uppercase text-muted-foreground mb-4 tracking-widest">System Actions</h3>
                     <div className="grid grid-cols-2 gap-3 mb-8">
                       <button onClick={() => { setActivePanel('search'); }} className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors">
@@ -85,14 +98,11 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
                         <span className="text-xs font-semibold">Support</span>
                       </button>
                       <button
-                        onClick={() => {
-                          const isDark = document.documentElement.classList.toggle("dark");
-                          localStorage.setItem("theme", isDark ? "dark" : "light");
-                        }}
+                        onClick={toggleTheme}
                         className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors"
                       >
-                        <Moon className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-xs font-semibold">Dark Mode</span>
+                        {isDark ? <Sun className="h-5 w-5 text-muted-foreground" /> : <Moon className="h-5 w-5 text-muted-foreground" />}
+                        <span className="text-xs font-semibold">{isDark ? "Light Mode" : "Dark Mode"}</span>
                       </button>
                       <button
                         onClick={() => {
@@ -116,13 +126,13 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
                       </div>
                     </div>
                   </section>
-                  <section className="bg-white rounded-2xl p-6 shadow-sm border border-border/40">
+                  <section className="bg-card rounded-2xl p-6 shadow-sm border border-border/40">
                     <h3 className="text-sm font-bold uppercase text-muted-foreground mb-4 tracking-widest">Security</h3>
                     <button className="h-10 w-full rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold">
                       Send reset email
                     </button>
                   </section>
-                  <section className="bg-white rounded-2xl p-6 shadow-sm border border-border/40">
+                  <section className="bg-card rounded-2xl p-6 shadow-sm border border-border/40">
                     <h3 className="text-sm font-bold uppercase text-muted-foreground mb-4 tracking-widest">Users</h3>
                     <div className="space-y-2">
                       <button className="h-10 w-full rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold text-left px-4">Invite user</button>
@@ -150,14 +160,16 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
 
       <main 
         className={cn(
-          "h-screen flex flex-col bg-[#F6F5FA] transition-all duration-200 overflow-hidden",
+          "h-screen flex flex-col bg-[#F6F5FA] dark:bg-background transition-all duration-200 overflow-hidden",
           collapsed ? "md:pl-[80px]" : "md:pl-[200px]",
           "pb-[64px] md:pb-0 pt-[80px]"
         )} 
         data-testid="main-crm"
       >
-        <div className="h-full w-full pl-10 pr-10 pt-4 pb-0 overflow-y-auto">
-          {children}
+        <div className="h-full w-full px-4 md:pl-10 md:pr-10 pt-4 pb-0 overflow-y-auto">
+          <PageTransition>
+            {children}
+          </PageTransition>
         </div>
       </main>
     </div>
