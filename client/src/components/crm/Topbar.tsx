@@ -1,10 +1,13 @@
-import { Link, useLocation } from "wouter";
-import { Bell, Search, Settings, ChevronDown } from "lucide-react";
+import { useLocation, Link } from "wouter";
+import { Bell, Search, Settings, ChevronDown, Moon, Sun, ChevronRight, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
-import { campaigns, accounts } from "@/data/mocks";
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getQueryFn } from "@/lib/queryClient";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,13 +15,30 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+type Campaign = {
+  id: number;
+  Accounts_id?: number;
+  account_id?: number;
+  name: string;
+  [key: string]: unknown;
+};
+
 export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string) => void; collapsed: boolean }) {
   const [location, setLocation] = useLocation();
-  const { currentAccountId, currentAccount, setCurrentAccountId, isAgencyView } = useWorkspace();
+  const { currentAccountId, currentAccount, setCurrentAccountId, isAgencyView, accounts, isAdmin } = useWorkspace();
+  const { isDark, toggleTheme } = useTheme();
+
+  // Fetch campaigns from API
+  const { data: campaignsData } = useQuery<Campaign[]>({
+    queryKey: ["/api/campaigns"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    staleTime: 5 * 60 * 1000,
+  });
 
   const campaignOptions = useMemo(() => {
-    return campaigns.filter((c) => c.account_id === currentAccountId);
-  }, [currentAccountId]);
+    if (!campaignsData) return [];
+    return campaignsData.filter((c) => (c.Accounts_id ?? c.account_id) === currentAccountId);
+  }, [campaignsData, currentAccountId]);
 
   const handleAccountSelect = (id: number) => {
     const prevIsAgency = currentAccountId === 1;
@@ -60,24 +80,108 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
     "/subaccount/prompt-library": "Prompts",
     "/agency/accounts": "Accounts",
     "/subaccount/accounts": "Accounts",
+    "/agency/settings": "Settings",
+    "/subaccount/settings": "Settings",
   };
 
   const currentTitle = titles[location] || "";
 
-  const currentUserEmail = localStorage.getItem("leadawaker_user_email") || "leadawaker@gmail.com";
-  const isAdmin = currentUserEmail === "leadawaker@gmail.com";
+  // Build breadcrumb trail from location
+  const breadcrumbs = useMemo(() => {
+    const prefix = isAgencyView ? "/agency" : "/subaccount";
+    const crumbs: { label: string; href: string }[] = [];
+
+    // Always start with home/dashboard
+    crumbs.push({ label: "Home", href: `${prefix}/dashboard` });
+
+    // Get the path after the prefix
+    const pathAfterPrefix = location.startsWith(prefix)
+      ? location.slice(prefix.length)
+      : "";
+    const segments = pathAfterPrefix.split("/").filter(Boolean);
+
+    // Map known segments to labels
+    const segmentLabels: Record<string, string> = {
+      dashboard: "Dashboard",
+      leads: "Contacts",
+      contacts: "Contacts",
+      conversations: "Conversations",
+      campaigns: "Campaigns",
+      calendar: "Calendar",
+      settings: "Settings",
+      accounts: "Accounts",
+      users: "Users",
+      tags: "Tags",
+      "prompt-library": "Prompts",
+      "automation-logs": "Automations",
+    };
+
+    let builtPath = prefix;
+    for (let i = 0; i < segments.length; i++) {
+      const seg = segments[i];
+      builtPath += `/${seg}`;
+      const label = segmentLabels[seg] || (seg.match(/^\d+$/) ? `#${seg}` : seg);
+      // Don't duplicate "Dashboard" since Home already represents it
+      if (seg === "dashboard") continue;
+      crumbs.push({ label, href: builtPath });
+    }
+
+    return crumbs;
+  }, [location, isAgencyView]);
+
+  // User info from localStorage (set at login)
+  const currentUserName = localStorage.getItem("leadawaker_user_name") || localStorage.getItem("leadawaker_account_name") || "User";
+  const currentUserEmail = localStorage.getItem("leadawaker_user_email") || "";
+
+  // Generate initials from user name
+  const userInitials = useMemo(() => {
+    const parts = currentUserName.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return (parts[0]?.[0] || "U").toUpperCase();
+  }, [currentUserName]);
 
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 h-20 bg-[#F6F5FA]/50 backdrop-blur-xl z-50 flex items-center px-10 transition-all duration-200 border-b border-slate-200/50 [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] pt-4",
+        "fixed top-0 right-0 h-20 bg-background/50 backdrop-blur-xl z-50 flex items-center px-10 transition-all duration-200 border-b border-border/50 [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] pt-4",
         collapsed ? "left-[80px]" : "left-[200px]"
       )}
       data-testid="header-crm-topbar"
     >
       <div className="flex-1 flex items-center justify-start gap-3">
         <div className="h-8 w-1.5 bg-blue-600 rounded-full" />
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">{currentTitle}</h1>
+        <div className="flex flex-col gap-0.5">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{currentTitle}</h1>
+          <nav aria-label="Breadcrumb" data-testid="breadcrumb-nav">
+            <ol className="flex items-center gap-1 text-xs text-muted-foreground">
+              {breadcrumbs.map((crumb, idx) => {
+                const isLast = idx === breadcrumbs.length - 1;
+                return (
+                  <li key={crumb.href} className="flex items-center gap-1">
+                    {idx > 0 && <ChevronRight className="h-3 w-3 text-muted-foreground/50" />}
+                    {isLast ? (
+                      <span className="font-medium text-foreground/70" data-testid={`breadcrumb-current`}>
+                        {idx === 0 && <Home className="h-3 w-3 inline mr-1 -mt-0.5" />}
+                        {crumb.label}
+                      </span>
+                    ) : (
+                      <Link
+                        href={crumb.href}
+                        className="hover:text-foreground transition-colors font-medium"
+                        data-testid={`breadcrumb-link-${idx}`}
+                      >
+                        {idx === 0 && <Home className="h-3 w-3 inline mr-1 -mt-0.5" />}
+                        {crumb.label}
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
+        </div>
       </div>
 
       <div className="absolute right-10 flex items-center gap-6">
@@ -85,15 +189,15 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
           {isAdmin ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className={cn(
-                    "h-11 px-4 w-56 justify-between hover:bg-white border border-border bg-white rounded-xl text-sm font-semibold flex items-center gap-2",
+                    "h-11 px-4 w-56 justify-between hover:bg-white dark:hover:bg-muted border border-border bg-white dark:bg-card rounded-xl text-sm font-semibold flex items-center gap-2",
                     isAgencyView ? "text-yellow-600" : "text-blue-600"
                   )}
                   data-testid="button-account-selector"
                 >
-                  <span className="truncate">{currentAccount.name}</span>
+                  <span className="truncate">{currentAccount?.name || "Select Account"}</span>
                   <ChevronDown className="h-4 w-4 opacity-60 shrink-0" />
                 </Button>
               </DropdownMenuTrigger>
@@ -113,7 +217,7 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
                         acc.id === 1 ? "bg-yellow-500 text-black" : "bg-blue-600 text-white",
                       )}
                     >
-                      {acc.name[0]}
+                      {acc.name?.[0] || "?"}
                     </div>
                     {acc.name}
                     {acc.id === 1 && <span className="ml-auto text-[10px] bg-yellow-100 text-yellow-900 px-1 rounded uppercase font-bold tracking-tighter">Agency</span>}
@@ -123,19 +227,19 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
             </DropdownMenu>
           ) : (
             <div className={cn(
-              "h-11 px-4 w-56 justify-start border border-border bg-white rounded-xl text-sm font-semibold flex items-center gap-2",
+              "h-11 px-4 w-56 justify-start border border-border bg-white dark:bg-card rounded-xl text-sm font-semibold flex items-center gap-2",
               isAgencyView ? "text-yellow-600" : "text-blue-600"
             )}>
-              <span className="truncate">{currentAccount.name}</span>
+              <span className="truncate">{currentAccount?.name || "My Account"}</span>
             </div>
           )}
 
           {!isAgencyView && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  className="h-11 px-4 w-[180px] justify-between hover:bg-white border border-border bg-white rounded-xl text-sm font-semibold flex items-center gap-2"
+                <Button
+                  variant="ghost"
+                  className="h-11 px-4 w-[180px] justify-between hover:bg-white dark:hover:bg-muted border border-border bg-white dark:bg-card rounded-xl text-sm font-semibold flex items-center gap-2"
                   data-testid="select-campaign-topbar-custom"
                 >
                   <span className="truncate">
@@ -145,7 +249,7 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64 rounded-2xl shadow-xl border-border bg-background mt-2">
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => {
                     localStorage.setItem("leadawaker_selected_campaign", "all");
                     window.dispatchEvent(new Event("storage"));
@@ -172,32 +276,59 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
         </div>
 
 
-        <div className="flex items-center gap-3">
-          <button 
+        <div className="flex items-center gap-2">
+          <button
             onClick={() => onOpenPanel('search')}
             className="p-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
             data-testid="button-search-top"
           >
-            <Search className="h-[24px] w-[24px]" />
+            <Search className="h-[22px] w-[22px]" />
           </button>
 
-          <button 
+          {/* Dark mode toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
+            data-testid="button-dark-mode-toggle"
+            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {isDark ? <Sun className="h-[22px] w-[22px]" /> : <Moon className="h-[22px] w-[22px]" />}
+          </button>
+
+          {/* Notifications */}
+          <button
             onClick={() => onOpenPanel('notifications')}
             className="p-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
             data-testid="button-notifications"
           >
-            <Bell className="h-[24px] w-[24px]" />
-            <div className="absolute top-2 right-2 h-5 w-5 bg-blue-600 rounded-full flex items-center justify-center border-2 border-[#F6F5FA]">
+            <Bell className="h-[22px] w-[22px]" />
+            <div className="absolute top-2 right-2 h-5 w-5 bg-blue-600 rounded-full flex items-center justify-center border-2 border-background">
               <span className="text-[10px] font-bold text-white">3</span>
             </div>
           </button>
 
-          <button 
+          {/* Settings */}
+          <button
             onClick={() => onOpenPanel('settings')}
             className="p-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
             data-testid="button-settings-top"
           >
-            <Settings className="h-[24px] w-[24px]" />
+            <Settings className="h-[22px] w-[22px]" />
+          </button>
+
+          {/* User avatar */}
+          <button
+            onClick={() => onOpenPanel('settings')}
+            className="ml-1 flex items-center gap-2 hover:opacity-80 transition-opacity"
+            data-testid="button-user-avatar"
+            title={currentUserName}
+          >
+            <Avatar className="h-9 w-9 border-2 border-primary/20">
+              <AvatarImage src="" alt={currentUserName} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
           </button>
         </div>
       </div>
