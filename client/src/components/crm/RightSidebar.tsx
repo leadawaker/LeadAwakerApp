@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { DbStatusIndicator } from "@/components/crm/DbStatusIndicator";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -601,6 +602,11 @@ export function RightSidebar({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          </div>
+
+          {/* DB STATUS INDICATOR */}
+          <div className="px-3 mb-1 shrink-0">
+            <DbStatusIndicator collapsed={collapsed} />
           </div>
 
           {/* USER FOOTER */}
