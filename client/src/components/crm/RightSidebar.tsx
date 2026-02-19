@@ -57,10 +57,9 @@ export function RightSidebar({
 
   const count = notificationsCount ?? 0;
 
-  // ✅ ADMIN CHECK
-  const currentUserEmail =
-    localStorage.getItem("leadawaker_user_email") || "";
-  const isAdmin = currentUserEmail === "leadawaker@gmail.com";
+  // ✅ AGENCY CHECK — agency users have accountsId === 1
+  const isAgency =
+    localStorage.getItem("leadawaker_current_account_id") === "1";
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -88,47 +87,92 @@ export function RightSidebar({
     { href: `${prefix}/contacts`, label: "Contacts", icon: BookUser, testId: "nav-contacts" },
     { href: `${prefix}/conversations`, label: "Chats", icon: MessageSquare, testId: "nav-chats" },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "nav-calendar" },
-    { href: `${prefix}/tags`, label: "Tags", icon: Tag, testId: "nav-tags" },
+    { href: `${prefix}/tags`, label: "Tags", icon: Tag, testId: "nav-tags", agencyOnly: true },
     {
       href: `${prefix}/prompt-library`,
       label: "Library",
       icon: BookOpen,
       testId: "nav-library",
-      adminOnly: true,
+      agencyOnly: true,
     },
-    { href: `${prefix}/users`, label: "Users", icon: Users, testId: "nav-users" },
-
-    // 🔒 ADMIN ONLY
+    { href: `${prefix}/users`, label: "Users", icon: Users, testId: "nav-users", agencyOnly: true },
     {
       href: `${prefix}/automation-logs`,
       label: "Automations",
       icon: ScrollText,
       testId: "nav-automations",
-      adminOnly: true,
+      agencyOnly: true,
     },
   ];
 
   const visibleNavItems = navItems.filter((it) => {
-    if (it.adminOnly && !isAdmin) return false;
-    if (it.agencyOnly && !(isAdmin || isAgencyView)) return false;
+    if (it.adminOnly && !isAgency) return false;
+    if (it.agencyOnly && !isAgency) return false;
     return true;
   });
+
+  /** Check if a nav item is active (exact match or sub-route match) */
+  const isActive = (href: string) => {
+    if (location === href) return true;
+    // For sub-routes like /agency/contacts/123, highlight the parent nav item
+    // But don't let /agency/contacts match /agency/contact (partial word)
+    if (href !== `${prefix}/dashboard` && location.startsWith(href + '/')) return true;
+    return false;
+  };
 
   return (
     <>
       {/* MOBILE BOTTOM BAR */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 h-[64px] border-t bg-white z-[100] flex justify-around">
-        <button onClick={() => setLocation(`${prefix}/dashboard`)}>
-          <LayoutDashboard />
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-[64px] border-t bg-white z-[100] flex justify-around items-center">
+        <button
+          onClick={() => setLocation(`${prefix}/dashboard`)}
+          className={cn(
+            "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
+            isActive(`${prefix}/dashboard`)
+              ? (isAgencyView ? "text-yellow-600" : "text-blue-600")
+              : "text-muted-foreground"
+          )}
+          data-testid="mobile-nav-dashboard"
+          data-active={isActive(`${prefix}/dashboard`) || undefined}
+        >
+          <LayoutDashboard className="h-5 w-5" />
+          <span className="text-[10px] font-semibold">Dashboard</span>
         </button>
-        <button onClick={() => setLocation(`${prefix}/contacts`)}>
-          <BookUser />
+        <button
+          onClick={() => setLocation(`${prefix}/contacts`)}
+          className={cn(
+            "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
+            isActive(`${prefix}/contacts`)
+              ? (isAgencyView ? "text-yellow-600" : "text-blue-600")
+              : "text-muted-foreground"
+          )}
+          data-testid="mobile-nav-contacts"
+          data-active={isActive(`${prefix}/contacts`) || undefined}
+        >
+          <BookUser className="h-5 w-5" />
+          <span className="text-[10px] font-semibold">Contacts</span>
         </button>
-        <button onClick={() => setLocation(`${prefix}/conversations`)}>
-          <MessageSquare />
+        <button
+          onClick={() => setLocation(`${prefix}/conversations`)}
+          className={cn(
+            "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
+            isActive(`${prefix}/conversations`)
+              ? (isAgencyView ? "text-yellow-600" : "text-blue-600")
+              : "text-muted-foreground"
+          )}
+          data-testid="mobile-nav-conversations"
+          data-active={isActive(`${prefix}/conversations`) || undefined}
+        >
+          <MessageSquare className="h-5 w-5" />
+          <span className="text-[10px] font-semibold">Chats</span>
         </button>
-        <button onClick={() => setIsMobileMenuOpen((v) => !v)}>
-          {isMobileMenuOpen ? <X /> : <Menu />}
+        <button
+          onClick={() => setIsMobileMenuOpen((v) => !v)}
+          className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-muted-foreground"
+          data-testid="mobile-nav-menu"
+        >
+          {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          <span className="text-[10px] font-semibold">Menu</span>
         </button>
       </div>
 
@@ -138,13 +182,21 @@ export function RightSidebar({
           <nav className="p-4 space-y-2">
             {visibleNavItems.map((it) => {
               const Icon = it.icon;
+              const active = isActive(it.href);
               return (
                 <Link
                   key={it.href}
                   href={it.href}
-                  className="flex gap-3 p-3 rounded-xl"
+                  className={cn(
+                    "flex gap-3 p-3 rounded-xl transition-colors",
+                    active
+                      ? (isAgencyView ? "bg-yellow-500 text-black font-bold" : "bg-blue-600 text-white font-bold")
+                      : "text-muted-foreground hover:bg-muted"
+                  )}
+                  data-testid={`mobile-${it.testId}`}
+                  data-active={active || undefined}
                 >
-                  <Icon />
+                  <Icon className="h-5 w-5" />
                   {it.label}
                 </Link>
               );
@@ -175,7 +227,7 @@ export function RightSidebar({
           {/* NAV */}
           <nav className="px-3 space-y-2 flex-1">
             {visibleNavItems.map((it) => {
-              const active = location === it.href;
+              const active = isActive(it.href);
               const Icon = it.icon;
 
               return (
@@ -190,6 +242,7 @@ export function RightSidebar({
                       : "text-muted-foreground hover:bg-muted"
                   )}
                   data-testid={`link-${it.testId}`}
+                  data-active={active || undefined}
                 >
                   <Icon className="h-5 w-5" />
                   {!collapsed && (
