@@ -103,3 +103,27 @@
 - 12/207 features passing (11 at session start, +1 this session)
 - Feature #18 marked passing after browser verification
 - Git commit: 75d9a80
+
+## Session 2026-02-19 (5th) - Coding Agent
+
+### Completed Features:
+- Feature #17: Quick-jump shortcuts from dashboard - PASSING
+  - QuickJumpCards component already implemented in AppDashboard.tsx (lines 100-174)
+  - Four cards: Leads (/contacts), Campaigns (/campaigns), Inbox (/conversations), Calendar (/calendar)
+  - Rendered in both AgencyDashboard and SubaccountDashboard views
+  - Uses useWorkspace() for correct route prefix (/agency or /subaccount)
+  - Verified all four cards navigate correctly via Playwright browser automation
+  - Tested agency view: all 4 cards → correct /agency/ routes
+  - Tested subaccount view: Leads card → /subaccount/contacts (correct prefix)
+  - Visual verification: cards show icons, labels, descriptions, arrow indicators
+  - No code changes needed - feature was already fully implemented
+
+### Environment Notes:
+- Server on port 5001 (started fresh this session)
+- DB reachable (login via API worked successfully)
+- Playwright working via /home/gabriel/.npm-global/bin/playwright-cli
+- Console errors are Vite HMR websocket issues (dev environment only, not feature-related)
+
+### Current Status:
+- 11/207 features passing (10 at session start, +1 this session)
+- Feature #17 marked passing after thorough browser verification

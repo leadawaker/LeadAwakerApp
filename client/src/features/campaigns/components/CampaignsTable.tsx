@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import DataTable, { SortConfig, RowSpacing } from "@/components/DataTable/DataTable";
 import { useCampaignsData } from "../hooks/useCampaignsData";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 const CAMPAIGN_COLUMNS = [
   "Id", "Image", "name", "Account", "status", "Leads", "Interactions",
@@ -24,7 +25,10 @@ const SMALL_WIDTH_COLS = new Set([
 ]);
 
 export function CampaignsTable() {
-  const { campaigns, loading, handleRefresh, setCampaigns, updateCampaignRow } = useCampaignsData();
+  const { currentAccountId, isAgencyView } = useWorkspace();
+  // For agency view with account 1 selected (all accounts), don't filter; otherwise filter by selected account
+  const filterAccountId = (isAgencyView && currentAccountId === 1) ? undefined : currentAccountId;
+  const { campaigns, loading, handleRefresh, setCampaigns, updateCampaignRow } = useCampaignsData(filterAccountId);
   const [search, setSearch] = useState("");
   const [accountFilter, setAccountFilter] = useState<number | "all">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "Active" | "Inactive">("all");
@@ -127,6 +131,7 @@ export function CampaignsTable() {
       isRefreshing={loading}
       filterConfig={filterConfig}
       onFilterConfigChange={setFilterConfig}
+      pageSize={50}
     />
   );
 }

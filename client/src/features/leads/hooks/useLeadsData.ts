@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { fetchLeads, updateLead } from "../api/leadsApi";
 import { useToast } from "@/hooks/use-toast";
 
-export function useLeadsData() {
+export function useLeadsData(accountId?: number) {
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -12,7 +12,7 @@ export function useLeadsData() {
     setLoading(true);
 
     try {
-      const leadsList = await fetchLeads();
+      const leadsList = await fetchLeads(accountId);
 
       const normalized = leadsList.map((l: any) => {
         const rowId =
@@ -150,7 +150,7 @@ export function useLeadsData() {
 
   useEffect(() => {
     handleRefresh();
-  }, []);
+  }, [accountId]);
 
   return {
     leads,

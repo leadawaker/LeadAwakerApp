@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import DataTable, { SortConfig, RowSpacing } from "@/components/DataTable/DataTable";
 import { useLeadsData } from "../hooks/useLeadsData";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 const LEAD_COLUMNS = [
   /* Core */
@@ -76,7 +77,10 @@ const SMALL_WIDTH_COLS = new Set([
 ]);
 
 export function LeadsTable() {
-  const { leads, loading, handleRefresh, updateLeadRow } = useLeadsData();
+  const { currentAccountId, isAgencyView } = useWorkspace();
+  // For agency view with account 1 selected (all accounts), don't filter; otherwise filter by selected account
+  const filterAccountId = (isAgencyView && currentAccountId === 1) ? undefined : currentAccountId;
+  const { leads, loading, handleRefresh, updateLeadRow } = useLeadsData(filterAccountId);
   const [search, setSearch] = useState("");
   const [visibleColumns, setVisibleColumns] = useState<string[]>(LEAD_COLUMNS);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -154,6 +158,7 @@ export function LeadsTable() {
       isRefreshing={loading}
       filterConfig={filterConfig}
       onFilterConfigChange={setFilterConfig}
+      pageSize={50}
     />
   );
 }

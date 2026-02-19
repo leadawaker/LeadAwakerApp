@@ -3,7 +3,7 @@ import { fetchCampaigns, updateCampaign } from "../api/campaignsApi";
 import { fetchAccounts } from "../../accounts/api/accountsApi";
 import { useToast } from "@/hooks/use-toast";
 
-export function useCampaignsData() {
+export function useCampaignsData(accountId?: number) {
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -16,7 +16,7 @@ export function useCampaignsData() {
       const accountsList = await fetchAccounts();
       setAccounts(accountsList);
 
-      const campaignsList = await fetchCampaigns();
+      const campaignsList = await fetchCampaigns(accountId);
       
       const normalized = campaignsList.map((c: any) => {
         const account = accountsList.find(
@@ -83,7 +83,7 @@ export function useCampaignsData() {
 
   useEffect(() => {
     handleRefresh();
-  }, []);
+  }, [accountId]);
 
   return {
     campaigns,
