@@ -599,6 +599,11 @@ function AgencyDashboard({ accounts, campaigns, leads, campaignMetrics, metricsL
               </div>
               <TrendIndicator data={bookingsSparkline} color="#FCB803" />
             </div>
+            {totalCallsBooked === 0 && agencyStats.totalLeads === 0 && (
+              <p className="text-xs text-muted-foreground mt-2" data-testid="stat-bookings-empty-hint">
+                Add leads and launch a campaign to start booking calls.
+              </p>
+            )}
           </div>
           <div className="relative z-10 mt-2">
             <KpiSparkline data={bookingsSparkline} color="#FCB803" height={48} gradientId="hero-bookings-spark" />
@@ -778,6 +783,11 @@ function SubaccountDashboard({
                 </div>
                 <TrendIndicator data={bookingsSparkline} color="#FCB803" />
               </div>
+              {stats.callsBooked === 0 && stats.totalLeads === 0 && (
+                <p className="text-xs text-muted-foreground mt-2" data-testid="stat-bookings-empty-hint">
+                  Add leads and launch a campaign to start booking calls.
+                </p>
+              )}
             </div>
             <div className="relative z-10 mt-2">
               <KpiSparkline data={bookingsSparkline} color="#FCB803" height={48} gradientId="sub-hero-bookings-spark" />
