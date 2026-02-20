@@ -223,12 +223,13 @@ export default function AppDashboard() {
       .filter((l: any) => (selectedCampaignId === "all" ? true : (l.campaign_id || l.campaigns_id) === selectedCampaignId));
 
     const accountCampaigns = campaigns.filter((c: any) => (c.account_id || c.accounts_id) === currentAccountId);
-    const bookingsMo = accountLeads.filter((l: any) => l.conversion_status === "Booked").length;
+    // Count leads with actual booked_call_date (north star KPI)
+    const callsBooked = accountLeads.filter((l: any) => Boolean(l.booked_call_date)).length;
     const aiCost = accountCampaigns.reduce((sum: number, c: any) => sum + (Number(c.total_cost) || 0), 0);
     return {
       totalLeads: accountLeads.length,
       activeCampaigns: accountCampaigns.filter((c: any) => c.status === "Active").length,
-      bookingsMo,
+      callsBooked,
       aiCost,
     };
   }, [leads, campaigns, currentAccountId, selectedCampaignId]);
@@ -249,7 +250,7 @@ export default function AppDashboard() {
           {isLoading ? (
             <SkeletonDashboard />
           ) : isAgencyView ? (
-            <AgencyDashboard accounts={accounts} campaigns={campaigns} />
+            <AgencyDashboard accounts={accounts} campaigns={campaigns} leads={leads} />
           ) : (
             <SubaccountDashboard
               accountId={currentAccountId}
@@ -271,15 +272,47 @@ export default function AppDashboard() {
   );
 }
 
-function AgencyDashboard({ accounts, campaigns }: { accounts: Account[]; campaigns: Campaign[] }) {
+function AgencyDashboard({ accounts, campaigns, leads }: { accounts: Account[]; campaigns: Campaign[]; leads: Lead[] }) {
   const { currentAccountId } = useWorkspace();
 
   const subaccounts = useMemo(() => {
     return accounts.filter((a: any) => a.id !== 1);
   }, [accounts]);
 
+  // Total calls booked across all accounts
+  const totalCallsBooked = useMemo(() => {
+    return leads.filter((l: any) => Boolean(l.booked_call_date)).length;
+  }, [leads]);
+
   return (
     <div className="mt-6 space-y-12" data-testid="agency-dashboard">
+      {/* Hero KPI: Calls Booked — top, largest element */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 -mb-6">
+        <div
+          className="md:col-span-1 rounded-2xl border-2 shadow-lg relative overflow-hidden flex flex-col justify-between p-6"
+          style={{ borderColor: '#FCB803', background: 'linear-gradient(135deg, rgba(252,184,3,0.08) 0%, rgba(252,184,3,0.02) 100%)' }}
+          data-testid="stat-bookings"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-10" style={{ background: '#FCB803', transform: 'translate(30%, -30%)' }} />
+          <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full opacity-5" style={{ background: '#FCB803', transform: 'translate(-30%, 30%)' }} />
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="p-2 rounded-xl" style={{ backgroundColor: 'rgba(252,184,3,0.15)' }}>
+                <CalendarIcon className="w-5 h-5" style={{ color: '#FCB803' }} />
+              </div>
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest" data-testid="stat-bookings-label">Calls Booked</span>
+            </div>
+            <div className="text-5xl md:text-6xl font-black tracking-tight text-foreground" data-testid="stat-bookings-value" style={{ lineHeight: 1.1 }}>
+              {totalCallsBooked}
+            </div>
+          </div>
+          <div className="relative z-10 mt-4">
+            <div className="text-xs text-muted-foreground font-medium">North Star KPI</div>
+            <div className="h-1.5 w-16 rounded-full mt-2" style={{ backgroundColor: '#FCB803' }} />
+          </div>
+        </div>
+      </div>
+
       <QuickJumpCards />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {subaccounts.map((acc: any) => {
@@ -396,11 +429,36 @@ function SubaccountDashboard({
   return (
     <div className="mt-0 space-y-12 flex flex-col" data-testid="subaccount-dashboard">
       <QuickJumpCards />
-      <div className="flex items-start justify-between -mt-10 mb-8">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 flex-grow" data-testid="grid-kpis">
+      <div className="-mt-10 mb-8" data-testid="grid-kpis">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          {/* Hero KPI: Calls Booked — largest, most prominent, top-left */}
+          <div
+            className="col-span-2 row-span-2 rounded-2xl border-2 shadow-lg relative overflow-hidden flex flex-col justify-between p-6"
+            style={{ borderColor: '#FCB803', background: 'linear-gradient(135deg, rgba(252,184,3,0.08) 0%, rgba(252,184,3,0.02) 100%)' }}
+            data-testid="stat-bookings"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-10" style={{ background: '#FCB803', transform: 'translate(30%, -30%)' }} />
+            <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full opacity-5" style={{ background: '#FCB803', transform: 'translate(-30%, 30%)' }} />
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-2 rounded-xl" style={{ backgroundColor: 'rgba(252,184,3,0.15)' }}>
+                  <CalendarIcon className="w-5 h-5" style={{ color: '#FCB803' }} />
+                </div>
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest" data-testid="stat-bookings-label">Calls Booked</span>
+              </div>
+              <div className="text-5xl md:text-6xl font-black tracking-tight text-foreground" data-testid="stat-bookings-value" style={{ lineHeight: 1.1 }}>
+                {stats.callsBooked}
+              </div>
+            </div>
+            <div className="relative z-10 mt-4">
+              <div className="text-xs text-muted-foreground font-medium">North Star KPI</div>
+              <div className="h-1.5 w-16 rounded-full mt-2" style={{ backgroundColor: '#FCB803' }} />
+            </div>
+          </div>
+
+          {/* Remaining KPI cards — standard size */}
           <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" icon={<Users className="w-4 h-4" />} />
           <Stat label="Active Campaigns" value={String(stats.activeCampaigns)} testId="stat-active" icon={<Target className="w-4 h-4" />} />
-          <Stat label="Bookings/Mo" value={String(stats.bookingsMo)} testId="stat-bookings" icon={<CalendarIcon className="w-4 h-4" />} />
           <Stat label="AI Cost" value={`$${stats.aiCost.toFixed(0)}`} testId="stat-cost" icon={<Zap className="w-4 h-4" />} />
           <Stat label="Avg Resp Time" value="4.2m" testId="stat-resp" icon={<Clock className="w-4 h-4" />} />
           <Stat label="Conv Rate" value="12.4%" testId="stat-conv" icon={<TrendingUp className="w-4 h-4" />} />

@@ -41,6 +41,21 @@ function handleZodError(res: import("express").Response, err: ZodError) {
 }
 
 /**
+ * Coerce ISO date strings to Date objects for Drizzle timestamp fields.
+ * JSON payloads send dates as strings, but Drizzle/Zod expects Date objects.
+ */
+function coerceDates(body: Record<string, unknown>, dateFields: string[]): Record<string, unknown> {
+  const result = { ...body };
+  for (const field of dateFields) {
+    if (typeof result[field] === "string" && result[field]) {
+      const d = new Date(result[field] as string);
+      if (!isNaN(d.getTime())) result[field] = d;
+    }
+  }
+  return result;
+}
+
+/**
  * Extract pagination params from query string.
  * Returns null if pagination is not requested (no `page` param).
  */
@@ -233,7 +248,13 @@ export async function registerRoutes(
   });
 
   app.patch("/api/leads/:id", requireAuth, async (req, res) => {
-    const parsed = insertLeadsSchema.partial().safeParse(fromDbKeys(req.body, leads));
+    const LEAD_DATE_FIELDS = [
+      "bookedCallDate", "lastMessageSentAt", "lastMessageReceivedAt",
+      "bump1SentAt", "bump2SentAt", "bump3SentAt", "firstMessageSentAt",
+      "nextActionAt", "bookingConfirmedAt", "createdAt", "updatedAt",
+    ];
+    const body = coerceDates(fromDbKeys(req.body, leads) as Record<string, unknown>, LEAD_DATE_FIELDS);
+    const parsed = insertLeadsSchema.partial().safeParse(body);
     if (!parsed.success) return handleZodError(res, parsed.error);
     const lead = await storage.updateLead(Number(req.params.id), parsed.data);
     if (!lead) return res.status(404).json({ message: "Lead not found" });
