@@ -54,7 +54,7 @@ const TAG_CATEGORIES = [
   {
     type: "Outcome",
     tags: [
-      { name: "appointment booked", color: "#22C55E" },
+      { name: "appointment booked", color: "#FCB803" },
       { name: "goodbye", color: "#64748B" },
       { name: "no response", color: "#64748B" },
       { name: "schedule", color: "#22C55E" }
@@ -150,8 +150,8 @@ function QuickJumpCards() {
             data-testid={item.testId}
             onClick={() => setLocation(`${prefix}${item.route}`)}
             className={cn(
-              "group relative flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4",
-              "hover:shadow-md hover:border-slate-300 transition-all duration-200",
+              "group relative flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm",
+              "hover:shadow-md hover:border-border transition-all duration-200",
               "text-left cursor-pointer"
             )}
           >
@@ -162,11 +162,11 @@ function QuickJumpCards() {
               <Icon className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <div className="text-sm font-bold text-slate-800">{item.label}</div>
-              <div className="text-[11px] text-slate-400 truncate">{item.description}</div>
+              <div className="text-sm font-bold text-foreground">{item.label}</div>
+              <div className="text-[11px] text-muted-foreground truncate">{item.description}</div>
             </div>
             <ArrowUpRight
-              className="ml-auto h-4 w-4 text-slate-300 group-hover:text-slate-500 transition-colors shrink-0"
+              className="ml-auto h-4 w-4 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors shrink-0"
             />
           </button>
         );
@@ -192,7 +192,7 @@ export default function AppDashboard() {
     { id: "Responded" as const, label: "Responded", icon: <TrendingUp className="w-5 h-5" />, fill: "#1E90FF", textColor: "white" as const },
     { id: "Multiple Responses" as const, label: "Multiple", icon: <ArrowUpRight className="w-5 h-5" />, fill: "#17A398", textColor: "white" as const },
     { id: "Qualified" as const, label: "Qualified", icon: <CheckCircle2 className="w-5 h-5" />, fill: "#10b981", textColor: "white" as const },
-    { id: "Booked" as const, label: "Booked", icon: <CalendarIcon className="w-5 h-5" />, fill: "#facc15", textColor: "#ca8a04" as const },
+    { id: "Booked" as const, label: "Booked", icon: <CalendarIcon className="w-5 h-5" />, fill: "#FCB803", textColor: "#131B49" as const },
     { id: "DND" as const, label: "DND", icon: <Target className="w-5 h-5" />, fill: "#ef4444", textColor: "white" as const },
   ], []);
 
@@ -246,8 +246,8 @@ export default function AppDashboard() {
           </div>
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-              <span className="ml-3 text-sm text-slate-500 font-medium">Loading dashboard...</span>
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              <span className="ml-3 text-sm text-muted-foreground font-medium">Loading dashboard...</span>
             </div>
           ) : isAgencyView ? (
             <AgencyDashboard accounts={accounts} campaigns={campaigns} />
@@ -286,32 +286,32 @@ function AgencyDashboard({ accounts, campaigns }: { accounts: Account[]; campaig
         {subaccounts.map((acc: any) => {
           const accCampaigns = campaigns.filter((c: any) => (c.account_id || c.accounts_id) === acc.id);
           return (
-            <div key={acc.id} className="rounded-[32px] border border-slate-200 bg-white p-8 flex flex-col shadow-sm">
+            <div key={acc.id} className="rounded-2xl border border-border bg-card p-6 flex flex-col shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900">{acc.name}</h2>
-                  <p className="text-sm text-slate-500">{acc.owner_email}</p>
+                  <h2 className="text-xl font-bold text-foreground">{acc.name}</h2>
+                  <p className="text-sm text-muted-foreground">{acc.owner_email}</p>
                 </div>
-                <div className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-[10px] font-bold uppercase">
+                <div className="px-3 py-1 bg-brand-yellow/20 text-brand-yellow rounded-full text-[10px] font-bold uppercase">
                   {acc.status}
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Active Campaigns</h3>
+                <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Active Campaigns</h3>
                 <div className="space-y-3">
                   {accCampaigns.length === 0 ? (
-                    <div className="text-xs text-slate-400 italic p-4">No campaigns yet</div>
+                    <div className="text-xs text-muted-foreground italic p-4">No campaigns yet</div>
                   ) : (
                     accCampaigns.map((c: any) => (
-                      <div key={c.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                      <div key={c.id} className="p-4 rounded-2xl bg-muted/30 dark:bg-muted/10 border border-border flex items-center justify-between">
                         <div>
-                          <div className="font-semibold text-sm text-slate-800">{c.name}</div>
-                          <div className="text-xs text-slate-500">{c.type}</div>
+                          <div className="font-semibold text-sm text-foreground">{c.name}</div>
+                          <div className="text-xs text-muted-foreground">{c.type}</div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-bold text-slate-900">${Number(c.total_cost) || 0}</div>
-                          <div className="text-[10px] text-slate-400">spend</div>
+                          <div className="text-sm font-bold text-foreground">${Number(c.total_cost) || 0}</div>
+                          <div className="text-[10px] text-muted-foreground">spend</div>
                         </div>
                       </div>
                     ))
@@ -412,11 +412,11 @@ function SubaccountDashboard({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[400px]">
           <div className="lg:col-span-2 flex flex-col">
             <div className="mb-4">
-              <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Performance Over Time</h3>
+              <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Performance Over Time</h3>
             </div>
-            <div className="flex-grow rounded-[32px] border border-slate-200 bg-white p-6 overflow-hidden pb-4 flex flex-col">
+            <div className="flex-grow rounded-2xl border border-border bg-card p-6 shadow-sm overflow-hidden pb-4 flex flex-col">
               <div className="flex items-center justify-end mb-4 shrink-0">
-                <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold">
+                <div className="flex items-center gap-2 px-3 py-1 bg-brand-blue/10 text-brand-blue rounded-full text-[10px] font-bold">
                   <TrendingUp className="w-3 h-3" />
                   +24% vs last year
                 </div>
@@ -430,22 +430,22 @@ function SubaccountDashboard({
                         <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} className="[&_line]:stroke-border" stroke="currentColor" opacity={0.15} />
                     <XAxis
                       dataKey="name"
                       axisLine={false}
                       tickLine={false}
-                      tick={{fontSize: 10, fill: '#64748b'}}
+                      tick={{fontSize: 10, fill: 'hsl(var(--muted-foreground))'}}
                       dy={5}
                     />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{fontSize: 10, fill: '#64748b'}}
+                      tick={{fontSize: 10, fill: 'hsl(var(--muted-foreground))'}}
                       tickFormatter={(val) => `${val}%`}
                     />
                     <Tooltip
-                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                      contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', backgroundColor: 'hsl(var(--card))', color: 'hsl(var(--foreground))' }}
                       formatter={(value: number) => [`${value}%`, 'Growth']}
                     />
                     <Area
@@ -463,19 +463,19 @@ function SubaccountDashboard({
           </div>
           <div className="flex flex-col">
             <div className="mb-4">
-              <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sales Funnel</h3>
+              <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Sales Funnel</h3>
             </div>
-            <div className="flex-grow rounded-[32px] border border-slate-200 bg-white p-6 flex flex-col">
+            <div className="flex-grow rounded-2xl border border-border bg-card p-6 shadow-sm flex flex-col">
               <div className="flex-grow flex flex-col justify-between py-2">
                 {funnel.map((stage: any, idx: number) => {
                   const maxVal = Math.max(...funnel.map((s: any) => s.value), 1);
                   return (
                     <div key={stage.name} className="space-y-1.5">
                       <div className="flex justify-between text-[13px] font-bold">
-                        <span className="text-slate-600">{stage.name}</span>
-                        <span className="text-slate-900">{stage.value}</span>
+                        <span className="text-muted-foreground">{stage.name}</span>
+                        <span className="text-foreground">{stage.value}</span>
                       </div>
-                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-1000 ease-out"
                           style={{
@@ -498,16 +498,16 @@ function SubaccountDashboard({
         data-testid="section-pipeline"
       >
         <div className="flex items-center justify-between mb-4 px-1 md:px-0">
-          <h2 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sales Pipeline</h2>
+          <h2 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Sales Pipeline</h2>
         </div>
 
         <div className="relative group/pipeline">
           {showLeftArrow && (
             <button
               onClick={() => scroll('left')}
-              className="absolute left-0 top-0 bottom-0 z-20 w-12 flex items-center justify-start pl-2 text-slate-400 hover:text-slate-900 transition-all pointer-events-auto"
+              className="absolute left-0 top-0 bottom-0 z-20 w-12 flex items-center justify-start pl-2 text-muted-foreground hover:text-foreground transition-all pointer-events-auto"
             >
-              <div className="p-4 rounded-full bg-white shadow-2xl border border-slate-100 ml-6 hover:scale-110 transition-transform">
+              <div className="p-4 rounded-full bg-card shadow-2xl border border-border ml-6 hover:scale-110 transition-transform">
                 <ChevronLeft className="w-8 h-8" />
               </div>
             </button>
@@ -516,9 +516,9 @@ function SubaccountDashboard({
           {showRightArrow && (
             <button
               onClick={() => scroll('right')}
-              className="absolute right-0 top-0 bottom-0 z-20 w-12 flex items-center justify-end pr-2 text-slate-400 hover:text-slate-900 transition-all pointer-events-auto"
+              className="absolute right-0 top-0 bottom-0 z-20 w-12 flex items-center justify-end pr-2 text-muted-foreground hover:text-foreground transition-all pointer-events-auto"
             >
-              <div className="p-4 rounded-full bg-white shadow-2xl border border-slate-100 mr-6 hover:scale-110 transition-transform">
+              <div className="p-4 rounded-full bg-card shadow-2xl border border-border mr-6 hover:scale-110 transition-transform">
                 <ChevronRight className="w-8 h-8" />
               </div>
             </button>
@@ -554,12 +554,12 @@ function Stat({
   icon?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-[32px] border border-slate-200 bg-white p-4" data-testid={testId}>
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm" data-testid={testId}>
       <div className="flex items-center justify-between mb-2">
-        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider" data-testid={`${testId}-label`}>{label}</div>
-        <div className="text-slate-400">{icon}</div>
+        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider" data-testid={`${testId}-label`}>{label}</div>
+        <div className="text-muted-foreground">{icon}</div>
       </div>
-      <div className="text-2xl font-black tracking-tight text-slate-900" data-testid={`${testId}-value`}>{value}</div>
+      <div className="text-2xl font-black tracking-tight text-foreground" data-testid={`${testId}-value`}>{value}</div>
     </div>
   );
 }
@@ -609,7 +609,7 @@ function PipelineCol({
       const tag = cat.tags.find(t => t.name.toLowerCase() === normalized);
       if (tag) return tag.color;
     }
-    if (normalized.includes('booked')) return "#22C55E";
+    if (normalized.includes('booked')) return "#FCB803";
     if (normalized.includes('qualified')) return "#22C55E";
     if (normalized.includes('follow')) return "#F97316";
     if (normalized.includes('lead')) return "#3B82F6";
@@ -618,9 +618,9 @@ function PipelineCol({
   };
 
   return (
-    <div className="w-full bg-white flex flex-col h-full rounded-[32px] overflow-hidden shadow-sm border border-slate-100" data-testid={`col-${stage.id}`}>
+    <div className="w-full bg-card flex flex-col h-full rounded-2xl overflow-hidden shadow-sm border border-border" data-testid={`col-${stage.id}`}>
       {/* COLUMN HEADER */}
-      <div className="p-4 border-b border-slate-100 bg-white/50  sticky top-0 z-20">
+      <div className="p-4 border-b border-border bg-card/80  sticky top-0 z-20">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div
@@ -629,7 +629,7 @@ function PipelineCol({
             >
               {stage.icon && React.cloneElement(stage.icon as React.ReactElement<any>, { size: 14, strokeWidth: 2.5 })}
             </div>
-            <h3 className="text-[15px] font-bold text-slate-800 tracking-tight">{stage.label}</h3>
+            <h3 className="text-[15px] font-bold text-foreground tracking-tight">{stage.label}</h3>
           </div>
           <div
             className="px-2.5 py-1 rounded-full text-[12px] font-black"
@@ -647,7 +647,7 @@ function PipelineCol({
         className={cn(
           "rounded-xl cursor-pointer relative group",
           "transition-all duration-300 ease-in-out",
-          "min-h-10 hover:shadow-lg hover:shadow-slate-200/50",
+          "min-h-10 hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20",
           "overflow-hidden",
           "p-2"
         )}
@@ -675,7 +675,7 @@ function PipelineCol({
               className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 opacity-60"
               style={{
                 backgroundColor: `${stage.fill}15`,
-                color: stage.id === 'Booked' ? '#ca8a04' : stage.fill,
+                color: stage.id === 'Booked' ? '#131B49' : stage.fill,
                 border: `1px solid ${stage.fill}30`
               }}
             >
@@ -683,11 +683,11 @@ function PipelineCol({
             </div>
             <div
               className="font-semibold text-xs truncate flex-grow"
-              style={{ color: stage.id === 'Booked' ? '#ca8a04' : stage.fill }}
+              style={{ color: stage.id === 'Booked' ? '#131B49' : stage.fill }}
             >
               {l.full_name}
             </div>
-            <span className="text-[9px] text-muted-foreground group-hover:text-black transition-colors whitespace-nowrap opacity-30 group-hover:opacity-100 font-bold uppercase">
+            <span className="text-[9px] text-muted-foreground group-hover:text-foreground transition-colors whitespace-nowrap opacity-30 group-hover:opacity-100 font-bold uppercase">
               {l.created_at ? formatTimeAgo(l.created_at) : ""}
             </span>
           </div>
@@ -696,13 +696,13 @@ function PipelineCol({
             <div className="mt-3 space-y-2.5 pb-1">
               <div className="space-y-1">
                 {l.email && (
-                  <div className="flex items-center gap-2 text-[11px] text-slate-600 font-medium bg-white/40 px-2 py-1 rounded-md border border-slate-200/20">
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium bg-card/40 px-2 py-1 rounded-md border border-border/20">
                     <span className="opacity-50">@</span>
                     <span className="truncate">{l.email}</span>
                   </div>
                 )}
                 {l.phone && (
-                  <div className="flex items-center gap-2 text-[11px] text-slate-600 font-medium bg-white/40 px-2 py-1 rounded-md border border-slate-200/20">
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium bg-card/40 px-2 py-1 rounded-md border border-border/20">
                     <span className="opacity-50">#</span>
                     <span>{l.phone}</span>
                   </div>
@@ -733,7 +733,7 @@ function PipelineCol({
       </div>
         ))}
         {items.length === 0 ? (
-          <div className="flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-slate-400 text-xs italic bg-slate-50/50 dark:bg-slate-900/50 p-3">
+          <div className="flex items-center justify-center border-2 border-dashed border-border rounded-lg text-muted-foreground text-xs italic bg-muted/30 p-3">
             No contacts.
           </div>
         ) : null}

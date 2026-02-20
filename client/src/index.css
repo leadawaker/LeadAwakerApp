@@ -45,6 +45,22 @@
   --color-chart-3: hsl(var(--chart-3));
   --color-chart-4: hsl(var(--chart-4));
   --color-chart-5: hsl(var(--chart-5));
+
+  /* ── Brand Color Tokens — Lead Awaker Design System ── */
+  --color-brand-blue: hsl(var(--brand-blue));
+  --color-brand-blue-foreground: hsl(var(--brand-blue-foreground));
+  --color-brand-deep-blue: hsl(var(--brand-deep-blue));
+  --color-brand-deep-blue-foreground: hsl(var(--brand-deep-blue-foreground));
+  --color-brand-yellow: hsl(var(--brand-yellow));
+  --color-brand-yellow-foreground: hsl(var(--brand-yellow-foreground));
+  --color-brand-soft-yellow: hsl(var(--brand-soft-yellow));
+  --color-brand-soft-yellow-foreground: hsl(var(--brand-soft-yellow-foreground));
+
+  /* Sidebar-specific semantic tokens */
+  --color-sidebar-bg: hsl(var(--sidebar-bg));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-active: hsl(var(--sidebar-active));
+  --color-sidebar-active-foreground: hsl(var(--sidebar-active-foreground));
 }
 
 /* LIGHT MODE - Brand Colors derived from Lead Awaker */
@@ -60,8 +76,8 @@
   --popover: 0 0% 100%;
   --popover-foreground: 230 60% 10%;
 
-  /* Primary Brand Color: Vibrant Blue from Logo */
-  --primary: 230 100% 66%;
+  /* Primary Brand Color: Brand Blue #5170FF */
+  --primary: 229 100% 66%;
   --primary-foreground: 0 0% 100%;
 
   /* Secondary: Softer Blue */
@@ -81,39 +97,100 @@
 
   --border: 230 20% 90%;
   --input: 230 20% 90%;
-  --ring: 230 100% 66%;
+  --ring: 229 100% 66%;
 
   --radius: 0.75rem;
+
+  /* Chart colors (light mode) — brand-aligned */
+  --chart-1: 229 100% 66%;   /* Brand Blue */
+  --chart-2: 160 60% 45%;    /* Teal */
+  --chart-3: 44 98% 50%;     /* Brand Yellow */
+  --chart-4: 280 65% 55%;    /* Purple */
+  --chart-5: 0 72% 55%;      /* Red */
+
+  /* ── Brand Tokens (Light Mode) ── */
+  /* Brand Blue: #5170FF — primary actions, buttons, links */
+  --brand-blue: 229 100% 66%;
+  --brand-blue-foreground: 0 0% 100%;
+  /* Deep Blue: #131B49 — sidebar, headers, strong emphasis */
+  --brand-deep-blue: 231 59% 18%;
+  --brand-deep-blue-foreground: 0 0% 100%;
+  /* Brand Yellow: #FCB803 — Call Booked highlights, success accents */
+  --brand-yellow: 44 98% 50%;
+  --brand-yellow-foreground: 231 59% 18%;
+  /* Soft Yellow: #FCCA47 — secondary highlights, hover states */
+  --brand-soft-yellow: 43 97% 63%;
+  --brand-soft-yellow-foreground: 231 59% 18%;
+
+  /* Sidebar tokens (light mode) */
+  --sidebar-bg: 231 59% 18%;
+  --sidebar-foreground: 220 20% 90%;
+  --sidebar-active: 229 100% 66%;
+  --sidebar-active-foreground: 0 0% 100%;
 }
 
+/* DARK MODE — Brand-tinted dark surfaces (blue-tinted, NOT pure black) */
 .dark {
-  --background: 230 50% 5%;
-  --foreground: 230 20% 95%;
+  /* Base surfaces: dark navy-blue tinted backgrounds */
+  --background: 228 35% 10%;       /* Deep navy — main page bg */
+  --foreground: 220 20% 93%;       /* Off-white with slight warmth */
+  --bg-main: 228 35% 10%;          /* Match background for dark mode */
 
-  --card: 230 50% 8%;
-  --card-foreground: 230 20% 95%;
+  /* Cards: slightly lighter than background for elevation */
+  --card: 226 32% 14%;             /* Elevated card surface */
+  --card-foreground: 220 20% 93%;
 
-  --popover: 230 50% 8%;
-  --popover-foreground: 230 20% 95%;
+  /* Popovers: same as cards */
+  --popover: 226 32% 14%;
+  --popover-foreground: 220 20% 93%;
 
-  --primary: 230 100% 60%;
+  /* Primary: Brand Blue #5170FF — slightly brighter for dark bg legibility */
+  --primary: 229 100% 70%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 230 30% 15%;
-  --secondary-foreground: 230 20% 95%;
+  /* Secondary: subtle blue-tinted dark surface */
+  --secondary: 226 28% 18%;
+  --secondary-foreground: 220 20% 90%;
 
-  --muted: 230 30% 15%;
-  --muted-foreground: 230 20% 65%;
+  /* Muted: used for hover states, subtle fills */
+  --muted: 226 28% 18%;
+  --muted-foreground: 220 15% 60%;
 
-  --accent: 35 95% 55%;
+  /* Accent: warmer gold adjusted for dark — slightly brighter */
+  --accent: 38 90% 58%;
   --accent-foreground: 0 0% 100%;
 
-  --destructive: 0 62.8% 30.6%;
+  /* Destructive: lighter red on dark for readability */
+  --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 98%;
 
-  --border: 230 30% 15%;
-  --input: 230 30% 15%;
-  --ring: 230 100% 60%;
+  /* Borders: visible but subtle on dark surfaces */
+  --border: 226 25% 20%;
+  --input: 226 25% 20%;
+  --ring: 229 100% 70%;
+
+  /* Chart colors adjusted for dark */
+  --chart-1: 230 80% 65%;
+  --chart-2: 160 60% 50%;
+  --chart-3: 38 90% 58%;
+  --chart-4: 280 65% 60%;
+  --chart-5: 0 72% 55%;
+
+  /* ── Brand Tokens (Dark Mode) ── */
+  --brand-blue: 229 100% 70%;
+  --brand-blue-foreground: 0 0% 100%;
+  --brand-deep-blue: 228 35% 10%;
+  --brand-deep-blue-foreground: 220 20% 93%;
+  --brand-yellow: 44 98% 55%;
+  --brand-yellow-foreground: 228 35% 10%;
+  --brand-soft-yellow: 43 97% 65%;
+  --brand-soft-yellow-foreground: 228 35% 10%;
+
+  /* Sidebar tokens (dark mode) */
+  --sidebar-bg: 228 40% 8%;
+  --sidebar-foreground: 220 20% 85%;
+  --sidebar-active: 229 100% 70%;
+  --sidebar-active-foreground: 0 0% 100%;
 }
 
 @keyframes twinkle-fast {
@@ -843,8 +920,7 @@
     cursor: auto;
   }
   body {
-    background-color: #F6F5FA;
-    @apply font-sans antialiased text-foreground;
+    @apply bg-background font-sans antialiased text-foreground;
   }
   button, 
   [role="button"], 

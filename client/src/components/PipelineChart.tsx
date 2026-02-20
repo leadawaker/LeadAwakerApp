@@ -84,9 +84,9 @@ export default function PipelineChart() {
       id: "booked",
       title: t("stages.booked"),
       icon: <CalendarCheck className="w-5 h-5" />,
-      colorClass: "bg-yellow-400 border-yellow-300 text-yellow-900",
-      headerClass: "bg-yellow-500/40 text-yellow-800 dark:text-yellow-200",
-      textColorClass: "text-yellow-600 dark:text-yellow-500",
+      colorClass: "bg-brand-yellow border-brand-yellow/30 text-brand-yellow-foreground",
+      headerClass: "bg-brand-yellow/40 text-brand-yellow-foreground dark:text-brand-yellow",
+      textColorClass: "text-brand-yellow dark:text-brand-soft-yellow",
     },
   ];
 
@@ -195,7 +195,7 @@ export default function PipelineChart() {
                   }}
                   data-testid={`lead-card-${lead.id}`}
                 >
-                  <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                  <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer bg-card border-border">
                     <CardContent className="p-3 space-y-2">
                       <div className="flex justify-between items-start">
                         <div 
@@ -205,7 +205,7 @@ export default function PipelineChart() {
                         >
                           {lead.name}
                         </div>
-                        <MoreHorizontal className="w-4 h-4 text-slate-400" />
+                        <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
                       </div>
                       <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
                         <span data-testid={`lead-time-${lead.id}`}>{formatTimeAgo(lead.lastContacted)}</span>

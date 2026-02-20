@@ -26,7 +26,7 @@ const TAG_CATEGORIES = [
   {
     type: "Outcome",
     tags: [
-      { name: "appointment booked", color: "#22C55E", id: 3, description: "Lead has booked a call" },
+      { name: "appointment booked", color: "#FCB803", id: 3, description: "Lead has booked a call" },
       { name: "goodbye", color: "#64748B", id: 15, description: "Lead said goodbye/not interested" },
       { name: "no response", color: "#64748B", id: 21, description: "Lead never responded" },
       { name: "schedule", color: "#22C55E", id: 25, description: "Lead wants to schedule" }
@@ -194,13 +194,13 @@ export default function TagsPage() {
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="flex flex-1 gap-2 items-center w-full">
               <input
-                className="h-10 flex-1 max-w-md rounded-xl border border-border bg-white px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                className="h-10 flex-1 max-w-md rounded-xl border border-border bg-card px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
                 placeholder="Search tags…"
                 value={q}
                 onChange={e => setQ(e.target.value)}
               />
               <Select value={selectedAccountId.toString()} onValueChange={v => setSelectedAccountId(v === "all" ? "all" : Number(v))}>
-                <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white">
+                <SelectTrigger className="w-[180px] h-10 rounded-xl bg-card">
                   <SelectValue placeholder="All Accounts" />
                 </SelectTrigger>
                 <SelectContent>
@@ -211,7 +211,7 @@ export default function TagsPage() {
                 </SelectContent>
               </Select>
               <Select value={campaignId.toString()} onValueChange={v => setCampaignId(v === "all" ? "all" : Number(v))}>
-                <SelectTrigger className="w-[180px] h-10 rounded-xl bg-white">
+                <SelectTrigger className="w-[180px] h-10 rounded-xl bg-card">
                   <SelectValue placeholder="All Campaigns" />
                 </SelectTrigger>
                 <SelectContent>
@@ -233,7 +233,7 @@ export default function TagsPage() {
                     {cat.type}
                   </h3>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 bg-white p-4 rounded-3xl">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 bg-card p-4 rounded-2xl shadow-sm border border-border">
                     {cat.tags.map(t => (
                       <button
                         key={t.id}
@@ -241,7 +241,7 @@ export default function TagsPage() {
                         className={cn(
                           "flex items-center gap-3 px-3 py-2 rounded-xl transition text-left border border-transparent",
                           selectedTagName === t.name
-                            ? "ring-2 ring-primary bg-white"
+                            ? "ring-2 ring-primary bg-card"
                             : "hover:bg-muted/5"
                         )}
                         style={{
@@ -256,7 +256,7 @@ export default function TagsPage() {
                         </div>
 
                         <div
-                          className="truncate font-semibold text-[14px] text-black"
+                          className="truncate font-semibold text-[14px] text-foreground"
                         >
                           {t.name}
                         </div>
@@ -269,7 +269,7 @@ export default function TagsPage() {
 
             {/* RIGHT — STICKY */}
             <div className="space-y-4 sticky top-6">
-              <div className="bg-white rounded-2xl flex flex-col max-h-[calc(100vh-200px)]">
+              <div className="bg-card rounded-2xl shadow-sm border border-border flex flex-col max-h-[calc(100vh-200px)]">
                 <div className="p-4 border-b space-y-1">
                   <div className="font-bold text-sm">
                     {selectedTagName ? `Leads: ${selectedTagName}` : "Tag Insights"}

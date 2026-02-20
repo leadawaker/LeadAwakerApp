@@ -249,21 +249,21 @@ const statusColors: Record<
     text: "text-muted-foreground",
     bg: "bg-muted/10",
     border: "border-border",
-    dot: "bg-slate-400",
+    dot: "bg-muted-foreground",
   },
 };
 
 const timezoneColors: Record<string, { text: string; bg: string; border: string }> = {
-  UTC: { text: "text-slate-700", bg: "bg-slate-100", border: "border-slate-200" },
-  "Europe/London": { text: "text-blue-700", bg: "bg-blue-100", border: "border-blue-200" },
-  "Europe/Paris": { text: "text-indigo-700", bg: "bg-indigo-100", border: "border-indigo-200" },
-  "Europe/Berlin": { text: "text-purple-700", bg: "bg-purple-100", border: "border-purple-200" },
-  "Europe/Amsterdam": { text: "text-orange-700", bg: "bg-orange-100", border: "border-orange-200" },
-  "America/New_York": { text: "text-emerald-700", bg: "bg-emerald-100", border: "border-emerald-200" },
-  "America/Los_Angeles": { text: "text-rose-700", bg: "bg-rose-100", border: "border-rose-200" },
-  "America/Sao_Paulo": { text: "text-green-700", bg: "bg-green-100", border: "border-green-200" },
-  "Asia/Tokyo": { text: "text-red-700", bg: "bg-red-100", border: "border-red-200" },
-  "Asia/Dubai": { text: "text-amber-700", bg: "bg-amber-100", border: "border-amber-200" },
+  UTC: { text: "text-[#64748b] dark:text-[#94a3b8]", bg: "bg-[#64748b]/10", border: "border-[#64748b]/20" },
+  "Europe/London": { text: "text-[#2563eb] dark:text-[#60a5fa]", bg: "bg-[#2563eb]/10", border: "border-[#2563eb]/20" },
+  "Europe/Paris": { text: "text-[#4f46e5] dark:text-[#818cf8]", bg: "bg-[#4f46e5]/10", border: "border-[#4f46e5]/20" },
+  "Europe/Berlin": { text: "text-[#7c3aed] dark:text-[#a78bfa]", bg: "bg-[#7c3aed]/10", border: "border-[#7c3aed]/20" },
+  "Europe/Amsterdam": { text: "text-[#ea580c] dark:text-[#fb923c]", bg: "bg-[#ea580c]/10", border: "border-[#ea580c]/20" },
+  "America/New_York": { text: "text-[#059669] dark:text-[#34d399]", bg: "bg-[#059669]/10", border: "border-[#059669]/20" },
+  "America/Los_Angeles": { text: "text-[#e11d48] dark:text-[#fb7185]", bg: "bg-[#e11d48]/10", border: "border-[#e11d48]/20" },
+  "America/Sao_Paulo": { text: "text-[#16a34a] dark:text-[#4ade80]", bg: "bg-[#16a34a]/10", border: "border-[#16a34a]/20" },
+  "Asia/Tokyo": { text: "text-[#dc2626] dark:text-[#f87171]", bg: "bg-[#dc2626]/10", border: "border-[#dc2626]/20" },
+  "Asia/Dubai": { text: "text-[#d97706] dark:text-[#fbbf24]", bg: "bg-[#d97706]/10", border: "border-[#d97706]/20" },
 };
 
 const getIconForField = (col: string) => {
@@ -415,7 +415,7 @@ const includesAny = (col: string, list: string[]) => {
 
 const DateTimeCell = ({ value }: { value: any }) => {
   const parts = formatDateTimeParts(value);
-  if (!parts) return <span className="text-slate-400">-</span>;
+  if (!parts) return <span className="text-muted-foreground">-</span>;
 
   const now = new Date();
   const isToday =
@@ -425,10 +425,10 @@ const DateTimeCell = ({ value }: { value: any }) => {
 
   return (
     <div className="flex items-center gap-3 whitespace-nowrap">
-      <span className={cn(isToday ? "text-blue-600 font-semibold" : "")}>
+      <span className={cn(isToday ? "text-brand-blue font-semibold" : "")}>
         {parts.date}
       </span>
-      <span className="text-slate-500">{parts.time}</span>
+      <span className="text-muted-foreground">{parts.time}</span>
     </div>
   );
 };
@@ -477,7 +477,7 @@ const TruncatedCell = ({
     return (
       <Input
         autoFocus
-        className="h-8 w-auto min-w-[200px] max-w-none bg-white shadow-lg border-blue-400 focus:ring-2 focus:ring-blue-100 relative z-30"
+        className="h-8 w-auto min-w-[200px] max-w-none bg-card dark:bg-card shadow-lg border-blue-400 focus:ring-2 focus:ring-blue-100 relative z-30"
         style={{ width: `${widthCh}ch` }}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
@@ -517,7 +517,7 @@ const TruncatedCell = ({
   return (
     <Popover open={isTruncated ? undefined : false}>
       <PopoverTrigger asChild>{content}</PopoverTrigger>
-      <PopoverContent className="w-fit max-w-[420px] p-2 text-xs break-words shadow-xl border border-slate-200 bg-white z-[100]">
+      <PopoverContent className="w-fit max-w-[420px] p-2 text-xs break-words shadow-xl border border-border bg-card z-[100]">
         {tooltipTitle}
       </PopoverContent>
     </Popover>
@@ -548,25 +548,25 @@ const RollupCell = ({ value, type }: { value: any; type: string }) => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <div className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity bg-slate-50/50 p-1 rounded border border-transparent hover:border-slate-200 overflow-hidden w-full">
+        <div className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity bg-muted/30 p-1 rounded border border-transparent hover:border-border overflow-hidden w-full">
           <Badge
             variant="secondary"
-            className="bg-slate-100 text-slate-600 border-slate-200 font-bold px-1.5 h-5 min-w-[24px] justify-center shrink-0"
+            className="bg-muted text-muted-foreground border-border font-bold px-1.5 h-5 min-w-[24px] justify-center shrink-0"
           >
             {count}
           </Badge>
-          <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold truncate">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold truncate">
             {type}
           </span>
         </div>
       </PopoverTrigger>
-      <PopoverContent className="w-64 p-3 shadow-2xl border border-slate-200 bg-white z-[100]">
+      <PopoverContent className="w-64 p-3 shadow-2xl border border-border bg-card z-[100]">
         <div className="space-y-2">
           <div className="flex items-center justify-between border-b pb-2">
-            <h4 className="font-black text-[10px] uppercase tracking-widest text-slate-500">
+            <h4 className="font-black text-[10px] uppercase tracking-widest text-muted-foreground">
               {type}
             </h4>
-            <Badge className="bg-blue-50 text-blue-600 border-blue-100">
+            <Badge className="bg-brand-blue/10 text-brand-blue border-brand-blue/20">
               {count}
             </Badge>
           </div>
@@ -576,7 +576,7 @@ const RollupCell = ({ value, type }: { value: any; type: string }) => {
                 list.map((item: any, i: number) => (
                   <div
                     key={i}
-                    className="text-xs py-1 px-2 rounded hover:bg-slate-50 text-slate-600 border border-transparent hover:border-slate-100"
+                    className="text-xs py-1 px-2 rounded hover:bg-muted/50 text-foreground/80 border border-transparent hover:border-border"
                   >
                     {typeof item === "object"
                       ? item.name || item.title || JSON.stringify(item)
@@ -584,7 +584,7 @@ const RollupCell = ({ value, type }: { value: any; type: string }) => {
                   </div>
                 ))
               ) : (
-                <div className="text-xs text-slate-400 italic p-2">No items</div>
+                <div className="text-xs text-muted-foreground italic p-2">No items</div>
               )}
             </div>
           </ScrollArea>
@@ -627,7 +627,7 @@ const SortableTableHead = ({
     <TableHead
       ref={setNodeRef}
       style={combinedStyle}
-      className={cn(className, isDragging && "bg-slate-100 shadow-inner")}
+      className={cn(className, isDragging && "bg-muted shadow-inner")}
     >
       {children({ attributes, listeners })}
       <div
@@ -648,18 +648,18 @@ const conversionColors: Record<string, { text: string; bg: string; border: strin
   "Responded": { text: "text-[#1E90FF]", bg: "bg-[#1E90FF]/10", border: "border-[#1E90FF]/20", dot: "bg-[#1E90FF]" },
   "Multiple Responses": { text: "text-[#17A398]", bg: "bg-[#17A398]/10", border: "border-[#17A398]/20", dot: "bg-[#17A398]" },
   "Qualified": { text: "text-[#10b981]", bg: "bg-[#10b981]/10", border: "border-[#10b981]/20", dot: "bg-[#10b981]" },
-  "Booked": { text: "text-[#ca8a04]", bg: "bg-[#facc15]/20", border: "border-[#facc15]/30", dot: "bg-[#ca8a04]" },
+  "Booked": { text: "text-brand-yellow", bg: "bg-brand-yellow/20", border: "border-brand-yellow/30", dot: "bg-brand-yellow" },
   "DND": { text: "text-[#ef4444]", bg: "bg-[#ef4444]/10", border: "border-[#ef4444]/20", dot: "bg-[#ef4444]" },
-  "Lost": { text: "text-pink-700", bg: "bg-pink-50", border: "border-pink-200", dot: "bg-pink-500" },
+  "Lost": { text: "text-[#be185d] dark:text-[#f9a8d4]", bg: "bg-[#be185d]/10", border: "border-[#be185d]/20", dot: "bg-[#ec4899]" },
 };
 
 const automationStatusColors: Record<string, { text: string; bg: string; border: string; dot: string }> = {
-  completed: { text: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", dot: "bg-emerald-500" },
-  queued: { text: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200", dot: "bg-blue-500" },
-  active: { text: "text-indigo-700", bg: "bg-indigo-50", border: "border-indigo-200", dot: "bg-indigo-500" },
-  paused: { text: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200", dot: "bg-amber-500" },
-  dnd: { text: "text-rose-700", bg: "bg-rose-50", border: "border-rose-200", dot: "bg-rose-500" },
-  error: { text: "text-red-700", bg: "bg-red-50", border: "border-red-200", dot: "bg-red-500" },
+  completed: { text: "text-[#059669] dark:text-[#34d399]", bg: "bg-[#059669]/10", border: "border-[#059669]/20", dot: "bg-[#10b981]" },
+  queued: { text: "text-[#2563eb] dark:text-[#60a5fa]", bg: "bg-[#2563eb]/10", border: "border-[#2563eb]/20", dot: "bg-[#3b82f6]" },
+  active: { text: "text-[#4f46e5] dark:text-[#818cf8]", bg: "bg-[#4f46e5]/10", border: "border-[#4f46e5]/20", dot: "bg-[#6366f1]" },
+  paused: { text: "text-[#d97706] dark:text-[#fbbf24]", bg: "bg-[#d97706]/10", border: "border-[#d97706]/20", dot: "bg-[#f59e0b]" },
+  dnd: { text: "text-[#e11d48] dark:text-[#fb7185]", bg: "bg-[#e11d48]/10", border: "border-[#e11d48]/20", dot: "bg-[#f43f5e]" },
+  error: { text: "text-[#dc2626] dark:text-[#f87171]", bg: "bg-[#dc2626]/10", border: "border-[#dc2626]/20", dot: "bg-[#ef4444]" },
 };
 
 export default function DataTable<TRow extends DataTableRow = DataTableRow>(
@@ -950,7 +950,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
         <div
           {...drag.attributes}
           {...drag.listeners}
-          className="cursor-grab active:cursor-grabbing hover:text-blue-600 transition-colors"
+          className="cursor-grab active:cursor-grabbing hover:text-brand-blue transition-colors"
         >
           {getIconForField(col)}
         </div>
@@ -971,7 +971,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
           {title}
         </span>
         {isSorted && (
-          <span className="text-blue-600 font-bold">
+          <span className="text-brand-blue font-bold">
             {sortConfig.direction === "asc" ? (
               <ChevronUp className="h-3 w-3" />
             ) : (
@@ -1083,7 +1083,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
           {onRefresh && (
             <Button
               variant="outline"
-              className="h-10 w-10 p-0 rounded-xl bg-white border-slate-200 shadow-none"
+              className="h-10 w-10 p-0 rounded-xl bg-card dark:bg-secondary border-border shadow-none"
               onClick={onRefresh}
             >
               <RefreshCw
@@ -1096,7 +1096,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
             <Input
               ref={searchInputRef}
               placeholder="Search records (Ctrl+K)"
-              className="w-[240px] h-10 rounded-xl bg-white shadow-none border-slate-200"
+              className="w-[240px] h-10 rounded-xl bg-card dark:bg-secondary shadow-none border-border"
               value={searchValue ?? ""}
               onChange={(e) => onSearchValueChange(e.target.value)}
             />
@@ -1107,12 +1107,12 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none relative"
+                  className="h-10 rounded-xl gap-2 font-semibold bg-card dark:bg-secondary border-border shadow-none relative"
                 >
                   <Filter className="h-4 w-4" />
                   <span>Filter</span>
                   {filterCount > 0 && (
-                    <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-blue-600">
+                    <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-brand-blue">
                       {filterCount}
                     </Badge>
                   )}
@@ -1134,7 +1134,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                   <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
                     {columns.map((col) => (
                       <div key={col} className="space-y-1">
-                        <label className="text-[10px] font-bold uppercase text-slate-500">
+                        <label className="text-[10px] font-bold uppercase text-muted-foreground">
                           {col}
                         </label>
                         <Input
@@ -1154,7 +1154,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
           )}
 
           {onGroupByChange && effectiveGroupOptions.length > 0 && (
-            <div className="flex items-center gap-1 bg-white rounded-xl border border-slate-200 px-1">
+            <div className="flex items-center gap-1 bg-card dark:bg-secondary rounded-xl border border-border px-1">
               <Select value={groupBy} onValueChange={onGroupByChange}>
                 <SelectTrigger className="h-10 w-[160px] border-none shadow-none font-semibold gap-2 focus:ring-0 [&>svg]:hidden">
                   <LayoutGrid className="h-4 w-4" />
@@ -1174,12 +1174,12 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 hover:bg-slate-100 rounded-lg"
+                      className="h-8 w-8 p-0 hover:bg-muted rounded-lg"
                     >
                       {groupSortOrder === "asc" ? (
-                        <ChevronUp className="h-4 w-4 text-blue-600" />
+                        <ChevronUp className="h-4 w-4 text-brand-blue" />
                       ) : (
-                        <ChevronDown className="h-4 w-4 text-blue-600" />
+                        <ChevronDown className="h-4 w-4 text-brand-blue" />
                       )}
                     </Button>
                   </DropdownMenuTrigger>
@@ -1208,13 +1208,13 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
 
           {selectedIds.length > 0 && (
             <div className="flex items-center gap-2" data-testid="bulk-selection-bar">
-              <Badge className="h-7 px-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-full">
+              <Badge className="h-7 px-3 bg-brand-blue hover:bg-brand-blue/90 text-brand-blue-foreground text-sm font-semibold rounded-full">
                 {selectedIds.length} selected
               </Badge>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 px-2 text-xs text-slate-500 hover:text-slate-700"
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
                 onClick={() => onSelectedIdsChange([])}
               >
                 Clear
@@ -1239,7 +1239,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
           {viewMenuGroups.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button className="w-[160px] h-10 rounded-xl bg-white shadow-none border-slate-200 font-bold flex items-center gap-2 text-slate-900">
+                <Button className="w-[160px] h-10 rounded-xl bg-card dark:bg-secondary shadow-none border-border font-bold flex items-center gap-2 text-foreground">
                   {VIEW_PRESETS.find(p => p.key === viewKey)?.icon || <LayoutGrid className="h-4 w-4" />}
                   <span className="truncate">{viewLabel}</span>
                 </Button>
@@ -1274,7 +1274,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none text-slate-900"
+                className="h-10 rounded-xl gap-2 font-semibold bg-card dark:bg-secondary border-border shadow-none text-foreground"
               >
                 Fields
               </Button>
@@ -1285,7 +1285,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                   {columns.map((col) => (
                     <div
                       key={col}
-                      className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded-lg cursor-pointer"
+                      className="flex items-center gap-2 p-2 hover:bg-muted/50 rounded-lg cursor-pointer"
                       onClick={() => {
                         if (visibleColumns.includes(col)) {
                           onVisibleColumnsChange(
@@ -1307,7 +1307,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
 
           {onAdd && (
             <Button
-              className="h-10 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold gap-2 shadow-none border-none"
+              className="h-10 px-4 rounded-xl bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90 text-sm font-semibold gap-2 shadow-none border-none"
               onClick={onAdd}
             >
               <Plus className="h-4 w-4" /> {addLabel}
@@ -1318,7 +1318,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="h-10 w-10 p-0 rounded-xl bg-white border-slate-200 shadow-none"
+                className="h-10 w-10 p-0 rounded-xl bg-card dark:bg-secondary border-border shadow-none"
               >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
@@ -1368,15 +1368,15 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
           <Table className="table-fixed w-full">
-            <TableHeader className="bg-slate-50/50">
-              <TableRow className="hover:bg-transparent border-b border-slate-200">
+            <TableHeader className="bg-muted/50">
+              <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="w-[40px] px-4">
                   <Checkbox
                     checked={
@@ -1401,7 +1401,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                         "relative px-4 overflow-visible whitespace-nowrap",
                         showVerticalLines &&
                           idx < visibleCols.length - 1 &&
-                          "border-r border-slate-100",
+                          "border-r border-border/50",
                       )}
                       handleResize={handleResize}
                     >
@@ -1418,7 +1418,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                 return (
                   <React.Fragment key={groupName}>
                     {groupBy !== "None" && (
-                      <TableRow className="bg-slate-50/30 hover:bg-slate-50/30 border-y border-slate-200/60 cursor-pointer" onClick={() => toggleGroupCollapse(groupName)}>
+                      <TableRow className="bg-muted/20 hover:bg-muted/20 border-y border-border/60 cursor-pointer" onClick={() => toggleGroupCollapse(groupName)}>
                         <TableCell
                           colSpan={visibleCols.length + 1}
                           className="py-2 px-4"
@@ -1431,8 +1431,8 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                 if (g === "conversion_status" || g === "conversion") color = (conversionColors as any)[groupName];
                                 else if (g === "automation_status") color = (automationStatusColors as any)[groupName];
                                 else if (g === "type") {
-                                  if (groupName.toLowerCase() === "agency") color = { bg: "bg-yellow-200", text: "text-yellow-800" };
-                                  else color = { bg: "bg-blue-200", text: "text-blue-800" };
+                                  if (groupName.toLowerCase() === "agency") color = { bg: "bg-brand-yellow/20", text: "text-brand-yellow" };
+                                  else color = { bg: "bg-brand-blue/20", text: "text-brand-blue" };
                                 }
                               }
                               
@@ -1441,21 +1441,21 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                   variant="secondary" 
                                   className={cn(
                                     "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md",
-                                    color ? cn(color.bg, color.text) : "bg-slate-100 text-slate-500"
+                                    color ? cn(color.bg, color.text) : "bg-muted text-muted-foreground"
                                   )}
                                 >
                                   {groupName}
                                 </Badge>
                               );
                             })()}
-                            <Badge variant="secondary" className="bg-slate-100/50 text-slate-400 h-6 px-2.5 text-xs font-bold border-none shadow-none">
+                            <Badge variant="secondary" className="bg-muted/50 text-muted-foreground h-6 px-2.5 text-xs font-bold border-none shadow-none">
                               {groupRows.length}
                             </Badge>
                             <div className="flex-1" />
                             {collapsedGroups[groupName] ? (
-                              <ChevronDown className="h-4 w-4 text-slate-400" />
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
                             ) : (
-                              <ChevronUp className="h-4 w-4 text-slate-400" />
+                              <ChevronUp className="h-4 w-4 text-muted-foreground" />
                             )}
                           </div>
                         </TableCell>
@@ -1466,9 +1466,9 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                         key={row.Id}
                         id={`row-${row.Id}`}
                         className={cn(
-                          "group hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0",
+                          "group hover:bg-muted/30 transition-colors border-b border-border/50 last:border-0",
                           selectedIds.includes(row.Id) &&
-                            "bg-blue-50/30 hover:bg-blue-50/50",
+                            "bg-primary/5 hover:bg-primary/10",
                         )}
                       >
                         <TableCell className="px-4">
@@ -1483,11 +1483,11 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                             key={col}
                             style={{ width: colWidths[col] }}
                             className={cn(
-                              "px-4 font-medium text-slate-600 transition-all overflow-visible",
+                              "px-4 font-medium text-foreground/80 transition-all overflow-visible",
                               rowPadding,
                               showVerticalLines &&
                                 idx < visibleCols.length - 1 &&
-                                "border-r border-slate-50",
+                                "border-r border-border/30",
                             )}
                           >
                             {isRollupCol(col) ? (
@@ -1503,7 +1503,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                               <Sheet>
                                 <SheetTrigger asChild>
                                   {col === "full_name" ? (
-                                    <div className="font-bold text-blue-600 cursor-pointer hover:text-blue-800 transition-colors">
+                                    <div className="font-bold text-brand-blue cursor-pointer hover:text-brand-blue/80 transition-colors">
                                       {row[col]}
                                     </div>
                                   ) : (
@@ -1555,12 +1555,12 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                         .filter((c) => !hiddenFields.includes(c))
                                         .map((c) => (
                                           <div key={c} className="space-y-1.5">
-                                            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-muted-foreground tracking-widest">
                                               {getIconForField(c)}
                                               <span>{c.replace(/_/g, " ")}</span>
                                             </div>
                                             {nonEditableFields.includes(c) ? (
-                                              <div className="px-3 py-2 bg-slate-50 rounded-lg text-sm font-medium text-slate-500 border border-slate-100">
+                                              <div className="px-3 py-2 bg-muted/50 rounded-lg text-sm font-medium text-muted-foreground border border-border">
                                                 {isDateCol(c)
                                                   ? formatDateTime(row[c])
                                                   : isTimeCol(c)
@@ -1574,7 +1574,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                                   handleUpdate(row.Id, c, v)
                                                 }
                                               >
-                                                <SelectTrigger className="w-full bg-white border-slate-200">
+                                                <SelectTrigger className="w-full bg-card dark:bg-secondary border-border">
                                                   <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -1592,7 +1592,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                                   handleUpdate(row.Id, c, v)
                                                 }
                                               >
-                                                <SelectTrigger className="w-full bg-white border-slate-200">
+                                                <SelectTrigger className="w-full bg-card dark:bg-secondary border-border">
                                                   <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -1610,7 +1610,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                                   handleUpdate(row.Id, c, v)
                                                 }
                                               >
-                                                <SelectTrigger className="w-full bg-white border-slate-200">
+                                                <SelectTrigger className="w-full bg-card dark:bg-secondary border-border">
                                                   <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -1631,7 +1631,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                                     e.target.value,
                                                   )
                                                 }
-                                                className="bg-white border-slate-200 focus:ring-blue-500"
+                                                className="bg-card dark:bg-secondary border-border focus:ring-blue-500"
                                               />
                                             )}
                                           </div>
@@ -1648,15 +1648,15 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                 <SelectTrigger
                                   className={cn(
                                     "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
-                                    (automationStatusColors as any)[row[col]]?.bg || "bg-slate-100",
-                                    (automationStatusColors as any)[row[col]]?.text || "text-slate-600",
+                                    (automationStatusColors as any)[row[col]]?.bg || "bg-muted",
+                                    (automationStatusColors as any)[row[col]]?.text || "text-muted-foreground",
                                   )}
                                 >
                                   <div className="flex items-center gap-1.5 overflow-hidden">
                                     <div
                                       className={cn(
                                         "h-1.5 w-1.5 rounded-full shrink-0",
-                                        (automationStatusColors as any)[row[col]]?.dot || "bg-slate-400",
+                                        (automationStatusColors as any)[row[col]]?.dot || "bg-muted-foreground",
                                       )}
                                     />
                                     <SelectValue />
@@ -1666,7 +1666,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                   {props.automationStatusOptions.map((o) => (
                                     <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">
                                       <div className="flex items-center gap-2">
-                                        <div className={cn("h-1.5 w-1.5 rounded-full", (automationStatusColors as any)[o]?.dot || "bg-slate-400")} />
+                                        <div className={cn("h-1.5 w-1.5 rounded-full", (automationStatusColors as any)[o]?.dot || "bg-muted-foreground")} />
                                         {o}
                                       </div>
                                     </SelectItem>
@@ -1681,8 +1681,8 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                 <SelectTrigger
                                   className={cn(
                                     "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
-                                    (conversionColors as any)[row[col]]?.bg || "bg-slate-100",
-                                    (conversionColors as any)[row[col]]?.text || "text-slate-600",
+                                    (conversionColors as any)[row[col]]?.bg || "bg-muted",
+                                    (conversionColors as any)[row[col]]?.text || "text-muted-foreground",
                                   )}
                                 >
                                   <div className="flex items-center gap-1.5 overflow-hidden">
@@ -1693,7 +1693,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                   {statusOptions.map((o) => (
                                     <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">
                                       <div className="flex items-center gap-2">
-                                        <div className={cn("h-1.5 w-1.5 rounded-full", (conversionColors as any)[o]?.dot || "bg-slate-400")} />
+                                        <div className={cn("h-1.5 w-1.5 rounded-full", (conversionColors as any)[o]?.dot || "bg-muted-foreground")} />
                                         {o}
                                       </div>
                                     </SelectItem>
@@ -1743,8 +1743,8 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                   className={cn(
                                     "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
                                     row[col]?.toLowerCase() === "agency"
-                                      ? "bg-yellow-200 text-yellow-800"
-                                      : "bg-blue-200 text-blue-800",
+                                      ? "bg-brand-yellow/20 text-brand-yellow"
+                                      : "bg-brand-blue/20 text-brand-blue",
                                   )}
                                 >
                                   <SelectValue />
@@ -1770,7 +1770,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                               >
                                 <SelectTrigger
                                   className={cn(
-                                    "h-7 px-2 rounded-lg border border-transparent shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate bg-slate-50 text-slate-500",
+                                    "h-7 px-2 rounded-lg border border-transparent shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate bg-muted/50 text-muted-foreground",
                                     (timezoneColors as any)[row[col]]?.bg,
                                     (timezoneColors as any)[row[col]]?.text,
                                     (timezoneColors as any)[row[col]]?.border,
@@ -1789,7 +1789,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                             ) : isDateCol(col) ? (
                               <DateTimeCell value={row[col]} />
                             ) : isTimeCol(col) ? (
-                              <div className="flex items-center gap-1.5 text-xs text-slate-500 font-bold bg-slate-50/50 px-2 py-1 rounded">
+                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-bold bg-muted/30 px-2 py-1 rounded">
                                 <Clock className="h-3 w-3" />
                                 {formatHHmm(row[col])}
                               </div>
