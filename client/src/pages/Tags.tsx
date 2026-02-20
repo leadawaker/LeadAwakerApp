@@ -6,6 +6,7 @@ import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SkeletonCardGrid } from "@/components/ui/skeleton";
+import { DataEmptyState } from "@/components/crm/DataEmptyState";
 
 const TAG_CATEGORIES = [
   {
@@ -286,13 +287,19 @@ export default function TagsPage() {
 
                 <div className="overflow-y-auto divide-y">
                   {!selectedTagName ? (
-                    <div className="p-8 text-center text-muted-foreground opacity-40">
-                      Click a tag to see associated leads
-                    </div>
+                    <DataEmptyState
+                      variant="tags"
+                      title="Tag Insights"
+                      description="Click a tag to see associated leads and their details."
+                      compact
+                    />
                   ) : selectedLeads.length === 0 ? (
-                    <div className="p-8 text-center text-muted-foreground opacity-40">
-                      No leads found with this tag
-                    </div>
+                    <DataEmptyState
+                      variant="search"
+                      title="No leads found"
+                      description="No leads are associated with this tag yet."
+                      compact
+                    />
                   ) : (
                     selectedLeads.map((l: any) => (
                       <div key={l.id || l.Id} className="p-4 hover:bg-muted/10">

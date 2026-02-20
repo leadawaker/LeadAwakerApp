@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { SkeletonTable } from "@/components/ui/skeleton";
+import { DataEmptyState } from "@/components/crm/DataEmptyState";
 
 interface AppUser {
   id: number;
@@ -168,6 +169,12 @@ export default function UsersPage() {
                 <div className="text-right">Actions</div>
               </div>
               <div className="flex-1 overflow-y-auto divide-y divide-border ">
+                {!loading && rows.length === 0 && (
+                  <DataEmptyState
+                    variant={q ? "search" : "users"}
+                    compact
+                  />
+                )}
                 {rows.map((u) => (
                   <div key={u.id} className="grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_100px_100px] px-6 py-5 text-sm items-center hover:bg-muted/50 transition-colors" data-testid={`row-user-${u.id}`}>
                     <div className="text-muted-foreground font-mono text-xs">#{u.users_id || u.id}</div>

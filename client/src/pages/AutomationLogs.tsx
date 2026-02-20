@@ -14,6 +14,8 @@ import {
   PlayCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SkeletonTable } from "@/components/ui/skeleton";
+import { DataEmptyState } from "@/components/crm/DataEmptyState";
 
 const STATUS_CONFIG: Record<string, { color: string; icon: any }> = {
   success: { color: "text-[#10b981] bg-[#10b981]/10 border-[#10b981]/20", icon: CheckCircle2 },
@@ -122,7 +124,7 @@ export default function AutomationLogsPage() {
             isRetrying={loading}
           />
         ) : loading ? (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">Loading automation logs…</div>
+          <SkeletonTable rows={8} columns={6} className="flex-1" />
         ) : (
           <div
             className="flex-1 min-h-0 bg-card rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden relative"
@@ -140,6 +142,9 @@ export default function AutomationLogsPage() {
 
             {/* Rows */}
             <div className="flex-1 overflow-y-auto divide-y divide-border/30">
+              {paginatedRows.length === 0 && (
+                <DataEmptyState variant="automation" compact />
+              )}
               {paginatedRows.map((r: any, idx: number) => {
                 const status = r.status === "error" ? "failed" : r.status;
                 const config = STATUS_CONFIG[status] || STATUS_CONFIG.success;

@@ -6,6 +6,7 @@ import { FiltersBar } from "@/components/crm/FiltersBar";
 import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -321,9 +322,8 @@ export default function CalendarPage() {
             </div>
             <div className="flex-1 overflow-y-auto divide-y divide-border">
               {(selectedDate ? appointmentsForSelectedDate : appts).length === 0 ? (
-                <div className="p-8 text-center" data-testid="empty-appts">
-                   <div className="text-3xl mb-2 opacity-20">📅</div>
-                   <div className="text-sm text-muted-foreground font-medium">No appointments scheduled</div>
+                <div data-testid="empty-appts">
+                  <DataEmptyState variant="calendar" compact />
                 </div>
               ) : (
                 (selectedDate ? appointmentsForSelectedDate : appts).map((a) => (

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 import {
@@ -64,6 +65,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { DataEmptyState } from "@/components/crm/DataEmptyState";
 
 import {
   Activity,
@@ -182,6 +184,16 @@ export interface DataTableProps<TRow extends DataTableRow = DataTableRow> {
 
   onImportCSV?: (file: File) => void;
   onExportCSV?: () => void;
+
+  // ─────────────────────
+  // Empty state
+  // ─────────────────────
+  /** Variant for the empty state design when no rows exist */
+  emptyStateVariant?: import("@/components/crm/DataEmptyState").EmptyStateVariant;
+  /** Override empty state title */
+  emptyStateTitle?: string;
+  /** Override empty state description */
+  emptyStateDescription?: string;
 
   // ─────────────────────
   // Pagination
@@ -702,6 +714,9 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     onDelete,
     onImportCSV,
     onExportCSV,
+    emptyStateVariant = "generic",
+    emptyStateTitle,
+    emptyStateDescription,
     pageSize,
   } = props;
 
@@ -1413,6 +1428,42 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
             </TableHeader>
 
             <TableBody>
+              {/* Skeleton loading rows */}
+              {loading && rows.length === 0 && (
+                <>
+                  {Array.from({ length: 8 }).map((_, rowIdx) => {
+                    const widths = ["w-3/4", "w-1/2", "w-2/3", "w-1/3", "w-4/5", "w-2/5", "w-3/5"];
+                    return (
+                      <TableRow key={`skeleton-${rowIdx}`} className="hover:bg-transparent border-b border-border/40">
+                        <TableCell className="w-[40px] px-4">
+                          <Skeleton className="h-4 w-4 rounded" />
+                        </TableCell>
+                        {visibleCols.map((col, colIdx) => (
+                          <TableCell key={col} style={{ width: colWidths[col] }} className="px-4">
+                            <Skeleton className={cn("h-3.5 rounded", widths[(rowIdx + colIdx) % widths.length])} />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    );
+                  })}
+                </>
+              )}
+              {/* Empty state when no rows and not loading */}
+              {!loading && rows.length === 0 && (
+                <TableRow className="hover:bg-transparent">
+                  <TableCell
+                    colSpan={visibleCols.length + 1}
+                    className="p-0 border-b-0"
+                  >
+                    <DataEmptyState
+                      variant={emptyStateVariant}
+                      title={emptyStateTitle}
+                      description={emptyStateDescription}
+                      compact
+                    />
+                  </TableCell>
+                </TableRow>
+              )}
               {sortedGroupNames.map((groupName) => {
                 const groupRows = groupedRows[groupName];
                 return (

@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SkeletonDashboard } from "@/components/ui/skeleton";
+import { DataEmptyState } from "@/components/crm/DataEmptyState";
 
 const TAG_CATEGORIES = [
   {
@@ -299,7 +300,7 @@ function AgencyDashboard({ accounts, campaigns }: { accounts: Account[]; campaig
                 <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Active Campaigns</h3>
                 <div className="space-y-3">
                   {accCampaigns.length === 0 ? (
-                    <div className="text-xs text-muted-foreground italic p-4">No campaigns yet</div>
+                    <DataEmptyState variant="campaigns" compact />
                   ) : (
                     accCampaigns.map((c: any) => (
                       <div key={c.id} className="p-4 rounded-2xl bg-muted/30 dark:bg-muted/10 border border-border flex items-center justify-between">
@@ -731,9 +732,7 @@ function PipelineCol({
       </div>
         ))}
         {items.length === 0 ? (
-          <div className="flex items-center justify-center border-2 border-dashed border-border rounded-lg text-muted-foreground text-xs italic bg-muted/30 p-3">
-            No contacts.
-          </div>
+          <DataEmptyState variant="leads" compact title="No contacts" description="No leads in this pipeline stage." />
         ) : null}
       </div>
     </div>

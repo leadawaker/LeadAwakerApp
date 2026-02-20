@@ -4,6 +4,7 @@ import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLeads } from "@/hooks/useLeads";
 import { LeadDetailLayout } from "@/components/LeadDetailLayout";
+import { SkeletonLeadDetail } from "@/components/ui/skeleton";
 
 export default function LeadDetailPage() {
   const [location, setLocation] = useLocation();
@@ -37,9 +38,7 @@ export default function LeadDetailPage() {
   return (
     <CrmShell>
       {isLoading ? (
-        <div className="px-6 py-6 text-sm text-muted-foreground" data-testid="status-contact-loading">
-          Loading contact…
-        </div>
+        <SkeletonLeadDetail data-testid="status-contact-loading" />
       ) : !lead ? (
         <div className="px-6 py-6 text-sm text-muted-foreground" data-testid="text-contact-missing">
           Contact not found.

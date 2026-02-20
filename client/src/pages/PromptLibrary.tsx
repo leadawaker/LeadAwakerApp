@@ -4,6 +4,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { apiFetch } from "@/lib/apiUtils";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 import { SkeletonCardGrid } from "@/components/ui/skeleton";
+import { DataEmptyState } from "@/components/crm/DataEmptyState";
 
 export default function PromptLibraryPage() {
   const { currentAccountId } = useWorkspace();
@@ -64,6 +65,11 @@ export default function PromptLibraryPage() {
           <SkeletonCardGrid count={6} columns="grid-cols-1 md:grid-cols-2 xl:grid-cols-3" className="flex-1" />
         ) : (
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-2" data-testid="grid-prompts">
+            {rows.length === 0 && (
+              <div className="col-span-full">
+                <DataEmptyState variant={q ? "search" : "prompts"} />
+              </div>
+            )}
             {rows.map((p: any) => (
               <div key={p.id || p.Id} className="rounded-2xl border border-border bg-card p-4 h-fit shadow-sm" data-testid={`card-prompt-${p.id || p.Id}`}>
                 <div className="font-semibold text-foreground" data-testid={`text-prompt-name-${p.id || p.Id}`}>{p.name}</div>
