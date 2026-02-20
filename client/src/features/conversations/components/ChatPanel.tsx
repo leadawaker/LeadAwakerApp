@@ -144,7 +144,7 @@ function ChatBubble({ item }: { item: Interaction }) {
           isFailed && "border-destructive/50 opacity-80",
         )}
       >
-        <div className="whitespace-pre-wrap leading-relaxed">{item.content}</div>
+        <div className="whitespace-pre-wrap leading-relaxed">{item.content ?? item.Content}</div>
         <div
           className={cn(
             "mt-1 text-[11px] opacity-80 flex items-center gap-1",
