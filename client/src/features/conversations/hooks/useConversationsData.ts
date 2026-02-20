@@ -4,6 +4,7 @@ import {
   fetchLeads,
   fetchInteractions,
   sendMessage,
+  updateLeadTakeover,
 } from "../api/conversationsApi";
 
 export interface Lead {
@@ -40,6 +41,14 @@ export interface Interaction {
   content: string;
   status: string;
   who: string;
+  Who?: string;
+  ai_generated?: boolean;
+  is_manual_follow_up?: boolean;
+  isManualFollowUp?: boolean;
+  is_bump?: boolean;
+  bump_number?: number | null;
+  triggered_by?: string | null;
+  ai_model?: string | null;
   [key: string]: any;
 }
 
@@ -234,6 +243,36 @@ export function useConversationsData(
     [leads, toast],
   );
 
+  // Toggle AI / Human takeover for a lead
+  const handleToggleTakeover = useCallback(
+    async (leadId: number, manualTakeover: boolean) => {
+      // Optimistic update — flip the lead's manual_takeover in local state immediately
+      setLeads((prev) =>
+        prev.map((l) =>
+          l.id === leadId ? { ...l, manual_takeover: manualTakeover } : l,
+        ),
+      );
+      try {
+        await updateLeadTakeover(leadId, manualTakeover);
+        toast({
+          title: manualTakeover ? "Switched to Human mode" : "Switched to AI mode",
+          description: manualTakeover
+            ? "AI paused. You are now managing this conversation."
+            : "AI is now managing this conversation.",
+        });
+      } catch (err) {
+        // Revert on failure
+        setLeads((prev) =>
+          prev.map((l) =>
+            l.id === leadId ? { ...l, manual_takeover: !manualTakeover } : l,
+          ),
+        );
+        toast({ variant: "destructive", title: "Failed to update takeover state" });
+      }
+    },
+    [toast],
+  );
+
   return {
     leads,
     interactions,
@@ -242,6 +281,7 @@ export function useConversationsData(
     error,
     sending,
     handleSend,
+    handleToggleTakeover,
     refresh: loadData,
   };
 }

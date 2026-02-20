@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Bot, User, UserCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import type { Thread, Interaction } from "../hooks/useConversationsData";
@@ -7,10 +8,12 @@ interface ChatPanelProps {
   selected: Thread | null;
   sending: boolean;
   onSend: (leadId: number, content: string, type?: string) => Promise<void>;
+  onToggleTakeover?: (leadId: number, manualTakeover: boolean) => Promise<void>;
   className?: string;
 }
 
-export function ChatPanel({ selected, sending, onSend, className }: ChatPanelProps) {
+export function ChatPanel({ selected, sending, onSend, onToggleTakeover, className }: ChatPanelProps) {
+  const isHuman = selected?.lead.manual_takeover === true;
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevMsgCount = useRef(0);
@@ -59,19 +62,50 @@ export function ChatPanel({ selected, sending, onSend, className }: ChatPanelPro
               {selected ? `${selected.lead.phone ?? ""} • ${selected.lead.email ?? ""}` : ""}
             </div>
           </div>
-          {selected && (
-            <a
-              href={`/app/contacts/${selected.lead.id}`}
-              onClick={(e) => {
-                e.preventDefault();
-                window.history.pushState({}, "", `/app/contacts/${selected.lead.id}`);
-                window.dispatchEvent(new PopStateEvent("popstate"));
-              }}
-              className="text-xs font-semibold text-primary hover:underline"
-            >
-              Open contact
-            </a>
-          )}
+
+          <div className="flex items-center gap-3 shrink-0">
+            {/* AI / Human takeover toggle */}
+            {selected && onToggleTakeover && (
+              <button
+                type="button"
+                data-testid="takeover-toggle"
+                onClick={() => onToggleTakeover(selected.lead.id, !isHuman)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
+                  isHuman
+                    ? "bg-amber-500/15 text-amber-600 border-amber-500/30 hover:bg-amber-500/25 dark:text-amber-400"
+                    : "bg-emerald-500/15 text-emerald-700 border-emerald-500/30 hover:bg-emerald-500/25 dark:text-emerald-400",
+                )}
+                title={isHuman ? "Switch back to AI mode" : "Take over from AI"}
+              >
+                {isHuman ? (
+                  <>
+                    <User className="h-3.5 w-3.5" />
+                    <span data-testid="takeover-state-label">Human Active</span>
+                  </>
+                ) : (
+                  <>
+                    <Bot className="h-3.5 w-3.5" />
+                    <span data-testid="takeover-state-label">AI Active</span>
+                  </>
+                )}
+              </button>
+            )}
+
+            {selected && (
+              <a
+                href={`/app/contacts/${selected.lead.id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.history.pushState({}, "", `/app/contacts/${selected.lead.id}`);
+                  window.dispatchEvent(new PopStateEvent("popstate"));
+                }}
+                className="text-xs font-semibold text-primary hover:underline"
+              >
+                Open contact
+              </a>
+            )}
+          </div>
         </div>
       </div>
 
@@ -128,27 +162,112 @@ export function ChatPanel({ selected, sending, onSend, className }: ChatPanelPro
   );
 }
 
+/** Returns true if this interaction was generated/sent by the AI/automation system */
+function isAiMessage(item: Interaction): boolean {
+  if (item.ai_generated === true) return true;
+  if (item.is_bump === true) return true;
+  if ((item.triggered_by ?? item.triggeredBy) === "Automation") return true;
+  const who = (item.Who ?? item.who ?? "").toLowerCase();
+  if (who === "ai" || who === "bot" || who === "automation") return true;
+  if (/^bump\s*\d/.test(who)) return true;
+  if (who === "start") return true;
+  return false;
+}
+
+/** Returns true if this interaction was sent manually by a human agent */
+function isHumanAgentMessage(item: Interaction): boolean {
+  if (item.direction !== "Outbound") return false;
+  if (isAiMessage(item)) return false;
+  return true;
+}
+
+/** Returns true if this interaction is flagged as a manual follow-up by human */
+function isManualFollowUp(item: Interaction): boolean {
+  return (
+    item.is_manual_follow_up === true ||
+    item.isManualFollowUp === true
+  );
+}
+
 function ChatBubble({ item }: { item: Interaction }) {
   const outbound = item.direction === "Outbound";
+  const inbound = !outbound;
   const isFailed = item.status === "failed";
   const isSending = item.status === "sending";
+  const aiMsg = outbound && isAiMessage(item);
+  const humanAgentMsg = outbound && isHumanAgentMessage(item);
+  const manualFollowUp = isManualFollowUp(item);
 
   return (
-    <div className={cn("flex", outbound ? "justify-end" : "justify-start")}>
+    <div className={cn("flex flex-col", outbound ? "items-end" : "items-start")}>
+      {/* Sender label above bubble */}
+      {aiMsg && (
+        <div
+          className="flex items-center gap-1 mb-1 px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 text-[10px] font-semibold border border-violet-200 dark:border-violet-700/50 select-none"
+          data-testid="ai-badge"
+          title="AI-generated message"
+        >
+          <Bot className="w-3 h-3 shrink-0" />
+          <span>AI</span>
+          {item.Who && item.Who !== "AI" && (
+            <span className="opacity-70">· {item.Who}</span>
+          )}
+        </div>
+      )}
+      {humanAgentMsg && (
+        <div
+          className="flex items-center gap-1 mb-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold border border-primary/20 select-none"
+          data-testid="agent-badge"
+          title="Human agent message"
+        >
+          <User className="w-3 h-3 shrink-0" />
+          <span>Agent</span>
+          {manualFollowUp && (
+            <span
+              className="flex items-center gap-0.5 ml-1 px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-400/30 text-[9px] font-bold"
+              data-testid="manual-follow-up-badge"
+              title="Manual follow-up message"
+            >
+              <UserCheck className="w-2.5 h-2.5 shrink-0" />
+              Manual
+            </span>
+          )}
+        </div>
+      )}
+      {inbound && (
+        <div
+          className="flex items-center gap-1 mb-1 px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-semibold border border-border select-none"
+          data-testid="lead-badge"
+          title="Message from lead"
+        >
+          <User className="w-3 h-3 shrink-0" />
+          <span>Lead</span>
+        </div>
+      )}
+
       <div
         className={cn(
           "max-w-[78%] rounded-2xl px-3 py-2 text-sm border",
-          outbound
-            ? "bg-primary text-primary-foreground border-primary/20"
-            : "bg-muted/40 text-foreground border-border",
+          // Inbound (lead message) — muted/neutral left-aligned bubble
+          inbound && "bg-muted/40 text-foreground border-border",
+          // AI-generated outbound — violet bubble with dashed border
+          aiMsg &&
+            "bg-violet-600/90 dark:bg-violet-700/80 text-white border-dashed border-violet-400/60 dark:border-violet-500/50",
+          // Human agent outbound — primary/brand color solid bubble
+          humanAgentMsg && !manualFollowUp && "bg-primary text-primary-foreground border-primary/20",
+          // Manual follow-up by human agent — amber/warm tint to distinguish
+          humanAgentMsg && manualFollowUp && "bg-amber-500 text-white border-amber-400/40",
           isFailed && "border-destructive/50 opacity-80",
         )}
+        data-message-type={
+          inbound ? "lead" : aiMsg ? "ai" : manualFollowUp ? "manual-follow-up" : "agent"
+        }
       >
         <div className="whitespace-pre-wrap leading-relaxed">{item.content ?? item.Content}</div>
         <div
           className={cn(
-            "mt-1 text-[11px] opacity-80 flex items-center gap-1",
-            outbound ? "text-primary-foreground/80" : "text-muted-foreground",
+            "mt-1 text-[11px] opacity-70 flex items-center gap-1 flex-wrap",
+            outbound ? "text-white/80" : "text-muted-foreground",
           )}
         >
           {item.created_at || item.createdAt
