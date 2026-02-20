@@ -226,11 +226,19 @@ export default function AppDashboard() {
     // Count leads with actual booked_call_date (north star KPI)
     const callsBooked = accountLeads.filter((l: any) => Boolean(l.booked_call_date)).length;
     const aiCost = accountCampaigns.reduce((sum: number, c: any) => sum + (Number(c.total_cost) || 0), 0);
+    // Messages sent: sum of message_count_sent across all account leads
+    const messagesSent = accountLeads.reduce((sum: number, l: any) => sum + (Number(l.message_count_sent) || 0), 0);
+    // Response rate: percentage of leads that received at least one response
+    const leadsContacted = accountLeads.filter((l: any) => (Number(l.message_count_sent) || 0) > 0).length;
+    const leadsResponded = accountLeads.filter((l: any) => (Number(l.message_count_received) || 0) > 0).length;
+    const responseRate = leadsContacted > 0 ? Math.round((leadsResponded / leadsContacted) * 100) : 0;
     return {
       totalLeads: accountLeads.length,
       activeCampaigns: accountCampaigns.filter((c: any) => c.status === "Active").length,
       callsBooked,
       aiCost,
+      messagesSent,
+      responseRate,
     };
   }, [leads, campaigns, currentAccountId, selectedCampaignId]);
 
@@ -284,12 +292,24 @@ function AgencyDashboard({ accounts, campaigns, leads }: { accounts: Account[]; 
     return leads.filter((l: any) => Boolean(l.booked_call_date)).length;
   }, [leads]);
 
+  // Agency-wide secondary KPI stats
+  const agencyStats = useMemo(() => {
+    const totalLeads = leads.length;
+    const activeCampaigns = campaigns.filter((c: any) => c.status === "Active").length;
+    const messagesSent = leads.reduce((sum: number, l: any) => sum + (Number(l.message_count_sent) || 0), 0);
+    const leadsContacted = leads.filter((l: any) => (Number(l.message_count_sent) || 0) > 0).length;
+    const leadsResponded = leads.filter((l: any) => (Number(l.message_count_received) || 0) > 0).length;
+    const responseRate = leadsContacted > 0 ? Math.round((leadsResponded / leadsContacted) * 100) : 0;
+    return { totalLeads, activeCampaigns, messagesSent, responseRate };
+  }, [leads, campaigns]);
+
   return (
     <div className="mt-6 space-y-12" data-testid="agency-dashboard">
-      {/* Hero KPI: Calls Booked — top, largest element */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 -mb-6">
+      {/* Hero KPI + Secondary KPI cards grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 -mb-6" data-testid="secondary-kpi-cards">
+        {/* Hero KPI: Calls Booked — largest, most prominent */}
         <div
-          className="md:col-span-1 rounded-2xl border-2 shadow-lg relative overflow-hidden flex flex-col justify-between p-6"
+          className="col-span-2 row-span-2 rounded-2xl border-2 shadow-lg relative overflow-hidden flex flex-col justify-between p-6"
           style={{ borderColor: '#FCB803', background: 'linear-gradient(135deg, rgba(252,184,3,0.08) 0%, rgba(252,184,3,0.02) 100%)' }}
           data-testid="stat-bookings"
         >
@@ -311,6 +331,12 @@ function AgencyDashboard({ accounts, campaigns, leads }: { accounts: Account[]; 
             <div className="h-1.5 w-16 rounded-full mt-2" style={{ backgroundColor: '#FCB803' }} />
           </div>
         </div>
+
+        {/* Secondary KPI cards — response rate, total leads, active campaigns, messages sent */}
+        <Stat label="Response Rate" value={`${agencyStats.responseRate}%`} testId="stat-response-rate" icon={<TrendingUp className="w-4 h-4" />} />
+        <Stat label="Total Leads" value={String(agencyStats.totalLeads)} testId="stat-total-leads" icon={<Users className="w-4 h-4" />} />
+        <Stat label="Active Campaigns" value={String(agencyStats.activeCampaigns)} testId="stat-active-campaigns" icon={<Target className="w-4 h-4" />} />
+        <Stat label="Messages Sent" value={String(agencyStats.messagesSent)} testId="stat-messages-sent" icon={<MessageSquare className="w-4 h-4" />} />
       </div>
 
       <QuickJumpCards />
@@ -430,7 +456,7 @@ function SubaccountDashboard({
     <div className="mt-0 space-y-12 flex flex-col" data-testid="subaccount-dashboard">
       <QuickJumpCards />
       <div className="-mt-10 mb-8" data-testid="grid-kpis">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3" data-testid="secondary-kpi-cards">
           {/* Hero KPI: Calls Booked — largest, most prominent, top-left */}
           <div
             className="col-span-2 row-span-2 rounded-2xl border-2 shadow-lg relative overflow-hidden flex flex-col justify-between p-6"
@@ -456,12 +482,11 @@ function SubaccountDashboard({
             </div>
           </div>
 
-          {/* Remaining KPI cards — standard size */}
-          <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" icon={<Users className="w-4 h-4" />} />
-          <Stat label="Active Campaigns" value={String(stats.activeCampaigns)} testId="stat-active" icon={<Target className="w-4 h-4" />} />
-          <Stat label="AI Cost" value={`$${stats.aiCost.toFixed(0)}`} testId="stat-cost" icon={<Zap className="w-4 h-4" />} />
-          <Stat label="Avg Resp Time" value="4.2m" testId="stat-resp" icon={<Clock className="w-4 h-4" />} />
-          <Stat label="Conv Rate" value="12.4%" testId="stat-conv" icon={<TrendingUp className="w-4 h-4" />} />
+          {/* Secondary KPI cards — response rate, total leads, active campaigns, messages sent */}
+          <Stat label="Response Rate" value={`${stats.responseRate}%`} testId="stat-response-rate" icon={<TrendingUp className="w-4 h-4" />} />
+          <Stat label="Total Leads" value={String(stats.totalLeads)} testId="stat-total-leads" icon={<Users className="w-4 h-4" />} />
+          <Stat label="Active Campaigns" value={String(stats.activeCampaigns)} testId="stat-active-campaigns" icon={<Target className="w-4 h-4" />} />
+          <Stat label="Messages Sent" value={String(stats.messagesSent)} testId="stat-messages-sent" icon={<MessageSquare className="w-4 h-4" />} />
         </div>
       </div>
 
@@ -522,29 +547,61 @@ function SubaccountDashboard({
             <div className="mb-4">
               <h3 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/15 dark:bg-muted/8 glass-surface text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Sales Funnel</h3>
             </div>
-            <div className="flex-grow rounded-2xl border border-border bg-card p-4 md:p-6 shadow-sm flex flex-col">
-              <div className="flex-grow flex flex-col justify-between py-2">
-                {funnel.map((stage: any, idx: number) => {
-                  const maxVal = Math.max(...funnel.map((s: any) => s.value), 1);
-                  return (
-                    <div key={stage.name} className="space-y-1.5">
-                      <div className="flex justify-between text-[13px] font-bold">
-                        <span className="text-muted-foreground">{stage.name}</span>
-                        <span className="text-foreground">{stage.value}</span>
-                      </div>
-                      <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+            <div className="flex-grow rounded-2xl border border-border bg-card p-4 md:p-6 shadow-sm flex flex-col" data-testid="pipeline-funnel">
+              {(() => {
+                const totalLeads = funnel.reduce((sum: number, s: any) => sum + s.value, 0);
+                const stageCount = funnel.length;
+                // Funnel tapering: widest at top (100%), narrowest at bottom
+                const minWidth = 40; // minimum width percentage for last stage
+                return (
+                  <div className="flex-grow flex flex-col justify-center gap-1 py-2">
+                    {funnel.map((stage: any, idx: number) => {
+                      const pct = totalLeads > 0 ? (stage.value / totalLeads) * 100 : 0;
+                      // Funnel taper: each stage gets progressively narrower
+                      const taperWidth = 100 - ((100 - minWidth) * idx / Math.max(stageCount - 1, 1));
+                      return (
                         <div
-                          className="h-full rounded-full transition-all duration-1000 ease-out"
-                          style={{
-                            width: `${(stage.value / maxVal) * 100}%`,
-                            backgroundColor: stage.fill,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                          key={stage.name}
+                          className="flex flex-col items-center"
+                          data-testid={`funnel-stage-${stage.name.toLowerCase().replace(/\s+/g, '-')}`}
+                        >
+                          <div
+                            className="relative flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-700 ease-out group/stage cursor-default"
+                            style={{
+                              width: `${taperWidth}%`,
+                              backgroundColor: `${stage.fill}18`,
+                              borderLeft: `3px solid ${stage.fill}`,
+                            }}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-[12px] font-bold text-muted-foreground truncate">{stage.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span
+                                className="text-[11px] font-bold rounded-full px-2 py-0.5"
+                                style={{ color: stage.fill, backgroundColor: `${stage.fill}15` }}
+                                data-testid={`funnel-count-${stage.name.toLowerCase().replace(/\s+/g, '-')}`}
+                              >
+                                {stage.value}
+                              </span>
+                              <span
+                                className="text-[10px] font-bold text-muted-foreground tabular-nums"
+                                data-testid={`funnel-pct-${stage.name.toLowerCase().replace(/\s+/g, '-')}`}
+                              >
+                                {pct.toFixed(0)}%
+                              </span>
+                            </div>
+                          </div>
+                          {/* Connector line between stages */}
+                          {idx < stageCount - 1 && (
+                            <div className="h-1 w-px bg-border" />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
