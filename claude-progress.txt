@@ -1,3 +1,49 @@
+## Session 2026-02-20 (17th) - Coding Agent
+
+### Completed Features:
+- Feature #44: View toggle (Kanban vs Table) - PASSING
+  - Created LeadsKanban component (client/src/features/leads/components/LeadsKanban.tsx)
+    - 8 pipeline columns: New, Contacted, Responded, Multiple Responses, Qualified, Booked, Lost, DND
+    - Each column has colored header with dot indicator, stage name, and count badge
+    - Lead cards show initials avatar, name, account name, email, phone, priority badge
+    - Cards also show interaction count, booked status, relative last activity date, and notes preview
+    - Loading skeleton state for Kanban board
+    - Empty state per column with "No leads" indicator
+    - Horizontally scrollable board with responsive column widths (260-300px)
+  - Modified LeadsTable.tsx to add view toggle
+    - Added viewMode state ("table" | "kanban")
+    - Toggle rendered as segmented control with Table2 and LayoutGrid icons
+    - Active view highlighted in brand-blue, inactive in muted style
+    - Conditionally renders DataTable or LeadsKanban based on viewMode
+    - Both views share the same filteredLeads data (filters persist across view switches)
+  - All state (search, filters, data) managed at parent level, shared between views
+
+### Verification:
+- Playwright browser automation confirmed all 4 feature steps:
+  1. Click toggle to switch from Table to Kanban → Kanban renders with 8 columns, lead cards visible
+  2. Verify data renders in Kanban format → Cards show initials, name, account, metadata
+  3. Switch back to Table → Table renders correctly with same data
+  4. Apply search "Gabriel", switch views → Filter persists: only Gabriel Fronza shown in Booked column
+- Visual screenshots verified: view toggle prominent in top-right, Kanban board with colored columns
+- Zero JavaScript errors in console
+- Zero mock data patterns in new/modified files (Step 5.6 clean)
+- Real database data: 9 leads from PostgreSQL via /api/leads
+
+### Code Changes:
+- NEW: client/src/features/leads/components/LeadsKanban.tsx - Full Kanban board component
+- MODIFIED: client/src/features/leads/components/LeadsTable.tsx - Added view toggle + Kanban integration
+
+### Environment Notes:
+- Server on port 5001 (started this session via npx tsx watch)
+- Vite on port 5173
+- DB healthy: 11/11 tables accessible
+- Login via leadawaker@gmail.com / test123
+
+### Current Status:
+- 40/207 features passing (39 at session start, +1 this session)
+- Feature #44 marked passing after browser verification
+- Git commit: 20deb4b
+
 ## Session 2026-02-20 (16th) - Coding Agent
 
 ### Completed Features:
