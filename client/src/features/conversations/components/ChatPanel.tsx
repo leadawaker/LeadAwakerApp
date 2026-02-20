@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { Bot, User, UserCheck, Check, CheckCheck, Clock, AlertCircle, FileText, Music, Video, Download, ExternalLink, MessageSquare } from "lucide-react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { Bot, User, UserCheck, Check, CheckCheck, Clock, AlertCircle, FileText, Music, Video, Download, ExternalLink, MessageSquare, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { SkeletonChatThread } from "@/components/ui/skeleton";
@@ -18,16 +18,58 @@ export function ChatPanel({ selected, loading = false, sending, onSend, onToggle
   const isHuman = selected?.lead.manual_takeover === true;
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const prevLeadId = useRef<number | null>(null);
   const prevMsgCount = useRef(0);
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
-  // Auto-scroll when new messages arrive
+  /** Scroll the chat area to the very bottom. */
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    const el = scrollRef.current;
+    if (el) {
+      el.scrollTo({ top: el.scrollHeight, behavior });
+    }
+  }, []);
+
+  /** When a new conversation is selected, jump immediately to the bottom. */
+  useEffect(() => {
+    const leadId = selected?.lead.id ?? null;
+    if (leadId !== prevLeadId.current) {
+      prevLeadId.current = leadId;
+      prevMsgCount.current = selected?.msgs.length ?? 0;
+      // Use "instant" (no animation) when switching threads so the user
+      // immediately sees the latest message instead of watching it scroll.
+      setTimeout(() => scrollToBottom("instant"), 0);
+      setShowScrollButton(false);
+    }
+  }, [selected?.lead.id, scrollToBottom]);
+
+  /** When new messages arrive in the current thread, smooth-scroll to bottom
+   *  only if the user is already near the bottom (within 200 px). */
   useEffect(() => {
     const count = selected?.msgs.length ?? 0;
     if (count !== prevMsgCount.current) {
       prevMsgCount.current = count;
-      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+      const el = scrollRef.current;
+      if (el) {
+        const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+        if (distanceFromBottom < 200) {
+          scrollToBottom("smooth");
+        }
+        // If user is far up, show the scroll-to-bottom button instead
+        else {
+          setShowScrollButton(true);
+        }
+      }
     }
-  }, [selected?.msgs.length]);
+  }, [selected?.msgs.length, scrollToBottom]);
+
+  /** Track scroll position to show/hide the scroll-to-bottom button. */
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setShowScrollButton(distanceFromBottom > 80);
+  }, []);
 
   const handleSubmit = async () => {
     if (!selected || !draft.trim() || sending) return;
@@ -120,41 +162,63 @@ export function ChatPanel({ selected, loading = false, sending, onSend, onToggle
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3" ref={scrollRef} data-testid="chat-scroll">
-        {loading && !selected ? (
-          // Loading skeleton — mimics chat bubbles while data loads
-          <SkeletonChatThread data-testid="skeleton-chat-thread" />
-        ) : !selected ? (
-          <div className="flex items-center justify-center h-full">
-            <DataEmptyState
-              variant="conversations"
-              title="Select a conversation"
-              description="Pick a contact on the left to view their messages."
-              compact
-            />
-          </div>
-        ) : selected.msgs.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <DataEmptyState
-              variant="conversations"
-              title="No messages yet"
-              description="Start the conversation by sending a message below."
-              compact
-            />
-          </div>
-        ) : (() => {
-          const threadGroups = groupMessagesByThread(selected.msgs);
-          return threadGroups.map((group, gi) => (
-            <div key={group.threadId} data-testid={`thread-group-${gi}`}>
-              {/* Thread boundary divider — always shown so boundaries are always visible */}
-              <ThreadDivider group={group} total={threadGroups.length} />
-              {/* Messages within this thread in chronological order */}
-              {group.msgs.map((m) => (
-                <ChatBubble key={m.id} item={m} />
-              ))}
+      {/* Scroll container wrapper — relative so the FAB button can be positioned inside */}
+      <div className="flex-1 overflow-hidden relative">
+        <div
+          className="h-full overflow-y-auto p-4 space-y-3"
+          ref={scrollRef}
+          onScroll={handleScroll}
+          data-testid="chat-scroll"
+        >
+          {loading && !selected ? (
+            // Loading skeleton — mimics chat bubbles while data loads
+            <SkeletonChatThread data-testid="skeleton-chat-thread" />
+          ) : !selected ? (
+            <div className="flex items-center justify-center h-full">
+              <DataEmptyState
+                variant="conversations"
+                title="Select a conversation"
+                description="Pick a contact on the left to view their messages."
+                compact
+              />
             </div>
-          ));
-        })()}
+          ) : selected.msgs.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <DataEmptyState
+                variant="conversations"
+                title="No messages yet"
+                description="Start the conversation by sending a message below."
+                compact
+              />
+            </div>
+          ) : (() => {
+            const threadGroups = groupMessagesByThread(selected.msgs);
+            return threadGroups.map((group, gi) => (
+              <div key={group.threadId} data-testid={`thread-group-${gi}`}>
+                {/* Thread boundary divider — always shown so boundaries are always visible */}
+                <ThreadDivider group={group} total={threadGroups.length} />
+                {/* Messages within this thread in chronological order */}
+                {group.msgs.map((m) => (
+                  <ChatBubble key={m.id} item={m} />
+                ))}
+              </div>
+            ));
+          })()}
+        </div>
+
+        {/* Scroll-to-bottom floating button — appears when user has scrolled up */}
+        {showScrollButton && (
+          <button
+            type="button"
+            onClick={() => scrollToBottom("smooth")}
+            className="absolute bottom-3 right-3 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all duration-150"
+            data-testid="button-scroll-to-bottom"
+            title="Scroll to latest message"
+            aria-label="Scroll to latest message"
+          >
+            <ChevronDown className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <div className="p-4 border-t border-border shrink-0" data-testid="chat-compose">
