@@ -1,3 +1,20 @@
+## Session 2026-02-20 (21st) - Coding Agent
+
+### Completed Features:
+- Feature #25: Hot leads widget - PASSING
+  - Created HotLeadsWidget component (client/src/components/crm/HotLeadsWidget.tsx)
+  - Computes lead engagement score (0-100) based on conversion status, messages, bump stage, recency, priority
+  - Falls back to DB lead_score field if available
+  - Filters out DND/Lost/opted-out leads, sorts by score descending, shows top 5
+  - Each lead shows: name, score badge (color-coded), current stage with colored dot
+  - Clicking a lead navigates to lead detail page
+  - Integrated into both AgencyDashboard and SubaccountDashboard
+  - Zero console errors, zero mock data patterns, real DB data
+
+### Current Status:
+- 44/207 features passing (43 at session start, +1 this session)
+- Feature #25 marked passing after browser verification
+
 ## Session 2026-02-20 (20th) - Coding Agent
 
 ### Completed Features:
