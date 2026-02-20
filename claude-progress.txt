@@ -1,3 +1,48 @@
+## Session 2026-02-21 - Coding Agent (Feature #107)
+
+### Completed Features:
+- Feature #107: Chat responsive single-panel mobile - PASSING
+  - Feature was already fully implemented from previous sessions
+  - All 4 feature steps verified with Playwright browser automation at 390x844px (mobile) viewport:
+
+  1. **Mobile inbox as primary view**: At 390px width, only the inbox/thread list panel is rendered
+     - No chat panel in DOM at all (not just hidden — fully unmounted)
+     - All controls (tabs, sort, filter, search, thread list) visible full-width
+
+  2. **Conversation list as primary**: Thread list fills the full single-column width
+     - 10 threads visible, Inbox/Unread tabs, sort dropdown, filters button, search all accessible
+
+  3. **Select conversation → thread replaces list**:
+     - Clicking a thread hides inbox list completely, shows chat panel full-width
+     - Back chevron (`<`) in top-left, contact name as heading, full message history visible
+     - AI Active toggle, Open contact link, message input all present
+
+  4. **Back button returns to inbox list**:
+     - Tapping back (`mobileView = "inbox"`) restores the full thread list
+     - Chat panel is completely removed from DOM again
+
+### Implementation (already in place from Feature #90 session):
+- `mobileView` state in Conversations.tsx: `"inbox" | "chat"` (default: `"inbox"`)
+- `handleSelectLead()` sets `setMobileView("chat")`
+- Back button in mobile header calls `setMobileView("inbox")`
+- InboxPanel: `className={cn(mobileView === "chat" ? "hidden md:flex" : "flex")}`
+- ChatPanel: `className={cn(mobileView === "inbox" ? "hidden md:flex" : "flex")}`
+- ContactSidebar: default `className="hidden xl:flex ..."` — hidden on mobile/tablet
+- Mobile header (md:hidden): shows back button + lead name or "Conversations" title
+
+### Verification:
+- Screenshots saved: step1_mobile_inbox.png, step2_mobile_chat.png, step3_mobile_back.png
+- All 3 screenshots confirm correct single-panel behavior
+- Zero JS console errors (0 errors, 0 warnings)
+- No code changes required — feature was already fully implemented
+
+### Code Changes:
+- No code changes required
+
+### Current Status:
+- 78/207 features passing (77 at session start, +1 this session)
+- Feature #107 marked passing after thorough browser verification
+
 ## Session 2026-02-20 - Coding Agent (Feature #98)
 
 ### Completed Features:
@@ -2655,3 +2700,53 @@
 ### Current Status:
 - 76/207 features passing (75 at session start, +1 this session)
 - Feature #105 marked passing after thorough browser verification
+
+## Session 2026-02-20 - Coding Agent (Feature #106)
+
+### Completed Features:
+- Feature #106: Chat dark mode variant - PASSING
+  - Verified dark mode toggle works via settings panel (gear icon → Dark Mode button)
+  - Button has data-testid="button-dark-mode-toggle", persists theme to localStorage
+  - All 4 feature steps confirmed passing:
+
+  1. **Dark mode toggle**: Gear icon in top nav opens settings panel → "Dark Mode" button applies .dark class to <html> element → Moon icon shown in top nav to confirm
+
+  2. **All three panels use dark surfaces**:
+     - Body/page: rgb(17, 20, 34) — deep navy
+     - Inbox panel: rgb(24, 30, 47) — dark card surface
+     - Chat panel: rgb(24, 30, 47) — dark card surface
+     - Contact sidebar: rgb(24, 30, 47) — dark card surface
+     - Sidebar nav: even deeper navy (sidebar-bg = 228 40% 8%)
+
+  3. **Message bubbles are readable**:
+     - Lead inbound (gray): bg-muted/40 dark:bg-muted/70 — improved opacity in dark mode
+     - AI outbound (violet): bg-violet-600/90 dark:bg-violet-700/80 text-white — white text on deep violet
+     - Agent outbound (blue): bg-primary text-primary-foreground — brand blue with white text
+     - ALL have sufficient contrast in dark mode
+
+  4. **Interactive elements styled correctly**:
+     - "AI Active" badge: emerald tinted, visible
+     - "Open contact" button: outlined, dark-themed
+     - Send button: brand blue (rgb(102, 130, 255)) with white text
+     - Text input: dark surface bg-muted/30 with off-white text
+     - Filter dropdowns (Account, Campaign): bg-background = dark navy with light text
+     - AI/Human segmented control: proper dark mode contrast
+
+### Code Changes:
+- MODIFIED: client/src/features/conversations/components/ChatPanel.tsx
+  - Inbound bubble: added `dark:bg-muted/70` to increase opacity from 40% to 70% in dark mode
+  - Inbound timestamp: changed from `opacity-70` universal to `opacity-70 dark:opacity-90` 
+    for better readability in dark mode
+  - Outbound timestamp: changed from `text-white/80 opacity-70` to `text-white/70` (simpler)
+
+### Verification:
+- Playwright browser automation confirmed all 4 feature steps
+- Screenshots in test-results/feature-106/
+- Zero JS console errors (0 errors, 0 warnings)
+- No mock data patterns
+- Dark mode toggle persists across navigation (localStorage)
+
+### Current Status:
+- 77/207 features passing (76 at session start, +1 this session)
+- Feature #106 marked passing after thorough browser verification
+- Git commit: 0606110
