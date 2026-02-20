@@ -1693,3 +1693,35 @@
 ### Current Status:
 - 14/207 features passing (13 at session start, +1 this session)
 - Git commit: d8f3e59
+
+## Session 2026-02-20 - Coding Agent (Feature #29)
+
+### Completed Features:
+- Feature #29: Account filter dropdown (agency view) - PASSING
+  - Account filter dropdown was already fully implemented in AppDashboard.tsx
+  - Uses dashboardAccountFilter state with Building2 icon and ChevronDown chevron
+  - Lists all client accounts (excludes Agency account id=1) in dropdown
+  - Selecting a specific account scopes ALL dashboard widgets:
+    - KPI cards (Calls Booked, Total Leads, Messages Sent, Response Rate)
+    - Hot Leads widget
+    - Lead Score Distribution chart
+    - Campaign Performance cards
+    - Subaccounts section (shows only selected account)
+  - "All Accounts" option shows aggregate data across all accounts
+  - Campaign filter resets when account filter changes (if selected campaign doesn't belong to new account)
+  - Verified via Playwright browser automation:
+    1. Admin login: account filter dropdown visible with "All Accounts" default, shows 5 client accounts
+    2. Selected "van de Kerkhof": Total Leads went from 9→4, Calls Booked from 2→1, only van de Kerkhof shown in subaccounts
+    3. Viewer login (viewer@test.com): account filter dropdown completely hidden, 403 on /api/accounts (correct security)
+  - Zero mock data patterns found in AppDashboard.tsx
+  - Only expected console errors: 403 on /api/accounts for viewer user (correct RBAC)
+
+### Environment Notes:
+- API server on port 5001 (started with npx tsx watch)
+- Vite dev server on port 5175 (started with npx vite)
+- STANDALONE_API=true in .env (separate API and frontend servers)
+- DB reachable, all 11 tables healthy
+
+### Current Status:
+- Feature #29 marked passing after thorough browser verification
+- No code changes needed - feature was already fully implemented
