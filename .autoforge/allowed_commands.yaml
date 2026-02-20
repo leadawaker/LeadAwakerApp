@@ -7,3 +7,4 @@ allowed_commands:
   - pkill
   - kill
   - lsof
+  - playwright-cli
