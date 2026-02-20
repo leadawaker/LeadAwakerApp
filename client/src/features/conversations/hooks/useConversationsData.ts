@@ -52,11 +52,14 @@ export interface Thread {
 
 const POLL_INTERVAL = 15_000; // 15 seconds
 
+export type AiStateFilter = "all" | "ai" | "human";
+
 export function useConversationsData(
   currentAccountId?: number,
   campaignId: number | "all" = "all",
   tab: "all" | "unread" = "all",
   searchQuery = "",
+  aiStateFilter: AiStateFilter = "all",
 ) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [interactions, setInteractions] = useState<Interaction[]>([]);
@@ -120,7 +123,7 @@ export function useConversationsData(
       .map((lead) => {
         const leadId = lead.id;
         const msgs = interactions
-          .filter((i) => (i.lead_id ?? i.leads_id) === leadId)
+          .filter((i) => (i.lead_id ?? i.leads_id ?? i.Leads_id) === leadId)
           .sort((a, b) =>
             (a.created_at ?? a.createdAt ?? "").localeCompare(
               b.created_at ?? b.createdAt ?? "",
@@ -138,7 +141,7 @@ export function useConversationsData(
           (t.lead.full_name ?? `${t.lead.first_name ?? ""} ${t.lead.last_name ?? ""}`).toLowerCase();
         const phone = (t.lead.phone ?? "").toLowerCase();
         const email = (t.lead.email ?? "").toLowerCase();
-        const lastMsg = (t.last?.content ?? "").toLowerCase();
+        const lastMsg = (t.last?.content ?? t.last?.Content ?? "").toLowerCase();
         return (
           name.includes(query) ||
           phone.includes(query) ||
@@ -152,9 +155,17 @@ export function useConversationsData(
         ),
       );
 
-    if (tab === "unread") return all.filter((t) => t.unread);
-    return all;
-  }, [leads, interactions, currentAccountId, campaignId, tab, searchQuery]);
+    // Filter by AI/human state
+    const stateFiltered =
+      aiStateFilter === "all"
+        ? all
+        : aiStateFilter === "human"
+        ? all.filter((t) => t.lead.manual_takeover === true)
+        : all.filter((t) => !t.lead.manual_takeover);
+
+    if (tab === "unread") return stateFiltered.filter((t) => t.unread);
+    return stateFiltered;
+  }, [leads, interactions, currentAccountId, campaignId, tab, searchQuery, aiStateFilter]);
 
   // Send message
   const handleSend = useCallback(

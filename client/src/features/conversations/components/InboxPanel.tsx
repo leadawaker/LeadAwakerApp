@@ -2,12 +2,25 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
-import type { Thread, Lead } from "../hooks/useConversationsData";
+import { ChevronDown, SlidersHorizontal, Bot, User, LayoutList } from "lucide-react";
+import type { Thread, Lead, AiStateFilter } from "../hooks/useConversationsData";
 
 function initialsFor(lead: Lead) {
   const a = (lead.first_name ?? "").slice(0, 1);
   const b = (lead.last_name ?? "").slice(0, 1);
   return `${a}${b}`.toUpperCase() || "?";
+}
+
+interface Campaign {
+  id: number;
+  name: string;
+  accounts_id?: number;
+  Accounts_id?: number;
+}
+
+interface Account {
+  id: number;
+  name: string;
 }
 
 interface InboxPanelProps {
@@ -19,6 +32,21 @@ interface InboxPanelProps {
   onTabChange: (tab: "all" | "unread") => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  /** Campaign filter state */
+  selectedCampaignId: number | "all";
+  onCampaignChange: (id: number | "all") => void;
+  /** AI/Human state filter */
+  aiStateFilter: AiStateFilter;
+  onAiStateFilterChange: (v: AiStateFilter) => void;
+  /** Available campaigns for filter dropdown */
+  campaigns?: Campaign[];
+  /** Available accounts (agency view only) */
+  accounts?: Account[];
+  /** Current selected account (agency view) */
+  selectedAccountId?: number | "all";
+  onAccountChange?: (id: number | "all") => void;
+  /** Whether the current user is an agency user */
+  isAgencyUser?: boolean;
   className?: string;
 }
 
@@ -31,8 +59,24 @@ export function InboxPanel({
   onTabChange,
   searchQuery,
   onSearchChange,
+  selectedCampaignId,
+  onCampaignChange,
+  aiStateFilter,
+  onAiStateFilterChange,
+  campaigns = [],
+  accounts = [],
+  selectedAccountId,
+  onAccountChange,
+  isAgencyUser = false,
   className,
 }: InboxPanelProps) {
+  const [showFilters, setShowFilters] = useState(false);
+
+  const hasActiveFilters =
+    selectedCampaignId !== "all" ||
+    aiStateFilter !== "all" ||
+    (isAgencyUser && selectedAccountId !== "all");
+
   return (
     <section
       className={cn(
@@ -41,33 +85,154 @@ export function InboxPanel({
       )}
       data-testid="panel-inbox"
     >
+      {/* Header: tabs + filter toggle */}
       <div className="p-4 border-b border-border shrink-0" data-testid="panel-inbox-head">
-        <div className="flex items-center gap-4 mb-2" data-testid="row-inbox-tabs">
+        <div className="flex items-center justify-between gap-4 mb-2" data-testid="row-inbox-tabs">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => onTabChange("all")}
+              className={cn(
+                "text-sm font-bold transition-colors pb-1 border-b-2",
+                tab === "all"
+                  ? "text-foreground border-primary"
+                  : "text-muted-foreground border-transparent hover:text-foreground",
+              )}
+              data-testid="button-tab-all"
+            >
+              Inbox
+            </button>
+            <button
+              onClick={() => onTabChange("unread")}
+              className={cn(
+                "text-sm font-bold transition-colors pb-1 border-b-2",
+                tab === "unread"
+                  ? "text-foreground border-primary"
+                  : "text-muted-foreground border-transparent hover:text-foreground",
+              )}
+              data-testid="button-tab-unread"
+            >
+              Unread
+            </button>
+          </div>
+
+          {/* Filter toggle button */}
           <button
-            onClick={() => onTabChange("all")}
+            type="button"
+            onClick={() => setShowFilters((v) => !v)}
             className={cn(
-              "text-sm font-bold transition-colors pb-1 border-b-2",
-              tab === "all"
-                ? "text-foreground border-primary"
-                : "text-muted-foreground border-transparent hover:text-foreground",
+              "flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-colors",
+              showFilters || hasActiveFilters
+                ? "bg-primary/10 border-primary/30 text-primary"
+                : "border-border text-muted-foreground hover:text-foreground hover:bg-muted/20",
             )}
-            data-testid="button-tab-all"
+            data-testid="button-toggle-filters"
+            aria-label="Toggle filters"
           >
-            Inbox
-          </button>
-          <button
-            onClick={() => onTabChange("unread")}
-            className={cn(
-              "text-sm font-bold transition-colors pb-1 border-b-2",
-              tab === "unread"
-                ? "text-foreground border-primary"
-                : "text-muted-foreground border-transparent hover:text-foreground",
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            Filters
+            {hasActiveFilters && (
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
             )}
-            data-testid="button-tab-unread"
-          >
-            Unread
           </button>
         </div>
+
+        {/* Expandable filter panel */}
+        {showFilters && (
+          <div
+            className="mt-2 space-y-2 pb-2"
+            data-testid="row-inbox-filters"
+          >
+            {/* Account filter (agency only) */}
+            {isAgencyUser && accounts.length > 0 && onAccountChange && (
+              <div data-testid="filter-account">
+                <label className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold block mb-1">
+                  Account
+                </label>
+                <div className="relative">
+                  <select
+                    value={selectedAccountId === "all" ? "all" : String(selectedAccountId)}
+                    onChange={(e) =>
+                      onAccountChange(
+                        e.target.value === "all" ? "all" : Number(e.target.value),
+                      )
+                    }
+                    className="w-full appearance-none h-9 pl-3 pr-8 rounded-lg border border-border bg-background text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                    data-testid="select-filter-account"
+                  >
+                    <option value="all">All Accounts</option>
+                    {accounts.map((a) => (
+                      <option key={a.id} value={String(a.id)}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                </div>
+              </div>
+            )}
+
+            {/* Campaign filter */}
+            <div data-testid="filter-campaign">
+              <label className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold block mb-1">
+                Campaign
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedCampaignId === "all" ? "all" : String(selectedCampaignId)}
+                  onChange={(e) =>
+                    onCampaignChange(
+                      e.target.value === "all" ? "all" : Number(e.target.value),
+                    )
+                  }
+                  className="w-full appearance-none h-9 pl-3 pr-8 rounded-lg border border-border bg-background text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                  data-testid="select-filter-campaign"
+                >
+                  <option value="all">All Campaigns</option>
+                  {campaigns.map((c) => (
+                    <option key={c.id} value={String(c.id)}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              </div>
+            </div>
+
+            {/* AI / Human state filter */}
+            <div data-testid="filter-ai-state">
+              <label className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold block mb-1">
+                Conversation handled by
+              </label>
+              <div className="flex rounded-lg border border-border overflow-hidden">
+                {(
+                  [
+                    { value: "all", label: "All", icon: LayoutList },
+                    { value: "ai", label: "AI", icon: Bot },
+                    { value: "human", label: "Human", icon: User },
+                  ] as const
+                ).map(({ value, label, icon: Icon }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => onAiStateFilterChange(value)}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-1.5 h-8 text-xs font-semibold transition-colors",
+                      aiStateFilter === value
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/20",
+                    )}
+                    data-testid={`button-ai-state-${value}`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Search box */}
         <div className="mt-2">
           <input
             className="h-10 w-full rounded-xl border border-border bg-muted/20 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
@@ -100,7 +265,7 @@ export function InboxPanel({
                   <div className="flex items-start gap-3">
                     <div
                       className={cn(
-                        "h-9 w-9 rounded-full grid place-items-center text-xs font-bold border",
+                        "h-9 w-9 rounded-full grid place-items-center text-xs font-bold border shrink-0",
                         active
                           ? "bg-primary/10 text-primary border-primary/20"
                           : "bg-muted/30 text-foreground border-border",
@@ -115,21 +280,39 @@ export function InboxPanel({
                             `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() ||
                             "Unknown"}
                         </div>
-                        <div className="text-[11px] text-muted-foreground whitespace-nowrap">
-                          {last
-                            ? new Date(last.created_at ?? last.createdAt).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })
-                            : "—"}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {/* AI/Human state badge */}
+                          {lead.manual_takeover ? (
+                            <span
+                              className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                              title="Human takeover"
+                            >
+                              Human
+                            </span>
+                          ) : (
+                            <span
+                              className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                              title="AI managed"
+                            >
+                              AI
+                            </span>
+                          )}
+                          <div className="text-[11px] text-muted-foreground whitespace-nowrap">
+                            {last
+                              ? new Date(last.created_at ?? last.createdAt).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              : "—"}
+                          </div>
                         </div>
                       </div>
                       <div className="mt-0.5 flex items-center justify-between gap-2">
                         <div className="text-xs text-muted-foreground truncate">
-                          {last ? last.content : "No messages yet."}
+                          {last ? (last.content ?? last.Content ?? "") : "No messages yet."}
                         </div>
                         {unread && (
-                          <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+                          <span className="h-2.5 w-2.5 rounded-full bg-primary shrink-0" />
                         )}
                       </div>
                     </div>
