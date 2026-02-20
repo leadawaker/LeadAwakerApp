@@ -47,6 +47,8 @@ interface InboxPanelProps {
   onAccountChange?: (id: number | "all") => void;
   /** Whether the current user is an agency user */
   isAgencyUser?: boolean;
+  /** Set of lead IDs that have been opened/read this session */
+  readLeadIds?: Set<number>;
   className?: string;
 }
 
@@ -68,6 +70,7 @@ export function InboxPanel({
   selectedAccountId,
   onAccountChange,
   isAgencyUser = false,
+  readLeadIds = new Set(),
   className,
 }: InboxPanelProps) {
   const [showFilters, setShowFilters] = useState(false);
@@ -76,6 +79,13 @@ export function InboxPanel({
     selectedCampaignId !== "all" ||
     aiStateFilter !== "all" ||
     (isAgencyUser && selectedAccountId !== "all");
+
+  // When in "unread" tab, also exclude threads that have been opened this session
+  // (the hook filters by t.unread but doesn't know which leads were opened in this session)
+  const displayThreads =
+    tab === "unread"
+      ? threads.filter((t) => t.unread && !readLeadIds.has(t.lead.id))
+      : threads;
 
   return (
     <section
@@ -104,7 +114,7 @@ export function InboxPanel({
             <button
               onClick={() => onTabChange("unread")}
               className={cn(
-                "text-sm font-bold transition-colors pb-1 border-b-2",
+                "text-sm font-bold transition-colors pb-1 border-b-2 flex items-center gap-1.5",
                 tab === "unread"
                   ? "text-foreground border-primary"
                   : "text-muted-foreground border-transparent hover:text-foreground",
@@ -112,6 +122,16 @@ export function InboxPanel({
               data-testid="button-tab-unread"
             >
               Unread
+              {(() => {
+                const totalUnread = threads.filter(
+                  (t) => t.unread && !readLeadIds.has(t.lead.id)
+                ).length;
+                return totalUnread > 0 ? (
+                  <span className="min-w-[18px] h-[18px] rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center px-1">
+                    {totalUnread > 99 ? "99+" : totalUnread}
+                  </span>
+                ) : null;
+              })()}
             </button>
           </div>
 
@@ -249,8 +269,10 @@ export function InboxPanel({
           <SkeletonList count={6} />
         ) : (
           <div className="flex flex-col">
-            {threads.map(({ lead, last, unread }) => {
+            {displayThreads.map(({ lead, last, unread, unreadCount }) => {
               const active = selectedLeadId === lead.id;
+              // Show unread count badge if thread has unread messages and hasn't been opened this session
+              const showUnreadBadge = unread && !readLeadIds.has(lead.id);
               return (
                 <button
                   key={lead.id}
@@ -311,8 +333,14 @@ export function InboxPanel({
                         <div className="text-xs text-muted-foreground truncate">
                           {last ? (last.content ?? last.Content ?? "") : "No messages yet."}
                         </div>
-                        {unread && (
-                          <span className="h-2.5 w-2.5 rounded-full bg-primary shrink-0" />
+                        {showUnreadBadge && (
+                          <span
+                            className="min-w-[18px] h-[18px] rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center px-1 shrink-0"
+                            data-testid={`badge-unread-${lead.id}`}
+                            title={`${unreadCount} unread message${unreadCount !== 1 ? "s" : ""}`}
+                          >
+                            {unreadCount > 99 ? "99+" : unreadCount}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -320,7 +348,7 @@ export function InboxPanel({
                 </button>
               );
             })}
-            {threads.length === 0 && !loading && (
+            {displayThreads.length === 0 && !loading && (
               <DataEmptyState
                 variant={searchQuery ? "search" : "conversations"}
                 compact
@@ -331,7 +359,7 @@ export function InboxPanel({
       </div>
 
       <div className="px-4 py-3 text-xs text-muted-foreground shrink-0" data-testid="text-inbox-foot">
-        {threads.length} threads
+        {displayThreads.length} threads
       </div>
     </section>
   );
