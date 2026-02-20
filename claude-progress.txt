@@ -1,3 +1,42 @@
+## Session 2026-02-20 (16th) - Coding Agent
+
+### Completed Features:
+- Feature #21: Calls Booked hero KPI card - PASSING
+  - Redesigned dashboard KPI section with hero card for Calls Booked (north star KPI)
+  - Hero card spans 2x2 grid cells, is the largest/most prominent element on dashboard
+  - Uses brand yellow (#FCB803) accent: border, icon background, accent bar
+  - Count based on booked_call_date field from Leads table (not just conversion_status)
+  - Added hero KPI to both Agency dashboard (total across all accounts) and Subaccount dashboard (filtered by account)
+  - Added date coercion helper (coerceDates) in server/routes.ts to fix timestamp validation on PATCH /api/leads/:id
+  - Set 2 test leads with booked_call_date for verification (leads #1 and #4)
+  - Verified via Playwright: Agency shows "2" (all leads with booked dates), Subaccount shows "1" (account-filtered)
+  - Tested in both light and dark mode - yellow accent visible in both themes
+  - Zero console errors
+  - Zero mock data patterns in production code (Step 5.6 clean)
+
+### Code Changes:
+- MODIFIED: client/src/pages/AppDashboard.tsx
+  - Changed stats.bookingsMo to stats.callsBooked (counting leads with booked_call_date instead of conversion_status)
+  - Replaced uniform 6-card grid with hero KPI layout: 2x2 hero card + 5 standard cards
+  - Hero card has gradient background, decorative circles, yellow border, large font size (text-5xl/6xl)
+  - Shows "CALLS BOOKED" label, count value, "North Star KPI" sub-label, yellow accent bar
+  - Added hero KPI to AgencyDashboard component (counts total across all accounts)
+  - Passed leads prop to AgencyDashboard
+- MODIFIED: server/routes.ts
+  - Added coerceDates() helper function to convert ISO date strings to Date objects for Drizzle timestamp fields
+  - Applied coerceDates to PATCH /api/leads/:id route to fix "Expected date, received string" validation errors
+
+### Environment Notes:
+- Server on port 5001 (tsx watch)
+- Vite on port 5173
+- DB healthy: 11/11 tables accessible
+- Login via leadawaker@gmail.com / test123
+
+### Current Status:
+- 40/207 features passing (39 at session start, +1 this session)
+- Feature #21 marked passing after browser verification
+- Git commit: dfee79f
+
 ## Session 2026-02-20 (15th) - Coding Agent
 
 ### Completed Features:
