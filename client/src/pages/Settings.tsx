@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SettingsPage() {
   const [name, setName] = useState("LeadAwaker Agency");
   const [email, setEmail] = useState("leadawaker@gmail.com");
+  const { toast } = useToast();
 
   return (
     <CrmShell>
@@ -27,6 +29,7 @@ export default function SettingsPage() {
                   type="button"
                   className="h-10 px-3 rounded-xl border border-border bg-primary text-primary-foreground hover:opacity-90 text-sm font-semibold"
                   data-testid="button-save-profile"
+                  onClick={() => toast({ variant: "success", title: "Profile saved", description: "Your changes have been saved." })}
                 >
                   Save changes
                 </button>
@@ -36,6 +39,41 @@ export default function SettingsPage() {
           </section>
 
           <div className="space-y-6" data-testid="col-settings-right">
+            <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-toast-test">
+              <div className="p-4 border-b border-border" data-testid="card-toast-test-head">
+                <div className="font-semibold" data-testid="text-toast-title">Toast Notifications</div>
+                <div className="text-xs text-muted-foreground" data-testid="text-toast-sub">
+                  Preview notification styles.
+                </div>
+              </div>
+              <div className="p-4 space-y-3" data-testid="card-toast-test-body">
+                <button
+                  type="button"
+                  className="h-10 w-full rounded-xl border border-green-500/30 bg-green-500/10 hover:bg-green-500/20 text-sm font-semibold text-green-700 dark:text-green-400"
+                  data-testid="button-toast-success"
+                  onClick={() => toast({ variant: "success", title: "Success", description: "Operation completed successfully." })}
+                >
+                  Show Success Toast
+                </button>
+                <button
+                  type="button"
+                  className="h-10 w-full rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-sm font-semibold text-red-700 dark:text-red-400"
+                  data-testid="button-toast-error"
+                  onClick={() => toast({ variant: "destructive", title: "Error", description: "Something went wrong. Please try again." })}
+                >
+                  Show Error Toast
+                </button>
+                <button
+                  type="button"
+                  className="h-10 w-full rounded-xl border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-sm font-semibold text-blue-700 dark:text-blue-400"
+                  data-testid="button-toast-info"
+                  onClick={() => toast({ variant: "info", title: "Info", description: "New campaign data is being synced." })}
+                >
+                  Show Info Toast
+                </button>
+              </div>
+            </section>
+
             <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-reset-password">
               <div className="p-4 border-b border-border" data-testid="card-reset-password-head">
                 <div className="font-semibold" data-testid="text-password-title">Reset password</div>

@@ -5,14 +5,16 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_LIMIT = 3
+const TOAST_REMOVE_DELAY = 1000
+const TOAST_AUTO_DISMISS_DEFAULT = 5000
 
 type ToasterToast = ToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  duration?: number
 }
 
 const actionTypes = {
@@ -139,15 +141,35 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
+const autoDismissTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
+
+function scheduleAutoDismiss(id: string, duration: number) {
+  if (autoDismissTimeouts.has(id)) {
+    clearTimeout(autoDismissTimeouts.get(id)!)
+  }
+  const timeout = setTimeout(() => {
+    autoDismissTimeouts.delete(id)
+    dispatch({ type: "DISMISS_TOAST", toastId: id })
+  }, duration)
+  autoDismissTimeouts.set(id, timeout)
+}
+
 function toast({ ...props }: Toast) {
   const id = genId()
+  const duration = props.duration ?? TOAST_AUTO_DISMISS_DEFAULT
 
   const update = (props: ToasterToast) =>
     dispatch({
       type: "UPDATE_TOAST",
       toast: { ...props, id },
     })
-  const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
+  const dismiss = () => {
+    if (autoDismissTimeouts.has(id)) {
+      clearTimeout(autoDismissTimeouts.get(id)!)
+      autoDismissTimeouts.delete(id)
+    }
+    dispatch({ type: "DISMISS_TOAST", toastId: id })
+  }
 
   dispatch({
     type: "ADD_TOAST",
@@ -160,6 +182,11 @@ function toast({ ...props }: Toast) {
       },
     },
   })
+
+  // Schedule auto-dismiss (duration=0 or Infinity means no auto-dismiss)
+  if (duration > 0 && duration < Infinity) {
+    scheduleAutoDismiss(id, duration)
+  }
 
   return {
     id: id,
