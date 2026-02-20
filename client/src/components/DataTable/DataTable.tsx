@@ -1384,6 +1384,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
       )}
 
       <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -1862,6 +1863,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
             </TableBody>
           </Table>
         </DndContext>
+        </div>
       </div>
 
       {/* Pagination footer */}

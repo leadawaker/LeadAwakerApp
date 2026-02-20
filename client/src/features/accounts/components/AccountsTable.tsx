@@ -145,6 +145,8 @@ export function AccountsTable(props: AccountsTableProps) {
       canViewSelected={canViewSelected}
       onImportCSV={onImportCSV}
       onExportCSV={onExportCSV}
+      pageSize={50}
+      emptyStateVariant={searchValue ? "search" : "accounts"}
     />
   );
 }

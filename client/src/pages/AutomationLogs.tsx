@@ -130,8 +130,9 @@ export default function AutomationLogsPage() {
             className="flex-1 min-h-0 bg-card rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden relative"
             data-testid="table-logs"
           >
+            <div className="overflow-x-auto flex-1 min-h-0 flex flex-col">
             {/* Header */}
-            <div className="shrink-0 grid grid-cols-[100px_160px_1fr_1fr_1fr_180px] gap-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-card border-b border-border px-6 py-4 sticky top-0 z-10">
+            <div className="shrink-0 grid grid-cols-[100px_160px_1fr_1fr_1fr_180px] min-w-[760px] gap-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-card border-b border-border px-6 py-4 sticky top-0 z-10">
               <div>Execution</div>
               <div>Status</div>
               <div>Lead</div>
@@ -153,7 +154,7 @@ export default function AutomationLogsPage() {
                 return (
                   <div
                     key={r.id || r.Id || idx}
-                    className="grid grid-cols-[100px_160px_1fr_1fr_1fr_180px] gap-4 px-6 py-4 text-sm items-center hover:bg-muted/30 transition-colors bg-card"
+                    className="grid grid-cols-[100px_160px_1fr_1fr_1fr_180px] min-w-[760px] gap-4 px-6 py-4 text-sm items-center hover:bg-muted/30 transition-colors bg-card"
                   >
                     <div className="font-mono text-xs text-muted-foreground">
                       #{r.execution_time_ms || r.id || r.Id}

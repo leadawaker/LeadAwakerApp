@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import DataTable, { SortConfig, RowSpacing } from "@/components/DataTable/DataTable";
 import { useCampaignsData } from "../hooks/useCampaignsData";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 
 const CAMPAIGN_COLUMNS = [
   "Id", "Image", "name", "Account", "status", "Leads", "Interactions",
@@ -28,7 +29,7 @@ export function CampaignsTable() {
   const { currentAccountId, isAgencyView } = useWorkspace();
   // For agency view with account 1 selected (all accounts), don't filter; otherwise filter by selected account
   const filterAccountId = (isAgencyView && currentAccountId === 1) ? undefined : currentAccountId;
-  const { campaigns, loading, handleRefresh, setCampaigns, updateCampaignRow } = useCampaignsData(filterAccountId);
+  const { campaigns, loading, error, handleRefresh, setCampaigns, updateCampaignRow } = useCampaignsData(filterAccountId);
   const [search, setSearch] = useState("");
   const [accountFilter, setAccountFilter] = useState<number | "all">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "Active" | "Inactive">("all");
@@ -94,6 +95,17 @@ export function CampaignsTable() {
 
   const statusOptions = Array.from(new Set(campaigns.map((c) => c.status).filter(Boolean)));
 
+  // Show error fallback when data fetch fails and we have no cached data to show
+  if (error && campaigns.length === 0 && !loading) {
+    return (
+      <ApiErrorFallback
+        error={error}
+        onRetry={handleRefresh}
+        isRetrying={loading}
+      />
+    );
+  }
+
   return (
     <DataTable
       loading={loading}
@@ -132,6 +144,7 @@ export function CampaignsTable() {
       filterConfig={filterConfig}
       onFilterConfigChange={setFilterConfig}
       pageSize={50}
+      emptyStateVariant={search ? "search" : "campaigns"}
     />
   );
 }

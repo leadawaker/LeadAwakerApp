@@ -319,6 +319,7 @@ export function LeadsTable() {
         filterConfig={filterConfig}
         onFilterConfigChange={setFilterConfig}
         pageSize={50}
+        emptyStateVariant={search ? "search" : "leads"}
       />
     </div>
   );

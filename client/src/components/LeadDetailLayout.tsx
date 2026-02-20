@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
+import { DataEmptyState } from "@/components/crm/DataEmptyState";
 
 export type LeadDetailLead = {
   id: number;
@@ -169,7 +170,9 @@ export function LeadDetailLayout({
 
           <div className="flex-1 overflow-auto p-4 space-y-3" data-testid="chat-scroll">
             {ordered.length === 0 ? (
-              <div className="text-sm text-muted-foreground" data-testid="empty-chat">No conversations yet.</div>
+              <div data-testid="empty-chat">
+                <DataEmptyState variant="conversations" compact title="No conversations yet" description="Messages will appear here once the lead receives outreach." />
+              </div>
             ) : (
               ordered.map((m) => <MessageBubble key={m.id} item={m} />)
             )}
@@ -185,7 +188,9 @@ export function LeadDetailLayout({
           <Section title="Tags" testId="section-tags">
             <div className="flex flex-wrap gap-2" data-testid="wrap-tags">
               {tags.length === 0 ? (
-                <span className="text-sm text-muted-foreground" data-testid="text-tags-empty">No tags</span>
+                <div data-testid="text-tags-empty">
+                  <DataEmptyState variant="tags" compact title="No tags" description="Tags will appear here once assigned to this lead." />
+                </div>
               ) : (
                 tags.map((t) => (
                   <span

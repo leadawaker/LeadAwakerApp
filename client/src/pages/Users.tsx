@@ -69,9 +69,11 @@ export default function UsersPage() {
   const currentUser = users.find(u => u.email === currentUserEmail);
 
   const rows = useMemo(() => {
+    const matchesSearch = (u: AppUser) =>
+      !q || (u.email || "").toLowerCase().includes(q.toLowerCase()) || (u.full_name || "").toLowerCase().includes(q.toLowerCase());
+
     if (isAdmin) {
-      return users
-        .filter((u) => (q ? u.email.toLowerCase().includes(q.toLowerCase()) || u.full_name.toLowerCase().includes(q.toLowerCase()) : true));
+      return users.filter(matchesSearch);
     }
 
     // If not admin, see leadawaker admin user, themselves, and others in same account
@@ -81,7 +83,7 @@ export default function UsersPage() {
         u.email === currentUserEmail ||
         (currentUser && u.account_id === currentUser.account_id)
       ))
-      .filter((u) => (q ? u.email.toLowerCase().includes(q.toLowerCase()) || u.full_name.toLowerCase().includes(q.toLowerCase()) : true));
+      .filter(matchesSearch);
   }, [q, users, isAdmin, currentUserEmail, currentUser]);
 
   const handleSaveUser = async () => {
@@ -137,9 +139,9 @@ export default function UsersPage() {
       <div className="h-full overflow-hidden flex flex-col" data-testid="page-users">
         <div className="flex-1 min-h-0 py-4 flex flex-col">
           <div className="flex items-center justify-between mb-6 shrink-0">
-            <div className="flex items-center gap-2" data-testid="bar-users">
+            <div className="flex items-center gap-2 w-full md:w-auto" data-testid="bar-users">
               <input
-                className="h-10 w-[320px] rounded-xl border border-border bg-card px-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-foreground"
+                className="h-10 w-full md:w-[320px] rounded-xl border border-border bg-card px-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-foreground"
                 placeholder="Search name or email…"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -158,7 +160,8 @@ export default function UsersPage() {
             <SkeletonTable rows={6} columns={7} className="flex-1" />
           ) : (
             <div className="flex-1 min-h-0 bg-card rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden" data-testid="table-users">
-              <div className="shrink-0 grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_100px_100px] text-[11px] uppercase tracking-wider font-bold text-muted-foreground bg-muted/50 border-b border-border px-6 py-4 z-10">
+              <div className="overflow-x-auto flex-1 min-h-0 flex flex-col">
+              <div className="shrink-0 grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_100px_100px] min-w-[800px] text-[11px] uppercase tracking-wider font-bold text-muted-foreground bg-muted/50 border-b border-border px-6 py-4 z-10">
                 <div>ID</div>
                 <div>Name</div>
                 <div>Account</div>
@@ -168,7 +171,7 @@ export default function UsersPage() {
                 <div>Status</div>
                 <div className="text-right">Actions</div>
               </div>
-              <div className="flex-1 overflow-y-auto divide-y divide-border ">
+              <div className="flex-1 overflow-y-auto divide-y divide-border">
                 {!loading && rows.length === 0 && (
                   <DataEmptyState
                     variant={q ? "search" : "users"}
@@ -176,7 +179,7 @@ export default function UsersPage() {
                   />
                 )}
                 {rows.map((u) => (
-                  <div key={u.id} className="grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_100px_100px] px-6 py-5 text-sm items-center hover:bg-muted/50 transition-colors" data-testid={`row-user-${u.id}`}>
+                  <div key={u.id} className="grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_100px_100px] min-w-[800px] px-6 py-5 text-sm items-center hover:bg-muted/50 transition-colors" data-testid={`row-user-${u.id}`}>
                     <div className="text-muted-foreground font-mono text-xs">#{u.users_id || u.id}</div>
                     <div className="font-semibold text-foreground">{u.full_name}</div>
                     <div className="text-muted-foreground truncate pr-4">{u.Accounts || u.accounts_id || ""}</div>
@@ -214,6 +217,7 @@ export default function UsersPage() {
                   </div>
                 ))}
               </div>
+              </div>
             </div>
           )}
         </div>
@@ -225,7 +229,7 @@ export default function UsersPage() {
             </DialogHeader>
 
             {editingUser && (
-              <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
                 <div className="space-y-2">
                   <Label>Full Name</Label>
                   <Input
