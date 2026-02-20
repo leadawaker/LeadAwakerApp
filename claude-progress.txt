@@ -1,3 +1,41 @@
+## Session 2026-02-20 (31st) - Coding Agent (Feature #36)
+
+### Completed Features:
+- Feature #36: Agency vs client dashboard variants - PASSING
+  - Verified all 3 feature steps using Playwright browser automation:
+  1. Admin login (leadawaker@gmail.com) → redirects to /agency/dashboard → shows AgencyDashboard
+     - Total Leads = 9 (aggregate across ALL accounts)
+     - "All Accounts" dropdown visible in filters bar
+     - Account switcher opens showing: Pepsi, Paul Mackartney, van de Kerkhof, Astra-Zeneca 2, Coca-Cola 2
+     - Selecting "van de Kerkhof": Total Leads filtered from 9 → 4 (correct scoping)
+  2. Viewer login (viewer@test.com, accountsId=2, role=Viewer) → redirects to /subaccount/dashboard
+     - Shows SubaccountDashboard component
+     - Total Leads = 4 (scoped to their account #2 only, NOT 9)
+     - Data filtered to van de Kerkhof account only
+  3. Account filter completely absent for Viewer users:
+     - No "All Accounts" button in toolbar (grep confirmed 0 matches in snapshot)
+     - API returns 403 Forbidden on /api/accounts for non-agency users (correct RBAC)
+     - Only "All Campaigns" filter visible in client toolbar
+     - Sidebar shows no admin pages (no Accounts, Users, Tags, Library, Automations)
+  - No code changes needed - feature was already fully implemented correctly
+  - isAgencyView in useWorkspace.ts: returns true when URL starts with /agency (line 102)
+  - AppDashboard.tsx line 498: renders AgencyDashboard when isAgencyView, SubaccountDashboard otherwise
+  - dashboardAccountFilter only rendered when isAgencyView (line 384: {isAgencyView && (...)})
+
+### Console Errors:
+- Expected 403 on /api/accounts for Viewer user - correct RBAC behavior, not a bug
+- No unexpected errors
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- DB healthy: 11/11 tables, 10 leads, 6 accounts
+
+### Current Status:
+- 55/207 features passing (54 at session start, +1 this session)
+- Feature #36 marked passing after thorough browser verification
+- No git commit needed (no code changes)
+
 ## Session 2026-02-20 (30th) - Coding Agent (Feature #34)
 
 ### Completed Features:
@@ -1808,3 +1846,40 @@
 ### Current Status:
 - Feature #29 marked passing after thorough browser verification
 - No code changes needed - feature was already fully implemented
+
+## Session 2026-02-20 - Coding Agent (Feature #35)
+
+### Completed Features:
+- Feature #35: Dashboard dark mode variant - PASSING
+  - Verified dark mode toggle in topbar works (Moon/Sun icon toggle)
+  - Dark mode persists via localStorage ("theme" key)
+  - Applied via `.dark` class on `<html>` element via useTheme hook
+  - All dashboard cards use brand-tinted dark surfaces:
+    - Background: hsl(228 35% 10%) - deep navy
+    - Card: hsl(226 32% 14%) - elevated dark surface
+    - Borders: hsl(226 25% 20%) - subtle dark borders
+  - Charts are readable with adjusted CSS variable colors:
+    - KPI sparklines: yellow (#FCB803), teal, blue, purple trend lines visible
+    - Campaign performance sparklines visible on dark backgrounds
+    - Lead Score Distribution bar chart with colored bars readable
+    - All tooltips use hsl(var(--card)) + hsl(var(--foreground)) for theme adaptation
+    - Recharts axes use hsl(var(--muted-foreground)) for tick labels
+  - Text contrast meets accessibility standards:
+    - Off-white foreground (hsl(220 20% 93%)) on deep navy backgrounds
+    - Brand yellow accents visible as highlights
+  - No code changes required - dark mode was already fully implemented
+  - Verified with 4 screenshots:
+    1. Dark mode toggle → dark dashboard with real data
+    2. Full-page screenshot showing all sections in dark mode
+    3. Campaign performance cards with sparklines in dark mode
+    4. Light mode toggle back works correctly
+
+### Environment Notes:
+- API server on port 5001, Vite on port 5173
+- Playwright browser session: coding-35
+- Login: leadawaker@gmail.com / test123
+- Dark mode localStorage key: "theme" = "dark"/"light"
+
+### Current Status:
+- 54/207 features passing (53 at session start, +1 this session)
+- Feature #35 marked passing after thorough browser verification

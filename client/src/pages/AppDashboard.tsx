@@ -1,8 +1,9 @@
-import React, { useMemo, useState, useRef, useEffect } from "react";
+import React, { useMemo, useState, useRef, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLeads, useCampaigns, useAccounts, useCampaignMetrics, useDashboardTrends } from "@/hooks/useApiData";
+import { useDashboardRefreshInterval } from "@/hooks/useDashboardRefreshInterval";
 import type { Lead, Campaign, Account, CampaignMetricsHistory, DashboardTrend } from "@/types/models";
 import { KpiSparkline, TrendIndicator, TrendRangeToggle } from "@/components/crm/KpiSparkline";
 import type { SparklineDataPoint } from "@/components/crm/KpiSparkline";
@@ -43,6 +44,7 @@ import {
   Loader2,
   Building2,
   ChevronDown,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SkeletonDashboard } from "@/components/ui/skeleton";
@@ -233,16 +235,67 @@ export default function AppDashboard() {
     }
   }, [campaignDropdownOpen]);
 
+  // Auto-refresh interval setting (persisted in localStorage)
+  const { intervalSeconds } = useDashboardRefreshInterval();
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
+  const [countdown, setCountdown] = useState<number>(0);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // Fetch real data from API
-  const { leads, loading: leadsLoading } = useLeads();
-  const { campaigns, loading: campaignsLoading } = useCampaigns();
-  const { accounts, loading: accountsLoading } = useAccounts();
-  const { metrics: campaignMetrics, loading: metricsLoading } = useCampaignMetrics();
+  const { leads, loading: leadsLoading, refresh: refreshLeads } = useLeads();
+  const { campaigns, loading: campaignsLoading, refresh: refreshCampaigns } = useCampaigns();
+  const { accounts, loading: accountsLoading, refresh: refreshAccounts } = useAccounts();
+  const { metrics: campaignMetrics, loading: metricsLoading, refresh: refreshMetrics } = useCampaignMetrics();
   // For agency view with a specific account filter, pass accountId to trends
   const trendAccountId = isAgencyView
     ? (dashboardAccountFilter === "all" ? undefined : dashboardAccountFilter)
     : currentAccountId;
-  const { trends: dashboardTrends, loading: trendsLoading } = useDashboardTrends(trendRange, trendAccountId);
+  const { trends: dashboardTrends, loading: trendsLoading, refresh: refreshTrends } = useDashboardTrends(trendRange, trendAccountId);
+
+  // Refresh all dashboard data sources at once
+  const refreshAllData = useCallback(() => {
+    refreshLeads();
+    refreshCampaigns();
+    refreshAccounts();
+    refreshMetrics();
+    refreshTrends();
+    setLastRefreshedAt(new Date());
+  }, [refreshLeads, refreshCampaigns, refreshAccounts, refreshMetrics, refreshTrends]);
+
+  // Set up auto-refresh interval
+  useEffect(() => {
+    // Clear any existing countdown timer
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+
+    if (intervalSeconds <= 0) {
+      setCountdown(0);
+      return;
+    }
+
+    // Start countdown from interval
+    setCountdown(intervalSeconds);
+
+    countdownRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          // Time to refresh — trigger data refresh
+          refreshAllData();
+          return intervalSeconds; // reset countdown
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
+    };
+  }, [intervalSeconds, refreshAllData]);
 
   // Filter leads by date range (uses created_at as the primary date field)
   const filteredLeads = useMemo(() => {
@@ -372,6 +425,17 @@ export default function AppDashboard() {
   }, [campaigns, currentAccountId]);
 
   const isLoading = leadsLoading || campaignsLoading || accountsLoading;
+  const isRefreshing = leadsLoading || campaignsLoading || metricsLoading || trendsLoading;
+
+  // Format last refreshed time as relative string
+  const lastRefreshedLabel = useMemo(() => {
+    if (!lastRefreshedAt) return null;
+    const diffSeconds = Math.round((Date.now() - lastRefreshedAt.getTime()) / 1000);
+    if (diffSeconds < 5) return "just now";
+    if (diffSeconds < 60) return `${diffSeconds}s ago`;
+    const mins = Math.floor(diffSeconds / 60);
+    return `${mins}m ago`;
+  }, [lastRefreshedAt, countdown]); // countdown dep to re-compute every second
 
   return (
     <CrmShell>
@@ -492,6 +556,38 @@ export default function AppDashboard() {
               </div>
             </div>
             <FiltersBar selectedCampaignId={selectedCampaignId} setSelectedCampaignId={setSelectedCampaignId} />
+            {/* Auto-refresh status indicator */}
+            <div className="flex items-center gap-2 ml-auto" data-testid="auto-refresh-indicator">
+              <button
+                type="button"
+                onClick={refreshAllData}
+                disabled={isRefreshing}
+                title="Refresh data now"
+                className={cn(
+                  "inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border text-sm font-semibold transition-all",
+                  "border-border bg-card text-foreground hover:bg-muted/50",
+                  isRefreshing && "opacity-60 cursor-not-allowed"
+                )}
+                data-testid="dashboard-refresh-now-btn"
+              >
+                <RefreshCw className={cn("w-3.5 h-3.5 text-muted-foreground", isRefreshing && "animate-spin")} />
+                {lastRefreshedLabel && (
+                  <span className="text-xs text-muted-foreground hidden sm:inline" data-testid="last-refreshed-label">
+                    {lastRefreshedLabel}
+                  </span>
+                )}
+              </button>
+              {intervalSeconds > 0 && (
+                <div
+                  className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border border-border bg-card text-xs font-semibold text-muted-foreground"
+                  title={`Auto-refresh every ${intervalSeconds}s`}
+                  data-testid="auto-refresh-countdown"
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  <span data-testid="countdown-value">{countdown}s</span>
+                </div>
+              )}
+            </div>
           </div>
           {isLoading ? (
             <SkeletonDashboard />

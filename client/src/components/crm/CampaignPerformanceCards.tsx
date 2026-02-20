@@ -5,7 +5,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import { TrendingUp, CalendarIcon, MessageSquare, Megaphone } from "lucide-react";
+import { TrendingUp, CalendarIcon, MessageSquare, Megaphone, DollarSign, BarChart3 } from "lucide-react";
 import type { Campaign, CampaignMetricsHistory } from "@/types/models";
 import { cn } from "@/lib/utils";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
@@ -202,6 +202,12 @@ export function CampaignPerformanceCards({
           const totalMsgsSent = cMetrics.reduce((s, m) => s + m.total_messages_sent, 0);
           const totalBookings = cMetrics.reduce((s, m) => s + m.bookings_generated, 0);
 
+          // Cost metrics — use latest metric entry values (most recent snapshot)
+          const latestMetric = cMetrics.length > 0 ? cMetrics[cMetrics.length - 1] : null;
+          const costPerLead = latestMetric ? Number(latestMetric.cost_per_lead) || 0 : 0;
+          const costPerBooking = latestMetric ? Number(latestMetric.cost_per_booking) || 0 : 0;
+          const roiPercent = latestMetric ? Number(latestMetric.roi_percent) || 0 : 0;
+
           return (
             <div
               key={campaign.id}
@@ -317,6 +323,53 @@ export function CampaignPerformanceCards({
                     color="#FCB803"
                     height={36}
                   />
+                </div>
+              </div>
+
+              {/* Cost Metrics Row */}
+              <div className="grid grid-cols-3 gap-2 mb-3 pt-3 border-t border-border">
+                {/* Cost per Lead */}
+                <div className="space-y-0.5" data-testid={`campaign-cost-per-lead-${campaign.id}`}>
+                  <div className="flex items-center gap-1">
+                    <DollarSign className="w-3 h-3 text-emerald-500" />
+                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Per Lead
+                    </span>
+                  </div>
+                  <div className="text-base font-black text-foreground tabular-nums">
+                    ${costPerLead.toFixed(2)}
+                  </div>
+                </div>
+
+                {/* Cost per Booking */}
+                <div className="space-y-0.5" data-testid={`campaign-cost-per-booking-${campaign.id}`}>
+                  <div className="flex items-center gap-1">
+                    <DollarSign className="w-3 h-3 text-orange-500" />
+                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Per Booking
+                    </span>
+                  </div>
+                  <div className="text-base font-black text-foreground tabular-nums">
+                    {costPerBooking > 0 ? `$${costPerBooking.toFixed(2)}` : "—"}
+                  </div>
+                </div>
+
+                {/* ROI % */}
+                <div className="space-y-0.5" data-testid={`campaign-roi-percent-${campaign.id}`}>
+                  <div className="flex items-center gap-1">
+                    <BarChart3 className="w-3 h-3 text-purple-500" />
+                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                      ROI
+                    </span>
+                  </div>
+                  <div
+                    className={cn(
+                      "text-base font-black tabular-nums",
+                      roiPercent >= 100 ? "text-emerald-500" : roiPercent >= 50 ? "text-amber-500" : "text-foreground"
+                    )}
+                  >
+                    {roiPercent > 0 ? `${roiPercent.toFixed(0)}%` : "—"}
+                  </div>
                 </div>
               </div>
 
