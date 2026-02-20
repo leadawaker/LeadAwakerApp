@@ -1,0 +1,414 @@
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - main [ref=e4]:
+    - generic [ref=e5]:
+      - link "Skip to main content" [ref=e6] [cursor=pointer]:
+        - /url: "#main-content"
+      - generic [ref=e7]:
+        - generic [ref=e10]:
+          - heading "Conversations" [level=1] [ref=e11]
+          - navigation "Breadcrumb" [ref=e12]:
+            - list [ref=e13]:
+              - listitem [ref=e14]:
+                - link "Home" [ref=e15] [cursor=pointer]:
+                  - /url: /agency/dashboard
+                  - img [ref=e16]
+                  - text: Home
+              - listitem [ref=e19]:
+                - img [ref=e20]
+                - generic [ref=e22]: Conversations
+        - generic [ref=e23]:
+          - button "Wow" [ref=e291] [cursor=pointer]:
+            - generic [ref=e26]: Wow
+            - img
+          - generic [ref=e27]:
+            - button "Search" [ref=e28] [cursor=pointer]:
+              - img [ref=e29]
+            - button "Switch to dark mode" [ref=e32] [cursor=pointer]:
+              - img [ref=e33]
+            - button "Notifications (3 unread)" [ref=e35] [cursor=pointer]:
+              - img [ref=e36]
+              - generic [ref=e40]: "3"
+            - button "Settings" [ref=e41] [cursor=pointer]:
+              - img [ref=e42]
+            - button "G2" [ref=e45] [cursor=pointer]:
+              - generic [ref=e47]: G2
+      - complementary [ref=e48]:
+        - generic [ref=e49]:
+          - link "Lead Awaker" [ref=e51] [cursor=pointer]:
+            - /url: /
+            - img "Lead Awaker" [ref=e52]
+          - button "W Wow" [ref=e292] [cursor=pointer]:
+            - generic [ref=e55]: W
+            - generic [ref=e56]: Wow
+            - img [ref=e57]
+          - navigation [ref=e60]:
+            - link "Dashboard" [ref=e61] [cursor=pointer]:
+              - /url: /agency/dashboard
+              - img [ref=e62]
+              - generic [ref=e67]: Dashboard
+            - link "Accounts" [ref=e68] [cursor=pointer]:
+              - /url: /agency/accounts
+              - img [ref=e69]
+              - generic [ref=e73]: Accounts
+            - link "Campaigns" [ref=e74] [cursor=pointer]:
+              - /url: /agency/campaigns
+              - img [ref=e75]
+              - generic [ref=e78]: Campaigns
+            - link "Contacts" [ref=e79] [cursor=pointer]:
+              - /url: /agency/contacts
+              - img [ref=e80]
+              - generic [ref=e84]: Contacts
+            - link "Chats" [ref=e85] [cursor=pointer]:
+              - /url: /agency/conversations
+              - img [ref=e86]
+              - generic [ref=e88]: Chats
+            - link "Calendar" [ref=e89] [cursor=pointer]:
+              - /url: /agency/calendar
+              - img [ref=e90]
+              - generic [ref=e92]: Calendar
+            - link "Tags" [ref=e93] [cursor=pointer]:
+              - /url: /agency/tags
+              - img [ref=e94]
+              - generic [ref=e97]: Tags
+            - link "Library" [ref=e98] [cursor=pointer]:
+              - /url: /agency/prompt-library
+              - img [ref=e99]
+              - generic [ref=e101]: Library
+            - link "Users" [ref=e102] [cursor=pointer]:
+              - /url: /agency/users
+              - img [ref=e103]
+              - generic [ref=e108]: Users
+            - link "Automations" [ref=e109] [cursor=pointer]:
+              - /url: /agency/automation-logs
+              - img [ref=e110]
+              - generic [ref=e113]: Automations
+          - generic [ref=e114]:
+            - button "Collapse" [ref=e115] [cursor=pointer]:
+              - img [ref=e116]
+              - generic [ref=e119]: Collapse
+            - button "Help" [ref=e120] [cursor=pointer]:
+              - img [ref=e121]
+              - generic [ref=e124]: Help
+          - generic "DB Connected — 11/11 tables" [ref=e293]:
+            - img [ref=e127]
+            - generic [ref=e132]: DB Connected
+          - generic [ref=e134]:
+            - generic [ref=e135]: GB
+            - generic [ref=e136]:
+              - generic [ref=e137]: Gabriel Barbosa Fronza 2
+              - generic [ref=e138]: Admin
+            - button "Logout" [ref=e139] [cursor=pointer]:
+              - img [ref=e140]
+      - main [ref=e143]:
+        - generic [ref=e147]:
+          - generic [ref=e148]:
+            - generic [ref=e149]:
+              - generic [ref=e150]:
+                - generic [ref=e151]:
+                  - button "Inbox" [ref=e152] [cursor=pointer]
+                  - button "Unread 1" [ref=e294] [cursor=pointer]:
+                    - text: Unread
+                    - generic [ref=e295]: "1"
+                - generic [ref=e154]:
+                  - generic [ref=e156]:
+                    - img
+                    - combobox "Sort conversations" [ref=e157] [cursor=pointer]:
+                      - option "Newest" [selected]
+                      - option "Oldest"
+                      - option "Unread first"
+                    - img
+                  - button "Toggle filters" [ref=e158] [cursor=pointer]:
+                    - img [ref=e159]
+                    - text: Filters
+              - textbox "Search contacts…" [ref=e161]
+            - generic [ref=e296]:
+              - button "DV Danique van de Kerkhof AI 19:22 maybe its not for you" [active] [ref=e297] [cursor=pointer]:
+                - generic [ref=e298]:
+                  - generic [ref=e299]: DV
+                  - generic [ref=e300]:
+                    - generic [ref=e301]:
+                      - generic [ref=e302]: Danique van de Kerkhof
+                      - generic [ref=e303]:
+                        - generic "AI managed" [ref=e304]: AI
+                        - generic [ref=e305]: 19:22
+                    - generic [ref=e307]: maybe its not for you
+              - button "AF Augusto Fronza AI Invalid Date UNREAD_TEST_99 1" [ref=e308] [cursor=pointer]:
+                - generic [ref=e309]:
+                  - generic [ref=e310]: AF
+                  - generic [ref=e311]:
+                    - generic [ref=e312]:
+                      - generic [ref=e313]: Augusto Fronza
+                      - generic [ref=e314]:
+                        - generic "AI managed" [ref=e315]: AI
+                        - generic [ref=e316]: Invalid Date
+                    - generic [ref=e317]:
+                      - generic [ref=e318]: UNREAD_TEST_99
+                      - generic "1 unread message" [ref=e319]: "1"
+              - button "BZ bob Ziegfried AI — No messages yet." [ref=e320] [cursor=pointer]:
+                - generic [ref=e321]:
+                  - generic [ref=e322]: BZ
+                  - generic [ref=e323]:
+                    - generic [ref=e324]:
+                      - generic [ref=e325]: bob Ziegfried
+                      - generic [ref=e326]:
+                        - generic "AI managed" [ref=e327]: AI
+                        - generic [ref=e328]: —
+                    - generic [ref=e330]: No messages yet.
+              - button "BS Bob2 Sanders AI — No messages yet." [ref=e331] [cursor=pointer]:
+                - generic [ref=e332]:
+                  - generic [ref=e333]: BS
+                  - generic [ref=e334]:
+                    - generic [ref=e335]:
+                      - generic [ref=e336]: Bob2 Sanders
+                      - generic [ref=e337]:
+                        - generic "AI managed" [ref=e338]: AI
+                        - generic [ref=e339]: —
+                    - generic [ref=e341]: No messages yet.
+              - button "BC Bob Lazar Chay Chay AI — No messages yet." [ref=e342] [cursor=pointer]:
+                - generic [ref=e343]:
+                  - generic [ref=e344]: BC
+                  - generic [ref=e345]:
+                    - generic [ref=e346]:
+                      - generic [ref=e347]: Bob Lazar Chay Chay
+                      - generic [ref=e348]:
+                        - generic "AI managed" [ref=e349]: AI
+                        - generic [ref=e350]: —
+                    - generic [ref=e352]: No messages yet.
+              - button "MT Michael Thompson AI — No messages yet." [ref=e353] [cursor=pointer]:
+                - generic [ref=e354]:
+                  - generic [ref=e355]: MT
+                  - generic [ref=e356]:
+                    - generic [ref=e357]:
+                      - generic [ref=e358]: Michael Thompson
+                      - generic [ref=e359]:
+                        - generic "AI managed" [ref=e360]: AI
+                        - generic [ref=e361]: —
+                    - generic [ref=e363]: No messages yet.
+              - button "GF Gabriel Fronza AI — No messages yet." [ref=e364] [cursor=pointer]:
+                - generic [ref=e365]:
+                  - generic [ref=e366]: GF
+                  - generic [ref=e367]:
+                    - generic [ref=e368]:
+                      - generic [ref=e369]: Gabriel Fronza
+                      - generic [ref=e370]:
+                        - generic "AI managed" [ref=e371]: AI
+                        - generic [ref=e372]: —
+                    - generic [ref=e374]: No messages yet.
+              - button "LF Luis Claudio Fronza AI — No messages yet." [ref=e375] [cursor=pointer]:
+                - generic [ref=e376]:
+                  - generic [ref=e377]: LF
+                  - generic [ref=e378]:
+                    - generic [ref=e379]:
+                      - generic [ref=e380]: Luis Claudio Fronza
+                      - generic [ref=e381]:
+                        - generic "AI managed" [ref=e382]: AI
+                        - generic [ref=e383]: —
+                    - generic [ref=e385]: No messages yet.
+              - button "RC Random Carlson AI — No messages yet." [ref=e386] [cursor=pointer]:
+                - generic [ref=e387]:
+                  - generic [ref=e388]: RC
+                  - generic [ref=e389]:
+                    - generic [ref=e390]:
+                      - generic [ref=e391]: Random Carlson
+                      - generic [ref=e392]:
+                        - generic "AI managed" [ref=e393]: AI
+                        - generic [ref=e394]: —
+                    - generic [ref=e396]: No messages yet.
+              - button "? Unknown AI — No messages yet." [ref=e397] [cursor=pointer]:
+                - generic [ref=e398]:
+                  - generic [ref=e399]: "?"
+                  - generic [ref=e400]:
+                    - generic [ref=e401]:
+                      - generic [ref=e402]: Unknown
+                      - generic [ref=e403]:
+                        - generic "AI managed" [ref=e404]: AI
+                        - generic [ref=e405]: —
+                    - generic [ref=e407]: No messages yet.
+            - generic [ref=e200]: 10 threads
+          - generic [ref=e201]:
+            - generic [ref=e203]:
+              - generic:
+                - generic: Danique van de Kerkhof
+                - generic: •
+              - generic [ref=e408]:
+                - button "AI Active" [ref=e409] [cursor=pointer]:
+                  - img [ref=e410]
+                  - generic [ref=e413]: AI Active
+                - link "Open contact" [ref=e414] [cursor=pointer]:
+                  - /url: /app/contacts/2
+            - generic [ref=e208]:
+              - generic [ref=e415]:
+                - generic "Human agent message" [ref=e416]:
+                  - img [ref=e417]
+                  - generic [ref=e420]: Agent
+                - generic [ref=e421]:
+                  - generic [ref=e422]: OPTIMISTIC_TEST_105 - testing optimistic send
+                  - generic [ref=e423]:
+                    - text: • SMS
+                    - generic "Sent" [ref=e424]:
+                      - img [ref=e425]
+              - generic [ref=e427]:
+                - generic "Human agent message" [ref=e428]:
+                  - img [ref=e429]
+                  - generic [ref=e432]: Agent
+                - generic [ref=e433]:
+                  - generic [ref=e434]: SEND_TEST_97_VERIFY_FEATURE
+                  - generic [ref=e435]:
+                    - text: • SMS
+                    - generic "Sent" [ref=e436]:
+                      - img [ref=e437]
+              - generic [ref=e439]:
+                - generic "Message from lead" [ref=e440]:
+                  - img [ref=e441]
+                  - generic [ref=e444]: Lead
+                - generic [ref=e445]:
+                  - generic [ref=e446]: TEST_ATTACH_98 - here is the document you asked for
+                  - generic [ref=e447]:
+                    - img "Attachment" [ref=e448] [cursor=pointer]
+                    - link "400px-Camponotus_flavomarginatus_ant.jpg" [ref=e449] [cursor=pointer]:
+                      - /url: https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Camponotus_flavomarginatus_ant.jpg/400px-Camponotus_flavomarginatus_ant.jpg
+                      - img [ref=e450]
+                      - generic [ref=e454]: 400px-Camponotus_flavomarginatus_ant.jpg
+                  - generic [ref=e455]: • Whatsapp
+              - generic [ref=e456]:
+                - generic "Human agent message" [ref=e457]:
+                  - img [ref=e458]
+                  - generic [ref=e461]: Agent
+                - generic [ref=e462]:
+                  - generic [ref=e463]: TEST_ATTACH_98_DOC - please find the info pack attached
+                  - link "wcag-quick-reference-20160105.pdf" [ref=e465] [cursor=pointer]:
+                    - /url: https://www.w3.org/WAI/WCAG21/quickref/wcag-quick-reference-20160105.pdf
+                    - img [ref=e466]
+                    - generic [ref=e469]: wcag-quick-reference-20160105.pdf
+                    - img [ref=e470]
+                  - generic [ref=e473]:
+                    - text: • Whatsapp
+                    - generic "Sent" [ref=e474]:
+                      - img [ref=e475]
+              - generic [ref=e477]:
+                - generic "Message from lead" [ref=e478]:
+                  - img [ref=e479]
+                  - generic [ref=e482]: Lead
+                - generic [ref=e483]:
+                  - generic [ref=e484]: INBOUND_TEST_MSG yes I am interested
+                  - generic [ref=e485]: • Whatsapp
+              - generic [ref=e486]:
+                - generic "Human agent message" [ref=e487]:
+                  - img [ref=e488]
+                  - generic [ref=e491]: Agent
+                - generic [ref=e492]:
+                  - generic [ref=e493]: TEST_HUMAN_MSG_93 - this is a human agent message
+                  - generic [ref=e494]:
+                    - text: • SMS
+                    - generic "Sent" [ref=e495]:
+                      - img [ref=e496]
+              - generic [ref=e498]:
+                - generic "Human agent message" [ref=e499]:
+                  - img [ref=e500]
+                  - generic [ref=e503]: Agent
+                - generic [ref=e504]:
+                  - generic [ref=e505]: STATUS_TEST_96 - testing message status
+                  - generic [ref=e506]:
+                    - text: • SMS
+                    - generic "Sent" [ref=e507]:
+                      - img [ref=e508]
+              - generic [ref=e510]:
+                - generic "AI-generated message" [ref=e511]:
+                  - img [ref=e512]
+                  - generic [ref=e515]: AI
+                  - generic [ref=e516]: · Start
+                - generic [ref=e517]:
+                  - generic [ref=e518]: Hey Danique! 👋 I noticed you reached out about kicking ass a while back but we never got to connect. Still interested? I've got some time this week to chat. - Sophie
+                  - generic [ref=e519]:
+                    - text: 28/01/2026, 19:10:37 • Whatsapp
+                    - generic "Sent" [ref=e520]:
+                      - img [ref=e521]
+              - generic [ref=e523]:
+                - generic "AI-generated message" [ref=e524]:
+                  - img [ref=e525]
+                  - generic [ref=e528]: AI
+                  - generic [ref=e529]: · Bump 1
+                - generic [ref=e530]:
+                  - generic [ref=e531]: Are you still here
+                  - generic [ref=e532]:
+                    - text: 28/01/2026, 19:13:58 • Whatsapp
+                    - generic "Sent" [ref=e533]:
+                      - img [ref=e534]
+              - generic [ref=e536]:
+                - generic "AI-generated message" [ref=e537]:
+                  - img [ref=e538]
+                  - generic [ref=e541]: AI
+                  - generic [ref=e542]: · Bump 2
+                - generic [ref=e543]:
+                  - generic [ref=e544]: Lets go
+                  - generic [ref=e545]:
+                    - text: 28/01/2026, 19:15:41 • Whatsapp
+                    - generic "Sent" [ref=e546]:
+                      - img [ref=e547]
+              - generic [ref=e549]:
+                - generic "AI-generated message" [ref=e550]:
+                  - img [ref=e551]
+                  - generic [ref=e554]: AI
+                  - generic [ref=e555]: · Bump 3
+                - generic [ref=e556]:
+                  - generic [ref=e557]: maybe its not for you
+                  - generic [ref=e558]:
+                    - text: 28/01/2026, 19:22:52 • Whatsapp
+                    - generic "Sent" [ref=e559]:
+                      - img [ref=e560]
+            - generic [ref=e243]:
+              - generic [ref=e244]:
+                - text: Manual send (takeover)
+                - textbox "Type a message… (Enter to send, Shift+Enter for newline)" [ref=e562]
+              - button "Send" [disabled] [ref=e246] [cursor=pointer]
+          - generic [ref=e247]:
+            - generic [ref=e248]:
+              - generic [ref=e249]: Lead Context
+              - generic [ref=e250]: Score, stage & tags
+            - generic [ref=e251]:
+              - generic [ref=e563]:
+                - generic [ref=e564]: DV
+                - generic [ref=e565]:
+                  - generic [ref=e566]: Danique van de Kerkhof
+                  - generic [ref=e567]: —
+              - generic [ref=e569]:
+                - generic [ref=e570]:
+                  - img [ref=e571]
+                  - text: Lead Score
+                - generic [ref=e574]: 30/100
+              - generic [ref=e577]:
+                - generic [ref=e578]:
+                  - img [ref=e579]
+                  - text: Pipeline Stage
+                - generic [ref=e583]:
+                  - generic [ref=e584]: Bump 3
+                  - generic [ref=e585]: All bumps sent
+                - generic [ref=e586]:
+                  - generic "Bump 1" [ref=e587]
+                  - generic "Bump 2" [ref=e588]
+                  - generic "Bump 3" [ref=e589]
+                - generic [ref=e590]: "Bumps sent: 3 / 3"
+              - generic [ref=e591]:
+                - generic [ref=e592]:
+                  - img [ref=e593]
+                  - text: Contact Info
+                - generic [ref=e596]:
+                  - generic [ref=e597]:
+                    - img [ref=e598]
+                    - generic [ref=e600]:
+                      - generic [ref=e601]: Phone
+                      - generic [ref=e602]: —
+                  - generic [ref=e603]:
+                    - img [ref=e604]
+                    - generic [ref=e607]:
+                      - generic [ref=e608]: Email
+                      - generic [ref=e609]: danique@test.com[Enter]
+              - generic [ref=e610]:
+                - generic [ref=e611]:
+                  - img [ref=e612]
+                  - text: Tags
+                - 'generic "Priority: high priority" [ref=e616]': high priority
+              - link "View full contact →" [ref=e618] [cursor=pointer]:
+                - /url: /agency/contacts/2

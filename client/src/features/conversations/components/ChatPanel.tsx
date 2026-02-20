@@ -456,7 +456,7 @@ function ChatBubble({ item }: { item: Interaction }) {
         className={cn(
           "max-w-[78%] rounded-2xl px-3 py-2 text-sm border",
           // Inbound (lead message) — muted/neutral left-aligned bubble
-          inbound && "bg-muted/40 text-foreground border-border",
+          inbound && "bg-muted/40 dark:bg-muted/70 text-foreground border-border",
           // AI-generated outbound — violet bubble with dashed border
           aiMsg &&
             "bg-violet-600/90 dark:bg-violet-700/80 text-white border-dashed border-violet-400/60 dark:border-violet-500/50",
@@ -480,8 +480,8 @@ function ChatBubble({ item }: { item: Interaction }) {
         )}
         <div
           className={cn(
-            "mt-1 text-[11px] opacity-70 flex items-center gap-1 flex-wrap",
-            outbound ? "text-white/80" : "text-muted-foreground",
+            "mt-1 text-[11px] flex items-center gap-1 flex-wrap",
+            outbound ? "text-white/70" : "text-muted-foreground opacity-70 dark:opacity-90",
           )}
         >
           {item.created_at || item.createdAt
