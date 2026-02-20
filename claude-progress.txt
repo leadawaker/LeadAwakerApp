@@ -2159,3 +2159,55 @@
 ### Current Status:
 - 64/207 features passing (63 at session start, +1 this session)
 - Feature #93 marked passing after thorough browser verification
+
+## Session 2026-02-20 - Coding Agent (Feature #95)
+
+### Completed Features:
+- Feature #95: Right-side lead context panel - PASSING
+  - Enhanced ContactSidebar component (client/src/features/conversations/components/ContactSidebar.tsx)
+  - Full rewrite to add all required sections:
+
+  1. Lead Score (0-100): Computed from conversion_status (+0-40), message_count_received (+5/msg max 20),
+     current_bump_stage (+7/bump max 20), booked_call_date (+10), manual_takeover (+5), not opted_out (+5)
+     Shown as large bold number + animated progress bar (green>=70, yellow>=40, gray<40)
+
+  2. Pipeline Stage: Reads Conversion_Status first (Booked, Qualified, Interested, Responded),
+     falls back to current_bump_stage (Bump 1/2/3 with progress dots showing X/3 bumps sent)
+     Shown as colored badge + description + 3-dot progress bar
+
+  3. Real Tags: Fetches /api/leads/:id/tags (junction rows) + /api/tags (all tags) in parallel,
+     resolves tag IDs to tag objects, renders with proper color classes per tag color field
+     Lead 2 (Danique) correctly shows "high priority" tag (orange badge)
+
+  4. Contact Info: Phone, Email, and Booked Call date (with icons)
+
+  5. View full contact link to /agency/contacts/:id
+
+  - Added useLeadTags hook inside component: fetches tags when leadId changes
+  - Added computeLeadScore() and getPipelineStage() pure functions
+  - Dynamic updates: panel rerenders with new data when selecting a different conversation thread
+
+### Code Changes:
+- MODIFIED: client/src/features/conversations/components/ContactSidebar.tsx
+  - Full rewrite from simple contact card to enriched lead context panel
+  - Uses apiFetch for /api/leads/:id/tags and /api/tags
+  - No new API endpoints needed (existing routes sufficient)
+
+### Verification:
+- Playwright browser automation confirmed all 3 feature steps:
+  1. Selected Danique van de Kerkhof - right panel shows "Lead Context" header + all 4 sections
+  2. Lead score (30/100 with progress bar), stage (Bump 3 + orange badge, bumps sent 3/3), tags (high priority in orange)
+  3. Switched to Augusto Fronza - score changed to 10/100, stage changed to New, no tags
+- Visual screenshot verified correct layout at xl breakpoint (3-column grid)
+- API calls confirmed real DB data (tags from /api/leads/2/tags returning tagsId=16 - "high priority")
+- Zero console errors, zero mock data patterns
+
+### Environment Notes:
+- API server on port 5001 (pre-existing)
+- Vite dev server on port 5173 (pre-existing)
+- DB reachable, all 11 tables healthy
+
+### Current Status:
+- 66/207 features passing (65 at session start, +1 this session)
+- Feature #95 marked passing after thorough browser verification
+- Git commit: 41b3a95
