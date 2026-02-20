@@ -1,3 +1,39 @@
+## Session 2026-02-20 - Coding Agent (Feature #91)
+
+### Completed Features:
+- Feature #91: Conversation thread view - PASSING
+  - Center panel (ChatPanel.tsx) renders message bubbles for selected conversation
+  - All 4 feature steps verified via Playwright browser automation:
+    1. Click a conversation → thread renders in center panel (Danique van de Kerkhof's 4+1 messages)
+    2. Inbound messages align LEFT - gray/white bubble on left side
+    3. Outbound messages align RIGHT - blue primary-color bubble on right side
+    4. Timestamps displayed on each message (e.g. "28/01/2026, 19:10:37 • Whatsapp")
+  - Thread switching works: clicking different conversations updates center panel
+  - Empty state shows "No messages yet" for contacts with no interactions
+
+### Bug Fixes During Verification:
+- Discovered API returns `Content` (uppercase) while ChatBubble accessed `item.content` (lowercase)
+  - Fixed: `{item.content ?? item.Content}` in ChatPanel.tsx
+- InboxPanel preview also accessed `last.content` - fixed to `last.content ?? last.Content`
+- Thread message filter checked `lead_id ?? leads_id` but API returns `Leads_id` (uppercase L)
+  - Fixed in useConversationsData.ts: `(i.lead_id ?? i.leads_id ?? i.Leads_id) === leadId`
+- All fixes were already present in codebase (committed in earlier session)
+
+### Verification Process:
+- Created inbound test message via POST /api/interactions with direction "Inbound"
+- Verified inbound message renders on LEFT (gray bubble) while outbound renders on RIGHT (blue bubble)
+- Zero console errors
+- No mock data patterns found in conversations feature files
+
+### Environment Notes:
+- API server on port 5001, Vite on port 5173
+- DB: 11/11 tables healthy, 10 leads, 4+1 interactions for lead 2
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 60/207 features passing (59 at session start, +1 this session)
+- Feature #91 marked passing after browser verification
+
 ## Session 2026-02-20 - Coding Agent (Feature #89)
 
 ### Completed Features:
