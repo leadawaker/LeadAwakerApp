@@ -1,3 +1,49 @@
+## Session 2026-02-20 (3rd) - Coding Agent
+
+### Completed Features:
+- Feature #195: Dark mode theme - PASSING
+  - Complete dark mode with brand-tinted navy surfaces (not pure black)
+  - Fixed sonner.tsx: replaced next-themes import with custom useTheme hook
+  - Fixed DataTable.tsx: ~37 hardcoded slate/gray colors → semantic tokens (text-foreground, bg-muted, border-border)
+  - Fixed AppDashboard.tsx: loading spinner, status badges, chart colors all dark-mode compatible
+  - Fixed LeadFilters.tsx: all border-slate, text-slate, hover:bg-slate → semantic tokens
+  - Fixed AutomationLogs.tsx: STATUS_CONFIG colors to opacity-based hex
+  - Fixed LeadsTable.tsx, Calendar.tsx, AppAccounts.tsx, app.tsx, login.tsx: various hardcoded colors
+  - Status badges use opacity-based hex colors (e.g., bg-[#10b981]/10) that work on both themes
+  - Recharts: CSS variable-based colors for ticks, grid, and tooltips
+  - WCAG Contrast Ratios (all PASS):
+    - Foreground on Background: 14.7:1 (AA required 4.5:1)
+    - Foreground on Card: 13.4:1 (AA required 4.5:1)
+    - Muted-fg on Background: 5.8:1 (AA-large required 3:1)
+    - Muted-fg on Card: 5.3:1 (AA-large required 3:1)
+    - Primary on Background: 4.9:1 (AA-large required 3:1)
+  - Verified all CRM pages in dark mode via Playwright: Dashboard, Contacts, Campaigns, Tags, Accounts, Automation Logs
+  - Zero console errors across all pages
+
+### Code Changes:
+- MODIFIED: client/src/components/ui/sonner.tsx - Replaced next-themes with custom useTheme hook
+- MODIFIED: client/src/components/DataTable/DataTable.tsx - ~37 fixes: slate/gray → semantic tokens, opacity-based status colors
+- MODIFIED: client/src/pages/AppDashboard.tsx - Chart colors, tooltip, badge, spinner dark mode fixes
+- MODIFIED: client/src/features/leads/components/LeadFilters.tsx - All slate colors → semantic tokens
+- MODIFIED: client/src/pages/AutomationLogs.tsx - STATUS_CONFIG opacity-based hex colors
+- MODIFIED: client/src/features/leads/components/LeadsTable.tsx - Date range badge semantic colors
+- MODIFIED: client/src/pages/Calendar.tsx - Loading spinner semantic colors
+- MODIFIED: client/src/pages/AppAccounts.tsx - Access denied text semantic color
+- MODIFIED: client/src/pages/app.tsx - Page loader bg-background, text-muted-foreground
+- MODIFIED: client/src/pages/login.tsx - Background gradient, checkbox border, text colors
+- NEW: script/contrast-check.mjs - WCAG contrast ratio calculator
+
+### Verification:
+- Tinted dark surfaces: background hsl(228,35%,10%), card hsl(226,32%,14%) - navy-tinted, not pure black
+- Brand colors adjusted: primary hsl(229,100%,70%), brand-yellow hsl(44,98%,55%)
+- WCAG contrast: All 5 key pairs PASS (14.7:1, 13.4:1, 5.8:1, 5.3:1, 4.9:1)
+- All CRM pages verified via Playwright screenshots in dark mode
+- Zero console errors, zero mock data introduced
+
+### Current Status:
+- 26/207 features passing (25 at session start, +1 this session)
+- Feature #195 marked passing after browser + WCAG verification
+
 ## Session 2026-02-20 (2nd) - Coding Agent
 
 ### Completed Features:

@@ -265,7 +265,7 @@ export function LeadsTable() {
           </span>
         )}
         {(leadFilters.dateFrom || leadFilters.dateTo) && (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium">
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-muted text-foreground text-xs font-medium">
             Date range
             <button
               className="ml-0.5 hover:text-red-600"

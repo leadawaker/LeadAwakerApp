@@ -53,10 +53,10 @@ function AgencyOnly({ children, prefix }: { children: ReactElement; prefix: stri
 
 function PageLoader() {
   return (
-    <div className="flex h-screen w-full items-center justify-center bg-slate-50">
+    <div className="flex h-screen w-full items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-4">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-sm font-medium text-slate-500 animate-pulse">Loading dashboard...</p>
+        <p className="text-sm font-medium text-muted-foreground animate-pulse">Loading dashboard...</p>
       </div>
     </div>
   );

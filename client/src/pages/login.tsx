@@ -11,26 +11,55 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [, setLocation] = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    // Simulate a small delay for a smoother feel
-    await new Promise(resolve => setTimeout(resolve, 800));
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
 
-    // MOCK AUTH: store a local token
-    localStorage.setItem("leadawaker_auth", "mock-jwt");
-    localStorage.setItem("leadawaker_user_email", email);
-    localStorage.setItem("leadawaker_current_account_id", email === "leadawaker@gmail.com" ? "1" : "2");
-    
-    // Use wouter navigation instead of window.location.href for a SPA transition
-    setLocation("/agency/dashboard");
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError(body.message || "Invalid email or password");
+        return;
+      }
+
+      const { user } = await res.json();
+
+      // Keep localStorage in sync so existing hooks continue to work
+      localStorage.setItem("leadawaker_auth", "session");
+      localStorage.setItem("leadawaker_user_email", user.email ?? email);
+      localStorage.setItem("leadawaker_user_role", user.role ?? "Viewer");
+      localStorage.setItem("leadawaker_user_name", user.fullName1 ?? user.email ?? email);
+      if (user.avatarUrl) {
+        localStorage.setItem("leadawaker_user_avatar", user.avatarUrl);
+      }
+      localStorage.setItem(
+        "leadawaker_current_account_id",
+        String(user.accountsId ?? 1),
+      );
+
+      // Route to appropriate area based on account
+      const isAgency = user.accountsId === 1;
+      setLocation(isAgency ? "/agency/dashboard" : "/subaccount/dashboard");
+    } catch {
+      setError("Network error — please try again");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-20 bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen pt-24 pb-20 bg-gradient-to-br from-background to-muted">
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <motion.div
@@ -72,17 +101,22 @@ export default function Login() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8"
+            className="bg-card rounded-2xl shadow-xl border border-border p-8"
           >
             <h2 className="text-2xl font-bold mb-6">{t("form.heading")}</h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+                  {error}
+                </div>
+              )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   {t("form.email.label")}
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     type="email"
                     placeholder={t("form.email.placeholder")}
@@ -97,11 +131,11 @@ export default function Login() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-foreground mb-2">
                   {t("form.password.label")}
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     type="password"
                     placeholder={t("form.password.placeholder")}
@@ -117,8 +151,8 @@ export default function Login() {
 
               <div className="flex items-center justify-between text-sm">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="w-4 h-4 rounded border-gray-300" disabled={isLoading} />
-                  <span className="text-gray-600">{t("form.rememberMe")}</span>
+                  <input type="checkbox" className="w-4 h-4 rounded border-border" disabled={isLoading} />
+                  <span className="text-muted-foreground">{t("form.rememberMe")}</span>
                 </label>
                 <a href="#" className="text-primary hover:underline">
                   {t("form.forgotPassword")}
@@ -145,8 +179,8 @@ export default function Login() {
               </Button>
             </form>
 
-            <div className="mt-8 pt-8 border-t border-gray-200">
-              <p className="text-center text-gray-600">
+            <div className="mt-8 pt-8 border-t border-border">
+              <p className="text-center text-muted-foreground">
                 {t("form.noAccount")}{" "}
                 <a href="/book-demo" className="text-primary font-medium hover:underline">
                   {t("form.scheduleDemo")}

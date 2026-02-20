@@ -173,13 +173,13 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="h-10 rounded-xl gap-2 font-semibold bg-white border-slate-200 shadow-none relative"
+          className="h-10 rounded-xl gap-2 font-semibold bg-card border-border shadow-none relative"
           data-testid="lead-filters-btn"
         >
           <Filter className="h-4 w-4" />
           <span>Filter</span>
           {activeCount > 0 && (
-            <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-blue-600">
+            <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-brand-blue">
               {activeCount}
             </Badge>
           )}
@@ -190,7 +190,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
         align="start"
         sideOffset={8}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <h4 className="font-semibold text-sm">Lead Filters</h4>
           <div className="flex items-center gap-2">
             {activeCount > 0 && (
@@ -198,7 +198,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                 variant="ghost"
                 size="sm"
                 onClick={clearAll}
-                className="h-7 text-xs text-slate-500 hover:text-red-600"
+                className="h-7 text-xs text-muted-foreground hover:text-red-600"
               >
                 Clear all
               </Button>
@@ -210,7 +210,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
           <div className="p-4 space-y-5">
             {/* ── Pipeline Stage ── */}
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">
                 Pipeline Stage
               </Label>
               <Select
@@ -219,7 +219,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                   update({ pipelineStage: v === "__all__" ? "" : v })
                 }
               >
-                <SelectTrigger className="h-9 text-sm bg-white border-slate-200">
+                <SelectTrigger className="h-9 text-sm bg-card border-border">
                   <SelectValue placeholder="All stages" />
                 </SelectTrigger>
                 <SelectContent>
@@ -235,7 +235,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
 
             {/* ── Campaign ── */}
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">
                 Campaign
               </Label>
               <Select
@@ -244,7 +244,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                   update({ campaignId: v === "__all__" ? "" : v })
                 }
               >
-                <SelectTrigger className="h-9 text-sm bg-white border-slate-200">
+                <SelectTrigger className="h-9 text-sm bg-card border-border">
                   <SelectValue placeholder="All campaigns" />
                 </SelectTrigger>
                 <SelectContent>
@@ -260,10 +260,10 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
 
             {/* ── Tags ── */}
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">
                 Tags{" "}
                 {filters.tags.length > 0 && (
-                  <span className="text-blue-600 ml-1">
+                  <span className="text-brand-blue ml-1">
                     ({filters.tags.length})
                   </span>
                 )}
@@ -272,7 +272,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full h-9 justify-between text-sm font-normal border-slate-200"
+                    className="w-full h-9 justify-between text-sm font-normal border-border"
                   >
                     <span className="truncate">
                       {filters.tags.length === 0
@@ -288,14 +288,14 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                       {Object.entries(tagsByCategory).map(
                         ([category, categoryTags]) => (
                           <div key={category}>
-                            <div className="text-[9px] font-bold uppercase text-slate-400 tracking-widest px-2 py-1">
+                            <div className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest px-2 py-1">
                               {category}
                             </div>
                             <div className="space-y-0.5">
                               {categoryTags.map((tag) => (
                                 <div
                                   key={tag.id}
-                                  className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-slate-50 cursor-pointer"
+                                  className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/50 cursor-pointer"
                                   onClick={() => toggleTag(tag.id)}
                                 >
                                   <Checkbox
@@ -311,7 +311,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                                           : `var(--${tag.color}-500, ${tag.color})`,
                                     }}
                                   />
-                                  <span className="text-xs font-medium text-slate-700 truncate">
+                                  <span className="text-xs font-medium text-foreground truncate">
                                     {tag.name}
                                   </span>
                                 </div>
@@ -348,7 +348,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
 
             {/* ── Score Range ── */}
             <div className="space-y-2">
-              <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">
                 Lead Score Range
               </Label>
               <div className="flex items-center gap-3">
@@ -399,7 +399,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
 
             {/* ── Priority ── */}
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">
                 Priority
               </Label>
               <Select
@@ -408,7 +408,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                   update({ priority: v === "__all__" ? "" : v })
                 }
               >
-                <SelectTrigger className="h-9 text-sm bg-white border-slate-200">
+                <SelectTrigger className="h-9 text-sm bg-card border-border">
                   <SelectValue placeholder="All priorities" />
                 </SelectTrigger>
                 <SelectContent>
@@ -424,7 +424,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
 
             {/* ── Date Range ── */}
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+              <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">
                 Created Date Range
               </Label>
               <div className="flex items-center gap-2">
@@ -433,7 +433,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                     <Button
                       variant="outline"
                       className={cn(
-                        "flex-1 h-9 justify-start text-sm font-normal border-slate-200",
+                        "flex-1 h-9 justify-start text-sm font-normal border-border",
                         !filters.dateFrom && "text-muted-foreground"
                       )}
                     >
@@ -452,13 +452,13 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                     />
                   </PopoverContent>
                 </Popover>
-                <span className="text-slate-400 text-xs">to</span>
+                <span className="text-muted-foreground text-xs">to</span>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className={cn(
-                        "flex-1 h-9 justify-start text-sm font-normal border-slate-200",
+                        "flex-1 h-9 justify-start text-sm font-normal border-border",
                         !filters.dateTo && "text-muted-foreground"
                       )}
                     >
@@ -480,7 +480,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 text-[10px] text-slate-400 hover:text-red-500 px-1"
+                  className="h-6 text-[10px] text-muted-foreground hover:text-red-500 px-1"
                   onClick={() =>
                     update({ dateFrom: undefined, dateTo: undefined })
                   }
@@ -494,8 +494,8 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
 
         {/* Footer */}
         {activeCount > 0 && (
-          <div className="border-t border-slate-200 px-4 py-2.5 bg-slate-50/50">
-            <div className="text-[10px] text-slate-500 font-medium">
+          <div className="border-t border-border px-4 py-2.5 bg-muted/30">
+            <div className="text-[10px] text-muted-foreground font-medium">
               {activeCount} filter{activeCount > 1 ? "s" : ""} active
             </div>
           </div>
