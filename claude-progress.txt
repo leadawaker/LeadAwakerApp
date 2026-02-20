@@ -1964,3 +1964,54 @@
 - 57/207 features passing (56 at session start, +1 this session)
 - Feature #38 marked passing after thorough browser verification
 - Git commits: 93f512b (hook + AppDashboard changes from previous session), d28a705 (Settings.tsx)
+
+## Session 2026-02-20 - Coding Agent (Feature #90)
+
+### Completed Features:
+- Feature #90: Conversation list filters - PASSING
+  - Added collapsible filter strip to InboxPanel with "Filters" toggle button
+  - Toggle button shows active indicator dot when any filter is active
+  - Campaign filter: select dropdown filters thread list by campaign (verified: 10->6 threads)
+  - AI/Human state filter: All/AI/Human segmented control based on manual_takeover field
+    - All: shows all threads
+    - AI: shows only threads where manual_takeover=false
+    - Human: shows only threads where manual_takeover=true
+  - Account filter: agency users only (isAgencyUser check), select dropdown scopes threads
+    - "All Accounts" = no account filter (shows all leads)
+    - Selecting account: scopes threads + resets campaign filter
+  - Non-agency/Viewer users: NO account filter shown (RBAC enforced)
+  - Added AI/Human badge on each thread row (blue=AI, amber=Human)
+  - AiStateFilter type exported from useConversationsData hook
+
+### Code Changes:
+- MODIFIED: client/src/features/conversations/hooks/useConversationsData.ts
+  - Added AiStateFilter type ("all" | "ai" | "human")
+  - Added aiStateFilter param to useConversationsData hook
+  - Filter logic in threads memo: filter by manual_takeover field
+- MODIFIED: client/src/features/conversations/components/InboxPanel.tsx
+  - Full rewrite to add filter strip
+  - Props: selectedCampaignId, onCampaignChange, aiStateFilter, onAiStateFilterChange
+  - Props: campaigns[], accounts[], selectedAccountId, onAccountChange, isAgencyUser
+  - Collapsible filter panel with SlidersHorizontal icon and active dot
+  - Campaign select, Account select (agency only), AI/Human segmented control
+  - AI/Human badge on each thread row
+- MODIFIED: client/src/pages/Conversations.tsx
+  - Added filterAccountId, aiStateFilter state
+  - Imports: useCampaigns hook for campaign options
+  - effectiveAccountId logic (agency: "all"=undefined, specific=number; non-agency: currentAccountId)
+  - Passes all filter props to InboxPanel
+  - handleAccountChange: resets campaign when account changes
+
+### Verification:
+- Admin login (agency): Filters button -> account/campaign/AI-state filters all visible
+  - Campaign filter: 10->6 threads when selecting "Reactivation" campaign
+  - Account filter: 10->4 threads when selecting "van de Kerkhof" account
+  - Human filter: 0 threads (no manual_takeover=true in test data - correct)
+  - AI filter: 10 threads (all leads are AI-managed - correct)
+  - Unread tab: 0 threads for selected account (correct)
+- Viewer login: Account filter hidden, only Campaign + AI-state filters shown (correct RBAC)
+- Zero JS console errors, no mock data patterns
+
+### Current Status:
+- 59/207 features passing (58 at session start, +1 this session)
+- Git commit: e7e6e9a
