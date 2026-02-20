@@ -1922,3 +1922,45 @@
 ### Current Status:
 - 54/207 features passing (53 at session start, +1 this session)
 - Feature #35 marked passing after thorough browser verification
+
+## Session 2026-02-20 (Feature #38) - Coding Agent
+
+### Completed Features:
+- Feature #38: Auto-refresh with configurable interval - PASSING
+  - Created useDashboardRefreshInterval hook (client/src/hooks/useDashboardRefreshInterval.ts)
+    - Reads/writes refresh interval to localStorage (key: "dashboard-refresh-interval")
+    - Default interval: 60 seconds
+    - Interval options: Off(0), 15s, 30s, 60s, 120s, 300s
+  - Modified AppDashboard.tsx:
+    - Added auto-refresh timer using setInterval (resets countdown on each tick)
+    - Visual countdown indicator in top-right: "55s", "27s" etc.
+    - Manual "Refresh now" button with spinning icon during refresh
+    - "Last refreshed: just now / Xs ago / Xm ago" label shown after first manual or auto-refresh
+    - All 5 data hooks (leads, campaigns, accounts, metrics, trends) called on refresh
+  - Modified Settings.tsx:
+    - New "Dashboard Auto-Refresh" card in right column
+    - Shows current interval label ("1 minute", "30 seconds", etc.)
+    - Grid of 6 option buttons (Off, 15s, 30s, 1 minute, 2 minutes, 5 minutes)
+    - Selected option highlighted in yellow (brand color)
+    - Toast notification on interval change
+  - Verified all 3 feature steps via Playwright browser automation:
+    1. Dashboard countdown timer visible (55s at 60s interval)
+    2. Changed to 30s in settings - toast confirmed "Refresh interval updated"
+    3. Dashboard showed 27s countdown confirming new interval applied
+    4. Manual refresh click showed "just now" label and reset countdown to 5s
+
+### Code Changes:
+- NEW: client/src/hooks/useDashboardRefreshInterval.ts
+- MODIFIED: client/src/pages/AppDashboard.tsx - Added auto-refresh logic and UI indicator
+- MODIFIED: client/src/pages/Settings.tsx - Added Dashboard Auto-Refresh settings card
+
+### Environment Notes:
+- Server on port 5001 (pre-existing)
+- Vite dev server on port 5173 (pre-existing)
+- DB reachable, all 11 tables healthy
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 57/207 features passing (56 at session start, +1 this session)
+- Feature #38 marked passing after thorough browser verification
+- Git commits: 93f512b (hook + AppDashboard changes from previous session), d28a705 (Settings.tsx)
