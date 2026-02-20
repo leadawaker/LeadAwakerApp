@@ -1,3 +1,43 @@
+## Session 2026-02-20 (18th) - Coding Agent
+
+### Completed Features:
+- Feature #22: Secondary KPI cards - PASSING
+  - Added 4 secondary KPI cards to both Agency and Subaccount dashboards:
+    1. Response Rate (percentage from leads message_count_received/sent)
+    2. Total Leads (count from Leads table)
+    3. Active Campaigns (count from Campaigns where status=Active)
+    4. Messages Sent (sum of message_count_sent across leads)
+  - All data computed from real PostgreSQL data via existing API hooks
+  - No new API endpoints needed - leveraged existing leads/campaigns data
+  - Agency dashboard: added agencyStats useMemo + grid layout with hero KPI + 4 secondary cards
+  - Subaccount dashboard: replaced old KPI cards (AI Cost, Avg Resp Time, Conv Rate) with required 4 cards
+  - Added data-testid attributes for testability (stat-response-rate, stat-total-leads, etc.)
+
+### Code Changes:
+- MODIFIED: client/src/pages/AppDashboard.tsx
+  - Added messagesSent and responseRate to stats computation in AppDashboard component
+  - Added agencyStats useMemo to AgencyDashboard for agency-wide KPI computation
+  - AgencyDashboard: changed from single hero KPI to grid layout with hero + 4 secondary cards
+  - SubaccountDashboard: replaced 5 old KPI cards with 4 required cards using real data
+  - Added data-testid="secondary-kpi-cards" to both dashboard KPI grids
+
+### Verification:
+- Playwright browser automation confirmed all 4 feature steps:
+  1. All four secondary KPI cards render on both Agency and Subaccount dashboards
+  2. Response rate shows 0% (computed from real data: 0 leads responded / 2 leads contacted)
+  3. Total leads = 9 (matches /api/health Leads table count of 9)
+  4. Active campaigns = 1 (matches Campaigns API: only "Reactivation of our liv" is Active)
+  5. Messages sent = 2 (Gabriel=1 + Danique=1 from message_count_sent field)
+- Visual screenshots confirmed clean layout with hero KPI + 4 compact secondary cards
+- Zero console errors (only healthy info messages)
+- Mock data detection: zero hits in AppDashboard.tsx
+- Data comes from real PostgreSQL via /api/leads and /api/campaigns
+
+### Current Status:
+- 41/207 features passing (40 at session start, +1 this session)
+- Feature #22 marked passing after browser verification
+- Git commit: 49518fd
+
 ## Session 2026-02-20 (17th) - Coding Agent
 
 ### Completed Features:
