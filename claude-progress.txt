@@ -2340,3 +2340,38 @@
 - 67/207 features passing (66 at session start, +1 this session)
 - Feature #96 marked passing after thorough browser verification
 - Git commit: 90dd69b
+
+## Session 2026-02-20 - Coding Agent (Feature #99)
+
+### Completed Features:
+- Feature #99: Unread count badges - PASSING
+  - Feature was largely already implemented from previous sessions
+  - Per-thread unread count badges with data-testid="badge-unread-{id}" and accessible title
+  - Badge shows on thread items when thread has inbound messages (unreadCount > 0) AND lead not in readLeadIds set
+  - Badge clears immediately when thread is clicked (readLeadIds.add via handleSelectLead)
+  - Unread tab button shows total unread count badge (excludes readLeadIds)
+  - Fixed inconsistency: Unread tab thread LIST was showing 2 threads (included auto-opened lead)
+    while the count badge showed 1. Fixed by computing displayThreads in InboxPanel:
+    when tab is "unread", filter to only threads that are unread AND not in readLeadIds
+    This ensures unread tab list matches the count shown on the Unread tab button
+  - Badge counts match actual inbound message counts from DB
+  - Zero JS console errors
+
+### Code Changes:
+- MODIFIED: client/src/features/conversations/components/InboxPanel.tsx
+  - Added displayThreads computed variable before return
+  - Unread tab: filter by t.unread AND lead not in readLeadIds
+  - All tab: show all threads (no additional filter)
+  - Updated map, empty state, and footer count to use displayThreads instead of threads
+
+### Verification:
+- Playwright browser automation confirmed all 3 feature steps:
+  1. Augusto Fronza thread shows badge "1" with aria-label "1 unread message"
+  2. Clicking thread: badge removed from DOM, Unread tab count cleared to 0
+  3. Unread tab shows only actually unread (not yet opened) threads
+- Zero JS console errors (0 errors, 0 warnings)
+
+### Current Status:
+- 70/207 features passing (69 at session start, +1 this session)
+- Feature #99 marked passing after thorough browser verification
+- Git commit: 6094218
