@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bot, User, UserCheck, Check, CheckCheck, Clock, AlertCircle } from "lucide-react";
+import { Bot, User, UserCheck, Check, CheckCheck, Clock, AlertCircle, FileText, Music, Video, Download, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import type { Thread, Interaction } from "../hooks/useConversationsData";
@@ -260,6 +260,123 @@ function isManualFollowUp(item: Interaction): boolean {
   );
 }
 
+/** Determine media type from URL or content-type hints in the URL */
+function getAttachmentType(url: string): "image" | "video" | "audio" | "document" {
+  const lower = url.toLowerCase().split("?")[0]; // strip query params for extension check
+  if (/\.(jpg|jpeg|png|gif|webp|svg|bmp|avif)$/.test(lower)) return "image";
+  if (/\.(mp4|mov|avi|webm|mkv|ogg)$/.test(lower)) return "video";
+  if (/\.(mp3|ogg|wav|m4a|aac|opus|flac)$/.test(lower)) return "audio";
+  return "document";
+}
+
+/** Inline attachment preview shown inside a chat bubble */
+function AttachmentPreview({ url, outbound }: { url: string; outbound: boolean }) {
+  const [imgError, setImgError] = useState(false);
+  const type = getAttachmentType(url);
+
+  // Derive a friendly filename from the URL
+  const filename = decodeURIComponent(url.split("/").pop()?.split("?")[0] ?? "attachment");
+
+  const linkClasses = cn(
+    "inline-flex items-center gap-1.5 mt-1 text-xs underline underline-offset-2 opacity-90 hover:opacity-100 break-all",
+    outbound ? "text-white/90" : "text-primary",
+  );
+
+  if (type === "image" && !imgError) {
+    return (
+      <div className="mt-2" data-testid="attachment-image">
+        <img
+          src={url}
+          alt="Attachment"
+          className="max-w-full max-h-60 rounded-lg object-cover border border-white/20 cursor-pointer"
+          onError={() => setImgError(true)}
+          onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
+          title="Click to open full size"
+        />
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={linkClasses}
+          data-testid="attachment-link"
+        >
+          <ExternalLink className="w-3 h-3 shrink-0" />
+          <span className="truncate max-w-[200px]">{filename}</span>
+        </a>
+      </div>
+    );
+  }
+
+  if (type === "video") {
+    return (
+      <div className="mt-2" data-testid="attachment-video">
+        <video
+          src={url}
+          controls
+          className="max-w-full max-h-48 rounded-lg border border-white/20"
+          preload="metadata"
+        />
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={linkClasses}
+          data-testid="attachment-link"
+        >
+          <Video className="w-3 h-3 shrink-0" />
+          <span className="truncate max-w-[200px]">{filename}</span>
+        </a>
+      </div>
+    );
+  }
+
+  if (type === "audio") {
+    return (
+      <div className="mt-2" data-testid="attachment-audio">
+        <audio
+          src={url}
+          controls
+          className="w-full max-w-xs rounded-lg"
+          preload="metadata"
+        />
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={linkClasses}
+          data-testid="attachment-link"
+        >
+          <Music className="w-3 h-3 shrink-0" />
+          <span className="truncate max-w-[200px]">{filename}</span>
+        </a>
+      </div>
+    );
+  }
+
+  // Generic document/file download link
+  return (
+    <div className="mt-2" data-testid="attachment-document">
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={cn(
+          "inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium",
+          outbound
+            ? "bg-white/15 border-white/30 text-white hover:bg-white/25"
+            : "bg-muted border-border text-foreground hover:bg-muted/70",
+        )}
+        data-testid="attachment-link"
+        download
+      >
+        <FileText className="w-4 h-4 shrink-0" />
+        <span className="truncate max-w-[200px]">{filename}</span>
+        <Download className="w-3 h-3 shrink-0 opacity-70" />
+      </a>
+    </div>
+  );
+}
+
 function ChatBubble({ item }: { item: Interaction }) {
   const outbound = item.direction === "Outbound";
   const inbound = !outbound;
@@ -340,6 +457,13 @@ function ChatBubble({ item }: { item: Interaction }) {
         }
       >
         <div className="whitespace-pre-wrap leading-relaxed">{item.content ?? item.Content}</div>
+        {/* Inline attachment display — image/video/audio/document */}
+        {(item.attachment ?? item.Attachment) && (
+          <AttachmentPreview
+            url={(item.attachment ?? item.Attachment) as string}
+            outbound={outbound}
+          />
+        )}
         <div
           className={cn(
             "mt-1 text-[11px] opacity-70 flex items-center gap-1 flex-wrap",

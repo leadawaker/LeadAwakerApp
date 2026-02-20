@@ -49,6 +49,9 @@ export interface Interaction {
   bump_number?: number | null;
   triggered_by?: string | null;
   ai_model?: string | null;
+  /** Attachment URL (image, video, document, audio) sent alongside the message */
+  attachment?: string | null;
+  Attachment?: string | null;
   [key: string]: any;
 }
 
