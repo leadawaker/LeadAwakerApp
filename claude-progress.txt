@@ -1,3 +1,42 @@
+## Session 2026-02-20 (32nd) - Coding Agent (Feature #37)
+
+### Completed Features:
+- Feature #37: Cost metrics display - PASSING
+  - Dashboard shows cost metrics: cost per lead, cost per booking, and ROI% from campaign metrics data
+  - Values sourced from Campaign_Metrics_History latest snapshot per campaign
+  - Added to CampaignPerformanceCards component after the sparklines section
+  - Three new columns displayed for each campaign card:
+    - "Per Lead": cost per lead (e.g., "$2.00") with green DollarSign icon
+    - "Per Booking": cost per booking (e.g., "$67.00" or "—" if no bookings) with orange DollarSign icon
+    - "ROI": ROI percentage (e.g., "232%") with purple BarChart3 icon - color-coded green if ≥100%
+  - Data comes from real PostgreSQL Campaign_Metrics_History table (42 rows of data)
+  - API endpoint: /api/campaign-metrics-history → costPerLead, costPerBooking, roiPercent fields
+
+### Code Changes:
+- MODIFIED: client/src/components/crm/CampaignPerformanceCards.tsx
+  - Added DollarSign and BarChart3 imports from lucide-react
+  - Added cost metrics calculation (costPerLead, costPerBooking, roiPercent from latest metric)
+  - Added "Cost Metrics Row" section with 3-column grid above footer stats
+  - Color-coded ROI: emerald-500 for ≥100%, amber-500 for ≥50%, default otherwise
+  - Shows "—" for zero cost-per-booking (when no bookings exist)
+  - data-testid attributes: campaign-cost-per-lead-{id}, campaign-cost-per-booking-{id}, campaign-roi-percent-{id}
+
+### Verification:
+- Playwright browser automation confirmed all 3 feature steps:
+  1. Campaign "Reactivation of our liv": Per Lead=$2.00, Per Booking=$67.00, ROI=232%
+  2. Campaign "Wow": Per Lead=$2.00, Per Booking=$22.00, ROI=121%
+  3. Campaign "Bananas": Per Lead=$3.00, Per Booking=— (no bookings), ROI=151%
+- Zero console errors
+- No mock data patterns (fields from real Campaign_Metrics_History API)
+
+### Environment Notes:
+- API server on port 5001, Vite on port 5173
+- Changes auto-committed in commit 93f512b by autoforge system
+
+### Current Status:
+- 56/207 features passing (55 at session start, +1 this session)
+- Feature #37 marked passing after browser verification
+
 ## Session 2026-02-20 (31st) - Coding Agent (Feature #36)
 
 ### Completed Features:
