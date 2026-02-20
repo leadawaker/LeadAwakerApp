@@ -30,9 +30,10 @@ import {
   ChevronRight,
   Megaphone,
   Inbox,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SkeletonDashboard } from "@/components/ui/skeleton";
 
 const TAG_CATEGORIES = [
   {
@@ -245,10 +246,7 @@ export default function AppDashboard() {
             <FiltersBar selectedCampaignId={selectedCampaignId} setSelectedCampaignId={setSelectedCampaignId} />
           </div>
           {isLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-              <span className="ml-3 text-sm text-muted-foreground font-medium">Loading dashboard...</span>
-            </div>
+            <SkeletonDashboard />
           ) : isAgencyView ? (
             <AgencyDashboard accounts={accounts} campaigns={campaigns} />
           ) : (
