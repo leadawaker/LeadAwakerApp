@@ -26,9 +26,9 @@ const CSV_TAGS = [
 function statusTone(status: Lead["conversion_status"]) {
   switch (status) {
     case "Booked":
-      return "bg-emerald-500/10 text-emerald-700 border-emerald-500/20";
+      return "bg-brand-yellow/10 text-brand-yellow border-brand-yellow/20";
     case "Qualified":
-      return "bg-blue-500/10 text-blue-700 border-blue-500/20";
+      return "bg-brand-blue/10 text-brand-blue border-brand-blue/20";
     case "Responded":
       return "bg-violet-500/10 text-violet-700 border-violet-500/20";
     case "DND":
@@ -44,7 +44,7 @@ export function LeadCard({ lead, active }: { lead: Lead; active: boolean }) {
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border bg-card shadow-sm p-4 transition-all duration-300 group/lead",
+        "rounded-2xl border border-border bg-card shadow-sm p-4 transition-all duration-200 ease-out group/lead",
         active ? "bg-primary/5" : "bg-background hover:bg-muted/10",
       )}
       data-testid={`card-lead-${lead.id}`}
@@ -55,7 +55,7 @@ export function LeadCard({ lead, active }: { lead: Lead; active: boolean }) {
             {lead.full_name}
           </div>
 
-          <div className="overflow-visible group-hover/lead:max-h-40 transition-all duration-300 ease-in-out">
+          <div className="overflow-visible group-hover/lead:max-h-40 transition-all duration-250 ease-out">
             <div className="pt-2 flex flex-col gap-1.5 border-t border-border mt-2 mb-2">
               <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                 <span className="opacity-50 font-bold uppercase text-[9px]">Email</span>

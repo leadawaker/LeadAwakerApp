@@ -158,27 +158,27 @@ export function Topbar({
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 h-20 bg-background/50 backdrop-blur-xl z-50 flex items-center px-4 md:px-10 transition-all duration-200 border-b border-border/50 [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] pt-4",
+        "fixed top-0 right-0 h-20 bg-background/50 backdrop-blur-xl z-50 flex items-center px-4 md:px-10 transition-all duration-200 ease-out border-b border-border/50 [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] pt-4",
         "left-0",
         "md:left-[80px]",
         !collapsed && "md:left-[200px]"
       )}
       data-testid="header-crm-topbar"
     >
-      <div className="flex-1 flex items-center justify-start gap-3">
+      <div className="flex-1 flex items-center justify-start gap-3 min-w-0">
         {/* Hamburger button - mobile only */}
         <button
           onClick={onToggleMobileMenu}
-          className="md:hidden p-2 rounded-xl hover:bg-muted/40 text-foreground transition-colors"
+          className="md:hidden p-2 rounded-xl hover:bg-muted/40 text-foreground transition-colors shrink-0"
           data-testid="button-hamburger-menu"
           aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
         >
           {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
-        <div className="h-8 w-1.5 bg-brand-blue rounded-full hidden md:block" />
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">{currentTitle}</h1>
-          <nav aria-label="Breadcrumb" data-testid="breadcrumb-nav">
+        <div className="h-8 w-1.5 bg-brand-blue rounded-full hidden md:block shrink-0" />
+        <div className="flex flex-col gap-0.5 min-w-0">
+          <h1 className="text-lg md:text-2xl font-bold tracking-tight text-foreground truncate">{currentTitle}</h1>
+          <nav aria-label="Breadcrumb" data-testid="breadcrumb-nav" className="hidden sm:block">
             <ol className="flex items-center gap-1 text-xs text-muted-foreground">
               {breadcrumbs.map((crumb, idx) => {
                 const isLast = idx === breadcrumbs.length - 1;
@@ -208,8 +208,8 @@ export function Topbar({
         </div>
       </div>
 
-      <div className="absolute right-4 md:right-10 flex items-center gap-3 md:gap-6">
-        <div className="hidden md:flex items-center gap-3">
+      <div className="flex items-center gap-2 md:gap-6 shrink-0">
+        <div className="hidden lg:flex items-center gap-3">
           {isAdmin ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -300,11 +300,12 @@ export function Topbar({
         </div>
 
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 md:gap-2">
           <button
             onClick={() => onOpenPanel('search')}
-            className="p-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
+            className="hidden sm:flex p-2 md:p-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
             data-testid="button-search-top"
+            aria-label="Search"
           >
             <Search className="h-5 w-5" />
           </button>
@@ -312,9 +313,10 @@ export function Topbar({
           {/* Dark mode toggle */}
           <button
             onClick={toggleTheme}
-            className="p-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
+            className="p-2 md:p-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
             data-testid="button-dark-mode-toggle"
             title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
           >
             {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
@@ -322,12 +324,13 @@ export function Topbar({
           {/* Notifications */}
           <button
             onClick={() => onOpenPanel('notifications')}
-            className="p-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
+            className="p-2 md:p-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
             data-testid="button-notifications"
+            aria-label={`Notifications${notificationsCount > 0 ? ` (${notificationsCount} unread)` : ''}`}
           >
             <Bell className="h-5 w-5" />
             {notificationsCount > 0 && (
-              <div className="absolute top-2 right-2 h-5 w-5 bg-brand-blue rounded-full flex items-center justify-center border-2 border-background" data-testid="badge-notifications-count">
+              <div className="absolute top-1.5 right-1.5 md:top-2 md:right-2 h-5 w-5 bg-brand-blue rounded-full flex items-center justify-center border-2 border-background" data-testid="badge-notifications-count" aria-hidden="true">
                 <span className="text-[10px] font-bold text-white">{notificationsCount > 9 ? '9+' : notificationsCount}</span>
               </div>
             )}
@@ -336,8 +339,9 @@ export function Topbar({
           {/* Settings */}
           <button
             onClick={() => onOpenPanel('settings')}
-            className="p-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
+            className="hidden sm:flex p-2 md:p-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
             data-testid="button-settings-top"
+            aria-label="Settings"
           >
             <Settings className="h-5 w-5" />
           </button>
@@ -349,7 +353,7 @@ export function Topbar({
             data-testid="button-user-avatar"
             title={currentUserName}
           >
-            <Avatar className="h-9 w-9 border-2 border-primary/20">
+            <Avatar className="h-8 w-8 md:h-9 md:w-9 border-2 border-primary/20">
               <AvatarImage src={currentUserAvatar} alt={currentUserName} />
               <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
                 {userInitials}

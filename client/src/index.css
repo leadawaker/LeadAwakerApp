@@ -103,7 +103,7 @@
   /* Toast semantic colors */
   --success: 142 71% 45%;
   --success-foreground: 0 0% 100%;
-  --info: 217 91% 60%;
+  --info: 229 100% 66%;
   --info-foreground: 0 0% 100%;
 
   --border: 230 20% 90%;
@@ -178,7 +178,7 @@
   /* Toast semantic colors (dark mode) */
   --success: 142 71% 45%;
   --success-foreground: 0 0% 100%;
-  --info: 217 91% 65%;
+  --info: 229 100% 70%;
   --info-foreground: 0 0% 100%;
 
   /* Borders: visible but subtle on dark surfaces */

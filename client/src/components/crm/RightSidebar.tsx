@@ -183,7 +183,7 @@ export function RightSidebar({
           />
           {/* Slide-in sidebar */}
           <aside
-            className="absolute left-0 top-0 bottom-0 w-[260px] bg-white/90 dark:bg-card/90 glass-accent shadow-2xl flex flex-col animate-in slide-in-from-left duration-200"
+            className="absolute left-0 top-0 bottom-0 w-[260px] bg-white/90 dark:bg-card/90 glass-accent shadow-2xl flex flex-col animate-in slide-in-from-left duration-250 ease-out"
             data-testid="mobile-sidebar-panel"
           >
             {/* LOGO */}

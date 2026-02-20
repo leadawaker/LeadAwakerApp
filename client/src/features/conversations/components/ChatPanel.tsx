@@ -41,7 +41,7 @@ export function ChatPanel({ selected, sending, onSend, className }: ChatPanelPro
   return (
     <section
       className={cn(
-        "rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col h-full transition-all duration-300",
+        "rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col h-full transition-all duration-250 ease-out",
         className,
       )}
       data-testid="panel-chat"
@@ -158,7 +158,7 @@ function ChatBubble({ item }: { item: Interaction }) {
           {isSending && <span className="ml-1 italic">sending…</span>}
           {isFailed && <span className="ml-1 text-destructive font-semibold">failed</span>}
           {item.status === "delivered" && <span className="ml-1">✓✓</span>}
-          {item.status === "read" && <span className="ml-1 text-blue-400">✓✓</span>}
+          {item.status === "read" && <span className="ml-1 text-brand-blue">✓✓</span>}
           {item.status === "sent" && <span className="ml-1">✓</span>}
         </div>
       </div>

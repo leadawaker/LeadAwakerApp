@@ -36,7 +36,7 @@ export function InboxPanel({
   return (
     <section
       className={cn(
-        "rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col h-full transition-all duration-300",
+        "rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col h-full transition-all duration-250 ease-out",
         className,
       )}
       data-testid="panel-inbox"

@@ -88,7 +88,7 @@ export function ConnectionBanner() {
   if (state === "recovered") {
     return (
       <div
-        className="mx-4 md:mx-0 mb-3 flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/40 px-4 py-2.5 text-sm animate-in fade-in slide-in-from-top-2 duration-300"
+        className="mx-4 md:mx-0 mb-3 flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/40 px-4 py-2.5 text-sm animate-in fade-in slide-in-from-top-2 duration-250 ease-out"
         role="status"
         data-testid="connection-banner-recovered"
       >
@@ -106,7 +106,7 @@ export function ConnectionBanner() {
       className={cn(
         "mx-4 md:mx-0 mb-3 flex items-center gap-3 rounded-xl border px-4 py-2.5 text-sm",
         "border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40",
-        "animate-in fade-in slide-in-from-top-2 duration-300"
+        "animate-in fade-in slide-in-from-top-2 duration-250 ease-out"
       )}
       role="alert"
       data-testid="connection-banner"
