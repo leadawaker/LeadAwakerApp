@@ -2087,3 +2087,47 @@
 ### Current Status:
 - 59/207 features passing (58 at session start, +1 this session)
 - Git commit: e7e6e9a
+
+## Session 2026-02-20 - Coding Agent (Feature #93)
+
+### Completed Features:
+- Feature #93: Human message visual distinction - PASSING
+  - Feature was already fully implemented in ChatPanel.tsx
+  - Three visually distinct message styles confirmed working:
+    1. Lead messages (inbound): Neutral gray/muted bubble, left-aligned, "👤 Lead" label badge
+    2. Human agent messages (outbound): Blue/primary color bubble, right-aligned, "👤 Agent" label badge
+    3. AI messages (outbound): Violet/purple bubble, right-aligned, "🤖 AI · [Who]" label badge
+  - is_manual_follow_up indicator implemented (amber "Manual" badge on agent messages with flag)
+  - No current test data has is_manual_follow_up=true but code handles it correctly
+
+### Verification:
+- Playwright browser automation confirmed:
+  1. Navigated to /agency/conversations
+  2. Selected "Danique van de Kerkhof" thread
+  3. Screenshot shows all 3 message types visible simultaneously:
+     - "Lead" badge on gray left-aligned inbound bubble
+     - "Agent" badge on blue right-aligned outbound bubble
+     - "AI · Start/Bump" badge on violet right-aligned AI bubbles
+  4. Sent test message "TEST_HUMAN_MSG_93 - this is a human agent message" and verified it:
+     - Appeared with correct blue/primary bubble styling
+     - Showed "Agent" badge above it
+     - Persisted to database (confirmed via API)
+  5. Zero console errors
+
+### Implementation Details (already in place):
+- isAiMessage(): checks ai_generated, is_bump, triggered_by="Automation", Who="ai/bot/automation"
+- isHumanAgentMessage(): outbound + not AI = human agent message
+- isManualFollowUp(): checks is_manual_follow_up or isManualFollowUp flags
+- ChatBubble component:
+  - Lead label: bg-muted text-muted-foreground border-border
+  - Agent label: bg-primary/10 text-primary border-primary/20
+  - AI label: bg-violet-100 text-violet-700 border-violet-200
+  - Manual badge (amber): bg-amber-500/20 text-amber-700 border-amber-400/30
+  - Bubble colors: lead=bg-muted/40, AI=bg-violet-600/90, agent=bg-primary, manual=bg-amber-500
+
+### Code Changes:
+- No code changes required - feature was already fully implemented
+
+### Current Status:
+- 64/207 features passing (63 at session start, +1 this session)
+- Feature #93 marked passing after thorough browser verification
