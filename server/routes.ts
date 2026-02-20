@@ -463,5 +463,10 @@ export async function registerRoutes(
     res.json(data);
   });
 
+  app.post("/api/campaign-metrics-history", requireAuth, async (req, res) => {
+    const row = await storage.createCampaignMetricsHistory(req.body);
+    res.status(201).json(row);
+  });
+
   return httpServer;
 }

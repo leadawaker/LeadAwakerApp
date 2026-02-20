@@ -325,6 +325,11 @@ export class DatabaseStorage implements IStorage {
       .where(eq(campaignMetricsHistory.campaignsId, campaignId))
       .orderBy(desc(campaignMetricsHistory.metricDate));
   }
+
+  async createCampaignMetricsHistory(data: any): Promise<Campaign_Metrics_History> {
+    const [row] = await db.insert(campaignMetricsHistory).values(data as any).returning();
+    return row;
+  }
 }
 
 // ─── Pagination helpers ───────────────────────────────────────────────────

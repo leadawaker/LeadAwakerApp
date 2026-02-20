@@ -2,8 +2,9 @@ import React, { useMemo, useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useLeads, useCampaigns, useAccounts } from "@/hooks/useApiData";
-import type { Lead, Campaign, Account } from "@/types/models";
+import { useLeads, useCampaigns, useAccounts, useCampaignMetrics } from "@/hooks/useApiData";
+import type { Lead, Campaign, Account, CampaignMetricsHistory } from "@/types/models";
+import { CampaignPerformanceCards } from "@/components/crm/CampaignPerformanceCards";
 import {
   LineChart,
   Line,
@@ -35,6 +36,7 @@ import {
 import { cn } from "@/lib/utils";
 import { SkeletonDashboard } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
+import { HotLeadsWidget } from "@/components/crm/HotLeadsWidget";
 
 const TAG_CATEGORIES = [
   {
@@ -187,6 +189,7 @@ export default function AppDashboard() {
   const { leads, loading: leadsLoading } = useLeads();
   const { campaigns, loading: campaignsLoading } = useCampaigns();
   const { accounts, loading: accountsLoading } = useAccounts();
+  const { metrics: campaignMetrics, loading: metricsLoading } = useCampaignMetrics();
 
   const stagePalette = useMemo(() => [
     { id: "New" as const, label: "New", icon: <Zap className="w-5 h-5" />, fill: "#1a3a6f", textColor: "white" as const },
@@ -258,7 +261,7 @@ export default function AppDashboard() {
           {isLoading ? (
             <SkeletonDashboard />
           ) : isAgencyView ? (
-            <AgencyDashboard accounts={accounts} campaigns={campaigns} leads={leads} />
+            <AgencyDashboard accounts={accounts} campaigns={campaigns} leads={leads} campaignMetrics={campaignMetrics} metricsLoading={metricsLoading} />
           ) : (
             <SubaccountDashboard
               accountId={currentAccountId}
@@ -272,6 +275,9 @@ export default function AppDashboard() {
               setIsBookedReportOpen={setIsBookedReportOpen}
               dashboardTab={dashboardTab}
               leads={leads}
+              campaigns={campaigns}
+              campaignMetrics={campaignMetrics}
+              metricsLoading={metricsLoading}
             />
           )}
         </div>
@@ -280,7 +286,7 @@ export default function AppDashboard() {
   );
 }
 
-function AgencyDashboard({ accounts, campaigns, leads }: { accounts: Account[]; campaigns: Campaign[]; leads: Lead[] }) {
+function AgencyDashboard({ accounts, campaigns, leads, campaignMetrics, metricsLoading }: { accounts: Account[]; campaigns: Campaign[]; leads: Lead[]; campaignMetrics: CampaignMetricsHistory[]; metricsLoading: boolean }) {
   const { currentAccountId } = useWorkspace();
 
   const subaccounts = useMemo(() => {
@@ -340,6 +346,12 @@ function AgencyDashboard({ accounts, campaigns, leads }: { accounts: Account[]; 
       </div>
 
       <QuickJumpCards />
+      <CampaignPerformanceCards
+        campaigns={campaigns}
+        metrics={campaignMetrics}
+        loading={metricsLoading}
+      />
+      <HotLeadsWidget leads={leads} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {subaccounts.map((acc: any) => {
           const accCampaigns = campaigns.filter((c: any) => (c.account_id || c.accounts_id) === acc.id);
@@ -396,6 +408,9 @@ function SubaccountDashboard({
   setIsBookedReportOpen,
   dashboardTab,
   leads,
+  campaigns,
+  campaignMetrics,
+  metricsLoading,
 }: {
   accountId: number;
   selectedCampaignId: number | "all";
@@ -408,6 +423,9 @@ function SubaccountDashboard({
   setIsBookedReportOpen: (v: boolean) => void;
   dashboardTab: DashboardTab;
   leads: Lead[];
+  campaigns: Campaign[];
+  campaignMetrics: CampaignMetricsHistory[];
+  metricsLoading: boolean;
 }) {
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
@@ -489,6 +507,14 @@ function SubaccountDashboard({
           <Stat label="Messages Sent" value={String(stats.messagesSent)} testId="stat-messages-sent" icon={<MessageSquare className="w-4 h-4" />} />
         </div>
       </div>
+
+      <HotLeadsWidget leads={leads} />
+
+      <CampaignPerformanceCards
+        campaigns={campaigns.filter((c: any) => (c.account_id || c.accounts_id || c.Accounts_id) === accountId)}
+        metrics={campaignMetrics}
+        loading={metricsLoading}
+      />
 
       <div className="space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:h-[400px]">
