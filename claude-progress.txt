@@ -1,3 +1,64 @@
+## Session 2026-02-20 (15th) - Coding Agent
+
+### Completed Features:
+- Feature #42: Bulk actions toolbar - PASSING
+  - Created BulkActionsToolbar component with 3 bulk actions: Move Stage, Tag, Assign Campaign
+  - Added backend endpoints: POST /api/leads/bulk-update and POST /api/leads/bulk-tag
+  - Added storage methods: bulkUpdateLeads (using Drizzle inArray), createLeadTag
+  - Added renderBulkActions slot to DataTable for custom bulk action rendering
+  - Move Stage: dropdown with all 8 pipeline stages, calls bulkUpdateLeads API
+  - Tag: popover with all tags grouped by category, checkboxes, apply button
+  - Assign Campaign: dropdown with all campaigns from DB
+  - Toolbar appears when leads are selected, disappears on deselect or after action
+  - After each action: toast notification shown, selection cleared, data refreshed
+  - Duplicate tag detection: bulk-tag endpoint skips tags already assigned to a lead
+
+### Code Changes:
+- NEW: client/src/features/leads/components/BulkActionsToolbar.tsx
+  - Fetches tags/campaigns from API on mount for dropdown options
+  - 3 action buttons: Move Stage (DropdownMenu), Tag (Popover with checkboxes), Assign Campaign (DropdownMenu)
+  - Loading states with Loader2 spinner during API calls
+  - Toast notifications for success/failure
+- MODIFIED: client/src/features/leads/api/leadsApi.ts
+  - Added bulkUpdateLeads(ids, data) - POST /api/leads/bulk-update
+  - Added bulkTagLeads(leadIds, tagIds) - POST /api/leads/bulk-tag
+- MODIFIED: client/src/features/leads/components/LeadsTable.tsx
+  - Added BulkActionsToolbar import and renderBulkActions callback
+  - handleBulkActionComplete: refreshes data + clears selection
+  - Passes renderBulkActions prop to DataTable
+- MODIFIED: client/src/components/DataTable/DataTable.tsx
+  - Added renderBulkActions optional prop to DataTableProps interface
+  - When provided, renders custom bulk actions instead of default selection bar
+  - Default behavior (badge + clear + delete) preserved when no renderBulkActions
+- MODIFIED: server/routes.ts
+  - Added POST /api/leads/bulk-update endpoint (uses fromDbKeys for schema compatibility)
+  - Added POST /api/leads/bulk-tag endpoint (with duplicate detection)
+  - Added insertLeads_TagsSchema, inArray, and imports
+- MODIFIED: server/storage.ts
+  - Added createLeadTag(data) method using db.insert into leadsTags
+  - Added bulkUpdateLeads(ids, data) method using inArray for batch updates
+  - Added InsertLeads_Tags type import
+
+### Verification:
+- Playwright browser automation confirmed all 4 feature steps:
+  1. Select all leads (9 selected) → toolbar with Move Stage, Tag, Assign Campaign appears
+  2. Bulk 'Move Stage' to "Contacted" → all 9 leads updated, toast "Moved 9 lead(s) to Contacted"
+  3. Bulk 'Tag' with "high priority" → Applied 1 tag to 10 leads, toast "Tags Applied"
+  4. Click Clear → all deselected, toolbar disappears completely
+- Server restart persistence test: data persisted (Leads_Tags: 5→16 rows, all leads kept "Contacted" status)
+- Zero mock data patterns in production code (Step 5.6 clean)
+- Zero console errors on fresh page load after server restart
+
+### Environment Notes:
+- Server on port 5001 (tsx watch), Vite on port 5173
+- DB healthy: 11/11 tables accessible
+- Login via leadawaker@gmail.com / test123
+
+### Current Status:
+- 37/207 features passing (36 at session start, +1 this session)
+- Feature #42 marked passing after browser verification
+- Git commit: c0c75fd (auto-committed by infrastructure)
+
 ## Session 2026-02-20 (14th) - Coding Agent
 
 ### Completed Features:
