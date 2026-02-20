@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { User, Phone, Mail, Tag, Target, TrendingUp, Calendar } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
+import { SkeletonContactPanel } from "@/components/ui/skeleton";
 import type { Thread, Lead } from "../hooks/useConversationsData";
 
 function initialsFor(lead: Lead) {
@@ -168,10 +169,11 @@ function useLeadTags(leadId: number | null) {
 
 interface ContactSidebarProps {
   selected: Thread | null;
+  loading?: boolean;
   className?: string;
 }
 
-export function ContactSidebar({ selected, className }: ContactSidebarProps) {
+export function ContactSidebar({ selected, loading = false, className }: ContactSidebarProps) {
   const leadId = selected?.lead?.id ?? null;
   const { tags: leadTags, loading: tagsLoading } = useLeadTags(leadId);
 
@@ -191,7 +193,10 @@ export function ContactSidebar({ selected, className }: ContactSidebarProps) {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {!selected ? (
+        {loading && !selected ? (
+          // Loading skeleton — shown while initial data loads
+          <SkeletonContactPanel data-testid="skeleton-contact-panel" />
+        ) : !selected ? (
           <div className="text-sm text-muted-foreground py-4 text-center">
             Select a conversation to see lead context.
           </div>

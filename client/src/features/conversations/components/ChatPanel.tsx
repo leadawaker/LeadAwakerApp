@@ -2,17 +2,19 @@ import { useEffect, useRef, useState } from "react";
 import { Bot, User, UserCheck, Check, CheckCheck, Clock, AlertCircle, FileText, Music, Video, Download, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
+import { SkeletonChatThread } from "@/components/ui/skeleton";
 import type { Thread, Interaction } from "../hooks/useConversationsData";
 
 interface ChatPanelProps {
   selected: Thread | null;
+  loading?: boolean;
   sending: boolean;
   onSend: (leadId: number, content: string, type?: string) => Promise<void>;
   onToggleTakeover?: (leadId: number, manualTakeover: boolean) => Promise<void>;
   className?: string;
 }
 
-export function ChatPanel({ selected, sending, onSend, onToggleTakeover, className }: ChatPanelProps) {
+export function ChatPanel({ selected, loading = false, sending, onSend, onToggleTakeover, className }: ChatPanelProps) {
   const isHuman = selected?.lead.manual_takeover === true;
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -52,15 +54,24 @@ export function ChatPanel({ selected, sending, onSend, onToggleTakeover, classNa
       <div className="px-4 py-3 border-b border-border shrink-0" data-testid="panel-chat-head">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <div className="text-sm font-semibold truncate">
-              {selected
-                ? selected.lead.full_name ||
-                  `${selected.lead.first_name ?? ""} ${selected.lead.last_name ?? ""}`.trim()
-                : "Select a conversation"}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {selected ? `${selected.lead.phone ?? ""} • ${selected.lead.email ?? ""}` : ""}
-            </div>
+            {loading && !selected ? (
+              <div className="space-y-1.5">
+                <div className="h-4 w-40 rounded bg-primary/10 animate-pulse" />
+                <div className="h-3 w-56 rounded bg-primary/10 animate-pulse" />
+              </div>
+            ) : (
+              <>
+                <div className="text-sm font-semibold truncate">
+                  {selected
+                    ? selected.lead.full_name ||
+                      `${selected.lead.first_name ?? ""} ${selected.lead.last_name ?? ""}`.trim()
+                    : "Select a conversation"}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {selected ? `${selected.lead.phone ?? ""} • ${selected.lead.email ?? ""}` : ""}
+                </div>
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
@@ -110,7 +121,10 @@ export function ChatPanel({ selected, sending, onSend, onToggleTakeover, classNa
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3" ref={scrollRef} data-testid="chat-scroll">
-        {!selected ? (
+        {loading && !selected ? (
+          // Loading skeleton — mimics chat bubbles while data loads
+          <SkeletonChatThread data-testid="skeleton-chat-thread" />
+        ) : !selected ? (
           <div className="flex items-center justify-center h-full">
             <DataEmptyState
               variant="conversations"

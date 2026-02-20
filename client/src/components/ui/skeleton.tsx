@@ -195,6 +195,117 @@ function SkeletonList({
 }
 
 /**
+ * Conversation thread (chat panel) loading skeleton.
+ * Mimics a mix of inbound and outbound chat bubbles to match the final layout.
+ */
+function SkeletonChatThread({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  // Alternating left/right bubble layout with varying widths
+  const bubbles = [
+    { side: "left", width: "w-48", lines: 1 },
+    { side: "right", width: "w-56", lines: 2 },
+    { side: "left", width: "w-40", lines: 1 },
+    { side: "right", width: "w-64", lines: 1 },
+    { side: "left", width: "w-52", lines: 2 },
+    { side: "right", width: "w-44", lines: 1 },
+  ] as const;
+
+  return (
+    <div className={cn("p-4 space-y-4", className)} {...props}>
+      {bubbles.map((b, i) => (
+        <div key={i} className={cn("flex flex-col", b.side === "right" ? "items-end" : "items-start")}>
+          {/* Sender label skeleton */}
+          <Skeleton className="h-4 w-12 rounded-full mb-1" />
+          {/* Bubble skeleton */}
+          <Skeleton className={cn("rounded-2xl px-3 py-2 space-y-1.5", b.width)}>
+            {Array.from({ length: b.lines }).map((_, j) => (
+              <Skeleton
+                key={j}
+                className={cn(
+                  "h-3 rounded bg-primary/5",
+                  j === b.lines - 1 && b.lines > 1 ? "w-3/4" : "w-full",
+                )}
+              />
+            ))}
+            {/* Timestamp skeleton */}
+            <Skeleton className="h-2.5 w-20 rounded bg-primary/5 mt-1" />
+          </Skeleton>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Lead context panel (ContactSidebar) loading skeleton.
+ * Mimics the avatar, score card, pipeline stage, contact info, and tags sections.
+ */
+function SkeletonContactPanel({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className={cn("p-4 space-y-4", className)} {...props}>
+      {/* Lead identity: avatar + name */}
+      <div className="flex items-start gap-3">
+        <SkeletonAvatar className="h-10 w-10 shrink-0" />
+        <div className="flex-1 space-y-2 pt-0.5">
+          <SkeletonText className="h-4 w-3/4" />
+          <SkeletonText className="h-3 w-1/2" />
+        </div>
+      </div>
+
+      {/* Lead score card skeleton */}
+      <div className="rounded-xl border border-border bg-muted/10 p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <SkeletonText className="h-3 w-20" />
+          <SkeletonText className="h-5 w-12 rounded" />
+        </div>
+        {/* Score bar */}
+        <Skeleton className="h-1.5 w-full rounded-full" />
+      </div>
+
+      {/* Pipeline stage card skeleton */}
+      <div className="rounded-xl border border-border bg-muted/10 p-3 space-y-2">
+        <SkeletonText className="h-3 w-24" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-6 w-20 rounded-full" />
+          <SkeletonText className="h-3 w-24" />
+        </div>
+        {/* Progress dots */}
+        <div className="flex items-center gap-1 mt-1">
+          {[1, 2, 3].map((n) => (
+            <Skeleton key={n} className="h-1.5 flex-1 rounded-full" />
+          ))}
+        </div>
+      </div>
+
+      {/* Contact info card skeleton */}
+      <div className="space-y-2">
+        <SkeletonText className="h-3 w-20" />
+        <div className="rounded-xl border border-border bg-muted/10 p-3 space-y-3">
+          {[1, 2].map((i) => (
+            <div key={i} className="flex items-start gap-2">
+              <Skeleton className="h-3.5 w-3.5 rounded shrink-0 mt-0.5" />
+              <div className="flex-1 space-y-1">
+                <SkeletonText className="h-2.5 w-8" />
+                <SkeletonText className="h-4 w-3/4" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Tags skeleton */}
+      <div className="space-y-2">
+        <SkeletonText className="h-3 w-8" />
+        <div className="flex flex-wrap gap-1.5">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-6 w-16 rounded-full" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
  * Lead detail page skeleton
  */
 function SkeletonLeadDetail({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
@@ -244,5 +355,7 @@ export {
   SkeletonDashboard,
   SkeletonCardGrid,
   SkeletonList,
+  SkeletonChatThread,
+  SkeletonContactPanel,
   SkeletonLeadDetail,
 }

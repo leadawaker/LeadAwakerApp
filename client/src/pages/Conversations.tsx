@@ -163,13 +163,14 @@ export default function ConversationsPage() {
 
             <ChatPanel
               selected={selected}
+              loading={loading}
               sending={sending}
               onSend={handleSend}
               onToggleTakeover={handleToggleTakeover}
               className={cn(mobileView === "inbox" ? "hidden md:flex" : "flex")}
             />
 
-            <ContactSidebar selected={selected} />
+            <ContactSidebar selected={selected} loading={loading} />
           </div>
         )}
       </div>
