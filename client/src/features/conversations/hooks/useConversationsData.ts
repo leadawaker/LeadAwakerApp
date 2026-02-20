@@ -60,11 +60,14 @@ export interface Thread {
   msgs: Interaction[];
   last: Interaction | undefined;
   unread: boolean;
+  /** Number of inbound messages in this thread (used for unread count badge) */
+  unreadCount: number;
 }
 
 const POLL_INTERVAL = 15_000; // 15 seconds
 
 export type AiStateFilter = "all" | "ai" | "human";
+export type SortOrder = "newest" | "oldest" | "unread";
 
 export function useConversationsData(
   currentAccountId?: number,
@@ -72,6 +75,7 @@ export function useConversationsData(
   tab: "all" | "unread" = "all",
   searchQuery = "",
   aiStateFilter: AiStateFilter = "all",
+  sortOrder: SortOrder = "newest",
 ) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [interactions, setInteractions] = useState<Interaction[]>([]);
@@ -142,10 +146,12 @@ export function useConversationsData(
             ),
           );
         const last = msgs[msgs.length - 1];
-        const unread =
-          msgs.filter((m) => m.direction === "Inbound").length > 0 &&
-          (lead.message_count_received ?? 0) > 0;
-        return { lead, msgs, last, unread };
+        const inboundMsgs = msgs.filter((m) => m.direction === "Inbound");
+        const unreadCount = inboundMsgs.length;
+        // A thread is unread if it has any inbound messages
+        // (message_count_received from the DB may be stale/zero, so we rely on actual message data)
+        const unread = unreadCount > 0;
+        return { lead, msgs, last, unread, unreadCount };
       })
       .filter((t) => {
         if (!query) return true;
@@ -161,11 +167,23 @@ export function useConversationsData(
           lastMsg.includes(query)
         );
       })
-      .sort((a, b) =>
-        (b.last?.created_at ?? b.last?.createdAt ?? "").localeCompare(
-          a.last?.created_at ?? a.last?.createdAt ?? "",
-        ),
-      );
+      .sort((a, b) => {
+        // Apply primary sort based on sortOrder
+        if (sortOrder === "unread") {
+          // Unread threads first, then sort by newest within each group
+          const aUnread = a.unread ? 1 : 0;
+          const bUnread = b.unread ? 1 : 0;
+          if (aUnread !== bUnread) return bUnread - aUnread;
+        }
+        // For "oldest", reverse the timestamp comparison
+        const aTime = a.last?.created_at ?? a.last?.createdAt ?? "";
+        const bTime = b.last?.created_at ?? b.last?.createdAt ?? "";
+        if (sortOrder === "oldest") {
+          return aTime.localeCompare(bTime);
+        }
+        // Default: newest first
+        return bTime.localeCompare(aTime);
+      });
 
     // Filter by AI/human state
     const stateFiltered =
@@ -177,7 +195,7 @@ export function useConversationsData(
 
     if (tab === "unread") return stateFiltered.filter((t) => t.unread);
     return stateFiltered;
-  }, [leads, interactions, currentAccountId, campaignId, tab, searchQuery, aiStateFilter]);
+  }, [leads, interactions, currentAccountId, campaignId, tab, searchQuery, aiStateFilter, sortOrder]);
 
   // Send message
   const handleSend = useCallback(

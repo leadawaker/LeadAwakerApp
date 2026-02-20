@@ -1,11 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useCampaigns } from "@/hooks/useApiData";
 import { cn } from "@/lib/utils";
 import { ChevronLeft } from "lucide-react";
-import { useConversationsData, type AiStateFilter } from "@/features/conversations/hooks/useConversationsData";
+import { useConversationsData, type AiStateFilter, type SortOrder } from "@/features/conversations/hooks/useConversationsData";
 import { InboxPanel } from "@/features/conversations/components/InboxPanel";
 import { ChatPanel } from "@/features/conversations/components/ChatPanel";
 import { ContactSidebar } from "@/features/conversations/components/ContactSidebar";
@@ -17,12 +17,15 @@ export default function ConversationsPage() {
   const [filterAccountId, setFilterAccountId] = useState<number | "all">("all");
   const [campaignId, setCampaignId] = useState<number | "all">("all");
   const [aiStateFilter, setAiStateFilter] = useState<AiStateFilter>("all");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
 
   // Chat state
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
   const [mobileView, setMobileView] = useState<"inbox" | "chat">("inbox");
   const [tab, setTab] = useState<"all" | "unread">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  // Track which lead IDs have been "read" (opened) in this session
+  const [readLeadIds, setReadLeadIds] = useState<Set<number>>(new Set());
 
   // Resolve which account ID to scope data to
   // Agency users can pick "all" to see all accounts, or a specific one
@@ -39,6 +42,7 @@ export default function ConversationsPage() {
     tab,
     searchQuery,
     aiStateFilter,
+    sortOrder,
   );
 
   // Load campaigns for the filter dropdown
@@ -57,9 +61,29 @@ export default function ConversationsPage() {
     return byId ?? threads[0] ?? null;
   }, [threads, selectedLeadId]);
 
+  // Auto-mark the currently visible thread as read whenever it changes
+  const prevSelectedRef = useRef<number | null>(null);
+  useEffect(() => {
+    const currentId = selected?.lead.id ?? null;
+    if (currentId !== null && currentId !== prevSelectedRef.current) {
+      prevSelectedRef.current = currentId;
+      setReadLeadIds((prev) => {
+        const next = new Set(prev);
+        next.add(currentId);
+        return next;
+      });
+    }
+  }, [selected]);
+
   const handleSelectLead = (id: number) => {
     setSelectedLeadId(id);
     setMobileView("chat");
+    // Mark this conversation as read (clears unread badge)
+    setReadLeadIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
   };
 
   // Filter accounts to exclude the agency account (id=1) for the account filter dropdown
@@ -121,6 +145,9 @@ export default function ConversationsPage() {
               selectedAccountId={filterAccountId}
               onAccountChange={handleAccountChange}
               isAgencyUser={isAgencyUser}
+              readLeadIds={readLeadIds}
+              sortOrder={sortOrder}
+              onSortOrderChange={setSortOrder}
               className={cn(mobileView === "chat" ? "hidden md:flex" : "flex")}
             />
 

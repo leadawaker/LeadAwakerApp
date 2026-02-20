@@ -2,8 +2,8 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
-import { ChevronDown, SlidersHorizontal, Bot, User, LayoutList } from "lucide-react";
-import type { Thread, Lead, AiStateFilter } from "../hooks/useConversationsData";
+import { ArrowDownUp, ChevronDown, SlidersHorizontal, Bot, User, LayoutList } from "lucide-react";
+import type { Thread, Lead, AiStateFilter, SortOrder } from "../hooks/useConversationsData";
 
 function initialsFor(lead: Lead) {
   const a = (lead.first_name ?? "").slice(0, 1);
@@ -49,6 +49,9 @@ interface InboxPanelProps {
   isAgencyUser?: boolean;
   /** Set of lead IDs that have been opened/read this session */
   readLeadIds?: Set<number>;
+  /** Current sort order */
+  sortOrder?: SortOrder;
+  onSortOrderChange?: (order: SortOrder) => void;
   className?: string;
 }
 
@@ -71,6 +74,8 @@ export function InboxPanel({
   onAccountChange,
   isAgencyUser = false,
   readLeadIds = new Set(),
+  sortOrder = "newest",
+  onSortOrderChange,
   className,
 }: InboxPanelProps) {
   const [showFilters, setShowFilters] = useState(false);
@@ -135,25 +140,53 @@ export function InboxPanel({
             </button>
           </div>
 
-          {/* Filter toggle button */}
-          <button
-            type="button"
-            onClick={() => setShowFilters((v) => !v)}
-            className={cn(
-              "flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-colors",
-              showFilters || hasActiveFilters
-                ? "bg-primary/10 border-primary/30 text-primary"
-                : "border-border text-muted-foreground hover:text-foreground hover:bg-muted/20",
+          <div className="flex items-center gap-1.5">
+            {/* Sort order dropdown */}
+            {onSortOrderChange && (
+              <div className="relative" data-testid="sort-order-wrapper">
+                <div className="flex items-center">
+                  <ArrowDownUp className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none z-10" />
+                  <select
+                    value={sortOrder}
+                    onChange={(e) => onSortOrderChange(e.target.value as SortOrder)}
+                    className={cn(
+                      "appearance-none h-8 pl-7 pr-6 rounded-lg border text-xs font-semibold outline-none focus:ring-2 focus:ring-primary/30 transition-colors cursor-pointer",
+                      sortOrder !== "newest"
+                        ? "bg-primary/10 border-primary/30 text-primary"
+                        : "border-border text-muted-foreground bg-background hover:text-foreground hover:bg-muted/20",
+                    )}
+                    data-testid="select-sort-order"
+                    aria-label="Sort conversations"
+                  >
+                    <option value="newest">Newest</option>
+                    <option value="oldest">Oldest</option>
+                    <option value="unread">Unread first</option>
+                  </select>
+                  <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
+                </div>
+              </div>
             )}
-            data-testid="button-toggle-filters"
-            aria-label="Toggle filters"
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            Filters
-            {hasActiveFilters && (
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            )}
-          </button>
+
+            {/* Filter toggle button */}
+            <button
+              type="button"
+              onClick={() => setShowFilters((v) => !v)}
+              className={cn(
+                "flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-colors",
+                showFilters || hasActiveFilters
+                  ? "bg-primary/10 border-primary/30 text-primary"
+                  : "border-border text-muted-foreground hover:text-foreground hover:bg-muted/20",
+              )}
+              data-testid="button-toggle-filters"
+              aria-label="Toggle filters"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Filters
+              {hasActiveFilters && (
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Expandable filter panel */}
