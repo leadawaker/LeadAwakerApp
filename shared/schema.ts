@@ -219,6 +219,11 @@ export const interactions = nocodb.table("Interactions", {
   campaignName: text("campaign_name"),
   leadName: text("lead_name"),
   agentName: text("agent_name"),
+  // New fields per database schema
+  responseTimeMinutes: integer("response_time_minutes"),
+  conversationThreadId: varchar("conversation_thread_id"),
+  sentimentDetected: varchar("sentiment_detected"),
+  isManualFollowUp: boolean("is_manual_follow_up"),
 });
 
 export const insertInteractionsSchema = createInsertSchema(interactions).omit({

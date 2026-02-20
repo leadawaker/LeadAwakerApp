@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bot, User, UserCheck, Check, CheckCheck, Clock, AlertCircle, FileText, Music, Video, Download, ExternalLink } from "lucide-react";
+import { Bot, User, UserCheck, Check, CheckCheck, Clock, AlertCircle, FileText, Music, Video, Download, ExternalLink, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { SkeletonChatThread } from "@/components/ui/skeleton";
@@ -142,9 +142,19 @@ export function ChatPanel({ selected, loading = false, sending, onSend, onToggle
               compact
             />
           </div>
-        ) : (
-          selected.msgs.map((m) => <ChatBubble key={m.id} item={m} />)
-        )}
+        ) : (() => {
+          const threadGroups = groupMessagesByThread(selected.msgs);
+          return threadGroups.map((group, gi) => (
+            <div key={group.threadId} data-testid={`thread-group-${gi}`}>
+              {/* Thread boundary divider — always shown so boundaries are always visible */}
+              <ThreadDivider group={group} total={threadGroups.length} />
+              {/* Messages within this thread in chronological order */}
+              {group.msgs.map((m) => (
+                <ChatBubble key={m.id} item={m} />
+              ))}
+            </div>
+          ));
+        })()}
       </div>
 
       <div className="p-4 border-t border-border shrink-0" data-testid="chat-compose">
@@ -271,6 +281,131 @@ function isManualFollowUp(item: Interaction): boolean {
   return (
     item.is_manual_follow_up === true ||
     item.isManualFollowUp === true
+  );
+}
+
+// ─── Thread Grouping ──────────────────────────────────────────────────────────
+
+/** A logical thread group: all messages sharing a conversation_thread_id (or inferred) */
+interface ThreadGroup {
+  threadId: string;
+  threadIndex: number;
+  msgs: Interaction[];
+}
+
+/** 2 hours in milliseconds — gap beyond which a new thread is inferred */
+const THREAD_GAP_MS = 2 * 60 * 60 * 1000;
+
+/**
+ * Groups messages into conversation threads.
+ *
+ * Priority order:
+ *  1. If message has conversation_thread_id → use that as group key
+ *  2. If message has bump_number → use "bump-{n}" as group key
+ *  3. Otherwise → infer threads by significant time gaps (>2h) between consecutive messages
+ *     Messages with null timestamps are treated as the same session / most recent thread.
+ */
+function groupMessagesByThread(msgs: Interaction[]): ThreadGroup[] {
+  if (msgs.length === 0) return [];
+
+  const groups: ThreadGroup[] = [];
+  let currentGroup: ThreadGroup | null = null;
+  let groupIndex = 0;
+
+  // Helper: derive a stable thread key for a message
+  function getThreadKey(m: Interaction): string | null {
+    const tid = m.conversation_thread_id ?? m.conversationThreadId;
+    if (tid) return `thread-${tid}`;
+    if (m.bump_number != null) return `bump-${m.bump_number}`;
+    if (m.is_bump && m.Who) return `bump-who-${m.Who.toLowerCase().replace(/\s+/g, "-")}`;
+    return null; // no explicit key — use time-gap heuristic
+  }
+
+  let lastTimestamp: number | null = null;
+
+  for (const m of msgs) {
+    const key = getThreadKey(m);
+    const ts = m.created_at || m.createdAt;
+    const currentTimestamp = ts ? new Date(ts).getTime() : null;
+
+    // Determine if we should start a new thread group
+    let startNew = false;
+
+    if (!currentGroup) {
+      startNew = true;
+    } else if (key !== null) {
+      // If the key differs from the current group's key → new group
+      if (key !== currentGroup.threadId) startNew = true;
+    } else {
+      // No explicit key — check time gap heuristic
+      if (
+        currentTimestamp !== null &&
+        lastTimestamp !== null &&
+        currentTimestamp - lastTimestamp > THREAD_GAP_MS
+      ) {
+        startNew = true;
+      }
+      // If both timestamps are null → continue same group (same session / no data)
+    }
+
+    if (startNew) {
+      const tid = key ?? `session-${groupIndex}`;
+      currentGroup = { threadId: tid, threadIndex: groupIndex++, msgs: [] };
+      groups.push(currentGroup);
+    }
+
+    currentGroup!.msgs.push(m);
+    if (currentTimestamp !== null) lastTimestamp = currentTimestamp;
+  }
+
+  return groups;
+}
+
+/** Format a thread label shown in the divider */
+function formatThreadLabel(group: ThreadGroup, total: number): string {
+  const { threadId, threadIndex } = group;
+  // Bump-based labels
+  if (threadId.startsWith("bump-who-")) {
+    const who = threadId.replace("bump-who-", "").replace(/-/g, " ");
+    return who.charAt(0).toUpperCase() + who.slice(1);
+  }
+  if (threadId.startsWith("bump-")) {
+    const n = threadId.replace("bump-", "");
+    return `Bump ${n}`;
+  }
+  if (threadId.startsWith("thread-")) {
+    const id = threadId.replace("thread-", "");
+    // If it looks like a UUID, shorten it
+    return id.length > 12 ? `Thread ${threadIndex + 1}` : `Thread ${id}`;
+  }
+  // session-N fallback: show "Conversation {n+1}" if more than 1 group
+  if (total === 1) return "Conversation";
+  return `Conversation ${threadIndex + 1}`;
+}
+
+/** Visual separator between thread groups */
+function ThreadDivider({ group, total }: { group: ThreadGroup; total: number }) {
+  const label = formatThreadLabel(group, total);
+  const firstMsg = group.msgs[0];
+  const ts = firstMsg?.created_at || firstMsg?.createdAt;
+  const dateStr = ts
+    ? new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+    : null;
+
+  return (
+    <div
+      className="flex items-center gap-3 my-3"
+      data-testid={`thread-divider-${group.threadIndex}`}
+      data-thread-id={group.threadId}
+    >
+      <div className="flex-1 h-px bg-border/60" />
+      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/60 border border-border/40 text-[10px] font-semibold text-muted-foreground select-none whitespace-nowrap">
+        <MessageSquare className="w-3 h-3 shrink-0 opacity-60" />
+        <span>{label}</span>
+        {dateStr && <span className="opacity-60">· {dateStr}</span>}
+      </div>
+      <div className="flex-1 h-px bg-border/60" />
+    </div>
   );
 }
 

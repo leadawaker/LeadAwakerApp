@@ -52,6 +52,13 @@ export interface Interaction {
   /** Attachment URL (image, video, document, audio) sent alongside the message */
   attachment?: string | null;
   Attachment?: string | null;
+  /** Groups related messages into a conversation thread (DB field: conversation_thread_id) */
+  conversation_thread_id?: string | null;
+  conversationThreadId?: string | null;
+  /** Minutes taken to respond to the previous message */
+  response_time_minutes?: number | null;
+  /** Sentiment detected (Positive/Negative/Neutral) */
+  sentiment_detected?: string | null;
   [key: string]: any;
 }
 
