@@ -1,3 +1,88 @@
+## Session 2026-02-20 - Coding Agent (Feature #98)
+
+### Completed Features:
+- Feature #98: Attachment support (display) - PASSING
+  - Added `attachment` and `Attachment` fields to the `Interaction` type interface in useConversationsData.ts
+  - Created `AttachmentPreview` component in ChatPanel.tsx with 4 media type handlers:
+    * **image** (jpg/jpeg/png/gif/webp/svg/bmp/avif): renders inline `<img>` thumbnail (clickable to open full-size) + filename link with ExternalLink icon below
+    * **video** (mp4/mov/avi/webm/mkv): renders native HTML5 `<video>` player with controls + filename link
+    * **audio** (mp3/ogg/wav/m4a/aac/opus/flac): renders native HTML5 `<audio>` player + filename link
+    * **document/other** (PDF, etc.): renders file chip with FileText icon, filename, and Download icon
+  - Image onError handler: gracefully fallbacks to document chip if image fails to load
+  - Outbound bubble attachments use white/translucent styling; inbound uses muted/primary colors
+  - Integrated `AttachmentPreview` into `ChatBubble` - renders between message content and status timestamp
+  - Created 2 test interactions via API:
+    * id=48: Inbound (Lead) message with image URL (Wikipedia ant photo) → rendered as thumbnail
+    * id=49: Outbound (Agent) message with PDF URL → rendered as document download chip
+  - Both URL styles supported: `Attachment` (DB key) and `attachment` (camelCase) via nullish coalescing
+
+### Code Changes:
+- MODIFIED: client/src/features/conversations/hooks/useConversationsData.ts
+  - Added `attachment?: string | null` and `Attachment?: string | null` to Interaction interface
+- MODIFIED: client/src/features/conversations/components/ChatPanel.tsx
+  - Added imports: FileText, Music, Video, Download, ExternalLink from lucide-react
+  - Added `getAttachmentType(url)` helper function
+  - Added `AttachmentPreview` component (image/video/audio/document branches)
+  - Added attachment rendering in ChatBubble JSX
+
+### Verification:
+- Playwright browser automation confirmed:
+  1. Danique van de Kerkhof thread shows image attachment as inline thumbnail (clickable img element)
+  2. Filename link "400px-Camponotus_flavomarginatus_ant.jpg" visible below image with ExternalLink icon
+  3. PDF attachment shows as document chip "wcag-quick-reference-20160105.pdf" with FileText + Download icons
+  4. Zero JS console errors (0 errors, 0 warnings)
+- No mock data patterns found in production code
+- accessibility snapshot confirmed data-testid="attachment-image" and data-testid="attachment-document"
+
+### Environment Notes:
+- API server on port 5001 (pre-existing)
+- Vite dev server on port 5173 (pre-existing)
+- DB reachable, all 11 tables healthy
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 69/207 features passing (68 at session start, +1 this session)
+- Feature #98 marked passing after thorough browser verification
+- Git commit: 4604198
+
+## Session 2026-02-20 - Coding Agent (Feature #97)
+
+### Completed Features:
+- Feature #97: Send message input with submit - PASSING
+  - Feature was already fully implemented in ChatPanel.tsx and useConversationsData.ts
+  - Text input at bottom with data-testid="input-compose" (textarea)
+  - Send button with data-testid="button-compose-send" (enabled only when text + conversation selected)
+  - handleKeyDown: Enter sends message, Shift+Enter inserts newline
+  - handleSubmit: clears draft, calls onSend(leadId, text) via handleSend in useConversationsData
+  - handleSend: creates optimistic Interaction with status="sending", then POSTs to /api/interactions
+  - On success: replaces optimistic with real saved record, shows toast "Message sent"
+  - On failure: marks optimistic as status="failed", shows destructive toast
+  - Real data: verified SEND_TEST_97_VERIFY_FEATURE persisted in PostgreSQL DB via API
+  - Zero console errors
+
+### Verification:
+- Playwright browser automation at http://localhost:5173/agency/conversations
+- Logged in as leadawaker@gmail.com (Admin)
+- Danique van de Kerkhof thread selected
+- Typed "SEND_TEST_97_VERIFY_FEATURE" in compose input
+- Input accepted text, Send button became enabled (blue)
+- Clicked Send button → input cleared, message appeared in thread with "Agent" badge + "Sent" status
+- Confirmed via /api/interactions?leadId=2: message found in database
+- Snapshot confirmed: message at lines 262-270 in snapshot with "Human agent message" badge
+
+### Code Changes:
+- No code changes required - feature was already fully implemented
+
+### Environment Notes:
+- API server on port 5001 (pre-existing)
+- Vite dev server on port 5173 (pre-existing)
+- DB reachable, all 11 tables healthy
+
+### Current Status:
+- 68/207 features passing (67 at session start, +1 this session)
+- Feature #97 marked passing after thorough browser verification
+- No new commits needed (no code changes)
+
 ## Session 2026-02-20 - Coding Agent (Feature #94)
 
 ### Completed Features:
