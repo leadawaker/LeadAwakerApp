@@ -233,7 +233,7 @@ export default function TagsPage() {
             <div className="space-y-8">
               {sortedCategories.map(cat => (
                 <div key={cat.type} className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground px-1">
+                  <h3 className="inline-flex items-center px-3 py-1.5 rounded-lg bg-muted/15 dark:bg-muted/8 glass-surface text-xs font-bold uppercase tracking-widest text-muted-foreground">
                     {cat.type}
                   </h3>
 

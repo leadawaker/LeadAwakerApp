@@ -173,7 +173,7 @@ export function DataEmptyState({
     <div
       className={cn(
         "flex items-center justify-center rounded-lg border border-dashed border-border/60 dark:border-border/40",
-        "bg-muted/20 dark:bg-muted/10",
+        "bg-muted/15 dark:bg-muted/8 glass-surface",
         "p-8 md:p-12 min-h-[250px]",
         className
       )}
@@ -182,7 +182,7 @@ export function DataEmptyState({
     >
       <div className="flex flex-col items-center text-center max-w-sm space-y-4">
         {/* Icon container */}
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted dark:bg-muted/50 ring-1 ring-border/30 dark:ring-border/20">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/60 dark:bg-muted/30 glass-surface ring-1 ring-border/30 dark:ring-border/20">
           <Icon className="h-7 w-7 text-muted-foreground" />
         </div>
 

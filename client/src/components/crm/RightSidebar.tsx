@@ -176,14 +176,14 @@ export function RightSidebar({
           {/* Backdrop - tap outside to close */}
           <button
             type="button"
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-black/25 glass-overlay"
             onClick={onCloseMobileMenu}
             aria-label="Close menu"
             data-testid="mobile-sidebar-backdrop"
           />
           {/* Slide-in sidebar */}
           <aside
-            className="absolute left-0 top-0 bottom-0 w-[260px] bg-white dark:bg-card shadow-2xl flex flex-col animate-in slide-in-from-left duration-200"
+            className="absolute left-0 top-0 bottom-0 w-[260px] bg-white/90 dark:bg-card/90 glass-accent shadow-2xl flex flex-col animate-in slide-in-from-left duration-200"
             data-testid="mobile-sidebar-panel"
           >
             {/* LOGO */}
@@ -207,8 +207,8 @@ export function RightSidebar({
                       className={cn(
                         "w-full rounded-xl border border-border/60 px-3 py-2.5 flex items-center gap-2 hover:bg-muted/60 transition-colors text-left",
                         currentAccountId === 1
-                          ? "bg-yellow-50 dark:bg-yellow-950/20"
-                          : "bg-blue-50 dark:bg-blue-950/20"
+                          ? "bg-brand-yellow/10 dark:bg-brand-yellow/10"
+                          : "bg-brand-blue/10 dark:bg-brand-blue/10"
                       )}
                       data-testid="mobile-sidebar-account-switcher-trigger"
                     >
@@ -216,8 +216,8 @@ export function RightSidebar({
                         className={cn(
                           "h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0",
                           currentAccountId === 1
-                            ? "bg-yellow-500 text-black"
-                            : "bg-blue-600 text-white"
+                            ? "bg-brand-yellow text-brand-yellow-foreground"
+                            : "bg-brand-blue text-brand-blue-foreground"
                         )}
                       >
                         {currentAccount?.name?.[0] || "?"}
@@ -250,18 +250,18 @@ export function RightSidebar({
                           className={cn(
                             "h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0",
                             acc.id === 1
-                              ? "bg-yellow-500 text-black"
-                              : "bg-blue-600 text-white"
+                              ? "bg-brand-yellow text-brand-yellow-foreground"
+                              : "bg-brand-blue text-brand-blue-foreground"
                           )}
                         >
                           {acc.name?.[0] || "?"}
                         </div>
                         <span className="text-sm truncate flex-1">{acc.name}</span>
                         {currentAccountId === acc.id && (
-                          <Check className="h-4 w-4 text-blue-600 shrink-0" />
+                          <Check className="h-4 w-4 text-brand-blue shrink-0" />
                         )}
                         {acc.id === 1 && (
-                          <span className="text-[9px] bg-yellow-100 text-yellow-900 px-1 rounded uppercase font-bold tracking-tighter shrink-0">
+                          <span className="text-[9px] bg-brand-yellow/15 text-brand-yellow px-1 rounded uppercase font-bold tracking-tighter shrink-0">
                             Agency
                           </span>
                         )}
@@ -284,7 +284,7 @@ export function RightSidebar({
                     className={cn(
                       "flex items-center gap-3 px-3 py-3 rounded-xl transition-colors",
                       active
-                        ? (isAgencyView ? "bg-yellow-500 text-black font-bold shadow-sm" : "bg-blue-600 text-white font-bold shadow-sm")
+                        ? "bg-brand-blue text-brand-blue-foreground font-bold shadow-sm"
                         : "text-muted-foreground hover:bg-muted"
                     )}
                     data-testid={`mobile-${it.testId}`}
@@ -340,13 +340,13 @@ export function RightSidebar({
       )}
 
       {/* MOBILE BOTTOM BAR */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 h-[64px] border-t bg-white dark:bg-card z-[100] flex justify-around items-center">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-[64px] border-t border-border/50 bg-white/80 dark:bg-card/80 glass-nav z-[100] flex justify-around items-center">
         <button
           onClick={() => setLocation(`${prefix}/dashboard`)}
           className={cn(
             "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
             isActive(`${prefix}/dashboard`)
-              ? (isAgencyView ? "text-yellow-600" : "text-blue-600")
+              ? "text-brand-blue"
               : "text-muted-foreground"
           )}
           data-testid="mobile-nav-dashboard"
@@ -360,7 +360,7 @@ export function RightSidebar({
           className={cn(
             "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
             isActive(`${prefix}/contacts`)
-              ? (isAgencyView ? "text-yellow-600" : "text-blue-600")
+              ? "text-brand-blue"
               : "text-muted-foreground"
           )}
           data-testid="mobile-nav-contacts"
@@ -374,7 +374,7 @@ export function RightSidebar({
           className={cn(
             "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
             isActive(`${prefix}/conversations`)
-              ? (isAgencyView ? "text-yellow-600" : "text-blue-600")
+              ? "text-brand-blue"
               : "text-muted-foreground"
           )}
           data-testid="mobile-nav-conversations"
@@ -387,7 +387,7 @@ export function RightSidebar({
           onClick={onToggleMobileMenu}
           className={cn(
             "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
-            isMobileMenuOpen ? "text-blue-600" : "text-muted-foreground"
+            isMobileMenuOpen ? "text-brand-blue" : "text-muted-foreground"
           )}
           data-testid="mobile-nav-menu"
         >
@@ -399,9 +399,10 @@ export function RightSidebar({
       {/* DESKTOP SIDEBAR */}
       <aside
         className={cn(
-          "fixed left-4 top-[16px] bottom-4 bg-white border rounded-[32px] shadow hidden md:block overflow-hidden",
+          "fixed left-4 top-[16px] bottom-4 bg-brand-deep-blue border border-brand-deep-blue rounded-[32px] shadow hidden md:block overflow-hidden",
           collapsed ? "w-[60px]" : "w-[180px]"
         )}
+        data-sidebar-focus
       >
         <div className="h-full flex flex-col overflow-hidden">
           {/* LOGO */}
@@ -422,22 +423,22 @@ export function RightSidebar({
                 <DropdownMenuTrigger asChild>
                   {collapsed ? (
                     <button
-                      className="relative group w-full h-10 rounded-xl flex items-center justify-center hover:bg-muted transition-colors"
+                      className="relative group w-full h-10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors"
                       data-testid="sidebar-account-switcher-trigger"
                     >
                       <div
                         className={cn(
                           "h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0",
                           currentAccountId === 1
-                            ? "bg-yellow-500 text-black"
-                            : "bg-blue-600 text-white"
+                            ? "bg-brand-yellow text-brand-yellow-foreground"
+                            : "bg-brand-blue text-brand-blue-foreground"
                         )}
                       >
                         {currentAccount?.name?.[0] || "?"}
                       </div>
                       {/* Tooltip on hover */}
                       <div className="absolute left-[40px] opacity-0 group-hover:opacity-100 transition-opacity z-[120] pointer-events-none">
-                        <div className="px-3 py-2 rounded-xl text-sm font-semibold whitespace-nowrap bg-muted text-foreground">
+                        <div className="px-3 py-2 rounded-xl text-sm font-semibold whitespace-nowrap bg-card text-foreground shadow-lg">
                           {currentAccount?.name || "Select Account"}
                         </div>
                       </div>
@@ -445,10 +446,10 @@ export function RightSidebar({
                   ) : (
                     <button
                       className={cn(
-                        "w-full rounded-xl border border-border/60 px-3 py-2.5 flex items-center gap-2 hover:bg-muted/60 transition-colors text-left",
+                        "w-full rounded-xl border border-white/10 px-3 py-2.5 flex items-center gap-2 hover:bg-white/10 transition-colors text-left",
                         currentAccountId === 1
-                          ? "bg-yellow-50 dark:bg-yellow-950/20"
-                          : "bg-blue-50 dark:bg-blue-950/20"
+                          ? "bg-brand-yellow/10"
+                          : "bg-brand-blue/10"
                       )}
                       data-testid="sidebar-account-switcher-trigger"
                     >
@@ -456,16 +457,16 @@ export function RightSidebar({
                         className={cn(
                           "h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0",
                           currentAccountId === 1
-                            ? "bg-yellow-500 text-black"
-                            : "bg-blue-600 text-white"
+                            ? "bg-brand-yellow text-brand-yellow-foreground"
+                            : "bg-brand-blue text-brand-blue-foreground"
                         )}
                       >
                         {currentAccount?.name?.[0] || "?"}
                       </div>
-                      <span className="text-xs font-semibold truncate flex-1">
+                      <span className="text-xs font-semibold truncate flex-1 text-sidebar-foreground">
                         {currentAccount?.name || "Select Account"}
                       </span>
-                      <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <ChevronsUpDown className="h-3.5 w-3.5 text-sidebar-foreground/50 shrink-0" />
                     </button>
                   )}
                 </DropdownMenuTrigger>
@@ -491,18 +492,18 @@ export function RightSidebar({
                         className={cn(
                           "h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0",
                           acc.id === 1
-                            ? "bg-yellow-500 text-black"
-                            : "bg-blue-600 text-white"
+                            ? "bg-brand-yellow text-brand-yellow-foreground"
+                            : "bg-brand-blue text-brand-blue-foreground"
                         )}
                       >
                         {acc.name?.[0] || "?"}
                       </div>
                       <span className="text-sm truncate flex-1">{acc.name}</span>
                       {currentAccountId === acc.id && (
-                        <Check className="h-4 w-4 text-blue-600 shrink-0" />
+                        <Check className="h-4 w-4 text-brand-blue shrink-0" />
                       )}
                       {acc.id === 1 && (
-                        <span className="text-[9px] bg-yellow-100 text-yellow-900 px-1 rounded uppercase font-bold tracking-tighter shrink-0">
+                        <span className="text-[9px] bg-brand-yellow/15 text-brand-yellow px-1 rounded uppercase font-bold tracking-tighter shrink-0">
                           Agency
                         </span>
                       )}
@@ -527,8 +528,8 @@ export function RightSidebar({
                     "relative group flex items-center gap-3 rounded-xl transition-colors",
                     collapsed ? "h-12 justify-center" : "px-3 py-3",
                     active
-                      ? (isAgencyView ? "bg-yellow-500 text-black shadow-sm" : "bg-blue-600 text-white shadow-sm")
-                      : "text-muted-foreground hover:bg-muted"
+                      ? "bg-brand-blue text-brand-blue-foreground font-bold shadow-sm"
+                      : "text-sidebar-foreground/70 hover:bg-white/10 hover:text-sidebar-foreground"
                   )}
                   data-testid={`link-${it.testId}`}
                   data-active={active || undefined}
@@ -547,7 +548,7 @@ export function RightSidebar({
                         className={cn(
                           "px-3 py-3.5 rounded-xl text-sm font-semibold whitespace-nowrap",
                           active
-                            ? "bg-blue-600 text-white"
+                            ? "bg-brand-blue text-brand-blue-foreground"
                             : "bg-muted text-foreground"
                         )}
                       >
@@ -566,7 +567,7 @@ export function RightSidebar({
             <button
               onClick={() => onCollapse(!collapsed)}
               className={cn(
-                "w-full h-10 rounded-xl flex items-center gap-3 text-muted-foreground hover:text-foreground",
+                "w-full h-10 rounded-xl flex items-center gap-3 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-white/10",
                 collapsed ? "justify-center" : "px-3"
               )}
             >
@@ -583,7 +584,7 @@ export function RightSidebar({
               <DropdownMenuTrigger asChild>
                 <button
                   className={cn(
-                    "w-full h-10 rounded-xl flex items-center gap-3 text-muted-foreground hover:text-foreground",
+                    "w-full h-10 rounded-xl flex items-center gap-3 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-white/10",
                     collapsed ? "justify-center" : "px-3"
                   )}
                 >
@@ -610,16 +611,16 @@ export function RightSidebar({
           </div>
 
           {/* USER FOOTER */}
-          <div className="px-3 pb-4 pt-2 border-t border-border/40 shrink-0" data-testid="sidebar-user-footer">
+          <div className="px-3 pb-4 pt-2 border-t border-white/10 shrink-0" data-testid="sidebar-user-footer">
             {collapsed ? (
               /* Collapsed state: avatar circle with tooltip and logout dropdown */
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="relative group w-full h-10 rounded-xl flex items-center justify-center hover:bg-muted transition-colors mt-2"
+                    className="relative group w-full h-10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors mt-2"
                     data-testid="sidebar-user-avatar-btn"
                   >
-                    <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
+                    <div className="h-8 w-8 rounded-full bg-brand-blue/20 text-brand-blue-foreground flex items-center justify-center text-xs font-bold">
                       {userInitials}
                     </div>
                     {/* Tooltip on hover */}
@@ -648,16 +649,16 @@ export function RightSidebar({
             ) : (
               /* Expanded state: full user info row with logout button */
               <div className="flex items-center gap-2.5 px-2 py-2 mt-2" data-testid="sidebar-user-info">
-                <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
+                <div className="h-8 w-8 rounded-full bg-brand-blue/20 text-brand-blue-foreground flex items-center justify-center text-xs font-bold shrink-0">
                   {userInitials}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold truncate leading-tight" data-testid="sidebar-user-name">{userName}</div>
-                  <div className="text-[10px] text-muted-foreground truncate leading-tight" data-testid="sidebar-user-role">{userRole}</div>
+                  <div className="text-xs font-semibold truncate leading-tight text-sidebar-foreground" data-testid="sidebar-user-name">{userName}</div>
+                  <div className="text-[10px] text-sidebar-foreground/50 truncate leading-tight" data-testid="sidebar-user-role">{userRole}</div>
                 </div>
                 <button
                   onClick={onLogout}
-                  className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors shrink-0"
+                  className="h-7 w-7 rounded-lg flex items-center justify-center text-sidebar-foreground/50 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0"
                   title="Logout"
                   data-testid="sidebar-logout-btn"
                 >

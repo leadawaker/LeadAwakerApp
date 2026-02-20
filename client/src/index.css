@@ -932,6 +932,42 @@
 }
 
 /* ============================
+   Glassmorphism Decorative Accents
+   Subtle glass effects for decorative surfaces ONLY
+   Never on functional data surfaces (tables, cards, chat bubbles)
+   ============================ */
+
+/* glass-overlay: frosted glass backdrop for overlay backgrounds (panels, modals) */
+@utility glass-overlay {
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+}
+
+/* glass-divider: subtle frosted glass for section dividers and sticky headers */
+@utility glass-divider {
+  backdrop-filter: blur(8px) saturate(1.1);
+  -webkit-backdrop-filter: blur(8px) saturate(1.1);
+}
+
+/* glass-accent: decorative glassmorphism for background accents and decorative panels */
+@utility glass-accent {
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+}
+
+/* glass-surface: very subtle glass for decorative section backgrounds and empty states */
+@utility glass-surface {
+  backdrop-filter: blur(6px) saturate(1.05);
+  -webkit-backdrop-filter: blur(6px) saturate(1.05);
+}
+
+/* glass-nav: frosted glass for navigation bars (mobile bottom bar, sticky sub-headers) */
+@utility glass-nav {
+  backdrop-filter: blur(14px) saturate(1.15);
+  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+}
+
+/* ============================
    Micro-interactions & Utilities
    Performance-first, GPU-accelerated
    All transitions < 200ms
@@ -1010,5 +1046,49 @@
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading font-bold tracking-tight;
+  }
+
+  /* ── Global Focus-Visible Styles ──
+     Consistent visible focus indicators for keyboard navigation (accessibility).
+     Uses :focus-visible so mouse clicks don't show the ring, only keyboard Tab.
+     These act as a safety net for elements not covered by shadcn/Tailwind ring classes. */
+
+  /* All interactive elements get a consistent focus ring */
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible:not([tabindex="-1"]) {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: var(--radius-sm, 4px);
+  }
+
+  /* Skip-navigation link for keyboard users (hidden until focused) */
+  .sr-skip-link {
+    position: absolute;
+    top: -100%;
+    left: 1rem;
+    z-index: 9999;
+    padding: 0.75rem 1rem;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    border: 2px solid hsl(var(--ring));
+    border-radius: var(--radius);
+    font-weight: 600;
+    text-decoration: none;
+    transition: top 150ms ease;
+  }
+  .sr-skip-link:focus {
+    top: 1rem;
+  }
+
+  /* Sidebar-specific focus ring: white/light ring on dark sidebar background */
+  [data-sidebar-focus] a:focus-visible,
+  [data-sidebar-focus] button:focus-visible,
+  [data-sidebar-focus] [role="button"]:focus-visible {
+    outline-color: rgba(255, 255, 255, 0.8);
   }
 }

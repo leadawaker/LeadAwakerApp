@@ -7,6 +7,8 @@ import { SearchModal } from "@/components/crm/SearchModal";
 import { NotificationsPanel } from "@/components/crm/NotificationsPanel";
 import { PageTransition } from "@/components/crm/PageTransition";
 import { CommandPalette } from "@/components/crm/CommandPalette";
+import { ErrorBoundary } from "@/components/crm/ErrorBoundary";
+import { ConnectionBanner } from "@/components/crm/ConnectionBanner";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
 import { X, Search, Bell, HelpCircle, Headphones, Moon, Sun } from "lucide-react";
@@ -38,7 +40,11 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F5FA] dark:bg-background" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
+    <div className="min-h-screen bg-background" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
+      {/* Skip to main content link — visible only on keyboard focus for accessibility */}
+      <a href="#main-content" className="sr-skip-link" data-testid="skip-to-main">
+        Skip to main content
+      </a>
       <Topbar
         onOpenPanel={(p) => setActivePanel(p)}
         collapsed={collapsed}
@@ -66,11 +72,11 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         <div className="fixed inset-0 z-[70] pointer-events-none" data-testid="unified-overlay">
           <button
             type="button"
-            className="absolute inset-0 bg-black/35 pointer-events-auto"
+            className="absolute inset-0 bg-black/25 glass-overlay pointer-events-auto"
             onClick={closePanel}
           />
-          <aside className="absolute right-4 top-8 bottom-4 w-full md:w-[400px] border border-border bg-background shadow-2xl rounded-[32px] pointer-events-auto flex flex-col overflow-hidden">
-            <div className="h-14 px-6 flex items-center justify-between border-b border-border bg-background sticky top-0 z-10 shrink-0">
+          <aside className="absolute right-0 top-0 bottom-0 w-full sm:right-4 sm:top-8 sm:bottom-4 sm:w-[400px] border border-border/60 bg-background/90 dark:bg-background/85 glass-accent shadow-sm sm:rounded-2xl pointer-events-auto flex flex-col overflow-hidden">
+            <div className="h-14 px-6 flex items-center justify-between border-b border-border/50 bg-background/80 glass-divider sticky top-0 z-10 shrink-0">
               <div className="font-bold text-lg capitalize">{activePanel.replace('-', ' ')}</div>
               <button onClick={closePanel} className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center">
                 <X className="h-4 w-4" />
@@ -86,7 +92,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
               )}
               {activePanel === 'settings' && (
                 <div className="p-6 space-y-8 overflow-auto h-full">
-                  <section className="bg-card rounded-2xl p-6 border border-border/40">
+                  <section className="bg-card rounded-2xl p-6 shadow-sm border border-border">
                     <h3 className="text-xs font-bold uppercase text-muted-foreground mb-4 tracking-widest">System Actions</h3>
                     <div className="grid grid-cols-2 gap-3 mb-8">
                       <button onClick={() => { setActivePanel('search'); }} className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors">
@@ -132,13 +138,13 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
                       </div>
                     </div>
                   </section>
-                  <section className="bg-card rounded-2xl p-6 shadow-sm border border-border/40">
+                  <section className="bg-card rounded-2xl p-6 shadow-sm border border-border">
                     <h3 className="text-sm font-bold uppercase text-muted-foreground mb-4 tracking-widest">Security</h3>
                     <button className="h-10 w-full rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold">
                       Send reset email
                     </button>
                   </section>
-                  <section className="bg-card rounded-2xl p-6 shadow-sm border border-border/40">
+                  <section className="bg-card rounded-2xl p-6 shadow-sm border border-border">
                     <h3 className="text-sm font-bold uppercase text-muted-foreground mb-4 tracking-widest">Users</h3>
                     <div className="space-y-2">
                       <button className="h-10 w-full rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold text-left px-4">Invite user</button>
@@ -165,17 +171,21 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
       )}
 
       <main
+        id="main-content"
         className={cn(
-          "h-screen flex flex-col bg-[#F6F5FA] dark:bg-background transition-all duration-200 overflow-hidden",
+          "h-screen flex flex-col bg-background transition-all duration-200 overflow-hidden",
           collapsed ? "md:pl-[80px]" : "md:pl-[200px]",
           "pb-[64px] md:pb-0 pt-[80px]"
         )}
         data-testid="main-crm"
       >
+        <ConnectionBanner />
         <div className="h-full w-full px-4 md:pl-10 md:pr-10 pt-4 pb-0 overflow-y-auto">
-          <PageTransition>
-            {children}
-          </PageTransition>
+          <ErrorBoundary>
+            <PageTransition>
+              {children}
+            </PageTransition>
+          </ErrorBoundary>
         </div>
       </main>
 

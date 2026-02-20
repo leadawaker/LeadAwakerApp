@@ -297,7 +297,7 @@ function AgencyDashboard({ accounts, campaigns }: { accounts: Account[]; campaig
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Active Campaigns</h3>
+                <h3 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/15 dark:bg-muted/8 glass-surface text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Active Campaigns</h3>
                 <div className="space-y-3">
                   {accCampaigns.length === 0 ? (
                     <DataEmptyState variant="campaigns" compact />
@@ -397,7 +397,7 @@ function SubaccountDashboard({
     <div className="mt-0 space-y-12 flex flex-col" data-testid="subaccount-dashboard">
       <QuickJumpCards />
       <div className="flex items-start justify-between -mt-10 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 flex-grow" data-testid="grid-kpis">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 flex-grow" data-testid="grid-kpis">
           <Stat label="Total Contacts" value={String(stats.totalLeads)} testId="stat-total" icon={<Users className="w-4 h-4" />} />
           <Stat label="Active Campaigns" value={String(stats.activeCampaigns)} testId="stat-active" icon={<Target className="w-4 h-4" />} />
           <Stat label="Bookings/Mo" value={String(stats.bookingsMo)} testId="stat-bookings" icon={<CalendarIcon className="w-4 h-4" />} />
@@ -408,10 +408,10 @@ function SubaccountDashboard({
       </div>
 
       <div className="space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[400px]">
-          <div className="lg:col-span-2 flex flex-col">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:h-[400px]">
+          <div className="lg:col-span-2 flex flex-col min-h-[280px] lg:min-h-0">
             <div className="mb-4">
-              <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Performance Over Time</h3>
+              <h3 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/15 dark:bg-muted/8 glass-surface text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Performance Over Time</h3>
             </div>
             <div className="flex-grow rounded-2xl border border-border bg-card p-6 shadow-sm overflow-hidden pb-4 flex flex-col">
               <div className="flex items-center justify-end mb-4 shrink-0">
@@ -460,11 +460,11 @@ function SubaccountDashboard({
               </div>
             </div>
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col min-h-[300px] lg:min-h-0">
             <div className="mb-4">
-              <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Sales Funnel</h3>
+              <h3 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/15 dark:bg-muted/8 glass-surface text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Sales Funnel</h3>
             </div>
-            <div className="flex-grow rounded-2xl border border-border bg-card p-6 shadow-sm flex flex-col">
+            <div className="flex-grow rounded-2xl border border-border bg-card p-4 md:p-6 shadow-sm flex flex-col">
               <div className="flex-grow flex flex-col justify-between py-2">
                 {funnel.map((stage: any, idx: number) => {
                   const maxVal = Math.max(...funnel.map((s: any) => s.value), 1);
@@ -497,7 +497,7 @@ function SubaccountDashboard({
         data-testid="section-pipeline"
       >
         <div className="flex items-center justify-between mb-4 px-1 md:px-0">
-          <h2 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Sales Pipeline</h2>
+          <h2 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/15 dark:bg-muted/8 glass-surface text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Sales Pipeline</h2>
         </div>
 
         <div className="relative group/pipeline">
