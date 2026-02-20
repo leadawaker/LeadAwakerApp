@@ -333,13 +333,69 @@ export default function AppDashboard() {
       <div className="py-4 px-0" data-testid="page-dashboard">
         <div className="p-0">
           <div className="px-1 md:px-0 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <DateRangeFilter value={dateRange} onChange={setDateRange} />
+            <div className="flex items-center gap-3 flex-wrap">
+              <DateRangeFilter value={dateRange} onChange={setDateRange} />
+              {/* Account filter dropdown — agency view only */}
+              {isAgencyView && (
+                <div className="relative" ref={accountDropdownRef} data-testid="account-filter-wrapper">
+                  <button
+                    type="button"
+                    onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
+                    className={cn(
+                      "inline-flex items-center gap-2 h-9 px-3 rounded-xl border text-sm font-semibold transition-all",
+                      dashboardAccountFilter === "all"
+                        ? "border-border bg-card text-foreground hover:bg-muted/50"
+                        : "border-brand-yellow/50 bg-brand-yellow/10 text-foreground hover:bg-brand-yellow/20"
+                    )}
+                    data-testid="account-filter-dropdown"
+                  >
+                    <Building2 className="w-4 h-4 text-muted-foreground" />
+                    <span className="max-w-[160px] truncate">{selectedAccountName}</span>
+                    <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", accountDropdownOpen && "rotate-180")} />
+                  </button>
+                  {accountDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-1 w-56 rounded-xl border border-border bg-card shadow-lg z-50 py-1 max-h-64 overflow-y-auto" data-testid="account-filter-options">
+                      <button
+                        type="button"
+                        onClick={() => { setDashboardAccountFilter("all"); setAccountDropdownOpen(false); }}
+                        className={cn(
+                          "w-full text-left px-3 py-2 text-sm font-medium transition-colors hover:bg-muted/50",
+                          dashboardAccountFilter === "all" ? "text-brand-yellow font-bold bg-brand-yellow/5" : "text-foreground"
+                        )}
+                        data-testid="account-filter-option-all"
+                      >
+                        All Accounts
+                      </button>
+                      {accounts
+                        .filter((a: any) => (a.id || a.Id) !== 1)
+                        .map((acc: any) => {
+                          const accId = acc.id || acc.Id;
+                          return (
+                            <button
+                              key={accId}
+                              type="button"
+                              onClick={() => { setDashboardAccountFilter(accId); setAccountDropdownOpen(false); }}
+                              className={cn(
+                                "w-full text-left px-3 py-2 text-sm font-medium transition-colors hover:bg-muted/50",
+                                dashboardAccountFilter === accId ? "text-brand-yellow font-bold bg-brand-yellow/5" : "text-foreground"
+                              )}
+                              data-testid={`account-filter-option-${accId}`}
+                            >
+                              {acc.name || acc.Name}
+                            </button>
+                          );
+                        })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
             <FiltersBar selectedCampaignId={selectedCampaignId} setSelectedCampaignId={setSelectedCampaignId} />
           </div>
           {isLoading ? (
             <SkeletonDashboard />
           ) : isAgencyView ? (
-            <AgencyDashboard accounts={accounts} campaigns={campaigns} leads={filteredLeads} campaignMetrics={filteredMetrics} metricsLoading={metricsLoading} trends={dashboardTrends} trendRange={trendRange} setTrendRange={setTrendRange} />
+            <AgencyDashboard accounts={accounts} campaigns={agencyFilteredCampaigns} leads={agencyFilteredLeads} campaignMetrics={agencyFilteredMetrics} metricsLoading={metricsLoading} trends={dashboardTrends} trendRange={trendRange} setTrendRange={setTrendRange} dashboardAccountFilter={dashboardAccountFilter} />
           ) : (
             <SubaccountDashboard
               accountId={currentAccountId}
@@ -367,12 +423,15 @@ export default function AppDashboard() {
   );
 }
 
-function AgencyDashboard({ accounts, campaigns, leads, campaignMetrics, metricsLoading, trends, trendRange, setTrendRange }: { accounts: Account[]; campaigns: Campaign[]; leads: Lead[]; campaignMetrics: CampaignMetricsHistory[]; metricsLoading: boolean; trends: DashboardTrend[]; trendRange: 7 | 30; setTrendRange: (v: 7 | 30) => void }) {
+function AgencyDashboard({ accounts, campaigns, leads, campaignMetrics, metricsLoading, trends, trendRange, setTrendRange, dashboardAccountFilter }: { accounts: Account[]; campaigns: Campaign[]; leads: Lead[]; campaignMetrics: CampaignMetricsHistory[]; metricsLoading: boolean; trends: DashboardTrend[]; trendRange: 7 | 30; setTrendRange: (v: 7 | 30) => void; dashboardAccountFilter: number | "all" }) {
   const { currentAccountId } = useWorkspace();
 
+  // When a specific account is selected, only show that one in the subaccounts section
   const subaccounts = useMemo(() => {
-    return accounts.filter((a: any) => a.id !== 1);
-  }, [accounts]);
+    const all = accounts.filter((a: any) => a.id !== 1);
+    if (dashboardAccountFilter === "all") return all;
+    return all.filter((a: any) => a.id === dashboardAccountFilter);
+  }, [accounts, dashboardAccountFilter]);
 
   // Total calls booked across all accounts
   const totalCallsBooked = useMemo(() => {
