@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useToast } from "@/hooks/use-toast";
+import { useDashboardRefreshInterval, REFRESH_INTERVAL_OPTIONS } from "@/hooks/useDashboardRefreshInterval";
 
 export default function SettingsPage() {
   const [name, setName] = useState("LeadAwaker Agency");
   const [email, setEmail] = useState("leadawaker@gmail.com");
   const { toast } = useToast();
+  const { intervalSeconds, setIntervalSeconds, labelForInterval } = useDashboardRefreshInterval();
 
   return (
     <CrmShell>
@@ -39,6 +41,47 @@ export default function SettingsPage() {
           </section>
 
           <div className="space-y-6" data-testid="col-settings-right">
+            {/* Dashboard auto-refresh interval setting */}
+            <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-refresh-interval">
+              <div className="p-4 border-b border-border" data-testid="card-refresh-interval-head">
+                <div className="font-semibold" data-testid="text-refresh-title">Dashboard Auto-Refresh</div>
+                <div className="text-xs text-muted-foreground" data-testid="text-refresh-sub">
+                  How often the dashboard automatically refreshes live data. Default: 1 minute.
+                </div>
+              </div>
+              <div className="p-4 space-y-3" data-testid="card-refresh-interval-body">
+                <div className="text-xs text-muted-foreground mb-1">
+                  Current interval: <span className="font-bold text-foreground" data-testid="text-current-interval">{labelForInterval}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2" data-testid="refresh-interval-options">
+                  {REFRESH_INTERVAL_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        setIntervalSeconds(option.value);
+                        toast({
+                          variant: "success",
+                          title: "Refresh interval updated",
+                          description: option.value === 0
+                            ? "Auto-refresh is now disabled."
+                            : `Dashboard will refresh every ${option.label}.`,
+                        });
+                      }}
+                      className={
+                        intervalSeconds === option.value
+                          ? "h-9 rounded-xl border-2 border-brand-yellow bg-brand-yellow/10 text-sm font-bold text-foreground transition-all"
+                          : "h-9 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold transition-all"
+                      }
+                      data-testid={`refresh-interval-option-${option.value}`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </section>
+
             <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-toast-test">
               <div className="p-4 border-b border-border" data-testid="card-toast-test-head">
                 <div className="font-semibold" data-testid="text-toast-title">Toast Notifications</div>
