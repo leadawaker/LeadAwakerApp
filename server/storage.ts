@@ -1,4 +1,4 @@
-import { eq, desc, asc, count, SQL } from "drizzle-orm";
+import { eq, desc, asc, count, SQL, inArray } from "drizzle-orm";
 import { PgTableWithColumns } from "drizzle-orm/pg-core";
 import { db } from "./db";
 import {
@@ -24,6 +24,7 @@ import {
   type Tags,
   type InsertTags,
   type Leads_Tags,
+  type InsertLeads_Tags,
   type Automation_Logs,
   type Users,
   type InsertUsers,
@@ -71,6 +72,10 @@ export interface IStorage {
 
   // Leads_Tags
   getTagsByLeadId(leadId: number): Promise<Leads_Tags[]>;
+  createLeadTag(data: InsertLeads_Tags): Promise<Leads_Tags>;
+
+  // Bulk operations
+  bulkUpdateLeads(ids: number[], data: Partial<InsertLeads>): Promise<Leads[]>;
 
   // Automation Logs
   getAutomationLogs(): Promise<Automation_Logs[]>;
@@ -232,6 +237,22 @@ export class DatabaseStorage implements IStorage {
 
   async getTagsByLeadId(leadId: number): Promise<Leads_Tags[]> {
     return db.select().from(leadsTags).where(eq(leadsTags.leadsId, leadId));
+  }
+
+  async createLeadTag(data: InsertLeads_Tags): Promise<Leads_Tags> {
+    const [row] = await db.insert(leadsTags).values(data as any).returning();
+    return row;
+  }
+
+  // ─── Bulk Operations ──────────────────────────────────────────────────
+
+  async bulkUpdateLeads(ids: number[], data: Partial<InsertLeads>): Promise<Leads[]> {
+    if (ids.length === 0) return [];
+    return db
+      .update(leads)
+      .set(data)
+      .where(inArray(leads.id, ids))
+      .returning();
   }
 
   // ─── Automation Logs ────────────────────────────────────────────────

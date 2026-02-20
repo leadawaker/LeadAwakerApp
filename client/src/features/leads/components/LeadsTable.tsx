@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import DataTable, { SortConfig, RowSpacing } from "@/components/DataTable/DataTable";
 import { useLeadsData } from "../hooks/useLeadsData";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -9,6 +9,7 @@ import {
   EMPTY_FILTERS,
   type LeadFilterState,
 } from "./LeadFilters";
+import { BulkActionsToolbar } from "./BulkActionsToolbar";
 import { apiFetch } from "@/lib/apiUtils";
 
 const LEAD_COLUMNS = [
@@ -192,6 +193,23 @@ export function LeadsTable() {
     // In mockup mode, we'd just show a toast or log
   };
 
+  const handleBulkActionComplete = useCallback(() => {
+    // Refresh leads data and clear selection after any bulk action
+    handleRefresh();
+    setSelectedIds([]);
+  }, [handleRefresh]);
+
+  const renderBulkActions = useCallback(
+    (ids: number[], clearSelection: () => void) => (
+      <BulkActionsToolbar
+        selectedIds={ids}
+        onClearSelection={clearSelection}
+        onActionComplete={handleBulkActionComplete}
+      />
+    ),
+    [handleBulkActionComplete],
+  );
+
   // Show error fallback when data fetch fails and we have no cached data to show
   if (error && leads.length === 0 && !loading) {
     return (
@@ -321,6 +339,7 @@ export function LeadsTable() {
         onFilterConfigChange={setFilterConfig}
         pageSize={50}
         emptyStateVariant={search ? "search" : "leads"}
+        renderBulkActions={renderBulkActions}
       />
     </div>
   );

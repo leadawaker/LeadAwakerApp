@@ -37,3 +37,37 @@ export const deleteLead = async (rowId: number | string) => {
   });
   if (!res.ok) throw new Error("Failed to delete lead");
 };
+
+/** Bulk update multiple leads at once (e.g. move stage, assign campaign) */
+export const bulkUpdateLeads = async (
+  ids: number[],
+  data: Record<string, any>,
+) => {
+  const res = await apiFetch("/api/leads/bulk-update", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ids, data }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Bulk update failed");
+  }
+  return await res.json();
+};
+
+/** Bulk add tags to multiple leads */
+export const bulkTagLeads = async (
+  leadIds: number[],
+  tagIds: number[],
+) => {
+  const res = await apiFetch("/api/leads/bulk-tag", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ leadIds, tagIds }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Bulk tag failed");
+  }
+  return await res.json();
+};

@@ -24,11 +24,12 @@ import {
   insertLeadsSchema,
   insertInteractionsSchema,
   insertTagsSchema,
+  insertLeads_TagsSchema,
   insertPrompt_LibrarySchema,
 } from "@shared/schema";
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "./dbKeys";
 import { db } from "./db";
-import { eq, count, type SQL } from "drizzle-orm";
+import { eq, count, inArray, and, type SQL } from "drizzle-orm";
 import { ZodError } from "zod";
 
 /** Return a 422 with Zod validation errors in a readable format. */
@@ -243,6 +244,75 @@ export async function registerRoutes(
     const ok = await storage.deleteLead(Number(req.params.id));
     if (!ok) return res.status(404).json({ message: "Lead not found" });
     res.status(204).end();
+  });
+
+  // ─── Bulk Lead Operations ──────────────────────────────────────────
+
+  // Bulk update leads (move stage, assign campaign)
+  app.post("/api/leads/bulk-update", requireAuth, async (req, res) => {
+    try {
+      const { ids, data } = req.body;
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: "ids must be a non-empty array" });
+      }
+      if (!data || typeof data !== "object") {
+        return res.status(400).json({ message: "data must be an object with fields to update" });
+      }
+
+      // Convert from DB column names to JS camelCase for Drizzle
+      const parsed = insertLeadsSchema.partial().safeParse(fromDbKeys(data, leads));
+      if (!parsed.success) return handleZodError(res, parsed.error);
+
+      const updated = await storage.bulkUpdateLeads(
+        ids.map(Number),
+        parsed.data,
+      );
+
+      res.json({
+        updated: updated.length,
+        leads: toDbKeysArray(updated as any, leads),
+      });
+    } catch (err: any) {
+      console.error("Bulk update error:", err);
+      res.status(500).json({ message: err.message || "Bulk update failed" });
+    }
+  });
+
+  // Bulk add tags to leads
+  app.post("/api/leads/bulk-tag", requireAuth, async (req, res) => {
+    try {
+      const { leadIds, tagIds } = req.body;
+      if (!Array.isArray(leadIds) || leadIds.length === 0) {
+        return res.status(400).json({ message: "leadIds must be a non-empty array" });
+      }
+      if (!Array.isArray(tagIds) || tagIds.length === 0) {
+        return res.status(400).json({ message: "tagIds must be a non-empty array" });
+      }
+
+      const created: any[] = [];
+      for (const leadId of leadIds) {
+        // Check existing tags for this lead to avoid duplicates
+        const existingTags = await storage.getTagsByLeadId(Number(leadId));
+        const existingTagIds = new Set(existingTags.map((t: any) => t.tagsId));
+
+        for (const tagId of tagIds) {
+          if (existingTagIds.has(Number(tagId))) continue; // Skip duplicates
+          const row = await storage.createLeadTag({
+            leadsId: Number(leadId),
+            tagsId: Number(tagId),
+          });
+          created.push(row);
+        }
+      }
+
+      res.json({
+        created: created.length,
+        message: `Applied ${tagIds.length} tag(s) to ${leadIds.length} lead(s)`,
+      });
+    } catch (err: any) {
+      console.error("Bulk tag error:", err);
+      res.status(500).json({ message: err.message || "Bulk tag failed" });
+    }
   });
 
   // ─── Interactions ─────────────────────────────────────────────────

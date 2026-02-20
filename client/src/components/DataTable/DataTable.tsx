@@ -199,6 +199,12 @@ export interface DataTableProps<TRow extends DataTableRow = DataTableRow> {
   // Pagination
   // ─────────────────────
   pageSize?: number; // If set, enables client-side pagination (e.g. 50)
+
+  // ─────────────────────
+  // Bulk actions slot
+  // ─────────────────────
+  /** Render custom bulk action buttons when rows are selected */
+  renderBulkActions?: (selectedIds: number[], clearSelection: () => void) => React.ReactNode;
 }
 
 const defaultRowPadding: Record<RowSpacing, string> = {
@@ -722,6 +728,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     emptyStateTitle,
     emptyStateDescription,
     pageSize,
+    renderBulkActions,
   } = props;
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -1226,18 +1233,24 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
           )}
 
           {selectedIds.length > 0 && (
-            <div className="flex items-center gap-2" data-testid="bulk-selection-bar">
-              <Badge className="h-7 px-3 bg-brand-blue hover:bg-brand-blue/90 text-brand-blue-foreground text-sm font-semibold rounded-full">
-                {selectedIds.length} selected
-              </Badge>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
-                onClick={() => onSelectedIdsChange([])}
-              >
-                Clear
-              </Button>
+            <div className="flex items-center gap-2 flex-wrap" data-testid="bulk-selection-bar">
+              {renderBulkActions ? (
+                renderBulkActions(selectedIds, () => onSelectedIdsChange([]))
+              ) : (
+                <>
+                  <Badge className="h-7 px-3 bg-brand-blue hover:bg-brand-blue/90 text-brand-blue-foreground text-sm font-semibold rounded-full">
+                    {selectedIds.length} selected
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => onSelectedIdsChange([])}
+                  >
+                    Clear
+                  </Button>
+                </>
+              )}
               {onDelete && (
                 <Button
                   variant="destructive"
