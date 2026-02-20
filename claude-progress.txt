@@ -2458,3 +2458,46 @@
 - 72/207 features passing (71 at session start, +1 this session)
 - Feature #101 marked passing after thorough browser verification
 - Git commit: 58c9d7b
+
+## Session 2026-02-20 - Coding Agent (Feature #102)
+
+### Completed Features:
+- Feature #102: Chat account filter (agency view) - PASSING
+  - Feature was fully implemented from previous sessions
+  - Account filter dropdown in Filters panel (InboxPanel component)
+  - Only visible to agency/admin users (isAgencyUser check)
+  - Account list loaded from /api/accounts via useWorkspace hook (guarded with enabled: isAgencyUser)
+  - Filtering: agency user can pick "All Accounts" or specific account
+  - When account selected, effectiveAccountId is passed to useConversationsData and useCampaigns
+  - Campaign filter also resets when account changes (handleAccountChange callback)
+  - Client users (Viewer role) route to /subaccount/conversations, no account filter shown
+  - Client users' conversations auto-scoped to their accountId (set in localStorage)
+
+### Verification:
+- Playwright browser automation confirmed all 3 feature steps:
+  1. Admin login: Account filter dropdown visible in Filters panel with all client accounts
+  2. Selected "van de Kerkhof" account: 10 threads → 4 threads (only that account's leads)
+  3. Selected "Pepsi" account: 0 threads (no leads in Pepsi)
+  4. Reset to "All Accounts": all 10 threads restored
+  5. Viewer (viewer@test.com) login: conversations page has NO account filter, only Campaign + AI filters
+  6. Client user routed to /subaccount/conversations (correct)
+  7. Zero console errors on conversations page for both admin and client users
+
+### Code Changes:
+- No code changes required - feature was already fully implemented
+
+### Notes:
+- AppDashboard.tsx calls useAccounts() unconditionally, causing 403 for client users on dashboard load
+  This is a dashboard-level issue (different feature), not related to conversations page
+  The conversations page itself is clean (0 errors for both user roles)
+
+### Environment Notes:
+- API server on port 5001 (pre-existing)
+- Vite dev server on port 5173 (pre-existing)
+- DB reachable, all 11 tables healthy
+- Login: leadawaker@gmail.com / test123 (Admin), viewer@test.com / test123 (Viewer)
+
+### Current Status:
+- 73/207 features passing (72 at session start, +1 this session)
+- Feature #102 marked passing after thorough browser verification
+- No git commit needed (no code changes)
