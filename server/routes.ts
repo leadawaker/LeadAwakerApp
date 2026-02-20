@@ -468,5 +468,76 @@ export async function registerRoutes(
     res.status(201).json(row);
   });
 
+  // ─── Dashboard KPI Trends ──────────────────────────────────────────
+  // Aggregates campaign metrics history into daily KPI totals for sparklines
+  app.get("/api/dashboard-trends", requireAuth, async (req, res) => {
+    try {
+      const days = Math.min(Number(req.query.days) || 30, 90);
+      const accountId = req.query.accountId ? Number(req.query.accountId) : undefined;
+
+      // Fetch all campaign metrics history
+      const allMetrics = await storage.getCampaignMetricsHistory();
+
+      // If accountId is specified, filter to campaigns belonging to that account
+      let filteredMetrics = allMetrics;
+      if (accountId && accountId !== 1) {
+        // Get campaigns for this account
+        const accountCampaigns = await storage.getCampaigns();
+        const campaignIds = accountCampaigns
+          .filter((c: any) => (c.accountsId || c.accounts_id) === accountId)
+          .map((c: any) => c.id);
+        filteredMetrics = allMetrics.filter((m: any) =>
+          campaignIds.includes(m.campaignsId || m.campaigns_id)
+        );
+      }
+
+      // Calculate the cutoff date
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - days);
+      const cutoffStr = cutoff.toISOString().split("T")[0];
+
+      // Aggregate by date
+      const byDate: Record<string, {
+        bookings: number;
+        messagesSent: number;
+        responses: number;
+        leadsTargeted: number;
+        responseRateSum: number;
+        count: number;
+      }> = {};
+
+      filteredMetrics.forEach((m: any) => {
+        const date = m.metricDate || m.metric_date || "";
+        if (!date || date < cutoffStr) return;
+        if (!byDate[date]) {
+          byDate[date] = { bookings: 0, messagesSent: 0, responses: 0, leadsTargeted: 0, responseRateSum: 0, count: 0 };
+        }
+        byDate[date].bookings += Number(m.bookingsGenerated || m.bookings_generated || 0);
+        byDate[date].messagesSent += Number(m.totalMessagesSent || m.total_messages_sent || 0);
+        byDate[date].responses += Number(m.totalResponsesReceived || m.total_responses_received || 0);
+        byDate[date].leadsTargeted += Number(m.totalLeadsTargeted || m.total_leads_targeted || 0);
+        byDate[date].responseRateSum += Number(m.responseRatePercent || m.response_rate_percent || 0);
+        byDate[date].count += 1;
+      });
+
+      // Sort by date and return as array
+      const trends = Object.entries(byDate)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, d]) => ({
+          date,
+          bookings: d.bookings,
+          messagesSent: d.messagesSent,
+          responses: d.responses,
+          leadsTargeted: d.leadsTargeted,
+          responseRate: d.count > 0 ? Math.round(d.responseRateSum / d.count) : 0,
+        }));
+
+      res.json(trends);
+    } catch (err: any) {
+      console.error("Error fetching dashboard trends:", err);
+      res.status(500).json({ message: "Failed to fetch dashboard trends", error: err.message });
+    }
+  });
+
   return httpServer;
 }

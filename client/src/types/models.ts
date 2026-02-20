@@ -188,6 +188,15 @@ export type PromptItem = {
   [key: string]: any;
 };
 
+export type DashboardTrend = {
+  date: string;
+  bookings: number;
+  messagesSent: number;
+  responses: number;
+  leadsTargeted: number;
+  responseRate: number;
+};
+
 export type CampaignMetricsHistory = {
   id: number;
   campaigns_id: number;

@@ -1,5 +1,5 @@
 import React from "react";
-import { ResponsiveContainer, AreaChart, Area, Tooltip } from "recharts";
+import { ResponsiveContainer, AreaChart, Area, Tooltip, XAxis } from "recharts";
 
 export type SparklineDataPoint = {
   date: string;
@@ -40,6 +40,7 @@ export function KpiSparkline({
               <stop offset="95%" stopColor={color} stopOpacity={0} />
             </linearGradient>
           </defs>
+          <XAxis dataKey="date" hide />
           {showTooltip && (
             <Tooltip
               contentStyle={{
@@ -52,11 +53,13 @@ export function KpiSparkline({
                 padding: "4px 8px",
               }}
               formatter={function(value: number) { return [value, "Value"]; }}
-              labelFormatter={function(label: string) {
+              labelFormatter={function(label: string | number) {
                 // Format date: "Feb 14"
-                if (!label) return "";
-                var parts = label.split("-");
-                if (parts.length < 3) return label;
+                if (label === null || label === undefined) return "";
+                var labelStr = String(label);
+                if (!labelStr) return "";
+                var parts = labelStr.split("-");
+                if (parts.length < 3) return labelStr;
                 var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
                 var monthIdx = parseInt(parts[1], 10) - 1;
                 var day = parseInt(parts[2], 10);
