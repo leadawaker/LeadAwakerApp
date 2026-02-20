@@ -1,3 +1,43 @@
+## Session 2026-02-20 (23rd) - Coding Agent
+
+### Completed Features:
+- Feature #26: Lead score distribution chart - PASSING
+  - Created LeadScoreDistributionChart component using Recharts BarChart
+  - Computes lead scores (0-100) from real lead engagement data using heuristic:
+    - Conversion status progression (0-40 pts)
+    - Message activity (0-20 pts)
+    - Bump stage progression (0-15 pts)
+    - Recency of interaction (0-15 pts)
+    - Priority level (0-10 pts)
+  - Falls back to DB lead_score if available
+  - Shows histogram with 5 score ranges: 0-20, 21-40, 41-60, 61-80, 81-100
+  - Color-coded bars: Gray, Blue, Yellow, Orange, Red
+  - Interactive tooltips show count and percentage on hover
+  - Legend at bottom showing all score ranges
+  - Header shows total lead count ("9 leads")
+  - Integrated into both Agency and Subaccount dashboards in a 2-column grid alongside HotLeadsWidget
+  - Fixed missing TrendRangeToggle export in KpiSparkline (pre-existing bug breaking dashboard)
+  - Verified all 3 feature steps via Playwright browser automation:
+    1. Distribution chart renders with score buckets (0-20, 21-40, 41-60, 61-80, 81-100)
+    2. Data matches actual lead scores: 6 in 0-20, 1 in 21-40 (Danique 28), 1 in 41-60 (Luis 46), 1 in 61-80 (Gabriel 63)
+    3. Tooltip shows count on hover ("Score 41-60 : 1 leads (11%)")
+  - Zero mock data patterns, zero console errors
+
+### Code Changes:
+- NEW: client/src/components/crm/LeadScoreDistributionChart.tsx - Bar chart component
+- MODIFIED: client/src/components/crm/KpiSparkline.tsx - Added missing TrendRangeToggle export
+- MODIFIED: client/src/pages/AppDashboard.tsx - Imported chart and added to both dashboards
+
+### Environment Notes:
+- Server on port 5001 (started via npx tsx)
+- Vite on port 5192 (port 5173 was occupied by stale process)
+- DB reachable (login via API worked, 9 leads loaded)
+- Playwright working via /home/gabriel/.npm-global/bin/playwright-cli
+
+### Current Status:
+- 47/207 features passing (46 at session start, +1 this session)
+- Git commit: fd92a35
+
 ## Session 2026-02-20 (22nd) - Coding Agent
 
 ### Completed Features:
