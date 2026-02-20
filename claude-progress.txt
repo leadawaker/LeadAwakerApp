@@ -2421,3 +2421,40 @@
 - 71/207 features passing (70 at session start, +1 this session)
 - Feature #100 marked passing after thorough browser verification
 - Git commit: 340e7bf
+
+## Session 2026-02-20 - Coding Agent (Feature #101)
+
+### Completed Features:
+- Feature #101: Chat campaign filter - PASSING
+  - Feature was already fully implemented from the Feature #90 session
+  - Campaign filter dropdown in the Filters panel of InboxPanel component
+  - Campaigns loaded from /api/campaigns and passed down from Conversations.tsx
+  - Campaign filter state: selectedCampaignId (number | "all"), default "all"
+  - Filter logic in useConversationsData hook: filters threads by campaignId match
+  - When campaign selected: active dot appears on Filters button (hasActiveFilters indicator)
+  - Clearing to "All Campaigns" restores all threads
+
+### Verification:
+- Playwright browser automation confirmed all 3 feature steps:
+  1. Selected "Reactivation of our liv" campaign: threads reduced from 10 to 6
+  2. Only conversations from that campaign shown (Danique, Augusto, Michael Thompson, etc.)
+  3. Selected "All Campaigns" again: all 10 threads restored
+- "Wow" campaign showed 0 threads (no leads in that campaign - correct)
+- Bananas campaign available in dropdown as well
+- Active dot on Filters button when filter is active
+- Zero JS console errors (0 errors, 0 warnings)
+- No code changes required - feature was already fully implemented
+
+### Code Changes:
+- No code changes required - feature was already fully implemented in Feature #90 session
+
+### Environment Notes:
+- API server on port 5001 (pre-existing)
+- Vite dev server on port 5173 (pre-existing)
+- DB reachable, all 11 tables healthy
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 72/207 features passing (71 at session start, +1 this session)
+- Feature #101 marked passing after thorough browser verification
+- Git commit: 58c9d7b
