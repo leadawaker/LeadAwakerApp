@@ -1,3 +1,50 @@
+## Session 2026-02-20 (25th) - Coding Agent
+
+### Completed Features:
+- Feature #28: Date range filter (today, 7d, 30d, custom) - PASSING
+  - Created DateRangeFilter component (client/src/components/crm/DateRangeFilter.tsx)
+    - Preset buttons: Today, 7d, 30d with highlighted active state
+    - Custom button opens a 2-month calendar popover using react-day-picker + Radix Popover
+    - Custom range requires two clicks (start + end), then auto-closes
+    - Disabled dates after today to prevent future date selection
+    - Custom button label updates to show selected range (e.g. "Feb 1 - Feb 13")
+  - Integrated into AppDashboard.tsx:
+    - Added dateRange state with 30d default
+    - filteredLeads computed via isWithinDateRange on created_at field
+    - filteredMetrics computed via isWithinDateRange on metric_date field
+    - All widgets receive filtered data: KPIs, funnel, pipeline, hot leads, campaign performance
+  - Fixed TrendRangeToggle not defined error (caused by another agent's incomplete work)
+    - Another agent added the import and reference but hadn't yet created the component
+    - Component was subsequently added to KpiSparkline.tsx by that agent
+  - Fixed calendar closing on first click for custom range
+    - react-day-picker sets from=to on first click; improved handleCalendarSelect
+    - Now only closes and applies when a true range with distinct start/end dates is selected
+
+### Verification:
+- Playwright browser automation confirmed all 3 feature steps:
+  1. Select "Today" → Calls Booked 0, Total Leads 0, Messages Sent 0, Hot Leads empty
+  2. Select "7d" → Total Leads 0 (no leads in last 7 days), Campaign Performance shows "5 days tracked"
+  3. Select custom "Feb 1 - Feb 13" → Total Leads 4 (only Feb 13 leads), Campaign Performance "9 days tracked"
+- Switching from 30d (default) to Today showed dramatic data change (9→0 leads, 2→0 calls booked)
+- Zero console errors
+- Zero mock data patterns in DateRangeFilter.tsx and AppDashboard.tsx
+- All data from real PostgreSQL database
+
+### Code Changes:
+- NEW: client/src/components/crm/DateRangeFilter.tsx
+  - DateRangeFilter component with presets + custom calendar
+  - DateRangeValue type, getDefaultDateRange, isWithinDateRange utility
+- MODIFIED: client/src/pages/AppDashboard.tsx
+  - Added DateRangeFilter import and state
+  - Added filteredLeads and filteredMetrics useMemo computations
+  - Replaced leads/campaignMetrics with filtered versions in all widget props
+  - Added DateRangeFilter component to filter bar area
+
+### Current Status:
+- 47/207 features passing (46 at session start, +1 this session)
+- Feature #28 marked passing after browser verification
+- Git commit: 094bc48
+
 ## Session 2026-02-20 (24th) - Coding Agent
 
 ### Completed Features:
