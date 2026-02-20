@@ -1,3 +1,53 @@
+## Session 2026-02-20 (20th) - Coding Agent
+
+### Completed Features:
+- Feature #24: Campaign performance summary cards with sparklines - PASSING
+  - Created CampaignPerformanceCards component with Recharts mini sparkline charts
+  - Cards show each campaign with: name, status badge, response rate, booking rate, trend sparklines, footer stats
+  - Sparklines use real data from Campaign_Metrics_History table (14 days of metrics per campaign)
+  - Response Rate sparkline in blue, Booking Rate sparkline in gold (#FCB803)
+  - Trend indicators show % change vs first half of period (green for positive, red for negative)
+  - Footer shows total messages sent and bookings for each campaign
+  - Added useCampaignMetrics hook to useApiData.ts for fetching Campaign_Metrics_History data
+  - Added CampaignMetricsHistory type to models.ts with all schema fields
+  - Integrated into both AgencyDashboard (shows all campaigns) and SubaccountDashboard (filtered by account)
+  - Added POST /api/campaign-metrics-history endpoint + createCampaignMetricsHistory storage method
+  - Seeded 42 metrics (14 days x 3 campaigns) via script/seed-campaign-metrics.cjs
+
+### Code Changes:
+- NEW: client/src/components/crm/CampaignPerformanceCards.tsx
+  - Sparkline component using Recharts LineChart (no dots, smooth monotone, tooltips)
+  - computeTrend() calculates latest value vs first-half average for trend arrows
+  - getStatusColor() maps campaign status to badge colors
+  - Loading skeleton state, empty state handling
+  - Responsive grid: 1 col mobile, 2 cols tablet, 3 cols desktop
+- MODIFIED: client/src/hooks/useApiData.ts - Added useCampaignMetrics hook with field normalization
+- MODIFIED: client/src/types/models.ts - Added CampaignMetricsHistory type
+- MODIFIED: client/src/pages/AppDashboard.tsx
+  - Added useCampaignMetrics hook call in AppDashboard
+  - Passed campaignMetrics and metricsLoading to both dashboard views
+  - Added CampaignPerformanceCards to AgencyDashboard (after QuickJumpCards)
+  - Added CampaignPerformanceCards to SubaccountDashboard (after HotLeadsWidget, filtered by account)
+- MODIFIED: server/routes.ts - Added POST /api/campaign-metrics-history endpoint
+- MODIFIED: server/storage.ts - Added createCampaignMetricsHistory method
+- NEW: script/seed-campaign-metrics.cjs - Seeds 42 campaign metrics records
+
+### Verification:
+- Playwright browser automation confirmed all 3 feature steps:
+  1. Campaign cards render for all campaigns with metrics on agency dashboard (3 cards: Reactivation, Wow, Bananas)
+  2. Sparklines show trend data from Campaign_Metrics_History (blue response rate line, gold booking rate line)
+  3. Metrics match campaign data (31% response rate matches latest DB record, 290 msgs sent and 28 bookings match sums)
+- Subaccount view (van de Kerkhof) correctly filters to only 1 campaign card (Reactivation of our liv)
+- Status badges: Active (green), Finished (blue), Inactive (gray)
+- Server restart persistence test passed (42 metrics still in DB after restart)
+- Zero console errors (0 errors, 0 warnings on dashboard page)
+- No mock data patterns found in any modified files
+- Git commit: 838e40b
+
+### Current Status:
+- 44/207 features passing (43 at session start, +1 this session)
+- Feature #24 marked passing after thorough browser verification
+
 ## Session 2026-02-20 (19th) - Coding Agent
 
 ### Completed Features:
