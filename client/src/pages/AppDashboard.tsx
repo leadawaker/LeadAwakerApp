@@ -2,9 +2,12 @@ import React, { useMemo, useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useLeads, useCampaigns, useAccounts, useCampaignMetrics } from "@/hooks/useApiData";
-import type { Lead, Campaign, Account, CampaignMetricsHistory } from "@/types/models";
+import { useLeads, useCampaigns, useAccounts, useCampaignMetrics, useDashboardTrends } from "@/hooks/useApiData";
+import type { Lead, Campaign, Account, CampaignMetricsHistory, DashboardTrend } from "@/types/models";
+import { KpiSparkline, TrendIndicator, TrendRangeToggle } from "@/components/crm/KpiSparkline";
+import type { SparklineDataPoint } from "@/components/crm/KpiSparkline";
 import { CampaignPerformanceCards } from "@/components/crm/CampaignPerformanceCards";
+import { LeadScoreDistributionChart } from "@/components/crm/LeadScoreDistributionChart";
 import {
   LineChart,
   Line,
@@ -17,6 +20,12 @@ import {
   Area
 } from "recharts";
 import { FiltersBar } from "@/components/crm/FiltersBar";
+import {
+  DateRangeFilter,
+  getDefaultDateRange,
+  isWithinDateRange,
+  type DateRangeValue,
+} from "@/components/crm/DateRangeFilter";
 import {
   Users,
   MessageSquare,
@@ -184,12 +193,31 @@ export default function AppDashboard() {
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | "all">("all");
   const [dashboardTab, setDashboardTab] = useState<DashboardTab>("pipeline");
   const [isBookedReportOpen, setIsBookedReportOpen] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRangeValue>(getDefaultDateRange);
+  const [trendRange, setTrendRange] = useState<7 | 30>(7);
 
   // Fetch real data from API
   const { leads, loading: leadsLoading } = useLeads();
   const { campaigns, loading: campaignsLoading } = useCampaigns();
   const { accounts, loading: accountsLoading } = useAccounts();
   const { metrics: campaignMetrics, loading: metricsLoading } = useCampaignMetrics();
+  const { trends: dashboardTrends, loading: trendsLoading } = useDashboardTrends(trendRange, isAgencyView ? undefined : currentAccountId);
+
+  // Filter leads by date range (uses created_at as the primary date field)
+  const filteredLeads = useMemo(() => {
+    return leads.filter((l: any) => {
+      // Use created_at as the date to filter by; fall back to updated_at or last_interaction_at
+      const dateField = l.created_at || l.updated_at || l.last_interaction_at;
+      return isWithinDateRange(dateField, dateRange);
+    });
+  }, [leads, dateRange]);
+
+  // Filter campaign metrics by date range
+  const filteredMetrics = useMemo(() => {
+    return campaignMetrics.filter((m: any) => {
+      return isWithinDateRange(m.metric_date || m.created_at, dateRange);
+    });
+  }, [campaignMetrics, dateRange]);
 
   const stagePalette = useMemo(() => [
     { id: "New" as const, label: "New", icon: <Zap className="w-5 h-5" />, fill: "#1a3a6f", textColor: "white" as const },
@@ -202,7 +230,7 @@ export default function AppDashboard() {
   ], []);
 
   const funnel = useMemo(() => {
-    const accountLeads = leads
+    const accountLeads = filteredLeads
       .filter((l: any) => (l.account_id || l.accounts_id) === currentAccountId)
       .filter((l: any) => (selectedCampaignId === "all" ? true : (l.campaign_id || l.campaigns_id) === selectedCampaignId));
 
@@ -218,10 +246,10 @@ export default function AppDashboard() {
 
     return stagePalette
       .map((s) => ({ name: s.label, value: counts[s.id] || 0, fill: s.fill }));
-  }, [leads, currentAccountId, selectedCampaignId, stagePalette]);
+  }, [filteredLeads, currentAccountId, selectedCampaignId, stagePalette]);
 
   const stats = useMemo(() => {
-    const accountLeads = leads
+    const accountLeads = filteredLeads
       .filter((l: any) => (l.account_id || l.accounts_id) === currentAccountId)
       .filter((l: any) => (selectedCampaignId === "all" ? true : (l.campaign_id || l.campaigns_id) === selectedCampaignId));
 
@@ -243,7 +271,7 @@ export default function AppDashboard() {
       messagesSent,
       responseRate,
     };
-  }, [leads, campaigns, currentAccountId, selectedCampaignId]);
+  }, [filteredLeads, campaigns, currentAccountId, selectedCampaignId]);
 
   const campaignOptions = useMemo(() => {
     return campaigns.filter((c: any) => (c.account_id || c.accounts_id) === currentAccountId);
@@ -255,13 +283,14 @@ export default function AppDashboard() {
     <CrmShell>
       <div className="py-4 px-0" data-testid="page-dashboard">
         <div className="p-0">
-          <div className="px-1 md:px-0 mb-6 flex items-center justify-end">
+          <div className="px-1 md:px-0 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <DateRangeFilter value={dateRange} onChange={setDateRange} />
             <FiltersBar selectedCampaignId={selectedCampaignId} setSelectedCampaignId={setSelectedCampaignId} />
           </div>
           {isLoading ? (
             <SkeletonDashboard />
           ) : isAgencyView ? (
-            <AgencyDashboard accounts={accounts} campaigns={campaigns} leads={leads} campaignMetrics={campaignMetrics} metricsLoading={metricsLoading} />
+            <AgencyDashboard accounts={accounts} campaigns={campaigns} leads={filteredLeads} campaignMetrics={filteredMetrics} metricsLoading={metricsLoading} trends={dashboardTrends} trendRange={trendRange} setTrendRange={setTrendRange} />
           ) : (
             <SubaccountDashboard
               accountId={currentAccountId}
@@ -274,10 +303,13 @@ export default function AppDashboard() {
               isBookedReportOpen={isBookedReportOpen}
               setIsBookedReportOpen={setIsBookedReportOpen}
               dashboardTab={dashboardTab}
-              leads={leads}
+              leads={filteredLeads}
               campaigns={campaigns}
-              campaignMetrics={campaignMetrics}
+              campaignMetrics={filteredMetrics}
               metricsLoading={metricsLoading}
+              trends={dashboardTrends}
+              trendRange={trendRange}
+              setTrendRange={setTrendRange}
             />
           )}
         </div>
@@ -286,7 +318,7 @@ export default function AppDashboard() {
   );
 }
 
-function AgencyDashboard({ accounts, campaigns, leads, campaignMetrics, metricsLoading }: { accounts: Account[]; campaigns: Campaign[]; leads: Lead[]; campaignMetrics: CampaignMetricsHistory[]; metricsLoading: boolean }) {
+function AgencyDashboard({ accounts, campaigns, leads, campaignMetrics, metricsLoading, trends, trendRange, setTrendRange }: { accounts: Account[]; campaigns: Campaign[]; leads: Lead[]; campaignMetrics: CampaignMetricsHistory[]; metricsLoading: boolean; trends: DashboardTrend[]; trendRange: 7 | 30; setTrendRange: (v: 7 | 30) => void }) {
   const { currentAccountId } = useWorkspace();
 
   const subaccounts = useMemo(() => {
@@ -309,6 +341,12 @@ function AgencyDashboard({ accounts, campaigns, leads, campaignMetrics, metricsL
     return { totalLeads, activeCampaigns, messagesSent, responseRate };
   }, [leads, campaigns]);
 
+  // Extract sparkline data series from trends
+  const bookingsSparkline: SparklineDataPoint[] = useMemo(() => trends.map((t) => ({ date: t.date, value: t.bookings })), [trends]);
+  const responseRateSparkline: SparklineDataPoint[] = useMemo(() => trends.map((t) => ({ date: t.date, value: t.responseRate })), [trends]);
+  const leadsSparkline: SparklineDataPoint[] = useMemo(() => trends.map((t) => ({ date: t.date, value: t.leadsTargeted })), [trends]);
+  const messagesSparkline: SparklineDataPoint[] = useMemo(() => trends.map((t) => ({ date: t.date, value: t.messagesSent })), [trends]);
+
   return (
     <div className="mt-6 space-y-12" data-testid="agency-dashboard">
       {/* Hero KPI + Secondary KPI cards grid */}
@@ -328,21 +366,27 @@ function AgencyDashboard({ accounts, campaigns, leads, campaignMetrics, metricsL
               </div>
               <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest" data-testid="stat-bookings-label">Calls Booked</span>
             </div>
-            <div className="text-5xl md:text-6xl font-black tracking-tight text-foreground" data-testid="stat-bookings-value" style={{ lineHeight: 1.1 }}>
-              {totalCallsBooked}
+            <div className="flex items-end gap-3">
+              <div className="text-5xl md:text-6xl font-black tracking-tight text-foreground" data-testid="stat-bookings-value" style={{ lineHeight: 1.1 }}>
+                {totalCallsBooked}
+              </div>
+              <TrendIndicator data={bookingsSparkline} color="#FCB803" />
             </div>
           </div>
-          <div className="relative z-10 mt-4">
+          <div className="relative z-10 mt-2">
+            <KpiSparkline data={bookingsSparkline} color="#FCB803" height={48} gradientId="hero-bookings-spark" />
+          </div>
+          <div className="relative z-10 mt-2 flex items-center justify-between">
             <div className="text-xs text-muted-foreground font-medium">North Star KPI</div>
-            <div className="h-1.5 w-16 rounded-full mt-2" style={{ backgroundColor: '#FCB803' }} />
+            <TrendRangeToggle value={trendRange} onChange={setTrendRange} />
           </div>
         </div>
 
         {/* Secondary KPI cards — response rate, total leads, active campaigns, messages sent */}
-        <Stat label="Response Rate" value={`${agencyStats.responseRate}%`} testId="stat-response-rate" icon={<TrendingUp className="w-4 h-4" />} />
-        <Stat label="Total Leads" value={String(agencyStats.totalLeads)} testId="stat-total-leads" icon={<Users className="w-4 h-4" />} />
+        <Stat label="Response Rate" value={`${agencyStats.responseRate}%`} testId="stat-response-rate" icon={<TrendingUp className="w-4 h-4" />} sparklineData={responseRateSparkline} sparklineColor="#10b981" />
+        <Stat label="Total Leads" value={String(agencyStats.totalLeads)} testId="stat-total-leads" icon={<Users className="w-4 h-4" />} sparklineData={leadsSparkline} sparklineColor="#3b82f6" />
         <Stat label="Active Campaigns" value={String(agencyStats.activeCampaigns)} testId="stat-active-campaigns" icon={<Target className="w-4 h-4" />} />
-        <Stat label="Messages Sent" value={String(agencyStats.messagesSent)} testId="stat-messages-sent" icon={<MessageSquare className="w-4 h-4" />} />
+        <Stat label="Messages Sent" value={String(agencyStats.messagesSent)} testId="stat-messages-sent" icon={<MessageSquare className="w-4 h-4" />} sparklineData={messagesSparkline} sparklineColor="#8b5cf6" />
       </div>
 
       <QuickJumpCards />
@@ -351,7 +395,10 @@ function AgencyDashboard({ accounts, campaigns, leads, campaignMetrics, metricsL
         metrics={campaignMetrics}
         loading={metricsLoading}
       />
-      <HotLeadsWidget leads={leads} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <HotLeadsWidget leads={leads} />
+        <LeadScoreDistributionChart leads={leads} />
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {subaccounts.map((acc: any) => {
           const accCampaigns = campaigns.filter((c: any) => (c.account_id || c.accounts_id) === acc.id);
@@ -411,6 +458,9 @@ function SubaccountDashboard({
   campaigns,
   campaignMetrics,
   metricsLoading,
+  trends,
+  trendRange,
+  setTrendRange,
 }: {
   accountId: number;
   selectedCampaignId: number | "all";
@@ -426,6 +476,9 @@ function SubaccountDashboard({
   campaigns: Campaign[];
   campaignMetrics: CampaignMetricsHistory[];
   metricsLoading: boolean;
+  trends: DashboardTrend[];
+  trendRange: 7 | 30;
+  setTrendRange: (v: 7 | 30) => void;
 }) {
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
@@ -470,6 +523,12 @@ function SubaccountDashboard({
     { name: "Dec", leads: 1400 },
   ], []);
 
+  // Extract sparkline data series from trends
+  const bookingsSparkline: SparklineDataPoint[] = useMemo(() => trends.map((t) => ({ date: t.date, value: t.bookings })), [trends]);
+  const responseRateSparkline: SparklineDataPoint[] = useMemo(() => trends.map((t) => ({ date: t.date, value: t.responseRate })), [trends]);
+  const leadsSparkline: SparklineDataPoint[] = useMemo(() => trends.map((t) => ({ date: t.date, value: t.leadsTargeted })), [trends]);
+  const messagesSparkline: SparklineDataPoint[] = useMemo(() => trends.map((t) => ({ date: t.date, value: t.messagesSent })), [trends]);
+
   return (
     <div className="mt-0 space-y-12 flex flex-col" data-testid="subaccount-dashboard">
       <QuickJumpCards />
@@ -490,25 +549,34 @@ function SubaccountDashboard({
                 </div>
                 <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest" data-testid="stat-bookings-label">Calls Booked</span>
               </div>
-              <div className="text-5xl md:text-6xl font-black tracking-tight text-foreground" data-testid="stat-bookings-value" style={{ lineHeight: 1.1 }}>
-                {stats.callsBooked}
+              <div className="flex items-end gap-3">
+                <div className="text-5xl md:text-6xl font-black tracking-tight text-foreground" data-testid="stat-bookings-value" style={{ lineHeight: 1.1 }}>
+                  {stats.callsBooked}
+                </div>
+                <TrendIndicator data={bookingsSparkline} color="#FCB803" />
               </div>
             </div>
-            <div className="relative z-10 mt-4">
+            <div className="relative z-10 mt-2">
+              <KpiSparkline data={bookingsSparkline} color="#FCB803" height={48} gradientId="sub-hero-bookings-spark" />
+            </div>
+            <div className="relative z-10 mt-2 flex items-center justify-between">
               <div className="text-xs text-muted-foreground font-medium">North Star KPI</div>
-              <div className="h-1.5 w-16 rounded-full mt-2" style={{ backgroundColor: '#FCB803' }} />
+              <TrendRangeToggle value={trendRange} onChange={setTrendRange} />
             </div>
           </div>
 
           {/* Secondary KPI cards — response rate, total leads, active campaigns, messages sent */}
-          <Stat label="Response Rate" value={`${stats.responseRate}%`} testId="stat-response-rate" icon={<TrendingUp className="w-4 h-4" />} />
-          <Stat label="Total Leads" value={String(stats.totalLeads)} testId="stat-total-leads" icon={<Users className="w-4 h-4" />} />
+          <Stat label="Response Rate" value={`${stats.responseRate}%`} testId="stat-response-rate" icon={<TrendingUp className="w-4 h-4" />} sparklineData={responseRateSparkline} sparklineColor="#10b981" />
+          <Stat label="Total Leads" value={String(stats.totalLeads)} testId="stat-total-leads" icon={<Users className="w-4 h-4" />} sparklineData={leadsSparkline} sparklineColor="#3b82f6" />
           <Stat label="Active Campaigns" value={String(stats.activeCampaigns)} testId="stat-active-campaigns" icon={<Target className="w-4 h-4" />} />
-          <Stat label="Messages Sent" value={String(stats.messagesSent)} testId="stat-messages-sent" icon={<MessageSquare className="w-4 h-4" />} />
+          <Stat label="Messages Sent" value={String(stats.messagesSent)} testId="stat-messages-sent" icon={<MessageSquare className="w-4 h-4" />} sparklineData={messagesSparkline} sparklineColor="#8b5cf6" />
         </div>
       </div>
 
-      <HotLeadsWidget leads={leads} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <HotLeadsWidget leads={leads} />
+        <LeadScoreDistributionChart leads={leads.filter((l: any) => (l.account_id || l.accounts_id) === accountId)} />
+      </div>
 
       <CampaignPerformanceCards
         campaigns={campaigns.filter((c: any) => (c.account_id || c.accounts_id || c.Accounts_id) === accountId)}
@@ -687,19 +755,38 @@ function Stat({
   value,
   testId,
   icon,
+  sparklineData,
+  sparklineColor,
 }: {
   label: string;
   value: string;
   testId: string;
   icon?: React.ReactNode;
+  sparklineData?: SparklineDataPoint[];
+  sparklineColor?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm" data-testid={testId}>
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm flex flex-col justify-between" data-testid={testId}>
       <div className="flex items-center justify-between mb-2">
         <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider" data-testid={`${testId}-label`}>{label}</div>
         <div className="text-muted-foreground">{icon}</div>
       </div>
-      <div className="text-2xl font-black tracking-tight text-foreground" data-testid={`${testId}-value`}>{value}</div>
+      <div className="flex items-end gap-2 mb-1">
+        <div className="text-2xl font-black tracking-tight text-foreground" data-testid={`${testId}-value`}>{value}</div>
+        {sparklineData && sparklineData.length >= 2 && (
+          <TrendIndicator data={sparklineData} />
+        )}
+      </div>
+      {sparklineData && sparklineData.length >= 2 && (
+        <div className="mt-1">
+          <KpiSparkline
+            data={sparklineData}
+            color={sparklineColor || "#3b82f6"}
+            height={28}
+            gradientId={`stat-spark-${testId}`}
+          />
+        </div>
+      )}
     </div>
   );
 }
