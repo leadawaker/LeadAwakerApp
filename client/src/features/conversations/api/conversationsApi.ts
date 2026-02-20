@@ -23,6 +23,16 @@ export const fetchInteractionsByLeadId = async (leadId: number) => {
   return Array.isArray(data) ? data : data?.list || [];
 };
 
+export const updateLeadTakeover = async (leadId: number, manualTakeover: boolean) => {
+  const res = await apiFetch(`/api/leads/${leadId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ manual_takeover: manualTakeover }),
+  });
+  if (!res.ok) throw new Error("Failed to update lead takeover state");
+  return await res.json();
+};
+
 export const sendMessage = async (payload: {
   leadsId: number;
   accountsId: number;

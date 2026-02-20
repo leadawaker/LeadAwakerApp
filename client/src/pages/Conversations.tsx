@@ -33,7 +33,7 @@ export default function ConversationsPage() {
     return filterAccountId as number;
   }, [isAgencyUser, filterAccountId, currentAccountId]);
 
-  const { threads, loading, error, sending, handleSend, refresh } = useConversationsData(
+  const { threads, loading, error, sending, handleSend, handleToggleTakeover, refresh } = useConversationsData(
     effectiveAccountId,
     campaignId,
     tab,
@@ -128,6 +128,7 @@ export default function ConversationsPage() {
               selected={selected}
               sending={sending}
               onSend={handleSend}
+              onToggleTakeover={handleToggleTakeover}
               className={cn(mobileView === "inbox" ? "hidden md:flex" : "flex")}
             />
 

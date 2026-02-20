@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bot, User, UserCheck } from "lucide-react";
+import { Bot, User, UserCheck, Check, CheckCheck, Clock, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import type { Thread, Interaction } from "../hooks/useConversationsData";
@@ -162,6 +162,77 @@ export function ChatPanel({ selected, sending, onSend, onToggleTakeover, classNa
   );
 }
 
+/** Delivery status icon for outbound messages. */
+interface MessageStatusIconProps {
+  status: string;
+  isSending: boolean;
+  isSent: boolean;
+  isDelivered: boolean;
+  isRead: boolean;
+  isFailed: boolean;
+}
+
+function MessageStatusIcon({ isSending, isSent, isDelivered, isRead, isFailed }: MessageStatusIconProps) {
+  if (isSending) {
+    return (
+      <span
+        className="inline-flex items-center gap-0.5 ml-1"
+        data-testid="status-sending"
+        title="Sending…"
+      >
+        <Clock className="w-3 h-3 animate-pulse opacity-70" />
+        <span className="text-[10px] italic opacity-70">sending…</span>
+      </span>
+    );
+  }
+  if (isFailed) {
+    return (
+      <span
+        className="inline-flex items-center gap-0.5 ml-1 text-destructive"
+        data-testid="status-failed"
+        title="Message failed to send"
+      >
+        <AlertCircle className="w-3 h-3" />
+        <span className="text-[10px] font-semibold">failed</span>
+      </span>
+    );
+  }
+  if (isRead) {
+    return (
+      <span
+        className="inline-flex items-center ml-1 text-sky-300"
+        data-testid="status-read"
+        title="Read"
+      >
+        <CheckCheck className="w-3.5 h-3.5" />
+      </span>
+    );
+  }
+  if (isDelivered) {
+    return (
+      <span
+        className="inline-flex items-center ml-1 opacity-80"
+        data-testid="status-delivered"
+        title="Delivered"
+      >
+        <CheckCheck className="w-3.5 h-3.5" />
+      </span>
+    );
+  }
+  if (isSent) {
+    return (
+      <span
+        className="inline-flex items-center ml-1 opacity-60"
+        data-testid="status-sent"
+        title="Sent"
+      >
+        <Check className="w-3 h-3" />
+      </span>
+    );
+  }
+  return null;
+}
+
 /** Returns true if this interaction was generated/sent by the AI/automation system */
 function isAiMessage(item: Interaction): boolean {
   if (item.ai_generated === true) return true;
@@ -192,8 +263,13 @@ function isManualFollowUp(item: Interaction): boolean {
 function ChatBubble({ item }: { item: Interaction }) {
   const outbound = item.direction === "Outbound";
   const inbound = !outbound;
-  const isFailed = item.status === "failed";
-  const isSending = item.status === "sending";
+  // Normalise status to lowercase so we handle "Sent", "sent", "SENT" equally
+  const statusNorm = (item.status ?? "").toLowerCase();
+  const isFailed = statusNorm === "failed";
+  const isSending = statusNorm === "sending";
+  const isSent = statusNorm === "sent";
+  const isDelivered = statusNorm === "delivered";
+  const isRead = statusNorm === "read";
   const aiMsg = outbound && isAiMessage(item);
   const humanAgentMsg = outbound && isHumanAgentMessage(item);
   const manualFollowUp = isManualFollowUp(item);
@@ -274,11 +350,17 @@ function ChatBubble({ item }: { item: Interaction }) {
             ? new Date(item.created_at ?? item.createdAt).toLocaleString()
             : ""}{" "}
           • {item.type}
-          {isSending && <span className="ml-1 italic">sending…</span>}
-          {isFailed && <span className="ml-1 text-destructive font-semibold">failed</span>}
-          {item.status === "delivered" && <span className="ml-1">✓✓</span>}
-          {item.status === "read" && <span className="ml-1 text-brand-blue">✓✓</span>}
-          {item.status === "sent" && <span className="ml-1">✓</span>}
+          {/* Message delivery status icons — outbound messages only */}
+          {outbound && (
+            <MessageStatusIcon
+              status={statusNorm}
+              isSending={isSending}
+              isSent={isSent}
+              isDelivered={isDelivered}
+              isRead={isRead}
+              isFailed={isFailed}
+            />
+          )}
         </div>
       </div>
     </div>
