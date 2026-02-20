@@ -11,7 +11,7 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Settings</h1>
 
         <div className="mt-6 grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6" data-testid="grid-settings">
-          <section className="rounded-2xl border border-border bg-background overflow-hidden" data-testid="card-edit-profile">
+          <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-edit-profile">
             <div className="p-4 border-b border-border" data-testid="card-edit-profile-head">
               <div className="font-semibold" data-testid="text-profile-title">Edit profile</div>
               <div className="text-xs text-muted-foreground" data-testid="text-profile-sub">
@@ -36,7 +36,7 @@ export default function SettingsPage() {
           </section>
 
           <div className="space-y-6" data-testid="col-settings-right">
-            <section className="rounded-2xl border border-border bg-background overflow-hidden" data-testid="card-reset-password">
+            <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-reset-password">
               <div className="p-4 border-b border-border" data-testid="card-reset-password-head">
                 <div className="font-semibold" data-testid="text-password-title">Reset password</div>
                 <div className="text-xs text-muted-foreground" data-testid="text-password-sub">
@@ -54,7 +54,7 @@ export default function SettingsPage() {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-border bg-background overflow-hidden" data-testid="card-user-management">
+            <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-user-management">
               <div className="p-4 border-b border-border" data-testid="card-user-management-head">
                 <div className="font-semibold" data-testid="text-users-title">User management</div>
                 <div className="text-xs text-muted-foreground" data-testid="text-users-sub">

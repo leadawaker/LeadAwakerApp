@@ -132,12 +132,12 @@ export default function UsersPage() {
 
   return (
     <CrmShell>
-      <div className="bg-[#F6F5FA] h-full overflow-hidden flex flex-col" data-testid="page-users">
+      <div className="h-full overflow-hidden flex flex-col" data-testid="page-users">
         <div className="flex-1 min-h-0 px-6 py-6 flex flex-col">
           <div className="flex items-center justify-between mb-6 shrink-0">
             <div className="flex items-center gap-2" data-testid="bar-users">
               <input
-                className="h-10 w-[320px] rounded-xl border border-slate-200 bg-white px-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                className="h-10 w-[320px] rounded-xl border border-border bg-card px-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-foreground"
                 placeholder="Search name or email…"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -155,8 +155,8 @@ export default function UsersPage() {
           ) : loading ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">Loading users…</div>
           ) : (
-            <div className="flex-1 min-h-0 bg-white rounded-[32px] border border-slate-200 shadow-sm flex flex-col overflow-hidden" data-testid="table-users">
-              <div className="shrink-0 grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_100px_100px] text-[11px] uppercase tracking-wider font-bold text-muted-foreground bg-slate-50 border-b border-slate-100 px-6 py-4 z-10">
+            <div className="flex-1 min-h-0 bg-card rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden" data-testid="table-users">
+              <div className="shrink-0 grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_100px_100px] text-[11px] uppercase tracking-wider font-bold text-muted-foreground bg-muted/50 border-b border-border px-6 py-4 z-10">
                 <div>ID</div>
                 <div>Name</div>
                 <div>Account</div>
@@ -166,18 +166,18 @@ export default function UsersPage() {
                 <div>Status</div>
                 <div className="text-right">Actions</div>
               </div>
-              <div className="flex-1 overflow-y-auto divide-y divide-slate-100 ">
+              <div className="flex-1 overflow-y-auto divide-y divide-border ">
                 {rows.map((u) => (
-                  <div key={u.id} className="grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_100px_100px] px-6 py-5 text-sm items-center hover:bg-slate-50/50 transition-colors" data-testid={`row-user-${u.id}`}>
+                  <div key={u.id} className="grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_100px_100px] px-6 py-5 text-sm items-center hover:bg-muted/50 transition-colors" data-testid={`row-user-${u.id}`}>
                     <div className="text-muted-foreground font-mono text-xs">#{u.users_id || u.id}</div>
-                    <div className="font-semibold text-slate-900">{u.full_name}</div>
-                    <div className="text-slate-500 truncate pr-4">{u.Accounts || u.accounts_id || ""}</div>
-                    <div className="text-slate-500 truncate pr-4">{u.email}</div>
-                    <div className="text-slate-500">{u.phone}</div>
+                    <div className="font-semibold text-foreground">{u.full_name}</div>
+                    <div className="text-muted-foreground truncate pr-4">{u.Accounts || u.accounts_id || ""}</div>
+                    <div className="text-muted-foreground truncate pr-4">{u.email}</div>
+                    <div className="text-muted-foreground">{u.phone}</div>
                     <div>
                       <span className={cn(
                         "px-2.5 py-1 rounded-lg text-xs font-medium",
-                        u.role === 'Admin' ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-100 text-slate-600'
+                        u.role === 'Admin' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' : 'bg-muted text-muted-foreground'
                       )}>
                         {u.role}
                       </span>
@@ -185,7 +185,7 @@ export default function UsersPage() {
                     <div data-testid={`text-user-status-${u.id}`}>
                       <span className={cn(
                         "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase",
-                        u.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
+                        u.status === 'Active' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-muted text-muted-foreground'
                       )}>
                         {u.status}
                       </span>
@@ -195,7 +195,7 @@ export default function UsersPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 rounded-lg hover:bg-slate-100"
+                          className="h-8 rounded-lg hover:bg-muted"
                           onClick={() => setEditingUser(u)}
                           data-testid={`button-edit-user-${u.id}`}
                         >

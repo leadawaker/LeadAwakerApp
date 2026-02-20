@@ -133,8 +133,8 @@ export default function CalendarPage() {
     return (
       <CrmShell>
         <div className="flex items-center justify-center py-20" data-testid="page-calendar">
-          <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-          <span className="ml-3 text-sm text-slate-500 font-medium">Loading calendar...</span>
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          <span className="ml-3 text-sm text-muted-foreground font-medium">Loading calendar...</span>
         </div>
       </CrmShell>
     );
@@ -149,7 +149,7 @@ export default function CalendarPage() {
         </div>
 
         <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-4" data-testid="layout-calendar">
-          <div className="border border-border bg-white overflow-hidden flex flex-col h-full rounded-2xl" data-testid="calendar-main">
+          <div className="border border-border bg-card shadow-sm overflow-hidden flex flex-col h-full rounded-2xl" data-testid="calendar-main">
             <div className="p-4 border-b border-border flex items-center justify-between shrink-0">
               <div className="flex items-center gap-4">
                 <DropdownMenu.Root>
@@ -231,7 +231,7 @@ export default function CalendarPage() {
                         </div>
                         {d.count > 0 && (
                           <div className="flex justify-center mt-2">
-                            <div className="h-6 w-6 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shadow-sm">
+                            <div className="h-6 w-6 rounded-full bg-brand-blue text-brand-blue-foreground text-[10px] font-bold flex items-center justify-center shadow-sm">
                               {d.count}
                             </div>
                           </div>
@@ -294,7 +294,7 @@ export default function CalendarPage() {
             )}
           </div>
 
-          <div className="bg-white flex flex-col overflow-hidden h-full rounded-2xl border border-border" data-testid="calendar-list">
+          <div className="bg-card flex flex-col overflow-hidden h-full rounded-2xl border border-border shadow-sm" data-testid="calendar-list">
             <div className="p-4 border-b border-border bg-muted/5 shrink-0">
               <div className="font-semibold text-sm" data-testid="text-list-title">
                 {selectedDate ? `Appointments for ${selectedDate}` : "Upcoming Appointments"}

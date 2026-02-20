@@ -1,4 +1,4 @@
-import { Lead } from "@/data/mocks";
+import type { Lead } from "@/types/models";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +44,7 @@ export function LeadCard({ lead, active }: { lead: Lead; active: boolean }) {
   return (
     <div
       className={cn(
-        "rounded-2xl border border-slate-200 p-4 transition-all duration-300 group/lead",
+        "rounded-2xl border border-border bg-card shadow-sm p-4 transition-all duration-300 group/lead",
         active ? "bg-primary/5" : "bg-background hover:bg-muted/10",
       )}
       data-testid={`card-lead-${lead.id}`}
@@ -54,16 +54,16 @@ export function LeadCard({ lead, active }: { lead: Lead; active: boolean }) {
           <div className="font-semibold truncate" data-testid={`text-lead-name-${lead.id}`}>
             {lead.full_name}
           </div>
-          
+
           <div className="overflow-visible group-hover/lead:max-h-40 transition-all duration-300 ease-in-out">
-            <div className="pt-2 flex flex-col gap-1.5 border-t border-slate-100 mt-2 mb-2">
+            <div className="pt-2 flex flex-col gap-1.5 border-t border-border mt-2 mb-2">
               <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                <span className="opacity-50 font-bold uppercase text-[9px]">Email</span> 
-                <span className="text-slate-900 font-medium">{lead.email}</span>
+                <span className="opacity-50 font-bold uppercase text-[9px]">Email</span>
+                <span className="text-foreground font-medium">{lead.email}</span>
               </div>
               <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                 <span className="opacity-50 font-bold uppercase text-[9px]">Phone</span>
-                <span className="text-slate-900 font-medium">{lead.phone}</span>
+                <span className="text-foreground font-medium">{lead.phone}</span>
               </div>
             </div>
           </div>
@@ -77,10 +77,10 @@ export function LeadCard({ lead, active }: { lead: Lead; active: boolean }) {
                 const tagInfo = CSV_TAGS.find(t => t.name === tag);
                 const color = tagInfo?.color || '#64748B';
                 return (
-                  <Badge 
-                    key={idx} 
+                  <Badge
+                    key={idx}
                     className="text-[11px] px-2.5 h-6 font-bold border shadow-none rounded-lg"
-                    style={{ 
+                    style={{
                       backgroundColor: `${color}15`,
                       color: color,
                       borderColor: `${color}30`

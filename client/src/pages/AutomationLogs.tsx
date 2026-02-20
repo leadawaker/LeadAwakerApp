@@ -16,13 +16,13 @@ import {
 import { cn } from "@/lib/utils";
 
 const STATUS_CONFIG: Record<string, { color: string; icon: any }> = {
-  success: { color: "text-emerald-500 bg-emerald-50 border-emerald-100", icon: CheckCircle2 },
-  failed: { color: "text-rose-500 bg-rose-50 border-rose-100", icon: XCircle },
-  skipped: { color: "text-slate-500 bg-slate-50 border-slate-100", icon: AlertCircle },
-  waiting: { color: "text-amber-500 bg-amber-50 border-amber-100", icon: Clock },
-  retrying: { color: "text-indigo-500 bg-indigo-50 border-indigo-100", icon: RotateCcw },
-  started: { color: "text-blue-500 bg-blue-50 border-blue-100", icon: PlayCircle },
-  error: { color: "text-rose-500 bg-rose-50 border-rose-100", icon: XCircle },
+  success: { color: "text-[#10b981] bg-[#10b981]/10 border-[#10b981]/20", icon: CheckCircle2 },
+  failed: { color: "text-[#f43f5e] bg-[#f43f5e]/10 border-[#f43f5e]/20", icon: XCircle },
+  skipped: { color: "text-muted-foreground bg-muted/50 border-border", icon: AlertCircle },
+  waiting: { color: "text-[#f59e0b] bg-[#f59e0b]/10 border-[#f59e0b]/20", icon: Clock },
+  retrying: { color: "text-[#6366f1] bg-[#6366f1]/10 border-[#6366f1]/20", icon: RotateCcw },
+  started: { color: "text-[#3b82f6] bg-[#3b82f6]/10 border-[#3b82f6]/20", icon: PlayCircle },
+  error: { color: "text-[#f43f5e] bg-[#f43f5e]/10 border-[#f43f5e]/20", icon: XCircle },
 };
 
 export default function AutomationLogsPage() {
@@ -125,11 +125,11 @@ export default function AutomationLogsPage() {
           <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">Loading automation logs…</div>
         ) : (
           <div
-            className="flex-1 min-h-0 bg-white rounded-2xl border border-border flex flex-col overflow-hidden relative"
+            className="flex-1 min-h-0 bg-card rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden relative"
             data-testid="table-logs"
           >
             {/* Header */}
-            <div className="shrink-0 grid grid-cols-[100px_160px_1fr_1fr_1fr_180px] gap-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-white border-b border-border/50 px-6 py-4 sticky top-0 z-10">
+            <div className="shrink-0 grid grid-cols-[100px_160px_1fr_1fr_1fr_180px] gap-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-card border-b border-border px-6 py-4 sticky top-0 z-10">
               <div>Execution</div>
               <div>Status</div>
               <div>Lead</div>
@@ -148,7 +148,7 @@ export default function AutomationLogsPage() {
                 return (
                   <div
                     key={r.id || r.Id || idx}
-                    className="grid grid-cols-[100px_160px_1fr_1fr_1fr_180px] gap-4 px-6 py-4 text-sm items-center hover:bg-muted/5 transition-colors bg-white"
+                    className="grid grid-cols-[100px_160px_1fr_1fr_1fr_180px] gap-4 px-6 py-4 text-sm items-center hover:bg-muted/30 transition-colors bg-card"
                   >
                     <div className="font-mono text-xs text-muted-foreground">
                       #{r.execution_time_ms || r.id || r.Id}
@@ -196,7 +196,7 @@ export default function AutomationLogsPage() {
 
             {/* Pagination (attached to card bottom) */}
             {totalPages > 1 && (
-              <div className="shrink-0 border-t border-border bg-white rounded-b-[20px]">
+              <div className="shrink-0 border-t border-border bg-card rounded-b-2xl">
                 <div className="flex items-center justify-center gap-3 py-2">
                   {Array.from({ length: totalPages }).map((_, i) => (
                     <button
@@ -206,7 +206,7 @@ export default function AutomationLogsPage() {
                         "text-xs font-bold transition-colors",
                         page === i
                           ? "text-blue-600"
-                          : "text-slate-400 hover:text-slate-600"
+                          : "text-muted-foreground hover:text-foreground"
                       )}
                     >
                       {i + 1}

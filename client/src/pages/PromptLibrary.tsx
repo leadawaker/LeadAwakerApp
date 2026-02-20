@@ -45,7 +45,7 @@ export default function PromptLibraryPage() {
       <div className="px-6 py-6 h-full flex flex-col" data-testid="page-prompt-library">
         <div className="flex items-center gap-2 mb-6" data-testid="bar-prompts">
           <input
-            className="h-10 w-[320px] max-w-full rounded-xl border border-border bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-10 w-[320px] max-w-full rounded-xl border border-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20"
             placeholder="Search prompts…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -64,8 +64,8 @@ export default function PromptLibraryPage() {
         ) : (
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-2" data-testid="grid-prompts">
             {rows.map((p: any) => (
-              <div key={p.id || p.Id} className="rounded-2xl border border-border bg-white p-4 h-fit shadow-sm" data-testid={`card-prompt-${p.id || p.Id}`}>
-                <div className="font-semibold text-slate-900" data-testid={`text-prompt-name-${p.id || p.Id}`}>{p.name}</div>
+              <div key={p.id || p.Id} className="rounded-2xl border border-border bg-card p-4 h-fit shadow-sm" data-testid={`card-prompt-${p.id || p.Id}`}>
+                <div className="font-semibold text-foreground" data-testid={`text-prompt-name-${p.id || p.Id}`}>{p.name}</div>
                 <div className="mt-1 text-xs text-muted-foreground" data-testid={`text-prompt-usecase-${p.id || p.Id}`}>{p.use_case}</div>
                 <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                   <span className="font-medium" data-testid={`text-prompt-model-${p.id || p.Id}`}>model: {p.model}</span>
