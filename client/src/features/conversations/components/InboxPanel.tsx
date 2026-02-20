@@ -52,6 +52,8 @@ interface InboxPanelProps {
   /** Current sort order */
   sortOrder?: SortOrder;
   onSortOrderChange?: (order: SortOrder) => void;
+  /** Optional callback to clear all filters (shown in empty state when filters are active) */
+  onClearFilters?: () => void;
   className?: string;
 }
 
@@ -76,6 +78,7 @@ export function InboxPanel({
   readLeadIds = new Set(),
   sortOrder = "newest",
   onSortOrderChange,
+  onClearFilters,
   className,
 }: InboxPanelProps) {
   const [showFilters, setShowFilters] = useState(false);
@@ -382,10 +385,46 @@ export function InboxPanel({
               );
             })}
             {displayThreads.length === 0 && !loading && (
-              <DataEmptyState
-                variant={searchQuery ? "search" : "conversations"}
-                compact
-              />
+              (() => {
+                if (searchQuery) {
+                  // Search returned no results
+                  return (
+                    <DataEmptyState
+                      variant="search"
+                      title="No conversations found"
+                      description={`No conversations match "${searchQuery}". Try a different name or phone number.`}
+                      compact
+                      data-testid="empty-state-search"
+                    />
+                  );
+                }
+                if (hasActiveFilters || tab === "unread") {
+                  // Filters or unread tab returned no results
+                  const filterDesc =
+                    tab === "unread"
+                      ? "You have no unread conversations right now."
+                      : "No conversations match the selected filters. Try adjusting or clearing your filters.";
+                  return (
+                    <DataEmptyState
+                      variant="search"
+                      title={tab === "unread" ? "All caught up!" : "No matches"}
+                      description={filterDesc}
+                      actionLabel={hasActiveFilters ? "Clear filters" : undefined}
+                      onAction={hasActiveFilters && onClearFilters ? onClearFilters : undefined}
+                      compact
+                      data-testid="empty-state-filtered"
+                    />
+                  );
+                }
+                // No conversations at all
+                return (
+                  <DataEmptyState
+                    variant="conversations"
+                    compact
+                    data-testid="empty-state-no-conversations"
+                  />
+                );
+              })()
             )}
           </div>
         )}

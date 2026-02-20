@@ -54,6 +54,15 @@ export default function ConversationsPage() {
     setCampaignId("all");
   };
 
+  // Clear all active filters at once (used by empty state CTA)
+  const handleClearFilters = () => {
+    setFilterAccountId("all");
+    setCampaignId("all");
+    setAiStateFilter("all");
+    setSearchQuery("");
+    setTab("all");
+  };
+
   const selected = useMemo(() => {
     const byId = selectedLeadId
       ? threads.find((t) => t.lead.id === selectedLeadId) ?? null
@@ -148,6 +157,7 @@ export default function ConversationsPage() {
               readLeadIds={readLeadIds}
               sortOrder={sortOrder}
               onSortOrderChange={setSortOrder}
+              onClearFilters={handleClearFilters}
               className={cn(mobileView === "chat" ? "hidden md:flex" : "flex")}
             />
 
