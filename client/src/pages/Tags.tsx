@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/apiUtils";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SkeletonCardGrid } from "@/components/ui/skeleton";
 
 const TAG_CATEGORIES = [
   {
@@ -181,15 +182,17 @@ export default function TagsPage() {
   if (loading) {
     return (
       <CrmShell>
-        <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm py-12">Loading tags…</div>
+        <div className="py-4 px-1">
+          <SkeletonCardGrid count={9} columns="grid-cols-1 md:grid-cols-2 xl:grid-cols-3" />
+        </div>
       </CrmShell>
     );
   }
 
   return (
     <CrmShell>
-      <div className="py-6">
-        <div className="flex flex-col gap-6">
+      <div className="py-4">
+        <div className="flex flex-col gap-4">
           {/* TOP SEARCH & FILTERS */}
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="flex flex-1 gap-2 items-center w-full">

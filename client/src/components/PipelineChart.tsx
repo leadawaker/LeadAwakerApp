@@ -157,7 +157,7 @@ export default function PipelineChart() {
         <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 dark:text-white">
           {t("header.title")}
         </h2>
-        <p className="text-slate-500 dark:text-slate-400 text-[18px] pt-[20px] pb-[20px]">
+        <p className="text-slate-500 dark:text-slate-400 text-lg py-5">
           {t("header.subtitle")}
         </p>
       </div>

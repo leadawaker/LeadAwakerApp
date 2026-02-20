@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { SkeletonTable } from "@/components/ui/skeleton";
 
 interface AppUser {
   id: number;
@@ -133,7 +134,7 @@ export default function UsersPage() {
   return (
     <CrmShell>
       <div className="h-full overflow-hidden flex flex-col" data-testid="page-users">
-        <div className="flex-1 min-h-0 px-6 py-6 flex flex-col">
+        <div className="flex-1 min-h-0 py-4 flex flex-col">
           <div className="flex items-center justify-between mb-6 shrink-0">
             <div className="flex items-center gap-2" data-testid="bar-users">
               <input
@@ -153,7 +154,7 @@ export default function UsersPage() {
               isRetrying={loading}
             />
           ) : loading ? (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">Loading users…</div>
+            <SkeletonTable rows={6} columns={7} className="flex-1" />
           ) : (
             <div className="flex-1 min-h-0 bg-card rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden" data-testid="table-users">
               <div className="shrink-0 grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_100px_100px] text-[11px] uppercase tracking-wider font-bold text-muted-foreground bg-muted/50 border-b border-border px-6 py-4 z-10">

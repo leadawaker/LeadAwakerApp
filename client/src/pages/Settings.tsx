@@ -7,7 +7,7 @@ export default function SettingsPage() {
 
   return (
     <CrmShell>
-      <div className="px-6 py-6" data-testid="page-settings">
+      <div className="py-4" data-testid="page-settings">
         <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Settings</h1>
 
         <div className="mt-6 grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6" data-testid="grid-settings">

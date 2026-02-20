@@ -65,7 +65,7 @@ export function LeadDetailLayout({
   }, [messages]);
 
   return (
-    <div className="px-6 py-6" data-testid="page-contact-detail">
+    <div className="py-4" data-testid="page-contact-detail">
       {/* Top header */}
       <div className="flex items-start justify-between gap-4" data-testid="header-contact">
         <div className="min-w-0">

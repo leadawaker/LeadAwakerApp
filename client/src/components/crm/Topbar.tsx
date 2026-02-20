@@ -1,5 +1,5 @@
 import { useLocation, Link } from "wouter";
-import { Bell, Search, Settings, ChevronDown, Moon, Sun, ChevronRight, Home } from "lucide-react";
+import { Bell, Search, Settings, ChevronDown, Moon, Sun, ChevronRight, Home, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -23,7 +23,19 @@ type Campaign = {
   [key: string]: unknown;
 };
 
-export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string) => void; collapsed: boolean }) {
+export function Topbar({
+  onOpenPanel,
+  collapsed,
+  isMobileMenuOpen,
+  onToggleMobileMenu,
+  notificationsCount = 0,
+}: {
+  onOpenPanel: (panel: string) => void;
+  collapsed: boolean;
+  isMobileMenuOpen?: boolean;
+  onToggleMobileMenu?: () => void;
+  notificationsCount?: number;
+}) {
   const [location, setLocation] = useLocation();
   const { currentAccountId, currentAccount, setCurrentAccountId, isAgencyView, accounts, isAdmin } = useWorkspace();
   const { isDark, toggleTheme } = useTheme();
@@ -132,6 +144,7 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
   // User info from localStorage (set at login)
   const currentUserName = localStorage.getItem("leadawaker_user_name") || localStorage.getItem("leadawaker_account_name") || "User";
   const currentUserEmail = localStorage.getItem("leadawaker_user_email") || "";
+  const currentUserAvatar = localStorage.getItem("leadawaker_user_avatar") || "";
 
   // Generate initials from user name
   const userInitials = useMemo(() => {
@@ -145,13 +158,24 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 h-20 bg-background/50 backdrop-blur-xl z-50 flex items-center px-10 transition-all duration-200 border-b border-border/50 [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] pt-4",
-        collapsed ? "left-[80px]" : "left-[200px]"
+        "fixed top-0 right-0 h-20 bg-background/50 backdrop-blur-xl z-50 flex items-center px-4 md:px-10 transition-all duration-200 border-b border-border/50 [mask-image:linear-gradient(to_bottom,black_85%,transparent_100%)] pt-4",
+        "left-0",
+        "md:left-[80px]",
+        !collapsed && "md:left-[200px]"
       )}
       data-testid="header-crm-topbar"
     >
       <div className="flex-1 flex items-center justify-start gap-3">
-        <div className="h-8 w-1.5 bg-blue-600 rounded-full" />
+        {/* Hamburger button - mobile only */}
+        <button
+          onClick={onToggleMobileMenu}
+          className="md:hidden p-2 rounded-xl hover:bg-muted/40 text-foreground transition-colors"
+          data-testid="button-hamburger-menu"
+          aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+        >
+          {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
+        <div className="h-8 w-1.5 bg-brand-blue rounded-full hidden md:block" />
         <div className="flex flex-col gap-0.5">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">{currentTitle}</h1>
           <nav aria-label="Breadcrumb" data-testid="breadcrumb-nav">
@@ -184,8 +208,8 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
         </div>
       </div>
 
-      <div className="absolute right-10 flex items-center gap-6">
-        <div className="flex items-center gap-3">
+      <div className="absolute right-4 md:right-10 flex items-center gap-3 md:gap-6">
+        <div className="hidden md:flex items-center gap-3">
           {isAdmin ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -193,7 +217,7 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
                   variant="ghost"
                   className={cn(
                     "h-11 px-4 w-56 justify-between hover:bg-white dark:hover:bg-muted border border-border bg-white dark:bg-card rounded-xl text-sm font-semibold flex items-center gap-2",
-                    isAgencyView ? "text-yellow-600" : "text-blue-600"
+                    isAgencyView ? "text-brand-yellow" : "text-brand-blue"
                   )}
                   data-testid="button-account-selector"
                 >
@@ -214,13 +238,13 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
                     <div
                       className={cn(
                         "h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-bold",
-                        acc.id === 1 ? "bg-yellow-500 text-black" : "bg-blue-600 text-white",
+                        acc.id === 1 ? "bg-brand-yellow text-brand-yellow-foreground" : "bg-brand-blue text-brand-blue-foreground",
                       )}
                     >
                       {acc.name?.[0] || "?"}
                     </div>
                     {acc.name}
-                    {acc.id === 1 && <span className="ml-auto text-[10px] bg-yellow-100 text-yellow-900 px-1 rounded uppercase font-bold tracking-tighter">Agency</span>}
+                    {acc.id === 1 && <span className="ml-auto text-[10px] bg-brand-yellow/15 text-brand-yellow px-1 rounded uppercase font-bold tracking-tighter">Agency</span>}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -228,7 +252,7 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
           ) : (
             <div className={cn(
               "h-11 px-4 w-56 justify-start border border-border bg-white dark:bg-card rounded-xl text-sm font-semibold flex items-center gap-2",
-              isAgencyView ? "text-yellow-600" : "text-blue-600"
+              isAgencyView ? "text-brand-yellow" : "text-brand-blue"
             )}>
               <span className="truncate">{currentAccount?.name || "My Account"}</span>
             </div>
@@ -282,7 +306,7 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
             className="p-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
             data-testid="button-search-top"
           >
-            <Search className="h-[22px] w-[22px]" />
+            <Search className="h-5 w-5" />
           </button>
 
           {/* Dark mode toggle */}
@@ -292,7 +316,7 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
             data-testid="button-dark-mode-toggle"
             title={isDark ? "Switch to light mode" : "Switch to dark mode"}
           >
-            {isDark ? <Sun className="h-[22px] w-[22px]" /> : <Moon className="h-[22px] w-[22px]" />}
+            {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
 
           {/* Notifications */}
@@ -301,10 +325,12 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
             className="p-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
             data-testid="button-notifications"
           >
-            <Bell className="h-[22px] w-[22px]" />
-            <div className="absolute top-2 right-2 h-5 w-5 bg-blue-600 rounded-full flex items-center justify-center border-2 border-background">
-              <span className="text-[10px] font-bold text-white">3</span>
-            </div>
+            <Bell className="h-5 w-5" />
+            {notificationsCount > 0 && (
+              <div className="absolute top-2 right-2 h-5 w-5 bg-brand-blue rounded-full flex items-center justify-center border-2 border-background" data-testid="badge-notifications-count">
+                <span className="text-[10px] font-bold text-white">{notificationsCount > 9 ? '9+' : notificationsCount}</span>
+              </div>
+            )}
           </button>
 
           {/* Settings */}
@@ -313,7 +339,7 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
             className="p-3 text-muted-foreground hover:text-foreground hover:bg-muted/40 rounded-full transition-all relative"
             data-testid="button-settings-top"
           >
-            <Settings className="h-[22px] w-[22px]" />
+            <Settings className="h-5 w-5" />
           </button>
 
           {/* User avatar */}
@@ -324,7 +350,7 @@ export function Topbar({ onOpenPanel, collapsed }: { onOpenPanel: (panel: string
             title={currentUserName}
           >
             <Avatar className="h-9 w-9 border-2 border-primary/20">
-              <AvatarImage src="" alt={currentUserName} />
+              <AvatarImage src={currentUserAvatar} alt={currentUserName} />
               <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
                 {userInitials}
               </AvatarFallback>

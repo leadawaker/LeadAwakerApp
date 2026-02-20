@@ -3,8 +3,9 @@ import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLeads } from "@/hooks/useApiData";
 import { FiltersBar } from "@/components/crm/FiltersBar";
-import { ChevronLeft, ChevronRight, ChevronDown, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -132,9 +133,24 @@ export default function CalendarPage() {
   if (leadsLoading) {
     return (
       <CrmShell>
-        <div className="flex items-center justify-center py-20" data-testid="page-calendar">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-          <span className="ml-3 text-sm text-muted-foreground font-medium">Loading calendar...</span>
+        <div className="space-y-4 py-4" data-testid="page-calendar">
+          {/* Calendar header skeleton */}
+          <div className="flex items-center justify-between px-2">
+            <Skeleton className="h-8 w-40 rounded-lg" />
+            <div className="flex gap-2">
+              <Skeleton className="h-8 w-8 rounded" />
+              <Skeleton className="h-8 w-8 rounded" />
+            </div>
+          </div>
+          {/* Calendar grid skeleton */}
+          <div className="grid grid-cols-7 gap-px bg-border rounded-2xl overflow-hidden border border-border">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <Skeleton key={`h-${i}`} className="h-8 rounded-none" />
+            ))}
+            {Array.from({ length: 35 }).map((_, i) => (
+              <Skeleton key={i} className="h-20 rounded-none bg-card" />
+            ))}
+          </div>
         </div>
       </CrmShell>
     );
@@ -272,7 +288,7 @@ export default function CalendarPage() {
                               className="absolute left-0 right-0 border-t-2 border-red-500 z-30 pointer-events-none"
                               style={{ top: `${(currentTime.getHours() * 60 + currentTime.getMinutes()) * (80/60)}px` }}
                             >
-                              <div className="w-2 h-2 rounded-full bg-red-500 -ml-1 -mt-[5px]" />
+                              <div className="w-2 h-2 rounded-full bg-red-500 -ml-1 -mt-1" />
                             </div>
                           )}
                           {appts.filter(a => a.date === d.toLocaleDateString()).map(a => (

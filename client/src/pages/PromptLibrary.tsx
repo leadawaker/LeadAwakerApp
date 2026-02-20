@@ -3,6 +3,7 @@ import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { apiFetch } from "@/lib/apiUtils";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
+import { SkeletonCardGrid } from "@/components/ui/skeleton";
 
 export default function PromptLibraryPage() {
   const { currentAccountId } = useWorkspace();
@@ -42,7 +43,7 @@ export default function PromptLibraryPage() {
 
   return (
     <CrmShell>
-      <div className="px-6 py-6 h-full flex flex-col" data-testid="page-prompt-library">
+      <div className="py-4 h-full flex flex-col" data-testid="page-prompt-library">
         <div className="flex items-center gap-2 mb-6" data-testid="bar-prompts">
           <input
             className="h-10 w-[320px] max-w-full rounded-xl border border-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20"
@@ -60,7 +61,7 @@ export default function PromptLibraryPage() {
             isRetrying={loading}
           />
         ) : loading ? (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">Loading prompts…</div>
+          <SkeletonCardGrid count={6} columns="grid-cols-1 md:grid-cols-2 xl:grid-cols-3" className="flex-1" />
         ) : (
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-2" data-testid="grid-prompts">
             {rows.map((p: any) => (

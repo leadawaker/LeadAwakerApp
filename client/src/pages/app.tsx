@@ -125,7 +125,7 @@ export default function AppArea() {
 
           <Route component={() => (
             <CrmShell>
-              <div className="px-6 py-6" data-testid="page-app-notfound">
+              <div className="py-4" data-testid="page-app-notfound">
                 <div className="text-2xl font-extrabold tracking-tight">Not found</div>
                 <div className="mt-1 text-sm text-muted-foreground">This CRM page doesn't exist.</div>
               </div>
