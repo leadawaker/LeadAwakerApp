@@ -65,7 +65,7 @@ export default function SettingsPage() {
                 </button>
                 <button
                   type="button"
-                  className="h-10 w-full rounded-xl border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-sm font-semibold text-blue-700 dark:text-blue-400"
+                  className="h-10 w-full rounded-xl border border-brand-blue/30 bg-brand-blue/10 hover:bg-brand-blue/20 text-sm font-semibold text-brand-blue"
                   data-testid="button-toast-info"
                   onClick={() => toast({ variant: "info", title: "Info", description: "New campaign data is being synced." })}
                 >

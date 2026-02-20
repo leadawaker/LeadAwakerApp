@@ -210,11 +210,12 @@ export function LeadsTable() {
         <LeadFilters filters={leadFilters} onFiltersChange={setLeadFilters} />
         {/* Show active filter summary badges */}
         {leadFilters.pipelineStage && (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium">
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-blue/10 text-brand-blue text-xs font-medium">
             Stage: {leadFilters.pipelineStage}
             <button
               className="ml-0.5 hover:text-red-600"
               onClick={() => setLeadFilters({ ...leadFilters, pipelineStage: "" })}
+              aria-label="Clear pipeline stage filter"
             >
               &times;
             </button>
@@ -243,7 +244,7 @@ export function LeadsTable() {
           </span>
         )}
         {(leadFilters.scoreMin > 0 || leadFilters.scoreMax < 100) && (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 text-amber-700 text-xs font-medium">
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-yellow/10 text-brand-yellow text-xs font-medium">
             Score: {leadFilters.scoreMin}–{leadFilters.scoreMax}
             <button
               className="ml-0.5 hover:text-red-600"

@@ -199,6 +199,7 @@ export default function AutomationLogsPage() {
                 );
               })}
             </div>
+            </div>
 
             {/* Pagination (attached to card bottom) */}
             {totalPages > 1 && (
@@ -211,7 +212,7 @@ export default function AutomationLogsPage() {
                       className={cn(
                         "text-xs font-bold transition-colors",
                         page === i
-                          ? "text-blue-600"
+                          ? "text-brand-blue"
                           : "text-muted-foreground hover:text-foreground"
                       )}
                     >

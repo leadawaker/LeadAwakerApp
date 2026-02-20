@@ -489,7 +489,7 @@ const TruncatedCell = ({
     return (
       <Input
         autoFocus
-        className="h-8 w-auto min-w-[200px] max-w-none bg-card dark:bg-card shadow-lg border-blue-400 focus:ring-2 focus:ring-blue-100 relative z-30"
+        className="h-8 w-auto min-w-[200px] max-w-none bg-card dark:bg-card shadow-lg border-brand-blue focus:ring-2 focus:ring-brand-blue/20 relative z-30"
         style={{ width: `${widthCh}ch` }}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
@@ -520,7 +520,11 @@ const TruncatedCell = ({
     <div
       ref={ref}
       className="w-full min-h-[1.5rem] overflow-hidden whitespace-nowrap text-ellipsis cursor-text flex items-center"
+      role="button"
+      tabIndex={0}
+      aria-label={`Edit ${text || 'cell'}`}
       onClick={() => setIsEditing(true)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsEditing(true); } }}
     >
       {text || "\u00A0"}
     </div>
@@ -643,7 +647,7 @@ const SortableTableHead = ({
     >
       {children({ attributes, listeners })}
       <div
-        className="absolute right-[-4px] top-0 bottom-0 w-[8px] cursor-col-resize hover:bg-blue-400/50 active:bg-blue-500 z-20"
+        className="absolute right-[-4px] top-0 bottom-0 w-[8px] cursor-col-resize hover:bg-brand-blue/50 active:bg-brand-blue z-20"
         onMouseDown={(e) => handleResize(col, e)}
       />
     </TableHead>
@@ -1470,7 +1474,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                 return (
                   <React.Fragment key={groupName}>
                     {groupBy !== "None" && (
-                      <TableRow className="bg-muted/20 hover:bg-muted/20 border-y border-border/60 cursor-pointer" onClick={() => toggleGroupCollapse(groupName)}>
+                      <TableRow className="bg-muted/20 hover:bg-muted/20 border-y border-border/60 cursor-pointer" tabIndex={0} role="button" aria-label={`Toggle group ${groupName}`} onClick={() => toggleGroupCollapse(groupName)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleGroupCollapse(groupName); } }}>
                         <TableCell
                           colSpan={visibleCols.length + 1}
                           className="py-2 px-4"
@@ -1683,7 +1687,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                                     e.target.value,
                                                   )
                                                 }
-                                                className="bg-card dark:bg-secondary border-border focus:ring-blue-500"
+                                                className="bg-card dark:bg-secondary border-border focus:ring-brand-blue"
                                               />
                                             )}
                                           </div>

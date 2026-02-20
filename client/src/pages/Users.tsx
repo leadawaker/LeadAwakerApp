@@ -141,7 +141,7 @@ export default function UsersPage() {
           <div className="flex items-center justify-between mb-6 shrink-0">
             <div className="flex items-center gap-2 w-full md:w-auto" data-testid="bar-users">
               <input
-                className="h-10 w-full md:w-[320px] rounded-xl border border-border bg-card px-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-foreground"
+                className="h-10 w-full md:w-[320px] rounded-xl border border-border bg-card px-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all text-foreground"
                 placeholder="Search name or email…"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -188,7 +188,7 @@ export default function UsersPage() {
                     <div>
                       <span className={cn(
                         "px-2.5 py-1 rounded-lg text-xs font-medium",
-                        u.role === 'Admin' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' : 'bg-muted text-muted-foreground'
+                        u.role === 'Admin' ? 'bg-brand-yellow/20 text-brand-deep-blue dark:bg-brand-yellow/15 dark:text-brand-yellow' : 'bg-muted text-muted-foreground'
                       )}>
                         {u.role}
                       </span>

@@ -161,7 +161,7 @@ export default function Login() {
 
               <Button 
                 type="submit" 
-                className="w-full h-12 bg-primary hover:bg-yellow-400 hover:text-black text-white shadow-lg shadow-primary/20 hover:shadow-yellow-400/35 transition-all"
+                className="w-full h-12 bg-primary hover:bg-brand-yellow hover:text-brand-yellow-foreground text-white shadow-lg shadow-primary/20 hover:shadow-brand-yellow/35 transition-all"
                 disabled={isLoading}
                 data-testid="button-login"
               >

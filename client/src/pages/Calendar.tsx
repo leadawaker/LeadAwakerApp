@@ -165,10 +165,10 @@ export default function CalendarPage() {
           <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
         </div>
 
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-4" data-testid="layout-calendar">
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4" data-testid="layout-calendar">
           <div className="border border-border bg-card shadow-sm overflow-hidden flex flex-col h-full rounded-2xl" data-testid="calendar-main">
-            <div className="p-4 border-b border-border flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-4">
+            <div className="p-3 md:p-4 border-b border-border flex flex-wrap items-center justify-between gap-2 shrink-0">
+              <div className="flex flex-wrap items-center gap-2 md:gap-4">
                 <DropdownMenu.Root>
                   <DropdownMenu.Trigger asChild>
                     <button className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold transition-colors uppercase tracking-wider" data-testid="button-view-mode">
@@ -228,7 +228,11 @@ export default function CalendarPage() {
                     return (
                       <div
                         key={idx}
+                        role="button"
+                        tabIndex={0}
                         onClick={() => handleDateClick(d.date.toLocaleDateString())}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleDateClick(d.date.toLocaleDateString()); } }}
+                        aria-label={`Select ${d.date.toLocaleDateString()}`}
                         className={cn(
                           "min-h-[100px] border-b border-r border-border/60 last:border-r-0 p-2 cursor-pointer transition-colors hover:bg-muted/30 relative",
                           !inMonth && "bg-muted/5 opacity-40",
@@ -263,7 +267,7 @@ export default function CalendarPage() {
             {(viewMode === "week" || viewMode === "day") && (
               <div className="flex-1 overflow-y-auto relative flex" data-testid="grid-time">
                 <div className="w-16 border-r border-border bg-muted/5 flex flex-col shrink-0 relative">
-                  <div className="h-[65px] border-b border-border sticky top-0 bg-background/95 z-30" />
+                  <div className="h-[65px] border-b border-border/50 sticky top-0 bg-background/80 glass-divider z-30" />
                   {hours.map(h => (
                     <div key={h} className="h-20 border-b border-border/50 text-[10px] font-bold text-muted-foreground p-2 text-right relative">
                       <span className="absolute -bottom-2 right-2">
@@ -278,7 +282,7 @@ export default function CalendarPage() {
                     const isWeekend = d.getDay() === 0 || d.getDay() === 6;
                     return (
                       <div key={i} className={cn("relative border-r border-border/50 last:border-r-0", isWeekend && "bg-muted/5")}>
-                        <div className={cn("sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border p-2 text-center h-[65px] flex flex-col justify-center", isToday && "bg-primary/5")}>
+                        <div className={cn("sticky top-0 z-20 bg-background/80 glass-divider border-b border-border/50 p-2 text-center h-[65px] flex flex-col justify-center", isToday && "bg-primary/5")}>
                           <div className="text-[10px] font-bold text-muted-foreground uppercase">{MONTHS[d.getMonth()]}</div>
                           <div className={cn("text-lg font-black", isToday ? "text-primary" : "text-foreground")}>{d.getDate()}</div>
                         </div>
@@ -295,11 +299,11 @@ export default function CalendarPage() {
                           {appts.filter(a => a.date === d.toLocaleDateString()).map(a => (
                             <div 
                               key={a.id}
-                              className="absolute left-1 right-1 p-2 rounded-lg bg-blue-100 border-l-4 border-blue-600 shadow-sm z-10"
+                              className="absolute left-1 right-1 p-2 rounded-lg bg-brand-blue/10 border-l-4 border-brand-blue shadow-sm z-10"
                               style={{ top: `${(a.hour * 60 + a.minutes) * (80/60)}px`, height: '60px' }}
                             >
-                              <div className="text-[10px] font-bold text-blue-900 truncate">{a.lead_name}</div>
-                              <div className="text-[9px] font-medium text-blue-700">{a.time}</div>
+                              <div className="text-[10px] font-bold text-brand-deep-blue dark:text-brand-blue truncate">{a.lead_name}</div>
+                              <div className="text-[9px] font-medium text-brand-blue">{a.time}</div>
                             </div>
                           ))}
                         </div>
@@ -332,7 +336,7 @@ export default function CalendarPage() {
                       <div className="min-w-0">
                         <div className="font-bold text-sm truncate" data-testid={`text-appt-name-${a.id}`}>{a.lead_name}</div>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded uppercase">{a.time}</span>
+                          <span className="text-[10px] font-bold bg-brand-blue/10 text-brand-blue px-1.5 py-0.5 rounded uppercase">{a.time}</span>
                           <span className="text-[10px] text-muted-foreground font-medium">{a.formattedDate}</span>
                         </div>
                       </div>
