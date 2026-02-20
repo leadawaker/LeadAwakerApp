@@ -1,3 +1,38 @@
+## Session 2026-02-20 (19th) - Coding Agent
+
+### Completed Features:
+- Feature #23: Pipeline funnel visualization - PASSING
+  - Visual funnel showing lead conversion through pipeline stages
+  - All 7 default pipeline stages render: New, Contacted, Responded, Multiple Responses, Qualified, Booked, DND
+  - Each stage shows both count and percentage of total leads
+  - Funnel uses tapered design (wider at top, narrower at bottom) for proper funnel visualization
+  - Stage counts match real Leads Conversion_Status distribution from PostgreSQL
+  - Visual proportions reflect actual percentages (e.g., 50% for stages with 1 out of 2 leads)
+  - Color-coded left borders match pipeline stage colors
+  - Connector lines between stages show flow direction
+  - data-testid attributes for funnel container and each stage
+  - Zero JS console errors, no mock data patterns
+  - Verified via Playwright browser automation on subaccount dashboard view
+  - Agency dashboard unaffected (no regression)
+
+### Code Changes:
+- client/src/pages/AppDashboard.tsx:
+  - Enhanced Sales Funnel section with tapered funnel shape (progressively narrowing bars)
+  - Added percentage display alongside counts for each pipeline stage
+  - Added data-testid="pipeline-funnel" to container
+  - Added data-testid for each stage (funnel-stage-*, funnel-count-*, funnel-pct-*)
+  - Replaced simple horizontal bars with centered, color-accented funnel rows
+
+### Environment Notes:
+- Server on port 5001 (started fresh this session via npx tsx)
+- Vite dev server on port 5173
+- DB reachable, login via API worked (leadawaker@gmail.com / test123)
+- Playwright working via /home/gabriel/.npm-global/bin/playwright-cli
+
+### Current Status:
+- Feature #23 marked passing after browser verification
+- Note: Funnel code was already partially committed by prior agent session in feature #22 commit
+
 ## Session 2026-02-20 (18th) - Coding Agent
 
 ### Completed Features:
