@@ -2375,3 +2375,49 @@
 - 70/207 features passing (69 at session start, +1 this session)
 - Feature #99 marked passing after thorough browser verification
 - Git commit: 6094218
+
+## Session 2026-02-20 - Coding Agent (Feature #100)
+
+### Completed Features:
+- Feature #100: Conversation sorting - PASSING
+  - Added SortOrder type to useConversationsData hook: "newest" | "oldest" | "unread"
+  - Added sortOrder parameter to useConversationsData (default: "newest")
+  - Sort logic in useMemo:
+    - newest: sort by newest timestamp first (previous default behavior)
+    - oldest: sort by oldest timestamp first (reverse of newest)
+    - unread: unread threads at top, then sort by newest within each group
+  - Added sort dropdown to InboxPanel header with ArrowDownUp icon
+  - Sort dropdown uses data-testid="select-sort-order" for automation
+  - Highlighted in primary color when non-default sort is active
+  - Wired sortOrder state in Conversations.tsx + passed to InboxPanel
+
+### Code Changes:
+- MODIFIED: client/src/features/conversations/hooks/useConversationsData.ts
+  - Added SortOrder type export ("newest" | "oldest" | "unread")
+  - Added sortOrder parameter to function signature
+  - Updated sort logic in useMemo
+  - Added sortOrder to dependency array
+- MODIFIED: client/src/features/conversations/components/InboxPanel.tsx
+  - Added ArrowDownUp import from lucide-react
+  - Added SortOrder to type import
+  - Added sortOrder, onSortOrderChange props to InboxPanelProps
+  - Added sort dropdown UI in header next to Filters button
+- MODIFIED: client/src/pages/Conversations.tsx
+  - Added SortOrder type import
+  - Added sortOrder state (default "newest")
+  - Passed sortOrder to useConversationsData and InboxPanel
+
+### Verification:
+- Playwright browser automation confirmed all 3 feature steps:
+  1. Newest: Danique (19:22) appears first (most recent)
+  2. Oldest: Augusto (oldest timestamp) appears first, order reversed
+  3. Unread first: Both unread threads appear before non-message threads
+- Sort dropdown shows Newest/Oldest/Unread first labels correctly
+- Non-default sorts highlighted in primary color (visual active indicator)
+- Zero JS console errors (0 errors, 0 warnings)
+- No mock data patterns found
+
+### Current Status:
+- 71/207 features passing (70 at session start, +1 this session)
+- Feature #100 marked passing after thorough browser verification
+- Git commit: 340e7bf
