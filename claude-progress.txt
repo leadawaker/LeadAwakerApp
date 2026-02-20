@@ -1,3 +1,71 @@
+## Session 2026-02-20 (24th) - Coding Agent
+
+### Completed Features:
+- Feature #27: Trend sparklines on KPI cards (7-day, 30-day) - PASSING
+  - Created /api/dashboard-trends endpoint that aggregates Campaign_Metrics_History data
+    - Accepts `days` (7 or 30) and optional `accountId` query parameters
+    - Returns daily aggregated bookings, messagesSent, responses, leadsTargeted, responseRate
+    - Filters by account's campaigns when accountId provided
+    - Real PostgreSQL data: 14 days of metrics across 3 campaigns
+  - Created KpiSparkline component using Recharts AreaChart
+    - Minimal sparkline with area fill gradient and tooltip
+    - Hidden XAxis with date dataKey for proper tooltip labels (shows "Feb 14" format)
+    - Unique gradient IDs to avoid SVG conflicts with multiple sparklines
+  - Created TrendIndicator component showing ↑/↓ percentage change
+    - Compares first half vs second half averages of sparkline data
+    - Color-coded: green for positive, red for negative trends
+  - Created TrendRangeToggle component for 7d/30d switching
+    - Pill-shaped toggle with active state highlighting
+  - Added useDashboardTrends hook to useApiData.ts
+    - Fetches from /api/dashboard-trends with configurable days parameter
+    - Re-fetches when days or accountId changes
+  - Added DashboardTrend type to models.ts
+  - Integrated sparklines into both AgencyDashboard and SubaccountDashboard:
+    - Hero KPI (Calls Booked): Large sparkline + TrendIndicator + TrendRangeToggle
+    - Response Rate stat card: Green sparkline with trend
+    - Total Leads stat card: Blue sparkline with trend
+    - Messages Sent stat card: Purple sparkline with trend
+    - Active Campaigns: No sparkline (not a time-series metric)
+  - Fixed tooltip labelFormatter crash (TypeError: label.split is not a function)
+    - Recharts passes numeric index when no XAxis dataKey specified
+    - Added String() coercion and hidden XAxis with date dataKey
+
+### Code Changes:
+- MODIFIED: server/routes.ts - Added /api/dashboard-trends endpoint
+- MODIFIED: client/src/components/crm/KpiSparkline.tsx - Added XAxis import, fixed labelFormatter type
+- MODIFIED: client/src/hooks/useApiData.ts - Added useDashboardTrends hook, DashboardTrend import
+- MODIFIED: client/src/types/models.ts - Added DashboardTrend type
+- MODIFIED: client/src/pages/AppDashboard.tsx - Integrated sparklines into KPI cards (auto-committed)
+  - Added trendRange state (7 | 30) with toggle
+  - Added useDashboardTrends hook call
+  - Passed trends data to AgencyDashboard and SubaccountDashboard
+  - Updated Stat component to accept sparklineData and sparklineColor props
+  - Added sparkline and trend indicator to hero KPI card
+  - Removed duplicate TrendRangeToggle (imported from KpiSparkline instead)
+
+### Verification:
+- Playwright browser automation confirmed all 3 feature steps:
+  1. Sparklines render on KPI cards: hero (bookings), response rate, total leads, messages sent
+  2. Toggle between 7-day and 30-day: clicking "7d"/"30d" updates sparklines and trend percentages
+     - 7d: ↓40% bookings, ↓1% response rate, ↑6% leads, ↑9% messages
+     - 30d: ↓5% bookings, ↓3% response rate, ↓9% leads, ↑1% messages
+  3. Trend data from real Campaign_Metrics_History table (42 rows, 14 days, 3 campaigns)
+- Tested on both agency dashboard and subaccount dashboard
+- Tooltip shows formatted dates (e.g., "Feb 17") when hovering sparklines
+- Zero console errors on both views
+- Zero mock data patterns in production code (Step 5.6 clean)
+- API endpoint returns real PostgreSQL data verified via curl
+
+### Environment Notes:
+- Server on port 5001, Vite on port 5173
+- DB healthy: 11/11 tables accessible, 42 campaign metrics history records
+- Login via leadawaker@gmail.com / test123
+- Git commit: f327bd7
+
+### Current Status:
+- 47/207 features passing (46 at session start, +1 this session)
+- Feature #27 marked passing after browser verification
+
 ## Session 2026-02-20 (23rd) - Coding Agent
 
 ### Completed Features:

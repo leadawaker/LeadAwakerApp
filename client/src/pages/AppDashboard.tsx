@@ -41,6 +41,8 @@ import {
   Megaphone,
   Inbox,
   Loader2,
+  Building2,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SkeletonDashboard } from "@/components/ui/skeleton";
@@ -196,12 +198,34 @@ export default function AppDashboard() {
   const [dateRange, setDateRange] = useState<DateRangeValue>(getDefaultDateRange);
   const [trendRange, setTrendRange] = useState<7 | 30>(7);
 
+  // Agency account filter — "all" = aggregate, or a specific account ID
+  const [dashboardAccountFilter, setDashboardAccountFilter] = useState<number | "all">("all");
+  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+  const accountDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (accountDropdownRef.current && !accountDropdownRef.current.contains(e.target as Node)) {
+        setAccountDropdownOpen(false);
+      }
+    }
+    if (accountDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [accountDropdownOpen]);
+
   // Fetch real data from API
   const { leads, loading: leadsLoading } = useLeads();
   const { campaigns, loading: campaignsLoading } = useCampaigns();
   const { accounts, loading: accountsLoading } = useAccounts();
   const { metrics: campaignMetrics, loading: metricsLoading } = useCampaignMetrics();
-  const { trends: dashboardTrends, loading: trendsLoading } = useDashboardTrends(trendRange, isAgencyView ? undefined : currentAccountId);
+  // For agency view with a specific account filter, pass accountId to trends
+  const trendAccountId = isAgencyView
+    ? (dashboardAccountFilter === "all" ? undefined : dashboardAccountFilter)
+    : currentAccountId;
+  const { trends: dashboardTrends, loading: trendsLoading } = useDashboardTrends(trendRange, trendAccountId);
 
   // Filter leads by date range (uses created_at as the primary date field)
   const filteredLeads = useMemo(() => {
@@ -218,6 +242,31 @@ export default function AppDashboard() {
       return isWithinDateRange(m.metric_date || m.created_at, dateRange);
     });
   }, [campaignMetrics, dateRange]);
+
+  // Agency account-scoped data: filter leads, campaigns, and metrics when a specific account is selected
+  const agencyFilteredLeads = useMemo(() => {
+    if (!isAgencyView || dashboardAccountFilter === "all") return filteredLeads;
+    return filteredLeads.filter((l: any) => (l.account_id || l.accounts_id) === dashboardAccountFilter);
+  }, [filteredLeads, dashboardAccountFilter, isAgencyView]);
+
+  const agencyFilteredCampaigns = useMemo(() => {
+    if (!isAgencyView || dashboardAccountFilter === "all") return campaigns;
+    return campaigns.filter((c: any) => (c.account_id || c.accounts_id || c.Accounts_id) === dashboardAccountFilter);
+  }, [campaigns, dashboardAccountFilter, isAgencyView]);
+
+  const agencyFilteredMetrics = useMemo(() => {
+    if (!isAgencyView || dashboardAccountFilter === "all") return filteredMetrics;
+    // Filter metrics by campaign IDs that belong to the selected account
+    const accountCampaignIds = new Set(agencyFilteredCampaigns.map((c: any) => c.id || c.Id));
+    return filteredMetrics.filter((m: any) => accountCampaignIds.has(m.campaigns_id || m.campaignsId));
+  }, [filteredMetrics, dashboardAccountFilter, isAgencyView, agencyFilteredCampaigns]);
+
+  // Selected account name for dropdown display
+  const selectedAccountName = useMemo(() => {
+    if (dashboardAccountFilter === "all") return "All Accounts";
+    const acc = accounts.find((a: any) => (a.id || a.Id) === dashboardAccountFilter);
+    return acc?.name || acc?.Name || `Account ${dashboardAccountFilter}`;
+  }, [dashboardAccountFilter, accounts]);
 
   const stagePalette = useMemo(() => [
     { id: "New" as const, label: "New", icon: <Zap className="w-5 h-5" />, fill: "#1a3a6f", textColor: "white" as const },
