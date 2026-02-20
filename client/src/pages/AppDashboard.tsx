@@ -203,7 +203,11 @@ export default function AppDashboard() {
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
   const accountDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on outside click
+  // Campaign filter dropdown state
+  const [campaignDropdownOpen, setCampaignDropdownOpen] = useState(false);
+  const campaignDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close account dropdown on outside click
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (accountDropdownRef.current && !accountDropdownRef.current.contains(e.target as Node)) {
@@ -215,6 +219,19 @@ export default function AppDashboard() {
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [accountDropdownOpen]);
+
+  // Close campaign dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (campaignDropdownRef.current && !campaignDropdownRef.current.contains(e.target as Node)) {
+        setCampaignDropdownOpen(false);
+      }
+    }
+    if (campaignDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [campaignDropdownOpen]);
 
   // Fetch real data from API
   const { leads, loading: leadsLoading } = useLeads();
@@ -267,6 +284,34 @@ export default function AppDashboard() {
     const acc = accounts.find((a: any) => (a.id || a.Id) === dashboardAccountFilter);
     return acc?.name || acc?.Name || `Account ${dashboardAccountFilter}`;
   }, [dashboardAccountFilter, accounts]);
+
+  // Campaign options for dropdown — scoped by current view/account filter
+  const dashboardCampaignOptions = useMemo(() => {
+    if (isAgencyView) {
+      // Agency view: if a specific account is selected, show only its campaigns; otherwise show all
+      if (dashboardAccountFilter === "all") return campaigns;
+      return campaigns.filter((c: any) => (c.account_id || c.accounts_id || c.Accounts_id) === dashboardAccountFilter);
+    }
+    // Subaccount view: show campaigns for the current account
+    return campaigns.filter((c: any) => (c.account_id || c.accounts_id || c.Accounts_id) === currentAccountId);
+  }, [campaigns, isAgencyView, dashboardAccountFilter, currentAccountId]);
+
+  // When account filter changes in agency view, reset campaign filter if the selected campaign doesn't belong to the new account
+  useEffect(() => {
+    if (selectedCampaignId !== "all") {
+      const campaignStillValid = dashboardCampaignOptions.some((c: any) => (c.id || c.Id) === selectedCampaignId);
+      if (!campaignStillValid) {
+        setSelectedCampaignId("all");
+      }
+    }
+  }, [dashboardAccountFilter, dashboardCampaignOptions, selectedCampaignId]);
+
+  // Selected campaign name for dropdown display
+  const selectedCampaignName = useMemo(() => {
+    if (selectedCampaignId === "all") return "All Campaigns";
+    const c = campaigns.find((c: any) => (c.id || c.Id) === selectedCampaignId);
+    return c?.name || c?.Name || `Campaign ${selectedCampaignId}`;
+  }, [selectedCampaignId, campaigns]);
 
   const stagePalette = useMemo(() => [
     { id: "New" as const, label: "New", icon: <Zap className="w-5 h-5" />, fill: "#1a3a6f", textColor: "white" as const },
@@ -389,13 +434,69 @@ export default function AppDashboard() {
                   )}
                 </div>
               )}
+              {/* Campaign filter dropdown — both views */}
+              <div className="relative" ref={campaignDropdownRef} data-testid="campaign-filter-wrapper">
+                <button
+                  type="button"
+                  onClick={() => setCampaignDropdownOpen(!campaignDropdownOpen)}
+                  className={cn(
+                    "inline-flex items-center gap-2 h-9 px-3 rounded-xl border text-sm font-semibold transition-all",
+                    selectedCampaignId === "all"
+                      ? "border-border bg-card text-foreground hover:bg-muted/50"
+                      : "border-brand-yellow/50 bg-brand-yellow/10 text-foreground hover:bg-brand-yellow/20"
+                  )}
+                  data-testid="campaign-filter-dropdown"
+                >
+                  <Megaphone className="w-4 h-4 text-muted-foreground" />
+                  <span className="max-w-[160px] truncate">{selectedCampaignName}</span>
+                  <ChevronDown className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", campaignDropdownOpen && "rotate-180")} />
+                </button>
+                {campaignDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-1 w-56 rounded-xl border border-border bg-card shadow-lg z-50 py-1 max-h-64 overflow-y-auto" data-testid="campaign-filter-options">
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedCampaignId("all"); setCampaignDropdownOpen(false); }}
+                      className={cn(
+                        "w-full text-left px-3 py-2 text-sm font-medium transition-colors hover:bg-muted/50",
+                        selectedCampaignId === "all" ? "text-brand-yellow font-bold bg-brand-yellow/5" : "text-foreground"
+                      )}
+                      data-testid="campaign-filter-option-all"
+                    >
+                      All Campaigns
+                    </button>
+                    {dashboardCampaignOptions.map((c: any) => {
+                      const cId = c.id || c.Id;
+                      return (
+                        <button
+                          key={cId}
+                          type="button"
+                          onClick={() => { setSelectedCampaignId(cId); setCampaignDropdownOpen(false); }}
+                          className={cn(
+                            "w-full text-left px-3 py-2 text-sm font-medium transition-colors hover:bg-muted/50",
+                            selectedCampaignId === cId ? "text-brand-yellow font-bold bg-brand-yellow/5" : "text-foreground"
+                          )}
+                          data-testid={`campaign-filter-option-${cId}`}
+                        >
+                          <div className="truncate">{c.name || c.Name}</div>
+                          {c.status && (
+                            <div className="text-[10px] text-muted-foreground">{c.status}</div>
+                          )}
+                        </button>
+                      );
+                    })}
+                    {dashboardCampaignOptions.length === 0 && (
+                      <div className="px-3 py-2 text-sm text-muted-foreground italic">No campaigns available</div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <FiltersBar selectedCampaignId={selectedCampaignId} setSelectedCampaignId={setSelectedCampaignId} />
           </div>
           {isLoading ? (
             <SkeletonDashboard />
           ) : isAgencyView ? (
-            <AgencyDashboard accounts={accounts} campaigns={agencyFilteredCampaigns} leads={agencyFilteredLeads} campaignMetrics={agencyFilteredMetrics} metricsLoading={metricsLoading} trends={dashboardTrends} trendRange={trendRange} setTrendRange={setTrendRange} dashboardAccountFilter={dashboardAccountFilter} />
+            <AgencyDashboard accounts={accounts} campaigns={agencyFilteredCampaigns} leads={agencyFilteredLeads} campaignMetrics={agencyFilteredMetrics} metricsLoading={metricsLoading} trends={dashboardTrends} trendRange={trendRange} setTrendRange={setTrendRange} dashboardAccountFilter={dashboardAccountFilter} selectedCampaignId={selectedCampaignId} />
           ) : (
             <SubaccountDashboard
               accountId={currentAccountId}
@@ -423,8 +524,26 @@ export default function AppDashboard() {
   );
 }
 
-function AgencyDashboard({ accounts, campaigns, leads, campaignMetrics, metricsLoading, trends, trendRange, setTrendRange, dashboardAccountFilter }: { accounts: Account[]; campaigns: Campaign[]; leads: Lead[]; campaignMetrics: CampaignMetricsHistory[]; metricsLoading: boolean; trends: DashboardTrend[]; trendRange: 7 | 30; setTrendRange: (v: 7 | 30) => void; dashboardAccountFilter: number | "all" }) {
+function AgencyDashboard({ accounts, campaigns, leads, campaignMetrics, metricsLoading, trends, trendRange, setTrendRange, dashboardAccountFilter, selectedCampaignId }: { accounts: Account[]; campaigns: Campaign[]; leads: Lead[]; campaignMetrics: CampaignMetricsHistory[]; metricsLoading: boolean; trends: DashboardTrend[]; trendRange: 7 | 30; setTrendRange: (v: 7 | 30) => void; dashboardAccountFilter: number | "all"; selectedCampaignId: number | "all" }) {
   const { currentAccountId } = useWorkspace();
+
+  // Filter leads by selected campaign
+  const campaignFilteredLeads = useMemo(() => {
+    if (selectedCampaignId === "all") return leads;
+    return leads.filter((l: any) => (l.campaign_id || l.campaigns_id) === selectedCampaignId);
+  }, [leads, selectedCampaignId]);
+
+  // Filter campaigns list when a specific campaign is selected
+  const campaignFilteredCampaigns = useMemo(() => {
+    if (selectedCampaignId === "all") return campaigns;
+    return campaigns.filter((c: any) => (c.id || c.Id) === selectedCampaignId);
+  }, [campaigns, selectedCampaignId]);
+
+  // Filter metrics by selected campaign
+  const campaignFilteredMetrics = useMemo(() => {
+    if (selectedCampaignId === "all") return campaignMetrics;
+    return campaignMetrics.filter((m: any) => (m.campaigns_id || m.campaignsId) === selectedCampaignId);
+  }, [campaignMetrics, selectedCampaignId]);
 
   // When a specific account is selected, only show that one in the subaccounts section
   const subaccounts = useMemo(() => {
@@ -433,21 +552,21 @@ function AgencyDashboard({ accounts, campaigns, leads, campaignMetrics, metricsL
     return all.filter((a: any) => a.id === dashboardAccountFilter);
   }, [accounts, dashboardAccountFilter]);
 
-  // Total calls booked across all accounts
+  // Total calls booked across all accounts (respecting campaign filter)
   const totalCallsBooked = useMemo(() => {
-    return leads.filter((l: any) => Boolean(l.booked_call_date)).length;
-  }, [leads]);
+    return campaignFilteredLeads.filter((l: any) => Boolean(l.booked_call_date)).length;
+  }, [campaignFilteredLeads]);
 
-  // Agency-wide secondary KPI stats
+  // Agency-wide secondary KPI stats (respecting campaign filter)
   const agencyStats = useMemo(() => {
-    const totalLeads = leads.length;
-    const activeCampaigns = campaigns.filter((c: any) => c.status === "Active").length;
-    const messagesSent = leads.reduce((sum: number, l: any) => sum + (Number(l.message_count_sent) || 0), 0);
-    const leadsContacted = leads.filter((l: any) => (Number(l.message_count_sent) || 0) > 0).length;
-    const leadsResponded = leads.filter((l: any) => (Number(l.message_count_received) || 0) > 0).length;
+    const totalLeads = campaignFilteredLeads.length;
+    const activeCampaigns = campaignFilteredCampaigns.filter((c: any) => c.status === "Active").length;
+    const messagesSent = campaignFilteredLeads.reduce((sum: number, l: any) => sum + (Number(l.message_count_sent) || 0), 0);
+    const leadsContacted = campaignFilteredLeads.filter((l: any) => (Number(l.message_count_sent) || 0) > 0).length;
+    const leadsResponded = campaignFilteredLeads.filter((l: any) => (Number(l.message_count_received) || 0) > 0).length;
     const responseRate = leadsContacted > 0 ? Math.round((leadsResponded / leadsContacted) * 100) : 0;
     return { totalLeads, activeCampaigns, messagesSent, responseRate };
-  }, [leads, campaigns]);
+  }, [campaignFilteredLeads, campaignFilteredCampaigns]);
 
   // Extract sparkline data series from trends
   const bookingsSparkline: SparklineDataPoint[] = useMemo(() => trends.map((t) => ({ date: t.date, value: t.bookings })), [trends]);
@@ -499,17 +618,17 @@ function AgencyDashboard({ accounts, campaigns, leads, campaignMetrics, metricsL
 
       <QuickJumpCards />
       <CampaignPerformanceCards
-        campaigns={campaigns}
-        metrics={campaignMetrics}
+        campaigns={campaignFilteredCampaigns}
+        metrics={campaignFilteredMetrics}
         loading={metricsLoading}
       />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <HotLeadsWidget leads={leads} />
-        <LeadScoreDistributionChart leads={leads} />
+        <HotLeadsWidget leads={campaignFilteredLeads} />
+        <LeadScoreDistributionChart leads={campaignFilteredLeads} />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {subaccounts.map((acc: any) => {
-          const accCampaigns = campaigns.filter((c: any) => (c.account_id || c.accounts_id) === acc.id);
+          const accCampaigns = campaignFilteredCampaigns.filter((c: any) => (c.account_id || c.accounts_id) === acc.id);
           return (
             <div key={acc.id} className="rounded-2xl border border-border bg-card p-6 flex flex-col shadow-sm">
               <div className="flex items-center justify-between mb-6">
@@ -616,20 +735,16 @@ function SubaccountDashboard({
     }
   };
 
-  const leadGrowthData = useMemo(() => [
-    { name: "Jan", leads: 400 },
-    { name: "Feb", leads: 300 },
-    { name: "Mar", leads: 600 },
-    { name: "Apr", leads: 800 },
-    { name: "May", leads: 500 },
-    { name: "Jun", leads: 900 },
-    { name: "Jul", leads: 1000 },
-    { name: "Aug", leads: 850 },
-    { name: "Sep", leads: 1100 },
-    { name: "Oct", leads: 1250 },
-    { name: "Nov", leads: 1200 },
-    { name: "Dec", leads: 1400 },
-  ], []);
+  // Build performance-over-time data from real trend data (messages sent over time)
+  const leadGrowthData = useMemo(() => {
+    if (!trends || trends.length === 0) return [];
+    return trends.map((t) => ({
+      name: t.date ? t.date.substring(5) : "",
+      leads: t.leadsTargeted || 0,
+      messages: t.messagesSent || 0,
+      bookings: t.bookings || 0,
+    }));
+  }, [trends]);
 
   // Extract sparkline data series from trends
   const bookingsSparkline: SparklineDataPoint[] = useMemo(() => trends.map((t) => ({ date: t.date, value: t.bookings })), [trends]);
@@ -699,50 +814,62 @@ function SubaccountDashboard({
               <h3 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/15 dark:bg-muted/8 glass-surface text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Performance Over Time</h3>
             </div>
             <div className="flex-grow rounded-2xl border border-border bg-card p-6 shadow-sm overflow-hidden pb-4 flex flex-col">
-              <div className="flex items-center justify-end mb-4 shrink-0">
-                <div className="flex items-center gap-2 px-3 py-1 bg-brand-blue/10 text-brand-blue rounded-full text-[10px] font-bold">
-                  <TrendingUp className="w-3 h-3" />
-                  +24% vs last year
+              {leadGrowthData.length === 0 ? (
+                <div className="flex-grow flex items-center justify-center" data-testid="performance-chart-empty">
+                  <DataEmptyState
+                    variant="dashboard"
+                    compact
+                    title="No performance data"
+                    description="Trend data will appear here once leads start receiving messages."
+                  />
                 </div>
-              </div>
-              <div className="flex-grow -ml-2 -mb-2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={leadGrowthData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} className="[&_line]:stroke-border" stroke="currentColor" opacity={0.15} />
-                    <XAxis
-                      dataKey="name"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{fontSize: 10, fill: 'hsl(var(--muted-foreground))'}}
-                      dy={5}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{fontSize: 10, fill: 'hsl(var(--muted-foreground))'}}
-                      tickFormatter={(val) => `${val}%`}
-                    />
-                    <Tooltip
-                      contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', backgroundColor: 'hsl(var(--card))', color: 'hsl(var(--foreground))' }}
-                      formatter={(value: number) => [`${value}%`, 'Growth']}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="leads"
-                      stroke="#3b82f6"
-                      strokeWidth={3}
-                      fillOpacity={1}
-                      fill="url(#colorLeads)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-end mb-4 shrink-0">
+                    <div className="flex items-center gap-2 px-3 py-1 bg-brand-blue/10 text-brand-blue rounded-full text-[10px] font-bold">
+                      <TrendingUp className="w-3 h-3" />
+                      {trendRange === 7 ? "Last 7 days" : "Last 30 days"}
+                    </div>
+                  </div>
+                  <div className="flex-grow -ml-2 -mb-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={leadGrowthData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} className="[&_line]:stroke-border" stroke="currentColor" opacity={0.15} />
+                        <XAxis
+                          dataKey="name"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{fontSize: 10, fill: 'hsl(var(--muted-foreground))'}}
+                          dy={5}
+                        />
+                        <YAxis
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{fontSize: 10, fill: 'hsl(var(--muted-foreground))'}}
+                        />
+                        <Tooltip
+                          contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', backgroundColor: 'hsl(var(--card))', color: 'hsl(var(--foreground))' }}
+                          formatter={(value: number, name: string) => [value, name === "leads" ? "Leads Targeted" : name === "messages" ? "Messages Sent" : "Bookings"]}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="messages"
+                          stroke="#3b82f6"
+                          strokeWidth={3}
+                          fillOpacity={1}
+                          fill="url(#colorLeads)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </>
+              )}
             </div>
           </div>
           <div className="flex flex-col min-h-[300px] lg:min-h-0">
@@ -755,6 +882,21 @@ function SubaccountDashboard({
                 const stageCount = funnel.length;
                 // Funnel tapering: widest at top (100%), narrowest at bottom
                 const minWidth = 40; // minimum width percentage for last stage
+
+                // Empty state: no leads in this account/campaign
+                if (totalLeads === 0) {
+                  return (
+                    <div className="flex-grow flex items-center justify-center" data-testid="funnel-empty-state">
+                      <DataEmptyState
+                        variant="leads"
+                        compact
+                        title="No pipeline data"
+                        description="Add leads to this account to see the sales funnel breakdown."
+                      />
+                    </div>
+                  );
+                }
+
                 return (
                   <div className="flex-grow flex flex-col justify-center gap-1 py-2">
                     {funnel.map((stage: any, idx: number) => {

@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Search, X } from "lucide-react";
-import { leads, interactions } from "@/data/mocks";
+import { apiFetch } from "@/lib/apiUtils";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
@@ -8,30 +8,59 @@ import { cn } from "@/lib/utils";
 export function SearchModal({ open, onOpenChange, inline }: { open: boolean; onOpenChange: (v: boolean) => void; inline?: boolean }) {
   const { currentAccountId } = useWorkspace();
   const [q, setQ] = useState("");
+  const [allLeads, setAllLeads] = useState<any[]>([]);
+  const [allInteractions, setAllInteractions] = useState<any[]>([]);
+
+  // Fetch leads and interactions from API when modal opens
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    async function fetchData() {
+      try {
+        const params = new URLSearchParams();
+        if (currentAccountId) params.set("accountId", String(currentAccountId));
+        const qs = params.toString();
+
+        const [leadsRes, interactionsRes] = await Promise.all([
+          apiFetch(qs ? `/api/leads?${qs}` : "/api/leads"),
+          apiFetch(qs ? `/api/interactions?${qs}` : "/api/interactions"),
+        ]);
+
+        if (!cancelled) {
+          const leadsData = leadsRes.ok ? await leadsRes.json() : [];
+          const interactionsData = interactionsRes.ok ? await interactionsRes.json() : [];
+          setAllLeads(Array.isArray(leadsData) ? leadsData : []);
+          setAllInteractions(Array.isArray(interactionsData) ? interactionsData : []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch search data:", err);
+      }
+    }
+    fetchData();
+    return () => { cancelled = true; };
+  }, [open, currentAccountId]);
 
   const results = useMemo(() => {
-    // ... same logic ...
     const query = q.trim().toLowerCase();
     if (!query) return [] as { leadId: number; title: string; subtitle: string }[];
 
-    const leadHits = leads
-      .filter((l) => l.account_id === currentAccountId)
-      .filter((l) =>
-        [l.full_name, l.phone, l.email].some((v) => v.toLowerCase().includes(query)),
+    const leadHits = allLeads
+      .filter((l: any) =>
+        [l.full_name || "", l.phone || "", l.email || l.Email || ""].some((v: string) => v.toLowerCase().includes(query)),
       )
       .slice(0, 8)
-      .map((l) => ({ leadId: l.id, title: l.full_name, subtitle: `${l.phone} • ${l.email}` }));
+      .map((l: any) => ({ leadId: l.id || l.Id, title: l.full_name || l.name || "", subtitle: `${l.phone || ""} • ${l.email || l.Email || ""}` }));
 
-    const interactionHits = interactions
-      .filter((i) => i.account_id === currentAccountId)
-      .filter((i) => i.content.toLowerCase().includes(query))
+    const interactionHits = allInteractions
+      .filter((i: any) => (i.content || "").toLowerCase().includes(query))
       .slice(0, 6)
-      .map((i) => {
-        const lead = leads.find((l) => l.id === i.lead_id);
+      .map((i: any) => {
+        const leadId = i.lead_id || i.leads_id || i.Leads_id;
+        const lead = allLeads.find((l: any) => (l.id || l.Id) === leadId);
         return {
-          leadId: i.lead_id,
-          title: lead?.full_name ?? `Lead #${i.lead_id}`,
-          subtitle: `Message: ${i.content.slice(0, 72)}${i.content.length > 72 ? "…" : ""}`,
+          leadId,
+          title: lead?.full_name || lead?.name || `Lead #${leadId}`,
+          subtitle: `Message: ${(i.content || "").slice(0, 72)}${(i.content || "").length > 72 ? "…" : ""}`,
         };
       });
 
@@ -42,7 +71,7 @@ export function SearchModal({ open, onOpenChange, inline }: { open: boolean; onO
     });
 
     return Array.from(uniq.values()).slice(0, 10);
-  }, [q, currentAccountId]);
+  }, [q, allLeads, allInteractions]);
 
   const content = (
     <div className="p-4 h-full flex flex-col">

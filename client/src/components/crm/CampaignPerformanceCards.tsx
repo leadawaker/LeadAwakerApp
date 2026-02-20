@@ -8,6 +8,7 @@ import {
 import { TrendingUp, CalendarIcon, MessageSquare, Megaphone } from "lucide-react";
 import type { Campaign, CampaignMetricsHistory } from "@/types/models";
 import { cn } from "@/lib/utils";
+import { DataEmptyState } from "@/components/crm/DataEmptyState";
 
 interface CampaignPerformanceCardsProps {
   campaigns: Campaign[];
@@ -151,7 +152,26 @@ export function CampaignPerformanceCards({
   }
 
   if (campaignsWithMetrics.length === 0) {
-    return null; // Don't render section if no campaign has metrics
+    return (
+      <div data-testid="campaign-performance-cards">
+        <div className="mb-4">
+          <h3 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/15 dark:bg-muted/8 glass-surface text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+            <Megaphone className="w-3.5 h-3.5" />
+            Campaign Performance
+          </h3>
+        </div>
+        <DataEmptyState
+          variant="campaigns"
+          title={campaigns.length === 0 ? "No campaigns yet" : "No performance data yet"}
+          description={
+            campaigns.length === 0
+              ? "Create your first campaign to start engaging with leads via WhatsApp."
+              : "Campaign metrics will appear here once your campaigns start running."
+          }
+          data-testid="campaign-performance-empty"
+        />
+      </div>
+    );
   }
 
   return (

@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from "react";
-import { campaigns } from "@/data/mocks";
+import { useCampaigns } from "@/hooks/useApiData";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
 export type DashboardTab = "pipeline" | "funnel";
@@ -18,6 +18,7 @@ export function FiltersBar({
   allowAllAccounts?: boolean;
 }) {
   const { currentAccountId } = useWorkspace();
+  const { campaigns } = useCampaigns();
 
   // Sync with Topbar campaign selector via localStorage
   useEffect(() => {
@@ -35,9 +36,11 @@ export function FiltersBar({
   }, [setSelectedCampaignId]);
 
   const campaignOptions = useMemo(() => {
-    const list = campaigns.filter((c) => c.account_id === currentAccountId);
-    return list;
-  }, [currentAccountId]);
+    return campaigns.filter((c: any) => {
+      const accId = c.account_id || c.accounts_id || c.Accounts_id;
+      return accId === currentAccountId;
+    });
+  }, [campaigns, currentAccountId]);
 
   return (
     <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between" data-testid="bar-filters">

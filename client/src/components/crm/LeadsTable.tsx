@@ -7,7 +7,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Lead } from "@/data/mocks";
+import type { Lead } from "@/types/models";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -79,7 +79,7 @@ export function LeadsTable({
   });
 
   return (
-    <div className="rounded-2xl bg-white overflow-hidden shadow-none border-none" data-testid="table-leads">
+    <div className="rounded-2xl bg-card overflow-hidden shadow-none border-none" data-testid="table-leads">
       <div className="overflow-auto">
         <table className="w-full text-left">
           <thead className="bg-muted/30 border-b border-border">
@@ -119,7 +119,7 @@ export function LeadsTable({
         </table>
       </div>
       <div className="px-4 py-3 text-xs text-muted-foreground bg-background border-t border-border" data-testid="text-table-footer">
-        Showing {leads.length} leads • MOCK DATA
+        Showing {leads.length} leads
       </div>
     </div>
   );

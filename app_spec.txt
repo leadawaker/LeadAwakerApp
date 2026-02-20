@@ -1,0 +1,657 @@
+<project_specification>
+  <project_name>Lead Awaker</project_name>
+
+  <overview>
+    Lead Awaker is an AI-powered WhatsApp lead reactivation engine with a CRM and client dashboard layer. It helps businesses convert inactive or underutilized leads into booked calls (north star KPI) through AI-powered WhatsApp conversations orchestrated via n8n and Twilio. This specification covers a full frontend redesign/rebuild of the post-login application only — backend, database, and API contracts are locked and must not be modified.
+  </overview>
+
+  <scope_rules>
+    <in_scope>
+      - Redesign / rebuild all post-login UI screens
+      - Improve UX, performance perception, visual hierarchy, usability
+      - Role-based view enforcement (Agency vs Subaccount/Client)
+      - Respect existing database schema, API contracts, and backend logic
+    </in_scope>
+    <out_of_scope>
+      - Landing page, marketing pages (use-cases, about, etc.)
+      - Backend server logic (Express)
+      - Database schema modifications
+      - Existing API contract changes
+      - New npm packages unless absolutely necessary
+    </out_of_scope>
+  </scope_rules>
+
+  <technology_stack>
+    <frontend>
+      <framework>React 19 with TypeScript</framework>
+      <bundler>Vite 7</bundler>
+      <styling>Tailwind CSS v4</styling>
+      <component_library>Shadcn/ui + Radix UI</component_library>
+      <data_fetching>TanStack Query</data_fetching>
+      <routing>Wouter</routing>
+      <drag_and_drop>@dnd-kit</drag_and_drop>
+      <charts>Recharts</charts>
+      <panels>react-resizable-panels</panels>
+    </frontend>
+    <backend>
+      <runtime>Node.js / Express (existing — do not modify)</runtime>
+      <database>PostgreSQL (existing — do not modify)</database>
+      <database_schema>p2mxx34fvbf3ll6 (11 tables, 315+ columns)</database_schema>
+      <automation>n8n workflows (existing)</automation>
+      <messaging>Twilio (WhatsApp/SMS)</messaging>
+    </backend>
+    <communication>
+      <api>REST API (existing contracts — do not modify)</api>
+      <api_helpers>apiFetch from apiUtils.ts, apiRequest from queryClient.ts</api_helpers>
+    </communication>
+  </technology_stack>
+
+  <performance_constraints>
+    <environment>Raspberry Pi backend with PostgreSQL</environment>
+    <rules>
+      - Avoid heavy UI libraries
+      - Use virtualized tables for large datasets
+      - Limit animation overhead (micro-interactions only)
+      - Optimize perceived speed over visual effects
+      - Tailwind + Radix + TanStack for lightweight rendering
+    </rules>
+  </performance_constraints>
+
+  <database_reference>
+    <schema_file>/home/gabriel/LEADAWAKER_DATABASE_SCHEMA.md</schema_file>
+    <tables>
+      <table name="Accounts">Organization/client configuration, Twilio integration, AI preferences, business settings</table>
+      <table name="Leads">Prospects/contacts with engagement tracking, lead scoring (0-100), bump stages, pipeline status</table>
+      <table name="Campaigns">Messaging campaigns with AI templates, bump configs, performance metrics (response rate, booking rate, ROI)</table>
+      <table name="Interactions">Individual messages/communications with analytics (response time, sentiment, thread grouping)</table>
+      <table name="Users">Team members with authentication, roles, invite system</table>
+      <table name="Tags">Lead classification system with categories, colors, auto-apply rules</table>
+      <table name="Leads_Tags">Many-to-many junction: Leads ↔ Tags with workflow tracking</table>
+      <table name="Automation_Logs">N8N workflow execution tracking with error flagging and performance scoring</table>
+      <table name="Prompt_Library">AI prompt templates with versioning and performance scores</table>
+      <table name="Lead_Score_History">Lead scoring trends over time</table>
+      <table name="Campaign_Metrics_History">Daily campaign performance snapshots for ROI analysis</table>
+    </tables>
+    <database_rules>
+      - Treat database structure as stable
+      - DO NOT redesign schema
+      - DO NOT rename tables/fields
+      - DO NOT introduce breaking changes
+      - UI must adapt to database — not vice versa
+      - Use exact NocoDB field names (e.g., Conversion_Status, Accounts_id, full_name_1)
+    </database_rules>
+  </database_reference>
+
+  <feature_count>206</feature_count>
+
+  <security_and_access_control>
+    <user_roles>
+      <role name="Admin">
+        <description>Agency administrators (e.g., Gabriel Fronza). Full operational control.</description>
+        <permissions>
+          - Full access to all pages and all accounts/campaigns
+          - Filter any page by account or campaign
+          - Monitor AI campaigns, intervene in conversations
+          - Manage users, tags, prompts, automation logs, accounts
+          - Full CRUD on all entities
+        </permissions>
+        <pages_visible>
+          - Dashboard (all accounts/campaigns)
+          - Leads Page (all leads)
+          - Campaigns Page (all campaigns)
+          - Chats / Inbox (all accounts/campaigns)
+          - Calendar (all bookings)
+          - Accounts Page
+          - Prompts Page
+          - Automation Logs
+          - Tags Page
+          - Users Page
+          - Settings
+        </pages_visible>
+      </role>
+      <role name="Operator">
+        <description>Internal team member with operational access but limited admin capabilities.</description>
+        <permissions>
+          - Access to most pages, filtered by assigned accounts
+          - Can manage leads, campaigns, conversations
+          - Cannot manage users or system-level settings
+        </permissions>
+      </role>
+      <role name="Manager">
+        <description>Client-side manager with visibility into their account's performance.</description>
+        <permissions>
+          - Scoped to their account only
+          - View campaigns, leads, conversations, calendar
+          - Limited modification abilities
+        </permissions>
+      </role>
+      <role name="Viewer">
+        <description>Read-only client user.</description>
+        <permissions>
+          - Scoped to their account only
+          - View-only access to dashboard, leads, campaigns, calendar
+          - No modification capabilities
+        </permissions>
+      </role>
+    </user_roles>
+    <view_modes>
+      <agency_view>
+        <who>Admin, Operator</who>
+        <behavior>Full operational interface. Pages filterable by account or campaign. All nav items visible.</behavior>
+      </agency_view>
+      <subaccount_client_view>
+        <who>Manager, Viewer</who>
+        <behavior>
+          - Restricted view scoped to their account and campaigns
+          - Pages visible: Dashboard, Leads, Campaigns, Chats/Inbox, Calendar
+          - Pages hidden entirely: Accounts, Prompts, Automation Logs, Tags, Users
+          - Hidden pages not visible in navigation and inaccessible via URL
+          - All data auto-scoped to the client's account
+          - Actions, filters, and interactions limited to visible data
+        </behavior>
+      </subaccount_client_view>
+    </view_modes>
+    <authentication>
+      <method>Email/password (existing backend auth)</method>
+      <session_timeout>Backend-controlled</session_timeout>
+      <invite_system>Token-based invitations with expiration (invite_token, invite_token_expires_at fields in Users table)</invite_system>
+    </authentication>
+    <account_isolation>
+      - Strict account isolation: no cross-account data visibility
+      - Subaccount users can never see other accounts' data
+      - API calls include account scoping for subaccount users
+      - Agency users see all accounts with filtering capability
+    </account_isolation>
+  </security_and_access_control>
+
+  <core_features>
+    <infrastructure>
+      - Database connection established (PostgreSQL connectivity via API health check)
+      - Database schema applied correctly (all 11 tables accessible and queryable)
+      - Data persists across server restart
+      - No mock data patterns in codebase (all components fetch from real API)
+      - Backend API queries real database
+    </infrastructure>
+
+    <extended_infrastructure>
+      - Secure API calls to Raspberry Pi backend (credentials: include, CORS, error handling)
+      - Role-aware query filtering (account scoping for subaccount users, agency sees all)
+      - DB connection error handling (graceful error states, retry mechanisms)
+    </extended_infrastructure>
+
+    <app_shell_and_navigation>
+      - Collapsible sidebar with icon-only and expanded modes
+      - Role-based navigation items (hide restricted pages for clients)
+      - Account switcher dropdown for agency users
+      - Active page indicator in sidebar
+      - Breadcrumb navigation
+      - Top bar with user avatar, dark mode toggle, notifications indicator
+      - Route guards preventing unauthorized URL access
+      - Responsive sidebar collapse on mobile
+      - Quick-jump shortcuts from dashboard to any page
+      - Page transition animations (subtle, fast)
+      - Sidebar footer with user info and logout
+      - Global search / command palette (Cmd+K)
+    </app_shell_and_navigation>
+
+    <dashboard>
+      - Calls Booked hero KPI card (top-left, largest element, prominent)
+      - Secondary KPI cards (response rate, total leads, active campaigns, messages sent)
+      - Pipeline funnel visualization (conversion through stages)
+      - Campaign performance summary cards with sparklines
+      - Hot leads widget (highest scored leads needing attention)
+      - Lead score distribution chart
+      - Trend sparklines on KPI cards (7-day, 30-day)
+      - Date range filter (today, 7d, 30d, custom)
+      - Account filter dropdown (agency view)
+      - Campaign filter dropdown
+      - Quick-jump links to Leads, Campaigns, Inbox, Calendar
+      - Empty states for new accounts with no data
+      - Loading skeleton states
+      - Responsive grid layout (2-col on tablet, 1-col on mobile)
+      - Dark mode variant
+      - Agency vs client dashboard variants (scoped data)
+      - Cost metrics display (cost per lead, cost per booking, ROI)
+      - Auto-refresh with configurable interval
+    </dashboard>
+
+    <leads_shared>
+      SHARED INFRASTRUCTURE — built once, consumed by both Kanban and Table views:
+      - Lead search (name, email, phone, notes)
+      - Lead filters (pipeline stage, campaign, tags, score range, priority, date range)
+      - Bulk select mechanism (checkbox-based, select all)
+      - Bulk actions toolbar (tag, move stage, assign campaign)
+      - Campaign scope filter (filter leads by campaign)
+      - View toggle (switch between Kanban and Table)
+    </leads_shared>
+
+    <leads_kanban>
+      DEFAULT VIEW FOR CLIENTS. Pipeline-first experience:
+      - Pipeline columns rendered from Conversion_Status values
+      - Dynamic stages per campaign
+      - Drag-and-drop lead cards between columns (stage change via @dnd-kit)
+      - Lead card design: name, phone, score badge, tags, last interaction, sentiment
+      - Hover preview popover (expanded lead info without opening detail panel)
+      - Card count badge per column
+      - Column collapse/expand toggle
+      - Infinite scroll per column (virtualized for performance)
+      - Optimistic stage updates on drag
+      - Color-coded stage columns (Call Booked highlighted with brand yellow)
+      - Loading skeleton states per column
+      - Empty column states
+      - Responsive: horizontal scroll on mobile
+      - Dark mode variant
+      - Account scope enforcement for client users
+      - Call Booked column visual emphasis (north star)
+    </leads_kanban>
+
+    <leads_table>
+      POWER USER VIEW — data-dense, sortable, filterable:
+      - Virtualized table rendering (TanStack Virtual for 1000+ rows)
+      - Sortable columns (click header to sort)
+      - Column hide/show configuration panel
+      - Column reorder via drag
+      - Column resize via drag
+      - Row grouping by stage, campaign, or tag
+      - Row click opens Lead Detail Panel
+      - CSV export with field selection
+      - CSV import with field mapping wizard
+      - Pagination with page size selector
+      - Loading skeleton rows
+      - Responsive: horizontal scroll with pinned first column
+      - Dark mode variant
+      - Empty state for no results
+    </leads_table>
+
+    <lead_detail_panel>
+      Slide-over panel from right side:
+      - Lead info header (name, phone, email, source, priority)
+      - Lead score gauges (lead_score, engagement_score, activity_score)
+      - Pipeline stage indicator with dropdown to change stage
+      - Interaction timeline (chronological list of all messages)
+      - Tags display with add/remove capability
+      - Notes field (editable)
+      - AI memory display (read-only, from ai_memory JSON)
+      - Bump stage indicator (current_bump_stage, bump sent timestamps)
+      - Sentiment badge (ai_sentiment)
+      - Manual takeover toggle
+      - Booked call info (date, confirmed, no-show, rescheduled count)
+      - Edit lead fields inline
+      - DNC / opted-out status display and toggle
+      - Dark mode variant
+    </lead_detail_panel>
+
+    <chats_inbox>
+      Three-panel layout (list / conversation / lead context):
+      - Conversation list with search
+      - Conversation list filters (campaign, account, AI/human state, unread)
+      - Conversation thread view (message bubbles, timestamps)
+      - AI-generated message visual distinction (badge + different bubble style)
+      - Human message visual distinction
+      - Manual takeover toggle with clear state indicator
+      - Right-side lead context panel (lead info, score, stage, tags)
+      - Message status indicators (sent, delivered, read, failed)
+      - Send message input with submit
+      - Attachment support (display attachment URLs)
+      - Unread count badges on conversation list items
+      - Conversation sorting (newest, oldest, unread first)
+      - Campaign filter
+      - Account filter (agency view)
+      - Empty state (no conversations)
+      - Loading states
+      - Optimistic message send
+      - Dark mode variant
+      - Responsive: collapse to single-panel on mobile with back navigation
+      - Thread grouping by conversation_thread_id
+      - Auto-scroll to newest message
+      - is_manual_follow_up indicator on human agent messages
+    </chats_inbox>
+
+    <campaigns_page>
+      - Campaign list view with cards showing live metrics
+      - Campaign detail view (expandable or dedicated panel)
+      - Live metrics per campaign: response rate, booking rate, leads targeted, messages sent
+      - Campaign status badge (Active/Paused/Completed)
+      - Campaign settings display (bump templates, delays, active hours, daily limit)
+      - Cost metrics (total cost, cost per lead, cost per booking, ROI)
+      - Performance chart (response rate + booking rate over time from Campaign_Metrics_History)
+      - Filter by account (agency view)
+      - Filter by status
+      - Search campaigns by name
+      - Calendar link display
+      - AI prompt template preview
+      - First message preview
+      - Qualification criteria display
+      - Dark mode variant
+      - Empty state
+    </campaigns_page>
+
+    <calendar>
+      - Monthly view with booked call indicators
+      - Weekly view with time slots
+      - Booked call cards on calendar dates
+      - No-show indicators (visual flag on booking card)
+      - Rescheduled indicators (badge showing re_scheduled_count)
+      - Day click expands to call list for that day
+      - Call detail popover (lead name, campaign, status, time)
+      - Drag-and-drop booking to new date
+      - Drag-and-drop booking to new time slot
+      - Filter by campaign
+      - Filter by account (agency view)
+      - Date navigation (prev/next month/week, today button)
+      - Today highlight
+      - Dark mode variant
+      - Responsive layout
+    </calendar>
+
+    <accounts_page>
+      Agency-only page:
+      - Account list with status indicators
+      - Account detail view / edit form
+      - Twilio configuration display (SID, messaging service, from number)
+      - Business hours configuration
+      - AI defaults display (name, role, style, typo frequency)
+      - Business info (description, niche, services)
+      - Create new account
+      - Account status toggle (active/inactive)
+      - Search and filter accounts
+      - Dark mode variant
+    </accounts_page>
+
+    <users_page>
+      Agency-only page:
+      - User list with role and status indicators
+      - Invite user flow (generate invite token, send invite)
+      - Role assignment (Admin, Operator, Manager, Viewer)
+      - User status toggle (active/inactive)
+      - User detail view (profile, last login, preferences)
+      - Invite token management (view pending invites, resend, revoke)
+      - Filter by role
+      - Filter by account
+      - Search users
+      - Dark mode variant
+    </users_page>
+
+    <tags_page>
+      Agency-only page:
+      - Tag list grouped by category
+      - Create new tag (name, color, category, description)
+      - Edit tag
+      - Color picker for tag colors
+      - Auto-applied indicator badge
+      - Delete tag with confirmation
+      - Search and filter tags
+      - Dark mode variant
+    </tags_page>
+
+    <prompt_library>
+      Agency-only page:
+      - Prompt list with version and status indicators
+      - Create / edit prompt (name, prompt text, system message, model, temperature, max tokens)
+      - Version display
+      - Performance score display
+      - Use case and notes display
+      - Status toggle (Active/Archived)
+      - Search and filter prompts
+      - Dark mode variant
+    </prompt_library>
+
+    <automation_logs>
+      Agency-only page:
+      - Log list (workflow name, step, status, timestamp)
+      - Filter by status (Success/Failure)
+      - Filter by campaign
+      - Filter by workflow name
+      - Critical error highlighting (is_critical_error flagged rows)
+      - Execution time and duration display
+      - Error detail expansion (error code, input/output data)
+      - Date range filter
+      - Dark mode variant
+    </automation_logs>
+
+    <settings_page>
+      - User profile edit (name, email, phone, avatar)
+      - Notification preferences (email on/off, SMS on/off)
+      - Timezone selector
+      - Dark mode toggle with persistence
+      - Password change
+      - Preferences save with confirmation toast
+    </settings_page>
+
+    <design_system_and_polish>
+      - Typography system: Inter (body), Outfit (headings), consistent scale
+      - Color token system: brand blues, yellows, neutrals, semantic colors
+      - Dark mode theme with brand-tinted dark surfaces
+      - Card component styling (consistent borders, shadows, padding)
+      - Consistent spacing system (4px grid)
+      - Micro-interactions (button press, toggle, hover states)
+      - Loading skeleton system (reusable skeleton components)
+      - Empty state designs (illustrations or icons with messaging)
+      - Toast notification system (success, error, info)
+      - Responsive breakpoints (mobile, tablet, desktop)
+      - Glassmorphism decorative accents (subtle, non-functional surfaces only)
+      - Focus and keyboard navigation states
+      - Custom scrollbar styling
+      - Transition system (consistent easing and duration)
+      - Brand accent consistency across all components
+    </design_system_and_polish>
+  </core_features>
+
+  <ui_layout>
+    <main_structure>
+      Sidebar + Main Content Area layout:
+      - Collapsible sidebar (left): navigation, account switcher, user info
+      - Main content area (right): page-specific content
+      - Top bar within main area: breadcrumbs, search, dark mode toggle, user avatar
+    </main_structure>
+    <leads_page>
+      - Top: shared toolbar (search, filters, bulk actions, view toggle)
+      - Main: Kanban view (default for clients) or Table view
+      - Right: Lead Detail Panel (slide-over on lead selection)
+    </leads_page>
+    <chats_page>
+      Three-panel layout:
+      - Left panel: conversation list with search/filters
+      - Center panel: active conversation thread
+      - Right panel: lead context (info, score, stage, tags)
+    </chats_page>
+    <dashboard>
+      Grid layout:
+      - Top row: Calls Booked hero KPI (large) + secondary KPIs
+      - Second row: Pipeline funnel + campaign performance cards
+      - Third row: Hot leads + lead score distribution + trends
+    </dashboard>
+  </ui_layout>
+
+  <design_system>
+    <color_palette>
+      <brand>
+        - Blue: #5170FF (primary actions, active states)
+        - Deep Blue: #131B49 (sidebar, headers, dark accents)
+        - Yellow: #FCB803 (Call Booked highlight, important alerts)
+        - Soft Yellow: #FCCA47 (secondary highlights)
+      </brand>
+      <base>
+        - White: #FFFFFF (card backgrounds, surfaces)
+        - Light Gray: #F8F9FA (page backgrounds)
+        - Medium Gray: #E5E7EB (borders, dividers)
+        - Dark Gray: #374151 (secondary text)
+        - Near Black: #111827 (primary text)
+      </base>
+      <dark_mode>
+        - Brand-tinted dark surfaces (not pure black)
+        - Soft gray backgrounds with proper contrast
+        - Adjusted brand colors for dark backgrounds
+      </dark_mode>
+    </color_palette>
+    <typography>
+      <body>Inter — clean, readable, professional</body>
+      <headings>Outfit — modern, confident weight</headings>
+      <scale>Consistent type scale with clear hierarchy</scale>
+    </typography>
+    <style_reference>Modern Salesforce / Linear / Premium SaaS aesthetic. Clean, confident, structured. NOT playful startup UI. NOT generic CRM bloat.</style_reference>
+    <glassmorphism>Optional and subtle. Only on decorative accents. Never on functional data surfaces (pipeline cards, tables, chat bubbles).</glassmorphism>
+    <animations>Micro-interactions only. Performance-first. No heavy animations.</animations>
+  </design_system>
+
+  <mental_model>
+    Accounts → Campaigns → Leads → Interactions → Pipeline Movement
+  </mental_model>
+
+  <pipeline_behavior>
+    <type>Campaign-specific, dynamic, customizable</type>
+    <default_stages>New → Contacted → Responded → Multiple Responses → Qualified → Call Booked → Lost → DND</default_stages>
+    <north_star>Call Booked — UI hierarchy must reflect this as the most important outcome</north_star>
+  </pipeline_behavior>
+
+  <product_identity>
+    <is>
+      - Lead Reactivation Engine
+      - Pipeline-centric system
+      - Automation-first platform
+      - Observability dashboard
+    </is>
+    <is_not>
+      - Generic CRM
+      - Deal management system
+      - Marketing automation suite
+      - Email marketing tool
+    </is_not>
+  </product_identity>
+
+  <design_priorities>
+    1. Pipeline visibility
+    2. Perceived speed
+    3. Cognitive clarity
+    4. Operational efficiency
+    5. Professional SaaS polish
+  </design_priorities>
+
+  <implementation_steps>
+    <step number="1">
+      <title>Infrastructure &amp; Shell</title>
+      <tasks>
+        - Verify database connectivity via API health check
+        - Confirm all tables accessible
+        - Implement secure API call patterns with credentials and CORS
+        - Build app shell: sidebar, top bar, routing, role-based nav
+        - Implement route guards and account scoping
+        - Dark mode toggle with persistence
+      </tasks>
+    </step>
+    <step number="2">
+      <title>Design System Foundation</title>
+      <tasks>
+        - Establish color tokens, typography scale, spacing system
+        - Build reusable skeleton loaders, empty states, toast system
+        - Ensure all Shadcn/ui components follow brand styling
+        - Dark mode theme implementation
+      </tasks>
+    </step>
+    <step number="3">
+      <title>Dashboard</title>
+      <tasks>
+        - Calls Booked hero KPI
+        - Secondary KPIs with sparklines
+        - Pipeline funnel widget
+        - Campaign performance cards
+        - Hot leads widget
+        - Filters and quick-jump links
+      </tasks>
+    </step>
+    <step number="4">
+      <title>Leads Page — Shared + Kanban</title>
+      <tasks>
+        - Shared search, filters, bulk actions
+        - Kanban pipeline view with drag-and-drop
+        - Dynamic stages per campaign
+        - Lead cards with score, tags, sentiment
+        - Hover preview popovers
+      </tasks>
+    </step>
+    <step number="5">
+      <title>Leads Page — Table + Detail Panel</title>
+      <tasks>
+        - Virtualized table with sort, filter, group, column config
+        - CSV import/export
+        - Lead Detail slide-over panel
+        - Interaction timeline, tags, scores, notes
+      </tasks>
+    </step>
+    <step number="6">
+      <title>Chats / Inbox</title>
+      <tasks>
+        - Three-panel layout
+        - Conversation list with search/filters
+        - Message thread with AI/human distinction
+        - Manual takeover toggle
+        - Lead context panel
+        - Message sending with optimistic updates
+      </tasks>
+    </step>
+    <step number="7">
+      <title>Campaigns + Calendar</title>
+      <tasks>
+        - Campaign list with live metrics
+        - Campaign detail with settings and performance charts
+        - Calendar monthly/weekly views
+        - Booked call cards, no-show/reschedule indicators
+        - Drag-and-drop booking rescheduling
+      </tasks>
+    </step>
+    <step number="8">
+      <title>Admin Pages</title>
+      <tasks>
+        - Accounts management
+        - Users management with invite flow
+        - Tags management
+        - Prompt Library
+        - Automation Logs viewer
+        - Settings page
+      </tasks>
+    </step>
+    <step number="9">
+      <title>Polish &amp; Responsive</title>
+      <tasks>
+        - Responsive breakpoints across all pages
+        - Glassmorphism accents on decorative surfaces
+        - Keyboard navigation and focus states
+        - Final dark mode pass
+        - Performance audit and optimization
+      </tasks>
+    </step>
+  </implementation_steps>
+
+  <success_criteria>
+    <functionality>
+      - All 206 features implemented and testable
+      - Role-based access enforced (agency vs client views)
+      - Account isolation with no cross-account data leakage
+      - All data fetched from real PostgreSQL via existing API
+      - Pipeline drag-and-drop works smoothly
+      - Calendar drag-and-drop rescheduling works
+      - CSV import/export functional
+    </functionality>
+    <user_experience>
+      - Calls Booked is the most prominent element on dashboard
+      - Kanban is default leads view for clients
+      - Chats clearly distinguish AI vs human messages
+      - Navigation feels instant, transitions are smooth
+      - Empty states guide users, don't confuse them
+    </user_experience>
+    <technical_quality>
+      - No mock data or hardcoded values in production code
+      - Virtualized rendering for large datasets (1000+ leads)
+      - Lightweight enough for Raspberry Pi backend
+      - Dark mode works consistently across all pages
+      - Existing API helpers (apiFetch, apiRequest) used throughout
+    </technical_quality>
+    <design_polish>
+      - Consistent typography (Inter body, Outfit headings)
+      - Brand colors applied consistently
+      - Modern SaaS aesthetic (Salesforce/Linear reference)
+      - Glassmorphism subtle and only decorative
+      - Micro-interactions feel responsive, not heavy
+    </design_polish>
+  </success_criteria>
+</project_specification>

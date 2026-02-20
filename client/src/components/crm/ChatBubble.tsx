@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { type Interaction } from "@/data/mocks";
+import type { Interaction } from "@/types/models";
 
 export function ChatBubble({ item }: { item: Interaction }) {
   const outbound = item.direction === "Outbound";

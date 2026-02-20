@@ -7,11 +7,13 @@ export function useCampaignsData(accountId?: number) {
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
   const pendingSaves = useRef<Record<string, number>>({});
 
   const handleRefresh = async () => {
     setLoading(true);
+    setError(null);
     try {
       const accountsList = await fetchAccounts();
       setAccounts(accountsList);
@@ -38,6 +40,7 @@ export function useCampaignsData(accountId?: number) {
       setCampaigns(normalized);
     } catch (err) {
       console.error("Failed to refresh campaigns", err);
+      setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setLoading(false);
     }
@@ -89,6 +92,7 @@ export function useCampaignsData(accountId?: number) {
     campaigns,
     accounts,
     loading,
+    error,
     handleRefresh,
     setCampaigns,
     updateCampaignRow
