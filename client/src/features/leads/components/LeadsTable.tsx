@@ -10,7 +10,10 @@ import {
   type LeadFilterState,
 } from "./LeadFilters";
 import { BulkActionsToolbar } from "./BulkActionsToolbar";
+import { LeadsKanban } from "./LeadsKanban";
 import { apiFetch } from "@/lib/apiUtils";
+import { LayoutGrid, Table2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const LEAD_COLUMNS = [
   /* Core */
@@ -85,12 +88,15 @@ const SMALL_WIDTH_COLS = new Set([
   "no_show",
 ]);
 
+type ViewMode = "table" | "kanban";
+
 export function LeadsTable() {
   const { currentAccountId, isAgencyView } = useWorkspace();
   // For agency view with account 1 selected (all accounts), don't filter; otherwise filter by selected account
   const filterAccountId = (isAgencyView && currentAccountId === 1) ? undefined : currentAccountId;
   const { leads, loading, error, handleRefresh, updateLeadRow } = useLeadsData(filterAccountId);
   const [search, setSearch] = useState("");
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [visibleColumns, setVisibleColumns] = useState<string[]>(LEAD_COLUMNS);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "", direction: null });
@@ -226,6 +232,7 @@ export function LeadsTable() {
       {/* Lead Filters toolbar row - renders above the DataTable */}
       <div className="flex items-center gap-2 mb-3">
         <LeadFilters filters={leadFilters} onFiltersChange={setLeadFilters} />
+
         {/* Show active filter summary badges */}
         {leadFilters.pipelineStage && (
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-blue/10 text-brand-blue text-xs font-medium">
@@ -294,53 +301,96 @@ export function LeadsTable() {
             </button>
           </span>
         )}
+
+        {/* Spacer to push view toggle to the right */}
+        <div className="flex-1" />
+
+        {/* View toggle: Table vs Kanban */}
+        <div
+          className="inline-flex items-center rounded-xl border border-border bg-card dark:bg-secondary p-0.5 gap-0.5"
+          data-testid="view-toggle"
+        >
+          <button
+            onClick={() => setViewMode("table")}
+            className={cn(
+              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200",
+              viewMode === "table"
+                ? "bg-brand-blue text-white shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            )}
+            aria-label="Table view"
+            data-testid="view-toggle-table"
+          >
+            <Table2 className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Table</span>
+          </button>
+          <button
+            onClick={() => setViewMode("kanban")}
+            className={cn(
+              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200",
+              viewMode === "kanban"
+                ? "bg-brand-blue text-white shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            )}
+            aria-label="Kanban view"
+            data-testid="view-toggle-kanban"
+          >
+            <LayoutGrid className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Kanban</span>
+          </button>
+        </div>
       </div>
 
-      <DataTable
-        loading={loading}
-        rows={filteredLeads}
-        columns={LEAD_COLUMNS}
-        visibleColumns={visibleColumns}
-        onVisibleColumnsChange={setVisibleColumns}
-        selectedIds={selectedIds}
-        onSelectedIdsChange={setSelectedIds}
-        sortConfig={sortConfig}
-        onSortChange={setSortConfig}
-        groupBy={groupBy}
-        onGroupByChange={setGroupBy}
-        groupOptions={[
-          { value: "None", label: "No Grouping" },
-          { value: "conversion_status", label: "By Conversion" },
-          { value: "automation_status", label: "By Automation Status" },
-          { value: "Account", label: "By Account" },
-          { value: "Campaign", label: "By Campaign" },
-        ]}
-        colWidths={colWidths}
-        onColWidthsChange={setColWidths}
-        rowSpacing={rowSpacing}
-        onRowSpacingChange={setRowSpacing}
-        showVerticalLines={showVerticalLines}
-        onShowVerticalLinesChange={setShowVerticalLines}
-        onUpdate={handleUpdate}
-        onDelete={handleDelete}
-        onAdd={() => console.log("Add lead")}
-        statusOptions={["New", "Contacted", "Responded", "Multiple Responses", "Qualified", "Booked", "Lost", "DND"]}
-        automationStatusOptions={["completed", "queued", "active", "paused", "dnd", "error"]}
-        typeOptions={[]}
-        timezoneOptions={[]}
-        hiddenFields={[]}
-        nonEditableFields={["created_at", "updated_at"]}
-        smallWidthCols={Array.from(SMALL_WIDTH_COLS)}
-        searchValue={search}
-        onSearchValueChange={setSearch}
-        onRefresh={handleRefresh}
-        isRefreshing={loading}
-        filterConfig={filterConfig}
-        onFilterConfigChange={setFilterConfig}
-        pageSize={50}
-        emptyStateVariant={search ? "search" : "leads"}
-        renderBulkActions={renderBulkActions}
-      />
+      {/* Conditionally render Table or Kanban view */}
+      {viewMode === "kanban" ? (
+        <LeadsKanban leads={filteredLeads} loading={loading} />
+      ) : (
+        <DataTable
+          loading={loading}
+          rows={filteredLeads}
+          columns={LEAD_COLUMNS}
+          visibleColumns={visibleColumns}
+          onVisibleColumnsChange={setVisibleColumns}
+          selectedIds={selectedIds}
+          onSelectedIdsChange={setSelectedIds}
+          sortConfig={sortConfig}
+          onSortChange={setSortConfig}
+          groupBy={groupBy}
+          onGroupByChange={setGroupBy}
+          groupOptions={[
+            { value: "None", label: "No Grouping" },
+            { value: "conversion_status", label: "By Conversion" },
+            { value: "automation_status", label: "By Automation Status" },
+            { value: "Account", label: "By Account" },
+            { value: "Campaign", label: "By Campaign" },
+          ]}
+          colWidths={colWidths}
+          onColWidthsChange={setColWidths}
+          rowSpacing={rowSpacing}
+          onRowSpacingChange={setRowSpacing}
+          showVerticalLines={showVerticalLines}
+          onShowVerticalLinesChange={setShowVerticalLines}
+          onUpdate={handleUpdate}
+          onDelete={handleDelete}
+          onAdd={() => console.log("Add lead")}
+          statusOptions={["New", "Contacted", "Responded", "Multiple Responses", "Qualified", "Booked", "Lost", "DND"]}
+          automationStatusOptions={["completed", "queued", "active", "paused", "dnd", "error"]}
+          typeOptions={[]}
+          timezoneOptions={[]}
+          hiddenFields={[]}
+          nonEditableFields={["created_at", "updated_at"]}
+          smallWidthCols={Array.from(SMALL_WIDTH_COLS)}
+          searchValue={search}
+          onSearchValueChange={setSearch}
+          onRefresh={handleRefresh}
+          isRefreshing={loading}
+          filterConfig={filterConfig}
+          onFilterConfigChange={setFilterConfig}
+          pageSize={50}
+          emptyStateVariant={search ? "search" : "leads"}
+          renderBulkActions={renderBulkActions}
+        />
+      )}
     </div>
   );
 }
