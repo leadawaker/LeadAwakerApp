@@ -2501,3 +2501,108 @@
 - 73/207 features passing (72 at session start, +1 this session)
 - Feature #102 marked passing after thorough browser verification
 - No git commit needed (no code changes)
+
+## Session 2026-02-20 - Coding Agent (Feature #103)
+
+### Completed Features:
+- Feature #103: Chat empty state - PASSING
+  - Enhanced InboxPanel empty state to be fully context-aware:
+
+  1. **Search empty state**: When searchQuery is non-empty and no threads match
+     - Title: "No conversations found"
+     - Description: `No conversations match "${searchQuery}". Try a different name or phone number.`
+     - No action button (user should clear search themselves)
+
+  2. **Filter empty state**: When hasActiveFilters is true and no threads match
+     - Title: "No matches"
+     - Description: "No conversations match the selected filters. Try adjusting or clearing your filters."
+     - Action button: "Clear filters" → calls onClearFilters() which resets all filters
+
+  3. **Unread tab empty state**: When on "unread" tab and no unread threads
+     - Title: "All caught up!"
+     - Description: "You have no unread conversations right now."
+     - If also has active filters: also shows "Clear filters" button
+
+  4. **No conversations at all**: When no threads exist at all (new account, no messages)
+     - Shows default "conversations" variant: "No conversations yet"
+     - Description: "Conversations will appear here once leads start receiving messages."
+
+### Code Changes:
+- MODIFIED: client/src/features/conversations/components/InboxPanel.tsx
+  - Added `onClearFilters?: () => void` prop to InboxPanelProps
+  - Replaced simple `DataEmptyState` call with IIFE that picks correct variant/text based on context
+  - Uses hasActiveFilters, tab, searchQuery to determine which empty state to render
+- MODIFIED: client/src/pages/Conversations.tsx
+  - Added `handleClearFilters` function: resets filterAccountId, campaignId, aiStateFilter, searchQuery, tab
+  - Passes `onClearFilters={handleClearFilters}` to InboxPanel
+
+### Verification:
+- Playwright browser automation confirmed all 3 feature steps:
+  1. "Pepsi" account filter → "No matches" empty state with "Clear filters" button
+  2. "XYZXYZ_NONEXISTENT" search → "No conversations found" with search term in description
+  3. "Unread" tab + "Pepsi" filter → "All caught up!" empty state
+  4. "Clear filters" button click → resets all filters, 10 threads restored
+- Zero JS console errors (0 errors, 0 warnings)
+- No mock data patterns
+
+### Current Status:
+- 74/207 features passing (73 at session start, +1 this session)
+- Git commit: 1fc79be
+
+## Session 2026-02-20 - Coding Agent (Feature #104)
+
+### Completed Features:
+- Feature #104: Chat loading states - PASSING
+  - All 3 skeleton placeholders implemented for the Conversations/Chats page
+
+  1. **InboxPanel skeleton** (already existed from previous sessions):
+     - SkeletonList with count=6 renders when loading=true
+     - Shows 6 rows: avatar circle + two text lines + timestamp placeholder
+     - Matches final thread list layout exactly
+
+  2. **ChatPanel skeleton** (NEW - SkeletonChatThread):
+     - Added SkeletonChatThread component to skeleton.tsx
+     - Shows 6 alternating left/right chat bubble placeholders
+     - Each bubble has: sender label pill skeleton + message content skeleton + timestamp skeleton
+     - Varying widths (w-40 to w-64) for natural look
+     - Triggered by: `loading=true AND no selected thread`
+     - Header area also shows skeleton name/phone lines when loading
+
+  3. **ContactSidebar skeleton** (NEW - SkeletonContactPanel):
+     - Added SkeletonContactPanel component to skeleton.tsx
+     - Shows complete panel skeleton: avatar+name, score card, pipeline card, contact info, tags
+     - Mimics the actual panel layout with all 4 sections
+     - Triggered by: `loading=true AND no selected thread`
+
+### Code Changes:
+- NEW exports in: client/src/components/ui/skeleton.tsx
+  - SkeletonChatThread: alternating bubble skeleton for message thread
+  - SkeletonContactPanel: full lead context panel skeleton
+- MODIFIED: client/src/features/conversations/components/ChatPanel.tsx
+  - Added `loading?: boolean` prop (default false)
+  - Added SkeletonChatThread import
+  - Shows skeleton in chat-scroll area when loading=true and !selected
+  - Shows skeleton name/phone lines in header when loading=true and !selected
+- MODIFIED: client/src/features/conversations/components/ContactSidebar.tsx
+  - Added `loading?: boolean` prop (default false)
+  - Added SkeletonContactPanel import
+  - Shows skeleton in panel body when loading=true and !selected
+- MODIFIED: client/src/pages/Conversations.tsx
+  - Passes `loading={loading}` to ChatPanel
+  - Passes `loading={loading}` to ContactSidebar
+
+### Verification:
+- Playwright test with API route interception (2s delay on /api/leads and /api/interactions):
+  1. STEP 1 (loading state): All 3 skeletons FOUND in DOM simultaneously
+     - Inbox: animate-pulse elements in list-inbox ✅
+     - Chat: data-testid="skeleton-chat-thread" ✅
+     - Contact: data-testid="skeleton-contact-panel" ✅
+  2. STEP 2 (after load): All 3 skeletons GONE, 10 threads present ✅
+  3. STEP 3 (thread selected): Chat messages area + lead identity present ✅
+- Screenshots saved to test-results/feature-104/
+- Zero console errors, zero mock data patterns
+- Git commit: 384bb03
+
+### Current Status:
+- 75/207 features passing (74 at session start, +1 this session)
+- Feature #104 marked passing after thorough browser verification
