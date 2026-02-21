@@ -1,3 +1,62 @@
+## Session 2026-02-21 - Coding Agent (Feature #145)
+
+### Completed Features:
+- Feature #145: Business hours configuration - PASSING
+
+### Implementation Details:
+
+Feature requirement: Display and edit business_hours_start and business_hours_end for the account.
+
+**Changes made to `client/src/features/accounts/components/AccountDetailsDialog.tsx`:**
+
+1. **Added `formatTimeDisplay()` helper function**:
+   - Converts `HH:MM:SS` (or `HH:MM`) DB format to 12-hour display format
+   - Example: `"09:00:00"` → `"09:00 AM"`, `"17:00:00"` → `"05:00 PM"`
+   - Returns `—` for null/empty values
+
+2. **Added `toTimeInputValue()` helper function**:
+   - Strips seconds from DB value for the `<input type="time">` element
+   - Example: `"09:00:00"` → `"09:00"`
+
+3. **Added `timeField()` helper function**:
+   - View mode: renders formatted 12-hour time using `formatTimeDisplay()`
+   - Edit mode: renders native `<input type="time">` with clock picker UI
+   - Input width constrained to `w-36` for clean layout
+   - Saves in `HH:MM` format (backend accepts this)
+
+4. **Updated business hours field renders in JSX**:
+   - Changed `textField("business_hours_start", "09:00")` → `timeField("business_hours_start", "09:00")`
+   - Changed `textField("business_hours_end", "17:00")` → `timeField("business_hours_end", "17:00")`
+
+### Verification:
+1. Accounts page loads with table showing business hours columns - PASS
+2. Click "van de Kerkhof" account - detail dialog opens - PASS
+3. "Business Hours Open" shows `09:00 AM` (from DB `09:00:00`) - PASS
+4. "Business Hours Close" shows `05:00 PM` (from DB `17:00:00`) - PASS
+5. Click Edit - time inputs appear with values `09:00` / `17:00` - PASS
+6. Changed hours start to `10:00` - PASS
+7. Click Save → PATCH /api/accounts/2 returns 200 OK - PASS
+8. Dialog view mode shows `10:00 AM` after save - PASS
+9. Closed and reopened dialog - `10:00 AM` persists (confirmed DB persistence) - PASS
+10. Restored back to `09:00` and saved - PASS
+11. Cancel discards changes correctly (changes back to original) - PASS
+
+### Screenshots:
+- test-results/feat-145/01-view-mode-formatted-times.png
+- test-results/feat-145/02-edit-mode-time-inputs.png
+- test-results/feat-145/03-changed-time-value.png
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Accounts route: /agency/accounts
+
+### Current Status:
+- 115/207 features passing (114 at session start, +1 this session)
+- Feature #145 marked passing after thorough browser verification
+- Git commit: 7bb870d
+
 ## Session 2026-02-21 - Coding Agent (Feature #137)
 
 ### Completed Features:
@@ -4639,3 +4698,136 @@ The feature was ALREADY FULLY IMPLEMENTED from previous sessions. No code change
 - 112/207 features passing (111 at session start, +1 this session)
 - Feature #142 marked passing after thorough browser verification
 - No new code to commit
+
+## Session 2026-02-21 - Coding Agent (Feature #144)
+
+### Completed Features:
+- Feature #144: Twilio configuration display - PASSING
+
+### Implementation Details:
+
+Feature requirement: Display Twilio settings in account detail - account SID, messaging service SID, default from number (masked for security).
+
+**Changes made to `client/src/components/DataTable/DataTable.tsx`:**
+
+1. **Added imports**:
+   - `EyeOff` and `Copy` icons from lucide-react
+   - (Eye was already imported)
+
+2. **Added helper constants and functions**:
+   - `TWILIO_SENSITIVE_FIELDS`: list of fields needing masking
+   - `TWILIO_PHONE_FIELDS`: phone-style fields
+   - `isTwilioField()`: predicate for any Twilio field
+   - `maskTwilioValue()`: shows first 4 + last 4 chars with dots, handles short values
+   - Updated `formatHeaderTitle()` to return human-friendly names for Twilio fields
+
+3. **Added `TwilioFieldRow` sub-component**:
+   - Manages its own `revealed` and `copied` state (useState)
+   - Shows masked value by default using `maskTwilioValue()`
+   - Eye/EyeOff toggle to reveal/hide the full value
+   - Copy button that copies full value to clipboard, shows green checkmark for 2s
+   - Shows "Not configured" for null/empty values
+
+4. **Modified Sheet detail view** (in the `.map()` rendering inside SheetContent):
+   - Uses an IIFE to detect first Twilio field and insert section header
+   - Renders "TWILIO CONFIGURATION" section header with lightning bolt icon + blue divider line
+   - Uses `TwilioFieldRow` for all 4 Twilio fields
+   - Updated all field labels from `c.replace(/_/g, " ")` to `formatHeaderTitle(c)` for better names
+
+### Verification (via browser automation):
+1. Navigate to /agency/accounts - account list renders - PASS
+2. Click avatar for "van de Kerkhof" (account with Twilio data) - sheet opens - PASS
+3. "TWILIO CONFIGURATION" section header visible with blue icon/divider - PASS
+4. "TWILIO ACCOUNT SID" shows `••••1283` (masked by default) - PASS
+5. "TWILIO AUTH TOKEN" shows `••••3123` (masked by default) - PASS
+6. "MESSAGING SERVICE SID" shows "Not configured" (null value) - PASS
+7. "DEFAULT FROM NUMBER" shows `1203••••0312` (masked) - PASS
+8. Click eye icon on Account SID → reveals `1231283` full value - PASS
+9. Copy button present and functional - PASS
+10. Zero JS console errors - PASS (22 pre-existing Radix warnings unrelated)
+
+### Code Changes:
+- MODIFIED: client/src/components/DataTable/DataTable.tsx (+190, -86 relative to new sections)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Accounts route: /agency/accounts
+
+### Current Status:
+- 114/207 features passing (113 at session start, +1 this session)
+- Feature #144 marked passing after thorough browser verification
+
+## Session 2026-02-21 - Coding Agent (Feature #143)
+
+### Completed Features:
+- Feature #143: Account detail view / edit form - PASSING
+
+### Implementation Details:
+
+Feature requirement: Click account to view/edit details: name, email, phone, website, timezone, notes.
+
+**New file: client/src/features/accounts/components/AccountDetailsDialog.tsx**
+- Full-featured dialog component with view mode and edit mode
+- View mode: displays all account fields in read-only format organized in 6 sections:
+  1. Basic Information (name, status, type, business_niche)
+  2. Contact (owner_email, phone, website)
+  3. Schedule (timezone, business_hours_start/end, max_daily_sends)
+  4. AI and Messaging (default_ai_name, role, style, opt_out_keyword, etc.)
+  5. Description and Notes (business_description, service_categories, notes)
+  6. Twilio Integration (account_sid, auth_token, messaging_service_sid, from_number)
+- Edit mode: triggered by Edit button, all fields become input/textarea/select controls
+- Save button sends PATCH via existing handleInlineUpdate hook
+- Cancel button reverts changes
+- Status badge with color-coded icon (Active=green, Trial=amber, Suspended=red, Inactive=gray)
+- data-testid attributes: account-detail-dialog, btn-edit-account, btn-save-account, btn-cancel-edit, field-{key}
+
+**Modified: client/src/components/DataTable/DataTable.tsx**
+- Added onRowClick prop to DataTableProps interface
+- Added cursor-pointer class to rows when onRowClick is provided
+- Added onClick handler to TableRow that fires onRowClick
+- Added data-row-checkbox attribute to checkbox TableCell to prevent row click on checkbox
+
+**Modified: client/src/features/accounts/components/AccountsTable.tsx**
+- Added onRowClick prop and passed it through to DataTable
+
+**Modified: client/src/features/accounts/pages/AccountsPage.tsx**
+- Added detailAccount and detailOpen state
+- Wired handleRowClick to open dialog on row click
+- Wired handleDetailSave to save via handleInlineUpdate
+- Mounted AccountDetailsDialog at bottom of page
+
+**Bug Fixed:**
+- Empty AccountDetailsDialog.ts (0 bytes) was shadowing the real .tsx file
+- Deleted both empty stubs: AccountDetailsDialog.ts and AccountFormDialog.ts
+
+### Verification (via browser automation):
+1. Navigated to /agency/accounts - 6 accounts loaded in table - PASS
+2. Clicked account row (Paul Mackartney, id=25) - detail dialog opened - PASS
+3. Dialog showed all sections with proper field values - PASS
+4. Edit button switched to edit mode with input/textarea controls - PASS
+5. Filled Notes with FINAL_VERIFY_TEST - textarea found by data-testid - PASS
+6. Save Changes - toast confirmation appeared - PASS
+7. Dialog returned to view mode showing updated Notes - PASS
+8. Zero console errors - PASS
+9. Data persisted via API PATCH - PASS
+
+### Code Changes:
+- NEW: client/src/features/accounts/components/AccountDetailsDialog.tsx
+- MODIFIED: client/src/components/DataTable/DataTable.tsx (onRowClick prop)
+- MODIFIED: client/src/features/accounts/components/AccountsTable.tsx
+- MODIFIED: client/src/features/accounts/pages/AccountsPage.tsx
+- DELETED: client/src/features/accounts/components/AccountDetailsDialog.ts (empty stub)
+- DELETED: client/src/features/accounts/components/AccountFormDialog.ts (empty stub)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 114/207 features passing (113 at session start, +1 this session)
+- Feature #143 marked passing after thorough browser verification
+- Git commit: 2721b3f
+- Git commit: 78adb66
