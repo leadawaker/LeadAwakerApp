@@ -3906,3 +3906,113 @@ Changes made to client/src/pages/Calendar.tsx:
 - 101/207 features passing (100 at session start, +1 this session)
 - Feature #130 marked passing after browser verification
 - Git commit: 9ff8413
+
+## Session 2026-02-21 - Coding Agent (Feature #131)
+
+### Completed Features:
+- Feature #131: Rescheduled indicators - PASSING
+
+### Implementation Details:
+
+Feature requirement: Bookings with re_scheduled_count > 0 show a badge indicating how many times rescheduled.
+
+**Changes made to `client/src/pages/Calendar.tsx`:**
+
+1. **Added RefreshCw icon to imports** (from lucide-react) for the sidebar badge.
+
+2. **Added re_scheduled_count to appts mapping**:
+   - `re_scheduled_count: Number(l.re_scheduled_count) || 0`
+   - Uses `Number()` to handle both numeric and string API return formats
+
+3. **Monthly view booking cards** - when re_scheduled_count > 0:
+   - Small amber badge next to lead name showing the count number
+   - data-testid: `rescheduled-badge-{id}`
+   - title: "Rescheduled {N}x" for accessibility
+   - min-w-[12px] to fit 2+ digit counts
+
+4. **Weekly/day view booking cards** - when re_scheduled_count > 0:
+   - Amber badge next to lead name (slightly larger: 16px min-width)
+   - data-testid: `rescheduled-badge-{id}`
+   - Same amber styling as monthly view
+
+5. **Sidebar appointment list** - when re_scheduled_count > 0:
+   - Amber pill badge with RefreshCw icon + "{N}x" text
+   - data-testid: `rescheduled-badge-{id}`
+   - Similar style to the no-show badge (same sizing)
+
+### Test Setup:
+- Set re_scheduled_count=2 on lead ID 4 (Luis Claudio Fronza, Feb 28 booking) via PATCH API for testing
+
+### Verification (via browser automation agent):
+1. Monthly view (Feb 28 cell): amber badge showing "2" on Luis Claudio Fronza's card - PASS
+2. Sidebar: amber "2x" badge with RefreshCw icon on Luis Claudio Fronza - PASS
+3. Weekly view (Feb 28 column): amber badge showing "2" - PASS
+4. Gabriel Fronza (no_show=true, re_scheduled_count=0): NO rescheduled badge - PASS
+5. Zero JS console errors (0 errors, 0 warnings) - PASS
+6. Real PostgreSQL data via /api/leads - PASS
+
+### Code Changes:
+- MODIFIED: client/src/pages/Calendar.tsx (14 insertions, 1 deletion)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 102/207 features passing (101 at session start, +1 this session)
+- Feature #131 marked passing after thorough browser verification
+- Git commit: 7eb469b
+
+## Session 2026-02-21 - Coding Agent (Feature #132)
+
+### Completed Features:
+- Feature #132: Day click expands to call list - PASSING (already fully implemented)
+
+### Implementation Details:
+
+The feature was ALREADY FULLY IMPLEMENTED from previous sessions. No code changes needed.
+
+The Calendar page implements the full day-click-to-call-list behavior:
+
+1. **Click Handler** (`handleDateClick` function in Calendar.tsx):
+   - Toggles the `selectedDate` state when a date cell is clicked
+   - If same date is clicked again, deselects (sets to null)
+   - The clicked date cell shows a blue ring selection highlight
+
+2. **Right Sidebar Update**:
+   - Header changes from "Upcoming Appointments" to "Appointments for {date}" when `selectedDate` is set
+   - `appointmentsForSelectedDate` useMemo filters all `appts` for the selected date
+   - When a date is selected: shows only bookings for that day
+   - When no date selected: shows all upcoming appointments
+
+3. **Each appointment row shows**:
+   - Lead name (bold, with no-show red styling if applicable)
+   - NO-SHOW badge (red pill with AlertCircle icon) when `no_show=true`
+   - Rescheduled badge (amber pill with RefreshCw icon) when `re_scheduled_count > 0`
+   - Campaign name (if available, in muted smaller text)
+   - Time badge (blue/red for time, with date label)
+   - "VIEW CAL" external link button
+
+### Verification (via browser automation agent):
+1. Clicked February 25 date cell - cell highlighted with blue ring - PASS
+2. Sidebar header changed to "Appointments for 25/02/2026" - PASS
+3. Call list shows Gabriel Fronza with NO-SHOW badge, "Reactivation of our lives" campaign, 15:00 time - PASS
+- Zero JS console errors (0 errors, 0 warnings) - PASS
+- No mock data - real PostgreSQL data via useLeads() hook - PASS
+
+### Screenshot evidence:
+- test-results/cal-03-feb25-clicked.png - Shows selected Feb 25 with blue ring + sidebar showing appointments
+
+### Code Changes:
+- No source code changes required - already fully implemented in prior sessions
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 103/207 features passing (102 at session start, +1 this session)
+- Feature #132 marked passing after thorough browser verification
+- No new code to commit
