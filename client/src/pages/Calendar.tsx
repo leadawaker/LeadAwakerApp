@@ -3,7 +3,7 @@ import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLeads } from "@/hooks/useApiData";
 import { FiltersBar } from "@/components/crm/FiltersBar";
-import { ChevronLeft, ChevronRight, ChevronDown, AlertCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, AlertCircle, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
@@ -58,6 +58,7 @@ export default function CalendarPage() {
           status: l.conversion_status,
           calendar_link: l.calendar_link || "https://cal.example.com/leadawaker",
           no_show: l.no_show === true || l.no_show === "true" || l.no_show === 1,
+          re_scheduled_count: Number(l.re_scheduled_count) || 0,
         };
       })
       .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
@@ -276,6 +277,9 @@ export default function CalendarPage() {
                                   {a.no_show && (
                                     <span className="inline-flex items-center justify-center shrink-0 w-3 h-3 rounded-full bg-red-500 text-white text-[6px] font-black leading-none" data-testid={`no-show-badge-${a.id}`} title="No Show">!</span>
                                   )}
+                                  {a.re_scheduled_count > 0 && (
+                                    <span className="inline-flex items-center justify-center shrink-0 min-w-[12px] h-3 px-0.5 rounded-full bg-amber-500 text-white text-[6px] font-black leading-none" data-testid={`rescheduled-badge-${a.id}`} title={`Rescheduled ${a.re_scheduled_count}x`}>{a.re_scheduled_count}</span>
+                                  )}
                                 </div>
                                 {a.campaign_name && (
                                   <div className="text-[8px] text-muted-foreground truncate leading-tight" data-testid={`booking-campaign-${a.id}`}>{a.campaign_name}</div>
@@ -344,6 +348,9 @@ export default function CalendarPage() {
                                 {a.no_show && (
                                   <span className="inline-flex items-center justify-center shrink-0 w-4 h-4 rounded-full bg-red-500 text-white text-[8px] font-black leading-none" data-testid={`no-show-badge-${a.id}`} title="No Show">!</span>
                                 )}
+                                {a.re_scheduled_count > 0 && (
+                                  <span className="inline-flex items-center justify-center shrink-0 min-w-[16px] h-4 px-0.5 rounded-full bg-amber-500 text-white text-[8px] font-black leading-none" data-testid={`rescheduled-badge-${a.id}`} title={`Rescheduled ${a.re_scheduled_count}x`}>{a.re_scheduled_count}</span>
+                                )}
                               </div>
                               {a.campaign_name && (
                                 <div className="text-[8px] text-muted-foreground truncate" data-testid={`booking-campaign-${a.id}`}>{a.campaign_name}</div>
@@ -385,6 +392,12 @@ export default function CalendarPage() {
                             <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[9px] font-black leading-none shrink-0" data-testid={`no-show-badge-${a.id}`}>
                               <AlertCircle className="w-2.5 h-2.5" />
                               NO-SHOW
+                            </span>
+                          )}
+                          {a.re_scheduled_count > 0 && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[9px] font-black leading-none shrink-0" data-testid={`rescheduled-badge-${a.id}`}>
+                              <RefreshCw className="w-2.5 h-2.5" />
+                              {a.re_scheduled_count}x
                             </span>
                           )}
                         </div>
