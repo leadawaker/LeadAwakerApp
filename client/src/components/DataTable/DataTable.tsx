@@ -74,8 +74,10 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  Copy,
   Database,
   Eye,
+  EyeOff,
   FileText,
   Filter,
   Globe,
@@ -181,6 +183,9 @@ export interface DataTableProps<TRow extends DataTableRow = DataTableRow> {
   addLabel?: string;
   onViewSelected?: () => void;
   canViewSelected?: boolean;
+
+  /** Called when a data row is clicked (not the checkbox column) */
+  onRowClick?: (row: TRow) => void;
 
   onImportCSV?: (file: File) => void;
   onExportCSV?: () => void;
@@ -335,10 +340,43 @@ const formatHeaderTitle = (col: string) => {
   if (col === "campaign_id") return "Campaign ID";
   if (col === "full_name") return "Full Name";
   if (col === "conversion_status") return "Conversion";
+  if (col === "twilio_account_sid") return "Twilio Account SID";
+  if (col === "twilio_auth_token") return "Twilio Auth Token";
+  if (col === "twilio_messaging_service_sid") return "Messaging Service SID";
+  if (col === "twilio_default_from_number") return "Default From Number";
   return col
     .split("_")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+};
+
+/** Fields that contain sensitive Twilio credentials and should be masked by default */
+const TWILIO_SENSITIVE_FIELDS = [
+  "twilio_account_sid",
+  "twilio_auth_token",
+  "twilio_messaging_service_sid",
+];
+
+/** Fields that should show a partially-masked phone-style display */
+const TWILIO_PHONE_FIELDS = ["twilio_default_from_number"];
+
+const isTwilioField = (col: string) =>
+  TWILIO_SENSITIVE_FIELDS.includes(col) || TWILIO_PHONE_FIELDS.includes(col);
+
+/**
+ * Mask a Twilio value for display.
+ * Shows first 4 and last 4 characters with dots in between.
+ * For short values (<= 8 chars), masks everything except last 4.
+ */
+const maskTwilioValue = (value: string): string => {
+  if (!value) return "—";
+  const str = String(value);
+  if (str.length <= 4) return "••••";
+  if (str.length <= 8) return "••••" + str.slice(-4);
+  const prefix = str.slice(0, 4);
+  const suffix = str.slice(-4);
+  const dots = "•".repeat(Math.min(str.length - 8, 12));
+  return `${prefix}${dots}${suffix}`;
 };
 
 const formatDateTimeParts = (value: any) => {
@@ -708,6 +746,37 @@ const automationStatusColors: Record<string, { text: string; bg: string; border:
   error: { text: "text-[#dc2626] dark:text-[#f87171]", bg: "bg-[#dc2626]/10", border: "border-[#dc2626]/20", dot: "bg-[#ef4444]" },
 };
 
+function TwilioFieldRow({ label, value }: { label: string; value: string | null | undefined }) {
+  const [revealed, setRevealed] = React.useState(false);
+  const [copied, setCopied] = React.useState(false);
+  const displayValue = revealed ? (value || "—") : (value ? maskTwilioValue(String(value)) : "Not configured");
+  const handleCopy = () => {
+    if (!value) return;
+    navigator.clipboard.writeText(String(value)).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
+  };
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2 text-[10px] font-black uppercase text-muted-foreground tracking-widest">
+        <Zap className="h-3.5 w-3.5" />
+        <span>{label}</span>
+      </div>
+      <div className={cn("flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-mono", value ? "bg-card dark:bg-secondary border-border text-foreground" : "bg-muted/50 border-border text-muted-foreground italic text-xs font-sans tracking-normal")}>
+        <span className="flex-1 truncate">{displayValue}</span>
+        {value && (
+          <div className="flex items-center gap-1 shrink-0">
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-muted rounded" onClick={() => setRevealed((r) => !r)} title={revealed ? "Hide value" : "Show value"}>
+              {revealed ? <EyeOff className="h-3.5 w-3.5 text-muted-foreground" /> : <Eye className="h-3.5 w-3.5 text-muted-foreground" />}
+            </Button>
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-muted rounded" onClick={handleCopy} title={copied ? "Copied!" : "Copy"}>
+              <Copy className={cn("h-3.5 w-3.5", copied ? "text-emerald-500" : "text-muted-foreground")} />
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function DataTable<TRow extends DataTableRow = DataTableRow>(
   props: DataTableProps<TRow>,
 ) {
@@ -753,6 +822,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     emptyStateDescription,
     pageSize,
     renderBulkActions,
+    onRowClick,
   } = props;
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -1562,9 +1632,16 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                           "group hover:bg-muted/30 transition-colors border-b border-border/50 last:border-0",
                           selectedIds.includes(row.Id) &&
                             "bg-primary/5 hover:bg-primary/10",
+                          onRowClick && "cursor-pointer",
                         )}
+                        onClick={onRowClick ? (e) => {
+                          // Don't fire if clicking the checkbox column
+                          const target = e.target as HTMLElement;
+                          if (target.closest('[data-row-checkbox]')) return;
+                          onRowClick(row);
+                        } : undefined}
                       >
-                        <TableCell className="px-4">
+                        <TableCell className="px-4" data-row-checkbox>
                           <Checkbox
                             checked={selectedIds.includes(row.Id)}
                             onCheckedChange={() => toggleSelect(row.Id)}
@@ -1644,91 +1721,118 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                   </SheetHeader>
                                   <ScrollArea className="h-[calc(100vh-140px)] py-6 pr-4">
                                     <div className="space-y-6">
-                                      {columns
-                                        .filter((c) => !hiddenFields.includes(c))
-                                        .map((c) => (
-                                          <div key={c} className="space-y-1.5">
-                                            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-muted-foreground tracking-widest">
-                                              {getIconForField(c)}
-                                              <span>{c.replace(/_/g, " ")}</span>
-                                            </div>
-                                            {nonEditableFields.includes(c) ? (
-                                              <div className="px-3 py-2 bg-muted/50 rounded-lg text-sm font-medium text-muted-foreground border border-border">
-                                                {isDateCol(c)
-                                                  ? formatDateTime(row[c])
-                                                  : isTimeCol(c)
-                                                    ? formatHHmm(row[c])
-                                                    : row[c] || "-"}
-                                              </div>
-                                            ) : c === "status" ? (
-                                              <Select
-                                                value={row[c] || ""}
-                                                onValueChange={(v) =>
-                                                  handleUpdate(row.Id, c, v)
-                                                }
-                                              >
-                                                <SelectTrigger className="w-full bg-card dark:bg-secondary border-border">
-                                                  <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                  {statusOptions.map((o) => (
-                                                    <SelectItem key={o} value={o}>
-                                                      {o}
-                                                    </SelectItem>
-                                                  ))}
-                                                </SelectContent>
-                                              </Select>
-                                            ) : c === "type" ? (
-                                              <Select
-                                                value={row[c] || ""}
-                                                onValueChange={(v) =>
-                                                  handleUpdate(row.Id, c, v)
-                                                }
-                                              >
-                                                <SelectTrigger className="w-full bg-card dark:bg-secondary border-border">
-                                                  <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                  {typeOptions.map((o) => (
-                                                    <SelectItem key={o} value={o}>
-                                                      {o}
-                                                    </SelectItem>
-                                                  ))}
-                                                </SelectContent>
-                                              </Select>
-                                            ) : c === "timezone" ? (
-                                              <Select
-                                                value={row[c] || ""}
-                                                onValueChange={(v) =>
-                                                  handleUpdate(row.Id, c, v)
-                                                }
-                                              >
-                                                <SelectTrigger className="w-full bg-card dark:bg-secondary border-border">
-                                                  <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                  {timezoneOptions.map((o) => (
-                                                    <SelectItem key={o} value={o}>
-                                                      {o}
-                                                    </SelectItem>
-                                                  ))}
-                                                </SelectContent>
-                                              </Select>
-                                            ) : (
-                                              <Input
-                                                value={row[c] || ""}
-                                                onChange={(e) =>
-                                                  handleUpdate(
-                                                    row.Id,
-                                                    c,
-                                                    e.target.value,
-                                                  )
-                                                }
-                                                className="bg-card dark:bg-secondary border-border focus:ring-brand-blue"
-                                              />
-                                            )}
-                                          </div>
-                                        ))}
+                                      {(() => {
+                                        const visibleCols = columns.filter((c) => !hiddenFields.includes(c));
+                                        const twilioFields = ["twilio_account_sid", "twilio_auth_token", "twilio_messaging_service_sid", "twilio_default_from_number"];
+                                        const hasTwilio = visibleCols.some((c) => twilioFields.includes(c));
+                                        let twilioSectionAdded = false;
+                                        return visibleCols.map((c) => {
+                                          const isTwilio = twilioFields.includes(c);
+                                          const showTwilioHeader = isTwilio && !twilioSectionAdded;
+                                          if (isTwilio) twilioSectionAdded = true;
+                                          return (
+                                            <React.Fragment key={c}>
+                                              {showTwilioHeader && (
+                                                <div className="flex items-center gap-2 pt-2">
+                                                  <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-brand-blue">
+                                                    <Zap className="h-3.5 w-3.5" />
+                                                    <span>Twilio Configuration</span>
+                                                  </div>
+                                                  <div className="flex-1 h-px bg-brand-blue/20" />
+                                                </div>
+                                              )}
+                                              {isTwilio ? (
+                                                <TwilioFieldRow
+                                                  label={formatHeaderTitle(c)}
+                                                  value={row[c]}
+                                                />
+                                              ) : (
+                                                <div className="space-y-1.5">
+                                                  <div className="flex items-center gap-2 text-[10px] font-black uppercase text-muted-foreground tracking-widest">
+                                                    {getIconForField(c)}
+                                                    <span>{formatHeaderTitle(c)}</span>
+                                                  </div>
+                                                  {nonEditableFields.includes(c) ? (
+                                                    <div className="px-3 py-2 bg-muted/50 rounded-lg text-sm font-medium text-muted-foreground border border-border">
+                                                      {isDateCol(c)
+                                                        ? formatDateTime(row[c])
+                                                        : isTimeCol(c)
+                                                          ? formatHHmm(row[c])
+                                                          : row[c] || "-"}
+                                                    </div>
+                                                  ) : c === "status" ? (
+                                                    <Select
+                                                      value={row[c] || ""}
+                                                      onValueChange={(v) =>
+                                                        handleUpdate(row.Id, c, v)
+                                                      }
+                                                    >
+                                                      <SelectTrigger className="w-full bg-card dark:bg-secondary border-border">
+                                                        <SelectValue />
+                                                      </SelectTrigger>
+                                                      <SelectContent>
+                                                        {statusOptions.map((o) => (
+                                                          <SelectItem key={o} value={o}>
+                                                            {o}
+                                                          </SelectItem>
+                                                        ))}
+                                                      </SelectContent>
+                                                    </Select>
+                                                  ) : c === "type" ? (
+                                                    <Select
+                                                      value={row[c] || ""}
+                                                      onValueChange={(v) =>
+                                                        handleUpdate(row.Id, c, v)
+                                                      }
+                                                    >
+                                                      <SelectTrigger className="w-full bg-card dark:bg-secondary border-border">
+                                                        <SelectValue />
+                                                      </SelectTrigger>
+                                                      <SelectContent>
+                                                        {typeOptions.map((o) => (
+                                                          <SelectItem key={o} value={o}>
+                                                            {o}
+                                                          </SelectItem>
+                                                        ))}
+                                                      </SelectContent>
+                                                    </Select>
+                                                  ) : c === "timezone" ? (
+                                                    <Select
+                                                      value={row[c] || ""}
+                                                      onValueChange={(v) =>
+                                                        handleUpdate(row.Id, c, v)
+                                                      }
+                                                    >
+                                                      <SelectTrigger className="w-full bg-card dark:bg-secondary border-border">
+                                                        <SelectValue />
+                                                      </SelectTrigger>
+                                                      <SelectContent>
+                                                        {timezoneOptions.map((o) => (
+                                                          <SelectItem key={o} value={o}>
+                                                            {o}
+                                                          </SelectItem>
+                                                        ))}
+                                                      </SelectContent>
+                                                    </Select>
+                                                  ) : (
+                                                    <Input
+                                                      value={row[c] || ""}
+                                                      onChange={(e) =>
+                                                        handleUpdate(
+                                                          row.Id,
+                                                          c,
+                                                          e.target.value,
+                                                        )
+                                                      }
+                                                      className="bg-card dark:bg-secondary border-border focus:ring-brand-blue"
+                                                    />
+                                                  )}
+                                                </div>
+                                              )}
+                                            </React.Fragment>
+                                          );
+                                        });
+                                      })()}
                                     </div>
                                   </ScrollArea>
                                 </SheetContent>
