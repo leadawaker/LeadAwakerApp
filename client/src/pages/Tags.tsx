@@ -139,6 +139,7 @@ export default function TagsPage() {
   const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
   const [campaignId, setCampaignId] = useState<string>("all");
   const [selectedAccountId, setSelectedAccountId] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   // Create Tag dialog state
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -238,6 +239,18 @@ export default function TagsPage() {
     return map;
   }, [filteredLeads]);
 
+  // Derived list of all unique categories for the filter dropdown
+  const categoryOptions = useMemo((): string[] => {
+    const cats = new Set<string>();
+    tags.forEach((tag) => {
+      const key = tag.category
+        ? tag.category.charAt(0).toUpperCase() + tag.category.slice(1)
+        : "Uncategorized";
+      cats.add(key);
+    });
+    return Array.from(cats).sort((a, b) => a.localeCompare(b));
+  }, [tags]);
+
   // Group real API tags by category
   const groupedCategories = useMemo((): GroupedCategory[] => {
     const categoryMap = new Map<string, (Tag & { count: number; hexColor: string })[]>();
@@ -246,6 +259,9 @@ export default function TagsPage() {
       const categoryKey = tag.category
         ? tag.category.charAt(0).toUpperCase() + tag.category.slice(1)
         : "Uncategorized";
+
+      // Apply category filter
+      if (selectedCategory !== "all" && categoryKey !== selectedCategory) return;
 
       // Apply search filter
       if (q && !tag.name!.toLowerCase().includes(q.toLowerCase())) return;
@@ -269,7 +285,7 @@ export default function TagsPage() {
         type,
         tags: catTags.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "")),
       }));
-  }, [tags, tagCounts, q]);
+  }, [tags, tagCounts, q, selectedCategory]);
 
   const selectedTag = useMemo(
     () => (selectedTagId != null ? tags.find((t) => t.id === selectedTagId) ?? null : null),
@@ -442,6 +458,22 @@ export default function TagsPage() {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
               />
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger
+                  data-testid="select-category-filter"
+                  className="w-[160px] h-10 rounded-xl bg-card"
+                >
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categoryOptions.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Select
                 value={selectedAccountId}
                 onValueChange={(v) => {
@@ -706,7 +738,15 @@ export default function TagsPage() {
             <DataEmptyState
               variant="search"
               title="No tags found"
-              description={q ? `No tags match "${q}"` : "No tags available."}
+              description={
+                q && selectedCategory !== "all"
+                  ? `No tags match "${q}" in category "${selectedCategory}"`
+                  : q
+                  ? `No tags match "${q}"`
+                  : selectedCategory !== "all"
+                  ? `No tags in category "${selectedCategory}"`
+                  : "No tags available."
+              }
             />
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-6 items-start">
