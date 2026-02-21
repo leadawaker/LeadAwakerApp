@@ -16,6 +16,8 @@ interface CampaignCardGridProps {
   metrics: CampaignMetricsHistory[];
   loading?: boolean;
   searchValue?: string;
+  onCampaignClick?: (campaign: Campaign) => void;
+  selectedCampaignId?: number | null;
 }
 
 /** Status badge color mapping */
@@ -38,14 +40,36 @@ function getStatusColor(status: string): { bg: string; text: string; dot: string
   }
 }
 
-/** Aggregate all metrics for a campaign into summary stats */
-function aggregateCampaignMetrics(cMetrics: CampaignMetricsHistory[]) {
+/**
+ * Get campaign metrics from the Campaign object's own fields (from Campaigns table)
+ * or fall back to aggregated campaign-metrics-history records.
+ */
+function getCampaignMetrics(campaign: Campaign, cMetrics: CampaignMetricsHistory[]) {
+  // Prefer direct Campaigns table fields if they have real data
+  const directLeads = Number(campaign.total_leads_targeted) || 0;
+  const directMessages = Number(campaign.total_messages_sent) || 0;
+  const directResponseRate = Number(campaign.response_rate_percent) || 0;
+  const directBookingRate = Number(campaign.booking_rate_percent) || 0;
+
+  // If the Campaigns table has real values, use those
+  if (directLeads > 0 || directMessages > 0 || directResponseRate > 0 || directBookingRate > 0) {
+    return {
+      totalLeadsTargeted: directLeads,
+      totalMessagesSent: directMessages,
+      responseRate: directResponseRate,
+      bookingRate: directBookingRate,
+      source: "campaigns" as const,
+    };
+  }
+
+  // Fall back to campaign-metrics-history aggregation
   if (cMetrics.length === 0) {
     return {
       totalLeadsTargeted: 0,
       totalMessagesSent: 0,
       responseRate: null as number | null,
       bookingRate: null as number | null,
+      source: "history" as const,
     };
   }
   // For rates, use the latest snapshot (most recent metric_date)
@@ -69,6 +93,7 @@ function aggregateCampaignMetrics(cMetrics: CampaignMetricsHistory[]) {
     totalMessagesSent,
     responseRate: Number(latest.response_rate_percent) || 0,
     bookingRate: Number(latest.booking_rate_percent) || 0,
+    source: "history" as const,
   };
 }
 
@@ -139,6 +164,8 @@ export function CampaignCardGrid({
   metrics,
   loading,
   searchValue,
+  onCampaignClick,
+  selectedCampaignId,
 }: CampaignCardGridProps) {
   // Group metrics by campaign id
   const metricsByCampaign = useMemo(() => {
@@ -190,8 +217,13 @@ export function CampaignCardGrid({
       {campaigns.map((campaign) => {
         const cid = campaign.id || campaign.Id;
         const cMetrics = metricsByCampaign[cid] || [];
-        const hasMetrics = cMetrics.length > 0;
-        const agg = aggregateCampaignMetrics(cMetrics);
+        const agg = getCampaignMetrics(campaign, cMetrics);
+        // Has metrics if we have non-zero data from either source
+        const hasMetrics =
+          agg.totalLeadsTargeted > 0 ||
+          agg.totalMessagesSent > 0 ||
+          (agg.responseRate !== null && agg.responseRate > 0) ||
+          (agg.bookingRate !== null && agg.bookingRate > 0);
         const statusColors = getStatusColor(campaign.status);
 
         // Campaign initials for avatar
@@ -202,12 +234,17 @@ export function CampaignCardGrid({
           .join("");
 
         return (
-          <div
+          <button
             key={cid}
+            type="button"
+            onClick={() => onCampaignClick?.(campaign)}
             className={cn(
-              "rounded-2xl border border-border bg-card p-5 shadow-sm",
-              "hover:shadow-md hover:border-primary/30 transition-all duration-200",
-              "flex flex-col gap-0"
+              "rounded-2xl border bg-card p-5 shadow-sm text-left w-full",
+              "hover:shadow-md transition-all duration-200",
+              "flex flex-col gap-0",
+              selectedCampaignId === cid
+                ? "border-primary ring-1 ring-primary/40 shadow-md"
+                : "border-border hover:border-primary/30"
             )}
             data-testid={`campaign-card-${cid}`}
           >
@@ -312,7 +349,7 @@ export function CampaignCardGrid({
                 </p>
               </div>
             )}
-          </div>
+          </button>
         );
       })}
     </div>

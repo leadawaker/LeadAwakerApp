@@ -159,6 +159,17 @@ export const campaigns = nocodb.table("Campaigns", {
   firstMessage: text("First_Message"),
   agentName: text("agent_name"),
   serviceName: text("service_name"),
+  // Performance metrics (calculated fields on Campaigns table)
+  totalLeadsTargeted: integer("total_leads_targeted"),
+  totalMessagesSent: integer("total_messages_sent"),
+  totalResponsesReceived: integer("total_responses_received"),
+  responseRatePercent: numeric("response_rate_percent"),
+  bookingsGenerated: integer("bookings_generated"),
+  bookingRatePercent: numeric("booking_rate_percent"),
+  costPerLead: numeric("cost_per_lead"),
+  costPerBooking: numeric("cost_per_booking"),
+  roiPercent: numeric("roi_percent"),
+  lastMetricsCalculatedAt: timestamp("last_metrics_calculated_at"),
 });
 
 export const insertCampaignsSchema = createInsertSchema(campaigns).omit({

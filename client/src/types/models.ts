@@ -60,6 +60,19 @@ export type Campaign = {
   use_ai_bumps: boolean;
   max_bumps: number;
   stop_on_response: boolean;
+  // Performance metrics from Campaigns table
+  total_leads_targeted?: number | null;
+  total_messages_sent?: number | null;
+  total_responses_received?: number | null;
+  response_rate_percent?: string | number | null;
+  bookings_generated?: number | null;
+  booking_rate_percent?: string | number | null;
+  cost_per_lead?: string | number | null;
+  cost_per_booking?: string | number | null;
+  roi_percent?: string | number | null;
+  last_metrics_calculated_at?: string | null;
+  // Computed/joined fields
+  account_name?: string;
   [key: string]: any;
 };
 
