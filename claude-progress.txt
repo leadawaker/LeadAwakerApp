@@ -4466,3 +4466,176 @@ The feature was ALREADY FULLY IMPLEMENTED from prior sessions. No source code ch
 - Feature #139 marked passing after end-to-end browser verification
 - Screenshots in test-results/feat-139/
 
+
+## Session 2026-02-21 - Coding Agent (Feature #140)
+
+### Completed Features:
+- Feature #140: Calendar dark mode variant - PASSING
+
+### Implementation Details:
+
+Feature requirement: Calendar renders correctly in dark mode with proper grid, card, and text styling.
+
+The feature was ALREADY FULLY IMPLEMENTED from prior sessions. No source code changes were required.
+
+**How dark mode works in this app:**
+- `useTheme` hook in `/client/src/hooks/useTheme.ts` manages dark mode state
+- Persists preference in localStorage under "theme" key
+- Applies/removes `.dark` CSS class on `<html>` element
+- Toggle button accessible via Topbar (ref: `e32` in browser) with aria-label "Switch to dark mode" / "Switch to light mode"
+
+**Dark mode styling in Calendar.tsx:**
+- Uses Tailwind `dark:` variant classes throughout:
+  - `dark:text-red-400`, `dark:text-emerald-400`, `dark:text-amber-400`
+  - `dark:text-brand-blue`, `dark:text-red-300`
+- Semantic CSS variables (bg-background, bg-card, text-foreground, border-border) automatically adapt to dark mode via Tailwind v4 theme
+- Calendar grid: `bg-muted/5`, `bg-card`, `bg-background/80` → all adapt to dark mode automatically
+- Booking cards: `bg-red-500/15`, `bg-brand-blue/15` with dark: text overrides
+
+### Verification (via playwright-cli browser automation):
+1. Clicked dark mode toggle (e32) - page switched to dark mode - PASS
+2. Navigated to /agency/calendar - calendar grid renders with dark surfaces - PASS
+3. Month view: dark navy cell backgrounds, subtle borders, white date numbers - PASS
+4. Today (Feb 21) highlighted in blue with proper contrast on dark background - PASS
+5. Booking cards visible at Feb 25 (Gabriel Fronza, NO-SHOW) and Feb 28 (Luis Claudio Fronza, 2x) - PASS
+6. Week view: dark time grid, column headers (FEB 16-22) readable - PASS
+7. Day view: single column for Feb 21, dark surface, time rail readable - PASS
+8. Right panel "Upcoming Appointments" - cards readable with colored badges - PASS
+9. Zero JS console errors - PASS
+
+### Code Changes:
+- No source code changes required - already fully implemented in prior sessions
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Calendar route: /agency/calendar
+
+### Current Status:
+- 111/207 features passing (110 at session start, +1 this session)
+- Feature #140 marked passing after thorough browser verification
+- Git commit: a8a5b61
+
+## Session 2026-02-21 - Coding Agent (Feature #141)
+
+### Completed Features:
+- Feature #141: Calendar responsive layout - PASSING
+
+### Implementation Details:
+
+Feature requirement: Calendar adapts to smaller viewports with appropriate layout changes.
+
+**Changes made to `client/src/pages/Calendar.tsx`:**
+
+1. **Added viewport tracking state** (after other state declarations):
+   - `viewportWidth` state initialized from `window.innerWidth` (1024px fallback for SSR)
+   - `isMobile = viewportWidth < 640` - computed boolean
+   - `isTablet = viewportWidth >= 640 && viewportWidth < 1024` - computed boolean
+
+2. **Added resize useEffect**:
+   - Listens to `window resize` events
+   - Updates `viewportWidth` on each resize
+   - When width < 640px, auto-sets `viewMode = "day"` for usability
+   - Also runs once on mount to set day view if starting on mobile
+
+3. **Outer page div** - changed from `overflow-hidden h-full` to:
+   - Mobile/tablet: `h-auto overflow-y-auto` (allows scrolling)
+   - Desktop: `h-full overflow-hidden` (original behavior preserved)
+
+4. **Layout grid div** (main layout container):
+   - Mobile/tablet: `flex flex-col overflow-y-auto` (stacked vertical layout)
+   - Desktop: `grid grid-cols-1 lg:grid-cols-[1fr_300px]` (original side-by-side)
+
+5. **Calendar main area**:
+   - Mobile/tablet: `min-h-[420px]` (allows scrolling within, doesn't fill screen)
+   - Desktop: `h-full` (fills available space)
+
+6. **Appointments list panel** (calendar-list):
+   - Mobile/tablet: `min-h-[200px] max-h-[300px]` (compact, scrollable below calendar)
+   - Desktop: `h-full` (fills remaining space in grid)
+
+7. **Toolbar compactness on mobile**:
+   - Account filter: text label hidden with `!isMobile` guard (icon-only on mobile)
+   - Campaign filter: text label hidden with `!isMobile` guard (icon-only on mobile)
+   - View label min-width: 100px on mobile vs 140px on desktop
+
+### Verification:
+- **Desktop (1280px)**: Side-by-side layout, month view, all controls with labels - PASS
+- **Tablet (768px)**: Stacked layout, month view (readable 7-col grid), appointments panel below, toolbar with all controls - PASS
+- **Mobile (375px)**: Stacked layout, auto-switched to day view, compact icon-only toolbar, appointments panel below - PASS
+- Zero console errors (0 errors, 0 warnings) - PASS
+- No mock data - real PostgreSQL via useLeads() - PASS
+
+### Screenshots:
+- test-results/feat-141/01-desktop-calendar.png
+- test-results/feat-141/02-tablet-calendar.png
+- test-results/feat-141/03-mobile-calendar.png
+
+### Code Changes:
+- MODIFIED: client/src/pages/Calendar.tsx (58 insertions, 9 deletions)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 111/207 features passing (110 at session start, +1 this session)
+- Feature #141 marked passing after thorough browser verification at 3 viewport sizes
+- Git commit: 75f740e
+
+## Session 2026-02-21 - Coding Agent (Feature #142)
+
+### Completed Features:
+- Feature #142: Account list with status indicators - PASSING (already fully implemented)
+
+### Implementation Details:
+
+Feature requirement: Agency-only page showing list of accounts with active/inactive status badges.
+
+The feature was ALREADY FULLY IMPLEMENTED from previous sessions. No code changes needed.
+
+**Implementation in `client/src/features/accounts/` directory:**
+
+1. **`AccountsPage.tsx`** - Main page component using `useAccountsData` hook
+2. **`AccountsTable.tsx`** - DataTable wrapper with STATUS_OPTIONS: ["Active", "Inactive", "Trial", "Suspended", "Unknown"]
+3. **`accountsApi.ts`** - API calls to `/api/accounts` endpoint
+4. **`useAccountsData.ts`** - Data hook with CRUD operations, column ordering, sort/filter persistence
+
+**Status badge rendering:**
+- Handled by the shared `DataTable` component's status column renderer
+- Green dot + "ACTIVE" badge for active accounts
+- Red dot + "SUSPENDED" badge for suspended accounts
+- Blue dot + "TRIAL" badge for trial accounts
+- No dot + gray "INACTIVE" badge for inactive accounts
+
+**Account data verified:**
+- Pepsi (ID 5): SUSPENDED (red)
+- Paul Mackartney (ID 25): TRIAL (blue)
+- van de Kerkhof (ID 2): ACTIVE (green)
+- Wow (ID 1): ACTIVE (green) + AGENCY type badge
+- Astra-Zeneca 2 (ID 3): SUSPENDED (red)
+- Coca-Cola 2 (ID 4): ACTIVE (green)
+
+### Verification (via browser automation):
+1. Navigate to /agency/accounts as Admin user - PASS
+2. Account list renders with all 6 accounts from PostgreSQL - PASS
+3. Status badges visible with color-coded indicators: green (ACTIVE), red (SUSPENDED), blue (TRIAL) - PASS
+4. Zero JS console errors (21 Radix UI Popover warnings, unrelated to this feature) - PASS
+5. No mock data - real PostgreSQL data via /api/accounts endpoint - PASS
+6. PostgreSQL connected - 11/11 tables accessible - PASS
+
+### Code Changes:
+- No source code changes required - already fully implemented in prior sessions
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Accounts route: /agency/accounts
+
+### Current Status:
+- 112/207 features passing (111 at session start, +1 this session)
+- Feature #142 marked passing after thorough browser verification
+- No new code to commit
