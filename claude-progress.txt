@@ -5972,3 +5972,76 @@ The edit tag functionality was already completely implemented in `client/src/pag
 - 135/207 features passing (134 at session start, +1 this session)
 - Feature #164 marked passing after thorough browser verification
 - Git commit: 77af8b5
+
+## Session 2026-02-21 - Coding Agent (Feature #165)
+
+### Completed Features:
+- Feature #165: Color picker for tag colors - PASSING
+
+### Implementation Details:
+
+Feature requirement: Visual color picker component for selecting tag display colors.
+
+**Modified: client/src/pages/Tags.tsx**
+
+1. **Added `ChevronDown` to lucide-react imports**
+
+2. **New `COLOR_PALETTE` constant:** Filtered entries from COLOR_MAP (excluding "grey" duplicate), used as the swatch grid data source.
+
+3. **New `ColorPicker` component (inline, ~60 lines):**
+   - Props: `value` (color name string), `onChange` (callback), `data-testid` (optional)
+   - Trigger button: shows colored circle + color name label + chevron arrow
+   - Popover content: 5-column grid of colored circle swatches
+   - Each swatch: rounded-full button, hover scale-110, ring-2 when selected
+   - Selected swatch shows a `<Check>` icon overlaid (white, drop-shadow)
+   - Footer label shows current color name
+   - Clicking a swatch: sets color, closes popover automatically
+   - data-testid pattern: `{testId}` (trigger), `{testId}-popover` (popover), `{testId}-swatch-{colorName}` (each swatch)
+
+4. **Replaced Select dropdowns in Create Tag dialog:**
+   - Old: `<Select value={createColor} onValueChange={setCreateColor}>` with SelectItems
+   - New: `<ColorPicker value={createColor} onChange={setCreateColor} data-testid="color-picker-create" />`
+
+5. **Replaced Select dropdown in Edit Tag dialog:**
+   - Old: `<Select value={editColor} onValueChange={setEditColor}>` with SelectItems
+   - New: `<ColorPicker value={editColor} onChange={setEditColor} data-testid="color-picker-edit" />`
+
+6. **Select import retained** — still used for Account/Campaign filter dropdowns in page header
+
+### Verification (via browser automation):
+1. Navigated to /agency/tags as Admin - 35 tags in 8 categories - PASS
+2. Clicked "Create Tag" button - dialog opened - PASS
+3. Color field shows blue circle + "Blue" label + chevron (not a Select dropdown) - PASS
+4. Clicked Color picker trigger - popover opened with "Choose a color" heading + 11 color swatches in 5-column grid - PASS
+5. Blue swatch has checkmark (current selection) - PASS
+6. Clicked green swatch - popover closed, trigger updated to green circle + "Green" - PASS
+7. Clicked edit button on "ai stop" tag (edit-tag-2) - Edit dialog opened - PASS
+8. Edit color picker shows Red circle (pre-populated from tag's color) - PASS
+9. Clicked edit color picker - red swatch has checkmark indicator - PASS
+10. Zero JS console errors (2 non-critical Radix aria warnings only) - PASS
+
+### Screenshots:
+- test-results/feat-165/01-tags-page.png
+- test-results/feat-165/02-create-tag-dialog.png (color picker trigger button visible)
+- test-results/feat-165/03-color-picker-open.png (swatch grid popover open)
+- test-results/feat-165/04-after-green-selected.png (green selected, popover closed)
+- test-results/feat-165/05-edit-dialog.png (edit dialog, red pre-populated)
+- test-results/feat-165/06-edit-color-picker-open.png (edit color picker with red checkmark)
+
+### Code Changes:
+- MODIFIED: client/src/pages/Tags.tsx (+84 lines, -38 lines)
+  - Added ChevronDown import
+  - Added COLOR_PALETTE constant
+  - Added ColorPicker component (~60 lines)
+  - Replaced 2x Select color dropdowns with ColorPicker component
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173 (also accessible on 5000)
+- Login: leadawaker@gmail.com / test123
+- Tags route: /agency/tags
+
+### Current Status:
+- 136/207 features passing (135 at session start, +1 this session)
+- Feature #165 marked passing after thorough browser verification
+- Git commit: ad6b5e1
