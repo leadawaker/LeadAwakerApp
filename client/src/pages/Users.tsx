@@ -58,8 +58,11 @@ function isActive(status: string | null | undefined): boolean {
   return status.toLowerCase() === "active";
 }
 
+type RoleFilter = "All" | "Admin" | "Operator" | "Manager" | "Agent" | "Viewer";
+
 export default function UsersPage() {
   const [q, setQ] = useState("");
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>("All");
   const [users, setUsers] = useState<AppUser[]>([]);
   const [accounts, setAccounts] = useState<AccountMap>({});
   const [loading, setLoading] = useState(true);
@@ -127,8 +130,11 @@ export default function UsersPage() {
       (u.email || "").toLowerCase().includes(q.toLowerCase()) ||
       (u.fullName1 || "").toLowerCase().includes(q.toLowerCase());
 
-    return users.filter(matchesSearch);
-  }, [q, users]);
+    const matchesRole = (u: AppUser) =>
+      roleFilter === "All" || u.role === roleFilter;
+
+    return users.filter(u => matchesSearch(u) && matchesRole(u));
+  }, [q, roleFilter, users]);
 
   // Pending invites: users with "Invited" status who have an invite_token in preferences
   const pendingInvites = useMemo(() => {
@@ -349,15 +355,47 @@ export default function UsersPage() {
     <CrmShell>
       <div className="h-full overflow-hidden flex flex-col" data-testid="page-users">
         <div className="flex-1 min-h-0 py-4 flex flex-col">
-          <div className="flex items-center justify-between mb-6 shrink-0">
-            <div className="flex items-center gap-2 w-full md:w-auto" data-testid="bar-users">
+          <div className="flex items-center justify-between mb-6 shrink-0 gap-3 flex-wrap">
+            <div className="flex items-center gap-2 w-full md:w-auto flex-wrap" data-testid="bar-users">
               <input
-                className="h-10 w-full md:w-[320px] rounded-xl border border-border bg-card px-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all text-foreground"
+                className="h-10 w-full md:w-[280px] rounded-xl border border-border bg-card px-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all text-foreground"
                 placeholder="Search name or email…"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 data-testid="input-user-search"
               />
+              <Select
+                value={roleFilter}
+                onValueChange={(val) => setRoleFilter(val as RoleFilter)}
+              >
+                <SelectTrigger
+                  className="h-10 w-[160px] rounded-xl border border-border bg-card text-sm shadow-sm"
+                  data-testid="select-role-filter"
+                >
+                  <SelectValue placeholder="Filter by role…" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Roles</SelectItem>
+                  <SelectItem value="Admin">Admin</SelectItem>
+                  <SelectItem value="Operator">Operator</SelectItem>
+                  <SelectItem value="Manager">Manager</SelectItem>
+                  <SelectItem value="Agent">Agent</SelectItem>
+                  <SelectItem value="Viewer">Viewer</SelectItem>
+                </SelectContent>
+              </Select>
+              {roleFilter !== "All" && (
+                <button
+                  className="h-10 px-3 rounded-xl border border-border bg-card text-sm text-muted-foreground hover:bg-muted transition-colors flex items-center gap-1.5"
+                  onClick={() => setRoleFilter("All")}
+                  data-testid="button-clear-role-filter"
+                  title="Clear role filter"
+                >
+                  <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-medium", getRoleStyle(roleFilter))}>
+                    {roleFilter}
+                  </span>
+                  ×
+                </button>
+              )}
             </div>
             {isAdmin && (
               <Button
