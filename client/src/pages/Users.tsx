@@ -22,7 +22,7 @@ interface AppUser {
   email: string | null;
   phone: string | null;
   timezone: string | null;
-  role: "Admin" | "Manager" | "Agent" | "Viewer" | null;
+  role: "Admin" | "Operator" | "Manager" | "Agent" | "Viewer" | null;
   status: string | null;
   avatarUrl: string | null;
   n8nWebhookUrl: string | null;
@@ -70,7 +70,7 @@ export default function UsersPage() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("Viewer");
-  const [inviteAccountId, setInviteAccountId] = useState<string>("");
+  const [inviteAccountId, setInviteAccountId] = useState<string>("none");
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteResult, setInviteResult] = useState<{ token: string; email: string } | null>(null);
   const [tokenCopied, setTokenCopied] = useState(false);
@@ -173,7 +173,7 @@ export default function UsersPage() {
   const handleInviteOpen = () => {
     setInviteEmail("");
     setInviteRole("Viewer");
-    setInviteAccountId("");
+    setInviteAccountId("none");
     setInviteResult(null);
     setTokenCopied(false);
     setInviteOpen(true);
@@ -191,7 +191,7 @@ export default function UsersPage() {
     setInviteLoading(true);
     try {
       const body: Record<string, any> = { email: inviteEmail.trim(), role: inviteRole };
-      if (inviteAccountId) body.accountsId = Number(inviteAccountId);
+      if (inviteAccountId && inviteAccountId !== "none") body.accountsId = Number(inviteAccountId);
       const res = await apiFetch("/api/users/invite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -416,6 +416,7 @@ export default function UsersPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Admin">Admin</SelectItem>
+                      <SelectItem value="Operator">Operator</SelectItem>
                       <SelectItem value="Manager">Manager</SelectItem>
                       <SelectItem value="Agent">Agent</SelectItem>
                       <SelectItem value="Viewer">Viewer</SelectItem>
@@ -429,7 +430,7 @@ export default function UsersPage() {
                       <SelectValue placeholder="No account assigned" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No account</SelectItem>
+                      <SelectItem value="none">No account</SelectItem>
                       {Object.entries(accounts).map(([id, name]) => (
                         <SelectItem key={id} value={id}>{name}</SelectItem>
                       ))}
@@ -508,6 +509,7 @@ export default function UsersPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Admin">Admin</SelectItem>
+                      <SelectItem value="Operator">Operator</SelectItem>
                       <SelectItem value="Manager">Manager</SelectItem>
                       <SelectItem value="Agent">Agent</SelectItem>
                       <SelectItem value="Viewer">Viewer</SelectItem>
