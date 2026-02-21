@@ -5697,3 +5697,203 @@ Feature requirement: Users page renders correctly in dark mode. Steps: Toggle da
 - 131/207 features passing (130 at session start, +1 this session)
 - Feature #161 marked passing after thorough browser verification
 - Git commit: 399be04
+
+## Session 2026-02-21 - Coding Agent (Feature #160)
+
+### Completed Features:
+- Feature #160: Users search - PASSING
+
+### Implementation Details:
+
+Feature requirement: Search users by name or email (type in search, verify matching users display, search by email, clear search).
+
+**Status: Already implemented in previous sessions.**
+
+The search functionality was already fully implemented in `client/src/pages/Users.tsx`:
+- `const [q, setQ] = useState("")` - search query state (line 64)
+- `matchesSearch` function filters by `u.email` and `u.fullName1` using case-insensitive `includes()` (lines 129-132)
+- Search input with `data-testid="input-user-search"` and placeholder "Search name or email…" (lines 367-374)
+- The `rows` useMemo combines search + role filter + account filter (line 143)
+
+### Verification (via browser automation):
+1. Navigated to /agency/users - 9 users displayed - PASS
+2. Search input present with correct data-testid - PASS
+3. Typed "Gabriel" - filtered to 1 user (Gabriel Barbosa Fronza 2) - PASS
+4. Cleared search - all 9 users returned - PASS
+5. Typed "leadawaker@gmail.com" - filtered to 1 user by email - PASS
+6. Zero JS console errors - PASS
+
+### Screenshots:
+- test-results/users-search/01-users-page.png
+- test-results/users-search/02-search-gabriel.png
+- test-results/users-search/03-cleared-search.png
+- test-results/users-search/04-search-email.png
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Users route: /agency/users
+
+### Current Status:
+- 130/207 features passing (129 at session start, +1 this session)
+- Feature #160 marked passing after thorough browser verification
+- Git commit: d8663d5
+
+## Session 2026-02-21 - Coding Agent (Feature #162)
+
+### Completed Features:
+- Feature #162: Tag list grouped by category - PASSING
+
+### Implementation Details:
+
+Feature requirement: Agency-only Tags page showing tags organized by their category field. Steps: Navigate to Tags page as Admin, verify tags render grouped by category, verify each tag shows name, color, and description.
+
+**Problem Found:** The existing Tags.tsx used a completely hardcoded static array `TAG_CATEGORIES` instead of fetching real data from `/api/tags`. This was mock data that didn't reflect the actual database.
+
+**Modified: client/src/pages/Tags.tsx** (complete rewrite)
+
+1. **Removed** hardcoded `TAG_CATEGORIES` constant (static mock data with 6 groups, 29 hardcoded tags)
+
+2. **Added** real API fetching:
+   - `GET /api/tags` → real tags with `name`, `color`, `category`, `description`, `id` fields
+   - `GET /api/leads` → for counting leads per tag
+   - `GET /api/campaigns` → for campaign filter dropdown
+   - `GET /api/accounts` → for account filter dropdown (was also hardcoded mock)
+
+3. **Added** `COLOR_MAP` to convert DB color name strings (e.g., "blue", "red", "yellow") to hex values
+
+4. **Added** `resolveColor()` helper that handles both named colors and hex color strings
+
+5. **Tag grouping logic** (`groupedCategories` useMemo):
+   - Iterates all tags from API
+   - Groups by `tag.category` field (normalized to Title Case)
+   - Falls back to "Uncategorized" for tags with null category
+   - Applies search filter at grouping time
+   - Sorts categories alphabetically, tags within each by name
+
+6. **UI features preserved:**
+   - Color dot with lead count badge
+   - Tag name + description
+   - Click to select tag + show leads in side panel
+   - Side panel shows: tag title, description, category badge, auto-applied indicator
+   - Search filter input (data-testid="input-search-tags")
+   - Account filter Select (real accounts from API)
+   - Campaign filter Select (real campaigns from API, scoped to selected account)
+
+7. **Added** data-testids: `tags-page`, `tag-category-{type}`, `tag-item-{id}`, `tag-name-{id}`, `side-panel-title`, `side-panel-description`, `side-panel-leads`
+
+### Verification (via browser automation):
+1. Navigated to /agency/tags as Admin - PASS
+2. 7 categories loaded from real DB: Automation, Behavior, Outcome, Priority, Source, Status, Uncategorized - PASS
+3. All 6 expected categories present (Status, Outcome, Automation, Behavior, Source, Priority) - PASS
+4. 34 tag items rendered from real database (not hardcoded 29) - PASS
+5. First tag name: "ai stop" (from DB) - PASS
+6. Color dots rendered for all 34 tags - PASS
+7. Clicked "ai stop" tag - side panel shows "Leads: ai stop", description "Stop all AI-generated messages", category "Automation" - PASS
+8. Search "bump" filter - 8 tags shown (all bump-related) - PASS
+9. Tag IDs 2 and 3 present (from real DB) - PASS
+10. Zero JS console errors - PASS
+11. No mock data patterns in source code (TAG_CATEGORIES removed) - PASS
+
+### Screenshots:
+- test-results/feat-162/01-tags-page-initial.png (full page with all categories)
+- test-results/feat-162/02-tag-selected.png (ai stop selected, side panel open)
+- test-results/feat-162/03-search-bump.png (bump search filter active)
+
+### Code Changes:
+- MODIFIED: client/src/pages/Tags.tsx (complete rewrite: removed mock TAG_CATEGORIES, added real API fetching, added real grouping by DB category field)
+- CREATED: script/test-feat-162-tags.cjs (test script)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Tags route: /agency/tags
+
+### Current Status:
+- 132/207 features passing (131 at session start, +1 this session)
+- Feature #162 marked passing after thorough browser verification
+- Git commit: a25c471
+
+## Session 2026-02-21 - Coding Agent (Feature #163)
+
+### Completed Features:
+- Feature #163: Create new tag - PASSING
+
+### Implementation Details:
+
+Feature requirement: Form to create a new tag with name, color, category, and description fields.
+
+**Modified: client/src/pages/Tags.tsx**
+
+1. **New imports added:**
+   - Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter from @/components/ui/dialog
+   - Button from @/components/ui/button
+   - Input from @/components/ui/input
+   - Label from @/components/ui/label
+   - Textarea from @/components/ui/textarea
+   - Plus icon from lucide-react
+   - useToast from @/hooks/use-toast
+
+2. **New state variables:**
+   - `createDialogOpen` (boolean) - controls dialog open/close
+   - `createName` (string) - tag name input
+   - `createColor` (string) - selected color, defaults to "blue"
+   - `createCategory` (string) - category input
+   - `createDescription` (string) - description input
+   - `creating` (boolean) - tracks API call in progress
+   - `{ toast }` from useToast
+
+3. **`handleCreateTag` async function:**
+   - Validates name is not empty
+   - Sets creating=true to disable submit button
+   - Calls POST /api/tags with { name, color, category?, description? }
+   - On success: optimistically adds tag to local state, shows success toast, resets form, closes dialog
+   - On error: shows error toast with message
+   - Uses finally to always clear creating=true
+
+4. **UI changes:**
+   - "Create Tag" button (data-testid="button-create-tag") with Plus icon, placed in top filter bar
+   - Dialog (data-testid="dialog-create-tag") with:
+     * Name input (data-testid="input-tag-name", required, Enter key to submit)
+     * Color Select (data-testid="select-tag-color") with all colors from COLOR_MAP
+     * Category input (data-testid="input-tag-category")
+     * Description Textarea (data-testid="input-tag-description", 3 rows)
+     * Live preview shown when name is non-empty (shows color dot + tag name + category)
+     * Cancel button (closes dialog) + Create Tag submit button (data-testid="button-submit-create-tag")
+     * Submit button disabled when name empty or creating
+
+### Verification (via browser automation):
+1. Navigated to /agency/tags as Admin - page loaded, 34 tags in 7 categories - PASS
+2. "Create Tag" button visible in top right of filter bar (blue, + icon) - PASS
+3. Clicked "Create Tag" button - dialog opened with title "Create New Tag" - PASS
+4. All 4 form fields present: Name*, Color (Blue default), Category, Description - PASS
+5. Filled Name: "TEST_TAG_12345", Color: Green, Category: "TestCategory", Description: "A test tag..." - PASS
+6. Live preview shown below form: green circle + TEST_TAG_12345 + TestCategory label - PASS
+7. Clicked "Create Tag" submit button - PASS
+8. Dialog closed, success toast: "Tag created - 'TEST_TAG_12345' was added successfully." - PASS
+9. Tag count updated: 35 tags in 8 categories (new TestCategory created) - PASS
+10. Navigated back to /agency/tags fresh load - TEST_TAG_12345 in TestCategory category - PASS
+11. Zero JS console errors - PASS
+
+### Screenshots:
+- test-results/feat-163/01-tags-page-with-create-btn.png
+- test-results/feat-163/02-create-dialog-open.png
+- test-results/feat-163/03-form-filled-with-preview.png
+- test-results/feat-163/04-tag-created-success-toast.png
+
+### Code Changes:
+- MODIFIED: client/src/pages/Tags.tsx (+130 lines: imports, state, handleCreateTag, button + dialog UI)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Tags route: /agency/tags
+- Backend POST /api/tags was already implemented (insertTagsSchema + storage.createTag)
+
+### Current Status:
+- 134/207 features passing (133 at session start, +1 this session)
+- Feature #163 marked passing after thorough browser verification
+- Git commit: 62f9457
