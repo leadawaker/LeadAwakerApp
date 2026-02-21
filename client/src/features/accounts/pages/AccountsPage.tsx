@@ -1,8 +1,10 @@
 // src/features/accounts/pages/AccountsPage.tsx
-import React, { useMemo, useState, useRef } from "react";
+import React, { useMemo, useState } from "react";
 import { useAccountsData } from "../hooks/useAccountsData";
 import { AccountsTable } from "../components/AccountsTable";
+import { AccountDetailsDialog } from "../components/AccountDetailsDialog";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
+import type { DataTableRow } from "@/components/DataTable/DataTable";
 
 export default function AccountsPage() {
   const accountId = undefined;
@@ -33,8 +35,34 @@ export default function AccountsPage() {
   const [filterConfig, setFilterConfig] = useState<Record<string, string>>({});
   const [searchTerm, setSearchTerm] = useState("");
 
-  // dialogs / detail state, etc. live here
+  // ── Detail/Edit dialog state ─────────────────────────────────────────────
+  const [detailAccount, setDetailAccount] = useState<DataTableRow | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
+  function handleRowClick(row: DataTableRow) {
+    setDetailAccount(row);
+    setDetailOpen(true);
+  }
+
+  function handleDetailClose() {
+    setDetailOpen(false);
+    setDetailAccount(null);
+  }
+
+  async function handleDetailSave(accountId: number, patch: Record<string, any>) {
+    // Use the existing handleInlineUpdate for each changed field
+    const patchEntries = Object.entries(patch);
+    for (const [col, value] of patchEntries) {
+      await handleInlineUpdate(accountId, col, value, [accountId]);
+    }
+    // Refresh the detail account with the latest data
+    const updated = rows.find((r) => (r.Id ?? r.id) === accountId);
+    if (updated) {
+      setDetailAccount({ ...updated, ...patch });
+    }
+  }
+
+  // ── Filtered rows ────────────────────────────────────────────────────────
   const filteredRows = useMemo(
     () =>
       rows.filter((row) => {
@@ -96,13 +124,25 @@ export default function AccountsPage() {
           searchValue={searchTerm}
           onSearchValueChange={setSearchTerm}
           onAdd={() => {/* open create dialog */}}
-          onViewSelected={() => {/* open detail view */}}
+          onViewSelected={() => {
+            if (selectedIds.length === 1) {
+              const row = rows.find((r) => r.Id === selectedIds[0]);
+              if (row) handleRowClick(row);
+            }
+          }}
           canViewSelected={selectedIds.length === 1}
           onImportCSV={(file) => {/* your CSV import */}}
           onExportCSV={() => {/* your CSV export */}}
+          onRowClick={handleRowClick}
         />
 
-        {/* create dialog, delete confirmation, detail dialog, etc. */}
+        {/* ── Account Detail / Edit Dialog ─────────────────────────────── */}
+        <AccountDetailsDialog
+          account={detailAccount}
+          open={detailOpen}
+          onClose={handleDetailClose}
+          onSave={handleDetailSave}
+        />
       </div>
     </div>
   );

@@ -40,6 +40,9 @@ interface AccountsTableProps {
   canViewSelected: boolean;
   onImportCSV: (file: File) => void;
   onExportCSV: () => void;
+
+  /** Called when a row is clicked — opens the detail/edit dialog */
+  onRowClick?: (row: DataTableRow) => void;
 }
 
 const STATUS_OPTIONS = ["Active", "Inactive", "Trial", "Suspended", "Unknown"];
@@ -99,6 +102,7 @@ export function AccountsTable(props: AccountsTableProps) {
     canViewSelected,
     onImportCSV,
     onExportCSV,
+    onRowClick,
   } = props;
 
   return (
@@ -147,6 +151,7 @@ export function AccountsTable(props: AccountsTableProps) {
       onExportCSV={onExportCSV}
       pageSize={50}
       emptyStateVariant={searchValue ? "search" : "accounts"}
+      onRowClick={onRowClick}
     />
   );
 }
