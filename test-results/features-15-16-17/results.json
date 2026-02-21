@@ -1,0 +1,34 @@
+{
+  "results": {
+    "feature15": {
+      "pass": true,
+      "notes": [
+        "/agency/accounts redirect: PASS (landed at http://localhost:5173/agency/dashboard)",
+        "/agency/users redirect: PASS (landed at http://localhost:5173/agency/dashboard)",
+        "/agency/tags redirect: PASS (landed at http://localhost:5173/agency/dashboard)",
+        "/agency/prompt-library redirect: PASS (landed at http://localhost:5173/agency/dashboard)",
+        "/agency/automation-logs redirect: PASS (landed at http://localhost:5173/agency/dashboard)"
+      ]
+    },
+    "feature16": {
+      "pass": true,
+      "notes": [
+        "Sidebar opened on hamburger click: PASS",
+        "Sidebar closed on backdrop click: PASS",
+        "Hamburger clicked: PASS",
+        "Mobile overlay appeared: PASS"
+      ]
+    },
+    "feature17": {
+      "pass": true,
+      "notes": [
+        "Quick-jump container present: PASS",
+        "Leads quick-jump navigation: PASS (http://localhost:5173/agency/contacts)",
+        "Campaigns quick-jump navigation: PASS (http://localhost:5173/agency/campaigns)",
+        "Inbox quick-jump navigation: PASS (http://localhost:5173/agency/conversations)",
+        "Calendar quick-jump navigation: PASS (http://localhost:5173/agency/calendar)"
+      ]
+    }
+  },
+  "consoleErrors": []
+}
