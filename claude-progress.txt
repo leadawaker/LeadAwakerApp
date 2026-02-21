@@ -3467,3 +3467,41 @@ The feature was ALREADY FULLY IMPLEMENTED from previous sessions. All code was i
 - Feature #121 marked passing after thorough browser verification
 - No git commit needed (no source code changes)
 - Git commit: 3da2b7a
+
+## Session 2026-02-21 - Coding Agent (Feature #122)
+
+### Completed Features:
+- Feature #122: Campaign AI prompt template preview - PASSING
+
+### Implementation Details:
+
+The feature was ALREADY FULLY IMPLEMENTED from previous sessions. No code changes needed.
+
+AI prompt template display in CampaignDetailPanel.tsx (lines 520-529):
+- In the "AI Configuration" section with data-testid="campaign-detail-section-ai"
+- Conditional rendering: only shown when campaign.ai_prompt_template is truthy
+- Label: small uppercase "AI PROMPT TEMPLATE" heading
+- Content rendered with whitespace-pre-wrap in bg-muted/30 rounded-lg block
+- Uses break-words to prevent overflow - not a raw text dump
+
+Test data added:
+- Added ai_prompt_template to campaign 1 via PATCH API for verification
+- Template: multi-line text about solar energy company sales assistant with bullet points
+
+### Verification:
+- Browser automation (playwright-cli) confirmed all 3 feature steps:
+  1. Opened campaign detail for "Reactivation of our liv" - PASS
+  2. AI prompt template text displays in "AI Configuration" section - PASS
+  3. Formatting is readable: multi-line text with bullet points, styled block, not raw text - PASS
+- Screenshot shows "AI PROMPT TEMPLATE" label with formatted block showing intro paragraph and 5 bullet points
+- Zero JS console errors
+- No mock data patterns - data from real PostgreSQL
+
+### Code Changes:
+- No source code changes required - already fully implemented in prior sessions
+- Test data added to campaign 1 via PATCH API (persists in DB)
+
+### Current Status:
+- 93/207 features passing (92 at session start, +1 this session)
+- Feature #122 marked passing after thorough browser verification
+- Git commit: 2177cdb
