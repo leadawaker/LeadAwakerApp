@@ -166,6 +166,29 @@ export default function CalendarPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  // Responsive: track viewport width to adjust layout and default view
+  const [viewportWidth, setViewportWidth] = useState(() => typeof window !== "undefined" ? window.innerWidth : 1024);
+  const isMobile = viewportWidth < 640;
+  const isTablet = viewportWidth >= 640 && viewportWidth < 1024;
+
+  // Auto-switch view mode based on viewport width
+  useEffect(() => {
+    const handleResize = () => {
+      const w = window.innerWidth;
+      setViewportWidth(w);
+      // On mobile, force day view for usability
+      if (w < 640) {
+        setViewMode("day");
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    // Run once on mount
+    if (window.innerWidth < 640) {
+      setViewMode("day");
+    }
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // DnD state
   const [activeAppt, setActiveAppt] = useState<Appointment | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -506,14 +529,25 @@ export default function CalendarPage() {
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
-        <div className="h-full flex flex-col px-0 py-0 overflow-hidden bg-transparent pb-4" data-testid="page-calendar">
+        <div className={cn(
+          "flex flex-col px-0 py-0 bg-transparent pb-4",
+          isMobile || isTablet ? "h-auto overflow-y-auto" : "h-full overflow-hidden"
+        )} data-testid="page-calendar">
           <div className="flex items-center gap-4 mb-6 shrink-0 hidden">
             <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Calendar</h1>
             <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
           </div>
 
-          <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4" data-testid="layout-calendar">
-            <div className="border border-border bg-card shadow-sm overflow-hidden flex flex-col h-full rounded-2xl" data-testid="calendar-main">
+          <div className={cn(
+            "flex-1 min-h-0 gap-4",
+            isMobile || isTablet
+              ? "flex flex-col overflow-y-auto"
+              : "grid grid-cols-1 lg:grid-cols-[1fr_300px]"
+          )} data-testid="layout-calendar">
+            <div className={cn(
+              "border border-border bg-card shadow-sm overflow-hidden flex flex-col rounded-2xl",
+              isMobile || isTablet ? "min-h-[420px]" : "h-full"
+            )} data-testid="calendar-main">
               <div className="p-3 md:p-4 border-b border-border flex flex-wrap items-center justify-between gap-2 shrink-0">
                 <div className="flex flex-wrap items-center gap-2 md:gap-4">
                   <DropdownMenu.Root>
@@ -551,7 +585,7 @@ export default function CalendarPage() {
                           data-testid="button-account-filter"
                         >
                           <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="max-w-[120px] truncate">{selectedAccountName}</span>
+                          {!isMobile && <span className="max-w-[120px] truncate">{selectedAccountName}</span>}
                           <ChevronDown className="h-4 w-4 shrink-0" />
                         </button>
                       </DropdownMenu.Trigger>
@@ -614,9 +648,11 @@ export default function CalendarPage() {
                         data-testid="button-campaign-filter"
                       >
                         <Filter className="h-3.5 w-3.5" />
-                        <span className="max-w-[120px] truncate">
-                          {selectedCampaignName ?? "All Campaigns"}
-                        </span>
+                        {!isMobile && (
+                          <span className="max-w-[120px] truncate">
+                            {selectedCampaignName ?? "All Campaigns"}
+                          </span>
+                        )}
                         <ChevronDown className="h-4 w-4 shrink-0" />
                       </button>
                     </DropdownMenu.Trigger>
@@ -674,20 +710,30 @@ export default function CalendarPage() {
                       className="h-6 w-6 rounded-lg hover:bg-muted/30 flex items-center justify-center transition-colors"
                       onClick={() => navigate(-1)}
                       data-testid="button-prev"
+                      aria-label="Previous"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </button>
-                    <div className="font-bold text-sm min-w-[140px] text-center" data-testid="text-view-label">
+                    <div className={cn("font-bold text-sm text-center", isMobile ? "min-w-[100px]" : "min-w-[140px]")} data-testid="text-view-label">
                       {viewLabel}
                     </div>
                     <button
                       className="h-6 w-6 rounded-lg hover:bg-muted/30 flex items-center justify-center transition-colors"
                       onClick={() => navigate(1)}
                       data-testid="button-next"
+                      aria-label="Next"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </button>
                   </div>
+                  <button
+                    className="px-3 py-1.5 rounded-xl border border-border bg-muted/20 text-sm font-medium hover:bg-muted/40 transition-colors"
+                    onClick={() => setAnchorDate(new Date())}
+                    data-testid="button-today"
+                    aria-label="Go to today"
+                  >
+                    Today
+                  </button>
                 </div>
               </div>
 
@@ -842,7 +888,10 @@ export default function CalendarPage() {
               )}
             </div>
 
-            <div className="bg-card flex flex-col overflow-hidden h-full rounded-2xl border border-border shadow-sm" data-testid="calendar-list">
+            <div className={cn(
+              "bg-card flex flex-col overflow-hidden rounded-2xl border border-border shadow-sm",
+              isMobile || isTablet ? "min-h-[200px] max-h-[300px]" : "h-full"
+            )} data-testid="calendar-list">
               <div className="p-4 border-b border-border bg-muted/5 shrink-0">
                 <div className="font-semibold text-sm" data-testid="text-list-title">
                   {selectedDate ? `Appointments for ${selectedDate}` : "Upcoming Appointments"}
