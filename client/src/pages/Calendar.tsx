@@ -3,7 +3,7 @@ import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLeads, useCampaigns } from "@/hooks/useApiData";
 import { FiltersBar } from "@/components/crm/FiltersBar";
-import { ChevronLeft, ChevronRight, ChevronDown, AlertCircle, RefreshCw, X, Clock, User, Megaphone, Calendar, ExternalLink, Filter } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, AlertCircle, RefreshCw, X, Clock, User, Megaphone, Calendar, ExternalLink, Filter, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
@@ -153,10 +153,12 @@ function DroppableTimeSlot({
 }
 
 export default function CalendarPage() {
-  const { currentAccountId } = useWorkspace();
+  const { currentAccountId, isAgencyUser, accounts } = useWorkspace();
   const { leads, loading: leadsLoading, refresh: refetchLeads } = useLeads();
   const { campaigns } = useCampaigns();
   const [campaignId, setCampaignId] = useState<number | "all">("all");
+  // Account filter state — only used for agency/admin users; client users always see their own account
+  const [calendarAccountFilter, setCalendarAccountFilter] = useState<number | "all">("all");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Appointment | null>(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -181,10 +183,23 @@ export default function CalendarPage() {
 
   const todayStr = new Date().toLocaleDateString();
 
+  // Effective account filter:
+  // - Agency users: use calendarAccountFilter ("all" = show all accounts, or specific account id)
+  // - Client users: always locked to their own currentAccountId
+  const effectiveAccountFilter = isAgencyUser ? calendarAccountFilter : currentAccountId;
+
   const appts = useMemo((): Appointment[] => {
     if (!leads) return [];
     return leads
-      .filter((l: any) => (l.account_id || l.accounts_id) === currentAccountId)
+      .filter((l: any) => {
+        if (!isAgencyUser) {
+          // Client users always see only their account
+          return (l.account_id || l.accounts_id) === currentAccountId;
+        }
+        // Agency users: "all" shows all accounts, otherwise filter by selected account
+        if (effectiveAccountFilter === "all") return true;
+        return (l.account_id || l.accounts_id) === effectiveAccountFilter;
+      })
       .filter((l: any) => (campaignId === "all" ? true : (l.campaign_id || l.campaigns_id) === campaignId))
       .filter((l: any) => Boolean(l.booked_call_date))
       .map((l: any) => {
@@ -209,7 +224,7 @@ export default function CalendarPage() {
         };
       })
       .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
-  }, [leads, currentAccountId, campaignId]);
+  }, [leads, currentAccountId, isAgencyUser, effectiveAccountFilter, campaignId]);
 
   const [anchorDate, setAnchorDate] = useState(() => {
     const d = new Date();
@@ -308,7 +323,12 @@ export default function CalendarPage() {
     for (const l of (leads || [])) {
       const lead = l as any;
       const accId = lead.account_id || lead.accounts_id;
-      if (accId !== currentAccountId) continue;
+      // Filter leads by effective account filter
+      if (!isAgencyUser) {
+        if (accId !== currentAccountId) continue;
+      } else if (effectiveAccountFilter !== "all") {
+        if (accId !== effectiveAccountFilter) continue;
+      }
       if (!lead.booked_call_date) continue;
       const cid = lead.campaign_id || lead.campaigns_id;
       const cname = lead.campaign_name;
@@ -319,8 +339,10 @@ export default function CalendarPage() {
 
     // Merge with known campaigns from API that belong to this account (or have no account)
     const fromApi = (campaigns || []).filter((c: any) => {
+      if (isAgencyUser && effectiveAccountFilter === "all") return true;
+      const targetAccountId = isAgencyUser ? effectiveAccountFilter : currentAccountId;
       const accId = c.account_id || c.accounts_id || c.Accounts_id;
-      return !accId || accId === currentAccountId;
+      return !accId || accId === targetAccountId;
     });
 
     // Build unified list: prefer API data (has full info incl. status), supplement with leads data
@@ -336,13 +358,27 @@ export default function CalendarPage() {
     }
 
     return Array.from(merged.values()).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-  }, [campaigns, currentAccountId, leads]);
+  }, [campaigns, currentAccountId, isAgencyUser, effectiveAccountFilter, leads]);
 
   const selectedCampaignName = useMemo(() => {
     if (campaignId === "all") return null;
     const found = campaignOptions.find((c: any) => c.id === campaignId);
     return found ? (found as any).name : null;
   }, [campaignId, campaignOptions]);
+
+  // Account filter computed display name (for admin toolbar)
+  const selectedAccountName = useMemo((): string => {
+    if (calendarAccountFilter === "all") return "All Accounts";
+    const acc = (accounts || []).find((a: any) => (a.id || a.Id) === calendarAccountFilter);
+    return acc ? (String(acc.name || acc.Name || `Account ${calendarAccountFilter}`)) : `Account ${calendarAccountFilter}`;
+  }, [calendarAccountFilter, accounts]);
+
+  // When account filter changes, reset campaign filter (campaign may not belong to new account)
+  const handleAccountFilterChange = useCallback((accId: number | "all") => {
+    setCalendarAccountFilter(accId);
+    setCampaignId("all");
+    setSelectedDate(null);
+  }, []);
 
   // ── Drag handlers ─────────────────────────────────────────────────────────
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -500,6 +536,70 @@ export default function CalendarPage() {
                       </DropdownMenu.Content>
                     </DropdownMenu.Portal>
                   </DropdownMenu.Root>
+
+                  {/* Account filter dropdown — agency/admin users only */}
+                  {isAgencyUser && (
+                    <DropdownMenu.Root>
+                      <DropdownMenu.Trigger asChild>
+                        <button
+                          className={cn(
+                            "flex items-center gap-2 px-3 py-1.5 rounded-xl border text-sm font-semibold transition-colors",
+                            calendarAccountFilter !== "all"
+                              ? "border-brand-yellow/50 bg-brand-yellow/10 text-foreground hover:bg-brand-yellow/20"
+                              : "border-border bg-muted/20 hover:bg-muted/30"
+                          )}
+                          data-testid="button-account-filter"
+                        >
+                          <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="max-w-[120px] truncate">{selectedAccountName}</span>
+                          <ChevronDown className="h-4 w-4 shrink-0" />
+                        </button>
+                      </DropdownMenu.Trigger>
+                      <DropdownMenu.Portal>
+                        <DropdownMenu.Content
+                          className="z-[100] min-w-[200px] bg-background border border-border rounded-xl shadow-xl p-1 max-h-64 overflow-y-auto"
+                          sideOffset={5}
+                          data-testid="account-filter-dropdown"
+                        >
+                          <DropdownMenu.Item
+                            className={cn(
+                              "flex items-center px-3 py-2 text-sm font-medium rounded-lg cursor-pointer hover:bg-muted/50 outline-none",
+                              calendarAccountFilter === "all" && "bg-muted/30 font-bold"
+                            )}
+                            onClick={() => handleAccountFilterChange("all")}
+                            data-testid="account-filter-option-all"
+                          >
+                            All Accounts
+                          </DropdownMenu.Item>
+                          {(accounts || []).filter((a: any) => (a.id || a.Id) !== 1).length > 0 && (
+                            <DropdownMenu.Separator className="h-px bg-border my-1" />
+                          )}
+                          {(accounts || [])
+                            .filter((a: any) => (a.id || a.Id) !== 1)
+                            .map((acc: any) => {
+                              const accId = acc.id || acc.Id;
+                              return (
+                                <DropdownMenu.Item
+                                  key={accId}
+                                  className={cn(
+                                    "flex items-center px-3 py-2 text-sm font-medium rounded-lg cursor-pointer hover:bg-muted/50 outline-none",
+                                    calendarAccountFilter === accId && "bg-brand-yellow/10 font-bold text-foreground"
+                                  )}
+                                  onClick={() => handleAccountFilterChange(accId)}
+                                  data-testid={`account-filter-option-${accId}`}
+                                >
+                                  <span className="truncate">{acc.name || acc.Name}</span>
+                                </DropdownMenu.Item>
+                              );
+                            })
+                          }
+                          {(accounts || []).filter((a: any) => (a.id || a.Id) !== 1).length === 0 && (
+                            <div className="px-3 py-2 text-sm text-muted-foreground italic">No accounts</div>
+                          )}
+                        </DropdownMenu.Content>
+                      </DropdownMenu.Portal>
+                    </DropdownMenu.Root>
+                  )}
 
                   {/* Campaign filter dropdown */}
                   <DropdownMenu.Root>
