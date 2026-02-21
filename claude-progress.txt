@@ -5588,3 +5588,112 @@ Feature requirement: Click user to open detail view showing profile fields: full
 - 126/207 features passing (125 at session start, +1 this session)
 - Feature #156 marked passing after thorough browser verification
 - Git commit: 53c7533
+
+## Session 2026-02-21 - Coding Agent (Feature #159)
+
+### Completed Features:
+- Feature #159: Users filter by account - PASSING
+
+### Implementation Details:
+
+Feature requirement: Filter users by their associated account (select account filter, verify users scoped, clear filter).
+
+**Modified: client/src/pages/Users.tsx**
+
+1. Added `accountFilter` state variable (string, default "all")
+
+2. Updated `rows` useMemo to include account filter logic:
+   - "all" → no filter applied (all users shown)
+   - "none" → only users without an accountsId (null/undefined)
+   - Any accountId string → only users where u.accountsId === Number(accountFilter)
+
+3. Added account filter Select dropdown in the filter bar:
+   - data-testid="select-account-filter"
+   - Width: w-[180px]
+   - Options: "All Accounts", "No Account", then all accounts from the accounts API map
+   - Placed after the role filter dropdown
+
+4. Added clear badge button (data-testid="button-clear-account-filter"):
+   - Shows when accountFilter !== "all"
+   - Displays account name in blue badge with × to clear
+   - Resets to "all" on click
+
+5. Updated DataEmptyState variant to include accountFilter check
+
+### Verification (via browser automation):
+1. Navigated to /agency/users - page loaded with 9 users - PASS
+2. Account filter dropdown present, labeled "All Accounts" - PASS
+3. Opened dropdown - 7 real accounts listed plus "No Account" option - PASS
+4. Selected "Wow" account - table filtered to 2 users (Gabriel Fronza #4, Test Admin #10) - PASS
+5. Both filtered users show "Wow" in Account column - PASS
+6. Clear badge "Wow ×" appeared after filter selected - PASS
+7. Clicked clear - filter reset, all 9 users returned - PASS
+8. Zero JS console errors - PASS
+
+### Screenshots:
+- test-results/feat-159/01-users-initial.png
+- test-results/feat-159/01b-dropdown-open.png
+- test-results/feat-159/02-account-filtered.png (shows 2 users filtered to "Wow")
+- test-results/feat-159/03-filter-cleared.png
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Users route: /agency/users
+
+### Current Status:
+- 129/207 features passing (128 at session start, +1 this session)
+- Feature #159 marked passing after thorough browser verification
+- Git commit: 5ea2903
+
+## Session 2026-02-21 - Coding Agent (Feature #161)
+
+### Completed Features:
+- Feature #161: Users dark mode variant - PASSING
+
+### Implementation Details:
+
+Feature requirement: Users page renders correctly in dark mode. Steps: Toggle dark mode, verify page uses dark surfaces, verify all elements readable, verify badges and status indicators visible.
+
+**No code changes needed** - The Users page already had comprehensive dark mode support via Tailwind `dark:` variant classes throughout the component. The feature was a verification/QA task.
+
+**Dark mode implementation already in place:**
+- ROLE_STYLES constant already had `dark:` variants for all roles (Admin, Manager, Agent, Operator, Viewer)
+- Pending Invites panel: amber styling with `dark:border-amber-700/50`, `dark:bg-amber-900/10`, `dark:text-amber-300`, etc.
+- User table rows: `dark:` variants on status indicators and badges
+- All dialogs (User Profile, Edit User, Invite User): use Shadcn/ui Dialog which inherits dark mode from CSS variables
+- useTheme hook persists preference to localStorage and toggles `.dark` class on `<html>` element
+- Dark mode toggle button in Topbar (data-testid="button-dark-mode-toggle")
+
+### Verification (via browser automation):
+1. Logged in as leadawaker@gmail.com / test123 - PASS
+2. Navigated to /agency/users - Users page loaded in light mode - PASS
+3. Clicked dark mode toggle (moon icon, ref e32) - PASS
+4. Dark mode applied: dark navy/charcoal backgrounds on sidebar and main content - PASS
+5. Pending Invites panel: amber styling adapts correctly (amber border/text visible on dark bg) - PASS
+6. User table: all rows readable, Manager badge (blue), Admin badge (amber/yellow) visible - PASS
+7. Status badges: ACTIVE badge visible with proper coloring - PASS
+8. Action buttons (View/Edit): visible as light icon/text on dark background - PASS
+9. User Profile dialog (clicked View on Test Admin): dark dialog bg, all fields readable - PASS
+10. Edit User dialog (clicked Edit): dark form inputs visible, labels readable - PASS
+11. Invite User dialog (clicked Invite User): dark dialog, form fields readable - PASS
+12. Sun icon shown in Topbar (indicating dark mode active) - PASS
+13. Zero JS console errors - PASS
+
+### Screenshots:
+- test-results/feat-161/01-dark-mode-users-table.png
+- test-results/feat-161/02-dark-mode-user-detail.png
+- test-results/feat-161/03-dark-mode-edit-dialog.png
+- test-results/feat-161/04-dark-mode-invite-dialog.png
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Users route: /agency/users
+
+### Current Status:
+- 131/207 features passing (130 at session start, +1 this session)
+- Feature #161 marked passing after thorough browser verification
+- Git commit: 399be04
