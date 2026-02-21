@@ -60,6 +60,8 @@ export type Campaign = {
   use_ai_bumps: boolean;
   max_bumps: number;
   stop_on_response: boolean;
+  // Qualification criteria (JSON string or plain text)
+  qualification_criteria?: string | null;
   // Performance metrics from Campaigns table
   total_leads_targeted?: number | null;
   total_messages_sent?: number | null;

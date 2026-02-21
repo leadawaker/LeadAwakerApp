@@ -16,6 +16,7 @@ import {
   BarChart2,
   Settings,
   Layers,
+  ListChecks,
 } from "lucide-react";
 import {
   LineChart,
@@ -104,6 +105,107 @@ function BoolRow({ label, value }: { label: string; value: boolean | null | unde
       ) : (
         <XCircle className="w-4 h-4 text-slate-400 shrink-0" />
       )}
+    </div>
+  );
+}
+
+/** Renders qualification criteria in a structured, readable format */
+function QualificationCriteriaDisplay({ raw }: { raw: string | null | undefined }) {
+  if (!raw) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center py-6 text-center"
+        data-testid="campaign-detail-qualification-empty"
+      >
+        <ListChecks className="w-6 h-6 text-muted-foreground/30 mb-2" />
+        <p className="text-[12px] text-muted-foreground italic">No qualification criteria defined</p>
+      </div>
+    );
+  }
+
+  // Try to parse as JSON
+  let parsed: Record<string, unknown> | null = null;
+  try {
+    const p = JSON.parse(raw);
+    if (typeof p === "object" && p !== null && !Array.isArray(p)) {
+      parsed = p as Record<string, unknown>;
+    }
+  } catch {
+    // Not valid JSON — fall through to plain text
+  }
+
+  if (parsed) {
+    return (
+      <div
+        className="space-y-2"
+        data-testid="campaign-detail-qualification-criteria"
+      >
+        {Object.entries(parsed).map(([key, value]) => {
+          const label = key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+          let displayValue: React.ReactNode;
+
+          if (typeof value === "boolean") {
+            displayValue = value ? (
+              <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Yes
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-slate-500">
+                <XCircle className="w-3.5 h-3.5" />
+                No
+              </span>
+            );
+          } else if (Array.isArray(value)) {
+            displayValue = (
+              <div className="flex flex-wrap gap-1 justify-end">
+                {(value as unknown[]).map((item, i) => (
+                  <span
+                    key={i}
+                    className="inline-block bg-muted rounded-md px-1.5 py-0.5 text-[10px] font-medium text-foreground"
+                  >
+                    {String(item)}
+                  </span>
+                ))}
+              </div>
+            );
+          } else if (typeof value === "number") {
+            displayValue = (
+              <span className="font-mono text-[11px] text-foreground">
+                {value.toLocaleString()}
+              </span>
+            );
+          } else {
+            displayValue = (
+              <span className="text-[12px] text-foreground break-words text-right max-w-[60%]">
+                {String(value ?? "—")}
+              </span>
+            );
+          }
+
+          return (
+            <div
+              key={key}
+              className="flex items-start justify-between gap-3 py-1.5 border-b border-border/40 last:border-0"
+            >
+              <span className="text-[11px] text-muted-foreground shrink-0 pt-0.5">{label}</span>
+              <span className="text-right">{displayValue}</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Plain text fallback
+  return (
+    <div
+      className="rounded-lg bg-muted/30 p-3"
+      data-testid="campaign-detail-qualification-criteria"
+    >
+      <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">
+        {raw}
+      </p>
     </div>
   );
 }
@@ -648,6 +750,14 @@ export function CampaignDetailPanel({
                 value={campaign.webhook_url || "—"}
                 mono
               />
+            </div>
+          </section>
+
+          {/* QUALIFICATION CRITERIA ─────────────────────────── */}
+          <section data-testid="campaign-detail-section-qualification">
+            <SectionHeader icon={<ListChecks className="w-3.5 h-3.5" />} title="Qualification Criteria" />
+            <div className="rounded-xl border border-border bg-card p-3">
+              <QualificationCriteriaDisplay raw={campaign.qualification_criteria} />
             </div>
           </section>
 
