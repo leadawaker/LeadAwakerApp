@@ -1,3 +1,65 @@
+## Session 2026-02-21 - Coding Agent (Feature #137)
+
+### Completed Features:
+- Feature #137: Calendar filter by account (agency view) - PASSING
+
+### Implementation Details:
+
+Feature requirement: Agency users can filter calendar by account. Client users see only their account's bookings.
+
+**Changes made to `client/src/pages/Calendar.tsx`:**
+
+1. **Added `Building2` icon** to lucide-react imports for the account filter button.
+
+2. **Expanded `useWorkspace()` destructure** to also get `isAgencyUser` and `accounts`.
+
+3. **Added `calendarAccountFilter` state** (`number | "all"`, default "all"):
+   - Only used for agency/admin users
+   - Client users are always locked to their `currentAccountId`
+
+4. **Added `effectiveAccountFilter` computed value**:
+   - `isAgencyUser ? calendarAccountFilter : currentAccountId`
+   - Used to filter appts and campaign options
+
+5. **Updated `appts` useMemo** to use `effectiveAccountFilter`:
+   - Non-agency: always filter by `currentAccountId`
+   - Agency + "all": show all accounts' bookings
+   - Agency + specific account: filter to that account only
+
+6. **Updated `campaignOptions` useMemo** to also use `effectiveAccountFilter` for consistency.
+
+7. **Added `selectedAccountName` computed string** for the filter button label.
+
+8. **Added `handleAccountFilterChange` callback** that resets campaign filter and selected date when account changes.
+
+9. **Added account filter `DropdownMenu`** in the calendar toolbar (guarded by `isAgencyUser &&`):
+   - Button shows "All Accounts" or selected account name
+   - Button turns amber-yellow when an account is actively filtered
+   - Dropdown lists: "All Accounts" reset option + separator + all accounts (excluding id=1/agency)
+   - data-testid: `button-account-filter`, `account-filter-dropdown`, `account-filter-option-all`, `account-filter-option-{id}`
+
+### Verification (via browser automation agents):
+1. Admin login → "All Accounts" button visible in calendar toolbar - PASS
+2. Open dropdown → shows Pepsi, Paul Mackartney, van de Kerkhof, Astra-Zeneca 2, Coca-Cola 2 - PASS
+3. Select "Pepsi" → bookings filtered (no Pepsi bookings, calendar empty) - PASS
+4. Reset to "All Accounts" → both bookings restored (Gabriel Fronza + Luis Claudio) - PASS
+5. Client/Viewer: button hidden (`isAgencyUser = false`), auto-scoped to currentAccountId - PASS
+6. Zero JS console errors - PASS
+7. Real PostgreSQL data via useLeads() / useAccounts() - PASS
+
+### Code Changes:
+- MODIFIED: client/src/pages/Calendar.tsx (107 insertions, 7 deletions)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 108/207 features passing (107 at session start, +1 this session)
+- Feature #137 marked passing after thorough browser verification
+- Git commit: 1e7320d
+
 ## Session 2026-02-21 - Coding Agent (Feature #112)
 
 ### Completed Features:
@@ -4133,3 +4195,124 @@ The feature was ALREADY FULLY IMPLEMENTED from a previous session. No code chang
 - 105/207 features passing (104 at session start, +1 this session)
 - Feature #134 marked passing after end-to-end API + UI verification
 - Git commit: 02fc957
+
+## Session 2026-02-21 - Coding Agent (Feature #135)
+
+### Completed Features:
+- Feature #135: Drag-and-drop booking to new time slot - PASSING
+
+### Implementation Details:
+
+Feature requirement: In weekly view, users can drag a booking to a different time slot to reschedule the time.
+
+**Changes made to `client/src/pages/Calendar.tsx`:**
+
+1. **Added `DroppableTimeSlot` component** (new component after `DroppableDay`):
+   - Uses `useDroppable({ id: 'timeslot-drop-{dateKey}-{hour}', data: { dateKey, hour } })`
+   - Each hour (0-23) has its own droppable zone per day column
+   - Shows visual highlight `bg-primary/15 border-primary/40` when a card is dragged over it
+   - Has `data-testid="timeslot-{dateKey}-{hour}"` for verification
+
+2. **Updated weekly view rendering** (previously used plain `div` for hour rows):
+   - Changed `{hours.map(h => <div key={h} className="h-20 border-b border-border/30" />)}` 
+   - To `{hours.map(h => <DroppableTimeSlot key={h} dateKey={dateKey} hour={h} />)}`
+   - Each of 24 × 7 = 168 time slot cells is now a droppable target
+
+3. **Updated `handleDragEnd`** to handle both drop types:
+   - Reads `over.data.current` which now includes `{ dateKey, hour? }` 
+   - **Time-slot drop** (has `hour`): Updates both date AND hour, preserves original minutes/seconds
+     - `new Date(yearPart, monthPart-1, dayPart, targetHour, origDate.getMinutes(), origDate.getSeconds())`
+   - **Day drop** (no `hour`, from monthly view): Keeps original time, changes only date
+   - Same-date+same-hour guard: no-op if nothing actually changed
+   - Toast message includes time for time-slot drops: "rescheduled to 25 Feb - 2026 at 10:00 AM"
+
+### Architecture:
+- Booking cards are absolutely positioned at `top: (appt.hour * 60 + appt.minutes) * (80/60)px` inside `relative h-[1920px]` div
+- `DroppableTimeSlot` divs are stacked normally (flow layout) covering the same space
+- `@dnd-kit` uses pointer coordinate geometry (not DOM hit-testing) to determine drop target
+- Both layers coexist correctly - booking cards at `z-10` overlay time slots
+
+### Verification:
+1. Switch to weekly view - PASS (confirmed via playwright-cli)
+2. Time slot elements exist with correct data-testid - PASS (168 elements confirmed in DOM)
+3. Gabriel Fronza's booking at correct time slot position (15:00 = 1433px top) - PASS
+4. API PATCH correctly updates time component only (same date, different hour) - PASS via curl
+5. Re-scheduled count incremented from 0 to 1 on PATCH - PASS
+6. Restored to original state successfully - PASS
+7. Zero JS console errors - PASS
+8. No mock data - real PostgreSQL via useLeads() hook - PASS
+
+### Code Changes:
+- MODIFIED: client/src/pages/Calendar.tsx (DroppableTimeSlot component + handleDragEnd updates + weekly view rendering)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 106/207 features passing (105 at session start, +1 this session)
+- Feature #135 marked passing after API verification and browser automation
+- Git commit: 7cb5b78
+
+## Session 2026-02-21 - Coding Agent (Feature #136)
+
+### Completed Features:
+- Feature #136: Calendar filter by campaign - PASSING
+
+### Implementation Details:
+
+Feature requirement: Filter calendar to show only bookings from a specific campaign (select, verify, clear).
+
+**Changes made to `client/src/pages/Calendar.tsx`:**
+
+1. **Added `useCampaigns` import** alongside `useLeads`
+
+2. **Added `Filter` icon** to lucide-react imports
+
+3. **Called `useCampaigns()` hook** inside `CalendarPage` component
+
+4. **Added `campaignOptions` computed value** (useMemo):
+   - Derives campaign options from two sources to avoid circular dependency:
+     a. **From leads**: Scans account-filtered leads with bookings to find their campaign_id/name pairs
+     b. **From API**: Filters campaigns from API where Accounts_id is null (global) or matches currentAccountId
+   - Merges both sources (API data preferred since it has status info), deduplicates by campaign id
+   - Sorted alphabetically by name
+
+5. **Added `selectedCampaignName` computed value** for the button label
+
+6. **Added campaign filter `DropdownMenu`** in the calendar toolbar:
+   - Button shows "All Campaigns" or the selected campaign name (truncated to 120px)
+   - Button turns blue when a campaign is actively filtered
+   - Dropdown shows "All Campaigns" reset option + separator + campaign options
+   - Each campaign option shows name + status badge (Active/Finished/Inactive)
+   - Clicking a campaign updates `campaignId` state → triggers `appts` recomputation
+   - data-testid: `button-campaign-filter`, `campaign-filter-dropdown`, `campaign-filter-all`, `campaign-filter-option-{id}`
+
+7. **Filter logic already in place** (from prior sessions):
+   - `appts` useMemo (line 187) already filters by `campaignId`
+   - No changes needed to filtering logic itself
+
+### Key Design Decision:
+Campaign options derive from leads (not just campaigns API) because campaign Accounts_id may not match the current account even when the campaign's leads are in that account. By scanning leads directly, we surface campaigns that actually have bookings in the current account.
+
+### Verification (via browser automation agent):
+1. Campaign filter button visible in toolbar showing "All Campaigns" - PASS
+2. Dropdown opened showing: "Bananas" (Inactive), "Reactivation of our lives", "Wow" (Finished) - PASS
+3. Selected "Reactivation of our lives" → only Gabriel Fronza's Feb 25 booking shows - PASS
+4. Cleared with "All Campaigns" → all bookings restored - PASS
+5. Zero JS console errors - PASS
+6. Real PostgreSQL data - PASS
+
+### Code Changes:
+- MODIFIED: client/src/pages/Calendar.tsx (115 insertions, 2 deletions)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 107/207 features passing (106 at session start, +1 this session)
+- Feature #136 marked passing after thorough browser verification
+- Git commit: 0aead61
