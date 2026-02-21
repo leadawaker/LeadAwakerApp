@@ -12,7 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { SkeletonTable } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
-import { UserPlus, Copy, Check, Mail } from "lucide-react";
+import { UserPlus, Copy, Check, Mail, Eye, User, Phone, AtSign, Shield, Clock, Settings, Calendar } from "lucide-react";
 
 // API returns camelCase fields from Drizzle ORM
 interface AppUser {
@@ -65,6 +65,7 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [editingUser, setEditingUser] = useState<AppUser | null>(null);
+  const [viewingUser, setViewingUser] = useState<AppUser | null>(null);
 
   // Invite flow state
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -74,6 +75,7 @@ export default function UsersPage() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteResult, setInviteResult] = useState<{ token: string; email: string } | null>(null);
   const [tokenCopied, setTokenCopied] = useState(false);
+  const [togglingUserId, setTogglingUserId] = useState<number | null>(null);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -170,6 +172,41 @@ export default function UsersPage() {
     }
   };
 
+  const handleStatusToggle = async (user: AppUser, checked: boolean) => {
+    const newStatus = checked ? "Active" : "Inactive";
+    if (togglingUserId === user.id) return; // prevent double-click
+
+    // Optimistic update
+    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: newStatus } : u));
+    setTogglingUserId(user.id);
+
+    try {
+      const res = await apiFetch(`/api/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, ...updated } : u));
+        toast({
+          title: checked ? "User activated" : "User deactivated",
+          description: `${user.fullName1 || user.email} is now ${newStatus}`,
+        });
+      } else {
+        // Revert on failure
+        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: user.status } : u));
+        toast({ title: "Failed to update status", variant: "destructive" });
+      }
+    } catch (err) {
+      // Revert on error
+      setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: user.status } : u));
+      toast({ title: "Failed to update status", variant: "destructive" });
+    } finally {
+      setTogglingUserId(null);
+    }
+  };
+
   const handleInviteOpen = () => {
     setInviteEmail("");
     setInviteRole("Viewer");
@@ -262,7 +299,7 @@ export default function UsersPage() {
           ) : (
             <div className="flex-1 min-h-0 bg-card rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden" data-testid="table-users">
               <div className="overflow-x-auto flex-1 min-h-0 flex flex-col">
-                <div className="shrink-0 grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_120px_100px] min-w-[800px] text-[11px] uppercase tracking-wider font-bold text-muted-foreground bg-muted/50 border-b border-border px-6 py-4 z-10">
+                <div className="shrink-0 grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_120px_150px] min-w-[800px] text-[11px] uppercase tracking-wider font-bold text-muted-foreground bg-muted/50 border-b border-border px-6 py-4 z-10">
                   <div>ID</div>
                   <div>Name</div>
                   <div>Account</div>
@@ -282,7 +319,7 @@ export default function UsersPage() {
                   {rows.map((u) => (
                     <div
                       key={u.id}
-                      className="grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_120px_100px] min-w-[800px] px-6 py-5 text-sm items-center hover:bg-muted/50 transition-colors"
+                      className="grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_120px_150px] min-w-[800px] px-6 py-5 text-sm items-center hover:bg-muted/50 transition-colors"
                       data-testid={`row-user-${u.id}`}
                     >
                       <div className="text-muted-foreground font-mono text-xs">#{u.id}</div>
@@ -306,25 +343,53 @@ export default function UsersPage() {
                           <span className="text-muted-foreground italic text-xs">—</span>
                         )}
                       </div>
-                      <div data-testid={`text-user-status-${u.id}`}>
-                        {u.status ? (
-                          <span className={cn(
-                            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase",
-                            isActive(u.status)
-                              ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
-                              : "bg-muted text-muted-foreground"
-                          )}>
+                      <div className="flex items-center gap-2" data-testid={`toggle-user-status-${u.id}`}>
+                        {isAdmin ? (
+                          <>
+                            <Switch
+                              checked={isActive(u.status)}
+                              onCheckedChange={(checked) => handleStatusToggle(u, checked)}
+                              disabled={togglingUserId === u.id}
+                              data-testid={`switch-user-status-${u.id}`}
+                              title={isActive(u.status) ? "Click to deactivate" : "Click to activate"}
+                            />
                             <span className={cn(
-                              "w-1.5 h-1.5 rounded-full",
-                              isActive(u.status) ? "bg-emerald-500" : "bg-muted-foreground"
-                            )} />
-                            {u.status}
-                          </span>
+                              "text-[10px] font-bold uppercase",
+                              isActive(u.status) ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
+                            )}>
+                              {togglingUserId === u.id ? "…" : (u.status || "—")}
+                            </span>
+                          </>
                         ) : (
-                          <span className="text-muted-foreground italic text-xs">—</span>
+                          u.status ? (
+                            <span className={cn(
+                              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase",
+                              isActive(u.status)
+                                ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                                : "bg-muted text-muted-foreground"
+                            )}>
+                              <span className={cn(
+                                "w-1.5 h-1.5 rounded-full",
+                                isActive(u.status) ? "bg-emerald-500" : "bg-muted-foreground"
+                              )} />
+                              {u.status}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground italic text-xs">—</span>
+                          )
                         )}
                       </div>
-                      <div className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 rounded-lg hover:bg-muted p-0"
+                          onClick={() => setViewingUser(u)}
+                          data-testid={`button-view-user-${u.id}`}
+                          title="View profile"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
                         {(isAdmin || u.email === currentUserEmail) && (
                           <Button
                             variant="ghost"
@@ -451,6 +516,224 @@ export default function UsersPage() {
                   data-testid="button-send-invite"
                 >
                   {inviteLoading ? "Sending…" : "Send Invite"}
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* ─── User Detail View Dialog ─── */}
+        <Dialog open={!!viewingUser} onOpenChange={(open) => !open && setViewingUser(null)}>
+          <DialogContent className="max-w-lg" data-testid="dialog-user-detail">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <User className="w-5 h-5 text-brand-blue" />
+                User Profile
+              </DialogTitle>
+              <DialogDescription>
+                Full profile details for this user.
+              </DialogDescription>
+            </DialogHeader>
+
+            {viewingUser && (
+              <div className="py-2 space-y-4">
+                {/* Avatar / Name Header */}
+                <div className="flex items-center gap-4 pb-4 border-b border-border">
+                  <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center shrink-0">
+                    {viewingUser.avatarUrl ? (
+                      <img
+                        src={viewingUser.avatarUrl}
+                        alt={viewingUser.fullName1 || "User"}
+                        className="w-14 h-14 rounded-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-6 h-6 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground" data-testid="detail-full-name">
+                      {viewingUser.fullName1 || <span className="text-muted-foreground italic text-sm">No name set</span>}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      {viewingUser.role && (
+                        <span className={cn(
+                          "px-2.5 py-0.5 rounded-lg text-xs font-medium",
+                          getRoleStyle(viewingUser.role)
+                        )} data-testid="detail-role">
+                          {viewingUser.role}
+                        </span>
+                      )}
+                      {viewingUser.status && (
+                        <span className={cn(
+                          "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                          isActive(viewingUser.status)
+                            ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                            : "bg-muted text-muted-foreground"
+                        )}>
+                          <span className={cn(
+                            "w-1.5 h-1.5 rounded-full",
+                            isActive(viewingUser.status) ? "bg-emerald-500" : "bg-muted-foreground"
+                          )} />
+                          {viewingUser.status}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Profile Fields */}
+                <div className="space-y-3">
+                  {/* Email */}
+                  <div className="flex items-start gap-3" data-testid="detail-email">
+                    <AtSign className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-0.5">Email</p>
+                      <p className="text-sm text-foreground break-all">{viewingUser.email || <span className="italic text-muted-foreground">Not set</span>}</p>
+                    </div>
+                  </div>
+
+                  {/* Phone */}
+                  <div className="flex items-start gap-3" data-testid="detail-phone">
+                    <Phone className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-0.5">Phone</p>
+                      <p className="text-sm text-foreground">{viewingUser.phone || <span className="italic text-muted-foreground">Not set</span>}</p>
+                    </div>
+                  </div>
+
+                  {/* Last Login */}
+                  <div className="flex items-start gap-3" data-testid="detail-last-login">
+                    <Clock className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-0.5">Last Login</p>
+                      <p className="text-sm text-foreground">
+                        {viewingUser.lastLoginAt
+                          ? new Date(viewingUser.lastLoginAt).toLocaleString(undefined, {
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                            })
+                          : <span className="italic text-muted-foreground">Never logged in</span>
+                        }
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Account */}
+                  {viewingUser.accountsId && (
+                    <div className="flex items-start gap-3" data-testid="detail-account">
+                      <Shield className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-0.5">Account</p>
+                        <p className="text-sm text-foreground">
+                          {accounts[viewingUser.accountsId] || `Account #${viewingUser.accountsId}`}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Timezone */}
+                  {viewingUser.timezone && (
+                    <div className="flex items-start gap-3" data-testid="detail-timezone">
+                      <Calendar className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-0.5">Timezone</p>
+                        <p className="text-sm text-foreground">{viewingUser.timezone}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Member Since */}
+                  {viewingUser.createdAt && (
+                    <div className="flex items-start gap-3" data-testid="detail-created-at">
+                      <Calendar className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-0.5">Member Since</p>
+                        <p className="text-sm text-foreground">
+                          {new Date(viewingUser.createdAt).toLocaleDateString(undefined, { dateStyle: "medium" })}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Preferences */}
+                  <div className="flex items-start gap-3" data-testid="detail-preferences">
+                    <Settings className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div className="min-w-0 w-full">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-0.5">Preferences</p>
+                      {viewingUser.preferences ? (
+                        (() => {
+                          try {
+                            const parsed = typeof viewingUser.preferences === "string"
+                              ? JSON.parse(viewingUser.preferences)
+                              : viewingUser.preferences;
+                            const keys = Object.keys(parsed).filter(k => k !== "invite_token");
+                            if (keys.length === 0) return <p className="text-sm text-muted-foreground italic">No preferences set</p>;
+                            return (
+                              <div className="rounded-lg bg-muted/50 border border-border p-3 space-y-1.5">
+                                {keys.map(k => (
+                                  <div key={k} className="flex items-start gap-2 text-xs">
+                                    <span className="font-mono text-muted-foreground shrink-0">{k}:</span>
+                                    <span className="text-foreground break-all">{String(parsed[k])}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          } catch {
+                            return (
+                              <p className="text-sm text-foreground font-mono break-all bg-muted/50 rounded-lg border border-border p-2 text-xs">
+                                {String(viewingUser.preferences)}
+                              </p>
+                            );
+                          }
+                        })()
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic">No preferences set</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notification Preferences */}
+                <div className="pt-3 border-t border-border">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-2">Notifications</p>
+                  <div className="flex gap-4">
+                    <span className={cn(
+                      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
+                      viewingUser.notificationEmail
+                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                        : "bg-muted text-muted-foreground"
+                    )}>
+                      <Mail className="w-3 h-3" />
+                      Email {viewingUser.notificationEmail ? "On" : "Off"}
+                    </span>
+                    <span className={cn(
+                      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
+                      viewingUser.notificationSms
+                        ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                        : "bg-muted text-muted-foreground"
+                    )}>
+                      <Phone className="w-3 h-3" />
+                      SMS {viewingUser.notificationSms ? "On" : "Off"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setViewingUser(null)}>
+                Close
+              </Button>
+              {viewingUser && (isAdmin || viewingUser.email === currentUserEmail) && (
+                <Button
+                  onClick={() => {
+                    const u = viewingUser;
+                    setViewingUser(null);
+                    setEditingUser(u);
+                  }}
+                  data-testid="button-detail-edit"
+                >
+                  Edit Profile
                 </Button>
               )}
             </DialogFooter>
