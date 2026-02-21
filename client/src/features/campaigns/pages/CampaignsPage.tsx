@@ -1,12 +1,14 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { LayoutGrid, TableIcon } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { CampaignsTable } from "../components/CampaignsTable";
 import { CampaignCardGrid } from "../components/CampaignCardGrid";
+import { CampaignDetailPanel } from "../components/CampaignDetailPanel";
 import { useCampaignsData } from "../hooks/useCampaignsData";
 import { useCampaignMetrics } from "@/hooks/useApiData";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
+import type { Campaign } from "@/types/models";
 
 type ViewMode = "cards" | "table";
 
@@ -54,7 +56,19 @@ function ViewToggle({
 export function CampaignsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
   const [search, setSearch] = useState("");
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const { currentAccountId, isAgencyView } = useWorkspace();
+
+  const handleCampaignClick = useCallback((campaign: Campaign) => {
+    setSelectedCampaign(campaign);
+    setDetailOpen(true);
+  }, []);
+
+  const handleCloseDetail = useCallback(() => {
+    setDetailOpen(false);
+    setSelectedCampaign(null);
+  }, []);
 
   // For agency view with account 1 selected (all accounts), don't filter
   const filterAccountId =
@@ -118,12 +132,22 @@ export function CampaignsPage() {
               metrics={metrics}
               loading={loading}
               searchValue={search}
+              onCampaignClick={handleCampaignClick}
+              selectedCampaignId={selectedCampaign?.id ?? null}
             />
           ) : (
             <CampaignsTable />
           )}
         </div>
       </div>
+
+      {/* Campaign detail panel */}
+      <CampaignDetailPanel
+        campaign={selectedCampaign}
+        metrics={metrics}
+        open={detailOpen}
+        onClose={handleCloseDetail}
+      />
     </CrmShell>
   );
 }
