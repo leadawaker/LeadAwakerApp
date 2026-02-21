@@ -3243,3 +3243,153 @@ The feature was already fully implemented from previous sessions. All code was i
 - 87/207 features passing (86 at session start, +1 this session)
 - Feature #116 marked passing after thorough browser verification
 - Git commit: 536e382
+
+## Session 2026-02-21 - Coding Agent (Feature #117)
+
+### Completed Features:
+- Feature #117: Campaign performance chart - PASSING
+
+### Implementation Details:
+
+The feature was already fully implemented from previous sessions. The `PerformanceChart` component exists in `CampaignDetailPanel.tsx`:
+
+1. **PerformanceChart component** (`client/src/features/campaigns/components/CampaignDetailPanel.tsx`):
+   - Uses Recharts `LineChart` with `ResponsiveContainer`
+   - Two primary lines: "Response %" (indigo #6366f1) and "Booking %" (amber #f59e0b)
+   - Third line: "ROI %" (emerald #10b981, dashed)
+   - X-axis: date labels from `metric_date` field (formatted as "5 Feb", "7 Feb", etc.)
+   - Y-axis: numeric tick labels (0, 60, 120, 180, 240)
+   - Tooltip: shows all 3 values on hover
+   - Legend: labels all 3 series
+   - Data source: `Campaign_Metrics_History` table via `/api/campaign-metrics-history`
+
+2. **Data flow**:
+   - `useCampaignMetrics()` hook fetches and normalizes field names (camelCase → snake_case)
+   - Metrics passed to `CampaignDetailPanel` via props
+   - `campaignMetrics` filtered to current campaign's ID in the panel
+   - Chart sorted by `metric_date` ascending before rendering
+
+3. **"Trends" section in panel**:
+   - Rendered inside `<section data-testid="campaign-detail-section-chart">`
+   - Only shows when `campaignMetrics.length > 0`
+   - Wrapped in card-style `rounded-xl border border-border bg-card p-3`
+
+### Verification:
+- Browser automation (playwright-cli) confirmed all 4 feature steps:
+  1. Chart renders with Response % and Booking % lines ✅ (legend lists both + ROI %)
+  2. Data from Campaign_Metrics_History table ✅ (7 date points: Feb 5, 7, 9, 11, 13, 15, 18)
+  3. Chart axes are labeled and readable ✅ (X: dates, Y: 0-240 numeric range)
+  4. Hover shows data point values ✅ (tooltip showed "Response %: 37, Booking %: 15, ROI %: 99" on Feb 11)
+- Zero JS console errors
+- No mock data patterns
+
+### Environment Notes:
+- API server on port 5001 (started via npm run dev)
+- Vite dev server on port 5174 (started via npx vite)
+- DB reachable, all 11 tables healthy
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 88/207 features passing (87 at session start, +1 this session)
+- Feature #117 marked passing after thorough browser verification
+- Git commit: fb4a17f
+
+## Session 2026-02-21 - Coding Agent (Feature #118)
+
+### Completed Features:
+- Feature #118: Campaign filter by account - PASSING
+
+### Implementation Details:
+
+1. CampaignsPage.tsx (major update):
+   - Added local filterAccountId state (number or "all") similar to Conversations page
+   - Added effectiveAccountId useMemo: agency users use local filter, client users use their account
+   - Added clientAccounts useMemo: accounts list excluding agency (id=1)
+   - Added account filter select dropdown in BOTH card view and table view toolbars
+   - Dropdown only shows for isAgencyUser users (Admin/Operator) with accounts loaded
+   - data-testid: "select-campaign-account-filter" (cards), "select-campaign-account-filter-table" (table)
+   - ChevronDown icon next to select for consistent styling
+   - Passes effectiveAccountId to CampaignsTable via new accountId prop
+
+2. CampaignsTable.tsx:
+   - Added optional accountId prop to component signature
+   - When parent passes accountId, use it directly; otherwise fall back to workspace-based filtering
+   - Enables consistent filtering between card/table views from the parent CampaignsPage
+
+3. useCampaignsData.ts (bug fix):
+   - API returns Accounts_id (capital A, NocoDB naming) but code was looking for lowercase account_id
+   - Fixed: now checks c.Accounts_id first, then c.accounts_id, then c.account_id for raw account ID
+   - Also stores account_id: rawAccountId in normalized data for downstream use
+   - Campaign cards now show "van de Kerkhof" instead of "Unknown Account" for linked campaigns
+
+### Verification:
+- Browser automation (playwright-cli) confirmed all 3 feature steps:
+  1. Admin login - account filter dropdown visible with "All Accounts" + 5 client accounts - PASS
+  2. Selected "van de Kerkhof" - shows 1 campaign down from 3; "All Accounts" restores 3 - PASS
+  3. Client users: backend scopeToAccount middleware auto-restricts by accountsId - PASS
+- Filter works in both card view and table view
+- Campaign cards show correct account name ("van de Kerkhof" not "Unknown Account")
+- Zero JS console errors (0 errors, 1 minor unrelated Radix UI warning)
+- No mock data patterns found
+
+### Code Changes:
+- MODIFIED: client/src/features/campaigns/pages/CampaignsPage.tsx (account filter UI + state)
+- MODIFIED: client/src/features/campaigns/components/CampaignsTable.tsx (accepts accountId prop)
+- MODIFIED: client/src/features/campaigns/hooks/useCampaignsData.ts (fixed Accounts_id lookup)
+
+### Environment Notes:
+- API server on port 5001 (pre-existing)
+- Vite dev server on port 5173 (started this session)
+- DB reachable, all 11 tables healthy
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 89/207 features passing (88 at session start, +1 this session)
+- Feature #118 marked passing after thorough browser verification
+- Git commit: 9aec993
+
+## Session 2026-02-21 - Coding Agent (Feature #119)
+
+### Completed Features:
+- Feature #119: Campaign filter by status - PASSING
+
+### Implementation Details:
+
+1. CampaignsPage.tsx (main changes):
+   - Added StatusFilter type: "all" | "Active" | "Paused" | "Completed" | "Inactive"
+   - Added filterStatus state (default: "all")
+   - Updated filteredCampaigns useMemo to apply status filter before search filter
+   - "Completed" filter also matches "Finished" status from DB (NocoDB naming variation)
+   - Added status filter dropdown to both card view and table view toolbars
+   - data-testid: "select-campaign-status-filter" (cards), "select-campaign-status-filter-table" (table)
+   - Passes externalStatusFilter={filterStatus} to CampaignsTable
+
+2. CampaignsTable.tsx (supporting changes):
+   - Added optional externalStatusFilter prop to component signature
+   - Changed internal statusFilter state type to string
+   - Added effectiveStatusFilter = externalStatusFilter ?? statusFilter
+   - Updated filteredCampaigns logic to use effectiveStatusFilter
+   - "Completed" also matches "Finished" in table view filter
+
+### Database Status Values:
+- "Active" - currently active campaign
+- "Finished" - completed campaign (DB value, filtered by "Completed" option)
+- "Inactive" - inactive campaign
+
+### Verification:
+- Browser automation (playwright-cli) confirmed all 3 feature steps:
+  1. Filtering by "Active" shows only 1 active campaign - PASS
+  2. Filtering by "Completed" shows "Finished" campaign ("Wow") - PASS
+  3. "All Statuses" restores all 3 campaigns - PASS
+- Status filter dropdown appears with all options (All Statuses, Active, Paused, Completed, Inactive)
+- Zero JS console errors (0 errors, 0 warnings)
+- No mock data patterns
+
+### Code Changes:
+- MODIFIED: client/src/features/campaigns/pages/CampaignsPage.tsx (status filter state + UI)
+- MODIFIED: client/src/features/campaigns/components/CampaignsTable.tsx (externalStatusFilter prop)
+
+### Current Status:
+- 90/207 features passing (89 at session start, +1 this session)
+- Feature #119 marked passing after thorough browser verification
+- Git commit: 875de7c
