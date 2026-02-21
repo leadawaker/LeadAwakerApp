@@ -3689,3 +3689,220 @@ Empty state for campaigns is implemented in two places:
 - 97/207 features passing (96 at session start, +1 this session)
 - Feature #126 marked passing after thorough browser verification
 - No new code changes to commit
+
+## Session 2026-02-21 - Coding Agent (Feature #127)
+
+### Completed Features:
+- Feature #127: Calendar monthly view - PASSING (already fully implemented)
+
+### Implementation Details:
+
+The feature was ALREADY FULLY IMPLEMENTED from previous sessions. No code changes needed.
+
+The Calendar page (`client/src/pages/Calendar.tsx`) implements a full monthly calendar grid:
+
+1. **Monthly Grid** (`data-testid="grid-days"`):
+   - 7-column grid (MON-SUN) header row (`data-testid="row-dow"`)
+   - 42-cell grid (6 weeks × 7 days) showing current month + overflow days
+   - Days outside current month shown with reduced opacity (muted styling)
+   - Weekends shown with slight background difference
+   - Today's date highlighted with primary/accent circle
+   - Selected date highlighted with ring + primary/5 background
+
+2. **Booking Indicator Badges**:
+   - When `d.count > 0`, renders a circular badge `h-6 w-6 rounded-full bg-brand-blue`
+   - Badge contains the count number (e.g., "1", "3") in white text
+   - Count is computed from `appts` filtered by date string match
+
+3. **Data Source**:
+   - Uses `useLeads()` hook to fetch leads from real PostgreSQL
+   - Filters by `currentAccountId` and optional `campaignId`
+   - Filters by `Boolean(l.booked_call_date)` to get only leads with bookings
+   - Maps `booked_call_date` to appointment objects with date/time/lead_name
+
+4. **Navigation**:
+   - Prev/Next buttons (`data-testid="button-prev"` / `"button-next"`) to change months
+   - View mode switcher (Month/Week/Day) via Radix DropdownMenu
+
+### Verification (via playwright-cli browser automation):
+1. Monthly grid renders with correct dates for February 2026 - PASS
+2. 7 columns MON-SUN showing correctly - PASS
+3. February 25 shows circular badge with "1" (one booking: Gabriel Fronza at 15:00) - PASS
+4. Badge count matches appointment in right-panel list - PASS
+5. Zero JS console errors (0 errors, 0 warnings) - PASS
+6. No mock data - real PostgreSQL data via useLeads() hook - PASS
+
+### Code Changes:
+- No source code changes required - already fully implemented in prior sessions
+
+### Environment Notes:
+- API server on port 5001 (restarted via restart-server.sh)
+- Vite dev server started via `npx vite --port 5173`
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 98/207 features passing (97 at session start, +1 this session)
+- Feature #127 marked passing after thorough browser verification
+- Git commit: 27f58d7
+
+## Session 2026-02-21 - Coding Agent (Feature #128)
+
+### Completed Features:
+- Feature #128: Calendar weekly view - PASSING
+
+### Implementation Details:
+
+The feature was ALREADY FULLY IMPLEMENTED from previous sessions. The weekly view in Calendar.tsx (the `viewMode === "week"` branch) renders:
+
+1. **7-day columns** (`weekDays` array computed from `anchorDate`):
+   - `grid-template-columns: repeat(7, 1fr)` layout in `data-testid="grid-time"`
+   - Each column has a sticky day header showing month abbreviation + date number
+   - Today's column highlighted with `bg-primary/5`
+   - Weekends have `bg-muted/5` background
+
+2. **Time slot rows** (24 hourly rows):
+   - Left sidebar shows hour labels: 1 AM, 2 AM, ..., 12 PM, 1 PM, ..., 12 AM
+   - Each time slot is `h-20` (80px) tall
+   - Current time red line indicator on today's column (`border-red-500`)
+
+3. **Booked calls in correct time slots**:
+   - Appointments positioned absolutely using: `top: (hour * 60 + minutes) * (80/60)px`
+   - Blue card with `border-l-4 border-brand-blue` styling
+   - Shows lead_name + time text
+
+4. **Fix applied this session**: Week label for cross-month boundary
+   - Before: "Feb 23 - 1, 2026" (missing month name for end date)
+   - After: "Feb 23 - Mar 1, 2026" (shows both month names)
+   - Logic: when `start.getMonth() !== end.getMonth()`, include both month abbreviations
+
+### Verification:
+- Browser automation (playwright-cli) confirmed all 3 feature steps:
+  1. Switch to weekly view - dropdown opens, "Week View" click switches view ✅
+  2. 7-day columns with time slot rows render - Feb 23-Mar 1 seven columns + 24 hourly rows ✅
+  3. Booked calls appear in correct time slots - Gabriel Fronza @ 15:00 on Feb 25 ✅
+- Week label fix verified: "Feb 23 - Mar 1, 2026" (no longer "Feb 23 - 1, 2026")
+- Zero JS console errors (0 errors, 0 warnings)
+- No mock data patterns - real PostgreSQL data via useLeads() hook
+
+### Code Changes:
+- MODIFIED: client/src/pages/Calendar.tsx (lines 127-129: week label cross-month fix)
+
+### Environment Notes:
+- API server on port 5001 (pre-existing)
+- Vite dev server on port 5173 (pre-existing)
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 99/207 features passing (98 at session start, +1 this session)
+- Feature #128 marked passing after thorough browser verification
+- Git commit: 3e8f816
+
+## Session 2026-02-21 - Coding Agent (Feature #129)
+
+### Completed Features:
+- Feature #129: Booked call cards on calendar - PASSING
+
+### Implementation Details:
+
+The feature required showing booking cards on calendar dates with lead name, campaign, and time. Previously the monthly view only showed count badges (circular blue dots with numbers).
+
+**Changes made to `client/src/pages/Calendar.tsx`:**
+
+1. **Added `campaign_name` to `appts` mapping**:
+   - Added `campaign_name: l.campaign_name || null` from the leads API response
+   - Also improved lead name resolution: `l.full_name || first_name + last_name || "Unknown Lead"`
+
+2. **Monthly view: Replaced count badge with actual booking cards**:
+   - Shows up to 2 booking cards per day cell
+   - Each card has: lead name (bold), campaign name (muted text, conditional), time (blue text)
+   - If > 2 bookings: shows "+N more" overflow indicator
+   - Cards have data-testid attributes: booking-card-{id}, booking-lead-name-{id}, booking-campaign-{id}, booking-time-{id}
+
+3. **Weekly/Day view: Added campaign name to booking cards**:
+   - Added campaign_name conditional display between lead name and time
+   - Height increased from 60px to 68px to accommodate extra line
+   - data-testid attributes added for all fields
+
+4. **Sidebar appointment list: Added campaign name**:
+   - Added campaign_name display below lead name in the right sidebar
+
+### Verification (via playwright-cli browser automation):
+1. Monthly view - Feb 25, 2026 shows full booking card: "Gabriel Fronza / Reactivation of our lives / 15:00" - PASS
+2. Card shows lead name: Gabriel Fronza - PASS
+3. Card shows campaign: Reactivation of our lives - PASS
+4. Card shows time: 15:00 - PASS
+5. Clicking the date updates right sidebar with same appointment details - PASS
+6. Zero JS console errors (0 errors, 0 warnings) - PASS
+7. No mock data - real PostgreSQL via useLeads() hook - PASS
+
+### Code Changes:
+- MODIFIED: client/src/pages/Calendar.tsx (34 insertions, 10 deletions)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 100/207 features passing (99 at session start, +1 this session)
+- Feature #129 marked passing after thorough browser verification
+- Git commit: edaca13
+
+## Session 2026-02-21 - Coding Agent (Feature #130)
+
+### Completed Features:
+- Feature #130: No-show indicators - PASSING
+
+### Implementation Details:
+
+Feature requirement: Bookings where no_show=true display a visual flag (red badge/icon) on the calendar card.
+
+Changes made to client/src/pages/Calendar.tsx:
+
+1. Added AlertCircle to lucide-react imports for sidebar NO-SHOW pill icon.
+
+2. Added no_show to the appts mapping:
+   - Handles boolean/string/number API return formats
+   - no_show: boolean parsed from raw API value
+
+3. Monthly view booking cards - when no_show=true:
+   - Card container: red background/border vs blue
+   - Lead name: red text
+   - Circular red "!" badge with data-testid no-show-badge-{id}
+   - Time text: red
+
+4. Weekly/Day view booking cards - when no_show=true:
+   - Card container: red vs blue styling
+   - Lead name: red text
+   - Circular red "!" badge
+
+5. Sidebar appointment list - when no_show=true:
+   - Row: subtle red background tint
+   - Lead name: red text
+   - Red "NO-SHOW" pill badge with AlertCircle icon
+   - Time badge: red instead of brand-blue
+
+### Test Setup:
+- Set no_show=true on lead ID 1 (Gabriel Fronza) via PATCH to test
+- Lead 1 has booked_call_date: 2026-02-25T14:00:00Z
+
+### Verification (via browser automation agent):
+1. Feb 25 booking card for Gabriel Fronza has red badge in DOM - PASS
+2. Badge is clearly visible with red circular "!" indicator - PASS
+3. Luis Claudio Fronza (no_show=false) has no badge - PASS
+4. Sidebar also shows red NO-SHOW pill badge - PASS
+5. Zero JS console errors - PASS
+6. Real PostgreSQL data via /api/leads - PASS
+
+### Code Changes:
+- MODIFIED: client/src/pages/Calendar.tsx (39 insertions, 10 deletions)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 101/207 features passing (100 at session start, +1 this session)
+- Feature #130 marked passing after browser verification
+- Git commit: 9ff8413
