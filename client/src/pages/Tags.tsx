@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Check, ChevronDown } from "lucide-react";
+import { Plus, Pencil, Check, ChevronDown, Trash2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // Map color name strings (from DB) to hex values
@@ -156,6 +156,11 @@ export default function TagsPage() {
   const [editCategory, setEditCategory] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Delete Tag confirmation dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingTag, setDeletingTag] = useState<Tag | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const { toast } = useToast();
 
@@ -368,6 +373,42 @@ export default function TagsPage() {
       setSaving(false);
     }
   }, [editingTag, editName, editColor, editCategory, editDescription, toast]);
+
+  // Open delete confirmation dialog
+  const openDeleteDialog = useCallback((tag: Tag, e: React.MouseEvent) => {
+    e.stopPropagation(); // Don't select tag when clicking delete
+    setDeletingTag(tag);
+    setDeleteDialogOpen(true);
+  }, []);
+
+  const handleDeleteTag = useCallback(async () => {
+    if (!deletingTag) return;
+    setDeleting(true);
+    try {
+      const res = await apiFetch(`/api/tags/${deletingTag.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`${res.status}: ${errText}`);
+      }
+
+      // Remove from local tags list
+      const deletedName = deletingTag.name ?? "";
+      setTags((prev) => prev.filter((t) => t.id !== deletingTag.id));
+      // Deselect if the deleted tag was selected
+      if (selectedTagId === deletingTag.id) setSelectedTagId(null);
+      toast({ title: "Tag deleted", description: `"${deletedName}" was deleted successfully.` });
+      setDeleteDialogOpen(false);
+      setDeletingTag(null);
+    } catch (err) {
+      console.error("Failed to delete tag:", err);
+      toast({ title: "Error", description: `Failed to delete tag: ${err instanceof Error ? err.message : String(err)}`, variant: "destructive" });
+    } finally {
+      setDeleting(false);
+    }
+  }, [deletingTag, selectedTagId, toast]);
 
   if (error && tags.length === 0 && !loading) {
     return (
@@ -619,6 +660,48 @@ export default function TagsPage() {
             </DialogContent>
           </Dialog>
 
+          {/* ─── DELETE TAG CONFIRMATION DIALOG ─── */}
+          <Dialog open={deleteDialogOpen} onOpenChange={(open) => {
+            setDeleteDialogOpen(open);
+            if (!open) setDeletingTag(null);
+          }}>
+            <DialogContent data-testid="dialog-delete-tag" className="sm:max-w-sm">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                  <AlertTriangle className="h-5 w-5 shrink-0" />
+                  Delete Tag
+                </DialogTitle>
+              </DialogHeader>
+              <div className="py-2 space-y-3">
+                <p className="text-sm text-foreground" data-testid="delete-dialog-message">
+                  Are you sure you want to delete the tag{" "}
+                  <span className="font-semibold">"{deletingTag?.name}"</span>?
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  This action cannot be undone. Leads that currently have this tag will not lose it — only the tag definition will be removed.
+                </p>
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  data-testid="button-cancel-delete-tag"
+                  onClick={() => setDeleteDialogOpen(false)}
+                  disabled={deleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  data-testid="button-confirm-delete-tag"
+                  onClick={handleDeleteTag}
+                  disabled={deleting}
+                >
+                  {deleting ? "Deleting…" : "Delete Tag"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
           {groupedCategories.length === 0 ? (
             <DataEmptyState
               variant="search"
@@ -687,15 +770,25 @@ export default function TagsPage() {
                             )}
                           </div>
 
-                          {/* Edit button — visible on hover */}
-                          <button
-                            data-testid={`button-edit-tag-${t.id}`}
-                            onClick={(e) => openEditDialog(t, e)}
-                            className="opacity-0 group-hover:opacity-100 absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-opacity"
-                            title={`Edit tag "${t.name}"`}
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </button>
+                          {/* Edit + Delete buttons — visible on hover */}
+                          <div className="opacity-0 group-hover:opacity-100 absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 transition-opacity">
+                            <button
+                              data-testid={`button-edit-tag-${t.id}`}
+                              onClick={(e) => openEditDialog(t, e)}
+                              className="h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors"
+                              title={`Edit tag "${t.name}"`}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              data-testid={`button-delete-tag-${t.id}`}
+                              onClick={(e) => openDeleteDialog(t, e)}
+                              className="h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                              title={`Delete tag "${t.name}"`}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -712,14 +805,24 @@ export default function TagsPage() {
                         {selectedTag ? `Leads: ${selectedTag.name}` : "Tag Insights"}
                       </div>
                       {selectedTag && (
-                        <button
-                          data-testid="button-edit-selected-tag"
-                          onClick={(e) => openEditDialog(selectedTag, e)}
-                          className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors"
-                          title={`Edit tag "${selectedTag.name}"`}
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            data-testid="button-edit-selected-tag"
+                            onClick={(e) => openEditDialog(selectedTag, e)}
+                            className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors"
+                            title={`Edit tag "${selectedTag.name}"`}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            data-testid="button-delete-selected-tag"
+                            onClick={(e) => openDeleteDialog(selectedTag, e)}
+                            className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                            title={`Delete tag "${selectedTag.name}"`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       )}
                     </div>
                     {selectedTag?.description && (

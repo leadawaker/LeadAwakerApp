@@ -392,6 +392,20 @@ export async function registerRoutes(
     res.status(201).json(toDbKeys(tag as any, tags));
   });
 
+  app.patch("/api/tags/:id", requireAuth, async (req, res) => {
+    const parsed = insertTagsSchema.partial().safeParse(fromDbKeys(req.body, tags));
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const tag = await storage.updateTag(Number(req.params.id), parsed.data);
+    if (!tag) return res.status(404).json({ message: "Tag not found" });
+    res.json(toDbKeys(tag as any, tags));
+  });
+
+  app.delete("/api/tags/:id", requireAuth, async (req, res) => {
+    const deleted = await storage.deleteTag(Number(req.params.id));
+    if (!deleted) return res.status(404).json({ message: "Tag not found" });
+    res.json({ success: true });
+  });
+
   // ─── Lead Tags ────────────────────────────────────────────────────
 
   app.get("/api/leads/:id/tags", requireAuth, async (req, res) => {

@@ -69,6 +69,8 @@ export interface IStorage {
   getTags(): Promise<Tags[]>;
   getTagsByAccountId(accountId: number): Promise<Tags[]>;
   createTag(data: InsertTags): Promise<Tags>;
+  updateTag(id: number, data: Partial<InsertTags>): Promise<Tags | undefined>;
+  deleteTag(id: number): Promise<boolean>;
 
   // Leads_Tags
   getTagsByLeadId(leadId: number): Promise<Leads_Tags[]>;
@@ -233,6 +235,16 @@ export class DatabaseStorage implements IStorage {
   async createTag(data: InsertTags): Promise<Tags> {
     const [row] = await db.insert(tags).values(data as any).returning();
     return row;
+  }
+
+  async updateTag(id: number, data: Partial<InsertTags>): Promise<Tags | undefined> {
+    const [row] = await db.update(tags).set(data).where(eq(tags.id, id)).returning();
+    return row;
+  }
+
+  async deleteTag(id: number): Promise<boolean> {
+    const result = await db.delete(tags).where(eq(tags.id, id)).returning();
+    return result.length > 0;
   }
 
   // ─── Leads_Tags ─────────────────────────────────────────────────────
