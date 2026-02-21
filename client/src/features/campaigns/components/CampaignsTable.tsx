@@ -25,10 +25,13 @@ const SMALL_WIDTH_COLS = new Set([
   "use_ai_bumps", "max_bumps", "stop_on_response", "daily_lead_limit",
 ]);
 
-export function CampaignsTable() {
+export function CampaignsTable({ accountId }: { accountId?: number }) {
   const { currentAccountId, isAgencyView } = useWorkspace();
-  // For agency view with account 1 selected (all accounts), don't filter; otherwise filter by selected account
-  const filterAccountId = (isAgencyView && currentAccountId === 1) ? undefined : currentAccountId;
+  // If parent passes accountId (from CampaignsPage filter), use it.
+  // Otherwise fall back to workspace-based filtering.
+  const filterAccountId = accountId !== undefined
+    ? accountId
+    : (isAgencyView && currentAccountId === 1) ? undefined : currentAccountId;
   const { campaigns, loading, error, handleRefresh, setCampaigns, updateCampaignRow } = useCampaignsData(filterAccountId);
   const [search, setSearch] = useState("");
   const [accountFilter, setAccountFilter] = useState<number | "all">("all");

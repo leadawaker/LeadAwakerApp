@@ -21,17 +21,20 @@ export function useCampaignsData(accountId?: number) {
       const campaignsList = await fetchCampaigns(accountId);
       
       const normalized = campaignsList.map((c: any) => {
+        // API returns Accounts_id (capital A) from NocoDB field naming
+        const rawAccountId = c.Accounts_id ?? c.accounts_id ?? c.account_id;
         const account = accountsList.find(
-          (a: any) => String(a.Id || a.id) === String(c.account_id)
+          (a: any) => String(a.Id || a.id) === String(rawAccountId)
         );
-        
+
         const rowId = c.Id || c.id || c.id_number || c.ID || Math.random();
-        
+
         return {
           ...c,
           Id: rowId,
           id: rowId,
-          account_name: account?.name || account?.Name || c.account_id || "Unknown Account",
+          account_id: rawAccountId,
+          account_name: account?.name || account?.Name || rawAccountId || "Unknown Account",
           Leads: Array.isArray(c.Leads) ? c.Leads.length : (typeof c.Leads === 'number' ? c.Leads : 0),
           Interactions: Array.isArray(c.Interactions) ? c.Interactions.length : (typeof c.Interactions === 'number' ? c.Interactions : 0),
           "Automation Logs": Array.isArray(c["Automation Logs"]) ? c["Automation Logs"].length : 0,

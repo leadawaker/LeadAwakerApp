@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { LayoutGrid, TableIcon } from "lucide-react";
+import { ChevronDown, LayoutGrid, TableIcon } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { CampaignsTable } from "../components/CampaignsTable";
 import { CampaignCardGrid } from "../components/CampaignCardGrid";
@@ -58,7 +58,11 @@ export function CampaignsPage() {
   const [search, setSearch] = useState("");
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
-  const { currentAccountId, isAgencyView } = useWorkspace();
+
+  // Local account filter state (agency users can switch; client users are auto-scoped)
+  const [filterAccountId, setFilterAccountId] = useState<number | "all">("all");
+
+  const { currentAccountId, isAgencyUser, accounts } = useWorkspace();
 
   const handleCampaignClick = useCallback((campaign: Campaign) => {
     setSelectedCampaign(campaign);
@@ -70,14 +74,25 @@ export function CampaignsPage() {
     setSelectedCampaign(null);
   }, []);
 
-  // For agency view with account 1 selected (all accounts), don't filter
-  const filterAccountId =
-    isAgencyView && currentAccountId === 1 ? undefined : currentAccountId;
+  // Resolve effective account ID to pass to API:
+  // - Agency users: use local filterAccountId ("all" = undefined = no filter)
+  // - Client users: use their own account (backend also enforces this via scopeToAccount)
+  const effectiveAccountId = useMemo(() => {
+    if (!isAgencyUser) return currentAccountId;
+    if (filterAccountId === "all") return undefined;
+    return filterAccountId as number;
+  }, [isAgencyUser, filterAccountId, currentAccountId]);
 
-  const { campaigns, loading: campaignsLoading } = useCampaignsData(filterAccountId);
+  const { campaigns, loading: campaignsLoading } = useCampaignsData(effectiveAccountId);
   const { metrics, loading: metricsLoading } = useCampaignMetrics();
 
   const loading = campaignsLoading || metricsLoading;
+
+  // Exclude agency account (id=1) from the account filter dropdown
+  const clientAccounts = useMemo(
+    () => accounts.filter((a) => a.id !== 1),
+    [accounts]
+  );
 
   // Filter campaigns by search in card view
   const filteredCampaigns = useMemo(() => {
@@ -93,13 +108,42 @@ export function CampaignsPage() {
       <div className="flex flex-col h-full">
         {/* Card view toolbar */}
         {viewMode === "cards" && (
-          <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
+          <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0 gap-2 flex-wrap">
             <h2 className="text-sm font-semibold text-foreground">
               {campaigns.length > 0
                 ? `${campaigns.length} Campaign${campaigns.length !== 1 ? "s" : ""}`
                 : "Campaigns"}
             </h2>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Account filter — only for agency/admin users */}
+              {isAgencyUser && clientAccounts.length > 0 && (
+                <div className="relative" data-testid="campaign-account-filter-wrap">
+                  <select
+                    value={filterAccountId === "all" ? "all" : String(filterAccountId)}
+                    onChange={(e) =>
+                      setFilterAccountId(
+                        e.target.value === "all" ? "all" : Number(e.target.value)
+                      )
+                    }
+                    className={cn(
+                      "h-8 pl-3 pr-8 text-xs rounded-lg border border-border bg-background",
+                      "appearance-none outline-none focus:ring-1 focus:ring-primary/50",
+                      "text-foreground"
+                    )}
+                    data-testid="select-campaign-account-filter"
+                    aria-label="Filter campaigns by account"
+                  >
+                    <option value="all">All Accounts</option>
+                    {clientAccounts.map((a) => (
+                      <option key={a.id} value={String(a.id)}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                </div>
+              )}
+
               <input
                 type="text"
                 placeholder="Search campaigns…"
@@ -117,9 +161,39 @@ export function CampaignsPage() {
           </div>
         )}
 
-        {/* Table view toggle (table has its own search toolbar) */}
+        {/* Table view toolbar */}
         {viewMode === "table" && (
-          <div className="flex items-center justify-end px-4 pt-3 pb-1 shrink-0">
+          <div className="flex items-center justify-between px-4 pt-3 pb-1 shrink-0 gap-2">
+            {/* Account filter for table view — agency only */}
+            {isAgencyUser && clientAccounts.length > 0 ? (
+              <div className="relative" data-testid="campaign-account-filter-wrap-table">
+                <select
+                  value={filterAccountId === "all" ? "all" : String(filterAccountId)}
+                  onChange={(e) =>
+                    setFilterAccountId(
+                      e.target.value === "all" ? "all" : Number(e.target.value)
+                    )
+                  }
+                  className={cn(
+                    "h-8 pl-3 pr-8 text-xs rounded-lg border border-border bg-background",
+                    "appearance-none outline-none focus:ring-1 focus:ring-primary/50",
+                    "text-foreground"
+                  )}
+                  data-testid="select-campaign-account-filter-table"
+                  aria-label="Filter campaigns by account"
+                >
+                  <option value="all">All Accounts</option>
+                  {clientAccounts.map((a) => (
+                    <option key={a.id} value={String(a.id)}>
+                      {a.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              </div>
+            ) : (
+              <div />
+            )}
             <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
           </div>
         )}
@@ -136,7 +210,7 @@ export function CampaignsPage() {
               selectedCampaignId={selectedCampaign?.id ?? null}
             />
           ) : (
-            <CampaignsTable />
+            <CampaignsTable accountId={effectiveAccountId} />
           )}
         </div>
       </div>
