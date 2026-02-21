@@ -6,6 +6,8 @@ import {
   Users,
   Zap,
   BarChart3,
+  DollarSign,
+  TrendingDown,
 } from "lucide-react";
 import type { Campaign, CampaignMetricsHistory } from "@/types/models";
 import { cn } from "@/lib/utils";
@@ -51,13 +53,17 @@ function getCampaignMetrics(campaign: Campaign, cMetrics: CampaignMetricsHistory
   const directResponseRate = Number(campaign.response_rate_percent) || 0;
   const directBookingRate = Number(campaign.booking_rate_percent) || 0;
 
-  // If the Campaigns table has real values, use those
+  // If the Campaigns table has real values, use those (cost metrics from Campaigns table are always 0 in this DB)
   if (directLeads > 0 || directMessages > 0 || directResponseRate > 0 || directBookingRate > 0) {
     return {
       totalLeadsTargeted: directLeads,
       totalMessagesSent: directMessages,
       responseRate: directResponseRate,
       bookingRate: directBookingRate,
+      totalCost: Number(campaign.total_cost) || 0,
+      costPerLead: Number(campaign.cost_per_lead) || 0,
+      costPerBooking: Number(campaign.cost_per_booking) || 0,
+      roiPercent: Number(campaign.roi_percent) || 0,
       source: "campaigns" as const,
     };
   }
@@ -69,16 +75,20 @@ function getCampaignMetrics(campaign: Campaign, cMetrics: CampaignMetricsHistory
       totalMessagesSent: 0,
       responseRate: null as number | null,
       bookingRate: null as number | null,
+      totalCost: null as number | null,
+      costPerLead: null as number | null,
+      costPerBooking: null as number | null,
+      roiPercent: null as number | null,
       source: "history" as const,
     };
   }
-  // For rates, use the latest snapshot (most recent metric_date)
+  // For rates/costs, use the latest snapshot (most recent metric_date)
   const sorted = [...cMetrics].sort((a, b) =>
     (b.metric_date || "").localeCompare(a.metric_date || "")
   );
   const latest = sorted[0];
 
-  // Total leads targeted and messages sent = sum across all days
+  // Total leads targeted, messages sent, and cost = sum across all days
   const totalLeadsTargeted = cMetrics.reduce(
     (s, m) => s + (m.total_leads_targeted || 0),
     0
@@ -87,14 +97,30 @@ function getCampaignMetrics(campaign: Campaign, cMetrics: CampaignMetricsHistory
     (s, m) => s + (m.total_messages_sent || 0),
     0
   );
+  const totalCost = cMetrics.reduce(
+    (s, m) => s + (Number(m.total_cost) || 0),
+    0
+  );
 
   return {
     totalLeadsTargeted,
     totalMessagesSent,
     responseRate: Number(latest.response_rate_percent) || 0,
     bookingRate: Number(latest.booking_rate_percent) || 0,
+    totalCost,
+    costPerLead: Number(latest.cost_per_lead) || 0,
+    costPerBooking: Number(latest.cost_per_booking) || 0,
+    roiPercent: Number(latest.roi_percent) || 0,
     source: "history" as const,
   };
+}
+
+/** Get ROI color class based on value */
+function getRoiColor(roi: number | null): string {
+  if (roi === null) return "text-slate-500";
+  if (roi >= 100) return "text-emerald-600 dark:text-emerald-400";
+  if (roi >= 0) return "text-blue-600 dark:text-blue-400";
+  return "text-rose-600 dark:text-rose-400";
 }
 
 /** Single campaign metric pill */
@@ -223,7 +249,13 @@ export function CampaignCardGrid({
           agg.totalLeadsTargeted > 0 ||
           agg.totalMessagesSent > 0 ||
           (agg.responseRate !== null && agg.responseRate > 0) ||
-          (agg.bookingRate !== null && agg.bookingRate > 0);
+          (agg.bookingRate !== null && agg.bookingRate > 0) ||
+          (agg.totalCost !== null && agg.totalCost > 0) ||
+          (agg.roiPercent !== null && agg.roiPercent > 0);
+        const hasCostMetrics =
+          (agg.totalCost !== null && agg.totalCost > 0) ||
+          (agg.costPerLead !== null && agg.costPerLead > 0) ||
+          (agg.roiPercent !== null && agg.roiPercent !== 0);
         const statusColors = getStatusColor(campaign.status);
 
         // Campaign initials for avatar
@@ -336,6 +368,56 @@ export function CampaignCardGrid({
                     data-testid={`campaign-messages-sent-${cid}`}
                   />
                 </div>
+
+                {/* Cost metrics */}
+                {hasCostMetrics && (
+                  <div
+                    className="grid grid-cols-3 gap-2 pt-3 mt-3 border-t border-border"
+                    data-testid={`campaign-cost-metrics-${cid}`}
+                  >
+                    {/* Total Cost */}
+                    <div className="flex flex-col gap-0.5" data-testid={`campaign-total-cost-${cid}`}>
+                      <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-rose-500">
+                        <DollarSign className="w-3 h-3" />
+                        Cost
+                      </div>
+                      <div className="text-sm font-black text-foreground tabular-nums leading-none">
+                        ${(agg.totalCost ?? 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                      </div>
+                    </div>
+
+                    {/* Cost per lead */}
+                    <div className="flex flex-col gap-0.5" data-testid={`campaign-cost-per-lead-${cid}`}>
+                      <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-orange-500">
+                        <Users className="w-3 h-3" />
+                        /Lead
+                      </div>
+                      <div className="text-sm font-black text-foreground tabular-nums leading-none">
+                        ${(agg.costPerLead ?? 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                      </div>
+                    </div>
+
+                    {/* ROI */}
+                    <div className="flex flex-col gap-0.5" data-testid={`campaign-roi-percent-${cid}`}>
+                      <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-500">
+                        {(agg.roiPercent ?? 0) >= 0 ? (
+                          <TrendingUp className="w-3 h-3" />
+                        ) : (
+                          <TrendingDown className="w-3 h-3 text-rose-500" />
+                        )}
+                        ROI
+                      </div>
+                      <div
+                        className={cn(
+                          "text-sm font-black tabular-nums leading-none",
+                          getRoiColor(agg.roiPercent)
+                        )}
+                      >
+                        {(agg.roiPercent ?? 0) >= 0 ? "+" : ""}{agg.roiPercent ?? 0}%
+                      </div>
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               /* No metrics yet – show placeholder stats */
