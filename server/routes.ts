@@ -27,6 +27,7 @@ import {
   insertLeads_TagsSchema,
   insertPrompt_LibrarySchema,
 } from "@shared/schema";
+import crypto from "crypto";
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "./dbKeys";
 import { db } from "./db";
 import { eq, count, inArray, and, type SQL } from "drizzle-orm";
@@ -422,6 +423,86 @@ export async function registerRoutes(
     // Never expose password hash
     const { passwordHash: _, ...safeUser } = user;
     res.json(safeUser);
+  });
+
+  app.patch("/api/users/:id", requireAuth, async (req, res) => {
+    try {
+      // Only admin can edit other users; non-admin can only edit their own profile
+      const sessionUser = (req as any).user;
+      const targetId = Number(req.params.id);
+      if (sessionUser && sessionUser.role !== "Admin" && sessionUser.id !== targetId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      // Strip out fields non-admins shouldn't change (role/status)
+      const allowed = { ...req.body };
+      if (sessionUser && sessionUser.role !== "Admin") {
+        delete allowed.role;
+        delete allowed.status;
+        delete allowed.accountsId;
+      }
+      const updated = await storage.updateAppUser(targetId, allowed);
+      if (!updated) return res.status(404).json({ message: "User not found" });
+      const { passwordHash: _, ...safeUser } = updated;
+      res.json(safeUser);
+    } catch (err: any) {
+      console.error("Error updating user:", err);
+      res.status(500).json({ message: "Failed to update user", error: err.message });
+    }
+  });
+
+  // POST /api/users/invite — generate invite token and create pending user record
+  app.post("/api/users/invite", requireAgency, async (req, res) => {
+    try {
+      const { email, role, accountsId } = req.body;
+      if (!email || typeof email !== "string") {
+        return res.status(400).json({ message: "email is required" });
+      }
+      if (!role || typeof role !== "string") {
+        return res.status(400).json({ message: "role is required" });
+      }
+
+      // Check if user with this email already exists
+      const existing = await storage.getAppUserByEmail(email);
+      if (existing) {
+        return res.status(409).json({ message: "A user with this email already exists" });
+      }
+
+      // Generate a secure random invite token
+      const inviteToken = crypto.randomBytes(32).toString("hex");
+
+      // Store invite token in preferences JSON field
+      const preferences = JSON.stringify({
+        invite_token: inviteToken,
+        invite_sent_at: new Date().toISOString(),
+        invited_by: (req as any).user?.email || "admin",
+      });
+
+      // Create the user record with Invited status
+      const newUser = await storage.createAppUser({
+        email,
+        role: role as any,
+        status: "Invited",
+        accountsId: accountsId ? Number(accountsId) : null,
+        preferences,
+        notificationEmail: true,
+        notificationSms: false,
+      } as any);
+
+      const { passwordHash: _, ...safeUser } = newUser;
+
+      // Log invite link to console (dev mode email simulation)
+      const inviteLink = `http://localhost:5173/accept-invite?token=${inviteToken}&email=${encodeURIComponent(email)}`;
+      console.log(`\n📧 INVITE EMAIL (dev mode)\nTo: ${email}\nRole: ${role}\nInvite link: ${inviteLink}\nToken: ${inviteToken}\n`);
+
+      res.status(201).json({
+        user: safeUser,
+        invite_token: inviteToken,
+        message: `Invite sent to ${email}`,
+      });
+    } catch (err: any) {
+      console.error("Error creating invite:", err);
+      res.status(500).json({ message: "Failed to create invite", error: err.message });
+    }
   });
 
   // ─── Prompt Library ───────────────────────────────────────────────

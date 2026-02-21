@@ -1,9 +1,8 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
-import { useWorkspace } from "@/hooks/useWorkspace";
 import { apiFetch } from "@/lib/apiUtils";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,45 +12,91 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { SkeletonTable } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
+import { UserPlus, Copy, Check, Mail } from "lucide-react";
 
+// API returns camelCase fields from Drizzle ORM
 interface AppUser {
   id: number;
-  account_id: number;
-  full_name: string;
-  email: string;
-  phone: string;
-  timezone: string;
-  role: "Admin" | "Manager" | "Agent" | "Viewer";
-  status: "Active" | "Inactive";
-  avatar_url: string;
-  n8n_webhook_url: string;
-  notification_email: boolean;
-  notification_sms: boolean;
-  last_login_at: string;
-  users_id: string;
-  Accounts: string;
-  accounts_id: string;
-  created_time: string;
-  last_modified_time: string;
+  accountsId: number | null;
+  fullName1: string | null;
+  email: string | null;
+  phone: string | null;
+  timezone: string | null;
+  role: "Admin" | "Manager" | "Agent" | "Viewer" | null;
+  status: string | null;
+  avatarUrl: string | null;
+  n8nWebhookUrl: string | null;
+  notificationEmail: boolean | null;
+  notificationSms: boolean | null;
+  lastLoginAt: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  ncOrder: string | null;
+  preferences: string | null;
   [key: string]: any;
 }
 
+interface AccountMap {
+  [id: number]: string;
+}
+
+const ROLE_STYLES: Record<string, string> = {
+  Admin: "bg-brand-yellow/20 text-brand-deep-blue dark:bg-brand-yellow/15 dark:text-brand-yellow",
+  Manager: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  Agent: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+  Operator: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+  Viewer: "bg-muted text-muted-foreground",
+};
+
+function getRoleStyle(role: string | null): string {
+  if (!role) return "bg-muted text-muted-foreground";
+  return ROLE_STYLES[role] ?? "bg-muted text-muted-foreground";
+}
+
+function isActive(status: string | null | undefined): boolean {
+  if (!status) return false;
+  return status.toLowerCase() === "active";
+}
+
 export default function UsersPage() {
-  const { currentAccountId } = useWorkspace();
   const [q, setQ] = useState("");
   const [users, setUsers] = useState<AppUser[]>([]);
+  const [accounts, setAccounts] = useState<AccountMap>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [editingUser, setEditingUser] = useState<AppUser | null>(null);
+
+  // Invite flow state
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("Viewer");
+  const [inviteAccountId, setInviteAccountId] = useState<string>("");
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteResult, setInviteResult] = useState<{ token: string; email: string } | null>(null);
+  const [tokenCopied, setTokenCopied] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiFetch("/api/users");
-      if (!res.ok) throw new Error(`${res.status}: Failed to fetch users`);
-      const data = await res.json();
-      setUsers(Array.isArray(data) ? data : []);
+      const [usersRes, accountsRes] = await Promise.all([
+        apiFetch("/api/users"),
+        apiFetch("/api/accounts"),
+      ]);
+      if (!usersRes.ok) throw new Error(`${usersRes.status}: Failed to fetch users`);
+      const userData = await usersRes.json();
+      setUsers(Array.isArray(userData) ? userData : []);
+
+      if (accountsRes.ok) {
+        const accountsData = await accountsRes.json();
+        const map: AccountMap = {};
+        if (Array.isArray(accountsData)) {
+          accountsData.forEach((a: any) => {
+            if (a.id && a.name) map[a.id] = a.name;
+          });
+        }
+        setAccounts(map);
+      }
     } catch (err) {
       console.error("Failed to fetch users:", err);
       setError(err instanceof Error ? err : new Error(String(err)));
@@ -65,30 +110,20 @@ export default function UsersPage() {
   }, [fetchUsers]);
 
   const currentUserEmail = localStorage.getItem("leadawaker_user_email") || "leadawaker@gmail.com";
-  const isAdmin = currentUserEmail === "leadawaker@gmail.com";
-  const currentUser = users.find(u => u.email === currentUserEmail);
+  const currentUserRole = localStorage.getItem("leadawaker_user_role") || "Viewer";
+  const isAdmin = currentUserRole === "Admin" || currentUserEmail === "leadawaker@gmail.com";
 
   const rows = useMemo(() => {
     const matchesSearch = (u: AppUser) =>
-      !q || (u.email || "").toLowerCase().includes(q.toLowerCase()) || (u.full_name || "").toLowerCase().includes(q.toLowerCase());
+      !q ||
+      (u.email || "").toLowerCase().includes(q.toLowerCase()) ||
+      (u.fullName1 || "").toLowerCase().includes(q.toLowerCase());
 
-    if (isAdmin) {
-      return users.filter(matchesSearch);
-    }
-
-    // If not admin, see leadawaker admin user, themselves, and others in same account
-    return users
-      .filter((u) => (
-        u.email === "leadawaker@gmail.com" ||
-        u.email === currentUserEmail ||
-        (currentUser && u.account_id === currentUser.account_id)
-      ))
-      .filter(matchesSearch);
-  }, [q, users, isAdmin, currentUserEmail, currentUser]);
+    return users.filter(matchesSearch);
+  }, [q, users]);
 
   const handleSaveUser = async () => {
     if (!editingUser) return;
-    // Admin can edit anyone, users can only edit themselves
     if (!isAdmin && editingUser.email !== currentUserEmail) return;
 
     try {
@@ -96,31 +131,32 @@ export default function UsersPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          full_name: editingUser.full_name,
+          fullName1: editingUser.fullName1,
           email: editingUser.email,
           phone: editingUser.phone,
           timezone: editingUser.timezone,
           role: editingUser.role,
           status: editingUser.status,
-          n8n_webhook_url: editingUser.n8n_webhook_url,
-          notification_email: editingUser.notification_email,
-          notification_sms: editingUser.notification_sms,
+          n8nWebhookUrl: editingUser.n8nWebhookUrl,
+          notificationEmail: editingUser.notificationEmail,
+          notificationSms: editingUser.notificationSms,
         }),
       });
       if (res.ok) {
-        setUsers(prev => prev.map(u => u.id === editingUser.id ? editingUser : u));
+        const updated = await res.json();
+        setUsers(prev => prev.map(u => u.id === editingUser.id ? { ...u, ...updated } : u));
         setEditingUser(null);
         toast({
           title: "User updated",
-          description: `Successfully updated ${editingUser.full_name}`,
+          description: `Successfully updated ${editingUser.fullName1 || editingUser.email}`,
         });
       } else {
-        // Fallback to optimistic local update
+        // Optimistic local update as fallback
         setUsers(prev => prev.map(u => u.id === editingUser.id ? editingUser : u));
         setEditingUser(null);
         toast({
           title: "User updated locally",
-          description: `Changes saved locally for ${editingUser.full_name}`,
+          description: `Changes saved locally for ${editingUser.fullName1 || editingUser.email}`,
         });
       }
     } catch (err) {
@@ -129,9 +165,64 @@ export default function UsersPage() {
       setEditingUser(null);
       toast({
         title: "User updated locally",
-        description: `Changes saved locally for ${editingUser.full_name}`,
+        description: `Changes saved locally for ${editingUser.fullName1 || editingUser.email}`,
       });
     }
+  };
+
+  const handleInviteOpen = () => {
+    setInviteEmail("");
+    setInviteRole("Viewer");
+    setInviteAccountId("");
+    setInviteResult(null);
+    setTokenCopied(false);
+    setInviteOpen(true);
+  };
+
+  const handleSendInvite = async () => {
+    if (!inviteEmail.trim()) {
+      toast({ title: "Email required", description: "Please enter an email address", variant: "destructive" });
+      return;
+    }
+    if (!inviteRole) {
+      toast({ title: "Role required", description: "Please select a role", variant: "destructive" });
+      return;
+    }
+    setInviteLoading(true);
+    try {
+      const body: Record<string, any> = { email: inviteEmail.trim(), role: inviteRole };
+      if (inviteAccountId) body.accountsId = Number(inviteAccountId);
+      const res = await apiFetch("/api/users/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to send invite");
+      }
+      // Show success result with invite token
+      setInviteResult({ token: data.invite_token, email: inviteEmail.trim() });
+      // Add new user to local list
+      if (data.user) {
+        setUsers(prev => [...prev, data.user]);
+      }
+      toast({
+        title: "Invite sent",
+        description: `Invite created for ${inviteEmail.trim()} as ${inviteRole}`,
+      });
+    } catch (err: any) {
+      toast({ title: "Invite failed", description: err.message, variant: "destructive" });
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const handleCopyToken = async () => {
+    if (!inviteResult) return;
+    await navigator.clipboard.writeText(inviteResult.token).catch(() => {});
+    setTokenCopied(true);
+    setTimeout(() => setTokenCopied(false), 2000);
   };
 
   return (
@@ -148,6 +239,16 @@ export default function UsersPage() {
                 data-testid="input-user-search"
               />
             </div>
+            {isAdmin && (
+              <Button
+                onClick={handleInviteOpen}
+                className="ml-3 gap-2 shrink-0"
+                data-testid="button-invite-user"
+              >
+                <UserPlus className="w-4 h-4" />
+                Invite User
+              </Button>
+            )}
           </div>
 
           {error && users.length === 0 && !loading ? (
@@ -161,71 +262,204 @@ export default function UsersPage() {
           ) : (
             <div className="flex-1 min-h-0 bg-card rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden" data-testid="table-users">
               <div className="overflow-x-auto flex-1 min-h-0 flex flex-col">
-              <div className="shrink-0 grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_100px_100px] min-w-[800px] text-[11px] uppercase tracking-wider font-bold text-muted-foreground bg-muted/50 border-b border-border px-6 py-4 z-10">
-                <div>ID</div>
-                <div>Name</div>
-                <div>Account</div>
-                <div>Email</div>
-                <div>Phone</div>
-                <div>Role</div>
-                <div>Status</div>
-                <div className="text-right">Actions</div>
-              </div>
-              <div className="flex-1 overflow-y-auto divide-y divide-border">
-                {!loading && rows.length === 0 && (
-                  <DataEmptyState
-                    variant={q ? "search" : "users"}
-                    compact
-                  />
-                )}
-                {rows.map((u) => (
-                  <div key={u.id} className="grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_100px_100px] min-w-[800px] px-6 py-5 text-sm items-center hover:bg-muted/50 transition-colors" data-testid={`row-user-${u.id}`}>
-                    <div className="text-muted-foreground font-mono text-xs">#{u.users_id || u.id}</div>
-                    <div className="font-semibold text-foreground">{u.full_name}</div>
-                    <div className="text-muted-foreground truncate pr-4">{u.Accounts || u.accounts_id || ""}</div>
-                    <div className="text-muted-foreground truncate pr-4">{u.email}</div>
-                    <div className="text-muted-foreground">{u.phone}</div>
-                    <div>
-                      <span className={cn(
-                        "px-2.5 py-1 rounded-lg text-xs font-medium",
-                        u.role === 'Admin' ? 'bg-brand-yellow/20 text-brand-deep-blue dark:bg-brand-yellow/15 dark:text-brand-yellow' : 'bg-muted text-muted-foreground'
-                      )}>
-                        {u.role}
-                      </span>
+                <div className="shrink-0 grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_120px_100px] min-w-[800px] text-[11px] uppercase tracking-wider font-bold text-muted-foreground bg-muted/50 border-b border-border px-6 py-4 z-10">
+                  <div>ID</div>
+                  <div>Name</div>
+                  <div>Account</div>
+                  <div>Email</div>
+                  <div>Phone</div>
+                  <div>Role</div>
+                  <div>Status</div>
+                  <div className="text-right">Actions</div>
+                </div>
+                <div className="flex-1 overflow-y-auto divide-y divide-border">
+                  {!loading && rows.length === 0 && (
+                    <DataEmptyState
+                      variant={q ? "search" : "users"}
+                      compact
+                    />
+                  )}
+                  {rows.map((u) => (
+                    <div
+                      key={u.id}
+                      className="grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_120px_100px] min-w-[800px] px-6 py-5 text-sm items-center hover:bg-muted/50 transition-colors"
+                      data-testid={`row-user-${u.id}`}
+                    >
+                      <div className="text-muted-foreground font-mono text-xs">#{u.id}</div>
+                      <div className="font-semibold text-foreground" data-testid={`text-user-name-${u.id}`}>
+                        {u.fullName1 || <span className="text-muted-foreground italic text-xs">—</span>}
+                      </div>
+                      <div className="text-muted-foreground truncate pr-4">
+                        {u.accountsId ? (accounts[u.accountsId] || `Account #${u.accountsId}`) : <span className="italic text-xs">—</span>}
+                      </div>
+                      <div className="text-muted-foreground truncate pr-4">{u.email || <span className="italic text-xs">—</span>}</div>
+                      <div className="text-muted-foreground">{u.phone || <span className="italic text-xs">—</span>}</div>
+                      <div data-testid={`badge-user-role-${u.id}`}>
+                        {u.role ? (
+                          <span className={cn(
+                            "px-2.5 py-1 rounded-lg text-xs font-medium",
+                            getRoleStyle(u.role)
+                          )}>
+                            {u.role}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground italic text-xs">—</span>
+                        )}
+                      </div>
+                      <div data-testid={`text-user-status-${u.id}`}>
+                        {u.status ? (
+                          <span className={cn(
+                            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase",
+                            isActive(u.status)
+                              ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                              : "bg-muted text-muted-foreground"
+                          )}>
+                            <span className={cn(
+                              "w-1.5 h-1.5 rounded-full",
+                              isActive(u.status) ? "bg-emerald-500" : "bg-muted-foreground"
+                            )} />
+                            {u.status}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground italic text-xs">—</span>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        {(isAdmin || u.email === currentUserEmail) && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 rounded-lg hover:bg-muted"
+                            onClick={() => setEditingUser(u)}
+                            data-testid={`button-edit-user-${u.id}`}
+                          >
+                            Edit
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                    <div data-testid={`text-user-status-${u.id}`}>
-                      <span className={cn(
-                        "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase",
-                        u.status === 'Active' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-muted text-muted-foreground'
-                      )}>
-                        {u.status}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      {(isAdmin || u.email === currentUserEmail) && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 rounded-lg hover:bg-muted"
-                          onClick={() => setEditingUser(u)}
-                          data-testid={`button-edit-user-${u.id}`}
-                        >
-                          Edit
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
         </div>
 
+        {/* ─── Invite User Dialog ─── */}
+        <Dialog open={inviteOpen} onOpenChange={(open) => { if (!open) { setInviteOpen(false); setInviteResult(null); } }}>
+          <DialogContent className="max-w-md" data-testid="dialog-invite-user">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Mail className="w-5 h-5 text-brand-blue" />
+                Invite New User
+              </DialogTitle>
+              <DialogDescription>
+                Send an invite to add a new user to the platform. They will receive a token to set up their account.
+              </DialogDescription>
+            </DialogHeader>
+
+            {inviteResult ? (
+              /* Success state — show invite token */
+              <div className="py-4 space-y-4">
+                <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 p-4 space-y-2">
+                  <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                    ✓ Invite created for {inviteResult.email}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Share this invite token with the user to complete their registration:
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Invite Token</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      readOnly
+                      value={inviteResult.token}
+                      className="font-mono text-xs bg-muted"
+                      data-testid="input-invite-token"
+                    />
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={handleCopyToken}
+                      data-testid="button-copy-token"
+                      title="Copy token"
+                    >
+                      {tokenCopied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  The invite link has also been logged to the server console (dev mode).
+                </p>
+              </div>
+            ) : (
+              /* Form state */
+              <div className="py-4 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="invite-email">Email Address *</Label>
+                  <Input
+                    id="invite-email"
+                    type="email"
+                    placeholder="user@example.com"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    data-testid="input-invite-email"
+                    autoFocus
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="invite-role">Role *</Label>
+                  <Select value={inviteRole} onValueChange={setInviteRole}>
+                    <SelectTrigger id="invite-role" data-testid="select-invite-role">
+                      <SelectValue placeholder="Select role…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Admin">Admin</SelectItem>
+                      <SelectItem value="Manager">Manager</SelectItem>
+                      <SelectItem value="Agent">Agent</SelectItem>
+                      <SelectItem value="Viewer">Viewer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="invite-account">Account (optional)</Label>
+                  <Select value={inviteAccountId} onValueChange={setInviteAccountId}>
+                    <SelectTrigger id="invite-account" data-testid="select-invite-account">
+                      <SelectValue placeholder="No account assigned" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No account</SelectItem>
+                      {Object.entries(accounts).map(([id, name]) => (
+                        <SelectItem key={id} value={id}>{name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { setInviteOpen(false); setInviteResult(null); }}>
+                {inviteResult ? "Close" : "Cancel"}
+              </Button>
+              {!inviteResult && (
+                <Button
+                  onClick={handleSendInvite}
+                  disabled={inviteLoading || !inviteEmail.trim() || !inviteRole}
+                  data-testid="button-send-invite"
+                >
+                  {inviteLoading ? "Sending…" : "Send Invite"}
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Edit User: {editingUser?.full_name}</DialogTitle>
+              <DialogTitle>Edit User: {editingUser?.fullName1 || editingUser?.email}</DialogTitle>
             </DialogHeader>
 
             {editingUser && (
@@ -233,15 +467,15 @@ export default function UsersPage() {
                 <div className="space-y-2">
                   <Label>Full Name</Label>
                   <Input
-                    value={editingUser.full_name}
-                    onChange={e => setEditingUser({...editingUser, full_name: e.target.value})}
+                    value={editingUser.fullName1 || ""}
+                    onChange={e => setEditingUser({...editingUser, fullName1: e.target.value})}
                     data-testid="input-edit-full-name"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Email</Label>
                   <Input
-                    value={editingUser.email}
+                    value={editingUser.email || ""}
                     onChange={e => setEditingUser({...editingUser, email: e.target.value})}
                     data-testid="input-edit-email"
                   />
@@ -249,7 +483,7 @@ export default function UsersPage() {
                 <div className="space-y-2">
                   <Label>Phone</Label>
                   <Input
-                    value={editingUser.phone}
+                    value={editingUser.phone || ""}
                     onChange={e => setEditingUser({...editingUser, phone: e.target.value})}
                     data-testid="input-edit-phone"
                   />
@@ -257,7 +491,7 @@ export default function UsersPage() {
                 <div className="space-y-2">
                   <Label>Timezone</Label>
                   <Input
-                    value={editingUser.timezone}
+                    value={editingUser.timezone || ""}
                     onChange={e => setEditingUser({...editingUser, timezone: e.target.value})}
                     data-testid="input-edit-timezone"
                   />
@@ -265,7 +499,7 @@ export default function UsersPage() {
                 <div className="space-y-2">
                   <Label>Role</Label>
                   <Select
-                    value={editingUser.role}
+                    value={editingUser.role || ""}
                     onValueChange={(val: any) => setEditingUser({...editingUser, role: val})}
                     disabled={!isAdmin}
                   >
@@ -283,7 +517,7 @@ export default function UsersPage() {
                 <div className="space-y-2">
                   <Label>Status</Label>
                   <Select
-                    value={editingUser.status}
+                    value={editingUser.status || ""}
                     onValueChange={(val: any) => setEditingUser({...editingUser, status: val})}
                     disabled={!isAdmin}
                   >
@@ -308,8 +542,8 @@ export default function UsersPage() {
                 <div className="space-y-2">
                   <Label>n8n Webhook URL</Label>
                   <Input
-                    value={editingUser.n8n_webhook_url}
-                    onChange={e => setEditingUser({...editingUser, n8n_webhook_url: e.target.value})}
+                    value={editingUser.n8nWebhookUrl || ""}
+                    onChange={e => setEditingUser({...editingUser, n8nWebhookUrl: e.target.value})}
                     data-testid="input-edit-webhook"
                   />
                 </div>
@@ -317,16 +551,16 @@ export default function UsersPage() {
                   <div className="flex items-center justify-between">
                     <Label>Email Notifications</Label>
                     <Switch
-                      checked={editingUser.notification_email}
-                      onCheckedChange={checked => setEditingUser({...editingUser, notification_email: checked})}
+                      checked={!!editingUser.notificationEmail}
+                      onCheckedChange={checked => setEditingUser({...editingUser, notificationEmail: checked})}
                       data-testid="switch-edit-email-notif"
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>SMS Notifications</Label>
                     <Switch
-                      checked={editingUser.notification_sms}
-                      onCheckedChange={checked => setEditingUser({...editingUser, notification_sms: checked})}
+                      checked={!!editingUser.notificationSms}
+                      onCheckedChange={checked => setEditingUser({...editingUser, notificationSms: checked})}
                       data-testid="switch-edit-sms-notif"
                     />
                   </div>

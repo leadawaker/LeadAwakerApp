@@ -85,6 +85,8 @@ export interface IStorage {
   getAppUsers(): Promise<Users[]>;
   getAppUserById(id: number): Promise<Users | undefined>;
   getAppUserByEmail(email: string): Promise<Users | undefined>;
+  createAppUser(data: InsertUsers): Promise<Users>;
+  updateAppUser(id: number, data: Partial<Users>): Promise<Users | undefined>;
 
   // Prompt Library
   getPrompts(): Promise<Prompt_Library[]>;
@@ -283,6 +285,17 @@ export class DatabaseStorage implements IStorage {
   async getAppUserByEmail(email: string): Promise<Users | undefined> {
     const [row] = await db.select().from(users).where(eq(users.email, email));
     return row;
+  }
+
+  async createAppUser(data: InsertUsers): Promise<Users> {
+    const [row] = await db.insert(users).values(data as any).returning();
+    return row;
+  }
+
+  async updateAppUser(id: number, data: Partial<Users>): Promise<Users | undefined> {
+    const { id: _id, createdAt: _createdAt, createdBy: _createdBy, ...updateData } = data as any;
+    const [updated] = await db.update(users).set(updateData).where(eq(users.id, id)).returning();
+    return updated;
   }
 
   // ─── Prompt Library ─────────────────────────────────────────────────
