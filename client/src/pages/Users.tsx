@@ -12,7 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { SkeletonTable } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
-import { UserPlus, Copy, Check, Mail, Eye, User, Phone, AtSign, Shield, Clock, Settings, Calendar } from "lucide-react";
+import { UserPlus, Copy, Check, Mail, Eye, User, Phone, AtSign, Shield, Clock, Settings, Calendar, RefreshCw, XCircle, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 
 // API returns camelCase fields from Drizzle ORM
 interface AppUser {
@@ -77,6 +77,12 @@ export default function UsersPage() {
   const [tokenCopied, setTokenCopied] = useState(false);
   const [togglingUserId, setTogglingUserId] = useState<number | null>(null);
 
+  // Invite management state
+  const [invitesExpanded, setInvitesExpanded] = useState(true);
+  const [resendingUserId, setResendingUserId] = useState<number | null>(null);
+  const [revokingUserId, setRevokingUserId] = useState<number | null>(null);
+  const [resendResult, setResendResult] = useState<{ userId: number; token: string } | null>(null);
+
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -123,6 +129,20 @@ export default function UsersPage() {
 
     return users.filter(matchesSearch);
   }, [q, users]);
+
+  // Pending invites: users with "Invited" status who have an invite_token in preferences
+  const pendingInvites = useMemo(() => {
+    return users.filter(u => {
+      if ((u.status || "").toLowerCase() !== "invited") return false;
+      // Must have invite token in preferences
+      try {
+        const prefs = typeof u.preferences === "string" ? JSON.parse(u.preferences || "{}") : (u.preferences || {});
+        return !!prefs?.invite_token;
+      } catch {
+        return false;
+      }
+    });
+  }, [users]);
 
   const handleSaveUser = async () => {
     if (!editingUser) return;
@@ -262,6 +282,69 @@ export default function UsersPage() {
     setTimeout(() => setTokenCopied(false), 2000);
   };
 
+  // Helper: parse invite_sent_at from user.preferences
+  const getInviteSentAt = (u: AppUser): Date | null => {
+    if (!u.preferences) return null;
+    try {
+      const parsed = typeof u.preferences === "string" ? JSON.parse(u.preferences) : u.preferences;
+      if (parsed?.invite_sent_at) return new Date(parsed.invite_sent_at);
+    } catch {}
+    return null;
+  };
+
+  // Helper: check if invite is expired (older than 7 days)
+  const isInviteExpired = (u: AppUser): boolean => {
+    const sentAt = getInviteSentAt(u);
+    if (!sentAt) return false;
+    const now = new Date();
+    const diffMs = now.getTime() - sentAt.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    return diffDays > 7;
+  };
+
+  // Handle resend invite
+  const handleResendInvite = async (u: AppUser) => {
+    if (resendingUserId === u.id) return;
+    setResendingUserId(u.id);
+    setResendResult(null);
+    try {
+      const res = await apiFetch(`/api/users/${u.id}/resend-invite`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to resend invite");
+      // Update user in local state with new preferences
+      if (data.user) {
+        setUsers(prev => prev.map(usr => usr.id === u.id ? { ...usr, ...data.user } : usr));
+      }
+      setResendResult({ userId: u.id, token: data.invite_token });
+      toast({ title: "Invite resent", description: `New invite token generated for ${u.email}` });
+    } catch (err: any) {
+      toast({ title: "Failed to resend invite", description: err.message, variant: "destructive" });
+    } finally {
+      setResendingUserId(null);
+    }
+  };
+
+  // Handle revoke invite
+  const handleRevokeInvite = async (u: AppUser) => {
+    if (revokingUserId === u.id) return;
+    setRevokingUserId(u.id);
+    try {
+      const res = await apiFetch(`/api/users/${u.id}/revoke-invite`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to revoke invite");
+      // Update user in local state
+      if (data.user) {
+        setUsers(prev => prev.map(usr => usr.id === u.id ? { ...usr, ...data.user } : usr));
+      }
+      if (resendResult?.userId === u.id) setResendResult(null);
+      toast({ title: "Invite revoked", description: `Invite for ${u.email} has been revoked` });
+    } catch (err: any) {
+      toast({ title: "Failed to revoke invite", description: err.message, variant: "destructive" });
+    } finally {
+      setRevokingUserId(null);
+    }
+  };
+
   return (
     <CrmShell>
       <div className="h-full overflow-hidden flex flex-col" data-testid="page-users">
@@ -287,6 +370,122 @@ export default function UsersPage() {
               </Button>
             )}
           </div>
+
+          {/* ─── Pending Invites Panel (Admin only) ─── */}
+          {isAdmin && !loading && pendingInvites.length > 0 && (
+            <div
+              className="mb-4 rounded-2xl border border-amber-200 dark:border-amber-700/50 bg-amber-50 dark:bg-amber-900/10 shadow-sm overflow-hidden"
+              data-testid="section-pending-invites"
+            >
+              {/* Header */}
+              <button
+                className="w-full flex items-center justify-between px-5 py-3 hover:bg-amber-100/50 dark:hover:bg-amber-900/20 transition-colors text-left"
+                onClick={() => setInvitesExpanded(v => !v)}
+                data-testid="button-toggle-invites"
+                aria-expanded={invitesExpanded}
+              >
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  <span className="font-semibold text-sm text-amber-800 dark:text-amber-300">
+                    Pending Invites
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-200 dark:bg-amber-700/50 text-amber-800 dark:text-amber-300 text-xs font-bold">
+                    {pendingInvites.length}
+                  </span>
+                </div>
+                {invitesExpanded
+                  ? <ChevronUp className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  : <ChevronDown className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                }
+              </button>
+
+              {/* Invites list */}
+              {invitesExpanded && (
+                <div className="divide-y divide-amber-100 dark:divide-amber-800/30">
+                  {pendingInvites.map(u => {
+                    const sentAt = getInviteSentAt(u);
+                    const expired = isInviteExpired(u);
+                    const isResending = resendingUserId === u.id;
+                    const isRevoking = revokingUserId === u.id;
+                    const justResent = resendResult?.userId === u.id;
+
+                    return (
+                      <div
+                        key={u.id}
+                        className="flex items-center justify-between gap-4 px-5 py-3"
+                        data-testid={`invite-row-${u.id}`}
+                      >
+                        {/* User info */}
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
+                            <User className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate" data-testid={`invite-email-${u.id}`}>
+                              {u.email || <span className="italic text-muted-foreground">No email</span>}
+                            </p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              {u.role && (
+                                <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-medium", getRoleStyle(u.role))}>
+                                  {u.role}
+                                </span>
+                              )}
+                              {sentAt && (
+                                <span className="text-[10px] text-muted-foreground flex items-center gap-1" data-testid={`invite-sent-at-${u.id}`}>
+                                  <Clock className="w-3 h-3" />
+                                  Sent {sentAt.toLocaleDateString(undefined, { dateStyle: "medium" })}
+                                </span>
+                              )}
+                              {expired && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-[10px] font-medium" data-testid={`invite-expired-${u.id}`}>
+                                  <AlertTriangle className="w-3 h-3" />
+                                  Expired
+                                </span>
+                              )}
+                              {justResent && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-medium" data-testid={`invite-resent-badge-${u.id}`}>
+                                  <Check className="w-3 h-3" />
+                                  Resent
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1.5 text-xs border-amber-200 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/30"
+                            onClick={() => handleResendInvite(u)}
+                            disabled={isResending || isRevoking}
+                            data-testid={`button-resend-invite-${u.id}`}
+                            title="Resend invite with a new token"
+                          >
+                            <RefreshCw className={cn("w-3 h-3", isResending && "animate-spin")} />
+                            {isResending ? "Sending…" : "Resend"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1.5 text-xs border-red-200 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            onClick={() => handleRevokeInvite(u)}
+                            disabled={isResending || isRevoking}
+                            data-testid={`button-revoke-invite-${u.id}`}
+                            title="Revoke this invite"
+                          >
+                            <XCircle className={cn("w-3 h-3", isRevoking && "animate-spin")} />
+                            {isRevoking ? "Revoking…" : "Revoke"}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
           {error && users.length === 0 && !loading ? (
             <ApiErrorFallback

@@ -505,6 +505,102 @@ export async function registerRoutes(
     }
   });
 
+  // POST /api/users/:id/resend-invite — regenerate and resend invite token
+  app.post("/api/users/:id/resend-invite", requireAgency, async (req, res) => {
+    try {
+      const targetId = Number(req.params.id);
+      if (isNaN(targetId)) return res.status(400).json({ message: "Invalid user ID" });
+
+      const user = await storage.getAppUserById(targetId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+      if (user.status !== "Invited") {
+        return res.status(400).json({ message: "User has already accepted their invite" });
+      }
+
+      // Generate a new invite token
+      const inviteToken = crypto.randomBytes(32).toString("hex");
+
+      // Parse existing preferences or start fresh
+      let existingPrefs: Record<string, any> = {};
+      if (user.preferences) {
+        try {
+          existingPrefs = typeof user.preferences === "string"
+            ? JSON.parse(user.preferences)
+            : user.preferences as any;
+        } catch {}
+      }
+
+      const newPreferences = JSON.stringify({
+        ...existingPrefs,
+        invite_token: inviteToken,
+        invite_sent_at: new Date().toISOString(),
+        invited_by: (req as any).user?.email || "admin",
+      });
+
+      const updated = await storage.updateAppUser(targetId, { preferences: newPreferences });
+      if (!updated) return res.status(404).json({ message: "Failed to update user" });
+
+      const { passwordHash: _, ...safeUser } = updated;
+
+      // Log new invite link to console (dev mode)
+      const inviteLink = `http://localhost:5173/accept-invite?token=${inviteToken}&email=${encodeURIComponent(user.email || "")}`;
+      console.log(`\n📧 RESENT INVITE (dev mode)\nTo: ${user.email}\nInvite link: ${inviteLink}\nToken: ${inviteToken}\n`);
+
+      res.json({
+        user: safeUser,
+        invite_token: inviteToken,
+        message: `Invite resent to ${user.email}`,
+      });
+    } catch (err: any) {
+      console.error("Error resending invite:", err);
+      res.status(500).json({ message: "Failed to resend invite", error: err.message });
+    }
+  });
+
+  // POST /api/users/:id/revoke-invite — clear invite token (revoke pending invite)
+  app.post("/api/users/:id/revoke-invite", requireAgency, async (req, res) => {
+    try {
+      const targetId = Number(req.params.id);
+      if (isNaN(targetId)) return res.status(400).json({ message: "Invalid user ID" });
+
+      const user = await storage.getAppUserById(targetId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      // Parse existing preferences and remove invite_token
+      let existingPrefs: Record<string, any> = {};
+      if (user.preferences) {
+        try {
+          existingPrefs = typeof user.preferences === "string"
+            ? JSON.parse(user.preferences)
+            : user.preferences as any;
+        } catch {}
+      }
+
+      // Remove invite-related fields
+      const { invite_token, invite_sent_at, ...remainingPrefs } = existingPrefs;
+      const newPreferences = JSON.stringify({
+        ...remainingPrefs,
+        invite_revoked_at: new Date().toISOString(),
+      });
+
+      const updated = await storage.updateAppUser(targetId, {
+        preferences: newPreferences,
+        status: "Inactive", // Revoked invites become inactive
+      });
+      if (!updated) return res.status(404).json({ message: "Failed to update user" });
+
+      const { passwordHash: _, ...safeUser } = updated;
+
+      res.json({
+        user: safeUser,
+        message: `Invite revoked for ${user.email}`,
+      });
+    } catch (err: any) {
+      console.error("Error revoking invite:", err);
+      res.status(500).json({ message: "Failed to revoke invite", error: err.message });
+    }
+  });
+
   // ─── Prompt Library ───────────────────────────────────────────────
 
   app.get("/api/prompts", requireAgency, async (req, res) => {
