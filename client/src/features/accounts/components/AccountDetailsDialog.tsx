@@ -387,6 +387,75 @@ export function AccountDetailsDialog({
     );
   }
 
+  /**
+   * Parses a service_categories value — either a JSON array string or a
+   * comma-separated plain string — into an array of category strings.
+   */
+  function parseServiceCategories(val: string | null | undefined): string[] {
+    if (!val) return [];
+    const trimmed = val.trim();
+    // Try parsing as JSON array
+    if (trimmed.startsWith("[")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed.map((s: unknown) => String(s).trim()).filter(Boolean);
+        }
+      } catch {
+        // Fall through to comma split
+      }
+    }
+    // Fallback: comma-separated
+    return trimmed.split(",").map((s) => s.trim()).filter(Boolean);
+  }
+
+  /**
+   * Service categories field:
+   * - View mode: renders each category as a small badge/chip
+   * - Edit mode: plain textarea where user can edit the raw JSON or comma list;
+   *   the value is stored as-is (JSON string) in the form state
+   */
+  function serviceCategoriesField() {
+    const val = form["service_categories"];
+    if (!editing) {
+      const cats = parseServiceCategories(val);
+      if (cats.length === 0) {
+        return <span className="text-muted-foreground italic text-sm">—</span>;
+      }
+      return (
+        <div
+          className="flex flex-wrap gap-1.5"
+          data-testid="service-categories-display"
+        >
+          {cats.map((cat, i) => (
+            <span
+              key={i}
+              className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary border border-primary/20"
+              data-testid={`service-category-tag-${i}`}
+            >
+              {cat}
+            </span>
+          ))}
+        </div>
+      );
+    }
+    // Edit mode: textarea with helpful hint
+    return (
+      <div className="space-y-1">
+        <Textarea
+          value={val ?? ""}
+          onChange={(e) => handleChange("service_categories", e.target.value)}
+          placeholder={`["Category A", "Category B"] or Category A, Category B`}
+          className="text-sm min-h-[70px] resize-none font-mono text-xs"
+          data-testid="field-service_categories"
+        />
+        <p className="text-[11px] text-muted-foreground">
+          Enter as JSON array or comma-separated values
+        </p>
+      </div>
+    );
+  }
+
   // ── JSX ─────────────────────────────────────────────────────────────────────
 
   return (
@@ -451,7 +520,9 @@ export function AccountDetailsDialog({
             {selectField("type", TYPE_OPTIONS)}
           </FieldRow>
           <FieldRow label="Business Niche">
-            {textField("business_niche", "e.g. Construction, SaaS...")}
+            <div data-testid="field-business_niche">
+              {textField("business_niche", "e.g. Construction, SaaS...")}
+            </div>
           </FieldRow>
 
           {/* Contact */}
@@ -520,10 +591,12 @@ export function AccountDetailsDialog({
             title="Description & Notes"
           />
           <FieldRow label="Business Description">
-            {textField("business_description", "Describe the business...", "textarea")}
+            <div data-testid="field-business_description">
+              {textField("business_description", "Describe the business...", "textarea")}
+            </div>
           </FieldRow>
           <FieldRow label="Service Categories">
-            {textField("service_categories", "")}
+            {serviceCategoriesField()}
           </FieldRow>
           <FieldRow label="Notes">
             {textField("notes", "Internal notes...", "textarea")}
