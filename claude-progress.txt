@@ -4831,3 +4831,256 @@ Feature requirement: Click account to view/edit details: name, email, phone, web
 - Feature #143 marked passing after thorough browser verification
 - Git commit: 2721b3f
 - Git commit: 78adb66
+
+## Session 2026-02-21 - Coding Agent (Feature #146)
+
+### Completed Features:
+- Feature #146: AI defaults display - PASSING
+
+### Implementation Details:
+
+Feature requirement: Display default AI settings: default_ai_name, default_ai_role, default_ai_style, default_typo_frequency.
+
+The existing `AccountDetailsDialog.tsx` already showed 3 of the 4 required AI fields (default_ai_name, default_ai_role, default_ai_style). This session added the missing `default_typo_frequency` field.
+
+**Changes made to `client/src/features/accounts/components/AccountDetailsDialog.tsx`:**
+
+1. **Added `default_typo_frequency` to `AccountRow` interface** - TypeScript type now includes this field
+
+2. **Added `TYPO_FREQUENCY_OPTIONS` constant**:
+   - Options: `["None", "Rare", "Occasional", "Frequent"]`
+   - Matches the DB default value of "Rare"
+
+3. **Added `default_typo_frequency` to the `handleSave` keys list** - ensures it's included in PATCH operations when edited
+
+4. **Updated AI section icon** from `Mail` to `Bot` (from lucide-react) - better semantic match for an AI settings section
+
+5. **Added `FieldRow` for Typo Frequency** in the "AI & Messaging" section:
+   - Label: "Typo Frequency"
+   - Uses `selectField("default_typo_frequency", TYPO_FREQUENCY_OPTIONS)`
+   - Shows current value (e.g., "Rare") in view mode
+   - Shows a select dropdown in edit mode
+
+### Verification (via browser automation):
+1. Navigated to /agency/accounts - 6 accounts loaded - PASS
+2. Clicked "van de Kerkhof" row - AccountDetailsDialog opened - PASS
+3. AI & Messaging section visible with Bot icon - PASS
+4. AI Name: shows "—" (null for this account) - PASS
+5. AI Role: shows "admin support" - PASS (matches DB)
+6. AI Style: shows "Natural, human, low pressure" - PASS (matches DB)
+7. Typo Frequency: shows "Rare" - PASS (new field, matches DB default)
+8. Zero JS console errors - PASS
+9. Real PostgreSQL data - PASS
+
+### Code Changes:
+- MODIFIED: client/src/features/accounts/components/AccountDetailsDialog.tsx (+76, -3)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Accounts route: /agency/accounts
+
+### Current Status:
+- 116/207 features passing (115 at session start, +1 this session)
+- Feature #146 marked passing after thorough browser verification
+- Git commit: 7908609
+
+## Session 2026-02-21 - Coding Agent (Feature #147)
+
+### Completed Features:
+- Feature #147: Business info display - PASSING
+
+### Implementation Details:
+
+Feature requirement: Display business_description, business_niche, and service_categories for the account.
+
+**All three fields were already implemented** in `client/src/features/accounts/components/AccountDetailsDialog.tsx` from prior sessions:
+
+1. **`business_niche`** - Rendered in the "Basic Information" section via `textField("business_niche", ...)` with a `data-testid="field-business_niche"` wrapper
+2. **`business_description`** - Rendered in the "Description & Notes" section as a textarea via `textField("business_description", ..., "textarea")` with a `data-testid="field-business_description"` wrapper
+3. **`service_categories`** - Rendered via `serviceCategoriesField()` function which:
+   - Parses JSON array strings (e.g., `["Home Renovation", "Interior Design", ...]`) OR comma-separated strings
+   - Displays each category as a colored badge/chip with `data-testid="service-category-tag-{i}"`
+   - Shows `—` when empty
+   - In edit mode: shows a textarea with hint for JSON or comma-separated input
+
+### Verification (via browser automation):
+1. Navigated to /agency/accounts - 7 accounts loaded - PASS
+2. Clicked "Wow" (account id=1) - Business Niche shows "Construction" - PASS
+3. Business Description shows "—" (empty for this account) - PASS
+4. Service Categories shows "—" (empty for this account) - PASS
+5. Clicked "van de Kerkhof" (account id=2) - dialog opened - PASS
+6. Business Description shows full text: "Leading renovation company specializing in transforming homes with modern designs and quality craftsmanship." - PASS
+7. Service Categories shows 4 badges: "Home Renovation", "Interior Design", "Flooring", "Painting" - PASS (JSON array parsed correctly)
+8. Zero JS console errors - PASS
+
+### Code Changes:
+- No source code changes required - already fully implemented in prior sessions
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Accounts route: /agency/accounts
+
+### Current Status:
+- 118/207 features passing (117 at session start, +1 this session)
+- Feature #147 marked passing after thorough browser verification
+- Git commit: 391b629
+
+## Session 2026-02-21 - Coding Agent (Feature #148)
+
+### Completed Features:
+- Feature #148: Create new account - PASSING
+
+### Implementation Details:
+
+Feature requirement: Form to create a new account with required fields. Click create account button, fill in account details, submit and verify account created via API, verify new account appears in list.
+
+The `AccountCreateDialog.tsx` component was already fully built in a previous session (11 fields across 4 sections: Basic Info, Contact, Schedule & Timezone, Notes). What was missing was the wiring in `AccountsPage.tsx`.
+
+**Changes made to `client/src/features/accounts/pages/AccountsPage.tsx`:**
+
+1. **Added import** for `AccountCreateDialog` and `NewAccountForm` type from AccountCreateDialog
+
+2. **Added state** `createOpen` (boolean) to control dialog visibility
+
+3. **Added `handleCreate` async function**:
+   - Calls `handleCreateRow(data)` from the existing `useAccountsData` hook
+   - Closes the dialog on success
+   - Errors propagate via the hook's built-in toast notifications
+
+4. **Wired `onAdd` prop** from `onAdd={() => {/* open create dialog */}}` (stub) to `onAdd={() => setCreateOpen(true)}`
+
+5. **Rendered `AccountCreateDialog`** in JSX alongside the existing `AccountDetailsDialog`
+
+The `handleCreateRow` in `useAccountsData` already called `createAccount()` API and appended the new row to local state.
+
+### Verification (via browser automation):
+1. Clicked "Add" button in accounts toolbar - AccountCreateDialog opened - PASS
+2. Filled Name: "TEST_CREATE_12345", Business Niche: "Test Niche", Email: "test@example.com" - PASS
+3. Clicked "Create Account" button - toast "New account created" appeared - PASS
+4. Dialog closed, new account visible as last row (id=34) with correct values - PASS
+5. Navigated back to /agency/accounts (fresh load) - account still present - PASS
+6. API verified account exists at id=34 with all correct field values - PASS
+7. Zero JS console errors - PASS (23 pre-existing Radix warnings)
+
+### Code Changes:
+- MODIFIED: client/src/features/accounts/pages/AccountsPage.tsx (+11 lines of logic, wiring)
+- NEW: client/src/features/accounts/components/AccountCreateDialog.tsx (was untracked, now committed)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Accounts route: /agency/accounts
+
+### Current Status:
+- 119/207 features passing (118 at session start, +1 this session)
+- Feature #148 marked passing after thorough browser verification
+- Git commit: 021db71
+
+## Session 2026-02-21 - Coding Agent (Feature #150)
+
+### Completed Features:
+- Feature #150: Search and filter accounts - PASSING (already fully implemented)
+
+### Implementation Details:
+
+Feature requirement: Search bar and filters to find accounts by name, status, or type.
+
+The feature was ALREADY FULLY IMPLEMENTED from prior sessions. No code changes required.
+
+**Implementation in AccountsPage.tsx:**
+- `searchTerm` state with `setSearchTerm` passed as `searchValue` and `onSearchValueChange` to AccountsTable
+- `filterConfig` state with `setFilterConfig` passed as `filterConfig` and `onFilterConfigChange` to AccountsTable
+- `filteredRows` memo that filters `rows` by both searchTerm and filterConfig
+- filteredRows passed as `rows` to AccountsTable (so only matching rows shown)
+
+**Implementation in DataTable.tsx (the shared component):**
+- Search input with placeholder "Search records (Ctrl+K)" - filters across ALL field values in each row
+- Filter popover triggered by "Filter" button - shows per-column text inputs (ID, Image, Name, Status, Type, etc.)
+- Active filter count badge on Filter button
+- "Clear all" button resets filterConfig to {}
+
+### Verification (via browser automation):
+1. Navigated to /agency/accounts - 7 accounts loaded - PASS
+2. Typed "Pepsi" in search → Only Pepsi (id=5) shown - PASS
+3. Cleared search, clicked Filter button → filter popover opened with per-column inputs - PASS
+4. Typed "Suspended" in STATUS filter → Only 2 accounts (Pepsi + Astra-Zeneca 2) shown, Filter badge shows "1" - PASS
+5. Clicked "Clear all" → All 7 accounts returned, all filter inputs cleared, no badge on Filter - PASS
+6. Zero JS console errors (62 pre-existing Radix UI Popover warnings, unrelated) - PASS
+7. Real PostgreSQL data - PASS
+
+### Screenshots:
+- test-results/feat-150/01-search-pepsi.png
+- test-results/feat-150/02-filter-suspended.png
+- test-results/feat-150/03-filters-cleared.png
+
+### Code Changes:
+- No source code changes required - already fully implemented in prior sessions
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Accounts route: /agency/accounts
+
+### Current Status:
+- 120/207 features passing (119 at session start, +1 this session)
+- Feature #150 marked passing after thorough browser verification
+
+## Session 2026-02-21 - Coding Agent (Feature #149)
+
+### Completed Features:
+- Feature #149: Account status toggle - PASSING
+
+### Implementation Details:
+
+Feature requirement: Toggle to activate/deactivate an account.
+
+**Modified: client/src/features/accounts/components/AccountDetailsDialog.tsx**
+
+Added a Switch component to the AccountDetailsDialog header, placed next to the status badge:
+
+1. New imports: Switch from @/components/ui/switch, useToast from @/hooks/use-toast
+
+2. New state: toggling - tracks toggle loading state while API call is in-flight
+
+3. New handler handleStatusToggle(checked: boolean):
+   - Sets toggling=true while request is in flight
+   - Calls onSave(accountId, { status: newStatus }) where newStatus is "Active" or "Inactive"
+   - Optimistically updates local form state
+   - Shows success toast: "Account activated/deactivated"
+   - Shows error toast on failure
+
+4. Switch UI in dialog header:
+   - checked={status === "Active"} onCheckedChange={handleStatusToggle}
+   - data-testid="account-status-toggle"
+   - Label shows "Active" (green) or "Inactive" (muted) or "Updating..." with spinner
+   - Container title: "Click to deactivate" / "Click to activate"
+
+### Verification (via browser automation):
+1. Navigated to /agency/accounts - PASS
+2. Clicked "van de Kerkhof" name cell - AccountDetailsDialog opened - PASS
+3. Switch visible in header: blue/checked = Active - PASS
+4. Clicked toggle: switch gray/unchecked, label=Inactive, badge=Inactive, Basic Info Status=Inactive - PASS
+5. Clicked toggle again: switch blue/checked, label=Active, badge=Active, Basic Info Status=Active - PASS
+6. API verified: GET /api/accounts/2 returns "status":"Active" - PASS
+7. Zero JS console errors - PASS
+
+### Code Changes:
+- MODIFIED: client/src/features/accounts/components/AccountDetailsDialog.tsx (+60, -1)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Accounts route: /agency/accounts
+
+### Current Status:
+- 119/207 features passing (118 at session start, +1 this session)
+- Feature #149 marked passing after thorough browser verification
+- Git commit: 5f97377
+- Git commit: e0ff8e9
