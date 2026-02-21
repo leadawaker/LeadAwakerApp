@@ -1,9 +1,9 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useLeads } from "@/hooks/useApiData";
+import { useLeads, useCampaigns } from "@/hooks/useApiData";
 import { FiltersBar } from "@/components/crm/FiltersBar";
-import { ChevronLeft, ChevronRight, ChevronDown, AlertCircle, RefreshCw, X, Clock, User, Megaphone, Calendar, ExternalLink } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, AlertCircle, RefreshCw, X, Clock, User, Megaphone, Calendar, ExternalLink, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
@@ -155,6 +155,7 @@ function DroppableTimeSlot({
 export default function CalendarPage() {
   const { currentAccountId } = useWorkspace();
   const { leads, loading: leadsLoading, refresh: refetchLeads } = useLeads();
+  const { campaigns } = useCampaigns();
   const [campaignId, setCampaignId] = useState<number | "all">("all");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Appointment | null>(null);
@@ -298,6 +299,50 @@ export default function CalendarPage() {
   }, [viewMode, anchorDate, weekDays]);
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
+
+  // Build campaign options from all leads in scope (account-filtered, not campaign-filtered)
+  // so we don't create a circular dependency with the campaignId filter.
+  const campaignOptions = useMemo(() => {
+    // Collect unique campaign ids+names from account-filtered leads that have bookings
+    const fromLeads = new Map<number, string>();
+    for (const l of (leads || [])) {
+      const lead = l as any;
+      const accId = lead.account_id || lead.accounts_id;
+      if (accId !== currentAccountId) continue;
+      if (!lead.booked_call_date) continue;
+      const cid = lead.campaign_id || lead.campaigns_id;
+      const cname = lead.campaign_name;
+      if (cid && cname) {
+        fromLeads.set(Number(cid), cname);
+      }
+    }
+
+    // Merge with known campaigns from API that belong to this account (or have no account)
+    const fromApi = (campaigns || []).filter((c: any) => {
+      const accId = c.account_id || c.accounts_id || c.Accounts_id;
+      return !accId || accId === currentAccountId;
+    });
+
+    // Build unified list: prefer API data (has full info incl. status), supplement with leads data
+    const merged = new Map<number, any>();
+    for (const c of fromApi) {
+      merged.set(c.id, c);
+    }
+    // Add campaigns found in leads that aren't already in the API list
+    for (const [cid, cname] of fromLeads) {
+      if (!merged.has(cid)) {
+        merged.set(cid, { id: cid, name: cname, status: null });
+      }
+    }
+
+    return Array.from(merged.values()).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  }, [campaigns, currentAccountId, leads]);
+
+  const selectedCampaignName = useMemo(() => {
+    if (campaignId === "all") return null;
+    const found = campaignOptions.find((c: any) => c.id === campaignId);
+    return found ? (found as any).name : null;
+  }, [campaignId, campaignOptions]);
 
   // ── Drag handlers ─────────────────────────────────────────────────────────
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -452,6 +497,74 @@ export default function CalendarPage() {
                             <span className="capitalize">{mode}</span> View
                           </DropdownMenu.Item>
                         ))}
+                      </DropdownMenu.Content>
+                    </DropdownMenu.Portal>
+                  </DropdownMenu.Root>
+
+                  {/* Campaign filter dropdown */}
+                  <DropdownMenu.Root>
+                    <DropdownMenu.Trigger asChild>
+                      <button
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-1.5 rounded-xl border text-sm font-semibold transition-colors",
+                          campaignId !== "all"
+                            ? "border-brand-blue bg-brand-blue/10 text-brand-blue hover:bg-brand-blue/20"
+                            : "border-border bg-muted/20 hover:bg-muted/30"
+                        )}
+                        data-testid="button-campaign-filter"
+                      >
+                        <Filter className="h-3.5 w-3.5" />
+                        <span className="max-w-[120px] truncate">
+                          {selectedCampaignName ?? "All Campaigns"}
+                        </span>
+                        <ChevronDown className="h-4 w-4 shrink-0" />
+                      </button>
+                    </DropdownMenu.Trigger>
+                    <DropdownMenu.Portal>
+                      <DropdownMenu.Content
+                        className="z-[100] min-w-[200px] bg-background border border-border rounded-xl shadow-xl p-1"
+                        sideOffset={5}
+                        data-testid="campaign-filter-dropdown"
+                      >
+                        <DropdownMenu.Item
+                          className={cn(
+                            "flex items-center px-3 py-2 text-sm font-medium rounded-lg cursor-pointer hover:bg-muted/50 outline-none",
+                            campaignId === "all" && "bg-muted/30 font-bold"
+                          )}
+                          onClick={() => setCampaignId("all")}
+                          data-testid="campaign-filter-all"
+                        >
+                          All Campaigns
+                        </DropdownMenu.Item>
+                        {campaignOptions.length > 0 && (
+                          <DropdownMenu.Separator className="h-px bg-border my-1" />
+                        )}
+                        {campaignOptions.map((c: any) => (
+                          <DropdownMenu.Item
+                            key={c.id}
+                            className={cn(
+                              "flex items-center gap-2 px-3 py-2 text-sm rounded-lg cursor-pointer hover:bg-muted/50 outline-none",
+                              campaignId === c.id && "bg-brand-blue/10 font-bold text-brand-blue"
+                            )}
+                            onClick={() => setCampaignId(c.id)}
+                            data-testid={`campaign-filter-option-${c.id}`}
+                          >
+                            <span className="truncate">{c.name}</span>
+                            {c.status && (
+                              <span className={cn(
+                                "ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase shrink-0",
+                                c.status === "Active" ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                                  : c.status === "Finished" ? "bg-muted/40 text-muted-foreground"
+                                  : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                              )}>
+                                {c.status}
+                              </span>
+                            )}
+                          </DropdownMenu.Item>
+                        ))}
+                        {campaignOptions.length === 0 && (
+                          <div className="px-3 py-2 text-sm text-muted-foreground italic">No campaigns</div>
+                        )}
                       </DropdownMenu.Content>
                     </DropdownMenu.Portal>
                   </DropdownMenu.Root>
