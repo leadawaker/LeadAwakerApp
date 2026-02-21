@@ -245,6 +245,30 @@ const statusColors: Record<
     border: "border-[#10b981]/20",
     dot: "bg-[#10b981]",
   },
+  Paused: {
+    text: "text-[#f59e0b]",
+    bg: "bg-[#f59e0b]/10",
+    border: "border-[#f59e0b]/20",
+    dot: "bg-[#f59e0b]",
+  },
+  Completed: {
+    text: "text-[#6b7280]",
+    bg: "bg-[#6b7280]/10",
+    border: "border-[#6b7280]/20",
+    dot: "bg-[#6b7280]",
+  },
+  Finished: {
+    text: "text-[#6b7280]",
+    bg: "bg-[#6b7280]/10",
+    border: "border-[#6b7280]/20",
+    dot: "bg-[#6b7280]",
+  },
+  Draft: {
+    text: "text-[#6b7280]",
+    bg: "bg-[#6b7280]/10",
+    border: "border-[#6b7280]/20",
+    dot: "bg-[#6b7280]",
+  },
   Inactive: {
     text: "text-[#ef4444]",
     bg: "bg-[#ef4444]/10",

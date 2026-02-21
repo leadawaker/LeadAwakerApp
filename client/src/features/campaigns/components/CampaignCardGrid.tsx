@@ -31,7 +31,7 @@ function getStatusColor(status: string): { bg: string; text: string; dot: string
       return { bg: "bg-amber-500/15", text: "text-amber-600 dark:text-amber-400", dot: "bg-amber-500" };
     case "Completed":
     case "Finished":
-      return { bg: "bg-blue-500/15", text: "text-blue-600 dark:text-blue-400", dot: "bg-blue-500" };
+      return { bg: "bg-slate-400/15", text: "text-slate-500 dark:text-slate-400", dot: "bg-slate-400" };
     case "Archived":
     case "Inactive":
       return { bg: "bg-slate-400/10", text: "text-slate-500 dark:text-slate-400", dot: "bg-slate-400" };
