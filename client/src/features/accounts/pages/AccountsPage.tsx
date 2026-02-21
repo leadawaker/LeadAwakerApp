@@ -3,6 +3,7 @@ import React, { useMemo, useState } from "react";
 import { useAccountsData } from "../hooks/useAccountsData";
 import { AccountsTable } from "../components/AccountsTable";
 import { AccountDetailsDialog } from "../components/AccountDetailsDialog";
+import { AccountCreateDialog, type NewAccountForm } from "../components/AccountCreateDialog";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 import type { DataTableRow } from "@/components/DataTable/DataTable";
 
@@ -34,6 +35,14 @@ export default function AccountsPage() {
   const [showVerticalLines, setShowVerticalLines] = useState(true);
   const [filterConfig, setFilterConfig] = useState<Record<string, string>>({});
   const [searchTerm, setSearchTerm] = useState("");
+
+  // ── Create dialog state ───────────────────────────────────────────────────
+  const [createOpen, setCreateOpen] = useState(false);
+
+  async function handleCreate(data: NewAccountForm) {
+    await handleCreateRow(data);
+    setCreateOpen(false);
+  }
 
   // ── Detail/Edit dialog state ─────────────────────────────────────────────
   const [detailAccount, setDetailAccount] = useState<DataTableRow | null>(null);
@@ -123,7 +132,7 @@ export default function AccountsPage() {
           onFilterConfigChange={setFilterConfig}
           searchValue={searchTerm}
           onSearchValueChange={setSearchTerm}
-          onAdd={() => {/* open create dialog */}}
+          onAdd={() => setCreateOpen(true)}
           onViewSelected={() => {
             if (selectedIds.length === 1) {
               const row = rows.find((r) => r.Id === selectedIds[0]);
@@ -142,6 +151,13 @@ export default function AccountsPage() {
           open={detailOpen}
           onClose={handleDetailClose}
           onSave={handleDetailSave}
+        />
+
+        {/* ── Create Account Dialog ─────────────────────────────────────── */}
+        <AccountCreateDialog
+          open={createOpen}
+          onClose={() => setCreateOpen(false)}
+          onCreate={handleCreate}
         />
       </div>
     </div>
