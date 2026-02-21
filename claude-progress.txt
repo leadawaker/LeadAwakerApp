@@ -6045,3 +6045,154 @@ Feature requirement: Visual color picker component for selecting tag display col
 - 136/207 features passing (135 at session start, +1 this session)
 - Feature #165 marked passing after thorough browser verification
 - Git commit: ad6b5e1
+
+## Session 2026-02-21 - Coding Agent (Feature #167)
+
+### Completed Features:
+- Feature #167: Delete tag with confirmation - PASSING
+
+### Implementation Details:
+
+Feature requirement: Delete a tag with a confirmation dialog to prevent accidental deletion.
+
+**Modified: server/storage.ts**
+1. Added `deleteTag(id: number): Promise<boolean>` to the `IStorage` interface
+2. Added `async deleteTag(id: number): Promise<boolean>` implementation in `DatabaseStorage`:
+   - Uses `db.delete(tags).where(eq(tags.id, id)).returning()`
+   - Returns `true` if tag was found and deleted, `false` if not found
+
+**Modified: server/routes.ts**
+1. Added `DELETE /api/tags/:id` route after the existing PATCH route:
+   - Calls `storage.deleteTag(Number(req.params.id))`
+   - Returns 404 if tag not found
+   - Returns `{ success: true }` on successful deletion
+
+**Modified: client/src/pages/Tags.tsx**
+1. Added `Trash2` and `AlertTriangle` to lucide-react imports
+2. Added delete state variables:
+   - `deleteDialogOpen` (boolean) - controls dialog open/close
+   - `deletingTag` (Tag | null) - stores tag being deleted
+   - `deleting` (boolean) - tracks API call in progress
+3. Added `openDeleteDialog(tag, e)` function:
+   - Stops propagation (doesn't select tag)
+   - Sets deletingTag and opens dialog
+4. Added `handleDeleteTag()` async function:
+   - Calls DELETE /api/tags/:id
+   - On success: removes tag from local state, deselects if selected, shows success toast, closes dialog
+   - On error: shows error toast
+5. Added delete button on each tag card (visible on hover, alongside edit button):
+   - `data-testid="button-delete-tag-{id}"`
+   - Red hover color, Trash2 icon
+   - Grouped with edit button in a flex container
+6. Added delete button in side panel next to edit button:
+   - `data-testid="button-delete-selected-tag"`
+7. Added confirmation dialog (`data-testid="dialog-delete-tag"`):
+   - Shows AlertTriangle icon + "Delete Tag" title in red
+   - Message shows tag name in quotes
+   - Warning: "This action cannot be undone..."
+   - Cancel button (`data-testid="button-cancel-delete-tag"`) - closes dialog, tag preserved
+   - Delete Tag button (`data-testid="button-confirm-delete-tag"`) - variant=destructive, calls handleDeleteTag
+
+### Verification (via browser automation):
+1. Navigated to /agency/tags - 35 tags in 8 categories loaded - PASS
+2. Hovered over tag card "ai stop" - delete button (Trash2 icon) appeared alongside edit button - PASS
+3. Clicked delete button - confirmation dialog appeared with title "Delete Tag" and tag name "ai stop" - PASS
+4. Clicked Cancel - dialog closed, tag still exists - PASS
+5. Created test tag "FEAT167_TEST_DELETE" via Create Tag dialog - PASS
+6. Hovered over test tag, clicked delete button - PASS
+7. Confirmation dialog shows "FEAT167_TEST_DELETE" in message - PASS
+8. Clicked "Delete Tag" confirm button - PASS
+9. Success toast: "Tag deleted - FEAT167_TEST_DELETE was deleted successfully." - PASS
+10. Tag removed from list - PASS
+11. API endpoint verified independently: POST then DELETE then GET confirms deletion - PASS
+12. Zero JS errors related to tag deletion (pre-existing dashboard fetch errors unrelated) - PASS
+
+### Screenshots:
+- test-results/feat-167/01-tags-page-loaded.png
+- test-results/feat-167/03-hovered-tag-card.png
+- test-results/feat-167/04-after-delete-click.png
+- test-results/feat-167/05-confirmation-dialog.png
+- test-results/feat-167/06-after-cancel-tag-still-exists.png
+- test-results/feat-167/07-create-tag-dialog-open.png
+- test-results/feat-167/10-confirmation-dialog-for-test-tag.png
+- test-results/feat-167/13-tag-deleted-final-state.png
+
+### Code Changes:
+- MODIFIED: server/storage.ts (+6 lines: deleteTag interface + implementation)
+- MODIFIED: server/routes.ts (+6 lines: DELETE /api/tags/:id route)
+- MODIFIED: client/src/pages/Tags.tsx (+100 lines: imports, state, handlers, delete buttons, confirm dialog)
+
+### Environment Notes:
+- API server on port 5001 (tsx watch auto-reloads on file changes)
+- Vite dev server on port 5000/5173
+- Login: leadawaker@gmail.com / test123
+- Tags route: /agency/tags
+
+### Current Status:
+- 138/207 features passing (137 at session start, +1 this session)
+- Feature #167 marked passing after thorough browser verification
+- Git commit: e5b2540
+
+## Session 2026-02-21 - Coding Agent (Feature #168)
+
+### Completed Features:
+- Feature #168: Search and filter tags - PASSING
+
+### Implementation Details:
+
+Feature requirement: Search tags by name and filter by category.
+
+The search-by-name (input-search-tags) was already implemented in previous sessions. This session added the missing category filter dropdown.
+
+**Modified: client/src/pages/Tags.tsx**
+
+1. Added `selectedCategory` state: `const [selectedCategory, setSelectedCategory] = useState<string>("all");`
+
+2. Added `categoryOptions` useMemo (after tagCounts):
+   - Iterates all tags, extracts unique categories (capitalized, fallback "Uncategorized")
+   - Returns sorted array of category name strings
+   - Used to populate the filter dropdown
+
+3. Updated `groupedCategories` useMemo:
+   - Added category filter: if selectedCategory !== "all" && categoryKey !== selectedCategory, skip tag
+   - Added selectedCategory to dependency array
+
+4. Added select-category-filter dropdown in UI (between search input and account filter):
+   - Uses existing Select component from Shadcn/ui
+   - data-testid="select-category-filter"
+   - Shows "All Categories" as default, then all unique categories alphabetically
+
+5. Updated empty state description:
+   - Now shows combined message when both search + category filter are active
+   - e.g. "No tags match 'hot' in category 'Behavior'"
+
+### Verification (via browser automation):
+1. Tags page loaded - 35 tags in 8 categories - PASS
+2. input-search-tags present - PASS
+3. select-category-filter present - PASS
+4. Category dropdown has 9 options: All Categories + 8 categories (Automation, Behavior, Outcome, Priority, Source, Status, TestCategory, Uncategorized) - PASS
+5. Search "bump" shows 8 matching tags - PASS
+6. Clear search restores all 35 tags - PASS
+7. Category filter "Behavior" shows 2 tags (dnd, manual takeover) - PASS
+8. Combined: Behavior + search "dnd" shows 1 tag - PASS
+9. Clear all filters restores 35 tags in 8 categories - PASS
+10. Zero JS console errors - PASS
+
+### Code Changes:
+- MODIFIED: client/src/pages/Tags.tsx (+42 lines, -2 lines)
+  - Added selectedCategory state
+  - Added categoryOptions useMemo
+  - Updated groupedCategories filter + deps
+  - Added select-category-filter dropdown in UI
+  - Updated empty state description
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173 (also accessible on 5000)
+- Login: leadawaker@gmail.com / test123
+- Tags route: /agency/tags
+
+### Current Status:
+- 139/207 features passing (138 at session start, +1 this session)
+- Feature #168 marked passing after thorough browser verification
+- Git commit: 6acd08a
