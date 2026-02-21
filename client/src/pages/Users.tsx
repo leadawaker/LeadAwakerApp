@@ -63,6 +63,7 @@ type RoleFilter = "All" | "Admin" | "Operator" | "Manager" | "Agent" | "Viewer";
 export default function UsersPage() {
   const [q, setQ] = useState("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("All");
+  const [accountFilter, setAccountFilter] = useState<string>("all");
   const [users, setUsers] = useState<AppUser[]>([]);
   const [accounts, setAccounts] = useState<AccountMap>({});
   const [loading, setLoading] = useState(true);
@@ -133,8 +134,14 @@ export default function UsersPage() {
     const matchesRole = (u: AppUser) =>
       roleFilter === "All" || u.role === roleFilter;
 
-    return users.filter(u => matchesSearch(u) && matchesRole(u));
-  }, [q, roleFilter, users]);
+    const matchesAccount = (u: AppUser) => {
+      if (accountFilter === "all") return true;
+      if (accountFilter === "none") return !u.accountsId;
+      return u.accountsId === Number(accountFilter);
+    };
+
+    return users.filter(u => matchesSearch(u) && matchesRole(u) && matchesAccount(u));
+  }, [q, roleFilter, accountFilter, users]);
 
   // Pending invites: users with "Invited" status who have an invite_token in preferences
   const pendingInvites = useMemo(() => {
@@ -396,6 +403,37 @@ export default function UsersPage() {
                   ×
                 </button>
               )}
+              <Select
+                value={accountFilter}
+                onValueChange={(val) => setAccountFilter(val)}
+              >
+                <SelectTrigger
+                  className="h-10 w-[180px] rounded-xl border border-border bg-card text-sm shadow-sm"
+                  data-testid="select-account-filter"
+                >
+                  <SelectValue placeholder="Filter by account…" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Accounts</SelectItem>
+                  <SelectItem value="none">No Account</SelectItem>
+                  {Object.entries(accounts).map(([id, name]) => (
+                    <SelectItem key={id} value={id}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {accountFilter !== "all" && (
+                <button
+                  className="h-10 px-3 rounded-xl border border-border bg-card text-sm text-muted-foreground hover:bg-muted transition-colors flex items-center gap-1.5"
+                  onClick={() => setAccountFilter("all")}
+                  data-testid="button-clear-account-filter"
+                  title="Clear account filter"
+                >
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+                    {accountFilter === "none" ? "No Account" : (accounts[Number(accountFilter)] || `Account #${accountFilter}`)}
+                  </span>
+                  ×
+                </button>
+              )}
             </div>
             {isAdmin && (
               <Button
@@ -549,7 +587,7 @@ export default function UsersPage() {
                 <div className="flex-1 overflow-y-auto divide-y divide-border">
                   {!loading && rows.length === 0 && (
                     <DataEmptyState
-                      variant={q ? "search" : "users"}
+                      variant={q || roleFilter !== "All" || accountFilter !== "all" ? "search" : "users"}
                       compact
                     />
                   )}
