@@ -6,6 +6,13 @@ import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SkeletonCardGrid } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, Pencil } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 // Map color name strings (from DB) to hex values
 const COLOR_MAP: Record<string, string> = {
@@ -60,6 +67,25 @@ export default function TagsPage() {
   const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
   const [campaignId, setCampaignId] = useState<string>("all");
   const [selectedAccountId, setSelectedAccountId] = useState<string>("all");
+
+  // Create Tag dialog state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createName, setCreateName] = useState("");
+  const [createColor, setCreateColor] = useState("blue");
+  const [createCategory, setCreateCategory] = useState("");
+  const [createDescription, setCreateDescription] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  // Edit Tag dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingTag, setEditingTag] = useState<Tag | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editColor, setEditColor] = useState("blue");
+  const [editCategory, setEditCategory] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const { toast } = useToast();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -181,6 +207,96 @@ export default function TagsPage() {
     });
   }, [selectedTag, filteredLeads]);
 
+  const handleCreateTag = useCallback(async () => {
+    if (!createName.trim()) return;
+    setCreating(true);
+    try {
+      const payload: Record<string, any> = {
+        name: createName.trim(),
+        color: createColor,
+      };
+      if (createCategory.trim()) payload.category = createCategory.trim();
+      if (createDescription.trim()) payload.description = createDescription.trim();
+
+      const res = await apiFetch("/api/tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`${res.status}: ${errText}`);
+      }
+
+      const newTag = await res.json();
+      // Optimistically add to local tags list
+      setTags((prev) => [...prev, newTag]);
+      toast({ title: "Tag created", description: `"${newTag.name ?? createName}" was added successfully.` });
+
+      // Reset form and close dialog
+      setCreateName("");
+      setCreateColor("blue");
+      setCreateCategory("");
+      setCreateDescription("");
+      setCreateDialogOpen(false);
+    } catch (err) {
+      console.error("Failed to create tag:", err);
+      toast({ title: "Error", description: `Failed to create tag: ${err instanceof Error ? err.message : String(err)}`, variant: "destructive" });
+    } finally {
+      setCreating(false);
+    }
+  }, [createName, createColor, createCategory, createDescription, toast]);
+
+  // Open edit dialog pre-populated with tag data
+  const openEditDialog = useCallback((tag: Tag, e: React.MouseEvent) => {
+    e.stopPropagation(); // Don't select tag when clicking edit
+    setEditingTag(tag);
+    setEditName(tag.name ?? "");
+    setEditColor(tag.color ?? "blue");
+    setEditCategory(tag.category ?? "");
+    setEditDescription(tag.description ?? "");
+    setEditDialogOpen(true);
+  }, []);
+
+  const handleEditTag = useCallback(async () => {
+    if (!editingTag || !editName.trim()) return;
+    setSaving(true);
+    try {
+      const payload: Record<string, any> = {
+        name: editName.trim(),
+        color: editColor,
+        category: editCategory.trim() || null,
+        description: editDescription.trim() || null,
+      };
+
+      const res = await apiFetch(`/api/tags/${editingTag.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`${res.status}: ${errText}`);
+      }
+
+      const updatedTag = await res.json();
+      // Update local tags list optimistically
+      setTags((prev) =>
+        prev.map((t) => (t.id === editingTag.id ? { ...t, ...updatedTag } : t))
+      );
+      toast({ title: "Tag updated", description: `"${updatedTag.name ?? editName}" was updated successfully.` });
+      setEditDialogOpen(false);
+      setEditingTag(null);
+    } catch (err) {
+      console.error("Failed to update tag:", err);
+      toast({ title: "Error", description: `Failed to update tag: ${err instanceof Error ? err.message : String(err)}`, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  }, [editingTag, editName, editColor, editCategory, editDescription, toast]);
+
   if (error && tags.length === 0 && !loading) {
     return (
       <CrmShell>
@@ -252,10 +368,210 @@ export default function TagsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="text-xs text-muted-foreground whitespace-nowrap">
-              {tags.filter((t) => t.name).length} tags in {groupedCategories.length} categories
+            <div className="flex items-center gap-3">
+              <div className="text-xs text-muted-foreground whitespace-nowrap">
+                {tags.filter((t) => t.name).length} tags in {groupedCategories.length} categories
+              </div>
+              <Button
+                data-testid="button-create-tag"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => setCreateDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4" />
+                Create Tag
+              </Button>
             </div>
           </div>
+
+          {/* ─── CREATE TAG DIALOG ─── */}
+          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+            <DialogContent data-testid="dialog-create-tag" className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Create New Tag</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="tag-name">Name <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="tag-name"
+                    data-testid="input-tag-name"
+                    placeholder="e.g. hot-lead"
+                    value={createName}
+                    onChange={(e) => setCreateName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !creating) handleCreateTag(); }}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="tag-color">Color</Label>
+                  <Select value={createColor} onValueChange={setCreateColor}>
+                    <SelectTrigger id="tag-color" data-testid="select-tag-color" className="w-full">
+                      <SelectValue placeholder="Select color" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(COLOR_MAP).filter(([k]) => k !== "grey").map(([colorName, hex]) => (
+                        <SelectItem key={colorName} value={colorName}>
+                          <span className="flex items-center gap-2">
+                            <span
+                              className="inline-block h-3 w-3 rounded-full"
+                              style={{ backgroundColor: hex }}
+                            />
+                            {colorName.charAt(0).toUpperCase() + colorName.slice(1)}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="tag-category">Category</Label>
+                  <Input
+                    id="tag-category"
+                    data-testid="input-tag-category"
+                    placeholder="e.g. Status, Behavior, Source"
+                    value={createCategory}
+                    onChange={(e) => setCreateCategory(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="tag-description">Description</Label>
+                  <Textarea
+                    id="tag-description"
+                    data-testid="input-tag-description"
+                    placeholder="Brief description of this tag…"
+                    rows={3}
+                    value={createDescription}
+                    onChange={(e) => setCreateDescription(e.target.value)}
+                  />
+                </div>
+                {/* Live color preview */}
+                {createName.trim() && (
+                  <div className="flex items-center gap-3 p-3 rounded-xl border border-border bg-muted/10">
+                    <div
+                      className="h-8 w-8 rounded-full text-[11px] font-bold flex items-center justify-center text-white shrink-0 shadow-sm"
+                      style={{ backgroundColor: resolveColor(createColor) }}
+                    >
+                      0
+                    </div>
+                    <div>
+                      <div className="font-semibold text-sm">{createName}</div>
+                      {createCategory && (
+                        <div className="text-xs text-muted-foreground capitalize">{createCategory}</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setCreateDialogOpen(false)} disabled={creating}>
+                  Cancel
+                </Button>
+                <Button
+                  data-testid="button-submit-create-tag"
+                  onClick={handleCreateTag}
+                  disabled={!createName.trim() || creating}
+                >
+                  {creating ? "Creating…" : "Create Tag"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* ─── EDIT TAG DIALOG ─── */}
+          <Dialog open={editDialogOpen} onOpenChange={(open) => {
+            setEditDialogOpen(open);
+            if (!open) setEditingTag(null);
+          }}>
+            <DialogContent data-testid="dialog-edit-tag" className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Edit Tag</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit-tag-name">Name <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="edit-tag-name"
+                    data-testid="input-edit-tag-name"
+                    placeholder="e.g. hot-lead"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !saving) handleEditTag(); }}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit-tag-color">Color</Label>
+                  <Select value={editColor} onValueChange={setEditColor}>
+                    <SelectTrigger id="edit-tag-color" data-testid="select-edit-tag-color" className="w-full">
+                      <SelectValue placeholder="Select color" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(COLOR_MAP).filter(([k]) => k !== "grey").map(([colorName, hex]) => (
+                        <SelectItem key={colorName} value={colorName}>
+                          <span className="flex items-center gap-2">
+                            <span
+                              className="inline-block h-3 w-3 rounded-full"
+                              style={{ backgroundColor: hex }}
+                            />
+                            {colorName.charAt(0).toUpperCase() + colorName.slice(1)}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit-tag-category">Category</Label>
+                  <Input
+                    id="edit-tag-category"
+                    data-testid="input-edit-tag-category"
+                    placeholder="e.g. Status, Behavior, Source"
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit-tag-description">Description</Label>
+                  <Textarea
+                    id="edit-tag-description"
+                    data-testid="input-edit-tag-description"
+                    placeholder="Brief description of this tag…"
+                    rows={3}
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                  />
+                </div>
+                {/* Live color preview */}
+                {editName.trim() && (
+                  <div className="flex items-center gap-3 p-3 rounded-xl border border-border bg-muted/10">
+                    <div
+                      className="h-8 w-8 rounded-full text-[11px] font-bold flex items-center justify-center text-white shrink-0 shadow-sm"
+                      style={{ backgroundColor: resolveColor(editColor) }}
+                    >
+                      {editingTag ? (tagCounts.get(editingTag.name!) ?? 0) : 0}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-sm">{editName}</div>
+                      {editCategory && (
+                        <div className="text-xs text-muted-foreground capitalize">{editCategory}</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditDialogOpen(false)} disabled={saving}>
+                  Cancel
+                </Button>
+                <Button
+                  data-testid="button-submit-edit-tag"
+                  onClick={handleEditTag}
+                  disabled={!editName.trim() || saving}
+                >
+                  {saving ? "Saving…" : "Save Changes"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {groupedCategories.length === 0 ? (
             <DataEmptyState
@@ -279,17 +595,17 @@ export default function TagsPage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 bg-card p-4 rounded-2xl shadow-sm border border-border">
                       {cat.tags.map((t) => (
-                        <button
+                        <div
                           key={t.id}
-                          data-testid={`tag-item-${t.id}`}
-                          onClick={() => setSelectedTagId(t.id === selectedTagId ? null : t.id)}
                           className={cn(
-                            "flex items-center gap-3 px-3 py-2 rounded-xl transition text-left border border-transparent",
+                            "relative group flex items-center gap-3 px-3 py-2 rounded-xl transition text-left border border-transparent cursor-pointer",
                             selectedTagId === t.id
                               ? "ring-2 ring-primary bg-card"
                               : "hover:bg-muted/5"
                           )}
                           style={{ backgroundColor: `${t.hexColor}08` }}
+                          data-testid={`tag-item-${t.id}`}
+                          onClick={() => setSelectedTagId(t.id === selectedTagId ? null : t.id)}
                           title={t.description ?? t.name ?? undefined}
                         >
                           {/* Color dot + count badge */}
@@ -300,7 +616,7 @@ export default function TagsPage() {
                             {t.count}
                           </div>
 
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <div
                               data-testid={`tag-name-${t.id}`}
                               className="truncate font-semibold text-[13px] text-foreground leading-tight"
@@ -313,7 +629,17 @@ export default function TagsPage() {
                               </div>
                             )}
                           </div>
-                        </button>
+
+                          {/* Edit button — visible on hover */}
+                          <button
+                            data-testid={`button-edit-tag-${t.id}`}
+                            onClick={(e) => openEditDialog(t, e)}
+                            className="opacity-0 group-hover:opacity-100 absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-opacity"
+                            title={`Edit tag "${t.name}"`}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -324,8 +650,20 @@ export default function TagsPage() {
               <div className="space-y-4 sticky top-6">
                 <div className="bg-card rounded-2xl shadow-sm border border-border flex flex-col max-h-[calc(100vh-200px)]">
                   <div className="p-4 border-b space-y-1">
-                    <div className="font-bold text-sm" data-testid="side-panel-title">
-                      {selectedTag ? `Leads: ${selectedTag.name}` : "Tag Insights"}
+                    <div className="flex items-center justify-between">
+                      <div className="font-bold text-sm" data-testid="side-panel-title">
+                        {selectedTag ? `Leads: ${selectedTag.name}` : "Tag Insights"}
+                      </div>
+                      {selectedTag && (
+                        <button
+                          data-testid="button-edit-selected-tag"
+                          onClick={(e) => openEditDialog(selectedTag, e)}
+                          className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors"
+                          title={`Edit tag "${selectedTag.name}"`}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
                     {selectedTag?.description && (
                       <div
