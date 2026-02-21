@@ -5324,4 +5324,136 @@ Added "Operator" role to all role selection dropdowns and the type definition:
 
 ### Current Status:
 - 124/207 features passing (123 at session start, +1 this session)
+
+## Session 2026-02-21 - Coding Agent (Feature #155)
+
+### Completed Features:
+- Feature #155: User status toggle - PASSING
+
+### Implementation Details:
+
+Feature requirement: Toggle user active/inactive status directly in the user table (click toggle, verify status changes, verify API updates user status field).
+
+**Modified: client/src/pages/Users.tsx**
+
+1. Added `togglingUserId` state (number | null) - tracks which user is being toggled to prevent double-clicks and show loading indicator
+
+2. Added `handleStatusToggle(user, checked)` async function:
+   - Computes newStatus: checked ? "Active" : "Inactive"
+   - Optimistic UI update: immediately updates user in local state
+   - Calls PATCH /api/users/{id} with { status: newStatus }
+   - On success: updates local state with server response, shows toast "User activated/deactivated"
+   - On failure: reverts optimistic update, shows error toast
+   - Uses finally to always clear togglingUserId
+
+3. Replaced static status badge with Switch component in user table row:
+   - Admin users: see Switch component with data-testid="switch-user-status-{id}"
+   - Switch checked={isActive(u.status)} (blue = active, gray = inactive)
+   - Switch disabled={togglingUserId === u.id} during API call
+   - Status label next to switch shows "..." while toggling, otherwise shows status text (ACTIVE/INACTIVE/INVITED)
+   - Active status label: emerald green text
+   - Non-admin users: see static badge (read-only)
+
+### Verification (via browser automation):
+1. Navigated to /agency/users - 9 users loaded in table - PASS
+2. Status column shows Switch toggles for Admin user - PASS
+3. User #10 (Test Admin): switch checked (blue), label "active" initially - PASS
+4. Clicked switch on user #10 - switch became unchecked (gray), label "Inactive" - PASS
+5. Toast notification appeared: "Test Admin is now Inactive" - PASS
+6. API verified: GET /api/users/10 returns "status":"Inactive" - PASS (persisted to DB)
+7. Zero JS console errors - PASS
+8. Screenshot confirmed visual: active users blue toggle, inactive users gray toggle - PASS
+
+### Code Changes:
+- MODIFIED: client/src/pages/Users.tsx (+38 lines: handleStatusToggle + Switch in table)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Users route: /agency/users
+
+### Current Status:
+- 126/207 features passing (125 at session start, +1 this session)
+- Feature #155 marked passing after thorough browser verification
+- Git commit: be4270e
+
+## Session 2026-02-21 - Coding Agent (Feature #157)
+
+### Completed Features:
+- Feature #157: Invite token management - PASSING
+
+### Implementation Details:
+
+Feature requirement: View pending invites, resend invitation, or revoke invite tokens.
+
+**Backend (server/routes.ts):**
+
+1. POST /api/users/:id/resend-invite (requireAgency):
+   - Validates user exists and has status "Invited"
+   - Generates new 64-char hex invite token via crypto.randomBytes(32)
+   - Merges new token into existing preferences JSON (preserves other prefs)
+   - Updates user via storage.updateAppUser()
+   - Logs new invite link to console (dev mode)
+   - Returns { user, invite_token, message }
+
+2. POST /api/users/:id/revoke-invite (requireAgency):
+   - Validates user exists
+   - Parses preferences, removes invite_token and invite_sent_at fields
+   - Adds invite_revoked_at timestamp to preferences
+   - Updates user status to "Inactive" (revoked invites become inactive)
+   - Returns { user, message }
+
+**Frontend (client/src/pages/Users.tsx):**
+
+New state variables:
+- invitesExpanded (boolean) - controls panel expand/collapse, defaults true
+- resendingUserId (number | null) - tracks which user is being resent
+- revokingUserId (number | null) - tracks which user is being revoked
+- resendResult ({userId, token} | null) - tracks just-resent result for badge
+
+New computed value:
+- pendingInvites memo - filters users with "Invited" status who have invite_token in preferences
+
+New helper functions:
+- getInviteSentAt(u) - parses invite_sent_at from preferences JSON into Date
+- isInviteExpired(u) - returns true if invite sent more than 7 days ago
+- handleResendInvite(u) - calls POST resend endpoint, updates local state, shows toast + "Resent" badge
+- handleRevokeInvite(u) - calls POST revoke endpoint, removes from panel, updates table
+
+New UI panel (amber styling, above user table, Admin-only):
+- Collapsible toggle button (data-testid="button-toggle-invites") with ChevronDown/Up
+- Header: Mail icon, "Pending Invites" title, count badge
+- Each row: email, role badge, sent date, optional "Expired" badge (>7 days), "Resent" badge if just resent
+- Resend button (amber border, RefreshCw icon, spins during request)
+- Revoke button (red border, XCircle icon, spins during request)
+
+### Verification (via browser automation):
+1. Navigated to /agency/users - Pending Invites panel visible with count badge "2" - PASS
+2. Two invite rows shown: testinvite@example.com (Viewer) and browsertest_invite@example.com (Viewer) - PASS
+3. Each row shows role badge, sent date (21 Feb 2026), Resend + Revoke buttons - PASS
+4. Clicked Resend on testinvite@example.com - toast "New invite token generated" appeared, "Resent" badge shown - PASS
+5. Clicked Revoke on browsertest_invite@example.com - toast "Invite revoked", panel count dropped to 1, user status changed to Inactive in table - PASS
+6. Panel collapse toggle works (ChevronUp/Down) - PASS
+7. Zero JS console errors - PASS
+8. Real PostgreSQL data - all changes persisted - PASS
+
+### Screenshots:
+- test-results/feat-157/01-pending-invites.png
+- test-results/feat-157/02-invites-collapsed.png
+
+### Code Changes:
+- MODIFIED: client/src/pages/Users.tsx (+230 lines: state, handlers, helpers, pending invites UI panel)
+- MODIFIED: server/routes.ts (+87 lines: POST resend-invite, POST revoke-invite endpoints)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Users route: /agency/users
+
+### Current Status:
+- 127/207 features passing (126 at session start, +1 this session)
+- Feature #157 marked passing after thorough browser verification
+- Git commit: 406af57
 - Feature #154 marked passing after thorough browser verification
