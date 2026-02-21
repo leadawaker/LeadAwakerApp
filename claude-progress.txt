@@ -4316,3 +4316,56 @@ Campaign options derive from leads (not just campaigns API) because campaign Acc
 - 107/207 features passing (106 at session start, +1 this session)
 - Feature #136 marked passing after thorough browser verification
 - Git commit: 0aead61
+
+## Session 2026-02-21 - Coding Agent (Feature #137 - Verification)
+
+### Completed Features:
+- Feature #137: Calendar filter by account (agency view) - PASSING (verified, marked in MCP)
+
+### Implementation Details:
+
+Feature was already fully implemented in a previous session (commit 1e7320d) but had not been marked as passing in the MCP feature tracker. This session verified the implementation and marked it passing.
+
+**Implementation in `client/src/pages/Calendar.tsx`:**
+
+1. **`isAgencyUser` + `accounts` from `useWorkspace()`**: Used to conditionally show/hide the account filter button
+
+2. **`calendarAccountFilter` state**: `number | "all"` - only used for agency users; client users always locked to `currentAccountId`
+
+3. **`effectiveAccountFilter` computed value**:
+   - Agency users: uses `calendarAccountFilter` ("all" = all accounts, or specific account id)
+   - Client users: always locked to `currentAccountId`
+
+4. **Account filter applied in `appts` useMemo**:
+   - Client users: filter by `currentAccountId` (hard-coded, no override)
+   - Agency users: "all" = no filter, specific id = filter to that account
+
+5. **Account filter dropdown** (only renders for `isAgencyUser`):
+   - `data-testid="button-account-filter"` - shows current selection
+   - `data-testid="account-filter-dropdown"` - dropdown panel
+   - `data-testid="account-filter-option-all"` - "All Accounts" option
+   - `data-testid="account-filter-option-{id}"` - per-account options
+   - Changing account filter resets campaign filter (handleAccountFilterChange)
+
+6. **Campaign filter integration**: `campaignOptions` also respects the account filter scope
+
+### Verification (via playwright-cli browser automation):
+1. Account filter button visible for admin user (data-testid="button-account-filter") - PASS
+2. Dropdown shows 5 accounts: Pepsi, Paul Mackartney, van de Kerkhof, Astra-Zeneca 2, Coca-Cola 2 - PASS
+3. Selecting "Pepsi" - calendar shows "No appointments scheduled" (0 bookings for Pepsi) - PASS
+4. Clearing to "All Accounts" - both appointments (Gabriel Fronza, Luis Claudio Fronza) restored - PASS
+5. Zero JS console errors - PASS
+6. Real PostgreSQL data via useLeads() hook - PASS
+
+### Code Changes:
+- No source code changes required - already fully implemented in prior session
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 108/207 features passing (107 at session start, +1 this session)
+- Feature #137 marked passing after thorough browser verification
+- Git commit: c8ec769
