@@ -4016,3 +4016,60 @@ The Calendar page implements the full day-click-to-call-list behavior:
 - 103/207 features passing (102 at session start, +1 this session)
 - Feature #132 marked passing after thorough browser verification
 - No new code to commit
+
+## Session 2026-02-21 - Coding Agent (Feature #133)
+
+### Completed Features:
+- Feature #133: Call detail popover - PASSING
+
+### Implementation Details:
+
+Feature requirement: Clicking a booking card on the calendar shows a popover with lead name, campaign, status, time, and booking details.
+
+**Changes made to `client/src/pages/Calendar.tsx`:**
+
+1. **Added imports**: X, Clock, User, Megaphone, Calendar, ExternalLink from lucide-react; useRef from react
+
+2. **New state variables**:
+   - `selectedBooking` - typed object holding the currently clicked booking data
+   - `popoverOpen` - boolean to control popover visibility
+   - `popoverRef` - ref for the popover div
+
+3. **New event handlers**:
+   - `handleBookingCardClick(e, booking)` - stops propagation, sets selectedBooking, opens popover
+   - `handleClosePopover()` - clears popoverOpen and selectedBooking state
+
+4. **Monthly view booking cards** - Added click/keyboard handlers and cursor-pointer hover styles
+
+5. **Weekly/day view booking cards** - Same click/keyboard handlers and hover styles
+
+6. **Popover Panel** (fixed-position, z-201):
+   - Renders only when `popoverOpen && selectedBooking`
+   - Backdrop div (z-200) covers full screen, clicks close the popover
+   - Header: lead name + NO-SHOW/rescheduled badges + close button
+   - Body rows (icon + label + value): Campaign, Status, Time, Date, Rescheduled count
+   - Footer: "View in Calendar" external link button
+
+### Verification (via browser automation agent):
+1. Click booking card on Feb 25 (Gabriel Fronza) → popover appears - PASS
+2. Popover shows lead name: "Gabriel Fronza" with NO-SHOW badge - PASS
+3. Campaign: "Reactivation of our lives" displayed - PASS
+4. Status: "No Show" (red text) displayed - PASS
+5. Time: "15:00" displayed - PASS
+6. Date: "25 Feb - 2026" displayed - PASS
+7. Close button dismisses popover, calendar returns to normal - PASS
+8. Zero JS console errors - PASS
+9. No mock data - real PostgreSQL via useLeads() hook - PASS
+
+### Code Changes:
+- MODIFIED: client/src/pages/Calendar.tsx (176 insertions, 8 deletions)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 104/207 features passing (103 at session start, +1 this session)
+- Feature #133 marked passing after thorough browser verification
+- Git commit: fc600d9
