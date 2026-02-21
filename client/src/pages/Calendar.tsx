@@ -124,7 +124,10 @@ export default function CalendarPage() {
     if (viewMode === "week") {
       const start = weekDays[0];
       const end = weekDays[6];
-      return `${MONTHS[start.getMonth()]} ${start.getDate()} - ${end.getDate()}, ${end.getFullYear()}`;
+      const sameMonth = start.getMonth() === end.getMonth();
+      return sameMonth
+        ? `${MONTHS[start.getMonth()]} ${start.getDate()} - ${end.getDate()}, ${end.getFullYear()}`
+        : `${MONTHS[start.getMonth()]} ${start.getDate()} - ${MONTHS[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`;
     }
     return `${FULL_MONTHS[anchorDate.getMonth()]} ${anchorDate.getDate()}, ${anchorDate.getFullYear()}`;
   }, [viewMode, anchorDate, weekDays]);
