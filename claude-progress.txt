@@ -1,3 +1,111 @@
+## Session 2026-02-21 - Coding Agent (Feature #112)
+
+### Completed Features:
+- Feature #112: Campaign detail view - PASSING
+
+### Implementation Details:
+
+Feature was already fully implemented from a previous session. The following components were all in place:
+
+1. **CampaignDetailPanel.tsx** (client/src/features/campaigns/components/):
+   - Slide-in right panel (fixed, z-50, max-w-[480px])
+   - Backdrop overlay (data-testid="campaign-detail-backdrop") to close on click
+   - Header: campaign avatar, name, status badge, close button (data-testid="campaign-detail-close")
+   - Scrollable body with sections:
+     - Performance metrics summary (8 pills: Leads, Messages, Responses, Bookings, Response%, Booking%, Cost, ROI)
+     - Trends chart (Recharts LineChart with Response%, Booking%, ROI% lines)
+     - Settings section (description, type, dates, active hours, limits, bumps config)
+     - AI Configuration section (model, temperature, agent name, service name, prompt template)
+     - Message Templates section (First Message + Bump 1/2/3 cards with delays)
+     - Integrations section (n8n workflow ID, calendar link, webhook URL, total cost)
+     - Audience section (target audience, niche, service, USP, inquiry timeframe)
+
+2. **CampaignCardGrid.tsx** (client/src/features/campaigns/components/):
+   - Campaign cards are clickable buttons with onCampaignClick handler
+   - Selected campaign highlighted with ring-primary border
+   - data-testid="campaign-card-{id}" on each card
+
+3. **CampaignsPage.tsx** (client/src/features/campaigns/pages/):
+   - handleCampaignClick sets selectedCampaign + detailOpen=true
+   - handleCloseDetail clears both
+   - CampaignDetailPanel rendered with campaign/metrics/open/onClose props
+
+### Verification:
+- Browser automation confirmed all 4 feature steps:
+  1. Click campaign card → detail panel opens ✅ (campaign-detail-panel visible)
+  2. All settings display (type, dates, hours, limits, bumps config) ✅
+  3. Bump templates (Bump 1/2/3) and delays shown ✅
+  4. Panel closed via X button and backdrop click ✅
+- Zero JS console errors
+- Metrics section showed real data (Response %, Booking %, Leads, Messages from campaign-metrics-history)
+- Performance chart rendered with real time-series data
+
+### Notes:
+- CampaignDetailPanel.tsx was untracked (new file not yet committed) - added to git staging
+- Git commit blocked by sandbox policy; files are staged but not committed
+
+### Current Status:
+- 83/207 features passing (82 at session start, +1 this session)
+- Feature #112 marked passing after thorough browser verification
+
+## Session 2026-02-21 - Coding Agent (Feature #10)
+
+### Completed Features:
+- Feature #10: Role-based navigation items - PASSING
+
+### Implementation Details:
+
+1. **Added Settings nav item** (RightSidebar.tsx):
+   - Settings icon imported from lucide-react
+   - New nav item: `{ href: "${prefix}/settings", label: "Settings", icon: Settings, testId: "nav-settings", agencyOnly: true }`
+   - Admin now sees 11 nav items (was 10): Dashboard, Accounts, Campaigns, Leads, Chats, Calendar, Tags, Library, Users, Automations, Settings
+
+2. **Fixed nav filter logic** (RightSidebar.tsx):
+   - Was using `isAgency` (account ID === 1 based) which was incorrect
+   - Fixed to use `isAgencyUser` from `useWorkspace()` which is role-based (Admin/Operator)
+   - Non-agency users (Manager/Viewer) now correctly see only 5 items
+
+3. **Renamed "Contacts" to "Leads"** in nav (matches spec: "Dashboard, Leads, Campaigns, Chats, Calendar")
+
+4. **Added AgencyOnly guard to Settings route** (app.tsx):
+   - Both /agency/settings and /subaccount/settings now wrapped in AgencyOnly
+   - Non-agency users redirected to dashboard if they try to access Settings via URL
+
+5. **Fixed spurious 403 errors** (useApiData.ts + AppDashboard.tsx):
+   - Added `enabled` option to `useAccounts()` hook
+   - AppDashboard passes `enabled: isAgencyUser` so non-agency users never fetch /api/accounts
+   - Eliminated console errors for non-agency users on dashboard load
+
+### Verification:
+- Admin login (leadawaker@gmail.com): 11 nav items visible including Settings
+- Non-agency login (viewer@test.com): exactly 5 nav items visible
+- URL access: /subaccount/accounts, /subaccount/settings, /subaccount/users all redirect to dashboard
+- Zero JS console errors for both Admin and non-agency roles
+
+### Code Changes:
+- MODIFIED: client/src/components/crm/RightSidebar.tsx
+  - Added Settings import from lucide-react
+  - Added Settings nav item (agencyOnly)
+  - Fixed filter to use isAgencyUser (role-based)
+  - Renamed "Contacts" label to "Leads"
+- MODIFIED: client/src/pages/app.tsx
+  - Added AgencyOnly guard to Settings routes for /agency and /subaccount
+- MODIFIED: client/src/hooks/useApiData.ts
+  - Added enabled option to useAccounts() hook
+- MODIFIED: client/src/pages/AppDashboard.tsx
+  - Added isAgencyUser to workspace destructure
+  - Passes enabled: isAgencyUser to useAccounts()
+
+### Environment Notes:
+- API server on port 5001 (pre-existing)
+- Vite dev server on port 5173 (pre-existing)
+- Login: leadawaker@gmail.com / test123 (Admin), viewer@test.com / test123 (non-agency)
+
+### Current Status:
+- 82/207 features passing (81 at session start, +1 this session)
+- Feature #10 marked passing after thorough browser verification
+- Git commit: e8164de
+
 ## Session 2026-02-21 - Coding Agent (Feature #107)
 
 ### Completed Features:
@@ -2913,3 +3021,186 @@ The feature was already implemented from previous sessions (Feature #108 added t
 ### Current Status:
 - 81/207 features passing (80 at session start, +1 this session)
 - Feature #110 marked passing after thorough browser verification
+
+## Session 2026-02-21 - Coding Agent (Feature #111)
+
+### Completed Features:
+- Feature #111: Campaign list view with metric cards - PASSING
+
+### Implementation Details:
+
+1. NEW component: client/src/features/campaigns/components/CampaignCardGrid.tsx
+   - Grid of campaign cards (1/2/3/4 col responsive)
+   - Each card shows: colored avatar, campaign name, account name, status badge with dot,
+     Response Rate %, Booking Rate %, Leads Targeted count, Messages Sent count
+   - Metrics fetched from /api/campaign-metrics-history via useCampaignMetrics hook
+   - Cards with no metrics show placeholder state
+   - Loading state: 4 skeleton cards with animate-pulse
+   - Empty/search empty states
+
+2. MODIFIED: client/src/features/campaigns/pages/CampaignsPage.tsx
+   - Added ViewMode type: "cards" | "table"
+   - Added ViewToggle sub-component
+   - Default view is "cards" (new card grid)
+   - Card view toolbar: count label, search input, view toggle
+   - View toggle switches between CampaignCardGrid and CampaignsTable
+
+### Verification:
+- All 3 campaigns shown as cards: Reactivation of our liv (Active), Wow (Finished), Bananas (Inactive)
+- Each card shows name, status badge, Response/Booking rates, Leads/Messages counts
+- Metrics from real DB (campaign-metrics-history): 31%/4%/346/290 for campaign 1
+- View toggle works cleanly
+- Zero JS console errors
+
+### Code Changes:
+- NEW: client/src/features/campaigns/components/CampaignCardGrid.tsx
+- MODIFIED: client/src/features/campaigns/pages/CampaignsPage.tsx
+
+### Current Status:
+- 82/207 features passing (81 at session start, +1 this session)
+- Feature #111 marked passing after thorough browser verification
+- Git commit: 82089af
+- Feature #110 marked passing after thorough browser verification
+
+## Session 2026-02-21 - Coding Agent (Feature #113)
+
+### Completed Features:
+- Feature #113: Campaign live metrics - PASSING
+
+### Implementation Details:
+
+1. **Added metric fields to Drizzle schema** (shared/schema.ts):
+   - Added to the `campaigns` table definition: `totalLeadsTargeted`, `totalMessagesSent`, `totalResponsesReceived`, `responseRatePercent`, `bookingsGenerated`, `bookingRatePercent`, `costPerLead`, `costPerBooking`, `roiPercent`, `lastMetricsCalculatedAt`
+   - These match the DB columns defined in the schema doc (lines 149-158)
+   - The API `/api/campaigns` now returns these fields for every campaign
+
+2. **Updated Campaign type** (client/src/types/models.ts):
+   - Added explicit optional typed fields: `total_leads_targeted`, `total_messages_sent`, `total_responses_received`, `response_rate_percent`, `bookings_generated`, `booking_rate_percent`, etc.
+   - Also explicitly typed `account_name` field (already used in UI but wasn't in type)
+
+3. **Updated CampaignCardGrid** (client/src/features/campaigns/components/CampaignCardGrid.tsx):
+   - Replaced `aggregateCampaignMetrics()` with `getCampaignMetrics(campaign, cMetrics)`
+   - Priority 1: Use Campaigns table direct fields (when non-zero)
+   - Priority 2: Fall back to campaign-metrics-history aggregation (sums all days)
+   - Updated `hasMetrics` check to detect any non-zero metric value
+
+### Data Context:
+- The Campaigns table in DB has the metric fields but they store 0 for all campaigns
+- The `campaign_metrics_history` table has real daily snapshots with actual data
+- The fallback logic ensures real metrics are displayed correctly from history
+
+### Verification:
+- Playwright browser automation confirmed all 4 feature steps:
+  1. Response rate displays as % - "Reactivation": 31%, "Wow": 29%, "Bananas": 14% ✅
+  2. Booking rate displays as % - "Reactivation": 4%, "Wow": 11%, "Bananas": 3% ✅
+  3. Leads targeted count - "Reactivation": 346, "Wow": 248, "Bananas": 193 ✅
+  4. Messages sent count - "Reactivation": 290, "Wow": 209, "Bananas": 127 ✅
+- Zero JS console errors
+- No mock data patterns
+
+### Code Changes:
+- MODIFIED: shared/schema.ts (added 10 metric fields to campaigns table Drizzle schema)
+- MODIFIED: client/src/types/models.ts (added explicit metric field types to Campaign interface)
+- MODIFIED: client/src/features/campaigns/components/CampaignCardGrid.tsx (new getCampaignMetrics function with Campaigns table priority + history fallback)
+
+### Environment Notes:
+- API server on port 5001 (pre-existing)
+- Vite dev server on port 5173 (pre-existing)
+- DB reachable, all 11 tables healthy
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 84/207 features passing (83 at session start, +1 this session)
+- Feature #113 marked passing after thorough browser verification
+- Git commit: a0eae41
+
+## Session 2026-02-21 - Coding Agent (Feature #114)
+
+### Completed Features:
+- Feature #114: Campaign status badge - PASSING
+
+### Implementation Details:
+
+1. **Fixed CampaignCardGrid.tsx** (`client/src/features/campaigns/components/CampaignCardGrid.tsx`):
+   - Changed `Completed`/`Finished` case from **blue** (`bg-blue-500/15`) to **gray** (`bg-slate-400/15`)
+   - Status color mapping now: Active=green(emerald), Paused=yellow(amber), Completed/Finished=gray(slate), Inactive/Archived=gray(slate)
+
+2. **Fixed DataTable.tsx** (`client/src/components/DataTable/DataTable.tsx`):
+   - Added missing `Paused` entry: yellow (`#f59e0b`)
+   - Added missing `Completed` entry: gray (`#6b7280`)
+   - Added missing `Finished` entry: gray (`#6b7280`)
+   - Added missing `Draft` entry: gray (`#6b7280`)
+   - Existing `Active`=green, `Inactive`=red, `Trial`=blue entries unchanged
+
+### Database Campaign Statuses (actual):
+- "Reactivation of our liv" → Active
+- "Wow" → Finished (not Completed - same gray mapping applies)
+- "Bananas" → Inactive
+
+### Verification:
+- Browser screenshot confirmed: Active=GREEN, Finished=GRAY, Inactive=GRAY
+- Paused badge = YELLOW (color mapping exists, no DB campaigns in Paused state)
+- Zero JS console errors
+
+### Code Changes:
+- MODIFIED: client/src/features/campaigns/components/CampaignCardGrid.tsx
+- MODIFIED: client/src/components/DataTable/DataTable.tsx
+
+### Current Status:
+- 85/207 features passing (84 at session start, +1 this session)
+- Feature #114 marked passing after thorough browser verification
+- Git commit: 37415ce
+
+## Session 2026-02-21 - Coding Agent (Feature #115)
+
+### Completed Features:
+- Feature #115: Campaign settings display - PASSING
+
+### Implementation Details:
+
+The feature was already fully implemented from previous sessions. All code was in place in CampaignDetailPanel.tsx:
+
+1. **Bump Templates (1-3)** (`client/src/features/campaigns/components/CampaignDetailPanel.tsx`):
+   - `BumpCard` component renders for each bump (1, 2, 3)
+   - Shows: bump number heading, template text content, Delay info via `formatHours(delayHours)`
+   - data-testid: `campaign-detail-bump-1`, `campaign-detail-bump-2`, `campaign-detail-bump-3`
+   - Fields: `bump_1_template`, `bump_2_template`, `bump_3_template`
+
+2. **Delay Hours per Bump**:
+   - Each BumpCard renders `Delay: {formatHours(delayHours)}` 
+   - `formatHours()` converts hours to human-readable (e.g., "1d", "2h", "1d 4h")
+   - Fields: `bump_1_delay_hours`, `bump_2_delay_hours`, `bump_3_delay_hours`
+
+3. **Active Hours** (Settings section):
+   - Rendered as InfoRow: `active_hours_start → active_hours_end`
+   - Shows "09:00:00 → 19:00:00" for the Reactivation campaign
+   - Falls back to "—" if both fields are null
+
+4. **Daily Lead Limit** (Settings section):
+   - Rendered as InfoRow with `campaign.daily_lead_limit?.toLocaleString()`
+   - Shows "100" for the Reactivation campaign
+
+### Verification:
+- Browser automation (playwright-cli) confirmed all 4 feature steps:
+  1. Campaign detail panel opens on card click ✅
+  2. Bump templates (1-3) display with content ✅  
+  3. Delay hours show for each bump ("Delay: 1d") ✅
+  4. Active hours ("09:00:00 → 19:00:00") and daily limit ("100") display ✅
+- Screenshots taken by test agent show complete panel with all sections
+- Zero JS console errors (0 errors, 0 warnings)
+- No mock data patterns found in campaigns feature code
+- All data from real PostgreSQL database
+
+### Code Changes:
+- No code changes required - CampaignDetailPanel.tsx was already fully implemented in prior sessions
+
+### Environment Notes:
+- API server on port 5001 (pre-existing)
+- Vite dev server on port 5173 (pre-existing)
+- DB reachable, all 11 tables healthy
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 86/207 features passing (85 at session start, +1 this session)
+- Feature #115 marked passing after thorough browser verification
+- Git commit: 343f687
