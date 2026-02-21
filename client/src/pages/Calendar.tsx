@@ -1,9 +1,9 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLeads } from "@/hooks/useApiData";
 import { FiltersBar } from "@/components/crm/FiltersBar";
-import { ChevronLeft, ChevronRight, ChevronDown, AlertCircle, RefreshCw } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, AlertCircle, RefreshCw, X, Clock, User, Megaphone, Calendar, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
@@ -26,6 +26,13 @@ export default function CalendarPage() {
   const { leads, loading: leadsLoading } = useLeads();
   const [campaignId, setCampaignId] = useState<number | "all">("all");
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<{
+    id: number; lead_name: string; campaign_name: string | null; date: string; formattedDate: string;
+    time: string; hour: number; minutes: number; status: string | undefined; calendar_link: string;
+    no_show: boolean; re_scheduled_count: number;
+  } | null>(null);
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -111,6 +118,17 @@ export default function CalendarPage() {
 
   const handleDateClick = (dateStr: string) => {
     setSelectedDate(prev => prev === dateStr ? null : dateStr);
+  };
+
+  const handleBookingCardClick = (e: React.MouseEvent, booking: typeof selectedBooking) => {
+    e.stopPropagation();
+    setSelectedBooking(booking);
+    setPopoverOpen(true);
+  };
+
+  const handleClosePopover = () => {
+    setPopoverOpen(false);
+    setSelectedBooking(null);
   };
 
   const navigate = (direction: number) => {
@@ -264,11 +282,15 @@ export default function CalendarPage() {
                             {appts.filter((a) => a.date === d.date.toLocaleDateString()).slice(0, 2).map((a) => (
                               <div
                                 key={a.id}
+                                role="button"
+                                tabIndex={0}
+                                onClick={(e) => handleBookingCardClick(e, a)}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleBookingCardClick(e as any, a); } }}
                                 className={cn(
-                                  "px-1.5 py-0.5 rounded text-left overflow-hidden relative",
+                                  "px-1.5 py-0.5 rounded text-left overflow-hidden relative cursor-pointer hover:ring-1 hover:ring-inset transition-all",
                                   a.no_show
-                                    ? "bg-red-500/15 border-l-2 border-red-500"
-                                    : "bg-brand-blue/15 border-l-2 border-brand-blue"
+                                    ? "bg-red-500/15 border-l-2 border-red-500 hover:ring-red-400"
+                                    : "bg-brand-blue/15 border-l-2 border-brand-blue hover:ring-brand-blue"
                                 )}
                                 data-testid={`booking-card-${a.id}`}
                               >
@@ -334,11 +356,15 @@ export default function CalendarPage() {
                           {appts.filter(a => a.date === d.toLocaleDateString()).map(a => (
                             <div
                               key={a.id}
+                              role="button"
+                              tabIndex={0}
+                              onClick={(e) => handleBookingCardClick(e, a)}
+                              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleBookingCardClick(e as any, a); } }}
                               className={cn(
-                                "absolute left-1 right-1 p-2 rounded-lg shadow-sm z-10",
+                                "absolute left-1 right-1 p-2 rounded-lg shadow-sm z-10 cursor-pointer hover:ring-2 transition-all",
                                 a.no_show
-                                  ? "bg-red-500/10 border-l-4 border-red-500"
-                                  : "bg-brand-blue/10 border-l-4 border-brand-blue"
+                                  ? "bg-red-500/10 border-l-4 border-red-500 hover:ring-red-400"
+                                  : "bg-brand-blue/10 border-l-4 border-brand-blue hover:ring-brand-blue"
                               )}
                               style={{ top: `${(a.hour * 60 + a.minutes) * (80/60)}px`, height: '68px' }}
                               data-testid={`booking-card-${a.id}`}
@@ -425,6 +451,148 @@ export default function CalendarPage() {
             </div>
           </div>
         </div>
+
+        {/* Booking Detail Popover */}
+        {popoverOpen && selectedBooking && (
+          <>
+            {/* Backdrop to close on outside click */}
+            <div
+              className="fixed inset-0 z-[200]"
+              onClick={handleClosePopover}
+              aria-hidden="true"
+            />
+            {/* Popover Panel */}
+            <div
+              ref={popoverRef}
+              className="fixed z-[201] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] bg-popover border border-border rounded-2xl shadow-2xl p-0 overflow-hidden"
+              data-testid="booking-detail-popover"
+              role="dialog"
+              aria-label="Booking details"
+            >
+              {/* Header */}
+              <div className={cn(
+                "p-4 pb-3 flex items-start justify-between gap-3",
+                selectedBooking.no_show ? "bg-red-500/10 border-b border-red-500/20" : "bg-brand-blue/10 border-b border-brand-blue/20"
+              )}>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className={cn("font-bold text-base truncate", selectedBooking.no_show ? "text-red-600 dark:text-red-400" : "text-foreground")} data-testid="popover-lead-name">
+                      {selectedBooking.lead_name}
+                    </div>
+                    {selectedBooking.no_show && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500 text-white text-[9px] font-black shrink-0" data-testid="popover-no-show-badge">
+                        <AlertCircle className="w-2.5 h-2.5" />
+                        NO-SHOW
+                      </span>
+                    )}
+                    {selectedBooking.re_scheduled_count > 0 && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[9px] font-black shrink-0" data-testid="popover-rescheduled-badge">
+                        <RefreshCw className="w-2.5 h-2.5" />
+                        {selectedBooking.re_scheduled_count}x
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5 uppercase tracking-wider font-semibold">Booking Details</div>
+                </div>
+                <button
+                  onClick={handleClosePopover}
+                  className="h-7 w-7 rounded-lg flex items-center justify-center hover:bg-muted/40 text-muted-foreground transition-colors shrink-0 -mt-0.5 -mr-0.5"
+                  aria-label="Close popover"
+                  data-testid="popover-close-button"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-4 space-y-3">
+                {/* Campaign */}
+                <div className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-muted/40 flex items-center justify-center shrink-0">
+                    <Megaphone className="w-3.5 h-3.5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">Campaign</div>
+                    <div className="text-sm font-medium text-foreground" data-testid="popover-campaign">
+                      {selectedBooking.campaign_name || <span className="text-muted-foreground italic">Unknown campaign</span>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status */}
+                <div className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-muted/40 flex items-center justify-center shrink-0">
+                    <User className="w-3.5 h-3.5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">Status</div>
+                    <div className="text-sm font-medium" data-testid="popover-status">
+                      {selectedBooking.no_show ? (
+                        <span className="text-red-600 dark:text-red-400 font-bold">No Show</span>
+                      ) : selectedBooking.status ? (
+                        <span className="capitalize">{String(selectedBooking.status).replace(/_/g, ' ')}</span>
+                      ) : (
+                        <span className="text-muted-foreground italic">Not set</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Time */}
+                <div className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-muted/40 flex items-center justify-center shrink-0">
+                    <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">Time</div>
+                    <div className="text-sm font-bold text-brand-blue" data-testid="popover-time">{selectedBooking.time}</div>
+                  </div>
+                </div>
+
+                {/* Date */}
+                <div className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-muted/40 flex items-center justify-center shrink-0">
+                    <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">Date</div>
+                    <div className="text-sm font-medium text-foreground" data-testid="popover-date">{selectedBooking.formattedDate}</div>
+                  </div>
+                </div>
+
+                {/* Reschedule count (if applicable) */}
+                {selectedBooking.re_scheduled_count > 0 && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                      <RefreshCw className="w-3.5 h-3.5 text-amber-500" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-0.5">Rescheduled</div>
+                      <div className="text-sm font-medium text-amber-600 dark:text-amber-400" data-testid="popover-rescheduled-count">
+                        {selectedBooking.re_scheduled_count}x
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer actions */}
+              <div className="px-4 pb-4">
+                <a
+                  href={selectedBooking.calendar_link}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full flex items-center justify-center gap-2 h-9 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-bold transition-colors"
+                  data-testid="popover-calendar-link"
+                  onClick={handleClosePopover}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  View in Calendar
+                </a>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </CrmShell>
   );
