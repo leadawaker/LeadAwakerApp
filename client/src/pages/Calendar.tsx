@@ -3,7 +3,7 @@ import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLeads } from "@/hooks/useApiData";
 import { FiltersBar } from "@/components/crm/FiltersBar";
-import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
@@ -57,6 +57,7 @@ export default function CalendarPage() {
           minutes: d.getMinutes(),
           status: l.conversion_status,
           calendar_link: l.calendar_link || "https://cal.example.com/leadawaker",
+          no_show: l.no_show === true || l.no_show === "true" || l.no_show === 1,
         };
       })
       .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
@@ -262,14 +263,24 @@ export default function CalendarPage() {
                             {appts.filter((a) => a.date === d.date.toLocaleDateString()).slice(0, 2).map((a) => (
                               <div
                                 key={a.id}
-                                className="px-1.5 py-0.5 rounded bg-brand-blue/15 border-l-2 border-brand-blue text-left overflow-hidden"
+                                className={cn(
+                                  "px-1.5 py-0.5 rounded text-left overflow-hidden relative",
+                                  a.no_show
+                                    ? "bg-red-500/15 border-l-2 border-red-500"
+                                    : "bg-brand-blue/15 border-l-2 border-brand-blue"
+                                )}
                                 data-testid={`booking-card-${a.id}`}
                               >
-                                <div className="text-[9px] font-bold text-brand-deep-blue dark:text-brand-blue truncate leading-tight" data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</div>
+                                <div className="flex items-center gap-0.5">
+                                  <div className={cn("text-[9px] font-bold truncate leading-tight flex-1", a.no_show ? "text-red-600 dark:text-red-400" : "text-brand-deep-blue dark:text-brand-blue")} data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</div>
+                                  {a.no_show && (
+                                    <span className="inline-flex items-center justify-center shrink-0 w-3 h-3 rounded-full bg-red-500 text-white text-[6px] font-black leading-none" data-testid={`no-show-badge-${a.id}`} title="No Show">!</span>
+                                  )}
+                                </div>
                                 {a.campaign_name && (
                                   <div className="text-[8px] text-muted-foreground truncate leading-tight" data-testid={`booking-campaign-${a.id}`}>{a.campaign_name}</div>
                                 )}
-                                <div className="text-[8px] font-medium text-brand-blue leading-tight" data-testid={`booking-time-${a.id}`}>{a.time}</div>
+                                <div className={cn("text-[8px] font-medium leading-tight", a.no_show ? "text-red-500" : "text-brand-blue")} data-testid={`booking-time-${a.id}`}>{a.time}</div>
                               </div>
                             ))}
                             {d.count > 2 && (
@@ -319,15 +330,25 @@ export default function CalendarPage() {
                           {appts.filter(a => a.date === d.toLocaleDateString()).map(a => (
                             <div
                               key={a.id}
-                              className="absolute left-1 right-1 p-2 rounded-lg bg-brand-blue/10 border-l-4 border-brand-blue shadow-sm z-10"
+                              className={cn(
+                                "absolute left-1 right-1 p-2 rounded-lg shadow-sm z-10",
+                                a.no_show
+                                  ? "bg-red-500/10 border-l-4 border-red-500"
+                                  : "bg-brand-blue/10 border-l-4 border-brand-blue"
+                              )}
                               style={{ top: `${(a.hour * 60 + a.minutes) * (80/60)}px`, height: '68px' }}
                               data-testid={`booking-card-${a.id}`}
                             >
-                              <div className="text-[10px] font-bold text-brand-deep-blue dark:text-brand-blue truncate" data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</div>
+                              <div className="flex items-center gap-1">
+                                <div className={cn("text-[10px] font-bold truncate flex-1", a.no_show ? "text-red-600 dark:text-red-400" : "text-brand-deep-blue dark:text-brand-blue")} data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</div>
+                                {a.no_show && (
+                                  <span className="inline-flex items-center justify-center shrink-0 w-4 h-4 rounded-full bg-red-500 text-white text-[8px] font-black leading-none" data-testid={`no-show-badge-${a.id}`} title="No Show">!</span>
+                                )}
+                              </div>
                               {a.campaign_name && (
                                 <div className="text-[8px] text-muted-foreground truncate" data-testid={`booking-campaign-${a.id}`}>{a.campaign_name}</div>
                               )}
-                              <div className="text-[9px] font-medium text-brand-blue" data-testid={`booking-time-${a.id}`}>{a.time}</div>
+                              <div className={cn("text-[9px] font-medium", a.no_show ? "text-red-500" : "text-brand-blue")} data-testid={`booking-time-${a.id}`}>{a.time}</div>
                             </div>
                           ))}
                         </div>
@@ -355,15 +376,23 @@ export default function CalendarPage() {
                 </div>
               ) : (
                 (selectedDate ? appointmentsForSelectedDate : appts).map((a) => (
-                  <div key={a.id} className="p-4 hover:bg-muted/20 transition-colors" data-testid={`row-appt-${a.id}`}>
+                  <div key={a.id} className={cn("p-4 hover:bg-muted/20 transition-colors", a.no_show && "bg-red-500/5")} data-testid={`row-appt-${a.id}`}>
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="font-bold text-sm truncate" data-testid={`text-appt-name-${a.id}`}>{a.lead_name}</div>
+                        <div className="flex items-center gap-1.5">
+                          <div className={cn("font-bold text-sm truncate", a.no_show && "text-red-600 dark:text-red-400")} data-testid={`text-appt-name-${a.id}`}>{a.lead_name}</div>
+                          {a.no_show && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[9px] font-black leading-none shrink-0" data-testid={`no-show-badge-${a.id}`}>
+                              <AlertCircle className="w-2.5 h-2.5" />
+                              NO-SHOW
+                            </span>
+                          )}
+                        </div>
                         {a.campaign_name && (
                           <div className="text-[10px] text-muted-foreground truncate mt-0.5" data-testid={`text-appt-campaign-${a.id}`}>{a.campaign_name}</div>
                         )}
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] font-bold bg-brand-blue/10 text-brand-blue px-1.5 py-0.5 rounded uppercase">{a.time}</span>
+                          <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded uppercase", a.no_show ? "bg-red-500/10 text-red-500" : "bg-brand-blue/10 text-brand-blue")}>{a.time}</span>
                           <span className="text-[10px] text-muted-foreground font-medium">{a.formattedDate}</span>
                         </div>
                       </div>
