@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import {
   Building2,
   Phone,
-  Mail,
+  Bot,
   Globe,
   Clock,
   FileText,
@@ -66,6 +66,7 @@ export interface AccountRow {
   default_ai_name?: string;
   default_ai_role?: string;
   default_ai_style?: string;
+  default_typo_frequency?: string;
   preferred_terminology?: string;
   service_categories?: string;
   opt_out_keyword?: string;
@@ -83,6 +84,7 @@ interface AccountDetailsDialogProps {
 
 const STATUS_OPTIONS = ["Active", "Inactive", "Trial", "Suspended", "Unknown"];
 const TYPE_OPTIONS = ["Agency", "Client"];
+const TYPO_FREQUENCY_OPTIONS = ["None", "Rare", "Occasional", "Frequent"];
 const TIMEZONE_OPTIONS = [
   "UTC",
   "Europe/London",
@@ -219,6 +221,7 @@ export function AccountDetailsDialog({
         "default_ai_name",
         "default_ai_role",
         "default_ai_style",
+        "default_typo_frequency",
         "preferred_terminology",
         "service_categories",
         "opt_out_keyword",
@@ -486,7 +489,7 @@ export function AccountDetailsDialog({
 
           {/* AI Settings */}
           <SectionHeader
-            icon={<Mail className="h-4 w-4" />}
+            icon={<Bot className="h-4 w-4" />}
             title="AI & Messaging"
           />
           <FieldRow label="AI Name">
@@ -497,6 +500,9 @@ export function AccountDetailsDialog({
           </FieldRow>
           <FieldRow label="AI Style">
             {textField("default_ai_style", "e.g. Natural, human, low pressure")}
+          </FieldRow>
+          <FieldRow label="Typo Frequency">
+            {selectField("default_typo_frequency", TYPO_FREQUENCY_OPTIONS)}
           </FieldRow>
           <FieldRow label="Opt-out Keyword">
             {textField("opt_out_keyword", "e.g. STOP")}
