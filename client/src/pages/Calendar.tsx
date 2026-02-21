@@ -43,16 +43,20 @@ export default function CalendarPage() {
       .filter((l: any) => Boolean(l.booked_call_date))
       .map((l: any) => {
         const d = new Date(l.booked_call_date as string);
+        const firstName = l.first_name || "";
+        const lastName = l.last_name || "";
+        const fullName = l.full_name || (firstName || lastName ? `${firstName} ${lastName}`.trim() : "Unknown Lead");
         return {
           id: l.id,
-          lead_name: l.full_name,
+          lead_name: fullName,
+          campaign_name: l.campaign_name || null,
           date: d.toLocaleDateString(),
           formattedDate: formatDate(d),
           time: d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           hour: d.getHours(),
           minutes: d.getMinutes(),
           status: l.conversion_status,
-          calendar_link: "https://cal.example.com/leadawaker",
+          calendar_link: l.calendar_link || "https://cal.example.com/leadawaker",
         };
       })
       .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
@@ -254,10 +258,23 @@ export default function CalendarPage() {
                           </div>
                         </div>
                         {d.count > 0 && (
-                          <div className="flex justify-center mt-2">
-                            <div className="h-6 w-6 rounded-full bg-brand-blue text-brand-blue-foreground text-[10px] font-bold flex items-center justify-center shadow-sm">
-                              {d.count}
-                            </div>
+                          <div className="mt-1 space-y-0.5">
+                            {appts.filter((a) => a.date === d.date.toLocaleDateString()).slice(0, 2).map((a) => (
+                              <div
+                                key={a.id}
+                                className="px-1.5 py-0.5 rounded bg-brand-blue/15 border-l-2 border-brand-blue text-left overflow-hidden"
+                                data-testid={`booking-card-${a.id}`}
+                              >
+                                <div className="text-[9px] font-bold text-brand-deep-blue dark:text-brand-blue truncate leading-tight" data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</div>
+                                {a.campaign_name && (
+                                  <div className="text-[8px] text-muted-foreground truncate leading-tight" data-testid={`booking-campaign-${a.id}`}>{a.campaign_name}</div>
+                                )}
+                                <div className="text-[8px] font-medium text-brand-blue leading-tight" data-testid={`booking-time-${a.id}`}>{a.time}</div>
+                              </div>
+                            ))}
+                            {d.count > 2 && (
+                              <div className="text-[8px] font-bold text-muted-foreground text-center">+{d.count - 2} more</div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -300,13 +317,17 @@ export default function CalendarPage() {
                             </div>
                           )}
                           {appts.filter(a => a.date === d.toLocaleDateString()).map(a => (
-                            <div 
+                            <div
                               key={a.id}
                               className="absolute left-1 right-1 p-2 rounded-lg bg-brand-blue/10 border-l-4 border-brand-blue shadow-sm z-10"
-                              style={{ top: `${(a.hour * 60 + a.minutes) * (80/60)}px`, height: '60px' }}
+                              style={{ top: `${(a.hour * 60 + a.minutes) * (80/60)}px`, height: '68px' }}
+                              data-testid={`booking-card-${a.id}`}
                             >
-                              <div className="text-[10px] font-bold text-brand-deep-blue dark:text-brand-blue truncate">{a.lead_name}</div>
-                              <div className="text-[9px] font-medium text-brand-blue">{a.time}</div>
+                              <div className="text-[10px] font-bold text-brand-deep-blue dark:text-brand-blue truncate" data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</div>
+                              {a.campaign_name && (
+                                <div className="text-[8px] text-muted-foreground truncate" data-testid={`booking-campaign-${a.id}`}>{a.campaign_name}</div>
+                              )}
+                              <div className="text-[9px] font-medium text-brand-blue" data-testid={`booking-time-${a.id}`}>{a.time}</div>
                             </div>
                           ))}
                         </div>
@@ -338,6 +359,9 @@ export default function CalendarPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="font-bold text-sm truncate" data-testid={`text-appt-name-${a.id}`}>{a.lead_name}</div>
+                        {a.campaign_name && (
+                          <div className="text-[10px] text-muted-foreground truncate mt-0.5" data-testid={`text-appt-campaign-${a.id}`}>{a.campaign_name}</div>
+                        )}
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-[10px] font-bold bg-brand-blue/10 text-brand-blue px-1.5 py-0.5 rounded uppercase">{a.time}</span>
                           <span className="text-[10px] text-muted-foreground font-medium">{a.formattedDate}</span>
