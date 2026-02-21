@@ -28,11 +28,13 @@ async function fetchApi<T>(url: string): Promise<T[]> {
 
 /* ─── Accounts ────────────────────────────────────────────────── */
 
-export function useAccounts() {
+export function useAccounts(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled !== false; // default true for backward compat
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
 
   const refresh = useCallback(async () => {
+    if (!enabled) return;
     setLoading(true);
     try {
       const data = await fetchApi<Account>("/api/accounts");
@@ -42,9 +44,9 @@ export function useAccounts() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [enabled]);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => { if (enabled) refresh(); }, [refresh, enabled]);
 
   return { accounts, loading, refresh };
 }

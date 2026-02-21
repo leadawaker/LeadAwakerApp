@@ -76,7 +76,9 @@ export default function AppArea() {
           <Route path="/agency/contacts/:id" component={LeadDetailPage} />
           <Route path="/agency/campaigns" component={AppCampaigns} />
           <Route path="/agency/calendar" component={CalendarPage} />
-          <Route path="/agency/settings" component={SettingsPage} />
+          <Route path="/agency/settings">
+            <AgencyOnly prefix="/agency"><SettingsPage /></AgencyOnly>
+          </Route>
 
           {/* Agency-only routes (admin pages) */}
           <Route path="/agency/accounts">
@@ -104,7 +106,9 @@ export default function AppArea() {
           <Route path="/subaccount/contacts/:id" component={LeadDetailPage} />
           <Route path="/subaccount/campaigns" component={AppCampaigns} />
           <Route path="/subaccount/calendar" component={CalendarPage} />
-          <Route path="/subaccount/settings" component={SettingsPage} />
+          <Route path="/subaccount/settings">
+            <AgencyOnly prefix="/subaccount"><SettingsPage /></AgencyOnly>
+          </Route>
 
           {/* Subaccount agency-only routes (admin pages) */}
           <Route path="/subaccount/accounts">

@@ -25,6 +25,7 @@ import {
   Building2,
   LogOut,
   User,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -132,7 +133,7 @@ export function RightSidebar({
       agencyOnly: true,
     },
     { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
-    { href: `${prefix}/contacts`, label: "Contacts", icon: BookUser, testId: "nav-contacts" },
+    { href: `${prefix}/contacts`, label: "Leads", icon: BookUser, testId: "nav-contacts" },
     { href: `${prefix}/conversations`, label: "Chats", icon: MessageSquare, testId: "nav-chats" },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "nav-calendar" },
     { href: `${prefix}/tags`, label: "Tags", icon: Tag, testId: "nav-tags", agencyOnly: true },
@@ -151,11 +152,19 @@ export function RightSidebar({
       testId: "nav-automations",
       agencyOnly: true,
     },
+    {
+      href: `${prefix}/settings`,
+      label: "Settings",
+      icon: Settings,
+      testId: "nav-settings",
+      agencyOnly: true,
+    },
   ];
 
+  // Filter nav items based on user role (role-based, not account-ID-based)
   const visibleNavItems = navItems.filter((it) => {
-    if (it.adminOnly && !isAgency) return false;
-    if (it.agencyOnly && !isAgency) return false;
+    if (it.adminOnly && !isAgencyUser) return false;
+    if (it.agencyOnly && !isAgencyUser) return false;
     return true;
   });
 

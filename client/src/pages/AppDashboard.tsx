@@ -193,7 +193,7 @@ function QuickJumpCards() {
 }
 
 export default function AppDashboard() {
-  const { currentAccountId, isAgencyView, currentAccount } = useWorkspace();
+  const { currentAccountId, isAgencyView, currentAccount, isAgencyUser } = useWorkspace();
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | "all">("all");
   const [dashboardTab, setDashboardTab] = useState<DashboardTab>("pipeline");
   const [isBookedReportOpen, setIsBookedReportOpen] = useState(false);
@@ -244,7 +244,7 @@ export default function AppDashboard() {
   // Fetch real data from API
   const { leads, loading: leadsLoading, refresh: refreshLeads } = useLeads();
   const { campaigns, loading: campaignsLoading, refresh: refreshCampaigns } = useCampaigns();
-  const { accounts, loading: accountsLoading, refresh: refreshAccounts } = useAccounts();
+  const { accounts, loading: accountsLoading, refresh: refreshAccounts } = useAccounts({ enabled: isAgencyUser });
   const { metrics: campaignMetrics, loading: metricsLoading, refresh: refreshMetrics } = useCampaignMetrics();
   // For agency view with a specific account filter, pass accountId to trends
   const trendAccountId = isAgencyView
