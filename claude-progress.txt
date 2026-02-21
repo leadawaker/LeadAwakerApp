@@ -3204,3 +3204,42 @@ The feature was already fully implemented from previous sessions. All code was i
 - 86/207 features passing (85 at session start, +1 this session)
 - Feature #115 marked passing after thorough browser verification
 - Git commit: 343f687
+
+## Session 2026-02-21 - Coding Agent (Feature #116)
+
+### Completed Features:
+- Feature #116: Campaign cost metrics - PASSING
+
+### Implementation Details:
+
+1. **CampaignCardGrid.tsx**:
+   - Added DollarSign, TrendingDown to lucide-react imports
+   - Updated getCampaignMetrics() to return: totalCost, costPerLead, costPerBooking, roiPercent
+     - totalCost = sum across all daily history records
+     - costPerLead, costPerBooking, roiPercent = from latest snapshot
+   - Added getRoiColor(roi) helper: green (>=100%), blue (0-99%), red (negative)
+   - Added hasCostMetrics boolean check
+   - Added cost metrics section to each card (when hasCostMetrics):
+     - 3-column grid: COST ($X,XXX) | /LEAD ($X) | ROI (+X%)
+     - ROI color coded dynamically via getRoiColor()
+
+2. **CampaignDetailPanel.tsx**:
+   - Added getRoiColor() helper function
+   - Updated MetricSummaryRow to 5-column grid:
+     - Added Cost/Lead, Cost/Booking, ROI pills
+     - ROI shows with color coding
+   - Added new COST & ROI section with DollarSign icon (shows Campaigns table direct fields)
+   - Removed total_cost from INTEGRATIONS section
+
+### Verification:
+- Browser automation confirmed all 3 feature steps:
+  1. Total cost with currency format: cards show $1,037 / $679 / $589
+  2. Cost per lead and cost per booking display confirmed in cards and detail panel
+  3. ROI with color coding: +232%/+121%/+151% GREEN on cards; +0% BLUE in detail panel
+- Zero JS console errors
+- No mock data patterns found
+
+### Current Status:
+- 87/207 features passing (86 at session start, +1 this session)
+- Feature #116 marked passing after thorough browser verification
+- Git commit: 536e382
