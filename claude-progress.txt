@@ -3505,3 +3505,48 @@ Test data added:
 - 93/207 features passing (92 at session start, +1 this session)
 - Feature #122 marked passing after thorough browser verification
 - Git commit: 2177cdb
+
+## Session 2026-02-21 - Coding Agent (Feature #123)
+
+### Completed Features:
+- Feature #123: Campaign first message preview - PASSING (already implemented)
+
+### Implementation Details:
+
+The feature was ALREADY FULLY IMPLEMENTED from previous sessions. No code changes needed.
+
+First Message display in CampaignDetailPanel.tsx:
+- In the "Message Templates" section, data-testid="campaign-detail-section-templates"
+- First message sub-section: data-testid="campaign-detail-first-message"
+- Label: "FIRST MESSAGE" (uppercase small-caps style)
+- Conditional rendering: shows template text when first_message_template or First_Message is truthy
+- Falls back to "No template set" (italic, muted) when both fields are null
+- Text displayed with whitespace-pre-wrap break-words for proper formatting
+- Handles both first_message_template (snake_case) and First_Message (NocoDB PascalCase)
+
+Test data verified:
+- "Reactivation of our liv" campaign: Has First_Message with full template including placeholders
+- "Wow" and "Bananas" campaigns: Show "No template set" (null in DB)
+
+### Verification (via sub-agent browser automation):
+- "FIRST MESSAGE" label appears clearly in campaign detail panel - PASS
+- Text is readable and properly formatted with whitespace-pre-wrap - PASS
+- Field label is clear ("FIRST MESSAGE") - PASS
+- data-testid="campaign-detail-first-message" element confirmed present - PASS
+- "No template set" shown for campaigns with null First_Message - PASS
+- Zero JS console errors (0 errors, 0 warnings) - PASS
+- No mock data patterns - PASS
+
+### Code Changes:
+- No source code changes required - already fully implemented in prior sessions
+
+### Environment Notes:
+- API server on port 5001 (pre-existing)
+- Vite dev server on port 5173 (pre-existing)
+- DB reachable, all 11 tables healthy
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 94/207 features passing (feature already marked passing by another agent/session)
+- Feature #123 confirmed passing after thorough browser verification
+- Git commit: 2177cdb
