@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { apiFetch } from "@/lib/apiUtils";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
@@ -7,11 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SkeletonCardGrid } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, Check, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // Map color name strings (from DB) to hex values
@@ -36,6 +37,77 @@ function resolveColor(color: string | null | undefined): string {
   if (color.startsWith("#")) return color;
   // Named color
   return COLOR_MAP[color.toLowerCase()] ?? "#64748B";
+}
+
+// Visual color picker component — a popover grid of colored swatches
+const COLOR_PALETTE = Object.entries(COLOR_MAP).filter(([k]) => k !== "grey");
+
+interface ColorPickerProps {
+  value: string;
+  onChange: (color: string) => void;
+  "data-testid"?: string;
+}
+
+function ColorPicker({ value, onChange, "data-testid": testId }: ColorPickerProps) {
+  const [open, setOpen] = useState(false);
+  const hex = resolveColor(value);
+  const label = value.charAt(0).toUpperCase() + value.slice(1);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          data-testid={testId}
+          className="flex items-center gap-2 w-full h-9 px-3 rounded-md border border-input bg-background text-sm hover:bg-accent hover:text-accent-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          aria-label={`Selected color: ${label}`}
+        >
+          <span
+            className="inline-block h-4 w-4 rounded-full shrink-0 shadow-sm ring-1 ring-black/10"
+            style={{ backgroundColor: hex }}
+          />
+          <span className="flex-1 text-left">{label}</span>
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-auto p-3"
+        align="start"
+        data-testid={testId ? `${testId}-popover` : undefined}
+      >
+        <div className="mb-2 text-xs font-medium text-muted-foreground">Choose a color</div>
+        <div className="grid grid-cols-5 gap-2">
+          {COLOR_PALETTE.map(([colorName, colorHex]) => {
+            const isSelected = value === colorName;
+            return (
+              <button
+                key={colorName}
+                type="button"
+                title={colorName.charAt(0).toUpperCase() + colorName.slice(1)}
+                data-testid={testId ? `${testId}-swatch-${colorName}` : undefined}
+                onClick={() => {
+                  onChange(colorName);
+                  setOpen(false);
+                }}
+                className={cn(
+                  "relative h-8 w-8 rounded-full transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-1",
+                  isSelected && "ring-2 ring-offset-2 ring-foreground scale-110"
+                )}
+                style={{ backgroundColor: colorHex }}
+              >
+                {isSelected && (
+                  <Check className="absolute inset-0 m-auto h-4 w-4 text-white drop-shadow-sm" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-2 text-xs text-center text-muted-foreground capitalize font-medium">
+          {label}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 interface Tag {
@@ -404,24 +476,11 @@ export default function TagsPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="tag-color">Color</Label>
-                  <Select value={createColor} onValueChange={setCreateColor}>
-                    <SelectTrigger id="tag-color" data-testid="select-tag-color" className="w-full">
-                      <SelectValue placeholder="Select color" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(COLOR_MAP).filter(([k]) => k !== "grey").map(([colorName, hex]) => (
-                        <SelectItem key={colorName} value={colorName}>
-                          <span className="flex items-center gap-2">
-                            <span
-                              className="inline-block h-3 w-3 rounded-full"
-                              style={{ backgroundColor: hex }}
-                            />
-                            {colorName.charAt(0).toUpperCase() + colorName.slice(1)}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <ColorPicker
+                    value={createColor}
+                    onChange={setCreateColor}
+                    data-testid="color-picker-create"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="tag-category">Category</Label>
@@ -500,24 +559,11 @@ export default function TagsPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="edit-tag-color">Color</Label>
-                  <Select value={editColor} onValueChange={setEditColor}>
-                    <SelectTrigger id="edit-tag-color" data-testid="select-edit-tag-color" className="w-full">
-                      <SelectValue placeholder="Select color" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(COLOR_MAP).filter(([k]) => k !== "grey").map(([colorName, hex]) => (
-                        <SelectItem key={colorName} value={colorName}>
-                          <span className="flex items-center gap-2">
-                            <span
-                              className="inline-block h-3 w-3 rounded-full"
-                              style={{ backgroundColor: hex }}
-                            />
-                            {colorName.charAt(0).toUpperCase() + colorName.slice(1)}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <ColorPicker
+                    value={editColor}
+                    onChange={setEditColor}
+                    data-testid="color-picker-edit"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="edit-tag-category">Category</Label>
