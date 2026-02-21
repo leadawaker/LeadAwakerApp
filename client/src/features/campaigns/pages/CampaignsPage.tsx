@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import type { Campaign } from "@/types/models";
 
 type ViewMode = "cards" | "table";
+type StatusFilter = "all" | "Active" | "Paused" | "Completed" | "Inactive";
 
 function ViewToggle({
   viewMode,
@@ -62,6 +63,9 @@ export function CampaignsPage() {
   // Local account filter state (agency users can switch; client users are auto-scoped)
   const [filterAccountId, setFilterAccountId] = useState<number | "all">("all");
 
+  // Status filter for card view
+  const [filterStatus, setFilterStatus] = useState<StatusFilter>("all");
+
   const { currentAccountId, isAgencyUser, accounts } = useWorkspace();
 
   const handleCampaignClick = useCallback((campaign: Campaign) => {
@@ -94,14 +98,29 @@ export function CampaignsPage() {
     [accounts]
   );
 
-  // Filter campaigns by search in card view
+  // Filter campaigns by search and status in card view
   const filteredCampaigns = useMemo(() => {
-    if (!search) return campaigns;
-    const q = search.toLowerCase();
-    return campaigns.filter((c) =>
-      String(c.name || "").toLowerCase().includes(q)
-    );
-  }, [campaigns, search]);
+    let result = campaigns;
+    // Apply status filter
+    if (filterStatus !== "all") {
+      result = result.filter((c) => {
+        const s = String(c.status || "");
+        if (filterStatus === "Completed") {
+          // "Completed" also matches "Finished" from DB
+          return s === "Completed" || s === "Finished";
+        }
+        return s === filterStatus;
+      });
+    }
+    // Apply search filter
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter((c) =>
+        String(c.name || "").toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [campaigns, search, filterStatus]);
 
   return (
     <CrmShell>
@@ -144,6 +163,28 @@ export function CampaignsPage() {
                 </div>
               )}
 
+              {/* Status filter */}
+              <div className="relative" data-testid="campaign-status-filter-wrap">
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value as StatusFilter)}
+                  className={cn(
+                    "h-8 pl-3 pr-8 text-xs rounded-lg border border-border bg-background",
+                    "appearance-none outline-none focus:ring-1 focus:ring-primary/50",
+                    "text-foreground"
+                  )}
+                  data-testid="select-campaign-status-filter"
+                  aria-label="Filter campaigns by status"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="Active">Active</option>
+                  <option value="Paused">Paused</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              </div>
+
               <input
                 type="text"
                 placeholder="Search campaigns…"
@@ -164,36 +205,58 @@ export function CampaignsPage() {
         {/* Table view toolbar */}
         {viewMode === "table" && (
           <div className="flex items-center justify-between px-4 pt-3 pb-1 shrink-0 gap-2">
-            {/* Account filter for table view — agency only */}
-            {isAgencyUser && clientAccounts.length > 0 ? (
-              <div className="relative" data-testid="campaign-account-filter-wrap-table">
+            <div className="flex items-center gap-2">
+              {/* Account filter for table view — agency only */}
+              {isAgencyUser && clientAccounts.length > 0 && (
+                <div className="relative" data-testid="campaign-account-filter-wrap-table">
+                  <select
+                    value={filterAccountId === "all" ? "all" : String(filterAccountId)}
+                    onChange={(e) =>
+                      setFilterAccountId(
+                        e.target.value === "all" ? "all" : Number(e.target.value)
+                      )
+                    }
+                    className={cn(
+                      "h-8 pl-3 pr-8 text-xs rounded-lg border border-border bg-background",
+                      "appearance-none outline-none focus:ring-1 focus:ring-primary/50",
+                      "text-foreground"
+                    )}
+                    data-testid="select-campaign-account-filter-table"
+                    aria-label="Filter campaigns by account"
+                  >
+                    <option value="all">All Accounts</option>
+                    {clientAccounts.map((a) => (
+                      <option key={a.id} value={String(a.id)}>
+                        {a.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                </div>
+              )}
+
+              {/* Status filter for table view */}
+              <div className="relative" data-testid="campaign-status-filter-wrap-table">
                 <select
-                  value={filterAccountId === "all" ? "all" : String(filterAccountId)}
-                  onChange={(e) =>
-                    setFilterAccountId(
-                      e.target.value === "all" ? "all" : Number(e.target.value)
-                    )
-                  }
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value as StatusFilter)}
                   className={cn(
                     "h-8 pl-3 pr-8 text-xs rounded-lg border border-border bg-background",
                     "appearance-none outline-none focus:ring-1 focus:ring-primary/50",
                     "text-foreground"
                   )}
-                  data-testid="select-campaign-account-filter-table"
-                  aria-label="Filter campaigns by account"
+                  data-testid="select-campaign-status-filter-table"
+                  aria-label="Filter campaigns by status"
                 >
-                  <option value="all">All Accounts</option>
-                  {clientAccounts.map((a) => (
-                    <option key={a.id} value={String(a.id)}>
-                      {a.name}
-                    </option>
-                  ))}
+                  <option value="all">All Statuses</option>
+                  <option value="Active">Active</option>
+                  <option value="Paused">Paused</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               </div>
-            ) : (
-              <div />
-            )}
+            </div>
             <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
           </div>
         )}
@@ -210,7 +273,7 @@ export function CampaignsPage() {
               selectedCampaignId={selectedCampaign?.id ?? null}
             />
           ) : (
-            <CampaignsTable accountId={effectiveAccountId} />
+            <CampaignsTable accountId={effectiveAccountId} externalStatusFilter={filterStatus} />
           )}
         </div>
       </div>

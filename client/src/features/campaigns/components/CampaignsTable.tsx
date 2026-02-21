@@ -25,7 +25,7 @@ const SMALL_WIDTH_COLS = new Set([
   "use_ai_bumps", "max_bumps", "stop_on_response", "daily_lead_limit",
 ]);
 
-export function CampaignsTable({ accountId }: { accountId?: number }) {
+export function CampaignsTable({ accountId, externalStatusFilter }: { accountId?: number; externalStatusFilter?: string }) {
   const { currentAccountId, isAgencyView } = useWorkspace();
   // If parent passes accountId (from CampaignsPage filter), use it.
   // Otherwise fall back to workspace-based filtering.
@@ -35,7 +35,7 @@ export function CampaignsTable({ accountId }: { accountId?: number }) {
   const { campaigns, loading, error, handleRefresh, setCampaigns, updateCampaignRow } = useCampaignsData(filterAccountId);
   const [search, setSearch] = useState("");
   const [accountFilter, setAccountFilter] = useState<number | "all">("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "Active" | "Inactive">("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [visibleColumns, setVisibleColumns] = useState<string[]>(CAMPAIGN_COLUMNS);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "", direction: null });
@@ -60,12 +60,22 @@ export function CampaignsTable({ accountId }: { accountId?: number }) {
     }));
   }, [campaigns]);
 
+  // Use external status filter from parent page if provided, otherwise use internal state
+  const effectiveStatusFilter = externalStatusFilter ?? statusFilter;
+
   const filteredCampaigns = useMemo(() => {
     return campaignsWithAccount
       .filter((c) => (accountFilter === "all" ? true : c.account_id === accountFilter))
-      .filter((c) => (statusFilter === "all" ? true : c.status === statusFilter))
+      .filter((c) => {
+        if (effectiveStatusFilter === "all") return true;
+        const s = String(c.status || "");
+        if (effectiveStatusFilter === "Completed") {
+          return s === "Completed" || s === "Finished";
+        }
+        return s === effectiveStatusFilter;
+      })
       .filter((c) => (search ? String(c.name || "").toLowerCase().includes(search.toLowerCase()) : true));
-  }, [campaignsWithAccount, search, accountFilter, statusFilter]);
+  }, [campaignsWithAccount, search, accountFilter, effectiveStatusFilter]);
 
   const handleUpdate = async (rowId: number, col: string, value: any) => {
     try {
