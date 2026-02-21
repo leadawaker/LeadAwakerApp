@@ -5084,3 +5084,244 @@ Added a Switch component to the AccountDetailsDialog header, placed next to the 
 - Feature #149 marked passing after thorough browser verification
 - Git commit: 5f97377
 - Git commit: e0ff8e9
+
+## Session 2026-02-21 - Coding Agent (Feature #151)
+
+### Completed Features:
+- Feature #151: Accounts dark mode variant - PASSING (already fully implemented)
+
+### Implementation Details:
+
+Feature requirement: Accounts page renders correctly in dark mode with dark surfaces, readable text, and visible status badges.
+
+The feature was ALREADY FULLY IMPLEMENTED from prior sessions. No code changes required.
+
+**How dark mode works:**
+- `useTheme` hook manages dark mode state, persists to localStorage, applies `.dark` class to `<html>`
+- Toggle button in Topbar (`data-testid="button-dark-mode-toggle"`)
+- All Accounts page components use semantic CSS tokens that auto-adapt:
+  - `bg-background`, `bg-card`, `text-foreground`, `text-muted-foreground`, `border-border`
+  - AccountDetailsDialog has explicit `dark:text-emerald-400`, `dark:text-amber-400`, `dark:text-red-400`, `dark:text-slate-400` for status badges
+
+**Verification results:**
+- Page background in dark mode: `rgb(17, 20, 34)` (dark navy) - PASS
+- Table/cards dark surface: `rgb(24, 30, 47)` - PASS
+- Heading text: `rgb(234, 236, 241)` (light on dark) - PASS
+- Status badges: Active (emerald green), Suspended (red), Trial (blue) - all visible - PASS
+- AccountDetailsDialog background: `rgb(17, 20, 34)` (dark) - PASS
+- No hardcoded white backgrounds found (0 of 200 DOM elements scanned) - PASS
+- Zero JS console errors - PASS
+
+### Screenshots:
+- test-results/feat-151/01-light-mode-accounts.png
+- test-results/feat-151/04-dark-accounts-full.png
+- test-results/feat-151/09-dialog-in-dark-mode.png
+
+### Code Changes:
+- No source code changes required - already fully implemented in prior sessions
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Accounts route: /agency/accounts
+
+### Current Status:
+- 121/207 features passing (120 at session start, +1 this session)
+- Feature #151 marked passing after thorough browser verification
+
+## Session 2026-02-21 - Coding Agent (Feature #152)
+
+### Completed Features:
+- Feature #152: User list with role and status - PASSING
+
+### Implementation Details:
+
+Feature requirement: Agency-only page showing user list with role badges and active/inactive status indicators.
+
+The Users.tsx page existed but had critical field mapping bugs - it was using snake_case field names from an old schema, but the API returns camelCase from Drizzle ORM.
+
+**Bugs fixed in client/src/pages/Users.tsx:**
+
+1. Interface fields corrected:
+   - full_name -> fullName1 (DB field is full_name_1, Drizzle maps to fullName1)
+   - account_id -> accountsId
+   - n8n_webhook_url -> n8nWebhookUrl
+   - notification_email -> notificationEmail
+   - notification_sms -> notificationSms
+
+2. Account name resolution: Now fetches /api/accounts in parallel with /api/users,
+   builds a {id: name} lookup map, displays account names (e.g. "Wow", "van de Kerkhof")
+
+3. Role badge colors:
+   - Admin: amber/yellow (bg-brand-yellow/20)
+   - Manager: blue (bg-blue-100 text-blue-700)
+   - Agent: purple
+   - Viewer: gray/muted
+   - Empty: shows dash
+
+4. Status indicator: Added green dot before "Active" text, gray dot for inactive;
+   handles case-insensitive comparison ("active" vs "Active")
+
+5. Search fix: Uses u.fullName1 for name search instead of u.full_name
+
+**New backend endpoints added:**
+
+server/routes.ts:
+- PATCH /api/users/:id - auth-protected user update endpoint
+  - Admin can update any user (role, status, all fields)
+  - Non-admin can only update their own profile
+  - Returns user without passwordHash
+
+server/storage.ts:
+- Added updateAppUser(id, data) to interface and implementation
+
+### Verification (via browser automation):
+1. Navigated to /agency/users as Admin - PASS
+2. User list renders with 7 users from PostgreSQL - PASS
+3. User names visible (Gabriel, Test Viewer, Test Admin, etc.) - PASS
+4. Account names shown ("Wow", "van de Kerkhof") - PASS
+5. Role badges: Admin=amber/yellow, Manager=blue, Viewer=gray - PASS
+6. Status: green dot + "ACTIVE" badge for active users - PASS
+7. Empty rows show dash for missing fields - PASS
+8. Zero JS console errors - PASS
+9. Real PostgreSQL data - PASS
+
+### Code Changes:
+- MODIFIED: client/src/pages/Users.tsx (complete rewrite of field mappings + improved UI)
+- MODIFIED: server/routes.ts (added PATCH /api/users/:id)
+- MODIFIED: server/storage.ts (added updateAppUser, createAppUser)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Users route: /agency/users
+
+### Current Status:
+- 122/207 features passing (121 at session start, +1 this session)
+- Feature #152 marked passing after thorough browser verification
+- Git commit: f953621
+- Git commit: 4d7a086
+
+## Session 2026-02-21 - Coding Agent (Feature #153)
+
+### Completed Features:
+- Feature #153: Invite user flow - PASSING
+
+### Implementation Details:
+
+Feature requirement: Generate invite token and invite new users by email with role assignment.
+
+**Backend (server/routes.ts) - POST /api/users/invite:**
+- Route: `POST /api/users/invite` (agency-only)
+- Validates email and role are present
+- Checks for duplicate email (returns 409 if exists)
+- Generates a 64-char hex invite token via `crypto.randomBytes(32).toString("hex")`
+- Stores token in `preferences` JSON field: `{ invite_token, invite_sent_at, invited_by }`
+- Creates user record with `status: "Invited"` via `storage.createAppUser()`
+- Returns: `{ user, invite_token, message }`
+- Logs invite link to console (dev mode email simulation)
+
+**Backend (server/storage.ts) - createAppUser:**
+- Added `createAppUser(data: InsertUsers): Promise<Users>` to IStorage interface
+- Added implementation: `db.insert(users).values(data as any).returning()`
+
+**Frontend (client/src/pages/Users.tsx):**
+- Added imports: `UserPlus, Copy, Check, Mail` from lucide-react, `DialogDescription`
+- Added invite state: `inviteOpen, inviteEmail, inviteRole, inviteAccountId, inviteLoading, inviteResult, tokenCopied`
+- Added `handleInviteOpen()` - resets form state and opens dialog
+- Added `handleSendInvite()` - calls `POST /api/users/invite`, shows success with token
+- Added `handleCopyToken()` - copies token to clipboard, shows green check for 2s
+- Added "Invite User" button in toolbar (Admin-only, data-testid="button-invite-user")
+- Added InviteUserDialog with two states:
+  1. Form state: email input, role select (Admin/Operator/Manager/Agent/Viewer), account select (optional)
+  2. Success state: green confirmation, invite token display with copy button
+- Fixed Radix UI bug: `SelectItem value=""` is forbidden — changed to `value="none"`
+
+### Verification (via browser automation):
+1. Navigated to /agency/users - "Invite User" button visible for Admin - PASS
+2. Clicked "Invite User" - dialog opened correctly with form fields - PASS
+3. Filled email: "browsertest_invite@example.com", role: Viewer - PASS
+4. Clicked "Send Invite" - request succeeded - PASS
+5. Success state shown with 64-char hex invite token - PASS
+6. Token copy button visible and functional - PASS
+7. Closed dialog - new user #13 appeared in users table with INVITED status - PASS
+8. Zero new console errors after fix applied - PASS
+9. Real PostgreSQL data - user persisted to DB with invite_token in preferences - PASS
+
+### Screenshots:
+- test-results/invite-flow/05-invite-dialog-with-fix.png
+- test-results/invite-flow/06-email-filled.png
+- test-results/invite-flow/07-after-send-invite.png
+- test-results/invite-flow/09-new-user-in-table.png
+
+### Code Changes:
+- MODIFIED: client/src/pages/Users.tsx (+160, invite UI and handlers)
+- MODIFIED: server/routes.ts (+55, POST /api/users/invite endpoint)
+- MODIFIED: server/storage.ts (+6, createAppUser method)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Users route: /agency/users
+
+### Current Status:
+- 123/207 features passing (122 at session start, +1 this session)
+- Feature #153 marked passing after thorough browser verification
+- Git commit: f124d19
+
+## Session 2026-02-21 - Coding Agent (Feature #154)
+
+### Completed Features:
+- Feature #154: Role assignment - PASSING
+
+### Implementation Details:
+
+Feature requirement: Assign or change user roles: Admin, Operator, Manager, Viewer.
+
+**Modified: client/src/pages/Users.tsx**
+
+Added "Operator" role to all role selection dropdowns and the type definition:
+
+1. AppUser interface type union updated:
+   - Before: `"Admin" | "Manager" | "Agent" | "Viewer" | null`
+   - After: `"Admin" | "Operator" | "Manager" | "Agent" | "Viewer" | null`
+
+2. Edit User dialog Role select dropdown:
+   - Added `<SelectItem value="Operator">Operator</SelectItem>` between Admin and Manager
+
+3. Invite User dialog Role select dropdown:
+   - Added `<SelectItem value="Operator">Operator</SelectItem>` between Admin and Manager
+
+4. Note: ROLE_STYLES already had Operator entry with orange styling (bg-orange-100/text-orange-700)
+
+**Backend:** PATCH /api/users/:id was already implemented from feature #152 session.
+  - Admin can update any user's role
+  - Non-admin cannot change role (deleted from allowed fields)
+  - Role stored in DB as plain text (not enum) - all values accepted
+
+### Verification (via browser automation):
+1. Navigated to /agency/users - PASS
+2. Clicked Edit on "Test Viewer" (user #9) - dialog opened - PASS
+3. Role dropdown opened - confirmed Operator option present - PASS
+4. Selected "Manager" role - PASS
+5. Clicked Save Changes - success toast: "User updated - Successfully updated Test Viewer" - PASS
+6. Role badge updated immediately in list from "Viewer" to "Manager" - PASS
+7. API verified: PATCH /api/users/9 returns role:"Manager" - PASS
+8. Restored user #9 back to Viewer after testing - PASS
+9. Zero JS console errors - PASS
+
+### Code Changes:
+- MODIFIED: client/src/pages/Users.tsx (added Operator to type union and both role dropdowns)
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+- Users route: /agency/users
+
+### Current Status:
+- 124/207 features passing (123 at session start, +1 this session)
+- Feature #154 marked passing after thorough browser verification
