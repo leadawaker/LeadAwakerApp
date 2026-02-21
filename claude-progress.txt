@@ -3603,3 +3603,89 @@ Test data verified:
 - 95/207 features passing (94 at session start, +1 this session)
 - Feature #124 marked passing after thorough browser verification
 - Git commit: 4a87689
+
+## Session 2026-02-21 - Coding Agent (Feature #125)
+
+### Completed Features:
+- Feature #125: Campaigns dark mode variant - PASSING
+
+### Implementation Details:
+
+The feature was ALREADY FULLY IMPLEMENTED from previous sessions. No code changes needed.
+
+Dark mode works globally via:
+- `useTheme` hook (`client/src/hooks/useTheme.ts`) - manages dark/light class on `<html>` root element
+- CSS variables in `client/src/index.css` with `.dark { ... }` block providing dark surface tokens:
+  - `--background`, `--foreground`, `--card`, `--border`, `--muted`, etc.
+- All Campaign components use Tailwind semantic tokens (bg-card, text-foreground, border-border) that auto-adapt
+- Status badge colors have explicit `dark:` variants (e.g., `text-emerald-600 dark:text-emerald-400`)
+- Dark mode toggle button: `data-testid="button-dark-mode-toggle"` in Topbar
+
+### Verification (via playwright-cli browser automation):
+1. Toggle dark mode via moon icon button → dark mode activated showing dark navy background - PASS
+2. Campaign cards use dark surfaces (navy blue, `bg-card` maps to dark navy in dark mode) - PASS
+3. Charts are readable: trend line chart in detail panel shows colored lines on dark bg - PASS
+4. All text has proper contrast: white/light text on dark backgrounds, colored metrics readable - PASS
+5. Table view also shows proper dark surfaces - PASS
+- Zero JS console errors (0 errors, 0 warnings)
+
+### Code Changes:
+- No source code changes required - already fully implemented via CSS variables and Tailwind semantic tokens
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 96/207 features passing (95 at session start, +1 this session)
+- Feature #125 marked passing after thorough browser verification
+- No git commit needed (no source code changes)
+
+## Session 2026-02-21 - Coding Agent (Feature #126)
+
+### Completed Features:
+- Feature #126: Campaigns empty state - PASSING (already implemented)
+
+### Implementation Details:
+
+The feature was ALREADY FULLY IMPLEMENTED from previous sessions. No code changes needed.
+
+Empty state for campaigns is implemented in two places:
+
+1. **CampaignCardGrid.tsx** (lines 221-235):
+   - Uses `DataEmptyState` component with `variant="campaigns"`
+   - When `campaigns.length === 0`:
+     - Shows `DataEmptyState` with title override based on context
+     - If search active: "No campaigns found" + `No campaigns match "${searchValue}". Try a different search term.`
+     - If no search: "No campaigns yet" + "Create your first campaign to start engaging with leads via WhatsApp."
+   - Wrapped in a div with data-testid="campaign-card-grid-empty"
+
+2. **DataEmptyState.tsx** - The reusable empty state component:
+   - "campaigns" variant: Megaphone icon + "No campaigns yet" + helpful guidance text
+   - Full dashed border card design with icon in rounded container
+   - Dark mode compatible via Tailwind semantic tokens
+
+### Verification (via playwright-cli browser automation):
+1. Navigated to /agency/campaigns (logged in as admin)
+2. Used account filter to select "Paul Mackartney" (account 25, no campaigns)
+3. Empty state appeared with:
+   - Megaphone icon in circular grey container
+   - "No campaigns yet" heading (bold, prominent)
+   - "Create your first campaign to start engaging with leads via WhatsApp." description
+4. Header shows "Campaigns" (no count) when zero campaigns
+- Zero JS console errors (0 errors, 0 warnings)
+- No mock data patterns - filtering hits real PostgreSQL
+
+### Code Changes:
+- No source code changes required - already fully implemented in prior sessions
+
+### Environment Notes:
+- API server on port 5001
+- Vite dev server on port 5173
+- Login: leadawaker@gmail.com / test123
+
+### Current Status:
+- 97/207 features passing (96 at session start, +1 this session)
+- Feature #126 marked passing after thorough browser verification
+- No new code changes to commit
