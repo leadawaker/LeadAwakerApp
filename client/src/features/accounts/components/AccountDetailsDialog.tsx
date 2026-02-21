@@ -1,4 +1,5 @@
 // src/features/accounts/components/AccountDetailsDialog.tsx
+// src/features/accounts/components/AccountDetailsDialog.tsx
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -20,7 +21,9 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 import {
   Building2,
   Phone,
@@ -179,7 +182,9 @@ export function AccountDetailsDialog({
 }: AccountDetailsDialogProps) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [toggling, setToggling] = useState(false);
   const [form, setForm] = useState<Partial<AccountRow>>({});
+  const { toast } = useToast();
 
   // Reset form when account changes
   useEffect(() => {
@@ -246,6 +251,31 @@ export function AccountDetailsDialog({
   function handleCancel() {
     setForm({ ...account });
     setEditing(false);
+  }
+
+  /**
+   * Quick status toggle: Active ↔ Inactive.
+   * Non-destructive — only changes status field, no full edit mode needed.
+   */
+  async function handleStatusToggle(checked: boolean) {
+    const newStatus = checked ? "Active" : "Inactive";
+    setToggling(true);
+    try {
+      await onSave(accountId, { status: newStatus });
+      setForm((prev) => ({ ...prev, status: newStatus }));
+      toast({
+        title: `Account ${newStatus === "Active" ? "activated" : "deactivated"}`,
+        description: `${account?.name || "Account"} is now ${newStatus.toLowerCase()}.`,
+      });
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Status update failed",
+        description: "Could not update account status. Please try again.",
+      });
+    } finally {
+      setToggling(false);
+    }
   }
 
   // ── Render helpers ──────────────────────────────────────────────────────────
@@ -474,7 +504,7 @@ export function AccountDetailsDialog({
               <DialogTitle className="text-xl font-semibold truncate">
                 {account.name || "Unnamed Account"}
               </DialogTitle>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <Badge
                   variant="outline"
                   className={cn(
@@ -496,6 +526,35 @@ export function AccountDetailsDialog({
                 <span className="text-xs text-muted-foreground">
                   #{accountId}
                 </span>
+                {/* ── Quick status toggle ─────────────────────────────── */}
+                <div className="flex items-center gap-1.5 ml-1" title={status === "Active" ? "Click to deactivate" : "Click to activate"}>
+                  <Switch
+                    id={`status-toggle-${accountId}`}
+                    checked={status === "Active"}
+                    onCheckedChange={handleStatusToggle}
+                    disabled={toggling || saving}
+                    data-testid="account-status-toggle"
+                    className="scale-90"
+                  />
+                  <label
+                    htmlFor={`status-toggle-${accountId}`}
+                    className={cn(
+                      "text-[11px] font-medium cursor-pointer select-none",
+                      status === "Active"
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-muted-foreground"
+                    )}
+                  >
+                    {toggling ? (
+                      <span className="flex items-center gap-1">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Updating...
+                      </span>
+                    ) : (
+                      status === "Active" ? "Active" : "Inactive"
+                    )}
+                  </label>
+                </div>
               </div>
             </div>
           </div>
