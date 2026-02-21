@@ -663,11 +663,22 @@ export default function TagsPage() {
                           </div>
 
                           <div className="min-w-0 flex-1">
-                            <div
-                              data-testid={`tag-name-${t.id}`}
-                              className="truncate font-semibold text-[13px] text-foreground leading-tight"
-                            >
-                              {t.name}
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <div
+                                data-testid={`tag-name-${t.id}`}
+                                className="truncate font-semibold text-[13px] text-foreground leading-tight"
+                              >
+                                {t.name}
+                              </div>
+                              {t.auto_applied && (
+                                <span
+                                  data-testid={`badge-auto-applied-${t.id}`}
+                                  className="shrink-0 text-[9px] font-semibold uppercase tracking-wide bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 px-1.5 py-0.5 rounded-full border border-violet-200 dark:border-violet-700/50"
+                                  title="This tag is automatically applied by workflows"
+                                >
+                                  Auto
+                                </span>
+                              )}
                             </div>
                             {t.description && (
                               <div className="truncate text-[10px] text-muted-foreground mt-0.5">
@@ -729,7 +740,11 @@ export default function TagsPage() {
                           {selectedTag.category ?? "Uncategorized"}
                         </span>
                         {selectedTag.auto_applied && (
-                          <span className="text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded">
+                          <span
+                            data-testid="badge-auto-applied-side-panel"
+                            className="text-[9px] font-semibold uppercase tracking-wide bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 px-1.5 py-0.5 rounded-full border border-violet-200 dark:border-violet-700/50"
+                            title="This tag is automatically applied by workflows"
+                          >
                             Auto
                           </span>
                         )}
