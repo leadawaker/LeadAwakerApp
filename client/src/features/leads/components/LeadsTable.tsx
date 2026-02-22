@@ -343,7 +343,11 @@ export function LeadsTable() {
 
       {/* Conditionally render Table or Kanban view */}
       {viewMode === "kanban" ? (
-        <LeadsKanban leads={filteredLeads} loading={loading} />
+        <LeadsKanban
+          leads={filteredLeads}
+          loading={loading}
+          campaignId={leadFilters.campaignId || undefined}
+        />
       ) : (
         <DataTable
           loading={loading}
