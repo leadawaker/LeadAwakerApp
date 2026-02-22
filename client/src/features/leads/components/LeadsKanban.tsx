@@ -653,10 +653,10 @@ function KanbanColumn({
         {/* Color dot */}
         <div className={cn("w-2 h-2 rounded-full flex-shrink-0 mt-1", styles.dot)} />
 
-        {/* Stage label — rotated vertically */}
+        {/* Stage label — rotated vertically, colored per stage */}
         <div className="flex-1 flex items-center justify-center py-3">
           <span
-            className="font-semibold text-[11px] text-foreground"
+            className={cn("font-semibold text-[11px]", styles.labelCls)}
             style={{
               writingMode: "vertical-rl",
               textOrientation: "mixed",
@@ -685,18 +685,31 @@ function KanbanColumn({
   return (
     <div
       className={cn(
-        "flex flex-col rounded-xl border min-w-[260px] w-[280px] max-w-[300px] flex-shrink-0 transition-all duration-200 snap-start snap-always",
+        "flex flex-col rounded-xl border min-w-[260px] w-[280px] max-w-[300px] flex-shrink-0 transition-all duration-200 overflow-hidden snap-start snap-always",
         isOver ? styles.dragOver : cn(styles.bg, styles.border)
       )}
       data-testid={`kanban-column-${stage}`}
+      data-stage={stage}
       data-collapsed="false"
       data-visible-count={visibleCount}
       data-total-count={leads.length}
     >
-      {/* Column Header */}
-      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border/30">
+      {/* Color accent bar — distinct color per pipeline stage; brand yellow for Call Booked (north star) */}
+      <div
+        className={cn("h-1 w-full flex-shrink-0", styles.accentBar)}
+        data-testid={`kanban-column-accent-${stage}`}
+      />
+
+      {/* Column Header — color-coded header background + colored stage label */}
+      <div
+        className={cn(
+          "flex items-center gap-2 px-3 py-2.5 border-b border-border/30",
+          styles.headerBg
+        )}
+        data-testid={`kanban-column-header-${stage}`}
+      >
         <div className={cn("w-2 h-2 rounded-full flex-shrink-0", styles.dot)} />
-        <span className="font-semibold text-sm text-foreground truncate">
+        <span className={cn("font-semibold text-sm truncate", styles.labelCls)}>
           {STAGE_LABELS[stage] ?? stage}
         </span>
         <Badge
