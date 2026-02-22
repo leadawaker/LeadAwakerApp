@@ -1737,10 +1737,11 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          <Table className="table-fixed" style={{ width: "100%", minWidth: totalTableMinWidth }}>
+          <Table className="table-fixed" style={{ width: "100%", minWidth: totalTableMinWidth }} data-testid="data-table">
             <TableHeader
+              data-testid="table-header"
               className={cn(
-                "bg-muted/50",
+                "bg-muted/50 dark:bg-muted/30",
                 virtualized && "sticky top-0 z-10 shadow-sm",
               )}
             >
