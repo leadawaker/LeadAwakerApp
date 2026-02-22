@@ -55,7 +55,19 @@ const STAGE_LABELS: Record<string, string> = {
 
 const STAGE_STYLES: Record<
   string,
-  { bg: string; border: string; badge: string; dot: string; dragOver: string }
+  {
+    bg: string;
+    border: string;
+    badge: string;
+    dot: string;
+    dragOver: string;
+    /** Tinted background for the column header area */
+    headerBg: string;
+    /** Colored text class for the stage label in the header */
+    labelCls: string;
+    /** Top accent bar color (thin strip at top of the column for visual distinction) */
+    accentBar: string;
+  }
 > = {
   New: {
     bg: "bg-blue-50/50 dark:bg-blue-950/20",
@@ -64,6 +76,9 @@ const STAGE_STYLES: Record<
     dot: "bg-blue-500",
     dragOver:
       "bg-blue-100/70 dark:bg-blue-900/40 border-blue-400/60 dark:border-blue-600/50",
+    headerBg: "bg-blue-100/60 dark:bg-blue-900/30",
+    labelCls: "text-blue-700 dark:text-blue-300",
+    accentBar: "bg-blue-400 dark:bg-blue-500",
   },
   Contacted: {
     bg: "bg-amber-50/50 dark:bg-amber-950/20",
@@ -73,6 +88,9 @@ const STAGE_STYLES: Record<
     dot: "bg-amber-500",
     dragOver:
       "bg-amber-100/70 dark:bg-amber-900/40 border-amber-400/60 dark:border-amber-600/50",
+    headerBg: "bg-amber-100/60 dark:bg-amber-900/30",
+    labelCls: "text-amber-700 dark:text-amber-300",
+    accentBar: "bg-amber-400 dark:bg-amber-500",
   },
   Responded: {
     bg: "bg-violet-50/50 dark:bg-violet-950/20",
@@ -82,6 +100,9 @@ const STAGE_STYLES: Record<
     dot: "bg-violet-500",
     dragOver:
       "bg-violet-100/70 dark:bg-violet-900/40 border-violet-400/60 dark:border-violet-600/50",
+    headerBg: "bg-violet-100/60 dark:bg-violet-900/30",
+    labelCls: "text-violet-700 dark:text-violet-300",
+    accentBar: "bg-violet-400 dark:bg-violet-500",
   },
   "Multiple Responses": {
     bg: "bg-indigo-50/50 dark:bg-indigo-950/20",
@@ -91,6 +112,9 @@ const STAGE_STYLES: Record<
     dot: "bg-indigo-500",
     dragOver:
       "bg-indigo-100/70 dark:bg-indigo-900/40 border-indigo-400/60 dark:border-indigo-600/50",
+    headerBg: "bg-indigo-100/60 dark:bg-indigo-900/30",
+    labelCls: "text-indigo-700 dark:text-indigo-300",
+    accentBar: "bg-indigo-400 dark:bg-indigo-500",
   },
   Qualified: {
     bg: "bg-emerald-50/50 dark:bg-emerald-950/20",
@@ -100,14 +124,21 @@ const STAGE_STYLES: Record<
     dot: "bg-emerald-500",
     dragOver:
       "bg-emerald-100/70 dark:bg-emerald-900/40 border-emerald-400/60 dark:border-emerald-600/50",
+    headerBg: "bg-emerald-100/60 dark:bg-emerald-900/30",
+    labelCls: "text-emerald-700 dark:text-emerald-300",
+    accentBar: "bg-emerald-400 dark:bg-emerald-500",
   },
   Booked: {
     bg: "bg-brand-yellow/5 dark:bg-brand-yellow/10",
-    border: "border-brand-yellow/30 dark:border-brand-yellow/20",
+    border: "border-brand-yellow/40 dark:border-brand-yellow/25",
     badge:
-      "bg-brand-yellow/15 text-brand-yellow dark:bg-brand-yellow/20 dark:text-brand-yellow",
+      "bg-brand-yellow/20 text-brand-yellow dark:bg-brand-yellow/25 dark:text-brand-yellow",
     dot: "bg-brand-yellow",
     dragOver: "bg-brand-yellow/20 dark:bg-brand-yellow/25 border-brand-yellow/60",
+    /* Brand yellow (#FCB803) — north-star "Call Booked" column emphasis */
+    headerBg: "bg-brand-yellow/20 dark:bg-brand-yellow/20",
+    labelCls: "text-brand-yellow font-bold",
+    accentBar: "bg-brand-yellow",
   },
   Lost: {
     bg: "bg-zinc-50/50 dark:bg-zinc-900/20",
@@ -116,6 +147,9 @@ const STAGE_STYLES: Record<
     dot: "bg-zinc-400",
     dragOver:
       "bg-zinc-100/70 dark:bg-zinc-800/40 border-zinc-400/60 dark:border-zinc-600/50",
+    headerBg: "bg-zinc-100/60 dark:bg-zinc-800/30",
+    labelCls: "text-zinc-600 dark:text-zinc-400",
+    accentBar: "bg-zinc-400 dark:bg-zinc-500",
   },
   DND: {
     bg: "bg-rose-50/50 dark:bg-rose-950/20",
@@ -124,6 +158,9 @@ const STAGE_STYLES: Record<
     dot: "bg-rose-500",
     dragOver:
       "bg-rose-100/70 dark:bg-rose-900/40 border-rose-400/60 dark:border-rose-600/50",
+    headerBg: "bg-rose-100/60 dark:bg-rose-900/30",
+    labelCls: "text-rose-700 dark:text-rose-300",
+    accentBar: "bg-rose-400 dark:bg-rose-500",
   },
 };
 
@@ -133,6 +170,9 @@ const DEFAULT_STYLE = {
   badge: "bg-muted text-muted-foreground",
   dot: "bg-muted-foreground",
   dragOver: "bg-muted/60 border-border",
+  headerBg: "bg-muted/40",
+  labelCls: "text-foreground",
+  accentBar: "bg-muted-foreground",
 };
 
 /* ─────────── Infinite scroll batch size ─────────── */
@@ -671,8 +711,12 @@ interface LeadsKanbanProps {
   loading?: boolean;
   /** Optional campaign ID filter (accepted for compat with LeadsTable) */
   campaignId?: string;
-  /** Called when a card is dropped into a different column; triggers the API update */
-  onLeadMove?: (leadId: number | string, newStage: string) => void;
+  /**
+   * Called when a card is dropped into a different column; triggers the API update.
+   * May return a Promise – if the promise rejects, the Kanban rolls back the
+   * optimistic update immediately (in addition to any parent-level rollback).
+   */
+  onLeadMove?: (leadId: number | string, newStage: string) => void | Promise<void>;
   /** Tag info map passed from LeadsTable: leadId → [{name, color}] */
   leadTagsMap?: Map<number, { name: string; color: string }[]>;
 }
@@ -687,6 +731,10 @@ export function LeadsKanban({
   const [localLeads, setLocalLeads] = useState<any[]>(leads);
   const [activeLead, setActiveLead] = useState<any | null>(null);
   const [isDraggingAny, setIsDraggingAny] = useState(false);
+
+  // Snapshot of leads taken just before an optimistic update.
+  // Used to immediately roll back if the API call fails.
+  const snapshotRef = useRef<any[]>([]);
 
   // Collapsed column state (persisted in localStorage)
   const [collapsedStages, setCollapsedStages] = useState<Set<string>>(() => {
@@ -708,7 +756,7 @@ export function LeadsKanban({
         next.add(stage);
       }
       try {
-        localStorage.setItem("kanban_collapsed_stages", JSON.stringify([...next]));
+        localStorage.setItem("kanban_collapsed_stages", JSON.stringify(Array.from(next)));
       } catch {
         // ignore storage errors
       }
@@ -716,8 +764,9 @@ export function LeadsKanban({
     });
   }, []);
 
-  // Sync with parent when not dragging (covers initial load and external refreshes)
-  useMemo(() => {
+  // Sync with parent when not dragging (covers initial load, external refreshes,
+  // and rollback after an API failure where the parent re-fetches fresh data).
+  useEffect(() => {
     if (!isDraggingAny) {
       setLocalLeads(leads);
     }
@@ -782,7 +831,12 @@ export function LeadsKanban({
 
       if (currentStage === targetStage) return; // same column – no-op
 
-      // Optimistic UI update
+      // Take a snapshot of the current leads BEFORE applying the optimistic update.
+      // If the API call fails, this snapshot is used to restore the original state.
+      snapshotRef.current = [...localLeads];
+
+      // ── Optimistic UI update (instant visual feedback) ──────────────────────
+      // The card moves to the new column immediately, before the server confirms.
       setLocalLeads((prev) =>
         prev.map((l) =>
           String(l.Id || l.id) === draggedId
@@ -795,43 +849,72 @@ export function LeadsKanban({
         )
       );
 
-      // Persist via parent callback → API
-      onLeadMove?.(draggedLead.Id ?? draggedLead.id, targetStage);
+      // ── API call in background ───────────────────────────────────────────────
+      // onLeadMove may return a Promise. If it rejects (API failure), we
+      // immediately roll back to the snapshot so the card returns to its original
+      // column without waiting for the parent to re-fetch from the server.
+      const result = onLeadMove?.(draggedLead.Id ?? draggedLead.id, targetStage);
+      if (result instanceof Promise) {
+        result.catch(() => {
+          // Rollback: restore the pre-drag snapshot
+          setLocalLeads(snapshotRef.current);
+        });
+      }
     },
     [localLeads, onLeadMove]
   );
 
   if (loading) {
     return (
-      <div className="flex gap-3 overflow-x-auto pb-4 px-1">
-        {PIPELINE_STAGES.slice(0, 5).map((stage) => {
+      <div
+        className="flex gap-3 overflow-x-auto pb-4 px-1 -mx-1"
+        data-testid="kanban-loading-skeleton"
+      >
+        {PIPELINE_STAGES.map((stage) => {
           const styles = STAGE_STYLES[stage] || DEFAULT_STYLE;
           return (
             <div
               key={stage}
               className={cn(
-                "flex flex-col rounded-xl border min-w-[260px] w-[280px] flex-shrink-0 animate-pulse",
+                "flex flex-col rounded-xl border min-w-[260px] w-[280px] flex-shrink-0",
                 styles.bg,
                 styles.border
               )}
+              data-testid="kanban-skeleton-column"
             >
-              <div className="px-3 py-2.5 border-b border-border/30">
-                <div className="h-4 bg-muted rounded w-20" />
+              {/* Column header skeleton */}
+              <div className="px-3 py-2.5 border-b border-border/30 flex items-center gap-2">
+                <div className={cn("h-2 w-2 rounded-full animate-pulse shrink-0", styles.dot)} />
+                <div className="h-4 bg-muted animate-pulse rounded flex-1 max-w-[5rem]" />
+                <div className="h-5 w-7 bg-muted animate-pulse rounded-full shrink-0" />
               </div>
+              {/* Card skeletons */}
               <div className="p-2 space-y-2">
-                {[1, 2].map((i) => (
+                {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="rounded-xl border border-border bg-card p-3 space-y-2"
+                    className="rounded-xl border border-border bg-card p-3 space-y-2.5 animate-pulse"
+                    data-testid="kanban-skeleton-card"
                   >
-                    <div className="flex gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-muted" />
-                      <div className="flex-1 space-y-1">
+                    {/* Avatar + Name + Score badge */}
+                    <div className="flex items-start gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-muted shrink-0" />
+                      <div className="flex-1 min-w-0 space-y-1.5 pt-0.5">
                         <div className="h-3.5 bg-muted rounded w-3/4" />
                         <div className="h-2.5 bg-muted rounded w-1/2" />
                       </div>
+                      <div className="h-5 w-8 bg-muted rounded-full shrink-0" />
                     </div>
-                    <div className="h-2.5 bg-muted rounded w-full" />
+                    {/* Tags row */}
+                    <div className="flex gap-1.5">
+                      <div className="h-4 w-12 bg-muted rounded-full" />
+                      <div className="h-4 w-14 bg-muted rounded-full" />
+                    </div>
+                    {/* Metadata row */}
+                    <div className="flex items-center gap-2">
+                      <div className="h-3 w-14 bg-muted rounded" />
+                      <div className="h-3 w-10 bg-muted rounded" />
+                    </div>
                   </div>
                 ))}
               </div>
