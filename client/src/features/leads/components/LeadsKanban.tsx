@@ -682,39 +682,87 @@ function KanbanColumn({
     );
   }
 
+  /** Whether this column is the north-star "Call Booked" stage */
+  const isBookedStage = stage === "Booked";
+
   return (
     <div
       className={cn(
-        "flex flex-col rounded-xl border min-w-[260px] w-[280px] max-w-[300px] flex-shrink-0 transition-all duration-200 overflow-hidden snap-start snap-always",
+        "flex flex-col rounded-xl border flex-shrink-0 transition-all duration-200 overflow-hidden snap-start snap-always",
+        // Call Booked is slightly wider to visually emphasise north-star status
+        isBookedStage
+          ? "min-w-[280px] w-[300px] max-w-[320px]"
+          : "min-w-[260px] w-[280px] max-w-[300px]",
         isOver ? styles.dragOver : cn(styles.bg, styles.border)
       )}
+      style={
+        isBookedStage
+          ? {
+              // Subtle yellow glow: inner ring + diffuse outer halo
+              boxShadow:
+                "0 0 0 1.5px rgba(252,184,3,0.55), 0 4px 24px rgba(252,184,3,0.22), 0 0 0 4px rgba(252,184,3,0.08)",
+            }
+          : undefined
+      }
       data-testid={`kanban-column-${stage}`}
       data-stage={stage}
       data-collapsed="false"
       data-visible-count={visibleCount}
       data-total-count={leads.length}
     >
-      {/* Color accent bar — distinct color per pipeline stage; brand yellow for Call Booked (north star) */}
+      {/* Color accent bar — distinct color per pipeline stage; thicker for Call Booked (north star) */}
       <div
-        className={cn("h-1 w-full flex-shrink-0", styles.accentBar)}
+        className={cn(
+          "w-full flex-shrink-0",
+          styles.accentBar,
+          isBookedStage ? "h-1.5" : "h-1"
+        )}
         data-testid={`kanban-column-accent-${stage}`}
       />
 
-      {/* Column Header — color-coded header background + colored stage label */}
+      {/* Column Header — color-coded background + colored label; taller + larger text for Call Booked */}
       <div
         className={cn(
-          "flex items-center gap-2 px-3 py-2.5 border-b border-border/30",
-          styles.headerBg
+          "flex items-center gap-2 px-3 border-b border-border/30",
+          styles.headerBg,
+          isBookedStage ? "py-3.5 flex-wrap" : "py-2.5"
         )}
         data-testid={`kanban-column-header-${stage}`}
       >
-        <div className={cn("w-2 h-2 rounded-full flex-shrink-0", styles.dot)} />
-        <span className={cn("font-semibold text-sm truncate", styles.labelCls)}>
-          {STAGE_LABELS[stage] ?? stage}
-        </span>
+        {/* Stage label row */}
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div
+            className={cn(
+              "rounded-full flex-shrink-0",
+              styles.dot,
+              isBookedStage ? "w-2.5 h-2.5" : "w-2 h-2"
+            )}
+          />
+          <span
+            className={cn(
+              "font-semibold truncate",
+              styles.labelCls,
+              isBookedStage ? "text-base" : "text-sm"
+            )}
+          >
+            {STAGE_LABELS[stage] ?? stage}
+          </span>
+
+          {/* North Star badge — only on Call Booked column */}
+          {isBookedStage && (
+            <span
+              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide bg-brand-yellow text-black flex-shrink-0"
+              data-testid="kanban-column-north-star-badge"
+              title="North Star KPI — goal of the funnel"
+            >
+              ★ Goal
+            </span>
+          )}
+        </div>
+
         <Badge
           className={cn(
-            "ml-auto text-[11px] px-2 py-0 h-5 font-semibold border-0 rounded-md",
+            "text-[11px] px-2 py-0 h-5 font-semibold border-0 rounded-md flex-shrink-0",
             styles.badge
           )}
           data-testid={`kanban-column-count-${stage}`}
