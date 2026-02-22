@@ -1,4 +1,4 @@
-import { eq, desc, asc, count, SQL, inArray } from "drizzle-orm";
+import { eq, desc, asc, count, SQL, inArray, and } from "drizzle-orm";
 import { PgTableWithColumns } from "drizzle-orm/pg-core";
 import { db } from "./db";
 import {
@@ -75,6 +75,7 @@ export interface IStorage {
   // Leads_Tags
   getTagsByLeadId(leadId: number): Promise<Leads_Tags[]>;
   createLeadTag(data: InsertLeads_Tags): Promise<Leads_Tags>;
+  deleteLeadTag(leadId: number, tagId: number): Promise<boolean>;
 
   // Bulk operations
   bulkUpdateLeads(ids: number[], data: Partial<InsertLeads>): Promise<Leads[]>;
@@ -258,6 +259,13 @@ export class DatabaseStorage implements IStorage {
   async createLeadTag(data: InsertLeads_Tags): Promise<Leads_Tags> {
     const [row] = await db.insert(leadsTags).values(data as any).returning();
     return row;
+  }
+
+  async deleteLeadTag(leadId: number, tagId: number): Promise<boolean> {
+    const result = await db.delete(leadsTags)
+      .where(and(eq(leadsTags.leadsId, leadId), eq(leadsTags.tagsId, tagId)))
+      .returning();
+    return result.length > 0;
   }
 
   // ─── Bulk Operations ──────────────────────────────────────────────────
