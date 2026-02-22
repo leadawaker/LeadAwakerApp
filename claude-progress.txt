@@ -6362,3 +6362,44 @@ Feature requirement: Form for creating or editing prompts: name, prompt_text, sy
 - 142/207 features passing (141 at session start, +1 this session)
 - Feature #171 marked passing after thorough browser verification
 - Git commit: 0bf0e5d
+
+## Session 2026-02-22 - Coding Agent (Feature #172)
+
+### Completed Features:
+- Feature #172: Prompt version display - PASSING
+
+### Implementation Details:
+
+Feature requirement: Display the version field for each prompt with clear formatting.
+
+No code changes required. The version display was already implemented in the previous session (Feature #170/171).
+
+Existing implementation in client/src/pages/PromptLibrary.tsx (lines 597-620):
+- Version badge renders as: v{p.version} with "v" prefix
+- Uses monospace font (font-mono) for version strings
+- Muted background pill badge (bg-muted rounded-md) for visual distinction
+- Located in the metadata row below prompt name/use case
+- Conditionally rendered: only shows when p.version is truthy
+- data-testid for each card: text-prompt-version-{id}
+
+### Verification (via browser automation):
+
+API response from /api/prompts confirms real version data:
+- Prompt ID 1 ("Prompt"): version="1.0" shows v1.0 badge
+- TEST_PROMPT_170_Archived: version="1.5" shows v1.5 badge
+- TEST_PROMPT_170_Active: version="2.0" shows v2.0 badge
+- Untitled prompt (ID 3): version=null shows no version badge (correct)
+
+Browser screenshot confirms:
+1. v1.0 badge on "Prompt" card - monospace pill, clearly visible - PASS
+2. v1.5 badge alongside gpt-3.5 model on TEST_PROMPT_170_Archived card - PASS
+3. v2.0 badge alongside gpt-4 model on TEST_PROMPT_170_Active card - PASS
+4. Untitled card shows no version badge (null version correctly hidden) - PASS
+
+### Code Changes:
+- None required - version display already implemented in previous session
+
+### Current Status:
+- 143/207 features passing (142 at session start, +1 this session)
+- Feature #172 marked passing after thorough browser verification
+- Git commit: af84a82
