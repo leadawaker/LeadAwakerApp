@@ -1173,6 +1173,9 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
   const visibleCols = visibleColumns.filter((c) => !hiddenFields.includes(c));
   const rowPadding = defaultRowPadding[rowSpacing];
 
+  // Minimum table width for horizontal scroll: checkbox col (40px) + each visible data col
+  const totalTableMinWidth = 40 + visibleCols.reduce((sum, col) => sum + (colWidths[col] ?? 150), 0);
+
   const applyView = (key: string) => {
     let next: string[] = [];
     if (key === "all") {
@@ -1727,13 +1730,14 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
           className="overflow-x-auto"
           style={virtualized ? { overflowY: "auto", height: virtualizedContainerHeight } : undefined}
           data-virtualized={virtualized}
+          data-testid="table-scroll-container"
         >
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          <Table className="table-fixed w-full">
+          <Table className="table-fixed" style={{ width: "100%", minWidth: totalTableMinWidth }}>
             <TableHeader
               className={cn(
                 "bg-muted/50",
@@ -1741,7 +1745,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
               )}
             >
               <TableRow className="hover:bg-transparent border-b border-border">
-                <TableHead className="w-[40px] px-4">
+                <TableHead className="w-[40px] px-4 sticky left-0 z-30 bg-muted/50">
                   <Checkbox
                     checked={
                       selectedIds.length === sortedRows.length &&
@@ -1766,6 +1770,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                         showVerticalLines &&
                           idx < visibleCols.length - 1 &&
                           "border-r border-border/50",
+                        idx === 0 && "sticky left-[40px] z-20 bg-muted/50 shadow-[2px_0_4px_rgba(0,0,0,0.05)]",
                       )}
                       handleResize={handleResize}
                     >
@@ -1789,11 +1794,18 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                         className="hover:bg-transparent border-b border-border/40 animate-in fade-in-0 duration-300"
                         style={{ animationDelay: `${rowIdx * 30}ms`, animationFillMode: "both" }}
                       >
-                        <TableCell className="w-[40px] px-4">
+                        <TableCell className="w-[40px] px-4 sticky left-0 z-20 bg-card">
                           <Skeleton className="h-4 w-4 rounded" />
                         </TableCell>
                         {visibleCols.map((col, colIdx) => (
-                          <TableCell key={col} style={{ width: colWidths[col] }} className="px-4">
+                          <TableCell
+                            key={col}
+                            style={{ width: colWidths[col] }}
+                            className={cn(
+                              "px-4",
+                              colIdx === 0 && "sticky left-[40px] z-10 bg-card shadow-[2px_0_4px_rgba(0,0,0,0.04)]",
+                            )}
+                          >
                             <Skeleton className={cn("h-3.5 rounded", widths[(rowIdx + colIdx) % widths.length])} />
                           </TableCell>
                         ))}
@@ -1836,10 +1848,14 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                         key={row.Id}
                         id={`row-${row.Id}`}
                         data-index={virtualRow.index}
+                        data-testid="table-row"
                         ref={rowVirtualizer.measureElement}
                         className={cn(
-                          "group hover:bg-muted/30 transition-colors border-b border-border/50 last:border-0",
-                          selectedIds.includes(row.Id) && "bg-primary/5 hover:bg-primary/10",
+                          "group transition-colors border-b border-border/50 last:border-0",
+                          virtualRow.index % 2 === 0
+                            ? "bg-transparent hover:bg-muted/30 dark:hover:bg-muted/20"
+                            : "bg-muted/[0.07] dark:bg-muted/[0.12] hover:bg-muted/30 dark:hover:bg-muted/20",
+                          selectedIds.includes(row.Id) && "!bg-primary/5 hover:!bg-primary/10",
                           onRowClick && "cursor-pointer",
                         )}
                         onClick={onRowClick ? (e) => {
@@ -1848,7 +1864,15 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                           onRowClick(row);
                         } : undefined}
                       >
-                        <TableCell className="px-4" data-row-checkbox>
+                        <TableCell
+                          className={cn(
+                            "px-4 sticky left-0 z-20",
+                            selectedIds.includes(row.Id)
+                              ? "bg-primary/5 group-hover:bg-primary/10"
+                              : "bg-card group-hover:bg-muted/30",
+                          )}
+                          data-row-checkbox
+                        >
                           <Checkbox
                             checked={selectedIds.includes(row.Id)}
                             onCheckedChange={() => toggleSelect(row.Id)}
@@ -1862,6 +1886,12 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                               "px-4 font-medium text-foreground/80 transition-all overflow-visible",
                               rowPadding,
                               showVerticalLines && idx < visibleCols.length - 1 && "border-r border-border/30",
+                              idx === 0 && cn(
+                                "sticky left-[40px] z-10 shadow-[2px_0_4px_rgba(0,0,0,0.04)]",
+                                selectedIds.includes(row.Id)
+                                  ? "bg-primary/5 group-hover:bg-primary/10"
+                                  : "bg-card group-hover:bg-muted/30",
+                              ),
                             )}
                           >
                             {isRollupCol(col) ? (
@@ -2088,14 +2118,18 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                         </TableCell>
                       </TableRow>
                     )}
-                    {!collapsedGroups[groupName] && groupRows.map((row: any) => (
+                    {!collapsedGroups[groupName] && groupRows.map((row: any, rowIdx: number) => (
                       <TableRow
                         key={row.Id}
                         id={`row-${row.Id}`}
+                        data-testid="table-row"
                         className={cn(
-                          "group hover:bg-muted/30 transition-colors border-b border-border/50 last:border-0",
+                          "group transition-colors border-b border-border/50 last:border-0",
+                          rowIdx % 2 === 0
+                            ? "bg-transparent hover:bg-muted/30 dark:hover:bg-muted/20"
+                            : "bg-muted/[0.07] dark:bg-muted/[0.12] hover:bg-muted/30 dark:hover:bg-muted/20",
                           selectedIds.includes(row.Id) &&
-                            "bg-primary/5 hover:bg-primary/10",
+                            "!bg-primary/5 hover:!bg-primary/10",
                           onRowClick && "cursor-pointer",
                         )}
                         onClick={onRowClick ? (e) => {
@@ -2105,7 +2139,15 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                           onRowClick(row);
                         } : undefined}
                       >
-                        <TableCell className="px-4" data-row-checkbox>
+                        <TableCell
+                          className={cn(
+                            "px-4 sticky left-0 z-20",
+                            selectedIds.includes(row.Id)
+                              ? "bg-primary/5 group-hover:bg-primary/10"
+                              : "bg-card group-hover:bg-muted/30",
+                          )}
+                          data-row-checkbox
+                        >
                           <Checkbox
                             checked={selectedIds.includes(row.Id)}
                             onCheckedChange={() => toggleSelect(row.Id)}
@@ -2122,6 +2164,12 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                               showVerticalLines &&
                                 idx < visibleCols.length - 1 &&
                                 "border-r border-border/30",
+                              idx === 0 && cn(
+                                "sticky left-[40px] z-10 shadow-[2px_0_4px_rgba(0,0,0,0.04)]",
+                                selectedIds.includes(row.Id)
+                                  ? "bg-primary/5 group-hover:bg-primary/10"
+                                  : "bg-card group-hover:bg-muted/30",
+                              ),
                             )}
                           >
                             {isRollupCol(col) ? (
