@@ -468,6 +468,38 @@ export async function registerRoutes(
     res.json(data);
   });
 
+  // POST /api/leads/:id/tags — add a single tag to a lead
+  app.post("/api/leads/:id/tags", requireAuth, async (req, res) => {
+    try {
+      const leadId = Number(req.params.id);
+      const { tagId } = req.body;
+      if (!tagId) return res.status(400).json({ message: "tagId is required" });
+
+      // Avoid duplicate
+      const existingTags = await storage.getTagsByLeadId(leadId);
+      const exists = existingTags.some((t: any) => t.tagsId === Number(tagId));
+      if (exists) return res.status(409).json({ message: "Tag already assigned to this lead" });
+
+      const row = await storage.createLeadTag({ leadsId: leadId, tagsId: Number(tagId) });
+      res.status(201).json(row);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Failed to add tag" });
+    }
+  });
+
+  // DELETE /api/leads/:id/tags/:tagId — remove a tag from a lead
+  app.delete("/api/leads/:id/tags/:tagId", requireAuth, async (req, res) => {
+    try {
+      const leadId = Number(req.params.id);
+      const tagId = Number(req.params.tagId);
+      const deleted = await storage.deleteLeadTag(leadId, tagId);
+      if (!deleted) return res.status(404).json({ message: "Tag not found on this lead" });
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Failed to remove tag" });
+    }
+  });
+
   // ─── Automation Logs ──────────────────────────────────────────────
   // Agency-only
 

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { apiFetch } from "@/lib/apiUtils";
 import { cn } from "@/lib/utils";
 import {
@@ -36,6 +37,14 @@ import {
   X,
   Plus,
   Save,
+  Smile,
+  Meh,
+  Frown,
+  Layers,
+  PhoneCall,
+  UserCheck,
+  UserX,
+  RefreshCw,
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -225,6 +234,72 @@ const PIPELINE_STAGES = [
   "DND",
 ] as const;
 
+// ── Sentiment Badge ────────────────────────────────────────────────────────
+
+const SENTIMENT_CONFIG: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
+  positive: {
+    bg: "bg-emerald-500/15",
+    text: "text-emerald-600 dark:text-emerald-400",
+    icon: <Smile className="h-3 w-3" />,
+  },
+  negative: {
+    bg: "bg-red-500/15",
+    text: "text-red-600 dark:text-red-400",
+    icon: <Frown className="h-3 w-3" />,
+  },
+  neutral: {
+    bg: "bg-zinc-500/15",
+    text: "text-zinc-600 dark:text-zinc-400",
+    icon: <Meh className="h-3 w-3" />,
+  },
+};
+
+function SentimentBadge({ sentiment }: { sentiment: string }) {
+  const key = sentiment?.toLowerCase() ?? "";
+  const config = SENTIMENT_CONFIG[key] ?? {
+    bg: "bg-muted",
+    text: "text-muted-foreground",
+    icon: <Meh className="h-3 w-3" />,
+  };
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold capitalize",
+        config.bg,
+        config.text
+      )}
+      data-testid="ai-sentiment-badge"
+      data-sentiment={key}
+    >
+      {config.icon}
+      {sentiment}
+    </span>
+  );
+}
+
+// ── AI Memory Display ──────────────────────────────────────────────────────
+
+function formatAiMemory(raw: string): string {
+  if (!raw) return "";
+  // Try to parse as JSON and pretty-print
+  try {
+    const parsed = JSON.parse(raw);
+    if (typeof parsed === "object" && parsed !== null) {
+      // Format key-value pairs as readable lines
+      return Object.entries(parsed)
+        .map(([k, v]) => {
+          const label = k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+          const value = typeof v === "object" ? JSON.stringify(v, null, 2) : String(v);
+          return `${label}: ${value}`;
+        })
+        .join("\n");
+    }
+    return typeof parsed === "string" ? parsed : JSON.stringify(parsed, null, 2);
+  } catch {
+    return raw; // return as-is if not JSON
+  }
+}
+
 // ── Score Gauge ────────────────────────────────────────────────────────────
 
 function scoreColor(value: number): { bar: string; text: string } {
@@ -291,6 +366,10 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   const [notesSaved, setNotesSaved] = useState(false);
   const notesOriginalRef = useRef<string>("");
 
+  // ── Manual takeover toggle state ──
+  const [localManualTakeover, setLocalManualTakeover] = useState<boolean>(false);
+  const [savingManualTakeover, setSavingManualTakeover] = useState(false);
+
   const leadId = lead?.Id || lead?.id;
 
   // Sync localStatus when lead changes
@@ -308,6 +387,11 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
     setNotesDirty(false);
     setNotesSaved(false);
   }, [lead?.Id, lead?.id, lead?.notes]);
+
+  // Sync manual_takeover when lead changes
+  useEffect(() => {
+    setLocalManualTakeover(Boolean(lead?.manual_takeover));
+  }, [lead?.Id, lead?.id, lead?.manual_takeover]);
 
   // Fetch interactions when panel opens with a lead
   useEffect(() => {
@@ -491,6 +575,27 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
       // silently fail — user can retry
     } finally {
       setSavingNotes(false);
+    }
+  };
+
+  const handleManualTakeoverChange = async (checked: boolean) => {
+    if (!leadId || savingManualTakeover) return;
+    const prev = localManualTakeover;
+    setLocalManualTakeover(checked); // optimistic update
+    setSavingManualTakeover(true);
+    try {
+      const res = await apiFetch(`/api/leads/${leadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ manual_takeover: checked }),
+      });
+      if (!res.ok) {
+        setLocalManualTakeover(prev); // revert on error
+      }
+    } catch {
+      setLocalManualTakeover(prev);
+    } finally {
+      setSavingManualTakeover(false);
     }
   };
 
@@ -718,10 +823,103 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
             </div>
 
             <InfoRow label="Automation" value={autoStatus} />
-            <InfoRow label="Bump Stage" value={lead.current_bump_stage} />
-            <InfoRow label="Manual Takeover" value={lead.manual_takeover ? "Yes" : lead.manual_takeover === false ? "No" : undefined} />
             <InfoRow label="Opted Out" value={lead.opted_out ? "Yes" : lead.opted_out === false ? "No" : undefined} />
+
+            {/* Manual Takeover — toggle switch */}
+            <div
+              className="flex items-center justify-between gap-3 py-1.5 border-t border-border/30"
+              data-testid="manual-takeover-row"
+            >
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-muted-foreground/60">
+                  {localManualTakeover ? <UserX className="h-3 w-3" /> : <UserCheck className="h-3 w-3" />}
+                </span>
+                <span className="text-[11px] text-muted-foreground">Manual Takeover</span>
+                {localManualTakeover && (
+                  <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-400/15 px-1.5 py-px rounded-full">
+                    AI paused
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5">
+                {savingManualTakeover && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+                <Switch
+                  checked={localManualTakeover}
+                  onCheckedChange={handleManualTakeoverChange}
+                  disabled={savingManualTakeover}
+                  data-testid="manual-takeover-toggle"
+                  aria-label="Toggle manual takeover"
+                />
+              </div>
+            </div>
           </div>
+
+          {/* Bump Stage Indicator */}
+          {(lead.current_bump_stage != null || lead.bump_1_sent_at || lead.bump_2_sent_at || lead.bump_3_sent_at) && (
+            <>
+              <SectionTitle icon={<Layers className="h-3.5 w-3.5" />} title="Bump Progress" />
+              <div
+                className="rounded-xl border border-border/40 bg-muted/20 px-3 py-3"
+                data-testid="bump-stage-section"
+              >
+                {/* Stage progress bar */}
+                <div className="flex items-center gap-1 mb-3">
+                  {[1, 2, 3].map((stage) => {
+                    const currentStage = Number(lead.current_bump_stage ?? 0);
+                    const done = currentStage >= stage;
+                    return (
+                      <div
+                        key={stage}
+                        className={cn(
+                          "flex-1 h-2 rounded-full transition-all duration-300",
+                          done ? "bg-brand-blue" : "bg-muted"
+                        )}
+                        data-testid={`bump-stage-step-${stage}`}
+                        data-done={done ? "true" : "false"}
+                      />
+                    );
+                  })}
+                </div>
+
+                {/* Current stage label */}
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] text-muted-foreground">Current Stage</span>
+                  <span
+                    className="text-[12px] font-semibold text-foreground tabular-nums"
+                    data-testid="bump-current-stage"
+                  >
+                    {lead.current_bump_stage ?? 0} / 3
+                  </span>
+                </div>
+
+                {/* Bump timestamps */}
+                {lead.bump_1_sent_at && (
+                  <div className="flex items-center justify-between py-0.5">
+                    <span className="text-[11px] text-muted-foreground">Bump 1</span>
+                    <span className="text-[11px] text-foreground/80 tabular-nums" data-testid="bump-1-sent-at">
+                      {fmtDateTime(lead.bump_1_sent_at)}
+                    </span>
+                  </div>
+                )}
+                {lead.bump_2_sent_at && (
+                  <div className="flex items-center justify-between py-0.5">
+                    <span className="text-[11px] text-muted-foreground">Bump 2</span>
+                    <span className="text-[11px] text-foreground/80 tabular-nums" data-testid="bump-2-sent-at">
+                      {fmtDateTime(lead.bump_2_sent_at)}
+                    </span>
+                  </div>
+                )}
+                {lead.bump_3_sent_at && (
+                  <div className="flex items-center justify-between py-0.5">
+                    <span className="text-[11px] text-muted-foreground">Bump 3</span>
+                    <span className="text-[11px] text-foreground/80 tabular-nums" data-testid="bump-3-sent-at">
+                      {fmtDateTime(lead.bump_3_sent_at)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
           {/* Activity */}
           <SectionTitle icon={<MessageSquare className="h-3.5 w-3.5" />} title="Activity" />
@@ -738,25 +936,69 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
           {/* Booking */}
           {(lead.booked_call_date || lead.booking_confirmed_at) && (
             <>
-              <SectionTitle icon={<Calendar className="h-3.5 w-3.5" />} title="Booking" />
-              <div className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5">
+              <SectionTitle icon={<PhoneCall className="h-3.5 w-3.5" />} title="Booking" />
+              <div
+                className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5"
+                data-testid="booked-call-section"
+              >
                 <InfoRow label="Call Date" value={fmtDate(lead.booked_call_date)} />
                 <InfoRow label="Confirmed At" value={fmtDateTime(lead.booking_confirmed_at)} />
-                <InfoRow label="No Show" value={lead.no_show ? "Yes" : lead.no_show === false ? "No" : undefined} />
+                {/* No-show indicator */}
+                <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
+                  <span className="text-[11px] text-muted-foreground shrink-0">No Show</span>
+                  {lead.no_show ? (
+                    <span
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-500/15 text-red-600 dark:text-red-400"
+                      data-testid="no-show-badge"
+                    >
+                      <X className="h-3 w-3" />
+                      No Show
+                    </span>
+                  ) : (
+                    <span className="text-[12px] text-muted-foreground">—</span>
+                  )}
+                </div>
+                {/* Reschedule count */}
+                {lead.re_scheduled_count != null && lead.re_scheduled_count > 0 && (
+                  <div className="flex items-center justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <RefreshCw className="h-3 w-3 text-muted-foreground/60" />
+                      <span className="text-[11px] text-muted-foreground">Rescheduled</span>
+                    </div>
+                    <span
+                      className="text-[12px] font-semibold text-amber-600 dark:text-amber-400 tabular-nums"
+                      data-testid="reschedule-count"
+                    >
+                      {lead.re_scheduled_count}×
+                    </span>
+                  </div>
+                )}
               </div>
             </>
           )}
 
-          {/* AI */}
+          {/* AI Insights */}
           {(lead.ai_sentiment || lead.ai_memory) && (
             <>
               <SectionTitle icon={<Bot className="h-3.5 w-3.5" />} title="AI Insights" />
-              <div className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5">
-                <InfoRow label="Sentiment" value={lead.ai_sentiment} />
+              <div
+                className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5"
+                data-testid="ai-insights-section"
+              >
+                {/* Sentiment badge — color coded */}
+                {lead.ai_sentiment && (
+                  <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
+                    <span className="text-[11px] text-muted-foreground shrink-0">Sentiment</span>
+                    <SentimentBadge sentiment={lead.ai_sentiment} />
+                  </div>
+                )}
+                {/* AI memory — formatted readably */}
                 {lead.ai_memory && (
-                  <div className="py-1.5 border-b border-border/30 last:border-0">
-                    <div className="text-[11px] text-muted-foreground mb-1">Memory</div>
-                    <p className="text-[12px] text-foreground leading-relaxed">{lead.ai_memory}</p>
+                  <div className="py-1.5" data-testid="ai-memory-display">
+                    <div className="text-[11px] text-muted-foreground mb-1.5">AI Memory</div>
+                    <pre className="text-[11px] text-foreground/80 leading-relaxed whitespace-pre-wrap font-sans break-words">
+                      {formatAiMemory(lead.ai_memory)}
+                    </pre>
                   </div>
                 )}
               </div>
