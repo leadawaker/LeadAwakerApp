@@ -13,6 +13,7 @@ import {
 
 /* ─────────── Pipeline column configuration ─────────── */
 
+// DB values for Conversion_Status field
 const PIPELINE_STAGES = [
   "New",
   "Contacted",
@@ -23,6 +24,18 @@ const PIPELINE_STAGES = [
   "Lost",
   "DND",
 ] as const;
+
+// Display labels for each pipeline stage (may differ from DB value)
+const STAGE_LABELS: Record<string, string> = {
+  New: "New",
+  Contacted: "Contacted",
+  Responded: "Responded",
+  "Multiple Responses": "Multiple Responses",
+  Qualified: "Qualified",
+  Booked: "Call Booked",
+  Lost: "Lost",
+  DND: "DND",
+};
 
 const STAGE_STYLES: Record<
   string,
@@ -245,7 +258,7 @@ function KanbanColumn({
       <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border/30">
         <div className={cn("w-2 h-2 rounded-full flex-shrink-0", styles.dot)} />
         <span className="font-semibold text-sm text-foreground truncate">
-          {stage}
+          {STAGE_LABELS[stage] ?? stage}
         </span>
         <Badge
           className={cn(
@@ -284,31 +297,61 @@ function KanbanColumn({
 interface LeadsKanbanProps {
   leads: any[];
   loading?: boolean;
+  /** When a campaign is selected, show only stages present for that campaign */
+  campaignId?: string;
 }
 
-export function LeadsKanban({ leads, loading }: LeadsKanbanProps) {
+export function LeadsKanban({ leads, loading, campaignId }: LeadsKanbanProps) {
+  // Determine which pipeline stages to display.
+  // When a campaign is selected, derive stages from the actual leads in that
+  // campaign (keeping PIPELINE_STAGES order). This lets the board adapt to
+  // campaigns that only use a subset of the standard stages.
+  // When no campaign is selected, fall back to all standard stages.
+  const activeStages = useMemo((): string[] => {
+    if (!campaignId) {
+      // No campaign filter — show every standard stage (including empties)
+      return [...PIPELINE_STAGES];
+    }
+
+    // Collect the unique conversion_status values present in the filtered leads
+    const usedStages = new Set(
+      leads.map(
+        (lead) => lead.conversion_status || lead.Conversion_Status || "New"
+      )
+    );
+
+    // Keep PIPELINE_STAGES order; only include stages that have leads
+    const filtered = (PIPELINE_STAGES as readonly string[]).filter((s) =>
+      usedStages.has(s)
+    );
+
+    // If the campaign has no leads yet, fall back to all stages so the board
+    // doesn't appear broken
+    return filtered.length > 0 ? filtered : [...PIPELINE_STAGES];
+  }, [campaignId, leads]);
+
   // Group leads by conversion_status
   const groupedLeads = useMemo(() => {
     const groups: Record<string, any[]> = {};
 
-    // Initialize all stages (even empty ones)
-    for (const stage of PIPELINE_STAGES) {
+    // Initialize only the active stages
+    for (const stage of activeStages) {
       groups[stage] = [];
     }
 
     // Distribute leads into their pipeline stages
     for (const lead of leads) {
       const status = lead.conversion_status || lead.Conversion_Status || "New";
-      if (groups[status]) {
+      if (groups[status] !== undefined) {
         groups[status].push(lead);
-      } else {
-        // Unknown status goes to "New"
+      } else if (groups["New"] !== undefined) {
+        // Unknown status falls back to "New" (if it is an active stage)
         groups["New"].push(lead);
       }
     }
 
     return groups;
-  }, [leads]);
+  }, [leads, activeStages]);
 
   if (loading) {
     return (
@@ -355,12 +398,13 @@ export function LeadsKanban({ leads, loading }: LeadsKanbanProps) {
     <div
       className="flex gap-3 overflow-x-auto pb-4 px-1 -mx-1"
       data-testid="kanban-board"
+      data-campaign-id={campaignId || "all"}
     >
-      {PIPELINE_STAGES.map((stage) => (
+      {activeStages.map((stage) => (
         <KanbanColumn
           key={stage}
           stage={stage}
-          leads={groupedLeads[stage]}
+          leads={groupedLeads[stage] || []}
         />
       ))}
     </div>
