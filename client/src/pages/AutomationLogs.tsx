@@ -14,6 +14,7 @@ import {
   PlayCircle,
   Search,
   AlertTriangle,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SkeletonTable } from "@/components/ui/skeleton";
@@ -48,6 +49,8 @@ export default function AutomationLogsPage() {
   const [campaignId, setCampaignId] = useState<number | "all">("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [workflowFilter, setWorkflowFilter] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
   const [page, setPage] = useState(0);
   const [automationLogs, setAutomationLogs] = useState<any[]>([]);
   const [allLeads, setAllLeads] = useState<any[]>([]);
@@ -114,6 +117,22 @@ export default function AutomationLogsPage() {
         const name = (r.workflowName || r.workflow_name || "").toLowerCase();
         return name.includes(workflowFilter.trim().toLowerCase());
       })
+      .filter((r: any) => {
+        const rawDate = r.created_at || r.CreatedAt;
+        if (!rawDate) return true; // no date → always show
+        const logDate = new Date(rawDate);
+        if (dateFrom) {
+          // dateFrom is "YYYY-MM-DD"; compare start of day
+          const from = new Date(dateFrom + "T00:00:00");
+          if (logDate < from) return false;
+        }
+        if (dateTo) {
+          // dateTo is "YYYY-MM-DD"; compare end of day
+          const to = new Date(dateTo + "T23:59:59.999");
+          if (logDate > to) return false;
+        }
+        return true;
+      })
       .map((log: any) => {
         const leadId = log.lead_id || log.leads_id || log.Leads_id;
         const accountId = log.account_id || log.accounts_id || log.Accounts_id;
@@ -130,7 +149,7 @@ export default function AutomationLogsPage() {
       });
 
     return baseRows;
-  }, [automationLogs, allLeads, allAccounts, allCampaigns, campaignId, statusFilter, workflowFilter]);
+  }, [automationLogs, allLeads, allAccounts, allCampaigns, campaignId, statusFilter, workflowFilter, dateFrom, dateTo]);
 
   const pageSize = 100;
   const paginatedRows = rows.slice(page * pageSize, (page + 1) * pageSize);
@@ -147,7 +166,7 @@ export default function AutomationLogsPage() {
             selectedCampaignId={campaignId}
             setSelectedCampaignId={setCampaignId}
           />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
@@ -158,6 +177,36 @@ export default function AutomationLogsPage() {
                 className="h-9 w-[200px] pl-8 text-sm"
                 data-testid="input-workflow-filter"
               />
+            </div>
+            {/* Date range filter */}
+            <div className="flex items-center gap-1.5" data-testid="date-range-filter">
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => { setDateFrom(e.target.value); setPage(0); }}
+                className="h-9 w-[150px] text-sm cursor-pointer"
+                data-testid="input-date-from"
+                title="From date"
+              />
+              <span className="text-xs text-muted-foreground select-none">–</span>
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => { setDateTo(e.target.value); setPage(0); }}
+                className="h-9 w-[150px] text-sm cursor-pointer"
+                data-testid="input-date-to"
+                title="To date"
+              />
+              {(dateFrom || dateTo) && (
+                <button
+                  onClick={() => { setDateFrom(""); setDateTo(""); setPage(0); }}
+                  className="h-9 w-9 flex items-center justify-center rounded-md border border-border bg-card hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+                  data-testid="btn-clear-date-filter"
+                  title="Clear date filter"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
             <Select
               value={String(campaignId)}
