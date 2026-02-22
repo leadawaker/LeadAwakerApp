@@ -1,3 +1,54 @@
+## Session 2026-02-22 - Coding Agent (Feature #78)
+
+### Completed Features:
+- Feature #78: Interaction timeline - PASSING
+
+### Implementation Details:
+
+Feature requirement: Chronological list of all interactions (messages) for the lead, showing content, direction, timestamp, and AI/human indicator.
+
+Steps verified:
+1. Timeline shows all interactions for the lead - No limit, fetches all via /api/interactions?leadId=X
+2. Chronological ordering - Client-side sort by created_at ASC (oldest first; API returns DESC)
+3. AI-generated messages have distinct styling - Blue tint background + "AI" badge with Bot icon
+4. Timestamps are readable and formatted - fmtDateTime (e.g., "22 Feb 2026, 10:30 AM")
+
+**Modified: client/src/features/leads/components/LeadDetailPanel.tsx**
+
+1. Updated Interaction interface with new fields:
+   - Content?: string (uppercase DB column name)
+   - Who?: string (uppercase DB column name)
+   - ai_generated?: boolean (marks AI messages)
+   - is_manual_follow_up?: boolean (marks human agent messages)
+   - is_bump?: boolean (marks automated bump messages)
+   - status?: string, sentiment_detected?: string
+
+2. Changed fetch from /api/interactions?leadId=${leadId}&limit=5 to /api/interactions?leadId=${leadId}
+   - Removed client-side .slice(0, 5) restriction
+   - Added ASC sort by created_at after fetch
+
+3. Redesigned "Recent Messages" section → "Interaction Timeline"
+   - Section title shows count: "Timeline (N)"
+   - Scrollable container (max-h-[320px] overflow-y-auto)
+   - AI messages: blue tint bg + "AI" badge with Bot icon (data-testid="interaction-ai-badge-{id}")
+   - Human outbound messages: purple tint bg + "Human" badge with User icon
+   - Bump messages: amber "Bump" badge
+   - Direction indicator: "↑ Sent" or "↓ Received" (data-testid="interaction-direction-{id}")
+   - Timestamp per message (data-testid="interaction-timestamp-{id}")
+   - Content from m.Content || m.content (handles DB uppercase field name)
+   - data-testid="interaction-timeline" on scrollable container
+   - data-ai-generated="true"/"false" attribute on each row
+
+### Verification:
+1. Build: npx vite build - success, 3990 modules, no TypeScript errors
+2. No mock data patterns in updated file
+3. Feature marked passing
+4. Git commit: 056bc32
+
+### Current Status:
+- 194/207 features passing (+1 this session)
+- Feature #78 marked passing
+
 ## Session 2026-02-22 - Coding Agent (Feature #76)
 
 ### Completed Features:
@@ -566,3 +617,23 @@ data-testid attributes: pipeline-stage-row, pipeline-stage-trigger, pipeline-sta
 - 194/207 features passing (+1 this session, 93.7%)
 - Feature #77 marked passing after build verification
 - Git commit: f2efbe8
+
+## Session 2026-02-22 - Coding Agent (Feature #75 - Already Passing)
+
+### Summary:
+Assigned Feature #75 "Lead info header".
+
+Upon claiming the feature via feature_claim_and_get, the MCP tool returned: "Feature with ID 75 is already passing"
+
+This confirms the feature was successfully completed in a prior session (commit fe4381d).
+
+Implementation details from prior session:
+- Enhanced Lead info header in LeadDetailPanel.tsx
+- Added data-testid attributes: lead-info-header, lead-header-meta, lead-detail-priority-badge, lead-detail-panel-email, lead-detail-panel-source
+- Added PriorityBadge with data-priority attribute
+- Added email and source rows to the header section
+
+### Current Status:
+- 194/207 features passing (93.7%)
+- Feature #75: Lead info header - ALREADY PASSING (commit fe4381d)
+- No additional work needed this session
