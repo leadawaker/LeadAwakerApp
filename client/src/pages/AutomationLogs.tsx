@@ -138,28 +138,55 @@ export default function AutomationLogsPage() {
             selectedCampaignId={campaignId}
             setSelectedCampaignId={setCampaignId}
           />
-          <Select
-            value={statusFilter}
-            onValueChange={(v) => { setStatusFilter(v); setPage(0); }}
-          >
-            <SelectTrigger
-              className="h-9 w-[160px] text-sm"
-              data-testid="select-status-filter"
+          <div className="flex items-center gap-2">
+            <Select
+              value={String(campaignId)}
+              onValueChange={(v) => { setCampaignId(v === "all" ? "all" : Number(v)); setPage(0); }}
             >
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTIONS.map((opt) => (
-                <SelectItem
-                  key={opt.value}
-                  value={opt.value}
-                  data-testid={`option-status-${opt.value}`}
-                >
-                  {opt.label}
+              <SelectTrigger
+                className="h-9 w-[200px] text-sm"
+                data-testid="select-campaign-filter"
+              >
+                <SelectValue placeholder="All Campaigns" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" data-testid="option-campaign-all">
+                  All Campaigns
                 </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                {allCampaigns.map((c: any) => (
+                  <SelectItem
+                    key={c.id || c.Id}
+                    value={String(c.id || c.Id)}
+                    data-testid={`option-campaign-${c.id || c.Id}`}
+                  >
+                    {c.name || `Campaign ${c.id || c.Id}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => { setStatusFilter(v); setPage(0); }}
+            >
+              <SelectTrigger
+                className="h-9 w-[160px] text-sm"
+                data-testid="select-status-filter"
+              >
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    data-testid={`option-status-${opt.value}`}
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {error && automationLogs.length === 0 && !loading ? (
