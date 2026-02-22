@@ -44,6 +44,21 @@ const STATUS_OPTIONS = [
   { value: "failed", label: "Failed" },
 ];
 
+function formatExecutionTime(ms: number | null | undefined): string {
+  if (ms == null) return "—";
+  const num = Number(ms);
+  if (isNaN(num)) return "—";
+  if (num < 1000) return `${Math.round(num)}ms`;
+  return `${(num / 1000).toFixed(2)}s`;
+}
+
+function formatDuration(seconds: number | null | undefined): string | null {
+  if (seconds == null) return null;
+  const num = Number(seconds);
+  if (isNaN(num)) return null;
+  return `${num.toFixed(1)}s`;
+}
+
 export default function AutomationLogsPage() {
   const { currentAccountId, isAgencyView } = useWorkspace();
   const [campaignId, setCampaignId] = useState<number | "all">("all");
@@ -273,13 +288,15 @@ export default function AutomationLogsPage() {
           >
             <div className="overflow-x-auto flex-1 min-h-0 flex flex-col">
             {/* Header */}
-            <div className="shrink-0 grid grid-cols-[140px_140px_140px_1fr_1fr_1fr_1fr_180px] min-w-[940px] gap-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-card border-b border-border px-6 py-4 sticky top-0 z-10">
+            <div className="shrink-0 grid grid-cols-[140px_140px_140px_1fr_1fr_1fr_1fr_110px_140px] min-w-[1040px] gap-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-card border-b border-border px-6 py-4 sticky top-0 z-10">
               <div>Workflow</div>
               <div>Step</div>
               <div>Status</div>
               <div>Lead</div>
               <div>Account</div>
               <div>Campaign</div>
+              <div className="text-right">Exec Time</div>
+              <div className="text-right">Duration</div>
               <div className="text-right">Created At</div>
             </div>
 
@@ -299,7 +316,7 @@ export default function AutomationLogsPage() {
                     key={r.id || r.Id || idx}
                     data-testid={isCritical ? "row-critical-error" : "row-log"}
                     className={cn(
-                      "grid grid-cols-[140px_140px_140px_1fr_1fr_1fr_1fr_180px] min-w-[940px] gap-4 px-6 py-4 text-sm items-center transition-colors",
+                      "grid grid-cols-[140px_140px_140px_1fr_1fr_1fr_1fr_110px_140px] min-w-[1040px] gap-4 px-6 py-4 text-sm items-center transition-colors",
                       isCritical
                         ? "bg-red-500/5 border-l-2 border-l-red-500 hover:bg-red-500/10 dark:bg-red-950/20 dark:hover:bg-red-950/30"
                         : "bg-card hover:bg-muted/30"
@@ -353,6 +370,30 @@ export default function AutomationLogsPage() {
 
                     <div className="text-muted-foreground truncate">
                       {r.campaign?.name || "N/A"}
+                    </div>
+
+                    <div
+                      className="text-[11px] text-muted-foreground text-right"
+                      data-testid="cell-exec-time"
+                    >
+                      <span className={cn(
+                        "font-mono",
+                        r.execution_time_ms != null ? "text-foreground" : "text-muted-foreground/50"
+                      )}>
+                        {formatExecutionTime(r.execution_time_ms)}
+                      </span>
+                    </div>
+
+                    <div
+                      className="text-[11px] text-muted-foreground text-right"
+                      data-testid="cell-duration"
+                    >
+                      <span className={cn(
+                        "font-mono",
+                        r.duration_seconds != null ? "text-foreground" : "text-muted-foreground/50"
+                      )}>
+                        {formatDuration(r.duration_seconds) ?? "—"}
+                      </span>
                     </div>
 
                     <div className="text-[11px] text-muted-foreground text-right">
