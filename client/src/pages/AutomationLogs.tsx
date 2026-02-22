@@ -124,7 +124,7 @@ export default function AutomationLogsPage() {
             isRetrying={loading}
           />
         ) : loading ? (
-          <SkeletonTable rows={8} columns={6} className="flex-1" />
+          <SkeletonTable rows={8} columns={7} className="flex-1" />
         ) : (
           <div
             className="flex-1 min-h-0 bg-card rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden relative"
@@ -132,8 +132,9 @@ export default function AutomationLogsPage() {
           >
             <div className="overflow-x-auto flex-1 min-h-0 flex flex-col">
             {/* Header */}
-            <div className="shrink-0 grid grid-cols-[100px_160px_1fr_1fr_1fr_180px] min-w-[760px] gap-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-card border-b border-border px-6 py-4 sticky top-0 z-10">
-              <div>Execution</div>
+            <div className="shrink-0 grid grid-cols-[140px_140px_140px_1fr_1fr_1fr_1fr_180px] min-w-[940px] gap-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-card border-b border-border px-6 py-4 sticky top-0 z-10">
+              <div>Workflow</div>
+              <div>Step</div>
               <div>Status</div>
               <div>Lead</div>
               <div>Account</div>
@@ -154,10 +155,18 @@ export default function AutomationLogsPage() {
                 return (
                   <div
                     key={r.id || r.Id || idx}
-                    className="grid grid-cols-[100px_160px_1fr_1fr_1fr_180px] min-w-[760px] gap-4 px-6 py-4 text-sm items-center hover:bg-muted/30 transition-colors bg-card"
+                    className="grid grid-cols-[140px_140px_140px_1fr_1fr_1fr_1fr_180px] min-w-[940px] gap-4 px-6 py-4 text-sm items-center hover:bg-muted/30 transition-colors bg-card"
                   >
-                    <div className="font-mono text-xs text-muted-foreground">
-                      #{r.execution_time_ms || r.id || r.Id}
+                    <div className="min-w-0">
+                      <div className="font-medium text-foreground truncate" title={r.workflowName || r.workflow_name || "N/A"}>
+                        {r.workflowName || r.workflow_name || "N/A"}
+                      </div>
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="text-muted-foreground truncate text-xs" title={r.stepName || r.step_name || "N/A"}>
+                        {r.stepName || r.step_name || "N/A"}
+                      </div>
                     </div>
 
                     <div>
