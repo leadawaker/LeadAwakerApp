@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Sheet,
   SheetContent,
@@ -13,6 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/apiUtils";
 import { cn } from "@/lib/utils";
 import {
@@ -31,6 +33,9 @@ import {
   ArrowUpCircle,
   BarChart2,
   CheckCircle2,
+  X,
+  Plus,
+  Save,
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -63,6 +68,23 @@ interface Interaction {
   is_bump?: boolean;
   status?: string;
   sentiment_detected?: string;
+}
+
+interface TagData {
+  id: number;
+  name: string;
+  color?: string | null;
+  category?: string | null;
+  slug?: string | null;
+}
+
+interface LeadTagEntry {
+  id?: number;
+  tagsId?: number;
+  Tags_id?: number;
+  leadsId?: number;
+  Leads_id?: number;
+  tagName?: string | null;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -254,6 +276,21 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   const [savingStatus, setSavingStatus] = useState(false);
   const [stageSaved, setStageSaved] = useState(false);
 
+  // ── Tags state ──
+  const [leadTags, setLeadTags] = useState<TagData[]>([]);
+  const [availableTags, setAvailableTags] = useState<TagData[]>([]);
+  const [loadingTags, setLoadingTags] = useState(false);
+  const [addingTag, setAddingTag] = useState(false);
+  const [removingTagId, setRemovingTagId] = useState<number | null>(null);
+  const [showTagDropdown, setShowTagDropdown] = useState(false);
+
+  // ── Notes editing state ──
+  const [localNotes, setLocalNotes] = useState<string>("");
+  const [notesDirty, setNotesDirty] = useState(false);
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [notesSaved, setNotesSaved] = useState(false);
+  const notesOriginalRef = useRef<string>("");
+
   const leadId = lead?.Id || lead?.id;
 
   // Sync localStatus when lead changes
@@ -262,6 +299,15 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
     setLocalStatus(status);
     setStageSaved(false);
   }, [lead?.Id, lead?.id, lead?.Conversion_Status, lead?.conversion_status]);
+
+  // Sync notes when lead changes
+  useEffect(() => {
+    const notes = lead?.notes || "";
+    notesOriginalRef.current = notes;
+    setLocalNotes(notes);
+    setNotesDirty(false);
+    setNotesSaved(false);
+  }, [lead?.Id, lead?.id, lead?.notes]);
 
   // Fetch interactions when panel opens with a lead
   useEffect(() => {
@@ -297,6 +343,106 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
     return () => { cancelled = true; };
   }, [open, leadId]);
 
+  // ── Fetch lead tags when panel opens ──
+  useEffect(() => {
+    if (!open || !leadId) {
+      setLeadTags([]);
+      setShowTagDropdown(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingTags(true);
+
+    // Fetch lead's current tags (returns Leads_Tags rows with tagName denormalized)
+    apiFetch(`/api/leads/${leadId}/tags`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: LeadTagEntry[]) => {
+        if (cancelled) return;
+        const arr = Array.isArray(data) ? data : [];
+        // Convert LeadTagEntry rows to TagData for display
+        // The Leads_Tags table has a tagName denormalized field
+        const tagList: TagData[] = arr
+          .filter((e) => e.tagsId || e.Tags_id)
+          .map((e) => ({
+            id: e.tagsId ?? e.Tags_id ?? 0,
+            name: e.tagName || `Tag #${e.tagsId ?? e.Tags_id}`,
+            color: null,
+            category: null,
+          }));
+        setLeadTags(tagList);
+      })
+      .catch(() => { if (!cancelled) setLeadTags([]); })
+      .finally(() => { if (!cancelled) setLoadingTags(false); });
+
+    return () => { cancelled = true; };
+  }, [open, leadId]);
+
+  // ── Fetch available tags once ──
+  useEffect(() => {
+    if (!open) return;
+    apiFetch("/api/tags")
+      .then((r) => r.ok ? r.json() : Promise.resolve([]))
+      .then((data: any) => {
+        const arr: any[] = Array.isArray(data) ? data : data?.list || data?.data || [];
+        setAvailableTags(arr.map((t: any) => ({
+          id: t.Id ?? t.id,
+          name: t.Name ?? t.name ?? "Tag",
+          color: t.Color ?? t.color ?? null,
+          category: t.Category ?? t.category ?? null,
+          slug: t.Slug ?? t.slug ?? null,
+        })));
+      })
+      .catch(() => {});
+  }, [open]);
+
+  const handleAddTag = async (tag: TagData) => {
+    if (!leadId) return;
+    // Already assigned?
+    if (leadTags.some((t) => t.id === tag.id)) {
+      setShowTagDropdown(false);
+      return;
+    }
+    setAddingTag(true);
+    try {
+      const res = await apiFetch(`/api/leads/${leadId}/tags`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tagId: tag.id }),
+      });
+      if (res.ok) {
+        setLeadTags((prev) => [...prev, tag]);
+      }
+    } catch {
+      // silently ignore
+    } finally {
+      setAddingTag(false);
+      setShowTagDropdown(false);
+    }
+  };
+
+  const handleRemoveTag = async (tagId: number) => {
+    if (!leadId) return;
+    setRemovingTagId(tagId);
+    try {
+      const res = await apiFetch(`/api/leads/${leadId}/tags/${tagId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setLeadTags((prev) => prev.filter((t) => t.id !== tagId));
+      }
+    } catch {
+      // silently ignore
+    } finally {
+      setRemovingTagId(null);
+    }
+  };
+
+  // Derive available tags that aren't yet assigned
+  const unassignedTags = availableTags.filter(
+    (t) => !leadTags.some((lt) => lt.id === t.id)
+  );
+
   const handleStageChange = async (newStage: string) => {
     if (!leadId || newStage === localStatus) return;
 
@@ -322,6 +468,29 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
       setLocalStatus(prevStatus); // revert on error
     } finally {
       setSavingStatus(false);
+    }
+  };
+
+  const handleNotesSave = async () => {
+    if (!leadId || !notesDirty || savingNotes) return;
+    setSavingNotes(true);
+    setNotesSaved(false);
+    try {
+      const res = await apiFetch(`/api/leads/${leadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: localNotes }),
+      });
+      if (res.ok) {
+        notesOriginalRef.current = localNotes;
+        setNotesDirty(false);
+        setNotesSaved(true);
+        setTimeout(() => setNotesSaved(false), 2000);
+      }
+    } catch {
+      // silently fail — user can retry
+    } finally {
+      setSavingNotes(false);
     }
   };
 
@@ -594,17 +763,152 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
             </>
           )}
 
-          {/* Notes */}
-          {lead.notes && (
-            <>
-              <SectionTitle icon={<StickyNote className="h-3.5 w-3.5" />} title="Notes" />
-              <div className="rounded-xl border border-border/40 bg-muted/20 p-3">
-                <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap" data-testid="lead-detail-panel-notes">
-                  {lead.notes}
-                </p>
+          {/* Notes — editable */}
+          <div data-testid="lead-notes-section">
+            <div className="flex items-center justify-between mb-2 mt-4">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground"><StickyNote className="h-3.5 w-3.5" /></span>
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Notes</h3>
               </div>
-            </>
-          )}
+              <div className="flex items-center gap-1.5">
+                {savingNotes && (
+                  <Loader2
+                    className="h-3 w-3 animate-spin text-muted-foreground"
+                    data-testid="notes-saving-indicator"
+                  />
+                )}
+                {notesSaved && !savingNotes && (
+                  <span className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400" data-testid="notes-saved-indicator">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Saved
+                  </span>
+                )}
+                {notesDirty && !savingNotes && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleNotesSave}
+                    className="h-6 px-2 text-[11px] gap-1"
+                    data-testid="notes-save-button"
+                    aria-label="Save notes"
+                  >
+                    <Save className="h-3 w-3" />
+                    Save
+                  </Button>
+                )}
+              </div>
+            </div>
+            <div className="rounded-xl border border-border/40 bg-muted/20 p-2">
+              <Textarea
+                value={localNotes}
+                onChange={(e) => {
+                  setLocalNotes(e.target.value);
+                  setNotesDirty(e.target.value !== notesOriginalRef.current);
+                  setNotesSaved(false);
+                }}
+                onBlur={handleNotesSave}
+                placeholder="Add notes about this lead…"
+                className="min-h-[80px] resize-none text-[12px] bg-transparent border-0 shadow-none focus-visible:ring-0 p-1 leading-relaxed"
+                data-testid="lead-notes-textarea"
+                disabled={savingNotes}
+              />
+            </div>
+          </div>
+
+          {/* Tags */}
+          <SectionTitle icon={<Tag className="h-3.5 w-3.5" />} title="Tags" />
+          <div
+            className="rounded-xl border border-border/40 bg-muted/20 px-3 py-3"
+            data-testid="lead-detail-tags-section"
+          >
+            {loadingTags ? (
+              <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Loading tags…
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-1.5" data-testid="lead-tags-chips">
+                {/* Existing tag chips */}
+                {leadTags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-violet-500/15 text-violet-700 dark:text-violet-300 ring-1 ring-violet-500/20"
+                    data-testid={`lead-tag-chip-${tag.id}`}
+                    data-tag-id={tag.id}
+                    data-tag-name={tag.name}
+                  >
+                    <Tag className="h-2.5 w-2.5 shrink-0" />
+                    {tag.name}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag.id)}
+                      disabled={removingTagId === tag.id}
+                      className="ml-0.5 rounded-full hover:bg-violet-500/20 transition-colors disabled:opacity-50"
+                      aria-label={`Remove tag ${tag.name}`}
+                      data-testid={`lead-tag-remove-${tag.id}`}
+                    >
+                      {removingTagId === tag.id
+                        ? <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                        : <X className="h-2.5 w-2.5" />
+                      }
+                    </button>
+                  </span>
+                ))}
+
+                {/* Add tag button + dropdown */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowTagDropdown((v) => !v)}
+                    disabled={addingTag}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border border-dashed border-border/60 text-muted-foreground hover:text-foreground hover:border-border transition-colors disabled:opacity-50"
+                    data-testid="lead-tag-add-button"
+                    aria-label="Add tag"
+                  >
+                    {addingTag
+                      ? <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                      : <Plus className="h-2.5 w-2.5" />
+                    }
+                    Add tag
+                  </button>
+
+                  {/* Tag selection dropdown */}
+                  {showTagDropdown && (
+                    <div
+                      className="absolute left-0 top-7 z-50 min-w-[180px] max-h-[200px] overflow-y-auto rounded-xl border border-border bg-popover shadow-lg py-1"
+                      data-testid="lead-tag-dropdown"
+                    >
+                      {unassignedTags.length === 0 ? (
+                        <div className="px-3 py-2 text-[12px] text-muted-foreground">
+                          {availableTags.length === 0 ? "No tags available" : "All tags already assigned"}
+                        </div>
+                      ) : (
+                        unassignedTags.map((tag) => (
+                          <button
+                            key={tag.id}
+                            type="button"
+                            onClick={() => handleAddTag(tag)}
+                            className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left hover:bg-muted/50 transition-colors"
+                            data-testid={`lead-tag-option-${tag.id}`}
+                          >
+                            <Tag className="h-3 w-3 shrink-0 text-muted-foreground" />
+                            <span className="truncate">{tag.name}</span>
+                            {tag.category && (
+                              <span className="ml-auto text-[10px] text-muted-foreground shrink-0">{tag.category}</span>
+                            )}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {leadTags.length === 0 && !showTagDropdown && (
+                  <span className="text-[12px] text-muted-foreground italic">No tags assigned</span>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Interaction Timeline */}
           <SectionTitle
