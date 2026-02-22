@@ -14,7 +14,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, Pencil, Trash2, AlertTriangle, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 /** Returns Tailwind classes for the status badge based on status value */
@@ -33,6 +33,15 @@ function getStatusBadgeClasses(status: string | null | undefined): string {
 function getStatusLabel(status: string | null | undefined): string {
   const normalized = (status || "").trim();
   return normalized || "Unknown";
+}
+
+/** Returns color classes for the performance score badge based on numeric value */
+function getScoreColorClasses(score: string | null | undefined): string {
+  const num = parseFloat(score || "");
+  if (isNaN(num)) return "text-muted-foreground";
+  if (num >= 8) return "text-emerald-600 dark:text-emerald-400";
+  if (num >= 6) return "text-amber-600 dark:text-amber-400";
+  return "text-red-600 dark:text-red-400";
 }
 
 // ─── Prompt Form Dialog ──────────────────────────────────────────────────
@@ -613,9 +622,23 @@ export default function PromptLibraryPage() {
                       )}
                     </div>
                     {/* Performance score */}
-                    {p.performanceScore != null && (
-                      <span className="font-medium" data-testid={`text-prompt-score-${promptId}`}>
-                        score: {p.performanceScore}
+                    {p.performanceScore != null ? (
+                      <span
+                        className={`inline-flex items-center gap-1 font-medium ${getScoreColorClasses(p.performanceScore)}`}
+                        title="Performance score"
+                        data-testid={`text-prompt-score-${promptId}`}
+                      >
+                        <Star className="h-3 w-3 fill-current" />
+                        {p.performanceScore}
+                      </span>
+                    ) : (
+                      <span
+                        className="inline-flex items-center gap-1 text-muted-foreground/50"
+                        title="No performance score yet"
+                        data-testid={`text-prompt-score-empty-${promptId}`}
+                      >
+                        <Star className="h-3 w-3" />
+                        <span className="text-[10px]">—</span>
                       </span>
                     )}
                   </div>
