@@ -1,83 +1,88 @@
 {
-  "f9": {
-    "step1_expanded_labels": [
-      "Dashboard",
-      "Accounts",
-      "Campaigns",
-      "Leads",
-      "Chats",
-      "Calendar",
-      "Tags",
-      "Library",
-      "Users",
-      "Automations",
-      "Settings"
-    ],
-    "step1_pass": true,
-    "step2_collapsed_pass": true,
-    "step3_expand_pass": true,
-    "step4_persist_pass": true
-  },
-  "f10": {
-    "admin_count": 11,
-    "admin_items": [
-      "Dashboard",
-      "Accounts",
-      "Campaigns",
-      "Leads",
-      "Chats",
-      "Calendar",
-      "Tags",
-      "Library",
-      "Users",
-      "Automations",
-      "Settings"
-    ],
-    "admin_pass": true,
-    "viewer_count": 5,
-    "viewer_items": [
-      "Dashboard",
-      "Campaigns",
-      "Leads",
-      "Chats",
-      "Calendar"
-    ],
-    "viewer_pass": true,
-    "restricted_url": "http://localhost:5173/subaccount/dashboard",
-    "restricted_redirected": true
-  },
-  "f11": {
-    "admin_switcher_visible": true,
-    "accounts": [
+  "feature9": {
+    "steps": [
       {
-        "id": "sidebar-account-option-5",
-        "text": "PPepsi"
+        "step": "Initial state: sidebar expanded",
+        "pass": true,
+        "note": "Width=180px (expected >100px for expanded)"
       },
       {
-        "id": "sidebar-account-option-25",
-        "text": "PPaul Mackartney"
+        "step": "Step 1: Click collapse toggle, sidebar shrinks to icon-only",
+        "pass": true,
+        "note": "Width=60px (expected <100px for icon-only)"
       },
       {
-        "id": "sidebar-account-option-2",
-        "text": "vvan de Kerkhof"
+        "step": "Step 1b: Nav labels hidden in collapsed state",
+        "pass": true,
+        "note": "Labels hidden (pass)"
       },
       {
-        "id": "sidebar-account-option-1",
-        "text": "WWowAgency"
+        "step": "Step 2: Click expand toggle, sidebar shows full labels",
+        "pass": false,
+        "note": "Width=60px (expected >100px for expanded)"
       },
       {
-        "id": "sidebar-account-option-3",
-        "text": "AAstra-Zeneca 2"
-      },
-      {
-        "id": "sidebar-account-option-4",
-        "text": "CCoca-Cola 2"
+        "step": "Step 2b: Nav labels visible after expand",
+        "pass": false,
+        "note": "Labels still hidden (fail)"
       }
     ],
-    "switched": true,
-    "url_after_switch": "http://localhost:5173/subaccount/dashboard",
-    "is_subaccount": true,
-    "switcher_text_after": "PPepsi",
-    "viewer_no_switcher": true
+    "pass": false,
+    "error": "elementHandle.click: Timeout 30000ms exceeded.\nCall log:\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <html lang=\"en\">…</html> intercepts pointer events\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is visible, enabled and stable\n      - scrolling into view if needed\n      - done scrolling\n      - <html lang=\"en\">…</html> intercepts pointer events\n    - retrying click action\n      - waiting 100ms\n    57 × waiting for element to be visible, enabled and stable\n       - element is visible, enabled and stable\n       - scrolling into view if needed\n       - done scrolling\n       - <html lang=\"en\">…</html> intercepts pointer events\n     - retrying click action\n       - waiting 500ms\n"
+  },
+  "feature10": {
+    "steps": [
+      {
+        "step": "Admin sees all 11 nav items",
+        "pass": true,
+        "note": "Found 11 nav items: Dashboard, Accounts, Campaigns, Leads, Chats, Calendar, Tags, Library, Users, Automations, Settings"
+      },
+      {
+        "step": "Admin sees agency-only items (accounts, tags, users, automation, library, settings)",
+        "pass": true,
+        "note": "settings=true, accounts=true, tags=true, users=true, automation=true, library=true"
+      },
+      {
+        "step": "Viewer/Manager sees only 5 allowed pages (no agency-only items)",
+        "pass": true,
+        "note": "Found 5 nav items: Dashboard, Campaigns, Leads, Chats, Calendar"
+      },
+      {
+        "step": "Viewer does NOT see agency-only items",
+        "pass": true,
+        "note": "settings=false, accounts=false, tags=false, users=false, automation=false, library=false"
+      },
+      {
+        "step": "Step 3: Hidden pages not accessible via direct URL for viewer",
+        "pass": true,
+        "note": "URL after access attempt: http://localhost:5173/subaccount/dashboard, redirected/blocked: true"
+      }
+    ],
+    "pass": true
+  },
+  "feature11": {
+    "steps": [
+      {
+        "step": "Step 1: Admin sees account switcher in sidebar",
+        "pass": true,
+        "note": "Account switcher found [data-testid=\"sidebar-account-switcher\"]"
+      },
+      {
+        "step": "Step 2: Account switcher dropdown opens with accounts list",
+        "pass": true,
+        "note": "Found 7 account options in dropdown"
+      },
+      {
+        "step": "Step 2b: Selecting account filters page data to that account",
+        "pass": true,
+        "note": "URL: http://localhost:5173/subaccount/dashboard, localStorage account: 4"
+      },
+      {
+        "step": "Step 3: Client/Viewer user does NOT see account switcher",
+        "pass": true,
+        "note": "Account switcher hidden for viewer (PASS)"
+      }
+    ],
+    "pass": true
   }
 }

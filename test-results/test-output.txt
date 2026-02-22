@@ -1,0 +1,86 @@
+============================================================
+REGRESSION TESTS: Features 9, 10, 11
+Time: 2026-02-22T01:05:45.420Z
+============================================================
+
+=== FEATURE 9: Collapsible Sidebar ===
+  ⚠ waitForURL timed out — current URL: http://localhost:5173/login
+  Post-login URL: http://localhost:5173/agency/dashboard
+  ✅ PASS: Logged in as Admin
+  Initial sidebar width: 180px
+  Initially collapsed: false
+  Buttons with "Collapse" text: 1
+  Width after collapse: 60px
+  ✅ PASS: Step 1: Sidebar collapsed to icon-only (60px)
+  ✅ PASS: Step 1: Text labels hidden in collapsed mode
+  Buttons in collapsed sidebar: 4
+  Clicked expand btn at y=700, new width=180
+  Width after expand: 180px
+  ✅ PASS: Step 2: Sidebar expanded back to full width (180px)
+  ✅ PASS: Step 2: Text labels visible in expanded mode
+  Step 3: Testing persistence across page navigation...
+  Pre-nav width: 180, collapsed: false
+  Post-nav width: 180, collapsed: false
+  ✅ PASS: Step 3: Sidebar state persisted across navigation
+  localStorage[sidebar-collapsed] = false
+  ✅ PASS: Step 3: Collapse state persisted in localStorage: "false"
+  ✅ PASS: No JS errors detected
+Feature 9: 8 passed, 0 failed
+
+=== FEATURE 10: Role-Based Navigation Items ===
+  Step 1: Admin nav items...
+  ⚠ waitForURL timed out — current URL: http://localhost:5173/login
+  Post-login URL: http://localhost:5173/agency/dashboard
+  Admin nav count: 11
+  Admin labels: ["Dashboard","Accounts","Campaigns","Leads","Chats","Calendar","Tags","Library","Users","Automations","Settings"]
+  ✅ PASS: Step 1: Admin sees all 11 nav items (11)
+  Admin Accounts visible: true
+  Admin Tags visible: true
+  Admin Users visible: true
+  Admin Settings visible: true
+  ✅ PASS: Step 1: Agency-only items (Accounts, Tags, Users) visible for Admin
+  ✅ PASS: Step 1: No JS errors for Admin
+  Step 2: Viewer nav items...
+  ⚠ waitForURL timed out — current URL: http://localhost:5173/login
+  Post-login URL: http://localhost:5173/subaccount/dashboard
+  Viewer nav count: 5
+  Viewer labels: ["Dashboard","Campaigns","Leads","Chats","Calendar"]
+  ✅ PASS: Step 2: Viewer sees 5 nav items (expected ~5)
+  Viewer Accounts hidden: true
+  Viewer Tags hidden: true
+  Viewer Users hidden: true
+  Viewer Settings hidden: true
+  ✅ PASS: Step 2: Agency-only items correctly hidden for Viewer
+  Step 3: Testing direct URL access to agency-only pages...
+  URL after accessing /subaccount/tags: http://localhost:5173/subaccount/dashboard
+  ✅ PASS: Step 3: Direct URL to hidden page redirected to login/dashboard
+Feature 10: 6 passed, 0 failed
+
+=== FEATURE 11: Account Switcher Dropdown ===
+  Step 1: Admin account switcher...
+  ⚠ waitForURL timed out — current URL: http://localhost:5173/login
+  Post-login URL: http://localhost:5173/agency/dashboard
+  Account switcher visible: true
+  ✅ PASS: Step 1: Account switcher visible for Admin
+  Step 2: Opening account switcher...
+  Account options: 7
+  ✅ PASS: Step 2: Account switcher dropdown shows 7 option(s)
+  Options: ["CCoca-Cola 2","TTEST_CREATE_12345","vvan de Kerkhof","PPepsi","PPaul Mackartney","WWowAgency","AAstra-Zeneca 2"]
+  Switching to option: sidebar-account-option-4
+  URL before: http://localhost:5173/agency/dashboard
+  URL after: http://localhost:5173/subaccount/dashboard
+  ✅ PASS: Step 2: Account switch changed the URL (http://localhost:5173/agency/dashboard → http://localhost:5173/subaccount/dashboard)
+  ✅ PASS: No JS errors for Admin
+  Step 3: Viewer account switcher should be hidden...
+  ⚠ waitForURL timed out — current URL: http://localhost:5173/login
+  Post-login URL: http://localhost:5173/subaccount/dashboard
+  Viewer account switcher visible: false
+  ✅ PASS: Step 3: Account switcher correctly hidden for Viewer user
+Feature 11: 5 passed, 0 failed
+
+============================================================
+FINAL SUMMARY
+============================================================
+Feature 9  (Collapsible Sidebar):   8 pass / 0 fail  → PASS ✅
+Feature 10 (Role-Based Nav):        6 pass / 0 fail  → PASS ✅
+Feature 11 (Account Switcher):      5 pass / 0 fail  → PASS ✅

@@ -1,0 +1,45 @@
+{
+  "pass": true,
+  "steps": [
+    {
+      "step": "Initial state: sidebar is expanded (width > 100px)",
+      "pass": true,
+      "note": "Width=180px"
+    },
+    {
+      "step": "Initial state: Nav labels visible (expanded)",
+      "pass": true,
+      "note": "Labels: Dashboard, Accounts, Campaigns, Leads, Chats, Calendar, Tags, Library, Users, Automations, Settings"
+    },
+    {
+      "step": "Step 1: Sidebar collapses to icon-only mode (width < 100px)",
+      "pass": true,
+      "note": "Width after collapse=60px"
+    },
+    {
+      "step": "Step 1b: Nav text labels hidden in collapsed (icon-only) state",
+      "pass": true,
+      "note": "Visible labels: 0 - "
+    },
+    {
+      "step": "Step 2: Sidebar expands back to full width with labels",
+      "pass": true,
+      "note": "Width after re-expand=180px"
+    },
+    {
+      "step": "Step 2b: Nav labels visible again after expand",
+      "pass": true,
+      "note": "Labels: Dashboard, Accounts, Campaigns, Leads, Chats, Calendar, Tags, Library, Users, Automations, Settings"
+    },
+    {
+      "step": "Step 3: Collapse state persists after navigation (localStorage + visual)",
+      "pass": true,
+      "note": "Width after nav=60px, localStorage=\"sidebar-collapsed:true\""
+    },
+    {
+      "step": "Step 3b: Collapse state persists across multiple navigations",
+      "pass": true,
+      "note": "Width after second nav=60px"
+    }
+  ]
+}

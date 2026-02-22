@@ -1,0 +1,64 @@
+{
+  "timestamp": "2026-02-22T08:49:55.303Z",
+  "results": [
+    {
+      "id": "F9-S1",
+      "label": "Sidebar collapses to icon-only [w=60, labelHidden=true]",
+      "pass": true
+    },
+    {
+      "id": "F9-S2",
+      "label": "Sidebar expands back with labels [w=180, labelVisible=true]",
+      "pass": true
+    },
+    {
+      "id": "F9-S3",
+      "label": "Collapse persists after navigation [w=60, ls=true]",
+      "pass": true
+    },
+    {
+      "id": "F10-S1",
+      "label": "Admin sees all 11 nav items (found 11)",
+      "pass": true
+    },
+    {
+      "id": "F10-S2",
+      "label": "Viewer sees 5 items (found 5, agency items hidden: true)",
+      "pass": true
+    },
+    {
+      "id": "F10-S3",
+      "label": "Restricted URL redirected (landed at: /subaccount/dashboard)",
+      "pass": true
+    },
+    {
+      "id": "F11-S1",
+      "label": "Admin sees account switcher in sidebar",
+      "pass": true
+    },
+    {
+      "id": "F11-S2",
+      "label": "Account switch updates context (1 -> 4)",
+      "pass": true
+    },
+    {
+      "id": "F11-S3",
+      "label": "Viewer does NOT see account switcher (visible: false)",
+      "pass": true
+    }
+  ],
+  "features": {
+    "9": {
+      "name": "Collapsible Sidebar",
+      "pass": true
+    },
+    "10": {
+      "name": "Role-based Navigation",
+      "pass": true
+    },
+    "11": {
+      "name": "Account Switcher Dropdown",
+      "pass": true
+    }
+  }
+}
