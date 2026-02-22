@@ -5,7 +5,36 @@ import { useDashboardRefreshInterval, REFRESH_INTERVAL_OPTIONS } from "@/hooks/u
 import { useSession } from "@/hooks/useSession";
 import { apiFetch } from "@/lib/apiUtils";
 import { Switch } from "@/components/ui/switch";
-import { Mail, MessageSquare } from "lucide-react";
+import { Mail, MessageSquare, Globe, Moon, Sun, Lock, Eye, EyeOff } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
+
+// Build list of IANA timezone identifiers from browser API with common fallback
+const TIMEZONE_LIST: string[] = (() => {
+  try {
+    if (typeof Intl !== "undefined" && "supportedValuesOf" in Intl) {
+      return (Intl as any).supportedValuesOf("timeZone") as string[];
+    }
+  } catch {
+    // fall through to fallback
+  }
+  // Curated fallback list of commonly used IANA timezones
+  return [
+    "Africa/Abidjan", "Africa/Accra", "Africa/Cairo", "Africa/Johannesburg", "Africa/Lagos", "Africa/Nairobi",
+    "America/Anchorage", "America/Argentina/Buenos_Aires", "America/Bogota", "America/Chicago",
+    "America/Denver", "America/Halifax", "America/Lima", "America/Los_Angeles", "America/Mexico_City",
+    "America/New_York", "America/Phoenix", "America/Santiago", "America/Sao_Paulo", "America/Toronto",
+    "America/Vancouver", "Asia/Bangkok", "Asia/Colombo", "Asia/Dubai", "Asia/Hong_Kong", "Asia/Jakarta",
+    "Asia/Karachi", "Asia/Kolkata", "Asia/Kuala_Lumpur", "Asia/Manila", "Asia/Seoul", "Asia/Shanghai",
+    "Asia/Singapore", "Asia/Taipei", "Asia/Tehran", "Asia/Tokyo", "Atlantic/Reykjavik",
+    "Australia/Adelaide", "Australia/Brisbane", "Australia/Melbourne", "Australia/Perth", "Australia/Sydney",
+    "Europe/Amsterdam", "Europe/Athens", "Europe/Berlin", "Europe/Brussels", "Europe/Budapest",
+    "Europe/Copenhagen", "Europe/Dublin", "Europe/Helsinki", "Europe/Istanbul", "Europe/Kiev",
+    "Europe/Lisbon", "Europe/London", "Europe/Madrid", "Europe/Moscow", "Europe/Oslo",
+    "Europe/Paris", "Europe/Prague", "Europe/Rome", "Europe/Sofia", "Europe/Stockholm",
+    "Europe/Vienna", "Europe/Warsaw", "Europe/Zurich", "Pacific/Auckland", "Pacific/Fiji",
+    "Pacific/Guam", "Pacific/Honolulu", "Pacific/Midway", "UTC",
+  ];
+})();
 
 // Full user profile shape returned by GET /api/users/:id
 type UserProfile = {
@@ -14,6 +43,7 @@ type UserProfile = {
   email: string | null;
   phone: string | null;
   avatarUrl: string | null;
+  timezone: string | null;
   role: string | null;
   status: string | null;
   accountsId: number | null;
@@ -35,6 +65,11 @@ export default function SettingsPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [timezone, setTimezone] = useState("");
+
+  // Theme state
+  const { isDark, toggleTheme } = useTheme();
+  const [isSavingTheme, setIsSavingTheme] = useState(false);
 
   // Notification preference state
   const [notifEmail, setNotifEmail] = useState<boolean>(true);
@@ -71,6 +106,7 @@ export default function SettingsPage() {
         setEmail(data.email ?? "");
         setPhone(data.phone ?? "");
         setAvatarUrl(data.avatarUrl ?? "");
+        setTimezone(data.timezone ?? "");
       })
       .catch((err) => {
         setProfileError(err.message || "Failed to load profile");
@@ -92,6 +128,7 @@ export default function SettingsPage() {
           email: email.trim() || null,
           phone: phone.trim() || null,
           avatarUrl: avatarUrl.trim() || null,
+          timezone: timezone.trim() || null,
         }),
       });
       if (!res.ok) {
@@ -104,6 +141,7 @@ export default function SettingsPage() {
       setEmail(updated.email ?? "");
       setPhone(updated.phone ?? "");
       setAvatarUrl(updated.avatarUrl ?? "");
+      setTimezone(updated.timezone ?? "");
       toast({ variant: "success", title: "Profile saved", description: "Your changes have been saved." });
     } catch (err: any) {
       toast({ variant: "destructive", title: "Save failed", description: err.message || "Could not save profile." });
@@ -218,6 +256,38 @@ export default function SettingsPage() {
                     testId="input-profile-avatar-url"
                     placeholder="https://example.com/avatar.png"
                   />
+
+                  {/* Timezone selector */}
+                  <div data-testid="input-profile-timezone-wrap">
+                    <label
+                      htmlFor="profile-timezone-select"
+                      className="text-xs text-muted-foreground flex items-center gap-1"
+                      data-testid="input-profile-timezone-label"
+                    >
+                      <Globe className="h-3 w-3" />
+                      Timezone
+                    </label>
+                    <select
+                      id="profile-timezone-select"
+                      value={timezone}
+                      onChange={(e) => setTimezone(e.target.value)}
+                      className="mt-1 h-10 w-full rounded-xl border border-border bg-muted/20 px-3 text-sm dark:bg-muted/10 dark:text-foreground"
+                      data-testid="select-profile-timezone"
+                      aria-label="Select timezone"
+                    >
+                      <option value="">— Select timezone —</option>
+                      {TIMEZONE_LIST.map((tz) => (
+                        <option key={tz} value={tz}>
+                          {tz.replace(/_/g, " ")}
+                        </option>
+                      ))}
+                    </select>
+                    {timezone && (
+                      <p className="mt-1 text-xs text-muted-foreground" data-testid="text-current-timezone">
+                        Current: <span className="font-medium text-foreground">{timezone.replace(/_/g, " ")}</span>
+                      </p>
+                    )}
+                  </div>
 
                   {/* Avatar preview */}
                   {avatarUrl && (
