@@ -219,7 +219,9 @@ export interface DataTableProps<TRow extends DataTableRow = DataTableRow> {
   // ─────────────────────
   // Pagination
   // ─────────────────────
-  pageSize?: number; // If set, enables client-side pagination (e.g. 50)
+  pageSize?: number; // If set, enables client-side pagination (initial value)
+  /** If provided, shows a page-size selector with these options (e.g. [25, 50, 100]) */
+  pageSizeOptions?: number[];
 
   // ─────────────────────
   // Virtualization
@@ -845,6 +847,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     emptyStateTitle,
     emptyStateDescription,
     pageSize,
+    pageSizeOptions,
     renderBulkActions,
     onRowClick,
   } = props;
@@ -860,8 +863,14 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
 
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Reset page when rows change (e.g. search/filter)
-  useEffect(() => { setCurrentPage(1); }, [rows.length, searchValue]);
+  // Internal page size — can be changed by the user via the page-size selector.
+  // Initial value: pageSizeOptions[0] ?? pageSize ?? 50
+  const [internalPageSize, setInternalPageSize] = useState<number>(
+    pageSizeOptions?.[0] ?? pageSize ?? 50
+  );
+
+  // Reset page when rows change (e.g. search/filter) or page size changes
+  useEffect(() => { setCurrentPage(1); }, [rows.length, searchValue, internalPageSize]);
 
   const [groupColoring, setGroupColoring] = useState(true);
   const [groupSortOrder, setGroupSortOrder] = useState<"asc" | "desc">("asc");
@@ -1088,7 +1097,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
   // Row virtualizer — always called (hooks must not be conditional)
   // When `virtualized` is false, count=0 so it has no effect.
   const rowVirtualizer = useVirtualizer({
-    count: virtualized ? sortedRows.length : 0,
+    count: virtualized ? displayRows.length : 0,
     getScrollElement: () => (virtualized ? scrollContainerRef.current : null),
     estimateSize: () => estimatedRowHeight,
     overscan: 10,
@@ -1105,16 +1114,25 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
   const virtualPaddingBottom =
     virtualItems.length > 0 ? totalVirtualSize - virtualItems[virtualItems.length - 1].end : 0;
 
-  // Pagination: slice sorted rows if pageSize is set (ignored in virtualized mode)
+  // Pagination: slice sorted rows when a page size is active.
+  // Works in both virtualized and non-virtualized modes.
+  // `effectivePageSize` is set when pageSizeOptions is provided OR pageSize prop is given.
+  const effectivePageSize: number | null =
+    pageSizeOptions && pageSizeOptions.length > 0
+      ? internalPageSize
+      : pageSize ?? null;
+
   const totalRows = sortedRows.length;
-  const totalPages = pageSize && !virtualized ? Math.max(1, Math.ceil(totalRows / pageSize)) : 1;
+  const totalPages = effectivePageSize
+    ? Math.max(1, Math.ceil(totalRows / effectivePageSize))
+    : 1;
   const safePage = Math.min(currentPage, totalPages);
 
   const displayRows = useMemo(() => {
-    if (!pageSize || virtualized) return sortedRows;
-    const start = (safePage - 1) * pageSize;
-    return sortedRows.slice(start, start + pageSize);
-  }, [sortedRows, pageSize, safePage, virtualized]);
+    if (!effectivePageSize) return sortedRows;
+    const start = (safePage - 1) * effectivePageSize;
+    return sortedRows.slice(start, start + effectivePageSize);
+  }, [sortedRows, effectivePageSize, safePage]);
 
   const groupedRows = useMemo(() => {
     if (groupBy === "None") return { "All Records": displayRows };
@@ -1806,7 +1824,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                     </tr>
                   )}
                   {virtualItems.map((virtualRow) => {
-                    const row = sortedRows[virtualRow.index] as any;
+                    const row = displayRows[virtualRow.index] as any;
                     if (!row) return null;
                     return (
                       <TableRow
@@ -2452,57 +2470,115 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
         </div>
       </div>
 
-      {/* Virtualized row count footer */}
-      {virtualized && !loading && rows.length > 0 && (
-        <div className="flex items-center justify-between px-4 py-2 border-t border-border bg-muted/10 text-sm">
-          <div className="text-muted-foreground" data-testid="virtual-row-count">
-            {totalRows.toLocaleString()} rows (virtualized)
+      {/* ─── Unified Pagination Footer ─── */}
+      {/* Show when pageSizeOptions is provided (always) or legacy pageSize prop without virtualization */}
+      {!loading && rows.length > 0 && (pageSizeOptions?.length || (effectivePageSize && !virtualized && totalPages > 1)) && (
+        <div
+          className="flex items-center justify-between px-4 py-2 border-t border-border bg-muted/10 text-sm"
+          data-testid="pagination-footer"
+        >
+          {/* Left: row count info */}
+          <div className="text-muted-foreground" data-testid="pagination-row-info">
+            {effectivePageSize
+              ? <>
+                  Showing{" "}
+                  <span className="font-medium text-foreground">
+                    {((safePage - 1) * effectivePageSize + 1).toLocaleString()}
+                    –
+                    {Math.min(safePage * effectivePageSize, totalRows).toLocaleString()}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-medium text-foreground" data-testid="virtual-row-count">
+                    {totalRows.toLocaleString()}
+                  </span>{" "}
+                  rows
+                </>
+              : <span data-testid="virtual-row-count">{totalRows.toLocaleString()} rows</span>
+            }
           </div>
-        </div>
-      )}
 
-      {/* Pagination footer */}
-      {pageSize && !virtualized && totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-2 border-t border-border bg-muted/10 text-sm">
-          <div className="text-muted-foreground">
-            Showing {((safePage - 1) * pageSize) + 1}–{Math.min(safePage * pageSize, totalRows)} of {totalRows} rows
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={safePage <= 1}
-              onClick={() => setCurrentPage(1)}
-            >
-              First
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={safePage <= 1}
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            >
-              Prev
-            </Button>
-            <span className="px-2 font-medium">
-              Page {safePage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={safePage >= totalPages}
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            >
-              Next
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={safePage >= totalPages}
-              onClick={() => setCurrentPage(totalPages)}
-            >
-              Last
-            </Button>
+          {/* Right: page-size selector + navigation */}
+          <div className="flex items-center gap-3">
+            {/* Page size selector — only when pageSizeOptions is provided */}
+            {pageSizeOptions && pageSizeOptions.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-muted-foreground text-xs">Rows per page:</span>
+                <Select
+                  value={String(internalPageSize)}
+                  onValueChange={(val) => {
+                    setInternalPageSize(Number(val));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger
+                    className="h-7 w-[72px] text-xs"
+                    data-testid="page-size-selector"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pageSizeOptions.map((opt) => (
+                      <SelectItem
+                        key={opt}
+                        value={String(opt)}
+                        data-testid={`page-size-option-${opt}`}
+                      >
+                        {opt}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Page navigation — only when there are multiple pages */}
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1" data-testid="pagination-nav">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  disabled={safePage <= 1}
+                  onClick={() => setCurrentPage(1)}
+                  data-testid="pagination-first"
+                >
+                  First
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  disabled={safePage <= 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  data-testid="pagination-prev"
+                >
+                  Prev
+                </Button>
+                <span className="px-2 font-medium text-xs" data-testid="pagination-page-info">
+                  Page {safePage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  disabled={safePage >= totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  data-testid="pagination-next"
+                >
+                  Next
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  disabled={safePage >= totalPages}
+                  onClick={() => setCurrentPage(totalPages)}
+                  data-testid="pagination-last"
+                >
+                  Last
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}

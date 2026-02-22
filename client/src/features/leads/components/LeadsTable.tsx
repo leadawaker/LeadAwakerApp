@@ -12,9 +12,11 @@ import {
 import { BulkActionsToolbar } from "./BulkActionsToolbar";
 import { LeadsKanban } from "./LeadsKanban";
 import { LeadDetailPanel } from "./LeadDetailPanel";
+import { CsvImportWizard } from "./CsvImportWizard";
 import { updateLead } from "../api/leadsApi";
 import { apiFetch } from "@/lib/apiUtils";
-import { LayoutGrid, Table2 } from "lucide-react";
+import { LayoutGrid, Table2, Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const LEAD_COLUMNS = [
@@ -103,6 +105,7 @@ export function LeadsTable() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [selectedLead, setSelectedLead] = useState<Record<string, any> | null>(null);
   const [detailPanelOpen, setDetailPanelOpen] = useState(false);
+  const [importWizardOpen, setImportWizardOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "", direction: null });
   const [groupBy, setGroupBy] = useState<string>("conversion_status");
   const [rowSpacing, setRowSpacing] = useState<RowSpacing>("medium");
@@ -403,6 +406,17 @@ export function LeadsTable() {
         {/* Spacer to push view toggle to the right */}
         <div className="flex-1" />
 
+        {/* Import CSV button */}
+        <Button
+          variant="outline"
+          className="h-8 px-3 gap-1.5 text-xs font-semibold rounded-xl bg-card dark:bg-secondary border-border shadow-none"
+          onClick={() => setImportWizardOpen(true)}
+          data-testid="import-csv-button"
+        >
+          <Upload className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="hidden sm:inline">Import CSV</span>
+        </Button>
+
         {/* View toggle: Table vs Kanban */}
         <div
           className="inline-flex items-center rounded-xl border border-border bg-card dark:bg-secondary p-0.5 gap-0.5"
@@ -492,6 +506,7 @@ export function LeadsTable() {
           filterConfig={filterConfig}
           onFilterConfigChange={setFilterConfig}
           virtualized={true}
+          pageSizeOptions={[25, 50, 100]}
           emptyStateVariant={search ? "search" : "leads"}
           renderBulkActions={renderBulkActions}
           onRowClick={handleRowClick}
@@ -505,6 +520,14 @@ export function LeadsTable() {
         lead={selectedLead}
         open={detailPanelOpen}
         onClose={handleClosePanel}
+      />
+
+      {/* CSV Import Wizard */}
+      <CsvImportWizard
+        open={importWizardOpen}
+        onClose={() => setImportWizardOpen(false)}
+        onImportComplete={handleRefresh}
+        defaultAccountId={filterAccountId}
       />
     </div>
   );

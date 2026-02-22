@@ -270,6 +270,61 @@ export async function registerRoutes(
 
   // ─── Bulk Lead Operations ──────────────────────────────────────────
 
+  // CSV Import — bulk create leads from a mapped array
+  app.post("/api/leads/import-csv", requireAuth, async (req, res) => {
+    try {
+      const { leads: leadRows } = req.body;
+      if (!Array.isArray(leadRows) || leadRows.length === 0) {
+        return res.status(400).json({ message: "leads must be a non-empty array" });
+      }
+      if (leadRows.length > 5000) {
+        return res.status(400).json({ message: "Maximum 5,000 leads per import" });
+      }
+
+      const LEAD_DATE_FIELDS = [
+        "bookedCallDate", "lastMessageSentAt", "lastMessageReceivedAt",
+        "bump1SentAt", "bump2SentAt", "bump3SentAt", "firstMessageSentAt",
+        "nextActionAt", "bookingConfirmedAt",
+      ];
+
+      const created: any[] = [];
+      const errors: { row: number; message: string }[] = [];
+
+      for (let i = 0; i < leadRows.length; i++) {
+        try {
+          const rawRow = leadRows[i];
+          // Convert from DB key format (e.g., first_name) to camelCase for Drizzle
+          const mapped = coerceDates(
+            fromDbKeys(rawRow, leads) as Record<string, unknown>,
+            LEAD_DATE_FIELDS,
+          );
+          const parsed = insertLeadsSchema.safeParse(mapped);
+          if (!parsed.success) {
+            errors.push({
+              row: i + 1,
+              message: parsed.error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join("; "),
+            });
+            continue;
+          }
+          const lead = await storage.createLead(parsed.data);
+          created.push(toDbKeys(lead as any, leads));
+        } catch (rowErr: any) {
+          errors.push({ row: i + 1, message: rowErr.message || "Unknown error" });
+        }
+      }
+
+      res.status(201).json({
+        created: created.length,
+        errors: errors.length,
+        errorDetails: errors.slice(0, 50), // cap to avoid huge responses
+        leads: created,
+      });
+    } catch (err: any) {
+      console.error("CSV import error:", err);
+      res.status(500).json({ message: err.message || "CSV import failed" });
+    }
+  });
+
   // Bulk update leads (move stage, assign campaign)
   app.post("/api/leads/bulk-update", requireAuth, async (req, res) => {
     try {
