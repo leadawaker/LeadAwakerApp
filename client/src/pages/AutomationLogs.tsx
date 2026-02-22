@@ -16,6 +16,13 @@ import {
 import { cn } from "@/lib/utils";
 import { SkeletonTable } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const STATUS_CONFIG: Record<string, { color: string; icon: any }> = {
   success: { color: "text-[#10b981] bg-[#10b981]/10 border-[#10b981]/20", icon: CheckCircle2 },
@@ -27,9 +34,16 @@ const STATUS_CONFIG: Record<string, { color: string; icon: any }> = {
   error: { color: "text-[#f43f5e] bg-[#f43f5e]/10 border-[#f43f5e]/20", icon: XCircle },
 };
 
+const STATUS_OPTIONS = [
+  { value: "all", label: "All Statuses" },
+  { value: "success", label: "Success" },
+  { value: "failed", label: "Failed" },
+];
+
 export default function AutomationLogsPage() {
   const { currentAccountId, isAgencyView } = useWorkspace();
   const [campaignId, setCampaignId] = useState<number | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [page, setPage] = useState(0);
   const [automationLogs, setAutomationLogs] = useState<any[]>([]);
   const [allLeads, setAllLeads] = useState<any[]>([]);
@@ -82,6 +96,15 @@ export default function AutomationLogsPage() {
   const rows = useMemo(() => {
     const baseRows = automationLogs
       .filter((r: any) => (campaignId === "all" ? true : (r.campaign_id || r.campaigns_id || r.Campaigns_id) === campaignId))
+      .filter((r: any) => {
+        if (statusFilter === "all") return true;
+        const rawStatus = r.status || "";
+        // Normalize: "error" maps to "failed" for display/filtering purposes
+        const normalizedStatus = rawStatus === "error" ? "failed" : rawStatus;
+        if (statusFilter === "success") return normalizedStatus === "success";
+        if (statusFilter === "failed") return normalizedStatus === "failed" || rawStatus === "error";
+        return true;
+      })
       .map((log: any) => {
         const leadId = log.lead_id || log.leads_id || log.Leads_id;
         const accountId = log.account_id || log.accounts_id || log.Accounts_id;
@@ -98,7 +121,7 @@ export default function AutomationLogsPage() {
       });
 
     return baseRows;
-  }, [automationLogs, allLeads, allAccounts, allCampaigns, campaignId]);
+  }, [automationLogs, allLeads, allAccounts, allCampaigns, campaignId, statusFilter]);
 
   const pageSize = 100;
   const paginatedRows = rows.slice(page * pageSize, (page + 1) * pageSize);
@@ -110,11 +133,33 @@ export default function AutomationLogsPage() {
         className="h-full flex flex-col px-0 py-0 overflow-hidden bg-transparent pb-4"
         data-testid="page-automation-logs"
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
           <FiltersBar
             selectedCampaignId={campaignId}
             setSelectedCampaignId={setCampaignId}
           />
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => { setStatusFilter(v); setPage(0); }}
+          >
+            <SelectTrigger
+              className="h-9 w-[160px] text-sm"
+              data-testid="select-status-filter"
+            >
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((opt) => (
+                <SelectItem
+                  key={opt.value}
+                  value={opt.value}
+                  data-testid={`option-status-${opt.value}`}
+                >
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {error && automationLogs.length === 0 && !loading ? (
