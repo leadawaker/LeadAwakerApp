@@ -1,13 +1,103 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useToast } from "@/hooks/use-toast";
 import { useDashboardRefreshInterval, REFRESH_INTERVAL_OPTIONS } from "@/hooks/useDashboardRefreshInterval";
+import { useSession } from "@/hooks/useSession";
+import { apiFetch } from "@/lib/apiUtils";
+import { Switch } from "@/components/ui/switch";
+import { Mail, MessageSquare } from "lucide-react";
+
+// Full user profile shape returned by GET /api/users/:id
+type UserProfile = {
+  id: number;
+  fullName1: string | null;
+  email: string | null;
+  phone: string | null;
+  avatarUrl: string | null;
+  role: string | null;
+  status: string | null;
+  accountsId: number | null;
+};
 
 export default function SettingsPage() {
-  const [name, setName] = useState("LeadAwaker Agency");
-  const [email, setEmail] = useState("leadawaker@gmail.com");
   const { toast } = useToast();
   const { intervalSeconds, setIntervalSeconds, labelForInterval } = useDashboardRefreshInterval();
+  const session = useSession();
+
+  // Profile form state
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Form field values (local editable state)
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+
+  // Fetch user profile once session is loaded
+  useEffect(() => {
+    if (session.status === "loading") return;
+    if (session.status === "unauthenticated") {
+      setProfileLoading(false);
+      setProfileError("Not authenticated");
+      return;
+    }
+
+    const userId = session.user.id;
+    setProfileLoading(true);
+    setProfileError(null);
+
+    apiFetch(`/api/users/${userId}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`Failed to load profile (${res.status})`);
+        const data: UserProfile = await res.json();
+        setProfile(data);
+        setName(data.fullName1 ?? "");
+        setEmail(data.email ?? "");
+        setPhone(data.phone ?? "");
+        setAvatarUrl(data.avatarUrl ?? "");
+      })
+      .catch((err) => {
+        setProfileError(err.message || "Failed to load profile");
+      })
+      .finally(() => {
+        setProfileLoading(false);
+      });
+  }, [session.status]);
+
+  const handleSaveProfile = async () => {
+    if (!profile) return;
+    setIsSaving(true);
+    try {
+      const res = await apiFetch(`/api/users/${profile.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName1: name.trim() || null,
+          email: email.trim() || null,
+          phone: phone.trim() || null,
+          avatarUrl: avatarUrl.trim() || null,
+        }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || `Save failed (${res.status})`);
+      }
+      const updated: UserProfile = await res.json();
+      setProfile(updated);
+      setName(updated.fullName1 ?? "");
+      setEmail(updated.email ?? "");
+      setPhone(updated.phone ?? "");
+      setAvatarUrl(updated.avatarUrl ?? "");
+      toast({ variant: "success", title: "Profile saved", description: "Your changes have been saved." });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Save failed", description: err.message || "Could not save profile." });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <CrmShell>
@@ -19,24 +109,79 @@ export default function SettingsPage() {
             <div className="p-4 border-b border-border" data-testid="card-edit-profile-head">
               <div className="font-semibold" data-testid="text-profile-title">Edit profile</div>
               <div className="text-xs text-muted-foreground" data-testid="text-profile-sub">
-                Update your display info (mock only).
+                Update your display name, email, phone, and avatar.
               </div>
             </div>
             <div className="p-4 space-y-4" data-testid="card-edit-profile-body">
-              <Field label="Name" value={name} onChange={setName} testId="input-profile-name" />
-              <Field label="Email" value={email} onChange={setEmail} testId="input-profile-email" />
+              {profileLoading ? (
+                <div className="text-sm text-muted-foreground" data-testid="profile-loading">
+                  Loading profile…
+                </div>
+              ) : profileError ? (
+                <div className="text-sm text-red-500" data-testid="profile-error">
+                  {profileError}
+                </div>
+              ) : (
+                <>
+                  <Field
+                    label="Name"
+                    value={name}
+                    onChange={setName}
+                    testId="input-profile-name"
+                    placeholder="Your full name"
+                  />
+                  <Field
+                    label="Email"
+                    value={email}
+                    onChange={setEmail}
+                    testId="input-profile-email"
+                    placeholder="your@email.com"
+                    type="email"
+                  />
+                  <Field
+                    label="Phone"
+                    value={phone}
+                    onChange={setPhone}
+                    testId="input-profile-phone"
+                    placeholder="+1 (555) 000-0000"
+                    type="tel"
+                  />
+                  <Field
+                    label="Avatar URL"
+                    value={avatarUrl}
+                    onChange={setAvatarUrl}
+                    testId="input-profile-avatar-url"
+                    placeholder="https://example.com/avatar.png"
+                  />
 
-              <div className="flex justify-end" data-testid="row-profile-actions">
-                <button
-                  type="button"
-                  className="h-10 px-3 rounded-xl border border-border bg-primary text-primary-foreground hover:opacity-90 text-sm font-semibold"
-                  data-testid="button-save-profile"
-                  onClick={() => toast({ variant: "success", title: "Profile saved", description: "Your changes have been saved." })}
-                >
-                  Save changes
-                </button>
-              </div>
+                  {/* Avatar preview */}
+                  {avatarUrl && (
+                    <div className="flex items-center gap-3" data-testid="avatar-preview">
+                      <img
+                        src={avatarUrl}
+                        alt="Avatar preview"
+                        className="h-12 w-12 rounded-full object-cover border border-border"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                      <span className="text-xs text-muted-foreground">Avatar preview</span>
+                    </div>
+                  )}
 
+                  <div className="flex justify-end" data-testid="row-profile-actions">
+                    <button
+                      type="button"
+                      className="h-10 px-4 rounded-xl border border-border bg-primary text-primary-foreground hover:opacity-90 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                      data-testid="button-save-profile"
+                      onClick={handleSaveProfile}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? "Saving…" : "Save changes"}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </section>
 
@@ -171,11 +316,15 @@ function Field({
   value,
   onChange,
   testId,
+  placeholder,
+  type = "text",
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   testId: string;
+  placeholder?: string;
+  type?: string;
 }) {
   return (
     <div data-testid={`${testId}-wrap`}>
@@ -183,10 +332,12 @@ function Field({
         {label}
       </label>
       <input
+        type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="mt-1 h-10 w-full rounded-xl border border-border bg-muted/20 px-3 text-sm"
         data-testid={testId}
+        placeholder={placeholder}
       />
     </div>
   );
