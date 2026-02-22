@@ -6310,3 +6310,55 @@ All other elements use semantic tokens (`bg-card`, `bg-muted`, `text-foreground`
 - 140/207 features passing (139 at session start, +1 this session)
 - Feature #169 marked passing after thorough browser verification
 - Git commit: 60937d6
+
+## Session 2026-02-22 - Coding Agent (Feature #171)
+
+### Completed Features:
+- Feature #171: Create / edit prompt - PASSING
+
+### Implementation Details:
+
+Feature requirement: Form for creating or editing prompts: name, prompt_text, system_message, model, temperature, max_tokens.
+
+**Modified: server/storage.ts**
+1. Added updatePrompt(id, data) to IStorage interface
+2. Added deletePrompt(id) to IStorage interface
+3. Implemented updatePrompt: db.update(promptLibrary).set(data).where(eq(promptLibrary.id, id)).returning()
+4. Implemented deletePrompt: db.delete(promptLibrary).where(eq(promptLibrary.id, id)).returning()
+
+**Modified: server/routes.ts**
+1. Added PUT /api/prompts/:id (requireAgency): calls storage.updatePrompt, returns 404 if not found
+2. Added DELETE /api/prompts/:id (requireAgency): calls storage.deletePrompt, returns 404 if not found
+
+**Modified: client/src/pages/PromptLibrary.tsx** (full rewrite with new components)
+1. Added PromptFormDialog component:
+   - Mode: create (prompt=null) vs edit (prompt=existing)
+   - Fields: name (required), use_case, prompt_text (required, textarea), system_message (textarea),
+     model (select: gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo, claude variants),
+     status (active/archived), temperature (0-2), max_tokens
+   - Pre-populates all fields on open when editing
+   - Client-side validation for required fields and numeric ranges
+   - Submits camelCase payload to match drizzle-zod insertSchema
+   - temperature sent as string (numeric column expects string in Zod)
+2. Added DeletePromptDialog component with confirmation (AlertTriangle + destructive button)
+3. Updated main page: Create Prompt button in toolbar, hover-revealed edit/delete buttons per card
+
+### Bugs Fixed During Verification:
+1. 422 error on create: payload sent temperature as float but Zod expects string - fixed
+2. Pre-population failure: snake_case payload keys rejected by drizzle-zod camelCase schema - fixed
+3. Error message not surfaced: wrong key errBody.error - fixed to use errBody.message
+
+### Verification:
+1. Navigated to /agency/prompt-library - 4 prompts loaded from API - PASS
+2. Clicked Create Prompt - dialog opened - PASS
+3. Filled all fields, submitted - toast and new card appeared in grid - PASS
+4. Hovered card - edit/delete buttons visible - PASS
+5. Clicked edit - all fields pre-populated correctly - PASS
+6. Changed name, saved - toast and card updated - PASS
+7. Zero JS console errors - PASS
+8. Test data cleaned up via DELETE /api/prompts/:id - PASS
+
+### Current Status:
+- 142/207 features passing (141 at session start, +1 this session)
+- Feature #171 marked passing after thorough browser verification
+- Git commit: 0bf0e5d
