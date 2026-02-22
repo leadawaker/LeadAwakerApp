@@ -46,6 +46,15 @@ import {
 } from "@/components/ui/sheet";
 
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+
+import {
   DndContext,
   closestCenter,
   KeyboardSensor,
@@ -77,6 +86,7 @@ import {
   Clock,
   Copy,
   Database,
+  Download,
   Eye,
   EyeOff,
   FileText,
@@ -190,6 +200,11 @@ export interface DataTableProps<TRow extends DataTableRow = DataTableRow> {
 
   onImportCSV?: (file: File) => void;
   onExportCSV?: () => void;
+
+  /** Enable self-contained CSV export with field-selection dialog */
+  exportable?: boolean;
+  /** Filename (without extension) for the exported CSV — defaults to "export" */
+  exportFilename?: string;
 
   // ─────────────────────
   // Empty state
@@ -834,6 +849,9 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     onRowClick,
   } = props;
 
+  const exportable = props.exportable ?? false;
+  const exportFilename = props.exportFilename ?? "export";
+
   const virtualized = props.virtualized ?? false;
   const virtualizedContainerHeight = props.virtualizedContainerHeight ?? "calc(100vh - 320px)";
 
@@ -849,6 +867,55 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
   const [groupSortOrder, setGroupSortOrder] = useState<"asc" | "desc">("asc");
   const [hideEmptyGroups, setHideEmptyGroups] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+
+  // CSV Export state
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [exportSelectedFields, setExportSelectedFields] = useState<string[]>([]);
+
+  // When dialog opens, default selection to currently visible columns
+  const handleOpenExportDialog = () => {
+    setExportSelectedFields([...visibleColumns]);
+    setExportDialogOpen(true);
+  };
+
+  const toggleExportField = (col: string) => {
+    setExportSelectedFields((prev) =>
+      prev.includes(col) ? prev.filter((c) => c !== col) : [...prev, col]
+    );
+  };
+
+  const generateAndDownloadCSV = () => {
+    const fields = exportSelectedFields.length > 0 ? exportSelectedFields : visibleColumns;
+    // Header row with human-readable titles
+    const header = fields.map((f) => {
+      const title = formatHeaderTitle(f);
+      return title.includes(",") || title.includes('"') ? `"${title.replace(/"/g, '""')}"` : title;
+    }).join(",");
+    // Data rows
+    const lines = rows.map((row) =>
+      fields.map((f) => {
+        const val = (row as Record<string, any>)[f];
+        const str = val === null || val === undefined ? "" : String(val);
+        // RFC-4180 CSV escaping
+        if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      }).join(",")
+    );
+    // Combine with UTF-8 BOM for Excel compatibility
+    const csv = [header, ...lines].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${exportFilename}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setExportDialogOpen(false);
+  };
 
   const toggleGroupCollapse = (groupName: string) => {
     setCollapsedGroups(prev => ({
@@ -1213,7 +1280,8 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     effectiveGroupOptions.length > 0 ||
     onAdd ||
     onImportCSV ||
-    onExportCSV;
+    onExportCSV ||
+    exportable;
 
   const sortedGroupNames = useMemo(() => {
     let keys = Object.keys(groupedRows);
@@ -1447,6 +1515,19 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+          )}
+
+          {/* Export CSV button — shown when exportable=true */}
+          {exportable && (
+            <Button
+              variant="outline"
+              data-testid="export-csv-trigger"
+              className="h-10 rounded-xl gap-2 font-semibold bg-card dark:bg-secondary border-border shadow-none text-foreground"
+              onClick={handleOpenExportDialog}
+            >
+              <Download className="h-4 w-4 text-muted-foreground" />
+              Export
+            </Button>
           )}
 
           {(() => {
@@ -2425,6 +2506,104 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
           </div>
         </div>
       )}
+
+      {/* ─── CSV Export Field-Selection Dialog ─── */}
+      <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+        <DialogContent className="max-w-md" data-testid="export-csv-dialog">
+          <DialogHeader>
+            <DialogTitle>Export CSV</DialogTitle>
+            <DialogDescription>
+              Choose which fields to include in the exported file.{" "}
+              <span className="font-medium text-foreground">{rows.length} row{rows.length !== 1 ? "s" : ""}</span>{" "}
+              will be exported.
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Field selection */}
+          <div className="space-y-2">
+            {/* Select All / Deselect All */}
+            <div className="flex items-center justify-between pb-1 border-b border-border">
+              <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">
+                Fields ({exportSelectedFields.length}/{columns.length} selected)
+              </span>
+              <div className="flex gap-2">
+                <button
+                  data-testid="export-select-all"
+                  className="text-[11px] text-brand-blue hover:text-brand-blue/80 font-medium px-1.5 py-0.5 rounded hover:bg-brand-blue/10 transition-colors"
+                  onClick={() => setExportSelectedFields([...columns])}
+                >
+                  All
+                </button>
+                <span className="text-border">·</span>
+                <button
+                  data-testid="export-select-visible"
+                  className="text-[11px] text-green-600 hover:text-green-700 font-medium px-1.5 py-0.5 rounded hover:bg-green-50 transition-colors"
+                  onClick={() => setExportSelectedFields([...visibleColumns])}
+                >
+                  Visible
+                </button>
+                <span className="text-border">·</span>
+                <button
+                  data-testid="export-deselect-all"
+                  className="text-[11px] text-muted-foreground hover:text-foreground font-medium px-1.5 py-0.5 rounded hover:bg-muted transition-colors"
+                  onClick={() => setExportSelectedFields([])}
+                >
+                  None
+                </button>
+              </div>
+            </div>
+
+            <ScrollArea className="h-64">
+              <div className="space-y-0.5 pr-2">
+                {columns.map((col) => {
+                  const isSelected = exportSelectedFields.includes(col);
+                  return (
+                    <div
+                      key={col}
+                      data-testid={`export-field-${col}`}
+                      className={cn(
+                        "flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer transition-colors select-none",
+                        isSelected
+                          ? "hover:bg-muted/60"
+                          : "hover:bg-muted/40 opacity-60 hover:opacity-80"
+                      )}
+                      onClick={() => toggleExportField(col)}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        className="pointer-events-none"
+                        data-testid={`export-checkbox-${col}`}
+                      />
+                      <span className={cn("text-sm flex-1 truncate", isSelected ? "font-medium text-foreground" : "text-muted-foreground")}>
+                        {formatHeaderTitle(col)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setExportDialogOpen(false)}
+              data-testid="export-cancel"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={generateAndDownloadCSV}
+              disabled={exportSelectedFields.length === 0}
+              data-testid="export-confirm"
+              className="bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90 gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Download CSV
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

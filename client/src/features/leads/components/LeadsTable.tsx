@@ -495,6 +495,8 @@ export function LeadsTable() {
           emptyStateVariant={search ? "search" : "leads"}
           renderBulkActions={renderBulkActions}
           onRowClick={handleRowClick}
+          exportable={true}
+          exportFilename="leads"
         />
       )}
 
