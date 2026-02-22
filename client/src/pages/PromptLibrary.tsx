@@ -55,6 +55,7 @@ interface PromptFormData {
   maxTokens: string;
   status: string;
   useCase: string;
+  notes: string;
 }
 
 const EMPTY_FORM: PromptFormData = {
@@ -66,6 +67,7 @@ const EMPTY_FORM: PromptFormData = {
   maxTokens: "1000",
   status: "active",
   useCase: "",
+  notes: "",
 };
 
 const MODEL_OPTIONS = [
@@ -105,6 +107,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
           maxTokens: prompt.maxTokens != null ? String(prompt.maxTokens) : "1000",
           status: prompt.status || "active",
           useCase: prompt.useCase || prompt.use_case || "",
+          notes: prompt.notes || "",
         });
       } else {
         setForm(EMPTY_FORM);
@@ -143,6 +146,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
         maxTokens: parseInt(form.maxTokens, 10),
         status: form.status || "active",
         useCase: form.useCase.trim() || null,
+        notes: form.notes.trim() || null,
       };
 
       let res: Response;
@@ -260,6 +264,21 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
               value={form.systemMessage}
               onChange={(e) => setField("systemMessage", e.target.value)}
               data-testid="textarea-system-message"
+            />
+          </div>
+
+          {/* Notes */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-foreground" htmlFor="prompt-notes">
+              Notes
+            </label>
+            <textarea
+              id="prompt-notes"
+              className="w-full min-h-[80px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-y"
+              placeholder="Additional notes or context about this prompt (optional)…"
+              value={form.notes}
+              onChange={(e) => setField("notes", e.target.value)}
+              data-testid="textarea-prompt-notes"
             />
           </div>
 
@@ -598,9 +617,22 @@ export default function PromptLibraryPage() {
                   </div>
 
                   {/* Use case */}
-                  <div className="mt-1 text-xs text-muted-foreground" data-testid={`text-prompt-usecase-${promptId}`}>
-                    {p.useCase || p.use_case || ""}
-                  </div>
+                  {(p.useCase || p.use_case) && (
+                    <div className="mt-1 text-xs text-muted-foreground" data-testid={`text-prompt-usecase-${promptId}`}>
+                      {p.useCase || p.use_case}
+                    </div>
+                  )}
+
+                  {/* Notes */}
+                  {p.notes && (
+                    <div
+                      className="mt-1 text-xs text-muted-foreground/80 italic line-clamp-2"
+                      title={p.notes}
+                      data-testid={`text-prompt-notes-${promptId}`}
+                    >
+                      {p.notes}
+                    </div>
+                  )}
 
                   {/* Version + model + score row */}
                   <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
