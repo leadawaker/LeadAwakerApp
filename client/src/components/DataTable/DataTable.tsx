@@ -1065,7 +1065,12 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     }
 
     displayRows.forEach((r) => {
-      const key = String(r[groupBy.toLowerCase()] || "Unknown");
+      // Try the exact groupBy key first (handles "Campaign", "Account" with capital letters),
+      // then fall back to lowercase (handles "conversion_status", "automation_status").
+      const rawVal = (r as any)[groupBy] !== undefined
+        ? (r as any)[groupBy]
+        : (r as any)[groupBy.toLowerCase()];
+      const key = String(rawVal ?? "") || "Unknown";
       if (!groups[key]) groups[key] = [];
       groups[key].push(r);
     });
@@ -1922,7 +1927,16 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                 return (
                   <React.Fragment key={groupName}>
                     {groupBy !== "None" && (
-                      <TableRow className="bg-muted/20 hover:bg-muted/20 border-y border-border/60 cursor-pointer" tabIndex={0} role="button" aria-label={`Toggle group ${groupName}`} onClick={() => toggleGroupCollapse(groupName)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleGroupCollapse(groupName); } }}>
+                      <TableRow
+                        className="bg-muted/20 hover:bg-muted/30 border-y border-border/60 cursor-pointer"
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`Toggle group ${groupName}`}
+                        aria-expanded={!collapsedGroups[groupName]}
+                        data-testid={`group-header-${groupName}`}
+                        onClick={() => toggleGroupCollapse(groupName)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleGroupCollapse(groupName); } }}
+                      >
                         <TableCell
                           colSpan={visibleCols.length + 1}
                           className="py-2 px-4"
@@ -1939,10 +1953,11 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                   else color = { bg: "bg-brand-blue/20", text: "text-brand-blue" };
                                 }
                               }
-                              
+
                               return (
-                                <Badge 
-                                  variant="secondary" 
+                                <Badge
+                                  variant="secondary"
+                                  data-testid={`group-label-${groupName}`}
                                   className={cn(
                                     "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md",
                                     color ? cn(color.bg, color.text) : "bg-muted text-muted-foreground"
@@ -1952,7 +1967,11 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                 </Badge>
                               );
                             })()}
-                            <Badge variant="secondary" className="bg-muted/50 text-muted-foreground h-6 px-2.5 text-xs font-bold border-none shadow-none">
+                            <Badge
+                              variant="secondary"
+                              data-testid={`group-count-${groupName}`}
+                              className="bg-muted/50 text-muted-foreground h-6 px-2.5 text-xs font-bold border-none shadow-none"
+                            >
                               {groupRows.length}
                             </Badge>
                             <div className="flex-1" />

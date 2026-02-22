@@ -11,6 +11,7 @@ import {
 } from "./LeadFilters";
 import { BulkActionsToolbar } from "./BulkActionsToolbar";
 import { LeadsKanban } from "./LeadsKanban";
+import { LeadDetailPanel } from "./LeadDetailPanel";
 import { updateLead } from "../api/leadsApi";
 import { apiFetch } from "@/lib/apiUtils";
 import { LayoutGrid, Table2 } from "lucide-react";
@@ -100,6 +101,8 @@ export function LeadsTable() {
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [visibleColumns, setVisibleColumns] = useState<string[]>(LEAD_COLUMNS);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedLead, setSelectedLead] = useState<Record<string, any> | null>(null);
+  const [detailPanelOpen, setDetailPanelOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "", direction: null });
   const [groupBy, setGroupBy] = useState<string>("conversion_status");
   const [rowSpacing, setRowSpacing] = useState<RowSpacing>("medium");
@@ -224,8 +227,16 @@ export function LeadsTable() {
     // Then apply structured filters
     result = applyLeadFilters(result, leadFilters, leadTagMap);
 
+    // Augment each lead with a _primary_tag field (first tag name) for tag-based grouping.
+    // Falls back to "Untagged" when no tags are assigned.
+    result = result.map((l) => {
+      const tags = leadTagsInfo.get(l.Id);
+      const primaryTag = tags && tags.length > 0 ? tags[0].name : "Untagged";
+      return { ...l, _primary_tag: primaryTag };
+    });
+
     return result;
-  }, [leads, search, leadFilters, leadTagMap]);
+  }, [leads, search, leadFilters, leadTagMap, leadTagsInfo]);
 
   const handleUpdate = async (rowId: number, col: string, value: any) => {
     try {
@@ -276,6 +287,15 @@ export function LeadsTable() {
     },
     [setLeads, handleRefresh]
   );
+
+  const handleRowClick = useCallback((row: Record<string, any>) => {
+    setSelectedLead(row);
+    setDetailPanelOpen(true);
+  }, []);
+
+  const handleClosePanel = useCallback(() => {
+    setDetailPanelOpen(false);
+  }, []);
 
   const handleBulkActionComplete = useCallback(() => {
     // Refresh leads data and clear selection after any bulk action
@@ -443,10 +463,11 @@ export function LeadsTable() {
           onGroupByChange={setGroupBy}
           groupOptions={[
             { value: "None", label: "No Grouping" },
-            { value: "conversion_status", label: "By Conversion" },
-            { value: "automation_status", label: "By Automation Status" },
-            { value: "Account", label: "By Account" },
+            { value: "conversion_status", label: "By Stage" },
             { value: "Campaign", label: "By Campaign" },
+            { value: "_primary_tag", label: "By Tag" },
+            { value: "automation_status", label: "By Automation" },
+            { value: "Account", label: "By Account" },
           ]}
           colWidths={colWidths}
           onColWidthsChange={setColWidths}
@@ -473,8 +494,16 @@ export function LeadsTable() {
           virtualized={true}
           emptyStateVariant={search ? "search" : "leads"}
           renderBulkActions={renderBulkActions}
+          onRowClick={handleRowClick}
         />
       )}
+
+      {/* Lead Detail slide-over panel */}
+      <LeadDetailPanel
+        lead={selectedLead}
+        open={detailPanelOpen}
+        onClose={handleClosePanel}
+      />
     </div>
   );
 }
