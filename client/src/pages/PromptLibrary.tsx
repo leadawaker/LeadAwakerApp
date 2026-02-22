@@ -14,7 +14,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, AlertTriangle, Star } from "lucide-react";
+import { Plus, Pencil, Trash2, AlertTriangle, Star, ToggleLeft, ToggleRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 /** Returns Tailwind classes for the status badge based on status value */
@@ -460,6 +460,7 @@ function DeletePromptDialog({ open, onClose, prompt, onDeleted }: DeletePromptDi
 
 export default function PromptLibraryPage() {
   const { isAgencyView } = useWorkspace();
+  const { toast } = useToast();
   const [q, setQ] = useState("");
   const [promptLibraryData, setPromptLibraryData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -472,6 +473,9 @@ export default function PromptLibraryPage() {
   // Delete dialog
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deletingPrompt, setDeletingPrompt] = useState<any | null>(null);
+
+  // Status toggle loading state (keyed by prompt id)
+  const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
 
   const fetchPrompts = useCallback(async () => {
     setLoading(true);
@@ -532,6 +536,59 @@ export default function PromptLibraryPage() {
 
   function handleDeleted(id: number) {
     setPromptLibraryData((prev) => prev.filter((p) => (p.id || p.Id) !== id));
+  }
+
+  async function handleToggleStatus(prompt: any, e: React.MouseEvent) {
+    e.stopPropagation();
+    const id = prompt.id || prompt.Id;
+    const currentStatus = (prompt.status || "").toLowerCase().trim();
+    const newStatus = currentStatus === "active" ? "archived" : "active";
+
+    // Prevent double-click while toggling
+    if (togglingIds.has(id)) return;
+
+    // Optimistic update
+    setTogglingIds((prev) => new Set(prev).add(id));
+    setPromptLibraryData((prev) =>
+      prev.map((p) => (p.id || p.Id) === id ? { ...p, status: newStatus } : p)
+    );
+
+    try {
+      const res = await apiFetch(`/api/prompts/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody?.message || `HTTP ${res.status}`);
+      }
+      const updated = await res.json();
+      // Sync with server response
+      setPromptLibraryData((prev) =>
+        prev.map((p) => (p.id || p.Id) === id ? updated : p)
+      );
+      toast({
+        title: "Status updated",
+        description: `"${prompt.name}" is now ${newStatus}.`,
+      });
+    } catch (err: any) {
+      // Revert optimistic update on error
+      setPromptLibraryData((prev) =>
+        prev.map((p) => (p.id || p.Id) === id ? { ...p, status: currentStatus } : p)
+      );
+      toast({
+        title: "Failed to update status",
+        description: err.message || "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setTogglingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
   }
 
   return (
@@ -606,13 +663,24 @@ export default function PromptLibraryPage() {
                       >
                         <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-red-500" />
                       </button>
-                      {/* Status badge */}
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${getStatusBadgeClasses(p.status)}`}
-                        data-testid={`badge-prompt-status-${promptId}`}
+                      {/* Status toggle button */}
+                      <button
+                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium transition-opacity cursor-pointer hover:opacity-80 ${getStatusBadgeClasses(p.status)} ${togglingIds.has(promptId) ? "opacity-50 cursor-not-allowed" : ""}`}
+                        onClick={(e) => handleToggleStatus(p, e)}
+                        disabled={togglingIds.has(promptId)}
+                        title={`Click to ${(p.status || "").toLowerCase() === "active" ? "archive" : "activate"} this prompt`}
+                        data-testid={`button-toggle-status-${promptId}`}
+                        aria-label={`Toggle prompt status (currently ${getStatusLabel(p.status)})`}
                       >
+                        {togglingIds.has(promptId) ? (
+                          <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                        ) : (p.status || "").toLowerCase() === "active" ? (
+                          <ToggleRight className="h-3 w-3" />
+                        ) : (
+                          <ToggleLeft className="h-3 w-3" />
+                        )}
                         {getStatusLabel(p.status)}
-                      </span>
+                      </button>
                     </div>
                   </div>
 
