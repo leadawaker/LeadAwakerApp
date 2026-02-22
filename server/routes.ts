@@ -632,6 +632,20 @@ export async function registerRoutes(
     res.status(201).json(prompt);
   });
 
+  app.put("/api/prompts/:id", requireAgency, async (req, res) => {
+    const id = Number(req.params.id);
+    const updated = await storage.updatePrompt(id, req.body);
+    if (!updated) return res.status(404).json({ error: "Prompt not found" });
+    res.json(updated);
+  });
+
+  app.delete("/api/prompts/:id", requireAgency, async (req, res) => {
+    const id = Number(req.params.id);
+    const deleted = await storage.deletePrompt(id);
+    if (!deleted) return res.status(404).json({ error: "Prompt not found" });
+    res.json({ success: true });
+  });
+
   // ─── Lead Score History ────────────────────────────────────────────
   // Agency-only (historical scoring data)
 

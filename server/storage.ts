@@ -94,6 +94,8 @@ export interface IStorage {
   getPrompts(): Promise<Prompt_Library[]>;
   getPromptsByAccountId(accountId: number): Promise<Prompt_Library[]>;
   createPrompt(data: InsertPrompt_Library): Promise<Prompt_Library>;
+  updatePrompt(id: number, data: Partial<InsertPrompt_Library>): Promise<Prompt_Library | undefined>;
+  deletePrompt(id: number): Promise<boolean>;
 
   // Lead Score History
   getLeadScoreHistory(): Promise<Lead_Score_History[]>;
@@ -323,6 +325,16 @@ export class DatabaseStorage implements IStorage {
   async createPrompt(data: InsertPrompt_Library): Promise<Prompt_Library> {
     const [row] = await db.insert(promptLibrary).values(data as any).returning();
     return row;
+  }
+
+  async updatePrompt(id: number, data: Partial<InsertPrompt_Library>): Promise<Prompt_Library | undefined> {
+    const [row] = await db.update(promptLibrary).set(data as any).where(eq(promptLibrary.id, id)).returning();
+    return row;
+  }
+
+  async deletePrompt(id: number): Promise<boolean> {
+    const rows = await db.delete(promptLibrary).where(eq(promptLibrary.id, id)).returning();
+    return rows.length > 0;
   }
 
   // ─── Lead Score History ───────────────────────────────────────────────
