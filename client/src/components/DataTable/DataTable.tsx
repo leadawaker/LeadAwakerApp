@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -204,6 +205,14 @@ export interface DataTableProps<TRow extends DataTableRow = DataTableRow> {
   // Pagination
   // ─────────────────────
   pageSize?: number; // If set, enables client-side pagination (e.g. 50)
+
+  // ─────────────────────
+  // Virtualization
+  // ─────────────────────
+  /** When true, uses TanStack Virtual for efficient rendering of 1000+ rows */
+  virtualized?: boolean;
+  /** Height of the virtualized scroll container (default: "calc(100vh - 320px)") */
+  virtualizedContainerHeight?: string;
 
   // ─────────────────────
   // Bulk actions slot
@@ -825,6 +834,12 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     onRowClick,
   } = props;
 
+  const virtualized = props.virtualized ?? false;
+  const virtualizedContainerHeight = props.virtualizedContainerHeight ?? "calc(100vh - 320px)";
+
+  // Ref for the scroll container used by the row virtualizer
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   const [currentPage, setCurrentPage] = useState(1);
 
   // Reset page when rows change (e.g. search/filter)
@@ -1000,16 +1015,39 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     });
   }, [rows, sortConfig]);
 
-  // Pagination: slice sorted rows if pageSize is set
+  // Estimated row height for the virtualizer based on rowSpacing
+  const estimatedRowHeight = rowSpacing === "tight" ? 40 : rowSpacing === "medium" ? 56 : 88;
+
+  // Row virtualizer — always called (hooks must not be conditional)
+  // When `virtualized` is false, count=0 so it has no effect.
+  const rowVirtualizer = useVirtualizer({
+    count: virtualized ? sortedRows.length : 0,
+    getScrollElement: () => (virtualized ? scrollContainerRef.current : null),
+    estimateSize: () => estimatedRowHeight,
+    overscan: 10,
+    measureElement: (el) => {
+      // Use the element's actual height for dynamic measurement
+      if (el && el instanceof HTMLElement) return el.getBoundingClientRect().height;
+      return estimatedRowHeight;
+    },
+  });
+
+  const virtualItems = rowVirtualizer.getVirtualItems();
+  const totalVirtualSize = rowVirtualizer.getTotalSize();
+  const virtualPaddingTop = virtualItems.length > 0 ? virtualItems[0].start : 0;
+  const virtualPaddingBottom =
+    virtualItems.length > 0 ? totalVirtualSize - virtualItems[virtualItems.length - 1].end : 0;
+
+  // Pagination: slice sorted rows if pageSize is set (ignored in virtualized mode)
   const totalRows = sortedRows.length;
-  const totalPages = pageSize ? Math.max(1, Math.ceil(totalRows / pageSize)) : 1;
+  const totalPages = pageSize && !virtualized ? Math.max(1, Math.ceil(totalRows / pageSize)) : 1;
   const safePage = Math.min(currentPage, totalPages);
 
   const displayRows = useMemo(() => {
-    if (!pageSize) return sortedRows;
+    if (!pageSize || virtualized) return sortedRows;
     const start = (safePage - 1) * pageSize;
     return sortedRows.slice(start, start + pageSize);
-  }, [sortedRows, pageSize, safePage]);
+  }, [sortedRows, pageSize, safePage, virtualized]);
 
   const groupedRows = useMemo(() => {
     if (groupBy === "None") return { "All Records": displayRows };
@@ -1406,40 +1444,115 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
             </DropdownMenu>
           )}
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="h-10 rounded-xl gap-2 font-semibold bg-card dark:bg-secondary border-border shadow-none text-foreground"
-              >
-                Fields
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-56 p-2">
-              <ScrollArea className="h-72">
-                <div className="space-y-1">
-                  {columns.map((col) => (
-                    <div
-                      key={col}
-                      className="flex items-center gap-2 p-2 hover:bg-muted/50 rounded-lg cursor-pointer"
-                      onClick={() => {
-                        if (visibleColumns.includes(col)) {
-                          onVisibleColumnsChange(
-                            visibleColumns.filter((c) => c !== col),
-                          );
-                        } else {
-                          onVisibleColumnsChange([...visibleColumns, col]);
-                        }
-                      }}
-                    >
-                      <Checkbox checked={visibleColumns.includes(col)} />
-                      <span className="text-sm font-medium">{col}</span>
+          {(() => {
+            // Columns that can be toggled (exclude internal hiddenFields)
+            const toggleableCols = columns.filter((c) => !hiddenFields.includes(c));
+            const hiddenCount = toggleableCols.filter((c) => !visibleColumns.includes(c)).length;
+            return (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    data-testid="column-config-trigger"
+                    className="h-10 rounded-xl gap-2 font-semibold bg-card dark:bg-secondary border-border shadow-none text-foreground"
+                  >
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    Fields
+                    {hiddenCount > 0 && (
+                      <span
+                        data-testid="column-config-hidden-count"
+                        className="ml-0.5 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-brand-blue text-brand-blue-foreground text-[10px] font-bold"
+                      >
+                        {hiddenCount}
+                      </span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-64 p-0 overflow-hidden"
+                  data-testid="column-config-panel"
+                  align="end"
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-3 py-2.5 border-b border-border bg-muted/40">
+                    <span className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                      Column Visibility
+                    </span>
+                    <div className="flex gap-1">
+                      <button
+                        data-testid="column-config-show-all"
+                        onClick={() => onVisibleColumnsChange(toggleableCols)}
+                        className="text-[11px] text-brand-blue hover:text-brand-blue/80 font-medium px-1.5 py-0.5 rounded hover:bg-brand-blue/10 transition-colors"
+                      >
+                        All
+                      </button>
+                      <span className="text-border">·</span>
+                      <button
+                        data-testid="column-config-hide-all"
+                        onClick={() => {
+                          // Keep at least the first column visible
+                          const first = toggleableCols[0];
+                          onVisibleColumnsChange(first ? [first] : []);
+                        }}
+                        className="text-[11px] text-muted-foreground hover:text-foreground font-medium px-1.5 py-0.5 rounded hover:bg-muted transition-colors"
+                      >
+                        None
+                      </button>
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </PopoverContent>
-          </Popover>
+                  </div>
+                  {/* Column list */}
+                  <ScrollArea className="h-72">
+                    <div className="p-1.5 space-y-0.5">
+                      {toggleableCols.map((col) => {
+                        const isVisible = visibleColumns.includes(col);
+                        return (
+                          <div
+                            key={col}
+                            data-testid={`column-toggle-${col}`}
+                            className={cn(
+                              "flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer transition-colors select-none",
+                              isVisible
+                                ? "hover:bg-muted/60"
+                                : "hover:bg-muted/40 opacity-60 hover:opacity-80",
+                            )}
+                            onClick={() => {
+                              if (isVisible) {
+                                onVisibleColumnsChange(
+                                  visibleColumns.filter((c) => c !== col),
+                                );
+                              } else {
+                                onVisibleColumnsChange([...visibleColumns, col]);
+                              }
+                            }}
+                          >
+                            <Checkbox
+                              checked={isVisible}
+                              data-testid={`column-checkbox-${col}`}
+                              className="pointer-events-none"
+                            />
+                            <span className={cn("text-sm flex-1 truncate", isVisible ? "font-medium text-foreground" : "text-muted-foreground")}>
+                              {formatHeaderTitle(col)}
+                            </span>
+                            {isVisible ? (
+                              <Eye className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                            ) : (
+                              <EyeOff className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0" />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
+                  {/* Footer: show hidden count */}
+                  {hiddenCount > 0 && (
+                    <div className="px-3 py-2 border-t border-border bg-muted/20 text-[11px] text-muted-foreground">
+                      {hiddenCount} column{hiddenCount !== 1 ? "s" : ""} hidden
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
+            );
+          })()}
 
           {onAdd && (
             <Button
@@ -1505,14 +1618,24 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
       )}
 
       <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        <div
+          ref={scrollContainerRef}
+          className="overflow-x-auto"
+          style={virtualized ? { overflowY: "auto", height: virtualizedContainerHeight } : undefined}
+          data-virtualized={virtualized}
+        >
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
           <Table className="table-fixed w-full">
-            <TableHeader className="bg-muted/50">
+            <TableHeader
+              className={cn(
+                "bg-muted/50",
+                virtualized && "sticky top-0 z-10 shadow-sm",
+              )}
+            >
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="w-[40px] px-4">
                   <Checkbox
@@ -1586,7 +1709,215 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                   </TableCell>
                 </TableRow>
               )}
-              {sortedGroupNames.map((groupName) => {
+
+              {/* ── Virtualized rows (TanStack Virtual) ── */}
+              {virtualized && !loading && rows.length > 0 && (
+                <>
+                  {/* Top spacer row — pushes virtual rows to their correct offset */}
+                  {virtualPaddingTop > 0 && (
+                    <tr aria-hidden="true">
+                      <td colSpan={visibleCols.length + 1} style={{ height: virtualPaddingTop }} />
+                    </tr>
+                  )}
+                  {virtualItems.map((virtualRow) => {
+                    const row = sortedRows[virtualRow.index] as any;
+                    if (!row) return null;
+                    return (
+                      <TableRow
+                        key={row.Id}
+                        id={`row-${row.Id}`}
+                        data-index={virtualRow.index}
+                        ref={rowVirtualizer.measureElement}
+                        className={cn(
+                          "group hover:bg-muted/30 transition-colors border-b border-border/50 last:border-0",
+                          selectedIds.includes(row.Id) && "bg-primary/5 hover:bg-primary/10",
+                          onRowClick && "cursor-pointer",
+                        )}
+                        onClick={onRowClick ? (e) => {
+                          const target = e.target as HTMLElement;
+                          if (target.closest("[data-row-checkbox]")) return;
+                          onRowClick(row);
+                        } : undefined}
+                      >
+                        <TableCell className="px-4" data-row-checkbox>
+                          <Checkbox
+                            checked={selectedIds.includes(row.Id)}
+                            onCheckedChange={() => toggleSelect(row.Id)}
+                          />
+                        </TableCell>
+                        {visibleCols.map((col, idx) => (
+                          <TableCell
+                            key={col}
+                            style={{ width: colWidths[col] }}
+                            className={cn(
+                              "px-4 font-medium text-foreground/80 transition-all overflow-visible",
+                              rowPadding,
+                              showVerticalLines && idx < visibleCols.length - 1 && "border-r border-border/30",
+                            )}
+                          >
+                            {isRollupCol(col) ? (
+                              <RollupCell value={row[col]} type={col === "Automation Logs" ? "automations" : col === "Prompt Libraries" ? "prompts" : col} />
+                            ) : (col.toLowerCase().includes("use") || typeof row[col] === "boolean") && (row[col] === 0 || row[col] === 1 || row[col] === true || row[col] === false) ? (
+                              <div className="flex justify-center w-full">
+                                <Checkbox
+                                  checked={Boolean(row[col])}
+                                  onCheckedChange={(checked) => handleUpdate(row.Id, col, !!checked)}
+                                />
+                              </div>
+                            ) : col === "Image" || col === "ACC" || col === "full_name" ? (
+                              <Sheet>
+                                <SheetTrigger asChild>
+                                  {col === "full_name" ? (
+                                    <div className="font-bold text-brand-blue cursor-pointer hover:text-brand-blue/80 transition-colors">
+                                      {row[col]}
+                                    </div>
+                                  ) : (
+                                    <div
+                                      className={cn(
+                                        "w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold cursor-pointer transition-transform hover:scale-110",
+                                        getAccountColor(row.Id).bg,
+                                        getAccountColor(row.Id).text,
+                                      )}
+                                    >
+                                      {row.image ? (
+                                        <img
+                                          src={row.image}
+                                          alt={row.full_name || row.name}
+                                          className="w-full h-full rounded-full object-cover"
+                                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                        />
+                                      ) : getInitials(row.full_name || row.name)}
+                                    </div>
+                                  )}
+                                </SheetTrigger>
+                                <SheetContent className="sm:max-w-lg w-[400px]">
+                                  <SheetHeader className="border-b pb-6">
+                                    <div className="flex items-center gap-4">
+                                      <div className={cn("w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold", getAccountColor(row.Id).bg, getAccountColor(row.Id).text)}>
+                                        {getInitials(row.name)}
+                                      </div>
+                                      <div>
+                                        <SheetTitle className="text-xl">{row.name || "Record Details"}</SheetTitle>
+                                        <SheetDescription>View and edit information</SheetDescription>
+                                      </div>
+                                    </div>
+                                  </SheetHeader>
+                                  <ScrollArea className="h-[calc(100vh-140px)] py-6 pr-4">
+                                    <div className="space-y-6">
+                                      {columns.filter((c) => !hiddenFields.includes(c)).map((c) => (
+                                        <div key={c} className="space-y-1.5">
+                                          <div className="flex items-center gap-2 text-[10px] font-black uppercase text-muted-foreground tracking-widest">
+                                            {getIconForField(c)}
+                                            <span>{formatHeaderTitle(c)}</span>
+                                          </div>
+                                          {nonEditableFields.includes(c) ? (
+                                            <div className="px-3 py-2 bg-muted/50 rounded-lg text-sm font-medium text-muted-foreground border border-border">
+                                              {isDateCol(c) ? formatDateTime(row[c]) : isTimeCol(c) ? formatHHmm(row[c]) : row[c] || "-"}
+                                            </div>
+                                          ) : (
+                                            <Input
+                                              value={row[c] || ""}
+                                              onChange={(e) => handleUpdate(row.Id, c, e.target.value)}
+                                              className="bg-card dark:bg-secondary border-border focus:ring-brand-blue"
+                                            />
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </ScrollArea>
+                                </SheetContent>
+                              </Sheet>
+                            ) : col === "automation_status" && props.automationStatusOptions ? (
+                              <Select value={row[col] || ""} onValueChange={(v) => handleUpdate(row.Id, col, v)}>
+                                <SelectTrigger className={cn("h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate", (automationStatusColors as any)[row[col]]?.bg || "bg-muted", (automationStatusColors as any)[row[col]]?.text || "text-muted-foreground")}>
+                                  <div className="flex items-center gap-1.5 overflow-hidden">
+                                    <div className={cn("h-1.5 w-1.5 rounded-full shrink-0", (automationStatusColors as any)[row[col]]?.dot || "bg-muted-foreground")} />
+                                    <SelectValue />
+                                  </div>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {props.automationStatusOptions.map((o) => (
+                                    <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">
+                                      <div className="flex items-center gap-2">
+                                        <div className={cn("h-1.5 w-1.5 rounded-full", (automationStatusColors as any)[o]?.dot || "bg-muted-foreground")} />
+                                        {o}
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : col === "conversion_status" ? (
+                              <Select value={row[col] || ""} onValueChange={(v) => handleUpdate(row.Id, col, v)}>
+                                <SelectTrigger className={cn("h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate", (conversionColors as any)[row[col]]?.bg || "bg-muted", (conversionColors as any)[row[col]]?.text || "text-muted-foreground")}>
+                                  <div className="flex items-center gap-1.5 overflow-hidden"><SelectValue /></div>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {statusOptions.map((o) => (
+                                    <SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">
+                                      <div className="flex items-center gap-2">
+                                        <div className={cn("h-1.5 w-1.5 rounded-full", (conversionColors as any)[o]?.dot || "bg-muted-foreground")} />
+                                        {o}
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : col === "status" ? (
+                              <Select value={row[col] || ""} onValueChange={(v) => handleUpdate(row.Id, col, v)}>
+                                <SelectTrigger className={cn("h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate", (statusColors as any)[row[col]]?.bg, (statusColors as any)[row[col]]?.text)}>
+                                  <div className="flex items-center gap-1.5 overflow-hidden">
+                                    <div className={cn("h-1.5 w-1.5 rounded-full shrink-0", (statusColors as any)[row[col]]?.dot)} />
+                                    <SelectValue />
+                                  </div>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {statusOptions.map((o) => (<SelectItem key={o} value={o}>{o}</SelectItem>))}
+                                </SelectContent>
+                              </Select>
+                            ) : col === "type" ? (
+                              <Select value={row[col] || ""} onValueChange={(v) => handleUpdate(row.Id, col, v)}>
+                                <SelectTrigger className={cn("h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate", row[col]?.toLowerCase() === "agency" ? "bg-brand-yellow/20 text-brand-yellow" : "bg-brand-blue/20 text-brand-blue")}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {typeOptions.map((o) => (<SelectItem key={o} value={o} className="text-[10px] font-bold uppercase tracking-wider">{o}</SelectItem>))}
+                                </SelectContent>
+                              </Select>
+                            ) : col === "timezone" ? (
+                              <Select value={row[col] || ""} onValueChange={(v) => handleUpdate(row.Id, col, v)}>
+                                <SelectTrigger className={cn("h-7 px-2 rounded-lg border border-transparent shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate bg-muted/50 text-muted-foreground", (timezoneColors as any)[row[col]]?.bg, (timezoneColors as any)[row[col]]?.text, (timezoneColors as any)[row[col]]?.border)}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {timezoneOptions.map((o) => (<SelectItem key={o} value={o}>{o}</SelectItem>))}
+                                </SelectContent>
+                              </Select>
+                            ) : isDateCol(col) ? (
+                              <DateTimeCell value={row[col]} />
+                            ) : isTimeCol(col) ? (
+                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-bold bg-muted/30 px-2 py-1 rounded">
+                                <Clock className="h-3 w-3" />
+                                {formatHHmm(row[col])}
+                              </div>
+                            ) : (
+                              <TruncatedCell value={row[col]} onUpdate={handleUpdate} rowId={row.Id} col={col} />
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    );
+                  })}
+                  {/* Bottom spacer row — fills remaining virtual space */}
+                  {virtualPaddingBottom > 0 && (
+                    <tr aria-hidden="true">
+                      <td colSpan={visibleCols.length + 1} style={{ height: virtualPaddingBottom }} />
+                    </tr>
+                  )}
+                </>
+              )}
+
+              {/* ── Grouped / paginated rows (non-virtualized mode) ── */}
+              {!virtualized && sortedGroupNames.map((groupName) => {
                 const groupRows = groupedRows[groupName];
                 return (
                   <React.Fragment key={groupName}>
@@ -2021,8 +2352,17 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
         </div>
       </div>
 
+      {/* Virtualized row count footer */}
+      {virtualized && !loading && rows.length > 0 && (
+        <div className="flex items-center justify-between px-4 py-2 border-t border-border bg-muted/10 text-sm">
+          <div className="text-muted-foreground" data-testid="virtual-row-count">
+            {totalRows.toLocaleString()} rows (virtualized)
+          </div>
+        </div>
+      )}
+
       {/* Pagination footer */}
-      {pageSize && totalPages > 1 && (
+      {pageSize && !virtualized && totalPages > 1 && (
         <div className="flex items-center justify-between px-4 py-2 border-t border-border bg-muted/10 text-sm">
           <div className="text-muted-foreground">
             Showing {((safePage - 1) * pageSize) + 1}–{Math.min(safePage * pageSize, totalRows)} of {totalRows} rows

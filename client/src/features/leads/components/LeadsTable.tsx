@@ -470,7 +470,7 @@ export function LeadsTable() {
           isRefreshing={loading}
           filterConfig={filterConfig}
           onFilterConfigChange={setFilterConfig}
-          pageSize={50}
+          virtualized={true}
           emptyStateVariant={search ? "search" : "leads"}
           renderBulkActions={renderBulkActions}
         />
