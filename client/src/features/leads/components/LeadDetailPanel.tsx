@@ -6,6 +6,13 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { apiFetch } from "@/lib/apiUtils";
 import { cn } from "@/lib/utils";
 import {
@@ -23,6 +30,7 @@ import {
   Globe,
   ArrowUpCircle,
   BarChart2,
+  CheckCircle2,
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -169,6 +177,19 @@ function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string })
   );
 }
 
+// ── Pipeline Stages ────────────────────────────────────────────────────────
+
+const PIPELINE_STAGES = [
+  "New",
+  "Contacted",
+  "Responded",
+  "Multiple Responses",
+  "Qualified",
+  "Booked",
+  "Lost",
+  "DND",
+] as const;
+
 // ── Score Gauge ────────────────────────────────────────────────────────────
 
 function scoreColor(value: number): { bar: string; text: string } {
@@ -216,8 +237,18 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   const [, setLocation] = useLocation();
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loadingInteractions, setLoadingInteractions] = useState(false);
+  const [localStatus, setLocalStatus] = useState<string>("");
+  const [savingStatus, setSavingStatus] = useState(false);
+  const [stageSaved, setStageSaved] = useState(false);
 
   const leadId = lead?.Id || lead?.id;
+
+  // Sync localStatus when lead changes
+  useEffect(() => {
+    const status = lead?.conversion_status || lead?.Conversion_Status || "";
+    setLocalStatus(status);
+    setStageSaved(false);
+  }, [lead?.Id, lead?.id, lead?.Conversion_Status, lead?.conversion_status]);
 
   // Fetch interactions when panel opens with a lead
   useEffect(() => {
@@ -246,10 +277,38 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
     return () => { cancelled = true; };
   }, [open, leadId]);
 
+  const handleStageChange = async (newStage: string) => {
+    if (!leadId || newStage === localStatus) return;
+
+    const prevStatus = localStatus;
+    setLocalStatus(newStage); // optimistic update
+    setSavingStatus(true);
+    setStageSaved(false);
+
+    try {
+      const res = await apiFetch(`/api/leads/${leadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ Conversion_Status: newStage }),
+      });
+      if (!res.ok) {
+        setLocalStatus(prevStatus); // revert on error
+      } else {
+        setStageSaved(true);
+        // Clear the "saved" checkmark after 2 seconds
+        setTimeout(() => setStageSaved(false), 2000);
+      }
+    } catch {
+      setLocalStatus(prevStatus); // revert on error
+    } finally {
+      setSavingStatus(false);
+    }
+  };
+
   if (!lead) return null;
 
   const fullName = lead.full_name || [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "Unknown";
-  const convStatus = lead.conversion_status || lead.Conversion_Status || "";
+  const convStatus = localStatus || lead.conversion_status || lead.Conversion_Status || "";
   const autoStatus = lead.automation_status || lead.Automation_Status || "";
   const email = lead.email || lead.Email || "";
   const source = lead.Source || lead.source || lead.inquiries_source || "";
@@ -403,7 +462,72 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
           {/* Status */}
           <SectionTitle icon={<Activity className="h-3.5 w-3.5" />} title="Status" />
           <div className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5">
-            <InfoRow label="Pipeline Stage" value={convStatus && <StatusBadge label={convStatus} />} />
+            {/* Pipeline Stage — interactive dropdown */}
+            <div
+              className="flex items-start justify-between gap-3 py-1.5 border-b border-border/30"
+              data-testid="pipeline-stage-row"
+            >
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[11px] text-muted-foreground">Pipeline Stage</span>
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                {/* Current stage badge (visual indicator) */}
+                {convStatus && <StatusBadge label={convStatus} />}
+
+                {/* Change dropdown */}
+                <Select
+                  value={convStatus}
+                  onValueChange={handleStageChange}
+                  disabled={savingStatus}
+                >
+                  <SelectTrigger
+                    className="h-6 w-auto min-w-[70px] text-[11px] px-2 py-0 border-dashed border-border/60 bg-transparent hover:bg-muted/40 transition-colors"
+                    data-testid="pipeline-stage-trigger"
+                    aria-label="Change pipeline stage"
+                  >
+                    <SelectValue placeholder="Change…" />
+                  </SelectTrigger>
+                  <SelectContent data-testid="pipeline-stage-dropdown">
+                    {PIPELINE_STAGES.map((stage) => {
+                      const colors = STATUS_COLORS[stage] ?? { bg: "bg-muted", text: "text-muted-foreground" };
+                      return (
+                        <SelectItem
+                          key={stage}
+                          value={stage}
+                          className="text-[12px]"
+                          data-testid={`pipeline-stage-option-${stage.replace(/\s+/g, "-").toLowerCase()}`}
+                        >
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-full text-[11px] font-semibold",
+                              colors.bg,
+                              colors.text
+                            )}
+                          >
+                            {stage}
+                          </span>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+
+                {/* Saving/saved indicator */}
+                {savingStatus && (
+                  <Loader2
+                    className="h-3 w-3 animate-spin text-muted-foreground"
+                    data-testid="pipeline-stage-saving"
+                  />
+                )}
+                {stageSaved && !savingStatus && (
+                  <CheckCircle2
+                    className="h-3.5 w-3.5 text-emerald-500"
+                    data-testid="pipeline-stage-saved"
+                  />
+                )}
+              </div>
+            </div>
+
             <InfoRow label="Automation" value={autoStatus} />
             <InfoRow label="Bump Stage" value={lead.current_bump_stage} />
             <InfoRow label="Manual Takeover" value={lead.manual_takeover ? "Yes" : lead.manual_takeover === false ? "No" : undefined} />
