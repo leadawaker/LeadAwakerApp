@@ -2,7 +2,9 @@ import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import {
   DndContext,
   DragOverlay,
+  MouseSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   useDroppable,
@@ -683,7 +685,7 @@ function KanbanColumn({
   return (
     <div
       className={cn(
-        "flex flex-col rounded-xl border min-w-[260px] w-[280px] max-w-[300px] flex-shrink-0 transition-all duration-200",
+        "flex flex-col rounded-xl border min-w-[260px] w-[280px] max-w-[300px] flex-shrink-0 transition-all duration-200 snap-start snap-always",
         isOver ? styles.dragOver : cn(styles.bg, styles.border)
       )}
       data-testid={`kanban-column-${stage}`}
@@ -895,8 +897,17 @@ export function LeadsKanban({
   }, [localLeads]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    // Mouse: activate drag after 8px movement
+    useSensor(MouseSensor, {
       activationConstraint: { distance: 8 },
+    }),
+    // Touch: activate drag only after a 250ms hold (long-press)
+    // This allows quick horizontal swipes to scroll the board on mobile/tablet
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
     })
   );
 
@@ -972,7 +983,8 @@ export function LeadsKanban({
   if (loading) {
     return (
       <div
-        className="flex gap-3 overflow-x-auto pb-4 px-1 -mx-1"
+        className="flex gap-3 overflow-x-auto pb-4 px-1 -mx-1 scroll-smooth snap-x snap-mandatory"
+        style={{ overscrollBehaviorX: "contain" } as React.CSSProperties}
         data-testid="kanban-loading-skeleton"
       >
         {PIPELINE_STAGES.map((stage) => {
@@ -981,7 +993,7 @@ export function LeadsKanban({
             <div
               key={stage}
               className={cn(
-                "flex flex-col rounded-xl border min-w-[260px] w-[280px] flex-shrink-0",
+                "flex flex-col rounded-xl border min-w-[260px] w-[280px] flex-shrink-0 snap-start snap-always",
                 styles.bg,
                 styles.border
               )}
@@ -1036,8 +1048,10 @@ export function LeadsKanban({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
+      {/* Horizontal scroll container — supports touch-friendly swipe on mobile/tablet */}
       <div
-        className="flex gap-3 overflow-x-auto pb-4 px-1 -mx-1"
+        className="flex gap-3 overflow-x-auto pb-4 px-1 -mx-1 scroll-smooth snap-x snap-mandatory"
+        style={{ overscrollBehaviorX: "contain" } as React.CSSProperties}
         data-testid="kanban-board"
       >
         {PIPELINE_STAGES.map((stage) => (
