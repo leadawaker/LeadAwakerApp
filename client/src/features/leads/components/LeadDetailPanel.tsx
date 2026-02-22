@@ -45,6 +45,8 @@ import {
   UserCheck,
   UserX,
   RefreshCw,
+  Pencil,
+  Ban,
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -300,6 +302,127 @@ function formatAiMemory(raw: string): string {
   }
 }
 
+// ── Inline Edit Field ──────────────────────────────────────────────────────
+
+interface InlineEditFieldProps {
+  label: string;
+  value: string;
+  onSave: (newValue: string) => Promise<void>;
+  icon?: React.ReactNode;
+  type?: "text" | "email" | "tel";
+  testId?: string;
+  selectOptions?: string[];
+}
+
+function InlineEditField({
+  label,
+  value,
+  onSave,
+  icon,
+  type = "text",
+  testId,
+  selectOptions,
+}: InlineEditFieldProps) {
+  const [editing, setEditing] = useState(false);
+  const [localValue, setLocalValue] = useState(value);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Sync if parent value changes
+  useEffect(() => {
+    if (!editing) setLocalValue(value);
+  }, [value, editing]);
+
+  const handleStartEdit = () => {
+    setLocalValue(value);
+    setEditing(true);
+    setSaved(false);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
+  const handleSave = async () => {
+    if (localValue === value) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    try {
+      await onSave(localValue);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } finally {
+      setSaving(false);
+      setEditing(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") { e.preventDefault(); handleSave(); }
+    if (e.key === "Escape") { setLocalValue(value); setEditing(false); }
+  };
+
+  return (
+    <div
+      className="flex items-center justify-between gap-3 py-1.5 border-b border-border/30 last:border-0 group"
+      data-testid={testId}
+    >
+      <div className="flex items-center gap-1.5 shrink-0">
+        {icon && <span className="text-muted-foreground/60">{icon}</span>}
+        <span className="text-[11px] text-muted-foreground">{label}</span>
+      </div>
+
+      {editing ? (
+        <div className="flex items-center gap-1 flex-1 min-w-0 justify-end">
+          {selectOptions ? (
+            <select
+              value={localValue}
+              onChange={(e) => setLocalValue(e.target.value)}
+              onBlur={handleSave}
+              className="text-[12px] bg-background border border-border rounded px-1.5 py-0.5 max-w-[140px] focus:outline-none focus:ring-1 focus:ring-brand-blue/50"
+              data-testid={`${testId}-select`}
+              autoFocus
+            >
+              {selectOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt || "—"}</option>
+              ))}
+            </select>
+          ) : (
+            <input
+              ref={inputRef}
+              type={type}
+              value={localValue}
+              onChange={(e) => setLocalValue(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={handleKeyDown}
+              className="text-[12px] bg-background border border-border rounded px-1.5 py-0.5 max-w-[160px] focus:outline-none focus:ring-1 focus:ring-brand-blue/50"
+              data-testid={`${testId}-input`}
+              disabled={saving}
+            />
+          )}
+          {saving && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground shrink-0" />}
+        </div>
+      ) : (
+        <div className="flex items-center gap-1.5 min-w-0">
+          {saved && <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />}
+          <span className="text-[12px] text-foreground text-right break-words max-w-[140px] truncate">
+            {value || "—"}
+          </span>
+          <button
+            type="button"
+            onClick={handleStartEdit}
+            className="opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 text-muted-foreground/60 hover:text-brand-blue"
+            aria-label={`Edit ${label}`}
+            data-testid={`${testId}-edit-btn`}
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Score Gauge ────────────────────────────────────────────────────────────
 
 function scoreColor(value: number): { bar: string; text: string } {
@@ -370,6 +493,13 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   const [localManualTakeover, setLocalManualTakeover] = useState<boolean>(false);
   const [savingManualTakeover, setSavingManualTakeover] = useState(false);
 
+  // ── DNC / Opted-out state ──
+  const [localOptedOut, setLocalOptedOut] = useState<boolean>(false);
+  const [localDncReason, setLocalDncReason] = useState<string>("");
+  const [savingDnc, setSavingDnc] = useState(false);
+  const [dncSaved, setDncSaved] = useState(false);
+  const [showDncReason, setShowDncReason] = useState(false);
+
   const leadId = lead?.Id || lead?.id;
 
   // Sync localStatus when lead changes
@@ -392,6 +522,15 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   useEffect(() => {
     setLocalManualTakeover(Boolean(lead?.manual_takeover));
   }, [lead?.Id, lead?.id, lead?.manual_takeover]);
+
+  // Sync DNC / opted-out state when lead changes
+  useEffect(() => {
+    const optedOut = Boolean(lead?.opted_out);
+    setLocalOptedOut(optedOut);
+    setLocalDncReason(lead?.dnc_reason || "");
+    setShowDncReason(optedOut);
+    setDncSaved(false);
+  }, [lead?.Id, lead?.id, lead?.opted_out, lead?.dnc_reason]);
 
   // Fetch interactions when panel opens with a lead
   useEffect(() => {
@@ -599,6 +738,65 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
     }
   };
 
+  // Generic inline field save handler (patches lead by field name)
+  const handleInlineFieldSave = async (fieldName: string, newValue: string) => {
+    if (!leadId) return;
+    await apiFetch(`/api/leads/${leadId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [fieldName]: newValue }),
+    });
+  };
+
+  const handleDncChange = async (checked: boolean) => {
+    if (!leadId || savingDnc) return;
+    const prev = localOptedOut;
+    setLocalOptedOut(checked);
+    setShowDncReason(checked);
+    setSavingDnc(true);
+    setDncSaved(false);
+    try {
+      const payload: Record<string, any> = { opted_out: checked };
+      if (!checked) payload.dnc_reason = "";
+      const res = await apiFetch(`/api/leads/${leadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        setLocalOptedOut(prev);
+        setShowDncReason(prev);
+      } else {
+        if (!checked) setLocalDncReason("");
+        setDncSaved(true);
+        setTimeout(() => setDncSaved(false), 2000);
+      }
+    } catch {
+      setLocalOptedOut(prev);
+      setShowDncReason(prev);
+    } finally {
+      setSavingDnc(false);
+    }
+  };
+
+  const handleDncReasonSave = async () => {
+    if (!leadId || savingDnc) return;
+    setSavingDnc(true);
+    try {
+      await apiFetch(`/api/leads/${leadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dnc_reason: localDncReason }),
+      });
+      setDncSaved(true);
+      setTimeout(() => setDncSaved(false), 2000);
+    } catch {
+      // silently ignore
+    } finally {
+      setSavingDnc(false);
+    }
+  };
+
   if (!lead) return null;
 
   const fullName = lead.full_name || [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "Unknown";
@@ -619,7 +817,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
     <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <SheetContent
         side="right"
-        className="w-[420px] sm:max-w-[420px] p-0 flex flex-col overflow-hidden"
+        className="w-[420px] sm:max-w-[420px] p-0 flex flex-col overflow-hidden bg-background text-foreground dark:bg-card dark:border-border"
         data-testid="lead-detail-panel"
       >
         {/* Header */}
@@ -696,29 +894,42 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto px-5 py-4" data-testid="lead-detail-panel-body">
 
-          {/* Contact Info */}
+          {/* Contact Info — with inline editing */}
           <SectionTitle icon={<User className="h-3.5 w-3.5" />} title="Contact" />
-          <div className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5">
-            <InfoRow
-              icon={<User className="h-3 w-3" />}
+          <div
+            className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5"
+            data-testid="contact-info-section"
+          >
+            <InlineEditField
               label="Name"
               value={fullName}
+              icon={<User className="h-3 w-3" />}
+              onSave={(v) => handleInlineFieldSave("full_name", v)}
+              testId="inline-edit-name"
             />
-            <InfoRow
-              icon={<Phone className="h-3 w-3" />}
+            <InlineEditField
               label="Phone"
-              value={lead.phone}
-              mono
+              value={lead.phone || ""}
+              icon={<Phone className="h-3 w-3" />}
+              type="tel"
+              onSave={(v) => handleInlineFieldSave("phone", v)}
+              testId="inline-edit-phone"
             />
-            <InfoRow
-              icon={<Mail className="h-3 w-3" />}
+            <InlineEditField
               label="Email"
-              value={lead.email}
+              value={lead.email || ""}
+              icon={<Mail className="h-3 w-3" />}
+              type="email"
+              onSave={(v) => handleInlineFieldSave("email", v)}
+              testId="inline-edit-email"
             />
-            <InfoRow
-              icon={<Activity className="h-3 w-3" />}
+            <InlineEditField
               label="Priority"
-              value={lead.priority}
+              value={lead.priority || ""}
+              icon={<Activity className="h-3 w-3" />}
+              onSave={(v) => handleInlineFieldSave("priority", v)}
+              selectOptions={["", "High", "Medium", "Low"]}
+              testId="inline-edit-priority"
             />
             <InfoRow
               label="Language"
@@ -823,7 +1034,6 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
             </div>
 
             <InfoRow label="Automation" value={autoStatus} />
-            <InfoRow label="Opted Out" value={lead.opted_out ? "Yes" : lead.opted_out === false ? "No" : undefined} />
 
             {/* Manual Takeover — toggle switch */}
             <div
@@ -852,6 +1062,65 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 />
               </div>
             </div>
+          </div>
+
+          {/* DNC / Opted-out Section */}
+          <SectionTitle icon={<Ban className="h-3.5 w-3.5" />} title="Do Not Contact" />
+          <div
+            className="rounded-xl border border-border/40 bg-muted/20 px-3 py-2"
+            data-testid="dnc-section"
+          >
+            {/* Opted-out toggle */}
+            <div
+              className="flex items-center justify-between gap-3 py-1.5"
+              data-testid="dnc-toggle-row"
+            >
+              <div className="flex items-center gap-1.5">
+                <Ban className="h-3 w-3 text-muted-foreground/60" />
+                <span className="text-[11px] text-muted-foreground">Opted Out / DNC</span>
+                {localOptedOut && (
+                  <span className="text-[10px] font-semibold text-red-600 dark:text-red-400 bg-red-500/15 px-1.5 py-px rounded-full">
+                    DNC active
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5">
+                {savingDnc && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+                {dncSaved && !savingDnc && <CheckCircle2 className="h-3 w-3 text-emerald-500" />}
+                <Switch
+                  checked={localOptedOut}
+                  onCheckedChange={handleDncChange}
+                  disabled={savingDnc}
+                  data-testid="dnc-toggle"
+                  aria-label="Toggle DNC / opted-out status"
+                />
+              </div>
+            </div>
+
+            {/* DNC reason input — shows when opted out */}
+            {showDncReason && (
+              <div className="mt-1.5 pt-1.5 border-t border-border/30" data-testid="dnc-reason-container">
+                <label className="text-[11px] text-muted-foreground mb-1 block">Reason (optional)</label>
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    value={localDncReason}
+                    onChange={(e) => setLocalDncReason(e.target.value)}
+                    onBlur={handleDncReasonSave}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleDncReasonSave(); }}
+                    placeholder="Enter DNC reason…"
+                    className="flex-1 text-[12px] bg-background border border-border/60 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-blue/50"
+                    data-testid="dnc-reason-input"
+                    disabled={savingDnc}
+                  />
+                </div>
+                {localDncReason && (
+                  <p className="mt-1 text-[11px] text-muted-foreground" data-testid="dnc-reason-display">
+                    Reason: <span className="text-foreground/80">{localDncReason}</span>
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Bump Stage Indicator */}
