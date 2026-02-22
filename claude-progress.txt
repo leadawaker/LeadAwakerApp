@@ -1,3 +1,67 @@
+## Session 2026-02-22 - Coding Agent (Feature #170)
+
+### Completed Features:
+- Feature #170: Prompt list with version and status - PASSING
+
+### Implementation Details:
+
+Feature requirement: Agency-only page showing prompts with version numbers and Active/Archived status badges.
+
+**Modified: client/src/pages/PromptLibrary.tsx**
+
+1. **Fixed empty page bug**: The original code passed `accountId=1` (default from localStorage) to `/api/prompts?accountId=1`, which returned no results because no prompt has `accountsId=1`. For the agency view, all prompts should be shown. Fixed by removing the accountId filter and always calling `/api/prompts` (shows all prompts).
+
+2. **Fixed field name bugs**: API returns camelCase (`useCase`, `performanceScore`) but old code used snake_case (`use_case`, `performance_score`). Fixed to use correct camelCase names with snake_case fallback for safety.
+
+3. **Added status badge**: New `getStatusBadgeClasses(status)` and `getStatusLabel(status)` helper functions:
+   - Active → `bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400`
+   - Archived → `bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400`
+   - null/unknown → lighter gray fallback
+   - Badge positioned top-right of each card, alongside the prompt name
+   - `data-testid="badge-prompt-status-{id}"`
+
+4. **Added version number display**: Monospace badge showing `v{version}` when version is set:
+   - `data-testid="text-prompt-version-{id}"`
+   - Styled as `bg-muted text-foreground font-mono text-[11px]`
+   - Appears in the bottom-left alongside the model name
+
+5. **Added Untitled fallback**: When `name` is null, shows italic "Untitled" text
+
+6. **Removed unused `currentAccountId`** from useWorkspace destructuring (replaced with `isAgencyView`)
+
+### Verification (via browser automation):
+1. Navigated to /agency/prompt-library as Admin - PASS
+2. Prompt list renders - 4 prompts visible - PASS
+3. Version numbers display: "v1.0", "v1.5", "v2.0" in monospace badges - PASS
+4. Status badges:
+   - "TEST_PROMPT_170_Active" → green "Active" badge - PASS
+   - "TEST_PROMPT_170_Archived" → gray "Archived" badge - PASS
+   - Existing prompts with null status → "Unknown" gray badge - PASS
+5. Page accessible only to Admin/Agency users (requireAgency guard) - PASS
+6. Zero new JS errors introduced - PASS
+
+### Screenshots:
+- test-results/prompt-library-verify/01-prompt-library.png
+
+### Code Changes:
+- MODIFIED: client/src/pages/PromptLibrary.tsx (+72 lines, -16 lines)
+  - Added getStatusBadgeClasses() helper
+  - Added getStatusLabel() helper
+  - Removed incorrect accountId filter from fetch
+  - Fixed camelCase field names
+  - Added status badge, version badge, model, fallback name
+
+### Environment Notes:
+- API server on port 5001 (tsx watch)
+- Vite dev server on port 5000/5173
+- Login: leadawaker@gmail.com / test123
+- Prompt Library route: /agency/prompt-library
+
+### Current Status:
+- 141/207 features passing (140 at session start, +1 this session)
+- Feature #170 marked passing after thorough browser verification
+- Git commit: 81b9841
+
 ## Session 2026-02-21 - Coding Agent (Feature #158)
 
 ### Completed Features:
