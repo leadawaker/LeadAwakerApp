@@ -15,6 +15,8 @@ import {
   Search,
   AlertTriangle,
   X,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SkeletonTable } from "@/components/ui/skeleton";
@@ -29,13 +31,13 @@ import {
 import { Input } from "@/components/ui/input";
 
 const STATUS_CONFIG: Record<string, { color: string; icon: any }> = {
-  success: { color: "text-[#10b981] bg-[#10b981]/10 border-[#10b981]/20", icon: CheckCircle2 },
-  failed: { color: "text-[#f43f5e] bg-[#f43f5e]/10 border-[#f43f5e]/20", icon: XCircle },
+  success: { color: "text-emerald-600 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-900/30 dark:border-emerald-800/50", icon: CheckCircle2 },
+  failed: { color: "text-rose-600 bg-rose-50 border-rose-200 dark:text-rose-400 dark:bg-rose-900/30 dark:border-rose-800/50", icon: XCircle },
   skipped: { color: "text-muted-foreground bg-muted/50 border-border", icon: AlertCircle },
-  waiting: { color: "text-[#f59e0b] bg-[#f59e0b]/10 border-[#f59e0b]/20", icon: Clock },
-  retrying: { color: "text-[#6366f1] bg-[#6366f1]/10 border-[#6366f1]/20", icon: RotateCcw },
-  started: { color: "text-[#3b82f6] bg-[#3b82f6]/10 border-[#3b82f6]/20", icon: PlayCircle },
-  error: { color: "text-[#f43f5e] bg-[#f43f5e]/10 border-[#f43f5e]/20", icon: XCircle },
+  waiting: { color: "text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-900/30 dark:border-amber-800/50", icon: Clock },
+  retrying: { color: "text-indigo-600 bg-indigo-50 border-indigo-200 dark:text-indigo-400 dark:bg-indigo-900/30 dark:border-indigo-800/50", icon: RotateCcw },
+  started: { color: "text-blue-600 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-900/30 dark:border-blue-800/50", icon: PlayCircle },
+  error: { color: "text-rose-600 bg-rose-50 border-rose-200 dark:text-rose-400 dark:bg-rose-900/30 dark:border-rose-800/50", icon: XCircle },
 };
 
 const STATUS_OPTIONS = [
@@ -57,6 +59,16 @@ function formatDuration(seconds: number | null | undefined): string | null {
   const num = Number(seconds);
   if (isNaN(num)) return null;
   return `${num.toFixed(1)}s`;
+}
+
+/** Attempt to pretty-print a JSON string; fall back to raw text on parse error */
+function formatJson(raw: string | null | undefined): string {
+  if (!raw) return "";
+  try {
+    return JSON.stringify(JSON.parse(raw), null, 2);
+  } catch {
+    return raw;
+  }
 }
 
 export default function AutomationLogsPage() {
@@ -326,7 +338,7 @@ export default function AutomationLogsPage() {
                       <div className="flex items-center gap-1.5 min-w-0">
                         {isCritical && (
                           <AlertTriangle
-                            className="h-3.5 w-3.5 text-red-500 shrink-0"
+                            className="h-3.5 w-3.5 text-red-500 dark:text-red-400 shrink-0"
                             data-testid="icon-critical-error"
                             aria-label="Critical error"
                           />
