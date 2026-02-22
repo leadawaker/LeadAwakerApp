@@ -12,6 +12,7 @@ import {
   Clock,
   RotateCcw,
   PlayCircle,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SkeletonTable } from "@/components/ui/skeleton";
@@ -23,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 const STATUS_CONFIG: Record<string, { color: string; icon: any }> = {
   success: { color: "text-[#10b981] bg-[#10b981]/10 border-[#10b981]/20", icon: CheckCircle2 },
@@ -44,6 +46,7 @@ export default function AutomationLogsPage() {
   const { currentAccountId, isAgencyView } = useWorkspace();
   const [campaignId, setCampaignId] = useState<number | "all">("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [workflowFilter, setWorkflowFilter] = useState<string>("");
   const [page, setPage] = useState(0);
   const [automationLogs, setAutomationLogs] = useState<any[]>([]);
   const [allLeads, setAllLeads] = useState<any[]>([]);
@@ -105,6 +108,11 @@ export default function AutomationLogsPage() {
         if (statusFilter === "failed") return normalizedStatus === "failed" || rawStatus === "error";
         return true;
       })
+      .filter((r: any) => {
+        if (!workflowFilter.trim()) return true;
+        const name = (r.workflowName || r.workflow_name || "").toLowerCase();
+        return name.includes(workflowFilter.trim().toLowerCase());
+      })
       .map((log: any) => {
         const leadId = log.lead_id || log.leads_id || log.Leads_id;
         const accountId = log.account_id || log.accounts_id || log.Accounts_id;
@@ -121,7 +129,7 @@ export default function AutomationLogsPage() {
       });
 
     return baseRows;
-  }, [automationLogs, allLeads, allAccounts, allCampaigns, campaignId, statusFilter]);
+  }, [automationLogs, allLeads, allAccounts, allCampaigns, campaignId, statusFilter, workflowFilter]);
 
   const pageSize = 100;
   const paginatedRows = rows.slice(page * pageSize, (page + 1) * pageSize);
@@ -139,6 +147,17 @@ export default function AutomationLogsPage() {
             setSelectedCampaignId={setCampaignId}
           />
           <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                type="text"
+                placeholder="Filter by workflow..."
+                value={workflowFilter}
+                onChange={(e) => { setWorkflowFilter(e.target.value); setPage(0); }}
+                className="h-9 w-[200px] pl-8 text-sm"
+                data-testid="input-workflow-filter"
+              />
+            </div>
             <Select
               value={String(campaignId)}
               onValueChange={(v) => { setCampaignId(v === "all" ? "all" : Number(v)); setPage(0); }}
