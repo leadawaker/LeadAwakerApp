@@ -163,4 +163,51 @@ export function registerAuthRoutes(app: Express) {
     const { passwordHash: _, ...safeUser } = req.user!;
     res.json({ user: safeUser });
   });
+
+  /** POST /api/auth/change-password — change password with current password verification */
+  app.post("/api/auth/change-password", requireAuth, async (req, res) => {
+    try {
+      const { currentPassword, newPassword, confirmPassword } = req.body;
+
+      // Validate required fields
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        return res.status(400).json({ message: "All fields are required." });
+      }
+
+      // Validate new password length
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "New password must be at least 6 characters." });
+      }
+
+      // Validate new password matches confirmation
+      if (newPassword !== confirmPassword) {
+        return res.status(400).json({ message: "New password and confirmation do not match." });
+      }
+
+      // Fetch the full user record (including passwordHash) from DB
+      const userId = (req.user as any).id;
+      const userRecord = await storage.getAppUserById(userId);
+      if (!userRecord || !userRecord.passwordHash) {
+        return res.status(400).json({ message: "Cannot change password for this account." });
+      }
+
+      // Verify current password
+      const isValid = await verifyPassword(currentPassword, userRecord.passwordHash);
+      if (!isValid) {
+        return res.status(400).json({ message: "Current password is incorrect." });
+      }
+
+      // Hash the new password and update the user record
+      const newHash = await hashPassword(newPassword);
+      const updated = await storage.updateAppUser(userId, { passwordHash: newHash } as any);
+      if (!updated) {
+        return res.status(500).json({ message: "Failed to update password." });
+      }
+
+      res.json({ message: "Password changed successfully." });
+    } catch (err: any) {
+      console.error("Error changing password:", err);
+      res.status(500).json({ message: "Failed to change password", error: err.message });
+    }
+  });
 }

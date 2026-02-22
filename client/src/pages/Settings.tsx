@@ -76,6 +76,16 @@ export default function SettingsPage() {
   const [notifSms, setNotifSms] = useState<boolean>(false);
   const [isSavingNotifications, setIsSavingNotifications] = useState(false);
 
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   // Initialize notification toggles from session user data when session loads
   useEffect(() => {
     if (session.status === "authenticated") {
@@ -199,6 +209,50 @@ export default function SettingsPage() {
       toast({ variant: "destructive", title: "Error", description: err.message || "Failed to save SMS notification preference." });
     } finally {
       setIsSavingNotifications(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError(null);
+
+    // Client-side validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError("All fields are required.");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordError("New password must be at least 6 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New password and confirmation do not match.");
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const res = await apiFetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || `Failed (${res.status})`);
+      }
+      // Clear fields on success
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setShowCurrentPassword(false);
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
+      toast({ variant: "success", title: "Password changed", description: "Your password has been updated successfully." });
+    } catch (err: any) {
+      setPasswordError(err.message || "Failed to change password.");
+      toast({ variant: "destructive", title: "Error", description: err.message || "Failed to change password." });
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -458,21 +512,129 @@ export default function SettingsPage() {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-reset-password">
-              <div className="p-4 border-b border-border" data-testid="card-reset-password-head">
-                <div className="font-semibold" data-testid="text-password-title">Reset password</div>
+            <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-change-password">
+              <div className="p-4 border-b border-border" data-testid="card-change-password-head">
+                <div className="flex items-center gap-2 font-semibold" data-testid="text-password-title">
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                  Change password
+                </div>
                 <div className="text-xs text-muted-foreground" data-testid="text-password-sub">
-                  Generate a password reset flow (mock).
+                  Enter your current password and choose a new one.
                 </div>
               </div>
-              <div className="p-4" data-testid="card-reset-password-body">
-                <button
-                  type="button"
-                  className="h-10 w-full rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold"
-                  data-testid="button-reset-password"
-                >
-                  Send reset email
-                </button>
+              <div className="p-4 space-y-3" data-testid="card-change-password-body">
+                {/* Current password */}
+                <div data-testid="input-current-password-wrap">
+                  <label className="text-xs text-muted-foreground" data-testid="label-current-password">
+                    Current password
+                  </label>
+                  <div className="relative mt-1">
+                    <input
+                      type={showCurrentPassword ? "text" : "password"}
+                      value={currentPassword}
+                      onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError(null); }}
+                      className="h-10 w-full rounded-xl border border-border bg-muted/20 px-3 pr-10 text-sm"
+                      data-testid="input-current-password"
+                      placeholder="Enter current password"
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      data-testid="btn-toggle-current-password"
+                      aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
+                      tabIndex={-1}
+                    >
+                      {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* New password */}
+                <div data-testid="input-new-password-wrap">
+                  <label className="text-xs text-muted-foreground" data-testid="label-new-password">
+                    New password
+                  </label>
+                  <div className="relative mt-1">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => { setNewPassword(e.target.value); setPasswordError(null); }}
+                      className="h-10 w-full rounded-xl border border-border bg-muted/20 px-3 pr-10 text-sm"
+                      data-testid="input-new-password"
+                      placeholder="At least 6 characters"
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      data-testid="btn-toggle-new-password"
+                      aria-label={showNewPassword ? "Hide new password" : "Show new password"}
+                      tabIndex={-1}
+                    >
+                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm new password */}
+                <div data-testid="input-confirm-password-wrap">
+                  <label className="text-xs text-muted-foreground" data-testid="label-confirm-password">
+                    Confirm new password
+                  </label>
+                  <div className="relative mt-1">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(null); }}
+                      className={`h-10 w-full rounded-xl border px-3 pr-10 text-sm bg-muted/20 ${
+                        confirmPassword && newPassword !== confirmPassword
+                          ? "border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                          : "border-border"
+                      }`}
+                      data-testid="input-confirm-password"
+                      placeholder="Repeat new password"
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      data-testid="btn-toggle-confirm-password"
+                      aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                      tabIndex={-1}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {/* Inline mismatch hint */}
+                  {confirmPassword && newPassword !== confirmPassword && (
+                    <p className="mt-1 text-xs text-red-500" data-testid="text-password-mismatch">
+                      Passwords do not match.
+                    </p>
+                  )}
+                </div>
+
+                {/* Error message */}
+                {passwordError && (
+                  <p className="text-xs text-red-500" data-testid="text-password-error">
+                    {passwordError}
+                  </p>
+                )}
+
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="button"
+                    className="h-10 px-4 rounded-xl border border-border bg-primary text-primary-foreground hover:opacity-90 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    data-testid="button-change-password"
+                    onClick={handleChangePassword}
+                    disabled={isChangingPassword}
+                  >
+                    {isChangingPassword ? "Updating…" : "Update password"}
+                  </button>
+                </div>
               </div>
             </section>
 
