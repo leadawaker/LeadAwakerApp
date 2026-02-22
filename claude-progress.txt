@@ -802,3 +802,96 @@ Checked feature_get_blocked: 0 features blocked.
 - 5 features currently in_progress by other agents
 - 0 features remaining in pending/ready queue
 - Project is nearly complete!
+
+## Session 2026-02-22 - Coding Agent (Features #80-88: LeadDetailPanel Enhancements)
+
+### Assigned Feature: #74 (Already Passing)
+Feature #74 was already passing. Picked up next available features starting with #80.
+
+### Completed Features:
+- Feature #80: Notes field (editable) - PASSING
+- Feature #81: AI memory display (read-only) - PASSING
+- Feature #82: Bump stage indicator - PASSING
+- Feature #83: Sentiment badge - PASSING
+- Feature #84: Manual takeover toggle - PASSING
+- Feature #85: Booked call info - PASSING
+- Feature #86: Edit lead fields inline - PASSING
+- Feature #87: DNC / opted-out status display and toggle - PASSING
+- Feature #88: Lead detail dark mode variant - PASSING
+
+### Implementation Details:
+
+All changes were made in: client/src/features/leads/components/LeadDetailPanel.tsx
+
+**Feature #80 - Notes Field (editable):**
+- Added Textarea and Button imports from shadcn/ui
+- Added localNotes, notesDirty, savingNotes, notesSaved state + notesOriginalRef
+- Auto-syncs notes when lead changes
+- handleNotesSave: PATCH /api/leads/:id with { notes: localNotes }
+- Always-visible Notes section with textarea (placeholder for empty)
+- Saves on onBlur and explicit Save button (only shown when dirty)
+- Saving spinner + "Saved" confirmation checkmark
+
+**Features #81 - AI Memory Display:**
+- Added formatAiMemory() helper: tries JSON.parse, formats key-value pairs readably
+- Falls back to raw string if not JSON
+- Uses `<pre>` with font-sans for readable display
+
+**Feature #82 - Bump Stage Indicator:**
+- Added Bump Progress section gated on current_bump_stage or any bump timestamp
+- Visual progress bar with 3 steps (steps filled when current_bump_stage >= step)
+- Shows timestamps for bump_1_sent_at, bump_2_sent_at, bump_3_sent_at
+- data-testid: bump-stage-section, bump-stage-step-N, bump-current-stage, bump-N-sent-at
+
+**Feature #83 - Sentiment Badge:**
+- Added SentimentBadge component with SENTIMENT_CONFIG map
+- positive=green (Smile icon), negative=red (Frown icon), neutral=gray (Meh icon)
+- Replaces InfoRow in AI Insights section
+
+**Feature #84 - Manual Takeover Toggle:**
+- Replaced InfoRow with Switch component (shadcn/ui)
+- localManualTakeover state with optimistic update
+- PATCH /api/leads/:id with { manual_takeover: checked }
+- Reverts on error, "AI paused" badge shown when active
+
+**Feature #85 - Booked Call Info:**
+- Added re_scheduled_count display with RefreshCw icon
+- Added no-show badge (red pill when no_show=true)
+- Confirmed booked_call_date, booking_confirmed_at already shown
+- data-testid: booked-call-section, no-show-badge, reschedule-count
+
+**Feature #86 - Edit Lead Fields Inline:**
+- Added InlineEditField component with click-to-edit pencil icon
+- Shows text input on click, saves on blur/Enter, cancels on Escape
+- Supports text/email/tel types and selectOptions for dropdowns
+- Applied to name, phone, email, priority in Contact section
+- PATCH /api/leads/:id with the specific field name
+
+**Feature #87 - DNC / Opted-out Status Display and Toggle:**
+- New "Do Not Contact" section with Switch toggle (opted_out field)
+- Shows "DNC active" badge when opted_out=true
+- When toggled on, shows dnc_reason text input
+- handleDncChange: PATCH with { opted_out, dnc_reason }
+- handleDncReasonSave: PATCH with { dnc_reason } on blur/Enter
+- data-testid: dnc-section, dnc-toggle-row, dnc-toggle, dnc-reason-container, dnc-reason-input
+
+**Feature #88 - Lead Detail Dark Mode Variant:**
+- Added explicit bg-background text-foreground dark:bg-card dark:border-border to SheetContent
+- All sections already used Tailwind dark: variants throughout (26 occurrences)
+- Shadcn/ui components automatically handle dark mode via CSS variables
+
+### Verification:
+- Build: npx vite build - success, 3990 modules, no TypeScript errors (all commits)
+- No mock data patterns
+- All changes use real API calls via apiFetch
+
+### Commits:
+- b0c5b0a: feat: implement editable notes field - feature #80
+- (features #81-85 were already committed in e642023 by the linter/autoforge)
+- c777c02: feat: implement inline edit, DNC toggle, and dark mode - features #86 #87 #88
+
+### Current Status:
+- 205/207 features passing (99.0%)
+- 2 features currently in_progress by other agents
+- 0 features remaining in pending/ready queue
+- PROJECT IS EFFECTIVELY COMPLETE!
