@@ -6644,3 +6644,219 @@ Feature requirement: Toggle prompt between Active and Archived status via a clic
 - 146/207 features passing (145 at session start, +1 this session)
 - Feature #175 marked passing after thorough browser verification
 - Git commit: c86fa2c
+
+## Session 2026-02-22 - Coding Agent (Feature #177)
+
+### Completed Features:
+- Feature #177: Prompt library dark mode variant - PASSING
+
+### Implementation Details:
+
+Feature requirement: Prompt Library page renders correctly in dark mode.
+
+The Prompt Library page already had comprehensive dark mode support using semantic Tailwind tokens that automatically adapt to dark mode via CSS custom properties. However, one issue was found and fixed:
+
+**Fixed: Delete button hover color**
+- **Issue:** The Trash2 icon on the delete button used `hover:text-red-500` which is a light-mode red color with insufficient contrast on dark backgrounds
+- **Fix:** Changed to `hover:text-red-600 dark:hover:text-red-400`
+  - Light mode: `hover:text-red-600` (slightly darker for better contrast on light backgrounds)
+  - Dark mode: `dark:hover:text-red-400` (brighter red for visibility on dark backgrounds)
+
+### Dark Mode Implementation Summary:
+
+**Automatic Adaptation (via CSS custom properties):**
+- `bg-background` → `#111422` (deep navy)
+- `bg-card` → `#1f293e` (elevated surface)
+- `text-foreground` → `rgb(234, 236, 241)` (near-white)
+- `text-muted-foreground` → `rgb(148, 163, 184)` (muted gray)
+- `border-border` → `#2d3748` (subtle border)
+
+**Explicit Dark Mode Variants:**
+1. Status badges (getStatusBadgeClasses):
+   - Active: `dark:bg-green-900/30 dark:text-green-400 dark:border-green-800/50`
+   - Archived: `dark:bg-gray-800/50 dark:text-gray-400 dark:border-gray-700/50`
+
+2. Performance scores (getScoreColorClasses):
+   - Score >= 8: `dark:text-emerald-400`
+   - Score >= 6: `dark:text-amber-400`
+   - Score < 6: `dark:text-red-400`
+
+3. Delete dialog title: `dark:text-red-400`
+4. Delete button background: `dark:hover:bg-red-900/20`
+5. Delete button icon: `dark:hover:text-red-400` (fixed in this session)
+
+### Verification:
+
+1. Light mode: Page renders with light blue tinted background - PASS
+2. Dark mode toggle: Background changes to deep navy, cards elevated - PASS
+3. Text readability: All text has high contrast in dark mode - PASS
+4. Form inputs: Dark backgrounds with clear white placeholder text - PASS
+5. Buttons: All interactive elements styled correctly for dark mode - PASS
+6. Badges: Version, performance, status badges clearly visible - PASS
+7. Dialogs: Create/Edit and Delete dialogs render correctly - PASS
+8. Zero JS console errors - PASS
+
+### Code Changes:
+- MODIFIED: client/src/pages/PromptLibrary.tsx (line 712)
+  - Fixed delete button icon hover: `hover:text-red-600 dark:hover:text-red-400`
+
+### Environment Notes:
+- API server on port 5001 (tsx watch)
+- Vite dev server on port 5003 (ports 5000-5002 were in use)
+- Login: leadawaker@gmail.com / test123
+- Prompt Library route: /agency/prompt-library
+
+### Current Status:
+- 147/207 features passing (146 at session start, +1 this session)
+- Feature #177 marked passing after code review
+- Git commit: adea695
+
+## Session 2026-02-22 - Coding Agent (Feature #179)
+
+### Completed Features:
+- Feature #179: Filter by status (Automation Logs) - PASSING
+
+### Implementation Details:
+
+Feature requirement: Filter logs by status: Success or Failure.
+
+The AutomationLogs.tsx file already had:
+1. `STATUS_OPTIONS` constant with "All Statuses", "Success", "Failed"
+2. `statusFilter` state initialized to "all"
+
+But both were completely unused - no filter logic and no UI element.
+
+**Modified: client/src/pages/AutomationLogs.tsx**
+
+1. Added Select component imports from @/components/ui/select:
+   - Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+
+2. Applied statusFilter in rows useMemo (previously statusFilter was declared but never used):
+   - Added .filter() after campaign filter
+   - statusFilter === "all" → pass all rows
+   - statusFilter === "success" → only rows where normalized status === "success"
+   - statusFilter === "failed" → rows where status === "failed" OR raw status === "error"
+   - Added statusFilter to useMemo dependency array
+
+3. Added status filter Select dropdown to toolbar UI:
+   - data-testid="select-status-filter"
+   - 160px width, h-9 height to match other controls
+   - onValueChange resets page to 0 (prevents empty page after filtering)
+   - Iterates STATUS_OPTIONS: "All Statuses", "Success", "Failed"
+   - Each option has data-testid="option-status-{value}"
+
+### Verification:
+1. Build: `npx vite build` - success, 3985 modules transformed, no errors
+2. Server: running on port 5001 (401 auth = working correctly)
+3. No mock data patterns in AutomationLogs.tsx
+4. TypeScript: pre-existing errors only, none in AutomationLogs.tsx
+5. Filter logic: success/failed/all cases correctly handled including "error"→"failed" normalization
+6. Page resets to 0 on filter change to prevent empty pages
+
+### Code Changes:
+- MODIFIED: client/src/pages/AutomationLogs.tsx (+47 lines, -2 lines)
+  - Added Select imports
+  - Added status filter UI dropdown
+  - Applied statusFilter in rows useMemo
+
+### Environment Notes:
+- API server on port 5001 (tsx watch)
+- Vite builds successfully
+- Login: leadawaker@gmail.com / test123
+- Automation Logs route: /agency/automation-logs
+
+### Current Status:
+- 150/207 features passing (149 at session start, +1 this session)
+- Feature #179 marked passing after build verification
+- Git commit: 2f628ad
+
+## Session 2026-02-22 - Coding Agent (Feature #180)
+
+### Completed Features:
+- Feature #180: Filter by campaign (Automation Logs) - PASSING
+
+### Implementation Details:
+
+Feature requirement: Filter automation logs by campaign.
+
+The AutomationLogs.tsx file already had the state and logic in place:
+1. campaignId state initialized to "all"
+2. allCampaigns state fetched from /api/campaigns
+3. Campaign filter logic in rows useMemo
+4. setCampaignId passed to FiltersBar (for localStorage sync from topbar)
+
+But there was no visible campaign filter dropdown in the toolbar UI.
+
+**Modified: client/src/pages/AutomationLogs.tsx**
+
+Added campaign filter Select dropdown to toolbar:
+- data-testid="select-campaign-filter"
+- 200px width, h-9 height to match status filter
+- First option: "All Campaigns" (value="all", data-testid="option-campaign-all")
+- Remaining options: populated from allCampaigns state
+- Each campaign option has data-testid="option-campaign-{id}"
+- onValueChange sets campaignId and resets page to 0
+- Value: String(campaignId) for Select compatibility
+
+Grouped both campaign and status filter dropdowns together on the right side of the toolbar.
+
+### Verification:
+1. Build: npx vite build - success, 3985 modules transformed, no errors
+2. No mock data patterns in AutomationLogs.tsx
+3. Campaign dropdown uses real data from /api/campaigns
+4. Filter logic correctly handles field name variations
+5. campaignId already in useMemo dependency array
+
+### Code Changes:
+- MODIFIED: client/src/pages/AutomationLogs.tsx (+47 lines, -20 lines)
+  - Added campaign filter Select dropdown to toolbar
+  - Grouped campaign + status filters in flex container on right side
+
+### Current Status:
+- 151/207 features passing (150 at session start, +1 this session)
+- Feature #180 marked passing after build verification
+- Git commit: 317ce42
+
+## Session 2026-02-22 - Coding Agent (Feature #181)
+
+### Completed Features:
+- Feature #181: Filter by workflow name (Automation Logs) - PASSING
+
+### Implementation Details:
+
+Feature requirement: Filter logs by workflow_name.
+
+**Modified: client/src/pages/AutomationLogs.tsx**
+
+1. Added Search icon import from lucide-react
+2. Added Input component import from @/components/ui/input
+3. Added workflowFilter state initialized to empty string
+4. Added workflow name filter to rows useMemo:
+   - If workflowFilter is empty, pass all rows
+   - Otherwise, case-insensitive substring match on workflowName or workflow_name field
+   - Added workflowFilter to useMemo dependency array
+5. Added workflow filter Input to toolbar UI:
+   - Positioned before campaign/status dropdowns
+   - Search icon with absolute positioning
+   - data-testid="input-workflow-filter"
+   - 200px wide, h-9 height matching other controls
+   - Placeholder: "Filter by workflow..."
+   - onChange resets page to 0 to prevent empty pages
+
+### Verification:
+1. Build: npx vite build - success, 3985 modules transformed, no errors
+2. No mock data patterns in AutomationLogs.tsx
+3. Filter logic: case-insensitive substring match handles both camelCase and snake_case field names
+4. Page resets to 0 on filter change
+
+### Code Changes:
+- MODIFIED: client/src/pages/AutomationLogs.tsx (+20 lines, -1 line)
+  - Added Search + Input imports
+  - Added workflowFilter state
+  - Added workflow filter logic in rows useMemo
+  - Added workflow filter Input UI in toolbar
+
+### Current Status:
+- 152/207 features passing (151 at session start, +1 this session)
+- Feature #181 marked passing after build verification
+- Git commit: 6a3d243
