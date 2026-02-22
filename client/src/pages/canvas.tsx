@@ -148,7 +148,7 @@ const LeadReactivationAnimation = () => {
   );
 };
 
-const Cursor = ({ id, startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHover }: { id: string, startX: number, startY: number, targetOffsetX: number, targetOffsetY: number, buttonRef: React.RefObject<HTMLButtonElement>, onHover: (clicking: boolean) => void }) => {
+const Cursor = ({ id, startX, startY, targetOffsetX, targetOffsetY, buttonRef, onHover }: { id: string, startX: number, startY: number, targetOffsetX: number, targetOffsetY: number, buttonRef: React.RefObject<HTMLButtonElement | null>, onHover: (clicking: boolean) => void }) => {
   const [phase, setPhase] = useState('moving');
   const cursorRef = useRef<HTMLDivElement>(null);
   

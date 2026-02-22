@@ -1,5 +1,4 @@
 import React, { useMemo, useState, useRef, useEffect, useCallback } from "react";
-import { useLocation } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLeads, useCampaigns, useAccounts, useCampaignMetrics, useDashboardTrends } from "@/hooks/useApiData";
@@ -36,11 +35,10 @@ import {
   ArrowUpRight,
   Target,
   Clock,
+  Megaphone,
   Zap,
   ChevronLeft,
   ChevronRight,
-  Megaphone,
-  Inbox,
   Loader2,
   Building2,
   ChevronDown,
@@ -113,84 +111,6 @@ const CSV_TAGS = [
 
 type DashboardTab = "pipeline" | "funnel";
 
-/* ------------------------------------------------------------------ */
-/* Quick-Jump Shortcut Cards                                           */
-/* ------------------------------------------------------------------ */
-const QUICK_JUMP_ITEMS = [
-  {
-    label: "Leads",
-    route: "/contacts",
-    icon: Users,
-    color: "#3b82f6",
-    description: "Manage contacts",
-    testId: "quick-jump-leads",
-  },
-  {
-    label: "Campaigns",
-    route: "/campaigns",
-    icon: Megaphone,
-    color: "#8b5cf6",
-    description: "View campaigns",
-    testId: "quick-jump-campaigns",
-  },
-  {
-    label: "Inbox",
-    route: "/conversations",
-    icon: Inbox,
-    color: "#10b981",
-    description: "Conversations",
-    testId: "quick-jump-inbox",
-  },
-  {
-    label: "Calendar",
-    route: "/calendar",
-    icon: CalendarIcon,
-    color: "#f59e0b",
-    description: "Scheduled calls",
-    testId: "quick-jump-calendar",
-  },
-];
-
-function QuickJumpCards() {
-  const [, setLocation] = useLocation();
-  const { isAgencyView } = useWorkspace();
-  const prefix = isAgencyView ? "/agency" : "/subaccount";
-
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6" data-testid="quick-jump-cards">
-      {QUICK_JUMP_ITEMS.map((item) => {
-        const Icon = item.icon;
-        return (
-          <button
-            key={item.route}
-            type="button"
-            data-testid={item.testId}
-            onClick={() => setLocation(`${prefix}${item.route}`)}
-            className={cn(
-              "group relative flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm",
-              "hover:shadow-md hover:border-border transition-all duration-200",
-              "text-left cursor-pointer"
-            )}
-          >
-            <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-110"
-              style={{ backgroundColor: `${item.color}15`, color: item.color }}
-            >
-              <Icon className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-sm font-bold text-foreground">{item.label}</div>
-              <div className="text-[11px] text-muted-foreground truncate">{item.description}</div>
-            </div>
-            <ArrowUpRight
-              className="ml-auto h-4 w-4 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors shrink-0"
-            />
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 export default function AppDashboard() {
   const { currentAccountId, isAgencyView, currentAccount, isAgencyUser } = useWorkspace();
@@ -673,7 +593,7 @@ function AgencyDashboard({ accounts, campaigns, leads, campaignMetrics, metricsL
   return (
     <div className="mt-6 space-y-12" data-testid="agency-dashboard">
       {/* Hero KPI + Secondary KPI cards grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 -mb-6" data-testid="secondary-kpi-cards">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3" data-testid="secondary-kpi-cards">
         {/* Hero KPI: Calls Booked — largest, most prominent */}
         <div
           className="col-span-2 row-span-2 rounded-2xl border-2 shadow-lg relative overflow-hidden flex flex-col justify-between p-6"
@@ -717,7 +637,6 @@ function AgencyDashboard({ accounts, campaigns, leads, campaignMetrics, metricsL
         <Stat label="Messages Sent" value={String(agencyStats.messagesSent)} testId="stat-messages-sent" icon={<MessageSquare className="w-4 h-4" />} sparklineData={messagesSparkline} sparklineColor="#8b5cf6" />
       </div>
 
-      <QuickJumpCards />
       <CampaignPerformanceCards
         campaigns={campaignFilteredCampaigns}
         metrics={campaignFilteredMetrics}
@@ -855,8 +774,7 @@ function SubaccountDashboard({
 
   return (
     <div className="mt-0 space-y-12 flex flex-col" data-testid="subaccount-dashboard">
-      <QuickJumpCards />
-      <div className="-mt-10 mb-8" data-testid="grid-kpis">
+      <div className="mb-8" data-testid="grid-kpis">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3" data-testid="secondary-kpi-cards">
           {/* Hero KPI: Calls Booked — largest, most prominent, top-left */}
           <div

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 
@@ -41,6 +42,7 @@ const ALL_PAGES = [
 ];
 
 export function useWorkspace(): WorkspaceState {
+  const [location] = useLocation();
   const userRole = localStorage.getItem("leadawaker_user_role") || "Viewer";
   const isAdmin = userRole === "Admin";
   const isAgencyUser = userRole === "Admin" || userRole === "Operator";
@@ -95,14 +97,10 @@ export function useWorkspace(): WorkspaceState {
     };
   }, [currentAccountId, accountsList]);
 
-  // Agency view: user is agency + we consider them in agency context
+  // Agency view: reactive URL-based detection via wouter useLocation
   const isAgencyView = useMemo(() => {
-    // Use URL-based detection as primary
-    if (typeof window !== "undefined") {
-      return window.location.pathname.startsWith("/agency");
-    }
-    return isAgencyUser;
-  }, [isAgencyUser]);
+    return location.startsWith("/agency");
+  }, [location]);
 
   const allowedPages = isAgencyUser ? ALL_PAGES : CLIENT_PAGES;
 

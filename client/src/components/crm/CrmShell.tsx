@@ -14,10 +14,14 @@ import { cn } from "@/lib/utils";
 import { X, Search, Bell, HelpCircle, Headphones, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { logout } from "@/hooks/useSession";
+import { TopbarActionsProvider } from "@/contexts/TopbarActionsContext";
 
 export function CrmShell({ children }: { children: React.ReactNode }) {
-  const [, setLocation] = useLocation();
-  const { isAgencyView, currentAccountId, currentAccount } = useWorkspace();
+  const [location, setLocation] = useLocation();
+  const { currentAccount } = useWorkspace();
+  // Use reactive wouter location (not the stale useMemo in useWorkspace) so the
+  // agency-mode class updates immediately when navigating between /agency and /subaccount routes.
+  const isAgencyView = location.startsWith("/agency");
   const { isDark, toggleTheme } = useTheme();
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(3);
@@ -40,7 +44,8 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-background" data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
+    <TopbarActionsProvider>
+    <div className={cn("min-h-screen bg-background", isAgencyView && "agency-mode")} data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
       {/* Skip to main content link — visible only on keyboard focus for accessibility */}
       <a href="#main-content" className="sr-skip-link" data-testid="skip-to-main">
         Skip to main content
@@ -51,6 +56,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         isMobileMenuOpen={isMobileMenuOpen}
         onToggleMobileMenu={() => setIsMobileMenuOpen((v) => !v)}
         notificationsCount={unreadCount}
+        onLogout={handleLogout}
       />
       <div className="fixed left-0 top-0 bottom-0 z-40" data-testid="wrap-left-nav">
         <RightSidebar
@@ -173,9 +179,9 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
       <main
         id="main-content"
         className={cn(
-          "h-screen flex flex-col bg-background transition-all duration-200 overflow-hidden",
-          collapsed ? "md:pl-[80px]" : "md:pl-[200px]",
-          "pb-[64px] md:pb-0 pt-[80px]"
+          "h-screen flex flex-col bg-stone-200 dark:bg-stone-900 transition-all duration-200 overflow-hidden",
+          collapsed ? "md:pl-[60px]" : "md:pl-[180px]",
+          "pb-[64px] md:pb-0 pt-[56px]"
         )}
         data-testid="main-crm"
       >
@@ -192,5 +198,6 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
       {/* Global Command Palette (Cmd+K / Ctrl+K) */}
       <CommandPalette />
     </div>
+    </TopbarActionsProvider>
   );
 }

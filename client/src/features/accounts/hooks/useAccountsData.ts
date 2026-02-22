@@ -185,8 +185,8 @@ export function useAccountsData(currentAccountId?: number) {
           : {};
         finalCols.forEach((col) => {
           if (!initialWidths[col]) {
-            if (col === "Id" || col === "Account ID") initialWidths[col] = 80;
-            else if (col === "Image") initialWidths[col] = 60;
+            if (col === "Id" || col === "Account ID") initialWidths[col] = 56;
+            else if (col === "Image") initialWidths[col] = 52;
             else if (SMALL_WIDTH_COLS.includes(col)) initialWidths[col] = 120;
             else initialWidths[col] = 180;
           }

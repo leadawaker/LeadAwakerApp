@@ -413,7 +413,7 @@ function groupMessagesByThread(msgs: Interaction[]): ThreadGroup[] {
     }
 
     if (startNew) {
-      const tid = key ?? `session-${groupIndex}`;
+      const tid: string = key ?? `session-${groupIndex}`;
       currentGroup = { threadId: tid, threadIndex: groupIndex++, msgs: [] };
       groups.push(currentGroup);
     }

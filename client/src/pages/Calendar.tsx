@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { apiFetch } from "@/lib/apiUtils";
+import { GitHubCalendar, type ContributionDay } from "@/components/ui/git-hub-calendar";
 import {
   DndContext,
   DragOverlay,
@@ -31,7 +32,7 @@ function formatDate(date: Date) {
   return `${day} ${month} - ${year}`;
 }
 
-type ViewMode = "month" | "week" | "day";
+type ViewMode = "year" | "month" | "week" | "day";
 
 type Appointment = {
   id: number;
@@ -120,16 +121,16 @@ function DroppableDay({
   );
 }
 
-// ── Droppable Time Slot (for weekly/day view) ──────────────────────────────
+// ── Droppable Time Slot — absolutely positioned in the shared coordinate space
 function DroppableTimeSlot({
   dateKey,
   hour,
-  children,
+  hourHeight,
   className,
 }: {
   dateKey: string;
   hour: number;
-  children?: React.ReactNode;
+  hourHeight: number;
   className?: string;
 }) {
   const { setNodeRef, isOver } = useDroppable({
@@ -140,15 +141,10 @@ function DroppableTimeSlot({
   return (
     <div
       ref={setNodeRef}
-      className={cn(
-        "h-20 border-b border-border/30 relative",
-        className,
-        isOver && "bg-primary/15 border-primary/40"
-      )}
+      className={cn("absolute left-0 right-0", className, isOver && "bg-primary/10")}
+      style={{ top: hour * hourHeight, height: hourHeight }}
       data-testid={`timeslot-${dateKey}-${hour}`}
-    >
-      {children}
-    </div>
+    />
   );
 }
 
@@ -163,6 +159,7 @@ export default function CalendarPage() {
   const [selectedBooking, setSelectedBooking] = useState<Appointment | null>(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const timeGridRef = useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -203,6 +200,20 @@ export default function CalendarPage() {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
+
+  // Auto-scroll to current time when entering week/day view
+  useEffect(() => {
+    if (viewMode === "week" || viewMode === "day") {
+      const id = requestAnimationFrame(() => {
+        if (timeGridRef.current) {
+          const now = new Date();
+          const scrollPos = (now.getHours() * 60 + now.getMinutes()) * (80 / 60);
+          timeGridRef.current.scrollTop = Math.max(0, scrollPos - 56 - 2 * 80); // account for sticky header + 2 hrs above
+        }
+      });
+      return () => cancelAnimationFrame(id);
+    }
+  }, [viewMode]);
 
   const todayStr = new Date().toLocaleDateString();
 
@@ -313,7 +324,9 @@ export default function CalendarPage() {
 
   const navigate = (direction: number) => {
     const next = new Date(anchorDate);
-    if (viewMode === "month") {
+    if (viewMode === "year") {
+      next.setFullYear(anchorDate.getFullYear() + direction);
+    } else if (viewMode === "month") {
       next.setMonth(anchorDate.getMonth() + direction);
     } else if (viewMode === "week") {
       next.setDate(anchorDate.getDate() + (direction * 7));
@@ -324,6 +337,7 @@ export default function CalendarPage() {
   };
 
   const viewLabel = useMemo(() => {
+    if (viewMode === "year") return String(anchorDate.getFullYear());
     if (viewMode === "month") return `${FULL_MONTHS[anchorDate.getMonth()]} ${anchorDate.getFullYear()}`;
     if (viewMode === "week") {
       const start = weekDays[0];
@@ -337,6 +351,42 @@ export default function CalendarPage() {
   }, [viewMode, anchorDate, weekDays]);
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
+
+  // Time grid layout constants — shared by labels, gridlines, appointments, drop zones
+  const HOUR_H = 80; // px per hour (all positioned elements use this)
+  const LABEL_W = 56; // px for the time gutter on the left
+
+  // ── Yearly view data ────────────────────────────────────────────────────────
+  const yearlyData = useMemo((): ContributionDay[] => {
+    const targetYear = anchorDate.getFullYear();
+    const countMap = new Map<string, number>();
+    for (const a of appts) {
+      const d = new Date(a.raw_booked_call_date);
+      if (d.getFullYear() !== targetYear) continue;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      countMap.set(key, (countMap.get(key) ?? 0) + 1);
+    }
+    return Array.from(countMap.entries()).map(([date, count]) => ({ date, count }));
+  }, [appts, anchorDate]);
+
+  const yearlyStats = useMemo(() => {
+    const targetYear = anchorDate.getFullYear();
+    const yearAppts = appts.filter(
+      (a) => new Date(a.raw_booked_call_date).getFullYear() === targetYear
+    );
+    const activeDays = yearlyData.filter((d) => d.count > 0).length;
+    const monthCounts = Array(12).fill(0) as number[];
+    yearAppts.forEach((a) => {
+      monthCounts[new Date(a.raw_booked_call_date).getMonth()]++;
+    });
+    const maxMonthCount = Math.max(0, ...monthCounts);
+    const bestMonthIdx = maxMonthCount > 0 ? monthCounts.indexOf(maxMonthCount) : -1;
+    return {
+      total: yearAppts.length,
+      activeDays,
+      bestMonth: bestMonthIdx >= 0 ? FULL_MONTHS[bestMonthIdx] : "—",
+    };
+  }, [appts, anchorDate, yearlyData]);
 
   // Build campaign options from all leads in scope (account-filtered, not campaign-filtered)
   // so we don't create a circular dependency with the campaignId filter.
@@ -374,7 +424,7 @@ export default function CalendarPage() {
       merged.set(c.id, c);
     }
     // Add campaigns found in leads that aren't already in the API list
-    for (const [cid, cname] of fromLeads) {
+    for (const [cid, cname] of Array.from(fromLeads)) {
       if (!merged.has(cid)) {
         merged.set(cid, { id: cid, name: cname, status: null });
       }
@@ -542,35 +592,75 @@ export default function CalendarPage() {
             "flex-1 min-h-0 gap-4",
             isMobile || isTablet
               ? "flex flex-col overflow-y-auto"
-              : "grid grid-cols-1 lg:grid-cols-[1fr_300px]"
+              : "grid grid-cols-1 lg:grid-cols-[380px_1fr]"
           )} data-testid="layout-calendar">
             <div className={cn(
-              "border border-border bg-card shadow-sm overflow-hidden flex flex-col rounded-2xl",
+              "border border-border bg-card shadow-sm overflow-hidden flex flex-col rounded-2xl lg:order-2",
               isMobile || isTablet ? "min-h-[420px]" : "h-full"
             )} data-testid="calendar-main">
               <div className="p-3 md:p-4 border-b border-border flex flex-wrap items-center justify-between gap-2 shrink-0">
-                <div className="flex flex-wrap items-center gap-2 md:gap-4">
-                  <DropdownMenu.Root>
-                    <DropdownMenu.Trigger asChild>
-                      <button className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold transition-colors uppercase tracking-wider" data-testid="button-view-mode">
-                        <span className="capitalize">{viewMode}</span> View <ChevronDown className="h-4 w-4" />
+                {/* LEFT: view mode + date navigation */}
+                <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                  <div
+                    className="flex rounded-xl border border-border overflow-hidden"
+                    data-testid="view-tab-strip"
+                  >
+                    {(["year", "month", "week", "day"] as ViewMode[]).map((mode) => (
+                      <button
+                        key={mode}
+                        onClick={() => setViewMode(mode)}
+                        className={cn(
+                          "px-3 py-1.5 text-sm font-semibold transition-colors border-r border-border last:border-r-0",
+                          viewMode === mode
+                            ? "bg-brand-blue text-white"
+                            : "bg-muted/10 hover:bg-muted/30 text-foreground"
+                        )}
+                        data-testid={`button-view-${mode}`}
+                      >
+                        {mode === "year"
+                          ? "Yearly"
+                          : mode === "month"
+                          ? "Monthly"
+                          : mode === "week"
+                          ? "Weekly"
+                          : "Daily"}
                       </button>
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Portal>
-                      <DropdownMenu.Content className="z-[100] min-w-[160px] bg-background border border-border rounded-xl shadow-xl p-1" sideOffset={5}>
-                        {(["month", "week", "day"] as ViewMode[]).map((mode) => (
-                          <DropdownMenu.Item
-                            key={mode}
-                            className="flex items-center px-3 py-2 text-sm font-medium rounded-lg cursor-pointer hover:bg-muted/50 outline-none"
-                            onClick={() => setViewMode(mode)}
-                          >
-                            <span className="capitalize">{mode}</span> View
-                          </DropdownMenu.Item>
-                        ))}
-                      </DropdownMenu.Content>
-                    </DropdownMenu.Portal>
-                  </DropdownMenu.Root>
+                    ))}
+                  </div>
 
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-muted/20">
+                    <button
+                      className="h-6 w-6 rounded-lg hover:bg-muted/30 flex items-center justify-center transition-colors"
+                      onClick={() => navigate(-1)}
+                      data-testid="button-prev"
+                      aria-label="Previous"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <div className={cn("font-bold text-sm text-center", isMobile ? "min-w-[100px]" : "min-w-[140px]")} data-testid="text-view-label">
+                      {viewLabel}
+                    </div>
+                    <button
+                      className="h-6 w-6 rounded-lg hover:bg-muted/30 flex items-center justify-center transition-colors"
+                      onClick={() => navigate(1)}
+                      data-testid="button-next"
+                      aria-label="Next"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <button
+                    className="px-3 py-1.5 rounded-xl border border-border bg-muted/20 text-sm font-medium hover:bg-muted/40 transition-colors"
+                    onClick={() => setAnchorDate(new Date())}
+                    data-testid="button-today"
+                    aria-label="Go to today"
+                  >
+                    Today
+                  </button>
+                </div>
+
+                {/* RIGHT: account + campaign filters */}
+                <div className="flex flex-wrap items-center gap-2">
                   {/* Account filter dropdown — agency/admin users only */}
                   {isAgencyUser && (
                     <DropdownMenu.Root>
@@ -593,6 +683,7 @@ export default function CalendarPage() {
                         <DropdownMenu.Content
                           className="z-[100] min-w-[200px] bg-background border border-border rounded-xl shadow-xl p-1 max-h-64 overflow-y-auto"
                           sideOffset={5}
+                          align="end"
                           data-testid="account-filter-dropdown"
                         >
                           <DropdownMenu.Item
@@ -660,6 +751,7 @@ export default function CalendarPage() {
                       <DropdownMenu.Content
                         className="z-[100] min-w-[200px] bg-background border border-border rounded-xl shadow-xl p-1"
                         sideOffset={5}
+                        align="end"
                         data-testid="campaign-filter-dropdown"
                       >
                         <DropdownMenu.Item
@@ -704,38 +796,63 @@ export default function CalendarPage() {
                       </DropdownMenu.Content>
                     </DropdownMenu.Portal>
                   </DropdownMenu.Root>
-
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border bg-muted/20">
-                    <button
-                      className="h-6 w-6 rounded-lg hover:bg-muted/30 flex items-center justify-center transition-colors"
-                      onClick={() => navigate(-1)}
-                      data-testid="button-prev"
-                      aria-label="Previous"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <div className={cn("font-bold text-sm text-center", isMobile ? "min-w-[100px]" : "min-w-[140px]")} data-testid="text-view-label">
-                      {viewLabel}
-                    </div>
-                    <button
-                      className="h-6 w-6 rounded-lg hover:bg-muted/30 flex items-center justify-center transition-colors"
-                      onClick={() => navigate(1)}
-                      data-testid="button-next"
-                      aria-label="Next"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <button
-                    className="px-3 py-1.5 rounded-xl border border-border bg-muted/20 text-sm font-medium hover:bg-muted/40 transition-colors"
-                    onClick={() => setAnchorDate(new Date())}
-                    data-testid="button-today"
-                    aria-label="Go to today"
-                  >
-                    Today
-                  </button>
                 </div>
               </div>
+
+              {viewMode === "year" && (
+                <div
+                  className="flex-1 overflow-y-auto p-4 md:p-6"
+                  data-testid="view-year"
+                >
+                  {/* Summary stats */}
+                  <div className="grid grid-cols-3 gap-3 mb-6">
+                    <div className="bg-muted/10 rounded-xl p-4 text-center border border-border/30">
+                      <div
+                        className="text-3xl font-black text-brand-blue"
+                        data-testid="stat-total-bookings"
+                      >
+                        {yearlyStats.total}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground mt-1 font-medium uppercase tracking-wider">
+                        Total Bookings
+                      </div>
+                    </div>
+                    <div className="bg-muted/10 rounded-xl p-4 text-center border border-border/30">
+                      <div
+                        className="text-3xl font-black text-foreground"
+                        data-testid="stat-active-days"
+                      >
+                        {yearlyStats.activeDays}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground mt-1 font-medium uppercase tracking-wider">
+                        Active Days
+                      </div>
+                    </div>
+                    <div className="bg-muted/10 rounded-xl p-4 text-center border border-border/30">
+                      <div
+                        className="text-xl font-black text-foreground truncate"
+                        data-testid="stat-best-month"
+                      >
+                        {yearlyStats.bestMonth}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground mt-1 font-medium uppercase tracking-wider">
+                        Busiest Month
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Booking activity heatmap */}
+                  <div className="bg-muted/5 rounded-xl p-4 border border-border/40">
+                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+                      {anchorDate.getFullYear()} Booking Activity
+                    </div>
+                    <GitHubCalendar
+                      data={yearlyData}
+                      year={anchorDate.getFullYear()}
+                    />
+                  </div>
+                </div>
+              )}
 
               {viewMode === "month" && (
                 <>
@@ -816,80 +933,149 @@ export default function CalendarPage() {
                 </>
               )}
 
-              {(viewMode === "week" || viewMode === "day") && (
-                <div className="flex-1 overflow-y-auto relative flex" data-testid="grid-time">
-                  <div className="w-16 border-r border-border bg-muted/5 flex flex-col shrink-0 relative">
-                    <div className="h-[65px] border-b border-border/50 sticky top-0 bg-background/80 glass-divider z-30" />
-                    {hours.map(h => (
-                      <div key={h} className="h-20 border-b border-border/50 text-[10px] font-bold text-muted-foreground p-2 text-right relative">
-                        <span className="absolute -bottom-2 right-2">
-                          {h === 23 ? "12 AM" : (h + 1 < 12 ? `${h + 1} AM` : h + 1 === 12 ? "12 PM" : `${h + 1 - 12} PM`)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex-1 grid" style={{ gridTemplateColumns: `repeat(${viewMode === "week" ? 7 : 1}, 1fr)` }}>
-                    {(viewMode === "week" ? weekDays : [anchorDate]).map((d, i) => {
-                      const isToday = d.toLocaleDateString() === todayStr;
-                      const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-                      const dateKey = d.toLocaleDateString();
-                      return (
-                        <div key={i} className={cn("relative border-r border-border/50 last:border-r-0", isWeekend && "bg-muted/5")}>
-                          <div className={cn("sticky top-0 z-20 bg-background/80 glass-divider border-b border-border/50 p-2 text-center h-[65px] flex flex-col justify-center", isToday && "bg-primary/5")}>
-                            <div className="text-[10px] font-bold text-muted-foreground uppercase">{MONTHS[d.getMonth()]}</div>
-                            <div className={cn("text-lg font-black", isToday ? "text-primary" : "text-foreground")}>{d.getDate()}</div>
+              {(viewMode === "week" || viewMode === "day") && (() => {
+                const days = viewMode === "week" ? weekDays : [anchorDate];
+                const totalH = 24 * HOUR_H;
+                return (
+                  <div ref={timeGridRef} className="flex-1 overflow-y-auto" data-testid="grid-time">
+
+                    {/* ── Sticky day-header row ──────────────────────────────── */}
+                    <div
+                      className="sticky top-0 z-30 flex shrink-0 bg-background/95 backdrop-blur-sm border-b border-border/50"
+                      style={{ height: 56 }}
+                    >
+                      {/* Corner gutter (aligns with time label column below) */}
+                      <div className="shrink-0 border-r border-border/30" style={{ width: LABEL_W }} />
+                      {/* Day name + number headers */}
+                      {days.map((d, i) => {
+                        const isToday = d.toLocaleDateString() === todayStr;
+                        const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                        return (
+                          <div key={i} className={cn(
+                            "flex-1 flex flex-col items-center justify-center border-r border-border/30 last:border-r-0 gap-0.5",
+                            isToday && "bg-primary/5",
+                            isWeekend && "bg-muted/5"
+                          )}>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                              {["SUN","MON","TUE","WED","THU","FRI","SAT"][d.getDay()]}
+                            </span>
+                            <span className={cn("text-xl font-black leading-none", isToday ? "text-primary" : "text-foreground")}>
+                              {d.getDate()}
+                            </span>
                           </div>
-                          <div className="relative h-[1920px]">
-                            {hours.map(h => (
-                              <DroppableTimeSlot key={h} dateKey={dateKey} hour={h} />
-                            ))}
-                            {isToday && (
-                              <div
-                                className="absolute left-0 right-0 border-t-2 border-red-500 z-30 pointer-events-none"
-                                style={{ top: `${(currentTime.getHours() * 60 + currentTime.getMinutes()) * (80/60)}px` }}
-                              >
-                                <div className="w-2 h-2 rounded-full bg-red-500 -ml-1 -mt-1" />
-                              </div>
-                            )}
-                            {appts.filter(a => a.date === dateKey).map(a => (
-                              <DraggableBookingCard
-                                key={a.id}
-                                appt={a}
-                                onClick={(e) => handleBookingCardClick(e, a)}
-                                className={cn(
-                                  "absolute left-1 right-1 p-2 rounded-lg shadow-sm z-10 hover:ring-2 transition-all",
-                                  a.no_show
-                                    ? "bg-red-500/10 border-l-4 border-red-500 hover:ring-red-400"
-                                    : "bg-brand-blue/10 border-l-4 border-brand-blue hover:ring-brand-blue"
-                                )}
-                                style={{ top: `${(a.hour * 60 + a.minutes) * (80/60)}px`, height: '68px' }}
-                              >
-                                <div className="flex items-center gap-1">
-                                  <div className={cn("text-[10px] font-bold truncate flex-1", a.no_show ? "text-red-600 dark:text-red-400" : "text-brand-deep-blue dark:text-brand-blue")} data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</div>
-                                  {a.no_show && (
-                                    <span className="inline-flex items-center justify-center shrink-0 w-4 h-4 rounded-full bg-red-500 text-white text-[8px] font-black leading-none" data-testid={`no-show-badge-${a.id}`} title="No Show">!</span>
-                                  )}
-                                  {a.re_scheduled_count > 0 && (
-                                    <span className="inline-flex items-center justify-center shrink-0 min-w-[16px] h-4 px-0.5 rounded-full bg-amber-500 text-white text-[8px] font-black leading-none" data-testid={`rescheduled-badge-${a.id}`} title={`Rescheduled ${a.re_scheduled_count}x`}>{a.re_scheduled_count}</span>
-                                  )}
-                                </div>
-                                {a.campaign_name && (
-                                  <div className="text-[8px] text-muted-foreground truncate" data-testid={`booking-campaign-${a.id}`}>{a.campaign_name}</div>
-                                )}
-                                <div className={cn("text-[9px] font-medium", a.no_show ? "text-red-500" : "text-brand-blue")} data-testid={`booking-time-${a.id}`}>{a.time}</div>
-                              </DraggableBookingCard>
-                            ))}
-                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* ── Single shared coordinate space ─────────────────────── */}
+                    {/* Every element uses: top = h * HOUR_H (or proportional) */}
+                    <div className="relative" style={{ height: totalH }}>
+
+                      {/* Time labels — at EXACTLY h * HOUR_H, centered on the gridline */}
+                      {hours.map(h => h > 0 ? (
+                        <div
+                          key={h}
+                          className="absolute text-[10px] font-semibold text-muted-foreground leading-none pointer-events-none select-none"
+                          style={{
+                            top: h * HOUR_H,
+                            width: LABEL_W,
+                            transform: "translateY(-50%)",
+                            textAlign: "right",
+                            paddingRight: 8,
+                          }}
+                        >
+                          {h < 12 ? `${h} AM` : h === 12 ? "12 PM" : `${h - 12} PM`}
                         </div>
-                      );
-                    })}
+                      ) : null)}
+
+                      {/* Vertical separator between gutter and day columns */}
+                      <div
+                        className="absolute top-0 bottom-0 border-r border-border/30 pointer-events-none"
+                        style={{ left: LABEL_W }}
+                      />
+
+                      {/* Day columns — same coordinate space, offset by LABEL_W */}
+                      <div className="absolute top-0 bottom-0 right-0 flex" style={{ left: LABEL_W }}>
+                        {days.map((d, i) => {
+                          const isToday = d.toLocaleDateString() === todayStr;
+                          const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                          const dateKey = d.toLocaleDateString();
+                          return (
+                            <div key={i} className={cn(
+                              "flex-1 relative border-r border-border/30 last:border-r-0",
+                              isWeekend && "bg-muted/[0.03]"
+                            )}>
+
+                              {/* Horizontal gridlines — top = h * HOUR_H (same formula as labels) */}
+                              {hours.map(h => (
+                                <div
+                                  key={h}
+                                  className="absolute left-0 right-0 border-t border-border/25 pointer-events-none"
+                                  style={{ top: h * HOUR_H }}
+                                />
+                              ))}
+
+                              {/* DnD drop zones — absolute, top = h * HOUR_H, height = HOUR_H */}
+                              {hours.map(h => (
+                                <DroppableTimeSlot key={h} dateKey={dateKey} hour={h} hourHeight={HOUR_H} />
+                              ))}
+
+                              {/* Current-time indicator — top = minutes_elapsed * (HOUR_H/60) */}
+                              {isToday && (
+                                <div
+                                  className="absolute left-0 right-0 z-30 pointer-events-none"
+                                  style={{ top: (currentTime.getHours() * 60 + currentTime.getMinutes()) * (HOUR_H / 60) }}
+                                >
+                                  <div className="absolute inset-x-0 border-t-2 border-red-500" />
+                                  <div className="absolute -left-1.5 -top-1.5 w-3 h-3 rounded-full bg-red-500" />
+                                </div>
+                              )}
+
+                              {/* Appointment cards — same position formula as indicator */}
+                              {appts.filter(a => a.date === dateKey).map(a => (
+                                <DraggableBookingCard
+                                  key={a.id}
+                                  appt={a}
+                                  onClick={(e) => handleBookingCardClick(e, a)}
+                                  className={cn(
+                                    "absolute left-1 right-1 px-2 py-1.5 rounded-lg shadow-sm z-10 hover:ring-2 transition-all overflow-hidden",
+                                    a.no_show
+                                      ? "bg-red-500/10 border-l-4 border-red-500 hover:ring-red-400"
+                                      : "bg-brand-blue/10 border-l-4 border-brand-blue hover:ring-brand-blue"
+                                  )}
+                                  style={{
+                                    top: `${(a.hour * 60 + a.minutes) * (HOUR_H / 60)}px`,
+                                    height: `${HOUR_H - 4}px`,
+                                  }}
+                                >
+                                  <div className="flex items-center gap-1 min-w-0">
+                                    <div className={cn("text-[10px] font-bold truncate flex-1", a.no_show ? "text-red-600 dark:text-red-400" : "text-brand-deep-blue dark:text-brand-blue")} data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</div>
+                                    {a.no_show && (
+                                      <span className="shrink-0 w-4 h-4 rounded-full bg-red-500 text-white text-[8px] font-black flex items-center justify-center" data-testid={`no-show-badge-${a.id}`} title="No Show">!</span>
+                                    )}
+                                    {a.re_scheduled_count > 0 && (
+                                      <span className="shrink-0 min-w-[16px] h-4 px-0.5 rounded-full bg-amber-500 text-white text-[8px] font-black flex items-center justify-center" data-testid={`rescheduled-badge-${a.id}`} title={`Rescheduled ${a.re_scheduled_count}x`}>{a.re_scheduled_count}</span>
+                                    )}
+                                  </div>
+                                  {a.campaign_name && (
+                                    <div className="text-[8px] text-muted-foreground truncate" data-testid={`booking-campaign-${a.id}`}>{a.campaign_name}</div>
+                                  )}
+                                  <div className={cn("text-[9px] font-medium", a.no_show ? "text-red-500" : "text-brand-blue")} data-testid={`booking-time-${a.id}`}>{a.time}</div>
+                                </DraggableBookingCard>
+                              ))}
+
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
 
             <div className={cn(
-              "bg-card flex flex-col overflow-hidden rounded-2xl border border-border shadow-sm",
+              "bg-card flex flex-col overflow-hidden rounded-2xl border border-border shadow-sm lg:order-1",
               isMobile || isTablet ? "min-h-[200px] max-h-[300px]" : "h-full"
             )} data-testid="calendar-list">
               <div className="p-4 border-b border-border bg-muted/5 shrink-0">

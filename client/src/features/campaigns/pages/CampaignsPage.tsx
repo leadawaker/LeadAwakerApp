@@ -1,289 +1,129 @@
-import { useState, useMemo, useCallback } from "react";
-import { ChevronDown, LayoutGrid, TableIcon } from "lucide-react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { TableIcon, LayoutList } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { CampaignsTable } from "../components/CampaignsTable";
-import { CampaignCardGrid } from "../components/CampaignCardGrid";
+import { CampaignListView } from "../components/CampaignListView";
 import { CampaignDetailPanel } from "../components/CampaignDetailPanel";
 import { useCampaignsData } from "../hooks/useCampaignsData";
 import { useCampaignMetrics } from "@/hooks/useApiData";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
 import type { Campaign } from "@/types/models";
+import { useTopbarActions } from "@/contexts/TopbarActionsContext";
+import { ViewTabStrip, type ViewTab } from "@/components/crm/ViewTabStrip";
 
-type ViewMode = "cards" | "table";
-type StatusFilter = "all" | "Active" | "Paused" | "Completed" | "Inactive";
+type ViewMode = "list" | "table";
 
-function ViewToggle({
-  viewMode,
-  onViewModeChange,
-}: {
-  viewMode: ViewMode;
-  onViewModeChange: (v: ViewMode) => void;
-}) {
-  return (
-    <div className="flex items-center rounded-lg border border-border bg-background overflow-hidden">
-      <button
-        onClick={() => onViewModeChange("cards")}
-        className={cn(
-          "flex items-center gap-1.5 px-2.5 h-8 text-xs font-medium transition-colors",
-          viewMode === "cards"
-            ? "bg-primary text-primary-foreground"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-        )}
-        title="Card view"
-        data-testid="campaign-view-cards"
-      >
-        <LayoutGrid className="w-3.5 h-3.5" />
-        Cards
-      </button>
-      <button
-        onClick={() => onViewModeChange("table")}
-        className={cn(
-          "flex items-center gap-1.5 px-2.5 h-8 text-xs font-medium transition-colors",
-          viewMode === "table"
-            ? "bg-primary text-primary-foreground"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-        )}
-        title="Table view"
-        data-testid="campaign-view-table"
-      >
-        <TableIcon className="w-3.5 h-3.5" />
-        Table
-      </button>
-    </div>
-  );
-}
+const CAMPAIGN_VIEW_TABS: ViewTab<"list" | "table">[] = [
+  { id: "list", label: "List", icon: LayoutList, testId: "campaign-view-list" },
+  { id: "table", label: "Table", icon: TableIcon, testId: "campaign-view-table" },
+];
 
 export function CampaignsPage() {
-  const [viewMode, setViewMode] = useState<ViewMode>("cards");
-  const [search, setSearch] = useState("");
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const { setTopbarActions, clearTopbarActions } = useTopbarActions();
+
+  useEffect(() => {
+    setTopbarActions(
+      <ViewTabStrip tabs={CAMPAIGN_VIEW_TABS} activeTab={viewMode} onTabChange={setViewMode} />
+    );
+    return () => clearTopbarActions();
+  }, [viewMode, setTopbarActions, clearTopbarActions]);
+
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
 
-  // Local account filter state (agency users can switch; client users are auto-scoped)
-  const [filterAccountId, setFilterAccountId] = useState<number | "all">("all");
+  // Slide-over edit panel (reuses existing CampaignDetailPanel)
+  const [editPanelOpen, setEditPanelOpen] = useState(false);
+  const [editCampaign, setEditCampaign] = useState<Campaign | null>(null);
 
-  // Status filter for card view
-  const [filterStatus, setFilterStatus] = useState<StatusFilter>("all");
+  // Account filter for table view (agency only)
+  const [filterAccountId] = useState<number | "all">("all");
 
-  const { currentAccountId, isAgencyUser, accounts } = useWorkspace();
+  const { currentAccountId, isAgencyUser } = useWorkspace();
 
-  const handleCampaignClick = useCallback((campaign: Campaign) => {
-    setSelectedCampaign(campaign);
-    setDetailOpen(true);
-  }, []);
-
-  const handleCloseDetail = useCallback(() => {
-    setDetailOpen(false);
-    setSelectedCampaign(null);
-  }, []);
-
-  // Resolve effective account ID to pass to API:
-  // - Agency users: use local filterAccountId ("all" = undefined = no filter)
-  // - Client users: use their own account (backend also enforces this via scopeToAccount)
   const effectiveAccountId = useMemo(() => {
     if (!isAgencyUser) return currentAccountId;
     if (filterAccountId === "all") return undefined;
     return filterAccountId as number;
   }, [isAgencyUser, filterAccountId, currentAccountId]);
 
-  const { campaigns, loading: campaignsLoading } = useCampaignsData(effectiveAccountId);
+  const { campaigns, loading: campaignsLoading, updateCampaignRow } = useCampaignsData(effectiveAccountId);
   const { metrics, loading: metricsLoading } = useCampaignMetrics();
 
   const loading = campaignsLoading || metricsLoading;
 
-  // Exclude agency account (id=1) from the account filter dropdown
-  const clientAccounts = useMemo(
-    () => accounts.filter((a) => a.id !== 1),
-    [accounts]
-  );
+  // Auto-select first campaign when data arrives (only if nothing is selected yet)
+  useEffect(() => {
+    if (!selectedCampaign && campaigns.length > 0) {
+      setSelectedCampaign(campaigns[0]);
+    }
+  }, [campaigns, selectedCampaign]);
 
-  // Filter campaigns by search and status in card view
-  const filteredCampaigns = useMemo(() => {
-    let result = campaigns;
-    // Apply status filter
-    if (filterStatus !== "all") {
-      result = result.filter((c) => {
-        const s = String(c.status || "");
-        if (filterStatus === "Completed") {
-          // "Completed" also matches "Finished" from DB
-          return s === "Completed" || s === "Finished";
-        }
-        return s === filterStatus;
-      });
+  // Keep selectedCampaign in sync if the campaigns list refreshes
+  useEffect(() => {
+    if (selectedCampaign && campaigns.length > 0) {
+      const cid = selectedCampaign.id || selectedCampaign.Id;
+      const refreshed = campaigns.find((c) => (c.id || c.Id) === cid);
+      if (refreshed) setSelectedCampaign(refreshed);
     }
-    // Apply search filter
-    if (search) {
-      const q = search.toLowerCase();
-      result = result.filter((c) =>
-        String(c.name || "").toLowerCase().includes(q)
-      );
-    }
-    return result;
-  }, [campaigns, search, filterStatus]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [campaigns]);
+
+  const handleSelectCampaign = useCallback((campaign: Campaign) => {
+    setSelectedCampaign(campaign);
+  }, []);
+
+  const handleEditCampaign = useCallback((campaign: Campaign) => {
+    setEditCampaign(campaign);
+    setEditPanelOpen(true);
+  }, []);
+
+  const handleCloseEditPanel = useCallback(() => {
+    setEditPanelOpen(false);
+    setEditCampaign(null);
+  }, []);
+
+  const handleToggleStatus = useCallback((campaign: Campaign) => {
+    const cid = campaign.id || campaign.Id;
+    const newStatus = String(campaign.status) === "Active" ? "Paused" : "Active";
+    updateCampaignRow(cid, "status", newStatus);
+    // Optimistic update on selected campaign
+    setSelectedCampaign((prev) =>
+      prev && (prev.id || prev.Id) === cid ? { ...prev, status: newStatus } : prev
+    );
+  }, [updateCampaignRow]);
 
   return (
     <CrmShell>
       <div className="flex flex-col h-full">
-        {/* Card view toolbar */}
-        {viewMode === "cards" && (
-          <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0 gap-2 flex-wrap">
-            <h2 className="text-sm font-semibold text-foreground">
-              {campaigns.length > 0
-                ? `${campaigns.length} Campaign${campaigns.length !== 1 ? "s" : ""}`
-                : "Campaigns"}
-            </h2>
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Account filter — only for agency/admin users */}
-              {isAgencyUser && clientAccounts.length > 0 && (
-                <div className="relative" data-testid="campaign-account-filter-wrap">
-                  <select
-                    value={filterAccountId === "all" ? "all" : String(filterAccountId)}
-                    onChange={(e) =>
-                      setFilterAccountId(
-                        e.target.value === "all" ? "all" : Number(e.target.value)
-                      )
-                    }
-                    className={cn(
-                      "h-8 pl-3 pr-8 text-xs rounded-lg border border-border bg-background",
-                      "appearance-none outline-none focus:ring-1 focus:ring-primary/50",
-                      "text-foreground"
-                    )}
-                    data-testid="select-campaign-account-filter"
-                    aria-label="Filter campaigns by account"
-                  >
-                    <option value="all">All Accounts</option>
-                    {clientAccounts.map((a) => (
-                      <option key={a.id} value={String(a.id)}>
-                        {a.name}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                </div>
-              )}
-
-              {/* Status filter */}
-              <div className="relative" data-testid="campaign-status-filter-wrap">
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value as StatusFilter)}
-                  className={cn(
-                    "h-8 pl-3 pr-8 text-xs rounded-lg border border-border bg-background",
-                    "appearance-none outline-none focus:ring-1 focus:ring-primary/50",
-                    "text-foreground"
-                  )}
-                  data-testid="select-campaign-status-filter"
-                  aria-label="Filter campaigns by status"
-                >
-                  <option value="all">All Statuses</option>
-                  <option value="Active">Active</option>
-                  <option value="Paused">Paused</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-              </div>
-
-              <input
-                type="text"
-                placeholder="Search campaigns…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className={cn(
-                  "h-8 px-3 text-xs rounded-lg border border-border bg-background",
-                  "placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50",
-                  "w-44"
-                )}
-                data-testid="campaign-card-search"
-              />
-              <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
-            </div>
-          </div>
-        )}
-
-        {/* Table view toolbar */}
-        {viewMode === "table" && (
-          <div className="flex items-center justify-between px-4 pt-3 pb-1 shrink-0 gap-2">
-            <div className="flex items-center gap-2">
-              {/* Account filter for table view — agency only */}
-              {isAgencyUser && clientAccounts.length > 0 && (
-                <div className="relative" data-testid="campaign-account-filter-wrap-table">
-                  <select
-                    value={filterAccountId === "all" ? "all" : String(filterAccountId)}
-                    onChange={(e) =>
-                      setFilterAccountId(
-                        e.target.value === "all" ? "all" : Number(e.target.value)
-                      )
-                    }
-                    className={cn(
-                      "h-8 pl-3 pr-8 text-xs rounded-lg border border-border bg-background",
-                      "appearance-none outline-none focus:ring-1 focus:ring-primary/50",
-                      "text-foreground"
-                    )}
-                    data-testid="select-campaign-account-filter-table"
-                    aria-label="Filter campaigns by account"
-                  >
-                    <option value="all">All Accounts</option>
-                    {clientAccounts.map((a) => (
-                      <option key={a.id} value={String(a.id)}>
-                        {a.name}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                </div>
-              )}
-
-              {/* Status filter for table view */}
-              <div className="relative" data-testid="campaign-status-filter-wrap-table">
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value as StatusFilter)}
-                  className={cn(
-                    "h-8 pl-3 pr-8 text-xs rounded-lg border border-border bg-background",
-                    "appearance-none outline-none focus:ring-1 focus:ring-primary/50",
-                    "text-foreground"
-                  )}
-                  data-testid="select-campaign-status-filter-table"
-                  aria-label="Filter campaigns by status"
-                >
-                  <option value="all">All Statuses</option>
-                  <option value="Active">Active</option>
-                  <option value="Paused">Paused</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-              </div>
-            </div>
-            <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
-          </div>
-        )}
 
         {/* Content */}
-        <div className="flex-1 overflow-auto">
-          {viewMode === "cards" ? (
-            <CampaignCardGrid
-              campaigns={filteredCampaigns}
+        <div className="flex-1 overflow-hidden">
+          {viewMode === "list" ? (
+            <CampaignListView
+              campaigns={campaigns}
               metrics={metrics}
               loading={loading}
-              searchValue={search}
-              onCampaignClick={handleCampaignClick}
-              selectedCampaignId={selectedCampaign?.id ?? null}
+              selectedCampaign={selectedCampaign}
+              onSelectCampaign={handleSelectCampaign}
+              onEditCampaign={handleEditCampaign}
+              onToggleStatus={handleToggleStatus}
             />
           ) : (
-            <CampaignsTable accountId={effectiveAccountId} externalStatusFilter={filterStatus} />
+            <CampaignsTable
+              accountId={effectiveAccountId}
+              externalStatusFilter="all"
+            />
           )}
         </div>
       </div>
 
-      {/* Campaign detail panel */}
+      {/* Edit slide-over — reuses existing CampaignDetailPanel */}
       <CampaignDetailPanel
-        campaign={selectedCampaign}
+        campaign={editCampaign}
         metrics={metrics}
-        open={detailOpen}
-        onClose={handleCloseDetail}
+        open={editPanelOpen}
+        onClose={handleCloseEditPanel}
       />
     </CrmShell>
   );

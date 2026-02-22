@@ -55,6 +55,11 @@ export const bulkUpdateLeads = async (
   return await res.json();
 };
 
+/** Bulk delete multiple leads (sequential individual DELETEs) */
+export const bulkDeleteLeads = async (ids: number[]) => {
+  await Promise.all(ids.map((id) => deleteLead(id)));
+};
+
 /** Bulk add tags to multiple leads */
 export const bulkTagLeads = async (
   leadIds: number[],

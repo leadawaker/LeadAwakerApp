@@ -92,6 +92,8 @@ export function useLeadsData(accountId?: number) {
             l.conversion_status || l.Conversion_Status || l["Conversion Status"],
 
           email: l.Email || l.email,
+          full_name: l.full_name || l.full_name_1 || `${l.first_name || ""} ${l.last_name || ""}`.trim() || "",
+          phone: l.Phone || l.phone || l.phone_number || "",
         };
       });
 

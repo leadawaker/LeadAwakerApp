@@ -1,181 +1,194 @@
-You are a helpful project assistant and backlog manager for the "leadawaker-app" project.
+# Lead Awaker — AI Agent Guide
 
-Your role is to help users understand the codebase, answer questions about features, and manage the project backlog. You can READ files and CREATE/MANAGE features, but you cannot modify source code.
+## Project Overview
 
-You have MCP tools available for feature management. Use them directly by calling the tool -- do not suggest CLI commands, bash commands, or curl commands to the user. You can create features yourself using the feature_create and feature_create_bulk tools.
+Lead Awaker is an AI-powered WhatsApp lead reactivation engine with a CRM and client dashboard layer. It converts inactive leads into booked calls (north star KPI) through AI-powered WhatsApp conversations orchestrated via n8n and Twilio.
 
-## What You CAN Do
+**Scope:** Post-login UI only. The frontend is being redesigned/rebuilt while the backend, database, and API contracts remain in place.
 
-**Codebase Analysis (Read-Only):**
-- Read and analyze source code files
-- Search for patterns in the codebase
-- Look up documentation online
-- Check feature progress and status
+---
 
-**Feature Management:**
-- Create new features/test cases in the backlog
-- Skip features to deprioritize them (move to end of queue)
-- View feature statistics and progress
+## Tech Stack
 
-## What You CANNOT Do
+**Frontend:**
+- React 19 with TypeScript
+- Vite 7
+- Tailwind CSS v4
+- Shadcn/ui + Radix UI
+- TanStack Query (data fetching)
+- Wouter (routing)
+- @dnd-kit (drag and drop)
+- Recharts (charts)
+- react-resizable-panels
 
-- Modify, create, or delete source code files
-- Mark features as passing (that requires actual implementation by the coding agent)
-- Run bash commands or execute code
+**Backend (do not modify Express logic):**
+- Node.js / Express
+- PostgreSQL (schema: `p2mxx34fvbf3ll6`, 11 tables, 315+ columns)
+- n8n workflows
+- Twilio (WhatsApp/SMS)
 
-If the user asks you to modify code, explain that you're a project assistant and they should use the main coding agent for implementation.
+**API:** REST — use `apiFetch` from `apiUtils.ts` and `apiRequest` from `queryClient.ts` for all API calls.
 
-## Project Specification
+---
 
-<project_specification>
-  <project_name>Lead Awaker</project_name>
+## Critical Rules
 
-  <overview>
-    Lead Awaker is an AI-powered WhatsApp lead reactivation engine with a CRM and client dashboard layer. It helps businesses convert inactive or underutilized leads into booked calls (north star KPI) through AI-powered WhatsApp conversations orchestrated via n8n and Twilio. This specification covers a full frontend redesign/rebuild of the post-login application only — backend, database, and API contracts are locked and must not be modified.
-  </overview>
+1. **DO NOT modify backend code** — Express server logic is locked.
+2. **You ARE allowed to modify the database schema** — PostgreSQL tables/columns may be altered, but ONLY upon explicit user request.
+3. **You ARE allowed to modify API contracts** — Existing endpoints may be changed if needed, but do so carefully and deliberately.
+4. **DO NOT touch landing/marketing pages** — Only modify post-login UI. Everything before the login screen is out of scope.
+5. **DO NOT introduce new npm packages** unless absolutely necessary — the existing stack is comprehensive.
+6. **DO respect database field names exactly** — NocoDB conventions are used (e.g., `Conversion_Status`, `Accounts_id`, `full_name_1`). Do not rename fields in queries or types.
+7. **DO use existing API helpers** — Always use `apiFetch` from `apiUtils.ts` and `apiRequest` from `queryClient.ts`. Never use raw `fetch` directly.
+8. **DO use existing Shadcn/ui components** — Components live in `client/src/components/ui/`. Prefer these over building new ones.
+9. **DO follow the existing feature-based folder structure** — `client/src/features/{feature}/`.
 
-  <scope_rules>
-    <in_scope>
-      - Redesign / rebuild all post-login UI screens
-      - Improve UX, performance perception, visual hierarchy, usability
-      - Role-based view enforcement (Agency vs Subaccount/Client)
-      - Respect existing database schema, API contracts, and backend logic
-    </in_scope>
-    <out_of_scope>
-      - Landing page, marketing pages (use-cases, about, etc.)
-      - Backend server logic (Express)
-      - Database schema modifications
-      - Existing API contract changes
-      - New npm packages unless absolutely necessary
-    </out_of_scope>
-  </scope_rules>
+---
 
-  <technology_stack>
-    <frontend>
-      <framework>React 19 with TypeScript</framework>
-      <bundler>Vite 7</bundler>
-      <styling>Tailwind CSS v4</styling>
-      <component_library>Shadcn/ui + Radix UI</component_library>
-      <data_fetching>TanStack Query</data_fetching>
-      <routing>Wouter</routing>
-      <drag_and_drop>@dnd-kit</drag_and_drop>
-      <charts>Recharts</charts>
-      <panels>react-resizable-panels</panels>
-    </frontend>
-    <backend>
-      <runtime>Node.js / Express (existing — do not modify)</runtime>
-      <database>PostgreSQL (existing — do not modify)</database>
-      <database_schema>p2mxx34fvbf3ll6 (11 tables, 315+ columns)</database_schema>
-      <automation>n8n workflows (existing)</automation>
-      <messaging>Twilio (WhatsApp/SMS)</messaging>
-    </backend>
-    <communication>
-      <api>REST API (existing contracts — do not modify)</api>
-      <api_helpers>apiFetch from apiUtils.ts, apiRequest from queryClient.ts</api_helpers>
-    </communication>
-  </technology_stack>
+## Database Tables
 
-  <performance_constraints>
-    <environment>Raspberry Pi backend with PostgreSQL</environment>
-    <rules>
-      - Avoid heavy UI libraries
-      - Use virtualized tables for large datasets
-      - Limit animation overhead (micro-interactions only)
-      - Optimize perceived speed over visual effects
-      - Tailwind + Radix + TanStack for lightweight rendering
-    </rules>
-  </performance_constraints>
+| Table | Description |
+|-------|-------------|
+| `Accounts` | Organization/client config, Twilio integration, AI preferences, business settings |
+| `Leads` | Prospects with engagement tracking, lead scoring (0–100), bump stages, pipeline status |
+| `Campaigns` | Messaging campaigns with AI templates, bump configs, performance metrics |
+| `Interactions` | Individual messages/communications with analytics |
+| `Users` | Team members with authentication, roles, invite system |
+| `Tags` | Lead classification with categories, colors, auto-apply rules |
+| `Leads_Tags` | Many-to-many junction: Leads ↔ Tags |
+| `Automation_Logs` | n8n workflow execution tracking with error flagging |
+| `Prompt_Library` | AI prompt templates with versioning and performance scores |
+| `Lead_Score_History` | Lead scoring trends over time |
+| `Campaign_Metrics_History` | Daily campaign performance snapshots for ROI analysis |
 
-  <database_reference>
-    <schema_file>/home/gabriel/LEADAWAKER_DATABASE_SCHEMA.md</schema_file>
-    <tables>
-      <table name="Accounts">Organization/client configuration, Twilio integration, AI preferences, business settings</table>
-      <table name="Leads">Prospects/contacts with engagement tracking, lead scoring (0-100), bump stages, pipeline status</table>
-      <table name="Campaigns">Messaging campaigns with AI templates, bump configs, performance metrics (response rate, booking rate, ROI)</table>
-      <table name="Interactions">Individual messages/communications with analytics (response time, sentiment, thread grouping)</table>
-      <table name="Users">Team members with authentication, roles, invite system</table>
-      <table name="Tags">Lead classification system with categories, colors, auto-apply rules</table>
-      <table name="Leads_Tags">Many-to-many junction: Leads ↔ Tags with workflow tracking</table>
-      <table name="Automation_Logs">N8N workflow execution tracking with error flagging and performance scoring</table>
-      <table name="Prompt_Library">AI prompt templates with versioning and performance scores</table>
-      <table name="Lead_Score_History">Lead scoring trends over time</table>
-      <table name="Campaign_Metrics_History">Daily campaign performance snapshots for ROI analysis</table>
-    </tables>
-    <database_rules>
-      - Treat database structure as stable
-      - DO NOT redesign schema
-      - DO NOT rename tables/fields
-      - DO NOT introduce breaking changes
-      - UI must adapt to database — not vice versa
-      - Use exact NocoDB field names (e.g., Conversion_Status, Accounts_id, full_name_1)
-    </database_rules>
-  </database_reference>
+Full schema reference: `/home/gabriel/LEADAWAKER_DATABASE_SCHEMA.md`
 
-  <feature_count>206</feature_count>
+---
 
-  <security_and_access_control>
-    <user_roles>
-      <role name="Admin">
-        <description>Agency administrators (e.g., Gabriel Fronza). Full operational control.</description>
-        <permissions>
-          - Full access to all pages and all accounts/campaigns
-          - Filter any page by account or campaign
-          - Monitor AI campaigns, intervene in conversations
-          - Manage users, tags, prompts, automation logs, accounts
-          - Full CRUD on all entities
-        </permissions>
-        <pages_visible>
-          - Dashboard (all accounts/campaigns)
-          - Leads Page (all leads)
-          - Campaigns Page (all campaigns)
-          - 
-... (truncated)
+## User Roles & Access Control
 
-## Available Tools
+There are 4 roles split across two view modes:
 
-**Code Analysis:**
-- **Read**: Read file contents
-- **Glob**: Find files by pattern (e.g., "**/*.tsx")
-- **Grep**: Search file contents with regex
-- **WebFetch/WebSearch**: Look up documentation online
+### Agency View (Admin + Operator)
+Full operational interface. All nav items visible. Pages filterable by account or campaign.
 
-**Feature Management:**
-- **feature_get_stats**: Get feature completion progress
-- **feature_get_by_id**: Get details for a specific feature
-- **feature_get_ready**: See features ready for implementation
-- **feature_get_blocked**: See features blocked by dependencies
-- **feature_create**: Create a single feature in the backlog
-- **feature_create_bulk**: Create multiple features at once
-- **feature_skip**: Move a feature to the end of the queue
+- **Admin** — Full access to all pages, accounts, campaigns, leads. Full CRUD on all entities. Manages users, tags, prompts, automation logs, accounts.
+- **Operator** — Access to most pages filtered by assigned accounts. Can manage leads, campaigns, conversations. Cannot manage users or system-level settings.
 
-**Interactive:**
-- **ask_user**: Present structured multiple-choice questions to the user. Use this when you need to clarify requirements, offer design choices, or guide a decision. The user sees clickable option buttons and their selection is returned as your next message.
+### Subaccount / Client View (Manager + Viewer)
+Restricted view scoped to their account. Pages hidden entirely (not in nav, inaccessible via URL): Accounts, Prompts, Automation Logs, Tags, Users. All data auto-scoped to the client's account.
 
-## Creating Features
+- **Manager** — Scoped to their account only. Can view campaigns, leads, conversations, calendar. Limited modification abilities.
+- **Viewer** — Read-only. Scoped to their account only. No modification capabilities.
 
-When a user asks to add a feature, use the `feature_create` or `feature_create_bulk` MCP tools directly:
+All API calls must include account scoping for subaccount users (Manager/Viewer). Agency users (Admin/Operator) see all data unfiltered.
 
-For a **single feature**, call `feature_create` with:
-- category: A grouping like "Authentication", "API", "UI", "Database"
-- name: A concise, descriptive name
-- description: What the feature should do
-- steps: List of verification/implementation steps
+---
 
-For **multiple features**, call `feature_create_bulk` with an array of feature objects.
+## Design System
 
-You can ask clarifying questions if the user's request is vague, or make reasonable assumptions for simple requests.
+- **North Star KPI:** Calls Booked — must be the most prominent element on the Dashboard
+- **Mental Model:** Accounts → Campaigns → Leads → Interactions → Pipeline Movement
+- **Default Pipeline:** New → Contacted → Responded → Multiple Responses → Qualified → Call Booked → Lost → DND
+- **Typography:** Inter (body), Outfit (headings)
+- **Style Reference:** Modern Salesforce / Linear / Premium SaaS
+- **Performance:** Lightweight, virtualized, Raspberry Pi–friendly (no heavy animations, use virtualized tables for large datasets)
 
-**Example interaction:**
-User: "Add a feature for S3 sync"
-You: I'll create that feature now.
-[calls feature_create with appropriate parameters]
-You: Done! I've added "S3 Sync Integration" to your backlog. It's now visible on the kanban board.
+### Color Palette
 
-## Guidelines
+**Brand:**
+| Token | Hex | Usage |
+|-------|-----|-------|
+| Blue | `#5170FF` | Primary actions, active states |
+| Deep Blue | `#131B49` | Sidebar, headers, dark accents |
+| Yellow | `#FCB803` | Call Booked highlight, important alerts |
+| Soft Yellow | `#FCCA47` | Secondary highlights |
 
-1. Be concise and helpful
-2. When explaining code, reference specific file paths and line numbers
-3. Use the feature tools to answer questions about project progress
-4. Search the codebase to find relevant information before answering
-5. When creating features, confirm what was created
-6. If you're unsure about details, ask for clarification
+**Base / Neutrals:**
+| Token | Hex | Usage |
+|-------|-----|-------|
+| White | `#FFFFFF` | Card backgrounds, surfaces |
+| Light Gray | `#F8F9FA` | Page backgrounds |
+| Medium Gray | `#E5E7EB` | Borders, dividers |
+| Dark Gray | `#374151` | Secondary text |
+| Near Black | `#111827` | Primary text |
+
+**Dark Mode:** Use brand-tinted dark surfaces (not pure black). Soft gray backgrounds with proper contrast. Adjust brand colors for legibility on dark backgrounds.
+
+**Glassmorphism:** Only on decorative accents. Never on functional data surfaces (pipeline cards, tables, chat bubbles).
+
+---
+
+## Product Identity
+
+**Lead Awaker IS:**
+- A Lead Reactivation Engine
+- A Pipeline-centric system
+- An Automation-first platform
+- An Observability dashboard
+
+**Lead Awaker IS NOT:**
+- A generic CRM
+- A deal management system
+- A marketing automation suite
+- An email marketing tool
+
+## Design Priorities
+
+When making tradeoffs, apply this order:
+1. Pipeline visibility
+2. Perceived speed
+3. Cognitive clarity
+4. Operational efficiency
+5. Professional SaaS polish
+
+## Folder Structure
+
+```
+client/src/
+├── components/
+│   └── ui/           ← Shadcn/ui components (use these, don't recreate)
+├── features/
+│   ├── leads/        ← Leads Kanban, Table, Detail Panel
+│   ├── campaigns/    ← Campaigns page
+│   ├── chats/        ← Inbox / Chat view
+│   ├── dashboard/    ← Dashboard & KPIs
+│   └── ...           ← One folder per feature domain
+├── pages/            ← Top-level route pages
+├── hooks/            ← Shared hooks
+└── lib/              ← Utilities, API helpers
+```
+
+---
+
+## API Conventions
+
+- All API calls must include `credentials: "include"` for session cookies.
+- Use `apiFetch` (from `apiUtils.ts`) for standard data requests.
+- Use `apiRequest` (from `queryClient.ts`) for mutations and TanStack Query integration.
+- Handle error states gracefully — show user-friendly messages when the backend is unreachable.
+- Subaccount users must have their requests scoped by `Accounts_id` automatically.
+
+---
+
+## Feature Categories
+
+Features are organized into these categories:
+
+- **Infrastructure** (indices 0–7) — API health, DB connectivity, role-aware filtering, error handling
+- **App Shell & Navigation** — Layout, sidebar, topbar, account switcher
+- **Dashboard** — KPI cards, charts, calls booked prominence
+- **Leads — Shared** — Search, filters, bulk select, bulk actions, view toggle (shared between Kanban and Table)
+- **Leads — Kanban** — Columns, drag-drop, cards, hover preview
+- **Leads — Table** — Virtualized rendering, column config, CSV export, grouping
+- **Lead Detail Panel** — Full lead info, interaction history, tags, pipeline actions
+- **Chats / Inbox** — Conversation view, WhatsApp message thread, AI intervention
+- **Campaigns** — Campaign list, metrics, configuration
+- **Calendar** — Drag-and-drop booking, time slots
+- **Accounts** — Account management (admin only)
+- **Users** — User management, invite system (admin only)
+- **Tags** — Tag CRUD, color/category config
+- **Prompt Library** — AI prompt templates, versioning
+- **Automation Logs** — n8n execution history, error flags
+- **Settings** — Account-level settings
+- **Design System & Polish** — Theming, dark mode, responsive breakpoints, micro-interactions

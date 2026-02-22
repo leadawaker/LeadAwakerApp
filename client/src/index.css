@@ -60,6 +60,9 @@
   --color-brand-yellow-foreground: hsl(var(--brand-yellow-foreground));
   --color-brand-soft-yellow: hsl(var(--brand-soft-yellow));
   --color-brand-soft-yellow-foreground: hsl(var(--brand-soft-yellow-foreground));
+  /* Brand Indigo: #4f46e5 — card view gradient, detail panel header */
+  --color-brand-indigo: hsl(var(--brand-indigo));
+  --color-brand-indigo-foreground: hsl(var(--brand-indigo-foreground));
 
   /* Sidebar-specific semantic tokens */
   --color-sidebar-bg: hsl(var(--sidebar-bg));
@@ -132,6 +135,9 @@
   /* Soft Yellow: #FCCA47 — secondary highlights, hover states */
   --brand-soft-yellow: 43 97% 63%;
   --brand-soft-yellow-foreground: 231 59% 18%;
+  /* Brand Indigo: #4f46e5 (indigo-600) — card view gradient, detail panel header */
+  --brand-indigo: 243 75% 59%;
+  --brand-indigo-foreground: 0 0% 100%;
 
   /* Sidebar tokens (light mode) */
   --sidebar-bg: 231 59% 18%;
@@ -202,12 +208,21 @@
   --brand-yellow-foreground: 228 35% 10%;
   --brand-soft-yellow: 43 97% 65%;
   --brand-soft-yellow-foreground: 228 35% 10%;
+  /* Brand Indigo (dark mode — slightly brighter for dark bg) */
+  --brand-indigo: 243 85% 68%;
+  --brand-indigo-foreground: 0 0% 100%;
 
   /* Sidebar tokens (dark mode) */
   --sidebar-bg: 228 40% 8%;
   --sidebar-foreground: 220 20% 85%;
   --sidebar-active: 229 100% 70%;
   --sidebar-active-foreground: 0 0% 100%;
+}
+
+/* Agency mode: swap blue accent to yellow globally */
+.agency-mode {
+  --brand-blue: 44 98% 50%;
+  --brand-blue-foreground: 231 59% 18%;
 }
 
 @keyframes twinkle-fast {

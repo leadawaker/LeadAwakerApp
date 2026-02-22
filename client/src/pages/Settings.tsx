@@ -285,9 +285,7 @@ export default function SettingsPage() {
   return (
     <CrmShell>
       <div className="py-4" data-testid="page-settings">
-        <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Settings</h1>
-
-        <div className="mt-6 grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6" data-testid="grid-settings">
+        <div className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6" data-testid="grid-settings">
           <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-edit-profile">
             <div className="p-4 border-b border-border" data-testid="card-edit-profile-head">
               <div className="font-semibold" data-testid="text-profile-title">Edit profile</div>

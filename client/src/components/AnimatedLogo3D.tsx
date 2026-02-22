@@ -39,8 +39,8 @@ export default function AnimatedLogo3D() {
       <div style={wrapperStyle}>
         {/* AWAKER Photo - Just the Photo with Smooth Animation */}
         <motion.div
-          initial={{ opacity: 0, rotationX: 90, scale: 0.8 }}
-          animate={isInView ? { opacity: 1, rotationX: 0, scale: 1 } : { opacity: 0, rotationX: 90, scale: 0.8 }}
+          initial={{ opacity: 0, rotateX: 90, scale: 0.8 }}
+          animate={isInView ? { opacity: 1, rotateX: 0, scale: 1 } : { opacity: 0, rotateX: 90, scale: 0.8 }}
           transition={{ delay: 0.3, duration: 1, type: "spring", stiffness: 100, damping: 15 }}
           style={logoStyle}
           data-testid="animated-logo-awaker"

@@ -79,6 +79,32 @@ const STAGE_STYLES: Record<
   }
 > = {
   New: {
+    /* Dark gray */
+    bg: "bg-slate-50/50 dark:bg-slate-900/20",
+    border: "border-slate-200/50 dark:border-slate-700/30",
+    badge: "bg-slate-100 text-slate-600 dark:bg-slate-800/40 dark:text-slate-400",
+    dot: "bg-slate-500",
+    dragOver:
+      "bg-slate-100/70 dark:bg-slate-800/40 border-slate-400/60 dark:border-slate-600/50",
+    headerBg: "bg-slate-100/60 dark:bg-slate-800/30",
+    labelCls: "text-slate-600 dark:text-slate-400",
+    accentBar: "bg-slate-500 dark:bg-slate-500",
+  },
+  Contacted: {
+    /* Dark blue (near-navy) */
+    bg: "bg-blue-950/5 dark:bg-blue-950/25",
+    border: "border-blue-900/20 dark:border-blue-800/30",
+    badge:
+      "bg-blue-900/15 text-blue-900 dark:bg-blue-900/40 dark:text-blue-300",
+    dot: "bg-blue-900",
+    dragOver:
+      "bg-blue-900/20 dark:bg-blue-900/40 border-blue-800/60 dark:border-blue-700/50",
+    headerBg: "bg-blue-900/10 dark:bg-blue-950/35",
+    labelCls: "text-blue-900 dark:text-blue-300",
+    accentBar: "bg-blue-900 dark:bg-blue-700",
+  },
+  Responded: {
+    /* Standard blue */
     bg: "bg-blue-50/50 dark:bg-blue-950/20",
     border: "border-blue-200/50 dark:border-blue-800/30",
     badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
@@ -87,45 +113,23 @@ const STAGE_STYLES: Record<
       "bg-blue-100/70 dark:bg-blue-900/40 border-blue-400/60 dark:border-blue-600/50",
     headerBg: "bg-blue-100/60 dark:bg-blue-900/30",
     labelCls: "text-blue-700 dark:text-blue-300",
-    accentBar: "bg-blue-400 dark:bg-blue-500",
-  },
-  Contacted: {
-    bg: "bg-amber-50/50 dark:bg-amber-950/20",
-    border: "border-amber-200/50 dark:border-amber-800/30",
-    badge:
-      "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-    dot: "bg-amber-500",
-    dragOver:
-      "bg-amber-100/70 dark:bg-amber-900/40 border-amber-400/60 dark:border-amber-600/50",
-    headerBg: "bg-amber-100/60 dark:bg-amber-900/30",
-    labelCls: "text-amber-700 dark:text-amber-300",
-    accentBar: "bg-amber-400 dark:bg-amber-500",
-  },
-  Responded: {
-    bg: "bg-violet-50/50 dark:bg-violet-950/20",
-    border: "border-violet-200/50 dark:border-violet-800/30",
-    badge:
-      "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
-    dot: "bg-violet-500",
-    dragOver:
-      "bg-violet-100/70 dark:bg-violet-900/40 border-violet-400/60 dark:border-violet-600/50",
-    headerBg: "bg-violet-100/60 dark:bg-violet-900/30",
-    labelCls: "text-violet-700 dark:text-violet-300",
-    accentBar: "bg-violet-400 dark:bg-violet-500",
+    accentBar: "bg-blue-500 dark:bg-blue-500",
   },
   "Multiple Responses": {
-    bg: "bg-indigo-50/50 dark:bg-indigo-950/20",
-    border: "border-indigo-200/50 dark:border-indigo-800/30",
+    /* Slightly teal */
+    bg: "bg-teal-50/50 dark:bg-teal-950/20",
+    border: "border-teal-200/50 dark:border-teal-800/30",
     badge:
-      "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300",
-    dot: "bg-indigo-500",
+      "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
+    dot: "bg-teal-500",
     dragOver:
-      "bg-indigo-100/70 dark:bg-indigo-900/40 border-indigo-400/60 dark:border-indigo-600/50",
-    headerBg: "bg-indigo-100/60 dark:bg-indigo-900/30",
-    labelCls: "text-indigo-700 dark:text-indigo-300",
-    accentBar: "bg-indigo-400 dark:bg-indigo-500",
+      "bg-teal-100/70 dark:bg-teal-900/40 border-teal-400/60 dark:border-teal-600/50",
+    headerBg: "bg-teal-100/60 dark:bg-teal-900/30",
+    labelCls: "text-teal-700 dark:text-teal-300",
+    accentBar: "bg-teal-400 dark:bg-teal-500",
   },
   Qualified: {
+    /* Green */
     bg: "bg-emerald-50/50 dark:bg-emerald-950/20",
     border: "border-emerald-200/50 dark:border-emerald-800/30",
     badge:
@@ -138,18 +142,19 @@ const STAGE_STYLES: Record<
     accentBar: "bg-emerald-400 dark:bg-emerald-500",
   },
   Booked: {
+    /* Brand yellow — north-star "Call Booked" */
     bg: "bg-brand-yellow/5 dark:bg-brand-yellow/10",
     border: "border-brand-yellow/40 dark:border-brand-yellow/25",
     badge:
       "bg-brand-yellow/20 text-brand-yellow dark:bg-brand-yellow/25 dark:text-brand-yellow",
     dot: "bg-brand-yellow",
     dragOver: "bg-brand-yellow/20 dark:bg-brand-yellow/25 border-brand-yellow/60",
-    /* Brand yellow (#FCB803) — north-star "Call Booked" column emphasis */
     headerBg: "bg-brand-yellow/20 dark:bg-brand-yellow/20",
     labelCls: "text-brand-yellow font-bold",
     accentBar: "bg-brand-yellow",
   },
   Lost: {
+    /* Gray */
     bg: "bg-zinc-50/50 dark:bg-zinc-900/20",
     border: "border-zinc-200/50 dark:border-zinc-700/30",
     badge: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800/40 dark:text-zinc-400",
@@ -161,15 +166,16 @@ const STAGE_STYLES: Record<
     accentBar: "bg-zinc-400 dark:bg-zinc-500",
   },
   DND: {
-    bg: "bg-rose-50/50 dark:bg-rose-950/20",
-    border: "border-rose-200/50 dark:border-rose-800/30",
-    badge: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
-    dot: "bg-rose-500",
+    /* Gray column, red title */
+    bg: "bg-zinc-50/50 dark:bg-zinc-900/20",
+    border: "border-zinc-200/50 dark:border-zinc-700/30",
+    badge: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800/40 dark:text-zinc-400",
+    dot: "bg-zinc-400",
     dragOver:
-      "bg-rose-100/70 dark:bg-rose-900/40 border-rose-400/60 dark:border-rose-600/50",
-    headerBg: "bg-rose-100/60 dark:bg-rose-900/30",
-    labelCls: "text-rose-700 dark:text-rose-300",
-    accentBar: "bg-rose-400 dark:bg-rose-500",
+      "bg-zinc-100/70 dark:bg-zinc-800/40 border-zinc-400/60 dark:border-zinc-600/50",
+    headerBg: "bg-zinc-100/60 dark:bg-zinc-800/30",
+    labelCls: "text-red-600 dark:text-red-400",
+    accentBar: "bg-zinc-400 dark:bg-zinc-500",
   },
 };
 
@@ -551,9 +557,13 @@ function KanbanCardContent({
 function KanbanLeadCard({
   lead,
   cardTags,
+  onCardClick,
+  isSelected,
 }: {
   lead: any;
   cardTags?: { name: string; color: string }[];
+  onCardClick?: (lead: any) => void;
+  isSelected?: boolean;
 }) {
   const leadId = String(lead.Id || lead.id);
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -567,9 +577,11 @@ function KanbanLeadCard({
       {...attributes}
       {...listeners}
       data-testid={`kanban-card-${leadId}`}
+      onClick={() => onCardClick?.(lead)}
       className={cn(
         "cursor-grab active:cursor-grabbing touch-none select-none",
-        isDragging && "opacity-30"
+        isDragging && "opacity-30",
+        isSelected && "ring-2 ring-brand-blue/60 rounded-xl"
       )}
     >
       <KanbanCardContent lead={lead} cardTags={cardTags} />
@@ -585,12 +597,16 @@ function KanbanColumn({
   leadTagsMap,
   isCollapsed,
   onToggleCollapse,
+  onCardClick,
+  selectedLeadId,
 }: {
   stage: string;
   leads: any[];
   leadTagsMap?: Map<number, { name: string; color: string }[]>;
   isCollapsed?: boolean;
   onToggleCollapse?: (stage: string) => void;
+  onCardClick?: (lead: any) => void;
+  selectedLeadId?: number | string;
 }) {
   const styles = STAGE_STYLES[stage] || DEFAULT_STYLE;
   const { setNodeRef, isOver } = useDroppable({ id: `column-${stage}` });
@@ -839,11 +855,15 @@ function KanbanColumn({
               {visibleLeads.map((lead) => {
                 const leadId = Number(lead.Id || lead.id);
                 const cardTags = leadTagsMap?.get(leadId) || [];
+                const isSelected = selectedLeadId !== undefined &&
+                  (lead.Id ?? lead.id) === selectedLeadId;
                 return (
                   <KanbanLeadCard
                     key={lead.Id || lead.id}
                     lead={lead}
                     cardTags={cardTags}
+                    onCardClick={onCardClick}
+                    isSelected={isSelected}
                   />
                 );
               })}
@@ -887,6 +907,10 @@ interface LeadsKanbanProps {
   onLeadMove?: (leadId: number | string, newStage: string) => void | Promise<void>;
   /** Tag info map passed from LeadsTable: leadId → [{name, color}] */
   leadTagsMap?: Map<number, { name: string; color: string }[]>;
+  /** Called when a card is clicked (not dragged) */
+  onCardClick?: (lead: Record<string, any>) => void;
+  /** ID of the currently selected lead (for ring highlight) */
+  selectedLeadId?: number | string;
 }
 
 export function LeadsKanban({
@@ -894,6 +918,8 @@ export function LeadsKanban({
   loading,
   onLeadMove,
   leadTagsMap,
+  onCardClick,
+  selectedLeadId,
 }: LeadsKanbanProps) {
   // Local optimistic copy of leads so visual updates are instant
   const [localLeads, setLocalLeads] = useState<any[]>(leads);
@@ -1123,6 +1149,8 @@ export function LeadsKanban({
             leadTagsMap={leadTagsMap}
             isCollapsed={collapsedStages.has(stage)}
             onToggleCollapse={toggleColumnCollapse}
+            onCardClick={onCardClick}
+            selectedLeadId={selectedLeadId}
           />
         ))}
       </div>

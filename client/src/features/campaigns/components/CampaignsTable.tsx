@@ -47,7 +47,9 @@ export function CampaignsTable({ accountId, externalStatusFilter }: { accountId?
 
   useEffect(() => {
     const defaults = CAMPAIGN_COLUMNS.reduce((acc, c) => {
-      acc[c] = SMALL_WIDTH_COLS.has(c) ? 120 : 200;
+      if (c === "Id") acc[c] = 56;
+      else if (c === "Image") acc[c] = 52;
+      else acc[c] = SMALL_WIDTH_COLS.has(c) ? 120 : 200;
       return acc;
     }, {} as Record<string, number>);
     setColWidths((prev) => ({ ...defaults, ...prev }));
@@ -158,6 +160,7 @@ export function CampaignsTable({ accountId, externalStatusFilter }: { accountId?
       onFilterConfigChange={setFilterConfig}
       pageSize={50}
       emptyStateVariant={search ? "search" : "campaigns"}
+      nonResizableCols={["Id", "Image"]}
     />
   );
 }

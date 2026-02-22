@@ -3,15 +3,14 @@ import { Link } from "wouter";
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import LightField from "@/components/LightField";
-import { 
-  ArrowRight, 
+import {
+  ArrowRight,
   ChevronDown,
-  BarChart3, 
-  Target, 
-  Zap, 
-  MessageSquare, 
-  Mail, 
+  BarChart3,
+  Target,
+  Zap,
+  MessageSquare,
+  Mail,
   Calendar,
   CheckCircle2,
   Clock,

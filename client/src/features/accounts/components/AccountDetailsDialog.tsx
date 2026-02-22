@@ -78,9 +78,11 @@ export interface AccountRow {
 
 interface AccountDetailsDialogProps {
   account: AccountRow | null;
-  open: boolean;
-  onClose: () => void;
+  open?: boolean;
+  onClose?: () => void;
   onSave: (accountId: number, patch: Partial<AccountRow>) => Promise<void>;
+  /** When true, renders as an inline panel instead of a modal dialog */
+  panelMode?: boolean;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -179,6 +181,7 @@ export function AccountDetailsDialog({
   open,
   onClose,
   onSave,
+  panelMode = false,
 }: AccountDetailsDialogProps) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -237,7 +240,7 @@ export function AccountDetailsDialog({
         "twilio_default_from_number",
       ];
       for (const k of keys) {
-        if (form[k] !== account[k]) {
+        if (form[k] !== account?.[k]) {
           (patch as any)[k] = form[k];
         }
       }
@@ -367,7 +370,7 @@ export function AccountDetailsDialog({
   }
 
   function selectField(key: string, options: string[]) {
-    const val = form[key] ?? account[key] ?? "";
+    const val = form[key] ?? account?.[key] ?? "";
     if (!editing) {
       return (
         <span className="text-sm text-foreground">
@@ -486,249 +489,220 @@ export function AccountDetailsDialog({
     );
   }
 
-  // ── JSX ─────────────────────────────────────────────────────────────────────
+  // ── Shared inner content ─────────────────────────────────────────────────
+
+  const headerContent = (
+    <div className="flex items-start gap-3">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+        <Building2 className="h-5 w-5 text-primary" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xl font-semibold truncate leading-tight">
+          {account.name || "Unnamed Account"}
+        </p>
+        <div className="flex items-center gap-2 mt-1 flex-wrap">
+          <Badge
+            variant="outline"
+            className={cn(
+              "flex items-center gap-1 text-[11px] px-2 py-0.5",
+              badge.cls
+            )}
+          >
+            {badge.icon}
+            {status}
+          </Badge>
+          {account.type && (
+            <Badge
+              variant="outline"
+              className="text-[11px] px-2 py-0.5 text-muted-foreground"
+            >
+              {account.type}
+            </Badge>
+          )}
+          <span className="text-xs text-muted-foreground">
+            #{accountId}
+          </span>
+          <div className="flex items-center gap-1.5 ml-1" title={status === "Active" ? "Click to deactivate" : "Click to activate"}>
+            <Switch
+              id={`status-toggle-${accountId}`}
+              checked={status === "Active"}
+              onCheckedChange={handleStatusToggle}
+              disabled={toggling || saving}
+              data-testid="account-status-toggle"
+              className="scale-90"
+            />
+            <label
+              htmlFor={`status-toggle-${accountId}`}
+              className={cn(
+                "text-[11px] font-medium cursor-pointer select-none",
+                status === "Active"
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-muted-foreground"
+              )}
+            >
+              {toggling ? (
+                <span className="flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Updating...
+                </span>
+              ) : (
+                status === "Active" ? "Active" : "Inactive"
+              )}
+            </label>
+          </div>
+        </div>
+      </div>
+      {panelMode && onClose && (
+        <button
+          onClick={onClose}
+          className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Close panel"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  );
+
+  const bodyContent = (
+    <div className="space-y-0 pb-2">
+      <SectionHeader icon={<Building2 className="h-4 w-4" />} title="Basic Information" />
+      <FieldRow label="Name">{textField("name", "Account name")}</FieldRow>
+      <FieldRow label="Status">{selectField("status", STATUS_OPTIONS)}</FieldRow>
+      <FieldRow label="Type">{selectField("type", TYPE_OPTIONS)}</FieldRow>
+      <FieldRow label="Business Niche">
+        <div data-testid="field-business_niche">
+          {textField("business_niche", "e.g. Construction, SaaS...")}
+        </div>
+      </FieldRow>
+
+      <SectionHeader icon={<Phone className="h-4 w-4" />} title="Contact" />
+      <FieldRow label="Owner Email">{textField("owner_email", "owner@example.com")}</FieldRow>
+      <FieldRow label="Phone">{textField("phone", "+1 555 000 0000")}</FieldRow>
+      <FieldRow label="Website">{textField("website", "https://...")}</FieldRow>
+
+      <SectionHeader icon={<Clock className="h-4 w-4" />} title="Schedule & Timezone" />
+      <FieldRow label="Timezone">{selectField("timezone", TIMEZONE_OPTIONS)}</FieldRow>
+      <FieldRow label="Business Hours Open">{timeField("business_hours_start", "09:00")}</FieldRow>
+      <FieldRow label="Business Hours Close">{timeField("business_hours_end", "17:00")}</FieldRow>
+      <FieldRow label="Max Daily Sends">{numberField("max_daily_sends", "500")}</FieldRow>
+
+      <SectionHeader icon={<Bot className="h-4 w-4" />} title="AI & Messaging" />
+      <FieldRow label="AI Name">{textField("default_ai_name", "e.g. Alex")}</FieldRow>
+      <FieldRow label="AI Role">{textField("default_ai_role", "e.g. admin support")}</FieldRow>
+      <FieldRow label="AI Style">{textField("default_ai_style", "e.g. Natural, human, low pressure")}</FieldRow>
+      <FieldRow label="Typo Frequency">{selectField("default_typo_frequency", TYPO_FREQUENCY_OPTIONS)}</FieldRow>
+      <FieldRow label="Opt-out Keyword">{textField("opt_out_keyword", "e.g. STOP")}</FieldRow>
+      <FieldRow label="Preferred Terminology">{textField("preferred_terminology", "")}</FieldRow>
+      <FieldRow label="Disclosure Text">{textField("data_collection_disclosure", "", "textarea")}</FieldRow>
+
+      <SectionHeader icon={<FileText className="h-4 w-4" />} title="Description & Notes" />
+      <FieldRow label="Business Description">
+        <div data-testid="field-business_description">
+          {textField("business_description", "Describe the business...", "textarea")}
+        </div>
+      </FieldRow>
+      <FieldRow label="Service Categories">{serviceCategoriesField()}</FieldRow>
+      <FieldRow label="Notes">{textField("notes", "Internal notes...", "textarea")}</FieldRow>
+
+      <SectionHeader icon={<Globe className="h-4 w-4" />} title="Twilio Integration" />
+      <FieldRow label="Account SID">{textField("twilio_account_sid", "ACxxxxxxxx")}</FieldRow>
+      <FieldRow label="Auth Token">{textField("twilio_auth_token", "")}</FieldRow>
+      <FieldRow label="Messaging Service SID">{textField("twilio_messaging_service_sid", "MGxxxxxxxx")}</FieldRow>
+      <FieldRow label="From Number">{textField("twilio_default_from_number", "+1 555 000 0000")}</FieldRow>
+    </div>
+  );
+
+  const footerContent = (
+    <div className={cn("flex items-center gap-2", panelMode ? "justify-end" : "")}>
+      {editing ? (
+        <>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCancel}
+            disabled={saving}
+            data-testid="btn-cancel-edit"
+          >
+            <X className="h-4 w-4 mr-1.5" />
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={saving}
+            data-testid="btn-save-account"
+          >
+            {saving ? (
+              <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-1.5" />
+            )}
+            Save Changes
+          </Button>
+        </>
+      ) : (
+        <>
+          {!panelMode && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onClose}
+              data-testid="btn-close-detail"
+            >
+              Close
+            </Button>
+          )}
+          <Button
+            size="sm"
+            onClick={() => setEditing(true)}
+            data-testid="btn-edit-account"
+          >
+            <Pencil className="h-4 w-4 mr-1.5" />
+            Edit
+          </Button>
+        </>
+      )}
+    </div>
+  );
+
+  // ── Panel mode (inline right sidebar) ────────────────────────────────────
+
+  if (panelMode) {
+    return (
+      <div className="flex flex-col h-full" data-testid="account-detail-dialog">
+        <div className="px-4 py-3 border-b border-border flex-shrink-0 bg-card">
+          {headerContent}
+        </div>
+        <div className="flex-1 overflow-y-auto px-4">
+          {bodyContent}
+        </div>
+        <div className="flex-shrink-0 bg-card border-t border-border px-4 py-3">
+          {footerContent}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Dialog mode (modal) ───────────────────────────────────────────────────
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose?.()}>
       <DialogContent
         className="max-w-2xl max-h-[90vh] overflow-y-auto"
         data-testid="account-detail-dialog"
       >
-        {/* ── Header ─────────────────────────────────────────────────────── */}
         <DialogHeader>
-          <div className="flex items-start gap-3 pr-6">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-              <Building2 className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <DialogTitle className="text-xl font-semibold truncate">
-                {account.name || "Unnamed Account"}
-              </DialogTitle>
-              <div className="flex items-center gap-2 mt-1 flex-wrap">
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "flex items-center gap-1 text-[11px] px-2 py-0.5",
-                    badge.cls
-                  )}
-                >
-                  {badge.icon}
-                  {status}
-                </Badge>
-                {account.type && (
-                  <Badge
-                    variant="outline"
-                    className="text-[11px] px-2 py-0.5 text-muted-foreground"
-                  >
-                    {account.type}
-                  </Badge>
-                )}
-                <span className="text-xs text-muted-foreground">
-                  #{accountId}
-                </span>
-                {/* ── Quick status toggle ─────────────────────────────── */}
-                <div className="flex items-center gap-1.5 ml-1" title={status === "Active" ? "Click to deactivate" : "Click to activate"}>
-                  <Switch
-                    id={`status-toggle-${accountId}`}
-                    checked={status === "Active"}
-                    onCheckedChange={handleStatusToggle}
-                    disabled={toggling || saving}
-                    data-testid="account-status-toggle"
-                    className="scale-90"
-                  />
-                  <label
-                    htmlFor={`status-toggle-${accountId}`}
-                    className={cn(
-                      "text-[11px] font-medium cursor-pointer select-none",
-                      status === "Active"
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-muted-foreground"
-                    )}
-                  >
-                    {toggling ? (
-                      <span className="flex items-center gap-1">
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        Updating...
-                      </span>
-                    ) : (
-                      status === "Active" ? "Active" : "Inactive"
-                    )}
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
+          <div className="pr-6">{headerContent}</div>
         </DialogHeader>
 
         <Separator className="my-1" />
 
-        {/* ── Body ───────────────────────────────────────────────────────── */}
-        <div className="space-y-0 pb-2">
-          {/* Basic Info */}
-          <SectionHeader
-            icon={<Building2 className="h-4 w-4" />}
-            title="Basic Information"
-          />
-          <FieldRow label="Name">
-            {textField("name", "Account name")}
-          </FieldRow>
-          <FieldRow label="Status">
-            {selectField("status", STATUS_OPTIONS)}
-          </FieldRow>
-          <FieldRow label="Type">
-            {selectField("type", TYPE_OPTIONS)}
-          </FieldRow>
-          <FieldRow label="Business Niche">
-            <div data-testid="field-business_niche">
-              {textField("business_niche", "e.g. Construction, SaaS...")}
-            </div>
-          </FieldRow>
+        {bodyContent}
 
-          {/* Contact */}
-          <SectionHeader
-            icon={<Phone className="h-4 w-4" />}
-            title="Contact"
-          />
-          <FieldRow label="Owner Email">
-            {textField("owner_email", "owner@example.com")}
-          </FieldRow>
-          <FieldRow label="Phone">
-            {textField("phone", "+1 555 000 0000")}
-          </FieldRow>
-          <FieldRow label="Website">
-            {textField("website", "https://...")}
-          </FieldRow>
-
-          {/* Schedule */}
-          <SectionHeader
-            icon={<Clock className="h-4 w-4" />}
-            title="Schedule & Timezone"
-          />
-          <FieldRow label="Timezone">
-            {selectField("timezone", TIMEZONE_OPTIONS)}
-          </FieldRow>
-          <FieldRow label="Business Hours Open">
-            {timeField("business_hours_start", "09:00")}
-          </FieldRow>
-          <FieldRow label="Business Hours Close">
-            {timeField("business_hours_end", "17:00")}
-          </FieldRow>
-          <FieldRow label="Max Daily Sends">
-            {numberField("max_daily_sends", "500")}
-          </FieldRow>
-
-          {/* AI Settings */}
-          <SectionHeader
-            icon={<Bot className="h-4 w-4" />}
-            title="AI & Messaging"
-          />
-          <FieldRow label="AI Name">
-            {textField("default_ai_name", "e.g. Alex")}
-          </FieldRow>
-          <FieldRow label="AI Role">
-            {textField("default_ai_role", "e.g. admin support")}
-          </FieldRow>
-          <FieldRow label="AI Style">
-            {textField("default_ai_style", "e.g. Natural, human, low pressure")}
-          </FieldRow>
-          <FieldRow label="Typo Frequency">
-            {selectField("default_typo_frequency", TYPO_FREQUENCY_OPTIONS)}
-          </FieldRow>
-          <FieldRow label="Opt-out Keyword">
-            {textField("opt_out_keyword", "e.g. STOP")}
-          </FieldRow>
-          <FieldRow label="Preferred Terminology">
-            {textField("preferred_terminology", "")}
-          </FieldRow>
-          <FieldRow label="Disclosure Text">
-            {textField("data_collection_disclosure", "", "textarea")}
-          </FieldRow>
-
-          {/* Business Description */}
-          <SectionHeader
-            icon={<FileText className="h-4 w-4" />}
-            title="Description & Notes"
-          />
-          <FieldRow label="Business Description">
-            <div data-testid="field-business_description">
-              {textField("business_description", "Describe the business...", "textarea")}
-            </div>
-          </FieldRow>
-          <FieldRow label="Service Categories">
-            {serviceCategoriesField()}
-          </FieldRow>
-          <FieldRow label="Notes">
-            {textField("notes", "Internal notes...", "textarea")}
-          </FieldRow>
-
-          {/* Twilio */}
-          <SectionHeader
-            icon={<Globe className="h-4 w-4" />}
-            title="Twilio Integration"
-          />
-          <FieldRow label="Account SID">
-            {textField("twilio_account_sid", "ACxxxxxxxx")}
-          </FieldRow>
-          <FieldRow label="Auth Token">
-            {textField("twilio_auth_token", "")}
-          </FieldRow>
-          <FieldRow label="Messaging Service SID">
-            {textField("twilio_messaging_service_sid", "MGxxxxxxxx")}
-          </FieldRow>
-          <FieldRow label="From Number">
-            {textField("twilio_default_from_number", "+1 555 000 0000")}
-          </FieldRow>
-        </div>
-
-        {/* ── Footer ─────────────────────────────────────────────────────── */}
         <Separator className="mt-2" />
-        <DialogFooter className="flex items-center gap-2 pt-2">
-          {editing ? (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCancel}
-                disabled={saving}
-                data-testid="btn-cancel-edit"
-              >
-                <X className="h-4 w-4 mr-1.5" />
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={saving}
-                data-testid="btn-save-account"
-              >
-                {saving ? (
-                  <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4 mr-1.5" />
-                )}
-                Save Changes
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onClose}
-                data-testid="btn-close-detail"
-              >
-                Close
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => setEditing(true)}
-                data-testid="btn-edit-account"
-              >
-                <Pencil className="h-4 w-4 mr-1.5" />
-                Edit
-              </Button>
-            </>
-          )}
+        <DialogFooter className="pt-2">
+          {footerContent}
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -152,6 +152,8 @@ export function AccountsTable(props: AccountsTableProps) {
       pageSize={50}
       emptyStateVariant={searchValue ? "search" : "accounts"}
       onRowClick={onRowClick}
+      columnLabelOverrides={{ name: "Account Name" }}
+      nonResizableCols={["Id", "Image"]}
     />
   );
 }

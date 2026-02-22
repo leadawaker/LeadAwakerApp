@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
-import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { Mail, Lock, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 
@@ -10,9 +10,21 @@ export default function Login() {
   const { t } = useTranslation("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, setLocation] = useLocation();
+
+  // Auto-redirect if previously logged in with "Remember Me"
+  useEffect(() => {
+    const isAuthed = Boolean(localStorage.getItem("leadawaker_auth"));
+    const remembered = localStorage.getItem("leadawaker_remember_me") === "true";
+    if (isAuthed && remembered) {
+      const accountId = localStorage.getItem("leadawaker_current_account_id");
+      setLocation(accountId === "1" ? "/agency/dashboard" : "/subaccount/dashboard");
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +59,13 @@ export default function Login() {
         "leadawaker_current_account_id",
         String(user.accountsId ?? 1),
       );
+
+      // Persist remember-me preference
+      if (rememberMe) {
+        localStorage.setItem("leadawaker_remember_me", "true");
+      } else {
+        localStorage.removeItem("leadawaker_remember_me");
+      }
 
       // Route to appropriate area based on account
       const isAgency = user.accountsId === 1;
@@ -137,21 +156,36 @@ export default function Login() {
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder={t("form.password.placeholder")}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-12"
+                    className="pl-10 pr-10 h-12"
                     required
                     disabled={isLoading}
                     data-testid="input-password"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    tabIndex={-1}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                 </div>
               </div>
 
               <div className="flex items-center justify-between text-sm">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="w-4 h-4 rounded border-border" disabled={isLoading} />
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 rounded border-border"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    disabled={isLoading}
+                  />
                   <span className="text-muted-foreground">{t("form.rememberMe")}</span>
                 </label>
                 <a href="#" className="text-primary hover:underline">

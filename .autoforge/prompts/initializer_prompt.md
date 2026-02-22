@@ -18,12 +18,6 @@ Lead Awaker is an AI-powered WhatsApp lead reactivation engine. You are rebuildi
 
 ---
 
-## REQUIRED FEATURE COUNT
-
-**CRITICAL:** You must create exactly **206** features using the `feature_create_bulk` tool.
-
----
-
 ## FEATURE STRUCTURE
 
 ### Infrastructure Features (Indices 0–4) — MANDATORY, NO DEPENDENCIES
@@ -108,7 +102,3 @@ Each feature should include:
 - **Performance:** Lightweight, virtualized, Raspberry Pi–friendly
 
 ---
-
-## OUTPUT
-
-Generate all **206** features using `feature_create_bulk`, organized by category, with proper dependencies and acceptance criteria. Infrastructure features (0–4) must come first with no dependencies.

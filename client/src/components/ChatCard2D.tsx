@@ -10,7 +10,7 @@ interface Message {
   id?: string;
 }
 
-export default function ChatCard2D({ messages, themeColor = "#2563EB" }: { messages?: Message[], themeColor?: string }) {
+export default function ChatCard2D({ messages, themeColor = "#2563EB", leadFullName }: { messages?: Message[], themeColor?: string, leadFullName?: string }) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
@@ -58,7 +58,7 @@ export default function ChatCard2D({ messages, themeColor = "#2563EB" }: { messa
     return fullNames[firstName] || firstName;
   };
 
-  const displayName = getFullName(headerName.split(' ')[0]);
+  const displayName = leadFullName || getFullName(headerName.split(' ')[0]);
 
   const isAtBottom = useCallback(() => {
     if (!scrollRef.current) return false;

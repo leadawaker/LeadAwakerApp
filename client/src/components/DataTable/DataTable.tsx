@@ -168,6 +168,10 @@ export interface DataTableProps<TRow extends DataTableRow = DataTableRow> {
   hiddenFields: string[];
   nonEditableFields: string[];
   smallWidthCols?: string[];
+  /** Override column header labels: e.g. { name: "Account Name" } */
+  columnLabelOverrides?: Record<string, string>;
+  /** Columns that cannot be resized (no drag handle) */
+  nonResizableCols?: string[];
 
   onUndoRedoReady?: (api: {
     undo: () => void;
@@ -200,6 +204,11 @@ export interface DataTableProps<TRow extends DataTableRow = DataTableRow> {
 
   onImportCSV?: (file: File) => void;
   onExportCSV?: () => void;
+
+  /** Slot rendered adjacent to the Group By selector (e.g. a custom filter button) */
+  filterSlot?: React.ReactNode;
+  /** Slot rendered adjacent to the Export button (e.g. an Import CSV button) */
+  importSlot?: React.ReactNode;
 
   /** Enable self-contained CSV export with field-selection dialog */
   exportable?: boolean;
@@ -715,6 +724,7 @@ const SortableTableHead = ({
   className,
   children,
   handleResize,
+  nonResizable,
 }: {
   col: string;
   idx: number;
@@ -725,6 +735,7 @@ const SortableTableHead = ({
     listeners: DraggableSyntheticListeners;
   }) => React.ReactNode;
   handleResize: (col: string, e: React.MouseEvent) => void;
+  nonResizable?: boolean;
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: col });
@@ -744,10 +755,12 @@ const SortableTableHead = ({
       className={cn(className, isDragging && "bg-muted shadow-inner")}
     >
       {children({ attributes, listeners })}
-      <div
-        className="absolute right-[-4px] top-0 bottom-0 w-[8px] cursor-col-resize hover:bg-brand-blue/50 active:bg-brand-blue z-20"
-        onMouseDown={(e) => handleResize(col, e)}
-      />
+      {!nonResizable && (
+        <div
+          className="absolute right-[-4px] top-0 bottom-0 w-[8px] cursor-col-resize hover:bg-brand-blue/50 active:bg-brand-blue z-20"
+          onMouseDown={(e) => handleResize(col, e)}
+        />
+      )}
     </TableHead>
   );
 };
@@ -856,6 +869,10 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     pageSizeOptions,
     renderBulkActions,
     onRowClick,
+    columnLabelOverrides,
+    nonResizableCols,
+    filterSlot,
+    importSlot,
   } = props;
 
   const exportable = props.exportable ?? false;
@@ -1097,29 +1114,6 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     });
   }, [rows, sortConfig]);
 
-  // Estimated row height for the virtualizer based on rowSpacing
-  const estimatedRowHeight = rowSpacing === "tight" ? 40 : rowSpacing === "medium" ? 56 : 88;
-
-  // Row virtualizer — always called (hooks must not be conditional)
-  // When `virtualized` is false, count=0 so it has no effect.
-  const rowVirtualizer = useVirtualizer({
-    count: virtualized ? displayRows.length : 0,
-    getScrollElement: () => (virtualized ? scrollContainerRef.current : null),
-    estimateSize: () => estimatedRowHeight,
-    overscan: 10,
-    measureElement: (el) => {
-      // Use the element's actual height for dynamic measurement
-      if (el && el instanceof HTMLElement) return el.getBoundingClientRect().height;
-      return estimatedRowHeight;
-    },
-  });
-
-  const virtualItems = rowVirtualizer.getVirtualItems();
-  const totalVirtualSize = rowVirtualizer.getTotalSize();
-  const virtualPaddingTop = virtualItems.length > 0 ? virtualItems[0].start : 0;
-  const virtualPaddingBottom =
-    virtualItems.length > 0 ? totalVirtualSize - virtualItems[virtualItems.length - 1].end : 0;
-
   // Pagination: slice sorted rows when a page size is active.
   // Works in both virtualized and non-virtualized modes.
   // `effectivePageSize` is set when pageSizeOptions is provided OR pageSize prop is given.
@@ -1140,41 +1134,78 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     return sortedRows.slice(start, start + effectivePageSize);
   }, [sortedRows, effectivePageSize, safePage]);
 
+  // Estimated row height for the virtualizer based on rowSpacing
+  const estimatedRowHeight = rowSpacing === "tight" ? 40 : rowSpacing === "medium" ? 56 : 88;
+
+  // ── Grouping computations (must be before the virtualizer so the flat list count is available) ──
   const groupedRows = useMemo(() => {
     if (groupBy === "None") return { "All Records": displayRows };
     const groups: Record<string, TRow[]> = {};
-    
-    // Determine order
     let order: string[] = [];
     const g = groupBy.toLowerCase();
     if (g === "conversion_status") order = statusOptions;
     else if (g === "automation_status") order = props.automationStatusOptions || [];
     else if (g === "type") order = typeOptions;
-    
-    if (order.length > 0) {
-      order.forEach(opt => { groups[opt] = []; });
-    }
-
+    if (order.length > 0) order.forEach(opt => { groups[opt] = []; });
     displayRows.forEach((r) => {
-      // Try the exact groupBy key first (handles "Campaign", "Account" with capital letters),
-      // then fall back to lowercase (handles "conversion_status", "automation_status").
-      const rawVal = (r as any)[groupBy] !== undefined
-        ? (r as any)[groupBy]
-        : (r as any)[groupBy.toLowerCase()];
+      const rawVal = (r as any)[groupBy] !== undefined ? (r as any)[groupBy] : (r as any)[groupBy.toLowerCase()];
       const key = String(rawVal ?? "") || "Unknown";
       if (!groups[key]) groups[key] = [];
       groups[key].push(r);
     });
-    
-    // Remove empty groups that weren't in order list
-    if (order.length > 0) {
-      Object.keys(groups).forEach(k => {
-        if (groups[k].length === 0 && !order.includes(k)) delete groups[k];
-      });
-    }
-
+    if (order.length > 0) Object.keys(groups).forEach(k => { if (groups[k].length === 0 && !order.includes(k)) delete groups[k]; });
     return groups;
   }, [displayRows, groupBy, statusOptions, props.automationStatusOptions, typeOptions]);
+
+  const sortedGroupNames = useMemo(() => {
+    let keys = Object.keys(groupedRows);
+    if (hideEmptyGroups && groupBy !== "None") keys = keys.filter(key => groupedRows[key].length > 0);
+    const conversionOrder = ["New","Contacted","Responded","Multiple Responses","Qualified","Booked","DND","Lost"];
+    return keys.sort((a, b) => {
+      const g = groupBy.toLowerCase();
+      const dir = groupSortOrder === "asc" ? 1 : -1;
+      if (g === "conversion_status" || g === "conversion") {
+        const ia = conversionOrder.indexOf(a), ib = conversionOrder.indexOf(b);
+        if (ia !== -1 && ib !== -1) return (ia - ib) * dir;
+      }
+      return a.localeCompare(b) * dir;
+    });
+  }, [groupedRows, groupSortOrder, hideEmptyGroups, groupBy]);
+
+  // Flat list for virtualized grouping — sentinel objects for group headers, spread row data for data rows.
+  // Both grouped and non-grouped paths share the same array; the render loop checks `_isGroupHeader`.
+  const flatDisplayRows = useMemo<any[]>(() => {
+    if (!virtualized || groupBy === "None") return displayRows as any[];
+    const result: any[] = [];
+    sortedGroupNames.forEach(groupName => {
+      const groupRows = groupedRows[groupName] || [];
+      result.push({ _isGroupHeader: true, _groupName: groupName, _groupCount: groupRows.length, Id: `grp-${groupName}` });
+      if (!collapsedGroups[groupName]) {
+        groupRows.forEach((row, rowIdx) => result.push({ ...(row as any), _rowIdx: rowIdx }));
+      }
+    });
+    return result;
+  }, [virtualized, groupBy, sortedGroupNames, groupedRows, collapsedGroups, displayRows]);
+
+  // Row virtualizer — always called (hooks must not be conditional)
+  // When `virtualized` is false, count=0 so it has no effect.
+  const rowVirtualizer = useVirtualizer({
+    count: virtualized ? flatDisplayRows.length : 0,
+    getScrollElement: () => (virtualized ? scrollContainerRef.current : null),
+    estimateSize: () => estimatedRowHeight,
+    overscan: 10,
+    measureElement: (el) => {
+      // Use the element's actual height for dynamic measurement
+      if (el && el instanceof HTMLElement) return el.getBoundingClientRect().height;
+      return estimatedRowHeight;
+    },
+  });
+
+  const virtualItems = rowVirtualizer.getVirtualItems();
+  const totalVirtualSize = rowVirtualizer.getTotalSize();
+  const virtualPaddingTop = virtualItems.length > 0 ? virtualItems[0].start : 0;
+  const virtualPaddingBottom =
+    virtualItems.length > 0 ? totalVirtualSize - virtualItems[virtualItems.length - 1].end : 0;
 
   const visibleCols = visibleColumns.filter((c) => !hiddenFields.includes(c));
   const rowPadding = defaultRowPadding[rowSpacing];
@@ -1191,7 +1222,8 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     } else if (key === "twilio") {
       next = columns.filter((c) => matchesAny(c, ALWAYS_VISIBLE_MATCH) || includesAny(c, ["twilio", "twillio", "webhook"]));
     } else if (key === "basic") {
-      next = columns.filter((c) => matchesAny(c, ALWAYS_VISIBLE_MATCH) || matchesAny(c, ["status", "type", "timezone"]));
+      const BASIC_MATCH = ["status", "type", "timezone", "tags", "full_name", "full name", "conversion_status", "leads_tags"];
+      next = columns.filter((c) => matchesAny(c, ALWAYS_VISIBLE_MATCH) || matchesAny(c, BASIC_MATCH));
     } else if (key === "automation") {
       next = columns.filter((c) => matchesAny(c, ALWAYS_VISIBLE_MATCH) || includesAny(c, AUTOMATION_MATCH));
     }
@@ -1200,7 +1232,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
 
   const renderHeader = (col: string, drag: { attributes: any; listeners: any }) => {
     const isSorted = sortConfig.key === col && sortConfig.direction !== null;
-    const title = formatHeaderTitle(col);
+    const title = columnLabelOverrides?.[col] ?? formatHeaderTitle(col);
 
     return (
       <div className="flex items-center gap-2 group/h">
@@ -1308,41 +1340,9 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     onAdd ||
     onImportCSV ||
     onExportCSV ||
-    exportable;
-
-  const sortedGroupNames = useMemo(() => {
-    let keys = Object.keys(groupedRows);
-    if (hideEmptyGroups && groupBy !== "None") {
-      keys = keys.filter(key => groupedRows[key].length > 0);
-    }
-
-    const conversionOrder = [
-      "New",
-      "Contacted",
-      "Responded",
-      "Multiple Responses",
-      "Qualified",
-      "Booked",
-      "DND",
-      "Lost"
-    ];
-
-    return keys.sort((a, b) => {
-      const g = groupBy.toLowerCase();
-      const dir = groupSortOrder === "asc" ? 1 : -1;
-
-      if (g === "conversion_status" || g === "conversion") {
-        const indexA = conversionOrder.indexOf(a);
-        const indexB = conversionOrder.indexOf(b);
-        
-        if (indexA !== -1 && indexB !== -1) {
-          return (indexA - indexB) * dir;
-        }
-      }
-
-      return a.localeCompare(b) * dir;
-    });
-  }, [groupedRows, groupSortOrder, hideEmptyGroups, groupBy]);
+    exportable ||
+    filterSlot ||
+    importSlot;
 
   return (
     <div className="space-y-0">
@@ -1474,6 +1474,8 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
             </div>
           )}
 
+          {filterSlot}
+
           {selectedIds.length > 0 && (
             <div className="flex items-center gap-2 flex-wrap" data-testid="bulk-selection-bar">
               {renderBulkActions ? (
@@ -1510,39 +1512,8 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
 
           <div className="flex-1" />
 
-          {viewMenuGroups.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="w-[160px] h-10 rounded-xl bg-card dark:bg-secondary shadow-none border-border font-bold flex items-center gap-2 text-foreground">
-                  {VIEW_PRESETS.find(p => p.key === viewKey)?.icon || <LayoutGrid className="h-4 w-4" />}
-                  <span className="truncate">{viewLabel}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-48">
-                {viewMenuGroups.map((group, idx) => (
-                  <div key={idx}>
-                    {group.label && <DropdownMenuLabel>{group.label}</DropdownMenuLabel>}
-                    {group.options.map((option) => {
-                      const preset = option.type === 'preset' ? VIEW_PRESETS.find(p => p.key === option.presetKey) : null;
-                      return (
-                        <DropdownMenuItem
-                          key={`${group.label}-${option.value}`}
-                          onClick={() => handleViewMenuSelect(option)}
-                          className="flex items-center gap-2"
-                        >
-                          {preset?.icon}
-                          {option.label}
-                        </DropdownMenuItem>
-                      );
-                    })}
-                    {idx < viewMenuGroups.length - 1 && (
-                      <DropdownMenuSeparator />
-                    )}
-                  </div>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          {/* Import slot — rendered next to Export */}
+          {importSlot}
 
           {/* Export CSV button — shown when exportable=true */}
           {exportable && (
@@ -1557,113 +1528,144 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
             </Button>
           )}
 
+          {/* Connected [View | Fields] button group */}
           {(() => {
-            // Columns that can be toggled (exclude internal hiddenFields)
             const toggleableCols = columns.filter((c) => !hiddenFields.includes(c));
             const hiddenCount = toggleableCols.filter((c) => !visibleColumns.includes(c)).length;
             return (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    data-testid="column-config-trigger"
-                    className="h-10 rounded-xl gap-2 font-semibold bg-card dark:bg-secondary border-border shadow-none text-foreground"
+              <div className="flex items-stretch rounded-xl border border-border bg-card dark:bg-secondary overflow-hidden divide-x divide-border shadow-none">
+                {/* View presets — left half */}
+                {viewMenuGroups.length > 0 && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="h-10 px-3 rounded-none gap-2 font-semibold shadow-none border-none text-foreground"
+                      >
+                        {VIEW_PRESETS.find(p => p.key === viewKey)?.icon || <Eye className="h-4 w-4 text-muted-foreground" />}
+                        <span className="truncate max-w-[100px]">{viewLabel}</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-48" align="end">
+                      {viewMenuGroups.map((group, idx) => (
+                        <div key={idx}>
+                          {group.label && <DropdownMenuLabel>{group.label}</DropdownMenuLabel>}
+                          {group.options.map((option) => {
+                            const preset = option.type === 'preset' ? VIEW_PRESETS.find(p => p.key === option.presetKey) : null;
+                            return (
+                              <DropdownMenuItem
+                                key={`${group.label}-${option.value}`}
+                                onClick={() => handleViewMenuSelect(option)}
+                                className="flex items-center gap-2"
+                              >
+                                {preset?.icon}
+                                {option.label}
+                              </DropdownMenuItem>
+                            );
+                          })}
+                          {idx < viewMenuGroups.length - 1 && <DropdownMenuSeparator />}
+                        </div>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+
+                {/* Fields — right half */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      data-testid="column-config-trigger"
+                      className="h-10 px-3 rounded-none gap-2 font-semibold shadow-none border-none text-foreground"
+                    >
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      Fields
+                      {hiddenCount > 0 && (
+                        <span
+                          data-testid="column-config-hidden-count"
+                          className="ml-0.5 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-brand-blue text-brand-blue-foreground text-[10px] font-bold"
+                        >
+                          {hiddenCount}
+                        </span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-64 p-0 overflow-hidden"
+                    data-testid="column-config-panel"
+                    align="end"
                   >
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
-                    Fields
-                    {hiddenCount > 0 && (
-                      <span
-                        data-testid="column-config-hidden-count"
-                        className="ml-0.5 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-brand-blue text-brand-blue-foreground text-[10px] font-bold"
-                      >
-                        {hiddenCount}
+                    <div className="flex items-center justify-between px-3 py-2.5 border-b border-border bg-muted/40">
+                      <span className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                        Column Visibility
                       </span>
+                      <div className="flex gap-1">
+                        <button
+                          data-testid="column-config-show-all"
+                          onClick={() => onVisibleColumnsChange(toggleableCols)}
+                          className="text-[11px] text-brand-blue hover:text-brand-blue/80 font-medium px-1.5 py-0.5 rounded hover:bg-brand-blue/10 transition-colors"
+                        >
+                          All
+                        </button>
+                        <span className="text-border">·</span>
+                        <button
+                          data-testid="column-config-hide-all"
+                          onClick={() => {
+                            const first = toggleableCols[0];
+                            onVisibleColumnsChange(first ? [first] : []);
+                          }}
+                          className="text-[11px] text-muted-foreground hover:text-foreground font-medium px-1.5 py-0.5 rounded hover:bg-muted transition-colors"
+                        >
+                          None
+                        </button>
+                      </div>
+                    </div>
+                    <ScrollArea className="h-72">
+                      <div className="p-1.5 space-y-0.5">
+                        {toggleableCols.map((col) => {
+                          const isVisible = visibleColumns.includes(col);
+                          return (
+                            <div
+                              key={col}
+                              data-testid={`column-toggle-${col}`}
+                              className={cn(
+                                "flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer transition-colors select-none",
+                                isVisible ? "hover:bg-muted/60" : "hover:bg-muted/40 opacity-60 hover:opacity-80",
+                              )}
+                              onClick={() => {
+                                if (isVisible) {
+                                  onVisibleColumnsChange(visibleColumns.filter((c) => c !== col));
+                                } else {
+                                  onVisibleColumnsChange([...visibleColumns, col]);
+                                }
+                              }}
+                            >
+                              <Checkbox
+                                checked={isVisible}
+                                data-testid={`column-checkbox-${col}`}
+                                className="pointer-events-none"
+                              />
+                              <span className={cn("text-sm flex-1 truncate", isVisible ? "font-medium text-foreground" : "text-muted-foreground")}>
+                                {formatHeaderTitle(col)}
+                              </span>
+                              {isVisible ? (
+                                <Eye className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                              ) : (
+                                <EyeOff className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0" />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                    {hiddenCount > 0 && (
+                      <div className="px-3 py-2 border-t border-border bg-muted/20 text-[11px] text-muted-foreground">
+                        {hiddenCount} column{hiddenCount !== 1 ? "s" : ""} hidden
+                      </div>
                     )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-64 p-0 overflow-hidden"
-                  data-testid="column-config-panel"
-                  align="end"
-                >
-                  {/* Header */}
-                  <div className="flex items-center justify-between px-3 py-2.5 border-b border-border bg-muted/40">
-                    <span className="text-xs font-semibold text-foreground uppercase tracking-wide">
-                      Column Visibility
-                    </span>
-                    <div className="flex gap-1">
-                      <button
-                        data-testid="column-config-show-all"
-                        onClick={() => onVisibleColumnsChange(toggleableCols)}
-                        className="text-[11px] text-brand-blue hover:text-brand-blue/80 font-medium px-1.5 py-0.5 rounded hover:bg-brand-blue/10 transition-colors"
-                      >
-                        All
-                      </button>
-                      <span className="text-border">·</span>
-                      <button
-                        data-testid="column-config-hide-all"
-                        onClick={() => {
-                          // Keep at least the first column visible
-                          const first = toggleableCols[0];
-                          onVisibleColumnsChange(first ? [first] : []);
-                        }}
-                        className="text-[11px] text-muted-foreground hover:text-foreground font-medium px-1.5 py-0.5 rounded hover:bg-muted transition-colors"
-                      >
-                        None
-                      </button>
-                    </div>
-                  </div>
-                  {/* Column list */}
-                  <ScrollArea className="h-72">
-                    <div className="p-1.5 space-y-0.5">
-                      {toggleableCols.map((col) => {
-                        const isVisible = visibleColumns.includes(col);
-                        return (
-                          <div
-                            key={col}
-                            data-testid={`column-toggle-${col}`}
-                            className={cn(
-                              "flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer transition-colors select-none",
-                              isVisible
-                                ? "hover:bg-muted/60"
-                                : "hover:bg-muted/40 opacity-60 hover:opacity-80",
-                            )}
-                            onClick={() => {
-                              if (isVisible) {
-                                onVisibleColumnsChange(
-                                  visibleColumns.filter((c) => c !== col),
-                                );
-                              } else {
-                                onVisibleColumnsChange([...visibleColumns, col]);
-                              }
-                            }}
-                          >
-                            <Checkbox
-                              checked={isVisible}
-                              data-testid={`column-checkbox-${col}`}
-                              className="pointer-events-none"
-                            />
-                            <span className={cn("text-sm flex-1 truncate", isVisible ? "font-medium text-foreground" : "text-muted-foreground")}>
-                              {formatHeaderTitle(col)}
-                            </span>
-                            {isVisible ? (
-                              <Eye className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-                            ) : (
-                              <EyeOff className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0" />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </ScrollArea>
-                  {/* Footer: show hidden count */}
-                  {hiddenCount > 0 && (
-                    <div className="px-3 py-2 border-t border-border bg-muted/20 text-[11px] text-muted-foreground">
-                      {hiddenCount} column{hiddenCount !== 1 ? "s" : ""} hidden
-                    </div>
-                  )}
-                </PopoverContent>
-              </Popover>
+                  </PopoverContent>
+                </Popover>
+              </div>
             );
           })()}
 
@@ -1780,6 +1782,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                         idx === 0 && "sticky left-[40px] z-20 bg-muted/50 shadow-[2px_0_4px_rgba(0,0,0,0.05)]",
                       )}
                       handleResize={handleResize}
+                      nonResizable={nonResizableCols?.includes(col)}
                     >
                       {(drag) => renderHeader(col, drag)}
                     </SortableTableHead>
@@ -1850,8 +1853,50 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                     </tr>
                   )}
                   {virtualItems.map((virtualRow) => {
-                    const row = displayRows[virtualRow.index] as any;
+                    // Source from flatDisplayRows — handles both grouped (with group-header sentinels) and non-grouped
+                    const row = flatDisplayRows[virtualRow.index] as any;
                     if (!row) return null;
+
+                    // ── Group header sentinel ──
+                    if (row._isGroupHeader) {
+                      const g = groupBy.toLowerCase();
+                      const color = groupColoring
+                        ? g === "conversion_status" || g === "conversion"
+                          ? (conversionColors as any)[row._groupName]
+                          : g === "automation_status"
+                          ? (automationStatusColors as any)[row._groupName]
+                          : g === "type"
+                          ? row._groupName.toLowerCase() === "agency"
+                            ? { bg: "bg-brand-yellow/20", text: "text-brand-yellow" }
+                            : { bg: "bg-brand-blue/20", text: "text-brand-blue" }
+                          : null
+                        : null;
+                      return (
+                        <TableRow
+                          key={String(row.Id)}
+                          data-index={virtualRow.index}
+                          ref={rowVirtualizer.measureElement}
+                          className="bg-muted/20 hover:bg-muted/30 border-y border-border/60 cursor-pointer"
+                          onClick={() => toggleGroupCollapse(row._groupName)}
+                        >
+                          <TableCell colSpan={visibleCols.length + 1} className="py-2 px-4">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className={cn("text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md", color ? cn(color.bg, color.text) : "bg-muted text-muted-foreground")}>
+                                {row._groupName}
+                              </Badge>
+                              <Badge variant="secondary" className="bg-muted/50 text-muted-foreground h-6 px-2.5 text-xs font-bold border-none shadow-none">
+                                {row._groupCount}
+                              </Badge>
+                              <div className="flex-1" />
+                              {collapsedGroups[row._groupName] ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronUp className="h-4 w-4 text-muted-foreground" />}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    }
+
+                    // ── Data row ──
+                    const stripeIdx = row._rowIdx ?? virtualRow.index;
                     return (
                       <TableRow
                         key={row.Id}
@@ -1861,7 +1906,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                         ref={rowVirtualizer.measureElement}
                         className={cn(
                           "group transition-colors border-b border-border/50 last:border-0",
-                          virtualRow.index % 2 === 0
+                          stripeIdx % 2 === 0
                             ? "bg-transparent hover:bg-muted/30 dark:hover:bg-muted/20"
                             : "bg-muted/[0.07] dark:bg-muted/[0.12] hover:bg-muted/30 dark:hover:bg-muted/20",
                           selectedIds.includes(row.Id) && "!bg-primary/5 hover:!bg-primary/10",
@@ -1934,7 +1979,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                           className="w-full h-full rounded-full object-cover"
                                           onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                                         />
-                                      ) : getInitials(row.full_name || row.name)}
+                                      ) : (row.Image && row.Image !== "?" ? row.Image : getInitials(row.full_name || row.name))}
                                     </div>
                                   )}
                                 </SheetTrigger>
@@ -2206,15 +2251,15 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                       )}
                                     >
                                       {row.image ? (
-                                        <img 
-                                          src={row.image} 
-                                          alt={row.full_name || row.name} 
+                                        <img
+                                          src={row.image}
+                                          alt={row.full_name || row.name}
                                           className="w-full h-full rounded-full object-cover"
                                           onError={(e) => {
                                             (e.target as HTMLImageElement).style.display = 'none';
                                           }}
                                         />
-                                      ) : getInitials(row.full_name || row.name)}
+                                      ) : (row.Image && row.Image !== "?" ? row.Image : getInitials(row.full_name || row.name))}
                                     </div>
                                   )}
                                 </SheetTrigger>

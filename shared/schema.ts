@@ -343,7 +343,6 @@ export const insertLeads_TagsSchema = createInsertSchema(leadsTags).omit({
   createdAt: true,
   updatedAt: true,
   createdBy: true,
-  updatedBy: true,
   ncOrder: true,
 });
 export type Leads_Tags = typeof leadsTags.$inferSelect;
