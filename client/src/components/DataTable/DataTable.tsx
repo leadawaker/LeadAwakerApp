@@ -1783,7 +1783,12 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                   {Array.from({ length: 8 }).map((_, rowIdx) => {
                     const widths = ["w-3/4", "w-1/2", "w-2/3", "w-1/3", "w-4/5", "w-2/5", "w-3/5"];
                     return (
-                      <TableRow key={`skeleton-${rowIdx}`} className="hover:bg-transparent border-b border-border/40">
+                      <TableRow
+                        key={`skeleton-${rowIdx}`}
+                        data-testid="skeleton-row"
+                        className="hover:bg-transparent border-b border-border/40 animate-in fade-in-0 duration-300"
+                        style={{ animationDelay: `${rowIdx * 30}ms`, animationFillMode: "both" }}
+                      >
                         <TableCell className="w-[40px] px-4">
                           <Skeleton className="h-4 w-4 rounded" />
                         </TableCell>
