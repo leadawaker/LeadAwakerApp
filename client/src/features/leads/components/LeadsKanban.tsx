@@ -11,6 +11,7 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import {
@@ -22,6 +23,8 @@ import {
   SmilePlus,
   Frown,
   Meh,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 /* ─────────── Pipeline column configuration ─────────── */
@@ -467,21 +470,79 @@ function KanbanColumn({
   stage,
   leads,
   leadTagsMap,
+  isCollapsed,
+  onToggleCollapse,
 }: {
   stage: string;
   leads: any[];
   leadTagsMap?: Map<number, { name: string; color: string }[]>;
+  isCollapsed?: boolean;
+  onToggleCollapse?: (stage: string) => void;
 }) {
   const styles = STAGE_STYLES[stage] || DEFAULT_STYLE;
   const { setNodeRef, isOver } = useDroppable({ id: `column-${stage}` });
 
+  /* ── Collapsed / minimal indicator ── */
+  if (isCollapsed) {
+    return (
+      <div
+        className={cn(
+          "flex flex-col items-center rounded-xl border w-10 flex-shrink-0 transition-all duration-200 cursor-pointer select-none",
+          cn(styles.bg, styles.border)
+        )}
+        data-testid={`kanban-column-${stage}`}
+        data-collapsed="true"
+        title={`${STAGE_LABELS[stage] ?? stage} (${leads.length}) — click to expand`}
+        onClick={() => onToggleCollapse?.(stage)}
+      >
+        {/* Expand chevron */}
+        <div className="py-2 flex items-center justify-center w-full">
+          <ChevronRight
+            className="h-4 w-4 text-muted-foreground"
+            data-testid={`kanban-column-expand-${stage}`}
+          />
+        </div>
+
+        {/* Color dot */}
+        <div className={cn("w-2 h-2 rounded-full flex-shrink-0 mt-1", styles.dot)} />
+
+        {/* Stage label — rotated vertically */}
+        <div className="flex-1 flex items-center justify-center py-3">
+          <span
+            className="font-semibold text-[11px] text-foreground"
+            style={{
+              writingMode: "vertical-rl",
+              textOrientation: "mixed",
+              transform: "rotate(180deg)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {STAGE_LABELS[stage] ?? stage}
+          </span>
+        </div>
+
+        {/* Count badge */}
+        <Badge
+          className={cn(
+            "mb-2 text-[10px] px-1 py-0 h-5 font-semibold border-0 rounded-md",
+            styles.badge
+          )}
+          data-testid={`kanban-column-count-${stage}`}
+        >
+          {leads.length}
+        </Badge>
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
-        "flex flex-col rounded-xl border min-w-[260px] w-[280px] max-w-[300px] flex-shrink-0 transition-colors duration-150",
+        "flex flex-col rounded-xl border min-w-[260px] w-[280px] max-w-[300px] flex-shrink-0 transition-all duration-200",
         isOver ? styles.dragOver : cn(styles.bg, styles.border)
       )}
       data-testid={`kanban-column-${stage}`}
+      data-collapsed="false"
     >
       {/* Column Header */}
       <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border/30">
@@ -498,6 +559,18 @@ function KanbanColumn({
         >
           {leads.length}
         </Badge>
+
+        {/* Collapse button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-5 w-5 ml-1 flex-shrink-0 text-muted-foreground hover:text-foreground"
+          onClick={() => onToggleCollapse?.(stage)}
+          data-testid={`kanban-column-collapse-${stage}`}
+          title="Collapse column"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+        </Button>
       </div>
 
       {/* Column Body – the ref is on the inner div so the drop target covers the list area */}
@@ -555,6 +628,34 @@ export function LeadsKanban({
   const [localLeads, setLocalLeads] = useState<any[]>(leads);
   const [activeLead, setActiveLead] = useState<any | null>(null);
   const [isDraggingAny, setIsDraggingAny] = useState(false);
+
+  // Collapsed column state (persisted in localStorage)
+  const [collapsedStages, setCollapsedStages] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem("kanban_collapsed_stages");
+      if (stored) return new Set(JSON.parse(stored) as string[]);
+    } catch {
+      // ignore parse errors
+    }
+    return new Set<string>();
+  });
+
+  const toggleColumnCollapse = useCallback((stage: string) => {
+    setCollapsedStages((prev) => {
+      const next = new Set(prev);
+      if (next.has(stage)) {
+        next.delete(stage);
+      } else {
+        next.add(stage);
+      }
+      try {
+        localStorage.setItem("kanban_collapsed_stages", JSON.stringify([...next]));
+      } catch {
+        // ignore storage errors
+      }
+      return next;
+    });
+  }, []);
 
   // Sync with parent when not dragging (covers initial load and external refreshes)
   useMemo(() => {
@@ -698,6 +799,8 @@ export function LeadsKanban({
             stage={stage}
             leads={groupedLeads[stage]}
             leadTagsMap={leadTagsMap}
+            isCollapsed={collapsedStages.has(stage)}
+            onToggleCollapse={toggleColumnCollapse}
           />
         ))}
       </div>
