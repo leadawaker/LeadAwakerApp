@@ -13,6 +13,7 @@ import {
   RotateCcw,
   PlayCircle,
   Search,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SkeletonTable } from "@/components/ui/skeleton";
@@ -242,15 +243,31 @@ export default function AutomationLogsPage() {
                 const status = r.status === "error" ? "failed" : r.status;
                 const config = STATUS_CONFIG[status] || STATUS_CONFIG.success;
                 const StatusIcon = config.icon;
+                const isCritical = r.is_critical_error === true || r.is_critical_error === 1 || r.is_critical_error === "true";
 
                 return (
                   <div
                     key={r.id || r.Id || idx}
-                    className="grid grid-cols-[140px_140px_140px_1fr_1fr_1fr_1fr_180px] min-w-[940px] gap-4 px-6 py-4 text-sm items-center hover:bg-muted/30 transition-colors bg-card"
+                    data-testid={isCritical ? "row-critical-error" : "row-log"}
+                    className={cn(
+                      "grid grid-cols-[140px_140px_140px_1fr_1fr_1fr_1fr_180px] min-w-[940px] gap-4 px-6 py-4 text-sm items-center transition-colors",
+                      isCritical
+                        ? "bg-red-500/5 border-l-2 border-l-red-500 hover:bg-red-500/10 dark:bg-red-950/20 dark:hover:bg-red-950/30"
+                        : "bg-card hover:bg-muted/30"
+                    )}
                   >
                     <div className="min-w-0">
-                      <div className="font-medium text-foreground truncate" title={r.workflowName || r.workflow_name || "N/A"}>
-                        {r.workflowName || r.workflow_name || "N/A"}
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {isCritical && (
+                          <AlertTriangle
+                            className="h-3.5 w-3.5 text-red-500 shrink-0"
+                            data-testid="icon-critical-error"
+                            aria-label="Critical error"
+                          />
+                        )}
+                        <div className="font-medium text-foreground truncate" title={r.workflowName || r.workflow_name || "N/A"}>
+                          {r.workflowName || r.workflow_name || "N/A"}
+                        </div>
                       </div>
                     </div>
 
