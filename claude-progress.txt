@@ -1,3 +1,47 @@
+## Session 2026-02-22 - Coding Agent (Feature #74)
+
+### Completed Features:
+- Feature #74: Table empty state for no results - PASSING
+
+### Implementation Details:
+
+Feature requirement: When filters return no results, table shows an empty state with helpful messaging that suggests clearing filters.
+
+Steps verified:
+1. Apply filters that match no leads → filter-aware empty state appears with "No leads match your filters"
+2. Empty state message appears with icon and description → using DataEmptyState compact variant (search)
+3. Message suggests clearing filters → "Try adjusting your search query or clearing active filters..." + "Clear all filters" CTA button
+
+**Modified: client/src/components/DataTable/DataTable.tsx**
+
+1. Added `emptyStateActionLabel?: string` prop - label for CTA button in empty state
+2. Added `emptyStateOnAction?: () => void` prop - handler for CTA button
+3. Passed both to DataEmptyState component in the empty row render
+
+**Modified: client/src/features/leads/components/LeadsTable.tsx**
+
+1. Added `hasActiveFilters` useMemo - detects if any filter is active:
+   - search term
+   - leadFilters: pipelineStage, campaignId, tags, scoreMin/Max, priority, dateFrom/dateTo
+   - filterConfig (DataTable column filters)
+2. Added `handleClearAllFilters` useCallback - clears search, leadFilters, filterConfig in one click
+3. Updated DataTable props:
+   - `emptyStateVariant={hasActiveFilters ? "search" : "leads"}`
+   - `emptyStateTitle` - "No leads match your filters" when filters active
+   - `emptyStateDescription` - "Try adjusting your search query or clearing active filters..."
+   - `emptyStateActionLabel="Clear all filters"` when filters active
+   - `emptyStateOnAction={handleClearAllFilters}` when filters active
+
+### Verification:
+1. Build: npx vite build - success, 3990 modules, no TypeScript errors
+2. No mock data patterns found
+3. Feature marked passing
+4. Git commit: ca1fb00
+
+### Current Status:
+- 191/207 features passing (+1 this session)
+- Feature #74 marked passing
+
 ## Session 2026-02-22 - Coding Agent (Feature #73)
 
 ### Completed Features:
