@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -134,6 +134,10 @@ const DEFAULT_STYLE = {
   dot: "bg-muted-foreground",
   dragOver: "bg-muted/60 border-border",
 };
+
+/* ─────────── Infinite scroll batch size ─────────── */
+/** Number of leads initially rendered per column, and loaded per scroll batch */
+const COLUMN_BATCH_SIZE = 20;
 
 /* ─────────── Priority badge colors ─────────── */
 
@@ -482,6 +486,40 @@ function KanbanColumn({
   const styles = STAGE_STYLES[stage] || DEFAULT_STYLE;
   const { setNodeRef, isOver } = useDroppable({ id: `column-${stage}` });
 
+  /* ── Infinite scroll state ── */
+  // visibleCount tracks how many leads to render; expands as user scrolls
+  const [visibleCount, setVisibleCount] = useState(COLUMN_BATCH_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Reset visible count when the column's lead list changes (e.g. campaign switch, filter)
+  useEffect(() => {
+    setVisibleCount(COLUMN_BATCH_SIZE);
+  }, [stage, leads.length]);
+
+  // IntersectionObserver: when the bottom sentinel enters the viewport, load the next batch
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || visibleCount >= leads.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + COLUMN_BATCH_SIZE, leads.length));
+        }
+      },
+      // Trigger 80px before the sentinel actually reaches the viewport bottom for smooth UX
+      { threshold: 0, rootMargin: "80px" }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [visibleCount, leads.length]);
+
+  // Only render the first `visibleCount` leads for performance
+  const visibleLeads = leads.slice(0, visibleCount);
+  const hasMore = visibleCount < leads.length;
+  const remainingCount = leads.length - visibleCount;
+
   /* ── Collapsed / minimal indicator ── */
   if (isCollapsed) {
     return (
@@ -543,6 +581,8 @@ function KanbanColumn({
       )}
       data-testid={`kanban-column-${stage}`}
       data-collapsed="false"
+      data-visible-count={visibleCount}
+      data-total-count={leads.length}
     >
       {/* Column Header */}
       <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border/30">
@@ -587,17 +627,36 @@ function KanbanColumn({
               <span className="text-xs">{isOver ? "Drop here" : "No leads"}</span>
             </div>
           ) : (
-            leads.map((lead) => {
-              const leadId = Number(lead.Id || lead.id);
-              const cardTags = leadTagsMap?.get(leadId) || [];
-              return (
-                <KanbanLeadCard
-                  key={lead.Id || lead.id}
-                  lead={lead}
-                  cardTags={cardTags}
-                />
-              );
-            })
+            <>
+              {visibleLeads.map((lead) => {
+                const leadId = Number(lead.Id || lead.id);
+                const cardTags = leadTagsMap?.get(leadId) || [];
+                return (
+                  <KanbanLeadCard
+                    key={lead.Id || lead.id}
+                    lead={lead}
+                    cardTags={cardTags}
+                  />
+                );
+              })}
+
+              {/* Sentinel element: when it enters the viewport the next batch loads */}
+              {hasMore && (
+                <div
+                  ref={sentinelRef}
+                  data-testid={`kanban-column-sentinel-${stage}`}
+                  className="py-2 flex items-center justify-center text-xs text-muted-foreground/60 select-none"
+                  aria-label={`Loading more leads – ${remainingCount} remaining`}
+                >
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="h-1 w-1 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:0ms]" />
+                    <span className="h-1 w-1 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:150ms]" />
+                    <span className="h-1 w-1 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:300ms]" />
+                    <span className="ml-1">{remainingCount} more</span>
+                  </span>
+                </div>
+              )}
+            </>
           )}
         </div>
       </ScrollArea>
