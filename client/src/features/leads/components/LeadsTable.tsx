@@ -11,6 +11,7 @@ import {
 } from "./LeadFilters";
 import { BulkActionsToolbar } from "./BulkActionsToolbar";
 import { LeadsKanban } from "./LeadsKanban";
+import { updateLead } from "../api/leadsApi";
 import { apiFetch } from "@/lib/apiUtils";
 import { LayoutGrid, Table2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -94,7 +95,7 @@ export function LeadsTable() {
   const { currentAccountId, isAgencyView } = useWorkspace();
   // For agency view with account 1 selected (all accounts), don't filter; otherwise filter by selected account
   const filterAccountId = (isAgencyView && currentAccountId === 1) ? undefined : currentAccountId;
-  const { leads, loading, error, handleRefresh, updateLeadRow } = useLeadsData(filterAccountId);
+  const { leads, loading, error, handleRefresh, updateLeadRow, setLeads } = useLeadsData(filterAccountId);
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [visibleColumns, setVisibleColumns] = useState<string[]>(LEAD_COLUMNS);
@@ -109,8 +110,12 @@ export function LeadsTable() {
   // Lead filter state
   const [leadFilters, setLeadFilters] = useState<LeadFilterState>({ ...EMPTY_FILTERS });
 
-  // Lead-tag mapping for tag-based filtering
+  // Lead-tag mapping for tag-based filtering (leadId → tag ID array)
   const [leadTagMap, setLeadTagMap] = useState<Map<number, number[]>>(new Map());
+  // Full tag info for Kanban card display (leadId → [{name, color}])
+  const [leadTagsInfo, setLeadTagsInfo] = useState<Map<number, { name: string; color: string }[]>>(new Map());
+  // All tags by ID for quick lookup
+  const [allTagsById, setAllTagsById] = useState<Map<number, { name: string; color: string }>>(new Map());
 
   useEffect(() => {
     const defaults = LEAD_COLUMNS.reduce((acc, c) => {
@@ -120,7 +125,28 @@ export function LeadsTable() {
     setColWidths((prev) => ({ ...defaults, ...prev }));
   }, []);
 
-  // Fetch lead-tag mappings when leads change (for tag-based filtering)
+  // Fetch all tags once for tag-name/color lookup
+  useEffect(() => {
+    const fetchAllTags = async () => {
+      try {
+        const res = await apiFetch("/api/tags");
+        if (res.ok) {
+          const data = await res.json();
+          const list = Array.isArray(data) ? data : data?.list || [];
+          const byId = new Map<number, { name: string; color: string }>();
+          list.forEach((t: any) => {
+            byId.set(t.id, { name: t.name || `Tag ${t.id}`, color: t.color || "gray" });
+          });
+          setAllTagsById(byId);
+        }
+      } catch (err) {
+        console.error("Failed to fetch all tags", err);
+      }
+    };
+    fetchAllTags();
+  }, []);
+
+  // Fetch lead-tag mappings when leads change (for tag-based filtering + Kanban card display)
   useEffect(() => {
     const fetchLeadTags = async () => {
       if (leads.length === 0) return;
@@ -157,6 +183,19 @@ export function LeadsTable() {
     };
     fetchLeadTags();
   }, [leads]);
+
+  // Build leadTagsInfo (leadId → [{name, color}]) whenever tagMap or allTagsById changes
+  useEffect(() => {
+    if (allTagsById.size === 0) return;
+    const info = new Map<number, { name: string; color: string }[]>();
+    leadTagMap.forEach((tagIds, leadId) => {
+      const tagDetails = tagIds
+        .map((id) => allTagsById.get(id))
+        .filter((t): t is { name: string; color: string } => !!t);
+      info.set(leadId, tagDetails);
+    });
+    setLeadTagsInfo(info);
+  }, [leadTagMap, allTagsById]);
 
   // Apply search filter and structured filters
   const filteredLeads = useMemo(() => {
@@ -198,6 +237,39 @@ export function LeadsTable() {
     console.log("Delete leads", ids);
     // In mockup mode, we'd just show a toast or log
   };
+
+  /**
+   * Called by LeadsKanban when a card is dragged to a different column.
+   * 1. Optimistically updates the parent leads state so the kanban reflects the move instantly.
+   * 2. Fires the PATCH API call (using the DB column name "Conversion_Status").
+   * 3. On API failure, refreshes to revert.
+   */
+  const handleKanbanLeadMove = useCallback(
+    async (leadId: number | string, newStage: string) => {
+      // Optimistic update in parent state (normalise both key forms used by the app)
+      setLeads((prev) =>
+        prev.map((l) =>
+          l.Id === leadId || l.id === leadId
+            ? {
+                ...l,
+                conversion_status: newStage,
+                Conversion_Status: newStage,
+              }
+            : l
+        )
+      );
+
+      try {
+        // The PATCH route calls fromDbKeys which maps "Conversion_Status" → "conversionStatus"
+        await updateLead(leadId, { Conversion_Status: newStage });
+      } catch (err) {
+        console.error("Failed to move lead to new stage", err);
+        // Revert optimistic update on failure
+        handleRefresh();
+      }
+    },
+    [setLeads, handleRefresh]
+  );
 
   const handleBulkActionComplete = useCallback(() => {
     // Refresh leads data and clear selection after any bulk action
@@ -347,6 +419,8 @@ export function LeadsTable() {
           leads={filteredLeads}
           loading={loading}
           campaignId={leadFilters.campaignId || undefined}
+          leadTagsMap={leadTagsInfo}
+          onLeadMove={handleKanbanLeadMove}
         />
       ) : (
         <DataTable
