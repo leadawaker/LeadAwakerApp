@@ -462,6 +462,8 @@ export default function PromptLibraryPage() {
   const { isAgencyView } = useWorkspace();
   const { toast } = useToast();
   const [q, setQ] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [modelFilter, setModelFilter] = useState<string>("all");
   const [promptLibraryData, setPromptLibraryData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -497,10 +499,33 @@ export default function PromptLibraryPage() {
     fetchPrompts();
   }, [fetchPrompts]);
 
+  // Derive unique models from loaded prompts for the model filter dropdown
+  const availableModels = useMemo(() => {
+    const modelSet = new Set<string>();
+    promptLibraryData.forEach((p: any) => {
+      const m = p.model || "";
+      if (m) modelSet.add(m);
+    });
+    return Array.from(modelSet).sort();
+  }, [promptLibraryData]);
+
   const rows = useMemo(() => {
-    return promptLibraryData
-      .filter((p: any) => (q ? (p.name || "").toLowerCase().includes(q.toLowerCase()) : true));
-  }, [promptLibraryData, q]);
+    return promptLibraryData.filter((p: any) => {
+      // Name search filter
+      if (q && !(p.name || "").toLowerCase().includes(q.toLowerCase())) return false;
+      // Status filter
+      if (statusFilter !== "all") {
+        const pStatus = (p.status || "").toLowerCase().trim();
+        if (pStatus !== statusFilter) return false;
+      }
+      // Model filter
+      if (modelFilter !== "all") {
+        const pModel = (p.model || "").trim();
+        if (pModel !== modelFilter) return false;
+      }
+      return true;
+    });
+  }, [promptLibraryData, q, statusFilter, modelFilter]);
 
   function openCreate() {
     setEditingPrompt(null);
@@ -595,14 +620,37 @@ export default function PromptLibraryPage() {
     <CrmShell>
       <div className="py-4 h-full flex flex-col" data-testid="page-prompt-library">
         {/* Toolbar */}
-        <div className="flex items-center gap-2 mb-6" data-testid="bar-prompts">
+        <div className="flex flex-wrap items-center gap-2 mb-6" data-testid="bar-prompts">
           <input
-            className="h-10 w-[320px] max-w-full rounded-xl border border-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-10 w-[240px] max-w-full rounded-xl border border-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20"
             placeholder="Search prompts…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             data-testid="input-prompt-search"
           />
+          {/* Status filter */}
+          <select
+            className="h-10 rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            data-testid="select-prompt-status-filter"
+          >
+            <option value="all">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="archived">Archived</option>
+          </select>
+          {/* Model filter */}
+          <select
+            className="h-10 rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            value={modelFilter}
+            onChange={(e) => setModelFilter(e.target.value)}
+            data-testid="select-prompt-model-filter"
+          >
+            <option value="all">All Models</option>
+            {availableModels.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
           <div className="ml-auto">
             <Button
               size="sm"
@@ -628,7 +676,7 @@ export default function PromptLibraryPage() {
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-2 content-start" data-testid="grid-prompts">
             {rows.length === 0 && (
               <div className="col-span-full">
-                <DataEmptyState variant={q ? "search" : "prompts"} />
+                <DataEmptyState variant={q || statusFilter !== "all" || modelFilter !== "all" ? "search" : "prompts"} />
               </div>
             )}
             {rows.map((p: any) => {
