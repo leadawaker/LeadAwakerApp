@@ -20,6 +20,8 @@ import {
   StickyNote,
   ExternalLink,
   Loader2,
+  Globe,
+  ArrowUpCircle,
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -82,6 +84,12 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   DND: { bg: "bg-zinc-500/15", text: "text-zinc-600 dark:text-zinc-400" },
 };
 
+const PRIORITY_COLORS: Record<string, { bg: string; text: string; ring: string }> = {
+  High: { bg: "bg-red-500/15", text: "text-red-600 dark:text-red-400", ring: "ring-1 ring-red-500/30" },
+  Medium: { bg: "bg-amber-400/20", text: "text-amber-600 dark:text-amber-400", ring: "ring-1 ring-amber-400/30" },
+  Low: { bg: "bg-emerald-500/15", text: "text-emerald-600 dark:text-emerald-400", ring: "ring-1 ring-emerald-500/30" },
+};
+
 function StatusBadge({ label }: { label: string }) {
   const colors = STATUS_COLORS[label] ?? { bg: "bg-muted", text: "text-muted-foreground" };
   return (
@@ -93,6 +101,29 @@ function StatusBadge({ label }: { label: string }) {
       )}
     >
       {label}
+    </span>
+  );
+}
+
+function PriorityBadge({ priority }: { priority: string }) {
+  const colors = PRIORITY_COLORS[priority] ?? {
+    bg: "bg-muted",
+    text: "text-muted-foreground",
+    ring: "ring-1 ring-border/30",
+  };
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold",
+        colors.bg,
+        colors.text,
+        colors.ring
+      )}
+      data-testid="lead-detail-priority-badge"
+      data-priority={priority}
+    >
+      <ArrowUpCircle className="h-3 w-3 shrink-0" />
+      {priority}
     </span>
   );
 }
@@ -178,6 +209,9 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   const fullName = lead.full_name || [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "Unknown";
   const convStatus = lead.conversion_status || lead.Conversion_Status || "";
   const autoStatus = lead.automation_status || lead.Automation_Status || "";
+  const email = lead.email || lead.Email || "";
+  const source = lead.Source || lead.source || lead.inquiries_source || "";
+  const priority = lead.priority || lead.Priority || "";
   const isAgency = window.location.pathname.startsWith("/agency");
 
   const handleViewFull = () => {
@@ -194,36 +228,69 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
         data-testid="lead-detail-panel"
       >
         {/* Header */}
-        <SheetHeader className="px-5 pt-5 pb-4 border-b border-border shrink-0">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="text-[11px] text-muted-foreground mb-0.5">Lead Detail</div>
-              <SheetTitle
-                className="text-lg font-bold leading-tight truncate"
-                data-testid="lead-detail-panel-name"
-              >
-                {fullName}
-              </SheetTitle>
-              {lead.phone && (
-                <SheetDescription className="text-[12px] mt-0.5" data-testid="lead-detail-panel-phone">
-                  {lead.phone}
-                </SheetDescription>
-              )}
+        <SheetHeader
+          className="px-5 pt-5 pb-4 border-b border-border shrink-0"
+          data-testid="lead-info-header"
+        >
+          {/* Row 1: label + status badge */}
+          <div className="flex items-center justify-between gap-2 mb-0.5">
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Lead Detail
             </div>
-
-            {/* Status badges */}
-            <div className="flex flex-col items-end gap-1 shrink-0">
+            <div className="flex items-center gap-1.5 flex-wrap justify-end">
               {convStatus && <StatusBadge label={convStatus} />}
-              {autoStatus && (
-                <span className="text-[10px] text-muted-foreground">{autoStatus}</span>
-              )}
+              {priority && <PriorityBadge priority={priority} />}
             </div>
           </div>
 
-          {/* View full page button */}
+          {/* Row 2: name (most prominent) */}
+          <SheetTitle
+            className="text-[18px] font-bold leading-tight truncate"
+            data-testid="lead-detail-panel-name"
+          >
+            {fullName}
+          </SheetTitle>
+
+          {/* Row 3: contact meta — phone, email, source */}
+          <div className="mt-2 flex flex-col gap-1" data-testid="lead-header-meta">
+            {lead.phone && (
+              <div
+                className="flex items-center gap-1.5 text-[12px] text-muted-foreground"
+                data-testid="lead-detail-panel-phone"
+              >
+                <Phone className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+                <span className="font-mono">{lead.phone}</span>
+              </div>
+            )}
+            {email && (
+              <div
+                className="flex items-center gap-1.5 text-[12px] text-muted-foreground"
+                data-testid="lead-detail-panel-email"
+              >
+                <Mail className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+                <span className="truncate">{email}</span>
+              </div>
+            )}
+            {source && (
+              <div
+                className="flex items-center gap-1.5 text-[12px] text-muted-foreground"
+                data-testid="lead-detail-panel-source"
+              >
+                <Globe className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+                <span>Source: <span className="text-foreground/80">{source}</span></span>
+              </div>
+            )}
+            {autoStatus && (
+              <SheetDescription className="text-[11px] mt-0.5">
+                {autoStatus}
+              </SheetDescription>
+            )}
+          </div>
+
+          {/* Row 4: View full page */}
           <button
             onClick={handleViewFull}
-            className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-brand-blue hover:text-brand-blue/80 font-medium transition-colors"
+            className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-brand-blue hover:text-brand-blue/80 font-medium transition-colors"
             data-testid="lead-detail-panel-view-full"
           >
             <ExternalLink className="h-3 w-3" />
