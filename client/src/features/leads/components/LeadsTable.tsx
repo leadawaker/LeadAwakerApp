@@ -242,7 +242,10 @@ export function LeadsTable() {
    * Called by LeadsKanban when a card is dragged to a different column.
    * 1. Optimistically updates the parent leads state so the kanban reflects the move instantly.
    * 2. Fires the PATCH API call (using the DB column name "Conversion_Status").
-   * 3. On API failure, refreshes to revert.
+   * 3. On API failure:
+   *    a. Calls handleRefresh() to revert the parent leads state from the server.
+   *    b. Re-throws the error so LeadsKanban can immediately roll back its local
+   *       snapshot without waiting for the server refresh to complete.
    */
   const handleKanbanLeadMove = useCallback(
     async (leadId: number | string, newStage: string) => {
@@ -264,8 +267,11 @@ export function LeadsTable() {
         await updateLead(leadId, { Conversion_Status: newStage });
       } catch (err) {
         console.error("Failed to move lead to new stage", err);
-        // Revert optimistic update on failure
+        // Revert parent optimistic update by re-fetching from the server
         handleRefresh();
+        // Re-throw so the Kanban's snapshot-based rollback fires immediately,
+        // before the server refresh completes (gives instant UI feedback).
+        throw err;
       }
     },
     [setLeads, handleRefresh]
