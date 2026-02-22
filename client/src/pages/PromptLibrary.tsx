@@ -709,7 +709,7 @@ export default function PromptLibraryPage() {
                         title="Delete prompt"
                         data-testid={`button-delete-prompt-${promptId}`}
                       >
-                        <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-red-500" />
+                        <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-red-600 dark:hover:text-red-400" />
                       </button>
                       {/* Status toggle button */}
                       <button
