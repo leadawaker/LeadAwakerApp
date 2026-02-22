@@ -6860,3 +6860,52 @@ Feature requirement: Filter logs by workflow_name.
 - 152/207 features passing (151 at session start, +1 this session)
 - Feature #181 marked passing after build verification
 - Git commit: 6a3d243
+
+## Session 2026-02-22 - Coding Agent (Feature #182)
+
+### Completed Features:
+- Feature #182: Critical error highlighting (Automation Logs) - PASSING
+
+### Implementation Details:
+
+Feature requirement: Logs with is_critical_error=true are highlighted with red accent and error icon.
+
+**Modified: client/src/pages/AutomationLogs.tsx**
+
+1. Added AlertTriangle icon import from lucide-react
+
+2. Added isCritical detection in row rendering:
+   - Checks r.is_critical_error === true, === 1, or === "true" (handles DB boolean variations)
+   - Uses data-testid="row-critical-error" for critical rows, "row-log" for normal rows
+
+3. Added red highlight styling for critical rows:
+   - bg-red-500/5 (subtle red tint in light mode)
+   - border-l-2 border-l-red-500 (red left accent border)
+   - hover:bg-red-500/10 (slightly deeper on hover)
+   - dark:bg-red-950/20 dark:hover:bg-red-950/30 (dark mode variants)
+   - Non-critical rows keep: bg-card hover:bg-muted/30
+
+4. Added AlertTriangle icon before workflow name for critical entries:
+   - h-3.5 w-3.5 text-red-500 (red, small)
+   - data-testid="icon-critical-error"
+   - aria-label="Critical error" (accessibility)
+   - Only renders when isCritical is true
+
+### Verification:
+1. Build: npx vite build - success, 3985 modules transformed, no errors
+2. No mock data patterns
+3. DB field name matches schema: is_critical_error (BOOLEAN)
+4. Handles boolean variations: true, 1, "true"
+5. Light and dark mode variants both included
+
+### Code Changes:
+- MODIFIED: client/src/pages/AutomationLogs.tsx (+20 lines, -3 lines)
+  - Added AlertTriangle import
+  - Added isCritical detection
+  - Added conditional red row styling
+  - Added conditional AlertTriangle icon before workflow name
+
+### Current Status:
+- 153/207 features passing (152 at session start, +1 this session)
+- Feature #182 marked passing after build verification
+- Git commit: b1fa810
