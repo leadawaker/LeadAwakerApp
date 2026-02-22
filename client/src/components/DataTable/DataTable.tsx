@@ -215,6 +215,10 @@ export interface DataTableProps<TRow extends DataTableRow = DataTableRow> {
   emptyStateTitle?: string;
   /** Override empty state description */
   emptyStateDescription?: string;
+  /** Label for the empty state action button (e.g. "Clear filters") */
+  emptyStateActionLabel?: string;
+  /** Handler for the empty state action button */
+  emptyStateOnAction?: () => void;
 
   // ─────────────────────
   // Pagination
@@ -846,6 +850,8 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
     emptyStateVariant = "generic",
     emptyStateTitle,
     emptyStateDescription,
+    emptyStateActionLabel,
+    emptyStateOnAction,
     pageSize,
     pageSizeOptions,
     renderBulkActions,
@@ -1826,6 +1832,8 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                       variant={emptyStateVariant}
                       title={emptyStateTitle}
                       description={emptyStateDescription}
+                      actionLabel={emptyStateActionLabel}
+                      onAction={emptyStateOnAction}
                       compact
                     />
                   </TableCell>

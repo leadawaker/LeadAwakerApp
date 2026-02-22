@@ -241,6 +241,26 @@ export function LeadsTable() {
     return result;
   }, [leads, search, leadFilters, leadTagMap, leadTagsInfo]);
 
+  // Detect whether any filter is currently active (search, structured filters, or column filters)
+  const hasActiveFilters = useMemo(() => {
+    if (search) return true;
+    if (leadFilters.pipelineStage) return true;
+    if (leadFilters.campaignId) return true;
+    if (leadFilters.tags.length > 0) return true;
+    if (leadFilters.scoreMin > 0 || leadFilters.scoreMax < 100) return true;
+    if (leadFilters.priority) return true;
+    if (leadFilters.dateFrom || leadFilters.dateTo) return true;
+    if (Object.keys(filterConfig).some((k) => filterConfig[k])) return true;
+    return false;
+  }, [search, leadFilters, filterConfig]);
+
+  // Clear all active filters and search in one click
+  const handleClearAllFilters = useCallback(() => {
+    setSearch("");
+    setLeadFilters({ ...EMPTY_FILTERS });
+    setFilterConfig({});
+  }, []);
+
   const handleUpdate = async (rowId: number, col: string, value: any) => {
     try {
       await updateLeadRow(rowId, col, value);
@@ -507,7 +527,15 @@ export function LeadsTable() {
           onFilterConfigChange={setFilterConfig}
           virtualized={true}
           pageSizeOptions={[25, 50, 100]}
-          emptyStateVariant={search ? "search" : "leads"}
+          emptyStateVariant={hasActiveFilters ? "search" : "leads"}
+          emptyStateTitle={hasActiveFilters ? "No leads match your filters" : undefined}
+          emptyStateDescription={
+            hasActiveFilters
+              ? "Try adjusting your search query or clearing active filters to see more results."
+              : undefined
+          }
+          emptyStateActionLabel={hasActiveFilters ? "Clear all filters" : undefined}
+          emptyStateOnAction={hasActiveFilters ? handleClearAllFilters : undefined}
           renderBulkActions={renderBulkActions}
           onRowClick={handleRowClick}
           exportable={true}
