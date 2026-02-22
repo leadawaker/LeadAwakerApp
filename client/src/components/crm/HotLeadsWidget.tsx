@@ -144,8 +144,8 @@ export function HotLeadsWidget({ leads, limit = 5 }: HotLeadsWidgetProps) {
       {/* Header */}
       <div className="flex items-center justify-between p-4 pb-3 border-b border-border">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-red-500/10">
-            <Flame className="w-4 h-4 text-red-500" />
+          <div className="p-1.5 rounded-lg bg-brand-yellow/10">
+            <Flame className="w-4 h-4 text-brand-yellow" />
           </div>
           <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
             Hot Leads

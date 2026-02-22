@@ -88,12 +88,12 @@ export function ConnectionBanner() {
   if (state === "recovered") {
     return (
       <div
-        className="mx-4 md:mx-0 mb-3 flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/40 px-4 py-2.5 text-sm animate-in fade-in slide-in-from-top-2 duration-250 ease-out"
+        className="mx-4 md:mx-0 mb-3 flex items-center gap-2.5 rounded-xl border border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/40 px-4 py-2.5 text-sm animate-in fade-in slide-in-from-top-2 duration-200 ease-out"
         role="status"
         data-testid="connection-banner-recovered"
       >
-        <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-        <span className="font-medium text-emerald-700 dark:text-emerald-300">
+        <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400 shrink-0" />
+        <span className="font-medium text-green-700 dark:text-green-300">
           Connection restored
         </span>
       </div>
@@ -105,22 +105,22 @@ export function ConnectionBanner() {
     <div
       className={cn(
         "mx-4 md:mx-0 mb-3 flex items-center gap-3 rounded-xl border px-4 py-2.5 text-sm",
-        "border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40",
-        "animate-in fade-in slide-in-from-top-2 duration-250 ease-out"
+        "border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/40",
+        "animate-in fade-in slide-in-from-top-2 duration-200 ease-out"
       )}
       role="alert"
       data-testid="connection-banner"
       data-state={state}
     >
-      <WifiOff className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+      <WifiOff className="h-4 w-4 text-orange-600 dark:text-orange-400 shrink-0" />
       <div className="flex-1 min-w-0">
-        <span className="font-medium text-amber-700 dark:text-amber-300">
+        <span className="font-medium text-orange-700 dark:text-orange-300">
           {state === "reconnecting"
             ? "Reconnecting to server..."
             : "Unable to reach the server"}
         </span>
         {state === "disconnected" && (
-          <span className="text-amber-600/80 dark:text-amber-400/80 ml-1 hidden sm:inline">
+          <span className="text-orange-600/80 dark:text-orange-400/80 ml-1 hidden sm:inline">
             — Check your connection or try again.
             {retryCount >= 3 && " The server may be down."}
           </span>
@@ -131,8 +131,8 @@ export function ConnectionBanner() {
         disabled={state === "reconnecting"}
         className={cn(
           "shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
-          "bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50",
-          "dark:bg-amber-500 dark:hover:bg-amber-600"
+          "bg-orange-600 text-white hover:bg-orange-700 disabled:opacity-50",
+          "dark:bg-orange-500 dark:hover:bg-orange-600"
         )}
         data-testid="connection-banner-retry"
       >
@@ -140,7 +140,7 @@ export function ConnectionBanner() {
         {state === "reconnecting" ? "Retrying..." : "Retry Now"}
       </button>
       {retryCount > 0 && state === "disconnected" && (
-        <span className="text-xs text-amber-600/60 dark:text-amber-400/60 shrink-0 hidden sm:inline">
+        <span className="text-xs text-orange-600/60 dark:text-orange-400/60 shrink-0 hidden sm:inline">
           (Attempt {retryCount})
         </span>
       )}

@@ -74,7 +74,9 @@ export interface IStorage {
 
   // Leads_Tags
   getTagsByLeadId(leadId: number): Promise<Leads_Tags[]>;
+  getTagsByLeadIds(leadIds: number[]): Promise<Leads_Tags[]>;
   createLeadTag(data: InsertLeads_Tags): Promise<Leads_Tags>;
+  bulkCreateLeadTags(data: InsertLeads_Tags[]): Promise<Leads_Tags[]>;
   deleteLeadTag(leadId: number, tagId: number): Promise<boolean>;
 
   // Bulk operations
@@ -256,9 +258,19 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(leadsTags).where(eq(leadsTags.leadsId, leadId));
   }
 
+  async getTagsByLeadIds(leadIds: number[]): Promise<Leads_Tags[]> {
+    if (leadIds.length === 0) return [];
+    return db.select().from(leadsTags).where(inArray(leadsTags.leadsId, leadIds));
+  }
+
   async createLeadTag(data: InsertLeads_Tags): Promise<Leads_Tags> {
     const [row] = await db.insert(leadsTags).values(data as any).returning();
     return row;
+  }
+
+  async bulkCreateLeadTags(data: InsertLeads_Tags[]): Promise<Leads_Tags[]> {
+    if (data.length === 0) return [];
+    return db.insert(leadsTags).values(data as any).returning();
   }
 
   async deleteLeadTag(leadId: number, tagId: number): Promise<boolean> {
@@ -405,16 +417,15 @@ export async function paginatedQuery<T>(
   const { page, limit } = params;
   const offset = (page - 1) * limit;
 
-  // Count total
+  // Count total and fetch page in parallel — both queries are independent
   let countQuery = db.select({ total: count() }).from(table);
   if (where) countQuery = countQuery.where(where) as any;
-  const [{ total }] = await countQuery;
 
-  // Fetch page
   let dataQuery = db.select().from(table);
   if (where) dataQuery = dataQuery.where(where) as any;
   dataQuery = dataQuery.limit(limit).offset(offset) as any;
-  const data = await dataQuery;
+
+  const [[{ total }], data] = await Promise.all([countQuery, dataQuery]);
 
   return { data: data as T[], total, page, limit };
 }

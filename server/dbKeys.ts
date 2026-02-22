@@ -1,14 +1,21 @@
 import { getTableColumns } from "drizzle-orm";
 
+// Memoize key maps per table — tables are module-level constants so WeakMap
+// keys are stable for the process lifetime. This avoids rebuilding on every call.
+const keyMapCache = new WeakMap<object, Record<string, string>>();
+const reverseKeyMapCache = new WeakMap<object, Record<string, string>>();
+
 /**
  * Build a map of JS camelCase key → DB snake_case column name for a Drizzle table.
  */
 function buildKeyMap(table: any): Record<string, string> {
+  if (keyMapCache.has(table)) return keyMapCache.get(table)!;
   const columns = getTableColumns(table);
   const map: Record<string, string> = {};
   for (const [jsKey, col] of Object.entries(columns)) {
     map[jsKey] = (col as any).name; // .name is the actual DB column name
   }
+  keyMapCache.set(table, map);
   return map;
 }
 
@@ -16,11 +23,13 @@ function buildKeyMap(table: any): Record<string, string> {
  * Build the reverse map: DB snake_case column name → JS camelCase key.
  */
 function buildReverseKeyMap(table: any): Record<string, string> {
+  if (reverseKeyMapCache.has(table)) return reverseKeyMapCache.get(table)!;
   const columns = getTableColumns(table);
   const map: Record<string, string> = {};
   for (const [jsKey, col] of Object.entries(columns)) {
     map[(col as any).name] = jsKey;
   }
+  reverseKeyMapCache.set(table, map);
   return map;
 }
 

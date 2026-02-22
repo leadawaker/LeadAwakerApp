@@ -12,6 +12,7 @@ import {
   time,
   json,
   real,
+  index,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -99,7 +100,9 @@ export const automationLogs = nocodb.table("Automation_Logs", {
   accountId: bigint("account_id", { mode: "number" }),
   campaignId: bigint("campaign_id", { mode: "number" }),
   leadId: bigint("lead_id", { mode: "number" }),
-});
+}, (t) => [
+  index("automation_logs_accounts_id_idx").on(t.accountsId),
+]);
 
 export const insertAutomation_LogsSchema = createInsertSchema(automationLogs).omit({
   id: true,
@@ -170,7 +173,9 @@ export const campaigns = nocodb.table("Campaigns", {
   costPerBooking: numeric("cost_per_booking"),
   roiPercent: numeric("roi_percent"),
   lastMetricsCalculatedAt: timestamp("last_metrics_calculated_at"),
-});
+}, (t) => [
+  index("campaigns_accounts_id_idx").on(t.accountsId),
+]);
 
 export const insertCampaignsSchema = createInsertSchema(campaigns).omit({
   id: true,
@@ -235,7 +240,11 @@ export const interactions = nocodb.table("Interactions", {
   conversationThreadId: varchar("conversation_thread_id"),
   sentimentDetected: varchar("sentiment_detected"),
   isManualFollowUp: boolean("is_manual_follow_up"),
-});
+}, (t) => [
+  index("interactions_leads_id_idx").on(t.leadsId),
+  index("interactions_accounts_id_idx").on(t.accountsId),
+  index("interactions_created_at_idx").on(t.createdAt),
+]);
 
 export const insertInteractionsSchema = createInsertSchema(interactions).omit({
   id: true,
@@ -300,7 +309,10 @@ export const leads = nocodb.table("Leads", {
   accountName: text("account_name"),
   campaignName: text("campaign_name"),
   text2: text("Text_2"),
-});
+}, (t) => [
+  index("leads_accounts_id_idx").on(t.accountsId),
+  index("leads_campaigns_id_idx").on(t.campaignsId),
+]);
 
 export const insertLeadsSchema = createInsertSchema(leads).omit({
   id: true,
@@ -336,7 +348,10 @@ export const leadsTags = nocodb.table("Leads_Tags", {
   leadName: text("lead_name"),
   accountName: text("account_name"),
   tagName: text("tag_name"),
-});
+}, (t) => [
+  index("leads_tags_leads_id_idx").on(t.leadsId),
+  index("leads_tags_tags_id_idx").on(t.tagsId),
+]);
 
 export const insertLeads_TagsSchema = createInsertSchema(leadsTags).omit({
   id: true,
@@ -370,7 +385,9 @@ export const promptLibrary = nocodb.table("Prompt_Library", {
   status: text("status"),
   performanceScore: text("performance_score"),
   notes: text("notes"),
-});
+}, (t) => [
+  index("prompt_library_accounts_id_idx").on(t.accountsId),
+]);
 
 export const insertPrompt_LibrarySchema = createInsertSchema(promptLibrary).omit({
   id: true,
@@ -402,7 +419,9 @@ export const tags = nocodb.table("Tags", {
   accountId: bigint("account_id", { mode: "number" }),
   accountsId: integer("Accounts_id"),
   accountName: text("account_name"),
-});
+}, (t) => [
+  index("tags_accounts_id_idx").on(t.accountsId),
+]);
 
 export const insertTagsSchema = createInsertSchema(tags).omit({
   id: true,
@@ -439,7 +458,9 @@ export const users = nocodb.table("Users", {
   email: varchar("email"),
   passwordHash: text("password_hash"),
   preferences: varchar("preferences"),
-});
+}, (t) => [
+  index("users_email_idx").on(t.email),
+]);
 
 export const insertUsersSchema = createInsertSchema(users).omit({
   id: true,
@@ -464,7 +485,9 @@ export const leadScoreHistory = nocodb.table("Lead_Score_History", {
   activityScore: integer("activity_score"),
   conversionStatus: varchar("conversion_status"),
   createdAt: timestamp("created_at"),
-});
+}, (t) => [
+  index("lsh_leads_id_idx").on(t.leadsId),
+]);
 
 export const insertLeadScoreHistorySchema = createInsertSchema(leadScoreHistory).omit({
   id: true,
@@ -491,7 +514,10 @@ export const campaignMetricsHistory = nocodb.table("Campaign_Metrics_History", {
   costPerBooking: numeric("cost_per_booking"),
   roiPercent: numeric("roi_percent"),
   createdAt: timestamp("created_at"),
-});
+}, (t) => [
+  index("cmh_campaigns_id_idx").on(t.campaignsId),
+  index("cmh_metric_date_idx").on(t.metricDate),
+]);
 
 export const insertCampaignMetricsHistorySchema = createInsertSchema(campaignMetricsHistory).omit({
   id: true,

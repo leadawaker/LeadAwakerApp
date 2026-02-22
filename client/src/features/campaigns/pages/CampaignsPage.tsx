@@ -7,7 +7,6 @@ import { CampaignDetailPanel } from "../components/CampaignDetailPanel";
 import { useCampaignsData } from "../hooks/useCampaignsData";
 import { useCampaignMetrics } from "@/hooks/useApiData";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { cn } from "@/lib/utils";
 import type { Campaign } from "@/types/models";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
 import { ViewTabStrip, type ViewTab } from "@/components/crm/ViewTabStrip";
@@ -19,7 +18,8 @@ const CAMPAIGN_VIEW_TABS: ViewTab<"list" | "table">[] = [
   { id: "table", label: "Table", icon: TableIcon, testId: "campaign-view-table" },
 ];
 
-export function CampaignsPage() {
+// Inner component — rendered inside CrmShell so useTopbarActions reads the live context
+function CampaignsContent() {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const { setTopbarActions, clearTopbarActions } = useTopbarActions();
 
@@ -32,11 +32,9 @@ export function CampaignsPage() {
 
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
 
-  // Slide-over edit panel (reuses existing CampaignDetailPanel)
   const [editPanelOpen, setEditPanelOpen] = useState(false);
   const [editCampaign, setEditCampaign] = useState<Campaign | null>(null);
 
-  // Account filter for table view (agency only)
   const [filterAccountId] = useState<number | "all">("all");
 
   const { currentAccountId, isAgencyUser } = useWorkspace();
@@ -52,7 +50,7 @@ export function CampaignsPage() {
 
   const loading = campaignsLoading || metricsLoading;
 
-  // Auto-select first campaign when data arrives (only if nothing is selected yet)
+  // Auto-select first campaign when data arrives
   useEffect(() => {
     if (!selectedCampaign && campaigns.length > 0) {
       setSelectedCampaign(campaigns[0]);
@@ -87,17 +85,14 @@ export function CampaignsPage() {
     const cid = campaign.id || campaign.Id;
     const newStatus = String(campaign.status) === "Active" ? "Paused" : "Active";
     updateCampaignRow(cid, "status", newStatus);
-    // Optimistic update on selected campaign
     setSelectedCampaign((prev) =>
       prev && (prev.id || prev.Id) === cid ? { ...prev, status: newStatus } : prev
     );
   }, [updateCampaignRow]);
 
   return (
-    <CrmShell>
+    <>
       <div className="flex flex-col h-full">
-
-        {/* Content */}
         <div className="flex-1 overflow-hidden">
           {viewMode === "list" ? (
             <CampaignListView
@@ -118,13 +113,21 @@ export function CampaignsPage() {
         </div>
       </div>
 
-      {/* Edit slide-over — reuses existing CampaignDetailPanel */}
+      {/* Edit slide-over */}
       <CampaignDetailPanel
         campaign={editCampaign}
         metrics={metrics}
         open={editPanelOpen}
         onClose={handleCloseEditPanel}
       />
+    </>
+  );
+}
+
+export function CampaignsPage() {
+  return (
+    <CrmShell>
+      <CampaignsContent />
     </CrmShell>
   );
 }

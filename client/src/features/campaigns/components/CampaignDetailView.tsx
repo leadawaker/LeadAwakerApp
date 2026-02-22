@@ -442,9 +442,9 @@ export function CampaignDetailView({ campaign, metrics, onEdit, onToggleStatus }
 
       {/* ── HEADER — D365 soft mint gradient ───────────────────────── */}
       <div className="shrink-0 relative overflow-hidden border-b border-border/30" data-testid="campaign-detail-view-header">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-teal-50/70 to-sky-50/40 dark:from-emerald-950/30 dark:via-teal-950/20 dark:to-background" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(167,243,208,0.35)_0%,_transparent_65%)]" />
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-200/60 to-transparent dark:via-emerald-800/30" />
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-blue/5 via-indigo-50/60 to-background dark:from-brand-blue/10 dark:via-indigo-950/20 dark:to-background" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(81,112,255,0.12)_0%,_transparent_65%)]" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-blue/20 to-transparent dark:via-brand-blue/30" />
 
         <div className="relative px-4 pt-4 pb-3 space-y-2.5">
 

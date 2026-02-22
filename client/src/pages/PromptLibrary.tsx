@@ -212,7 +212,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
             </label>
             <input
               id="prompt-name"
-              className={`w-full h-10 rounded-lg border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 ${errors.name ? "border-red-400" : "border-border"}`}
+              className={`w-full h-10 rounded-lg border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 ${errors.name ? "border-red-400" : "border-border"}`}
               placeholder="e.g. Lead Reactivation v1"
               value={form.name}
               onChange={(e) => setField("name", e.target.value)}
@@ -228,7 +228,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
             </label>
             <input
               id="prompt-use-case"
-              className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
               placeholder="e.g. WhatsApp lead reactivation"
               value={form.useCase}
               onChange={(e) => setField("useCase", e.target.value)}
@@ -243,7 +243,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
             </label>
             <textarea
               id="prompt-text"
-              className={`w-full min-h-[120px] rounded-lg border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-y ${errors.promptText ? "border-red-400" : "border-border"}`}
+              className={`w-full min-h-[120px] rounded-lg border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30 resize-y ${errors.promptText ? "border-red-400" : "border-border"}`}
               placeholder="Enter the main prompt text…"
               value={form.promptText}
               onChange={(e) => setField("promptText", e.target.value)}
@@ -259,7 +259,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
             </label>
             <textarea
               id="prompt-system-message"
-              className="w-full min-h-[80px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-y"
+              className="w-full min-h-[80px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30 resize-y"
               placeholder="System instructions for the AI model (optional)…"
               value={form.systemMessage}
               onChange={(e) => setField("systemMessage", e.target.value)}
@@ -274,7 +274,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
             </label>
             <textarea
               id="prompt-notes"
-              className="w-full min-h-[80px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-y"
+              className="w-full min-h-[80px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30 resize-y"
               placeholder="Additional notes or context about this prompt (optional)…"
               value={form.notes}
               onChange={(e) => setField("notes", e.target.value)}
@@ -291,7 +291,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
               </label>
               <select
                 id="prompt-model"
-                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
                 value={form.model}
                 onChange={(e) => setField("model", e.target.value)}
                 data-testid="select-prompt-model"
@@ -309,7 +309,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
               </label>
               <select
                 id="prompt-status"
-                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
                 value={form.status}
                 onChange={(e) => setField("status", e.target.value)}
                 data-testid="select-prompt-status"
@@ -333,7 +333,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
                 step="0.1"
                 min="0"
                 max="2"
-                className={`w-full h-10 rounded-lg border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 ${errors.temperature ? "border-red-400" : "border-border"}`}
+                className={`w-full h-10 rounded-lg border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 ${errors.temperature ? "border-red-400" : "border-border"}`}
                 value={form.temperature}
                 onChange={(e) => setField("temperature", e.target.value)}
                 data-testid="input-prompt-temperature"
@@ -350,7 +350,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
                 id="prompt-max-tokens"
                 type="number"
                 min="1"
-                className={`w-full h-10 rounded-lg border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 ${errors.maxTokens ? "border-red-400" : "border-border"}`}
+                className={`w-full h-10 rounded-lg border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 ${errors.maxTokens ? "border-red-400" : "border-border"}`}
                 value={form.maxTokens}
                 onChange={(e) => setField("maxTokens", e.target.value)}
                 data-testid="input-prompt-max-tokens"
@@ -622,7 +622,7 @@ export default function PromptLibraryPage() {
         {/* Toolbar */}
         <div className="flex flex-wrap items-center gap-2 mb-6" data-testid="bar-prompts">
           <input
-            className="h-10 w-[240px] max-w-full rounded-xl border border-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+            className="h-10 w-[240px] max-w-full rounded-xl border border-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-primary/30"
             placeholder="Search prompts…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -630,7 +630,7 @@ export default function PromptLibraryPage() {
           />
           {/* Status filter */}
           <select
-            className="h-10 rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            className="h-10 rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             data-testid="select-prompt-status-filter"
@@ -641,7 +641,7 @@ export default function PromptLibraryPage() {
           </select>
           {/* Model filter */}
           <select
-            className="h-10 rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+            className="h-10 rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
             value={modelFilter}
             onChange={(e) => setModelFilter(e.target.value)}
             data-testid="select-prompt-model-filter"

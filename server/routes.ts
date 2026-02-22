@@ -1,4 +1,4 @@
-import type { Express, Request } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { type Server } from "http";
 import { storage, paginatedQuery } from "./storage";
 import {
@@ -24,21 +24,31 @@ import {
   insertLeadsSchema,
   insertInteractionsSchema,
   insertTagsSchema,
-  insertLeads_TagsSchema,
   insertPrompt_LibrarySchema,
+  insertCampaignMetricsHistorySchema,
+  insertUsersSchema,
 } from "@shared/schema";
 import crypto from "crypto";
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "./dbKeys";
 import { db } from "./db";
-import { eq, count, inArray, and, type SQL } from "drizzle-orm";
+import { eq, count, type SQL } from "drizzle-orm";
 import { ZodError } from "zod";
 
 /** Return a 422 with Zod validation errors in a readable format. */
-function handleZodError(res: import("express").Response, err: ZodError) {
+function handleZodError(res: Response, err: ZodError) {
   return res.status(422).json({
     message: "Validation error",
     errors: err.errors.map((e) => ({ path: e.path.join("."), message: e.message })),
   });
+}
+
+/** Wrap an async route handler to forward thrown errors to Express error middleware. */
+function wrapAsync(
+  fn: (req: Request, res: Response) => Promise<unknown>,
+): (req: Request, res: Response, next: NextFunction) => void {
+  return (req, res, next) => {
+    Promise.resolve(fn(req, res)).catch(next);
+  };
 }
 
 /**
@@ -122,7 +132,7 @@ export async function registerRoutes(
   // ─── Accounts ─────────────────────────────────────────────────────
   // Only the agency can manage accounts
 
-  app.get("/api/accounts", requireAgency, async (req, res) => {
+  app.get("/api/accounts", requireAgency, wrapAsync(async (req, res) => {
     const pagination = getPagination(req);
     if (pagination) {
       const result = await paginatedQuery(accounts, pagination);
@@ -130,38 +140,38 @@ export async function registerRoutes(
     }
     const data = await storage.getAccounts();
     res.json(toDbKeysArray(data as any, accounts));
-  });
+  }));
 
-  app.get("/api/accounts/:id", requireAgency, async (req, res) => {
+  app.get("/api/accounts/:id", requireAgency, wrapAsync(async (req, res) => {
     const account = await storage.getAccountById(Number(req.params.id));
     if (!account) return res.status(404).json({ message: "Account not found" });
     res.json(toDbKeys(account as any, accounts));
-  });
+  }));
 
-  app.post("/api/accounts", requireAgency, async (req, res) => {
+  app.post("/api/accounts", requireAgency, wrapAsync(async (req, res) => {
     const parsed = insertAccountsSchema.safeParse(fromDbKeys(req.body, accounts));
     if (!parsed.success) return handleZodError(res, parsed.error);
     const account = await storage.createAccount(parsed.data);
     res.status(201).json(toDbKeys(account as any, accounts));
-  });
+  }));
 
-  app.patch("/api/accounts/:id", requireAgency, async (req, res) => {
+  app.patch("/api/accounts/:id", requireAgency, wrapAsync(async (req, res) => {
     const parsed = insertAccountsSchema.partial().safeParse(fromDbKeys(req.body, accounts));
     if (!parsed.success) return handleZodError(res, parsed.error);
     const account = await storage.updateAccount(Number(req.params.id), parsed.data);
     if (!account) return res.status(404).json({ message: "Account not found" });
     res.json(toDbKeys(account as any, accounts));
-  });
+  }));
 
-  app.delete("/api/accounts/:id", requireAgency, async (req, res) => {
+  app.delete("/api/accounts/:id", requireAgency, wrapAsync(async (req, res) => {
     const ok = await storage.deleteAccount(Number(req.params.id));
     if (!ok) return res.status(404).json({ message: "Account not found" });
     res.status(204).end();
-  });
+  }));
 
   // ─── Campaigns ────────────────────────────────────────────────────
 
-  app.get("/api/campaigns", requireAuth, scopeToAccount, async (req, res) => {
+  app.get("/api/campaigns", requireAuth, scopeToAccount, wrapAsync(async (req, res) => {
     const forcedId = (req as any).forcedAccountId as number | undefined;
     const accountId = forcedId ?? (req.query.accountId ? Number(req.query.accountId) : undefined);
 
@@ -176,38 +186,54 @@ export async function registerRoutes(
       ? await storage.getCampaignsByAccountId(accountId)
       : await storage.getCampaigns();
     res.json(toDbKeysArray(data as any, campaigns));
-  });
+  }));
 
-  app.get("/api/campaigns/:id", requireAuth, async (req, res) => {
+  app.get("/api/campaigns/:id", requireAuth, wrapAsync(async (req, res) => {
     const campaign = await storage.getCampaignById(Number(req.params.id));
     if (!campaign) return res.status(404).json({ message: "Campaign not found" });
+    // Subaccount users can only access their own campaigns
+    if (req.user!.accountsId !== 1 && campaign.accountsId !== req.user!.accountsId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
     res.json(toDbKeys(campaign as any, campaigns));
-  });
+  }));
 
-  app.post("/api/campaigns", requireAuth, async (req, res) => {
+  app.post("/api/campaigns", requireAuth, wrapAsync(async (req, res) => {
     const parsed = insertCampaignsSchema.safeParse(fromDbKeys(req.body, campaigns));
     if (!parsed.success) return handleZodError(res, parsed.error);
     const campaign = await storage.createCampaign(parsed.data);
     res.status(201).json(toDbKeys(campaign as any, campaigns));
-  });
+  }));
 
-  app.patch("/api/campaigns/:id", requireAuth, async (req, res) => {
+  app.patch("/api/campaigns/:id", requireAuth, wrapAsync(async (req, res) => {
+    const existing = await storage.getCampaignById(Number(req.params.id));
+    if (!existing) return res.status(404).json({ message: "Campaign not found" });
+    // Subaccount users can only modify their own campaigns
+    if (req.user!.accountsId !== 1 && existing.accountsId !== req.user!.accountsId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
     const parsed = insertCampaignsSchema.partial().safeParse(fromDbKeys(req.body, campaigns));
     if (!parsed.success) return handleZodError(res, parsed.error);
     const campaign = await storage.updateCampaign(Number(req.params.id), parsed.data);
     if (!campaign) return res.status(404).json({ message: "Campaign not found" });
     res.json(toDbKeys(campaign as any, campaigns));
-  });
+  }));
 
-  app.delete("/api/campaigns/:id", requireAuth, async (req, res) => {
+  app.delete("/api/campaigns/:id", requireAuth, wrapAsync(async (req, res) => {
+    const existing = await storage.getCampaignById(Number(req.params.id));
+    if (!existing) return res.status(404).json({ message: "Campaign not found" });
+    // Subaccount users can only delete their own campaigns
+    if (req.user!.accountsId !== 1 && existing.accountsId !== req.user!.accountsId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
     const ok = await storage.deleteCampaign(Number(req.params.id));
     if (!ok) return res.status(404).json({ message: "Campaign not found" });
     res.status(204).end();
-  });
+  }));
 
   // ─── Leads ────────────────────────────────────────────────────────
 
-  app.get("/api/leads", requireAuth, scopeToAccount, async (req, res) => {
+  app.get("/api/leads", requireAuth, scopeToAccount, wrapAsync(async (req, res) => {
     const forcedId = (req as any).forcedAccountId as number | undefined;
     const { accountId: qAccountId, campaignId } = req.query;
     const accountId = forcedId ?? (qAccountId ? Number(qAccountId) : undefined);
@@ -233,22 +259,32 @@ export async function registerRoutes(
       data = await storage.getLeads();
     }
     res.json(toDbKeysArray(data as any, leads));
-  });
+  }));
 
-  app.get("/api/leads/:id", requireAuth, async (req, res) => {
+  app.get("/api/leads/:id", requireAuth, wrapAsync(async (req, res) => {
     const lead = await storage.getLeadById(Number(req.params.id));
     if (!lead) return res.status(404).json({ message: "Lead not found" });
+    // Subaccount users can only access their own leads
+    if (req.user!.accountsId !== 1 && lead.accountsId !== req.user!.accountsId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
     res.json(toDbKeys(lead as any, leads));
-  });
+  }));
 
-  app.post("/api/leads", requireAuth, async (req, res) => {
+  app.post("/api/leads", requireAuth, wrapAsync(async (req, res) => {
     const parsed = insertLeadsSchema.safeParse(fromDbKeys(req.body, leads));
     if (!parsed.success) return handleZodError(res, parsed.error);
     const lead = await storage.createLead(parsed.data);
     res.status(201).json(toDbKeys(lead as any, leads));
-  });
+  }));
 
-  app.patch("/api/leads/:id", requireAuth, async (req, res) => {
+  app.patch("/api/leads/:id", requireAuth, wrapAsync(async (req, res) => {
+    const existing = await storage.getLeadById(Number(req.params.id));
+    if (!existing) return res.status(404).json({ message: "Lead not found" });
+    // Subaccount users can only modify their own leads
+    if (req.user!.accountsId !== 1 && existing.accountsId !== req.user!.accountsId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
     const LEAD_DATE_FIELDS = [
       "bookedCallDate", "lastMessageSentAt", "lastMessageReceivedAt",
       "bump1SentAt", "bump2SentAt", "bump3SentAt", "firstMessageSentAt",
@@ -260,13 +296,19 @@ export async function registerRoutes(
     const lead = await storage.updateLead(Number(req.params.id), parsed.data);
     if (!lead) return res.status(404).json({ message: "Lead not found" });
     res.json(toDbKeys(lead as any, leads));
-  });
+  }));
 
-  app.delete("/api/leads/:id", requireAuth, async (req, res) => {
+  app.delete("/api/leads/:id", requireAuth, wrapAsync(async (req, res) => {
+    const existing = await storage.getLeadById(Number(req.params.id));
+    if (!existing) return res.status(404).json({ message: "Lead not found" });
+    // Subaccount users can only delete their own leads
+    if (req.user!.accountsId !== 1 && existing.accountsId !== req.user!.accountsId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
     const ok = await storage.deleteLead(Number(req.params.id));
     if (!ok) return res.status(404).json({ message: "Lead not found" });
     res.status(204).end();
-  });
+  }));
 
   // ─── Bulk Lead Operations ──────────────────────────────────────────
 
@@ -366,21 +408,22 @@ export async function registerRoutes(
         return res.status(400).json({ message: "tagIds must be a non-empty array" });
       }
 
-      const created: any[] = [];
-      for (const leadId of leadIds) {
-        // Check existing tags for this lead to avoid duplicates
-        const existingTags = await storage.getTagsByLeadId(Number(leadId));
-        const existingTagIds = new Set(existingTags.map((t: any) => t.tagsId));
+      // 1 SELECT to fetch all existing associations for all leads at once
+      const existingRows = await storage.getTagsByLeadIds(leadIds.map(Number));
+      const existingSet = new Set(existingRows.map((r: any) => `${r.leadsId}:${r.tagsId}`));
 
+      // Compute pairs to insert in JS — skip existing ones
+      const toInsert: { leadsId: number; tagsId: number }[] = [];
+      for (const leadId of leadIds) {
         for (const tagId of tagIds) {
-          if (existingTagIds.has(Number(tagId))) continue; // Skip duplicates
-          const row = await storage.createLeadTag({
-            leadsId: Number(leadId),
-            tagsId: Number(tagId),
-          });
-          created.push(row);
+          if (!existingSet.has(`${Number(leadId)}:${Number(tagId)}`)) {
+            toInsert.push({ leadsId: Number(leadId), tagsId: Number(tagId) });
+          }
         }
       }
+
+      // 1 bulk INSERT for all pairs
+      const created = await storage.bulkCreateLeadTags(toInsert);
 
       res.json({
         created: created.length,
@@ -394,7 +437,7 @@ export async function registerRoutes(
 
   // ─── Interactions ─────────────────────────────────────────────────
 
-  app.get("/api/interactions", requireAuth, scopeToAccount, async (req, res) => {
+  app.get("/api/interactions", requireAuth, scopeToAccount, wrapAsync(async (req, res) => {
     const forcedId = (req as any).forcedAccountId as number | undefined;
     const leadId = req.query.leadId ? Number(req.query.leadId) : undefined;
     const accountId = forcedId ?? (req.query.accountId ? Number(req.query.accountId) : undefined);
@@ -420,53 +463,53 @@ export async function registerRoutes(
       data = await storage.getInteractions();
     }
     res.json(toDbKeysArray(data as any, interactions));
-  });
+  }));
 
-  app.post("/api/interactions", requireAuth, async (req, res) => {
+  app.post("/api/interactions", requireAuth, wrapAsync(async (req, res) => {
     const parsed = insertInteractionsSchema.safeParse(fromDbKeys(req.body, interactions));
     if (!parsed.success) return handleZodError(res, parsed.error);
     const interaction = await storage.createInteraction(parsed.data);
     res.status(201).json(toDbKeys(interaction as any, interactions));
-  });
+  }));
 
   // ─── Tags ─────────────────────────────────────────────────────────
 
-  app.get("/api/tags", requireAuth, scopeToAccount, async (req, res) => {
+  app.get("/api/tags", requireAuth, scopeToAccount, wrapAsync(async (req, res) => {
     const forcedId = (req as any).forcedAccountId as number | undefined;
     const accountId = forcedId ?? (req.query.accountId ? Number(req.query.accountId) : undefined);
     const data = accountId
       ? await storage.getTagsByAccountId(accountId)
       : await storage.getTags();
     res.json(toDbKeysArray(data as any, tags));
-  });
+  }));
 
-  app.post("/api/tags", requireAuth, async (req, res) => {
+  app.post("/api/tags", requireAuth, wrapAsync(async (req, res) => {
     const parsed = insertTagsSchema.safeParse(fromDbKeys(req.body, tags));
     if (!parsed.success) return handleZodError(res, parsed.error);
     const tag = await storage.createTag(parsed.data);
     res.status(201).json(toDbKeys(tag as any, tags));
-  });
+  }));
 
-  app.patch("/api/tags/:id", requireAuth, async (req, res) => {
+  app.patch("/api/tags/:id", requireAuth, wrapAsync(async (req, res) => {
     const parsed = insertTagsSchema.partial().safeParse(fromDbKeys(req.body, tags));
     if (!parsed.success) return handleZodError(res, parsed.error);
     const tag = await storage.updateTag(Number(req.params.id), parsed.data);
     if (!tag) return res.status(404).json({ message: "Tag not found" });
     res.json(toDbKeys(tag as any, tags));
-  });
+  }));
 
-  app.delete("/api/tags/:id", requireAuth, async (req, res) => {
+  app.delete("/api/tags/:id", requireAuth, wrapAsync(async (req, res) => {
     const deleted = await storage.deleteTag(Number(req.params.id));
     if (!deleted) return res.status(404).json({ message: "Tag not found" });
     res.json({ success: true });
-  });
+  }));
 
   // ─── Lead Tags ────────────────────────────────────────────────────
 
-  app.get("/api/leads/:id/tags", requireAuth, async (req, res) => {
+  app.get("/api/leads/:id/tags", requireAuth, wrapAsync(async (req, res) => {
     const data = await storage.getTagsByLeadId(Number(req.params.id));
     res.json(data);
-  });
+  }));
 
   // POST /api/leads/:id/tags — add a single tag to a lead
   app.post("/api/leads/:id/tags", requireAuth, async (req, res) => {
@@ -503,45 +546,49 @@ export async function registerRoutes(
   // ─── Automation Logs ──────────────────────────────────────────────
   // Agency-only
 
-  app.get("/api/automation-logs", requireAgency, async (req, res) => {
+  app.get("/api/automation-logs", requireAgency, wrapAsync(async (req, res) => {
     const accountId = req.query.accountId ? Number(req.query.accountId) : undefined;
     const data = accountId
       ? await storage.getAutomationLogsByAccountId(accountId)
       : await storage.getAutomationLogs();
     res.json(data);
-  });
+  }));
 
   // ─── Users ────────────────────────────────────────────────────────
 
-  app.get("/api/users", requireAgency, async (_req, res) => {
+  app.get("/api/users", requireAgency, wrapAsync(async (_req, res) => {
     const data = await storage.getAppUsers();
     res.json(data);
-  });
+  }));
 
-  app.get("/api/users/:id", requireAuth, async (req, res) => {
+  app.get("/api/users/:id", requireAuth, wrapAsync(async (req, res) => {
     const user = await storage.getAppUserById(Number(req.params.id));
     if (!user) return res.status(404).json({ message: "User not found" });
     // Never expose password hash
     const { passwordHash: _, ...safeUser } = user;
     res.json(safeUser);
-  });
+  }));
 
   app.patch("/api/users/:id", requireAuth, async (req, res) => {
     try {
       // Only admin can edit other users; non-admin can only edit their own profile
-      const sessionUser = (req as any).user;
+      const sessionUser = req.user!;
       const targetId = Number(req.params.id);
-      if (sessionUser && sessionUser.role !== "Admin" && sessionUser.id !== targetId) {
+      if (sessionUser.role !== "Admin" && sessionUser.id !== targetId) {
         return res.status(403).json({ message: "Forbidden" });
       }
-      // Strip out fields non-admins shouldn't change (role/status)
-      const allowed = { ...req.body };
-      if (sessionUser && sessionUser.role !== "Admin") {
-        delete allowed.role;
-        delete allowed.status;
-        delete allowed.accountsId;
+      // Strip out fields non-admins shouldn't change (role/status/account)
+      const rawBody = { ...req.body };
+      if (sessionUser.role !== "Admin") {
+        delete rawBody.role;
+        delete rawBody.status;
+        delete rawBody.accountsId;
+        delete rawBody.Accounts_id;
       }
-      const updated = await storage.updateAppUser(targetId, allowed);
+      // Validate allowed fields against schema
+      const parsed = insertUsersSchema.partial().safeParse(fromDbKeys(rawBody, users));
+      if (!parsed.success) return handleZodError(res, parsed.error);
+      const updated = await storage.updateAppUser(targetId, parsed.data as any);
       if (!updated) return res.status(404).json({ message: "User not found" });
       const { passwordHash: _, ...safeUser } = updated;
       res.json(safeUser);
@@ -575,7 +622,7 @@ export async function registerRoutes(
       const preferences = JSON.stringify({
         invite_token: inviteToken,
         invite_sent_at: new Date().toISOString(),
-        invited_by: (req as any).user?.email || "admin",
+        invited_by: req.user?.email || "admin",
       });
 
       // Create the user record with Invited status
@@ -591,8 +638,9 @@ export async function registerRoutes(
 
       const { passwordHash: _, ...safeUser } = newUser;
 
-      // Log invite link to console (dev mode email simulation)
-      const inviteLink = `http://localhost:5173/accept-invite?token=${inviteToken}&email=${encodeURIComponent(email)}`;
+      // Build invite URL from env or request host (never hardcode localhost)
+      const baseUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
+      const inviteLink = `${baseUrl}/accept-invite?token=${inviteToken}&email=${encodeURIComponent(email)}`;
       console.log(`\n📧 INVITE EMAIL (dev mode)\nTo: ${email}\nRole: ${role}\nInvite link: ${inviteLink}\nToken: ${inviteToken}\n`);
 
       res.status(201).json({
@@ -635,7 +683,7 @@ export async function registerRoutes(
         ...existingPrefs,
         invite_token: inviteToken,
         invite_sent_at: new Date().toISOString(),
-        invited_by: (req as any).user?.email || "admin",
+        invited_by: req.user?.email || "admin",
       });
 
       const updated = await storage.updateAppUser(targetId, { preferences: newPreferences });
@@ -643,8 +691,9 @@ export async function registerRoutes(
 
       const { passwordHash: _, ...safeUser } = updated;
 
-      // Log new invite link to console (dev mode)
-      const inviteLink = `http://localhost:5173/accept-invite?token=${inviteToken}&email=${encodeURIComponent(user.email || "")}`;
+      // Build invite URL from env or request host (never hardcode localhost)
+      const baseUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
+      const inviteLink = `${baseUrl}/accept-invite?token=${inviteToken}&email=${encodeURIComponent(user.email || "")}`;
       console.log(`\n📧 RESENT INVITE (dev mode)\nTo: ${user.email}\nInvite link: ${inviteLink}\nToken: ${inviteToken}\n`);
 
       res.json({
@@ -704,61 +753,63 @@ export async function registerRoutes(
 
   // ─── Prompt Library ───────────────────────────────────────────────
 
-  app.get("/api/prompts", requireAgency, async (req, res) => {
+  app.get("/api/prompts", requireAgency, wrapAsync(async (req, res) => {
     const accountId = req.query.accountId ? Number(req.query.accountId) : undefined;
     const data = accountId
       ? await storage.getPromptsByAccountId(accountId)
       : await storage.getPrompts();
     res.json(data);
-  });
+  }));
 
-  app.post("/api/prompts", requireAgency, async (req, res) => {
+  app.post("/api/prompts", requireAgency, wrapAsync(async (req, res) => {
     const parsed = insertPrompt_LibrarySchema.safeParse(req.body);
     if (!parsed.success) return handleZodError(res, parsed.error);
     const prompt = await storage.createPrompt(parsed.data);
     res.status(201).json(prompt);
-  });
+  }));
 
-  app.put("/api/prompts/:id", requireAgency, async (req, res) => {
+  app.put("/api/prompts/:id", requireAgency, wrapAsync(async (req, res) => {
     const id = Number(req.params.id);
-    const updated = await storage.updatePrompt(id, req.body);
+    const parsed = insertPrompt_LibrarySchema.partial().safeParse(req.body);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const updated = await storage.updatePrompt(id, parsed.data);
     if (!updated) return res.status(404).json({ error: "Prompt not found" });
     res.json(updated);
-  });
+  }));
 
-  app.delete("/api/prompts/:id", requireAgency, async (req, res) => {
+  app.delete("/api/prompts/:id", requireAgency, wrapAsync(async (req, res) => {
     const id = Number(req.params.id);
     const deleted = await storage.deletePrompt(id);
     if (!deleted) return res.status(404).json({ error: "Prompt not found" });
     res.json({ success: true });
-  });
+  }));
 
   // ─── Lead Score History ────────────────────────────────────────────
-  // Agency-only (historical scoring data)
 
-  app.get("/api/lead-score-history", requireAuth, async (req, res) => {
+  app.get("/api/lead-score-history", requireAuth, wrapAsync(async (req, res) => {
     const leadId = req.query.leadId ? Number(req.query.leadId) : undefined;
     const data = leadId
       ? await storage.getLeadScoreHistoryByLeadId(leadId)
       : await storage.getLeadScoreHistory();
     res.json(data);
-  });
+  }));
 
   // ─── Campaign Metrics History ──────────────────────────────────────
-  // Agency-only (historical metrics data)
 
-  app.get("/api/campaign-metrics-history", requireAuth, async (req, res) => {
+  app.get("/api/campaign-metrics-history", requireAuth, wrapAsync(async (req, res) => {
     const campaignId = req.query.campaignId ? Number(req.query.campaignId) : undefined;
     const data = campaignId
       ? await storage.getCampaignMetricsHistoryByCampaignId(campaignId)
       : await storage.getCampaignMetricsHistory();
     res.json(data);
-  });
+  }));
 
-  app.post("/api/campaign-metrics-history", requireAuth, async (req, res) => {
-    const row = await storage.createCampaignMetricsHistory(req.body);
+  app.post("/api/campaign-metrics-history", requireAuth, wrapAsync(async (req, res) => {
+    const parsed = insertCampaignMetricsHistorySchema.partial().safeParse(req.body);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const row = await storage.createCampaignMetricsHistory(parsed.data);
     res.status(201).json(row);
-  });
+  }));
 
   // ─── Dashboard KPI Trends ──────────────────────────────────────────
   // Aggregates campaign metrics history into daily KPI totals for sparklines

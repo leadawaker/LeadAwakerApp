@@ -179,7 +179,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
       <main
         id="main-content"
         className={cn(
-          "h-screen flex flex-col bg-stone-200 dark:bg-stone-900 transition-all duration-200 overflow-hidden",
+          "h-screen flex flex-col bg-muted/30 dark:bg-background transition-all duration-200 overflow-hidden",
           collapsed ? "md:pl-[60px]" : "md:pl-[180px]",
           "pb-[64px] md:pb-0 pt-[56px]"
         )}

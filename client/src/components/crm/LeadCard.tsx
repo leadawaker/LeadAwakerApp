@@ -45,7 +45,7 @@ export function LeadCard({ lead, active }: { lead: Lead; active: boolean }) {
     <div
       className={cn(
         "rounded-2xl border border-border bg-card shadow-sm p-4 transition-all duration-200 ease-out group/lead",
-        active ? "bg-primary/5" : "bg-background hover:bg-muted/10",
+        active ? "bg-primary/10 border-primary/30" : "bg-background hover:bg-muted/10",
       )}
       data-testid={`card-lead-${lead.id}`}
     >

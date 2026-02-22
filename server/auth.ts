@@ -88,9 +88,20 @@ export function setupAuth(app: Express) {
     done(null, user.id);
   });
 
+  // Short-lived in-process cache so deserializeUser doesn't hit the DB on
+  // every authenticated request (passport calls this once per API call).
+  const userCache = new Map<number, { user: Users; expiresAt: number }>();
+  const USER_CACHE_TTL_MS = 60_000;
+
   passport.deserializeUser(async (id: unknown, done) => {
+    const numId = Number(id);
+    const cached = userCache.get(numId);
+    if (cached && cached.expiresAt > Date.now()) {
+      return done(null, cached.user);
+    }
     try {
-      const user = await storage.getAppUserById(Number(id));
+      const user = await storage.getAppUserById(numId);
+      if (user) userCache.set(numId, { user, expiresAt: Date.now() + USER_CACHE_TTL_MS });
       done(null, user ?? false);
     } catch (err) {
       done(err);

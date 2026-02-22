@@ -7,7 +7,7 @@ export const fetchAccounts = async () => {
   return Array.isArray(data) ? data : data?.list || [];
 };
 
-export const updateAccount = async (rowId: number | string, patch: any) => {
+export const updateAccount = async (rowId: number | string, patch: Record<string, unknown>) => {
   const res = await apiFetch(`/api/accounts/${rowId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -17,7 +17,7 @@ export const updateAccount = async (rowId: number | string, patch: any) => {
   return await res.json();
 };
 
-export const createAccount = async (payload: any) => {
+export const createAccount = async (payload: Record<string, unknown>) => {
   const res = await apiFetch("/api/accounts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

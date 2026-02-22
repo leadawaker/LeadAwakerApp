@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/lib/utils";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
@@ -94,6 +95,14 @@ export function InboxPanel({
     tab === "unread"
       ? threads.filter((t) => t.unread && !readLeadIds.has(t.lead.id))
       : threads;
+
+  const listContainerRef = useRef<HTMLDivElement>(null);
+  const threadVirtualizer = useVirtualizer({
+    count: displayThreads.length,
+    getScrollElement: () => listContainerRef.current,
+    estimateSize: () => 68,
+    overscan: 5,
+  });
 
   return (
     <section
@@ -300,132 +309,131 @@ export function InboxPanel({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto" data-testid="list-inbox">
+      <div ref={listContainerRef} className="flex-1 overflow-y-auto" data-testid="list-inbox">
         {loading ? (
           <SkeletonList count={6} />
+        ) : displayThreads.length === 0 ? (
+          searchQuery ? (
+            <DataEmptyState
+              variant="search"
+              title="No conversations found"
+              description={`No conversations match "${searchQuery}". Try a different name or phone number.`}
+              compact
+              data-testid="empty-state-search"
+            />
+          ) : hasActiveFilters || tab === "unread" ? (
+            <DataEmptyState
+              variant="search"
+              title={tab === "unread" ? "All caught up!" : "No matches"}
+              description={
+                tab === "unread"
+                  ? "You have no unread conversations right now."
+                  : "No conversations match the selected filters. Try adjusting or clearing your filters."
+              }
+              actionLabel={hasActiveFilters ? "Clear filters" : undefined}
+              onAction={hasActiveFilters && onClearFilters ? onClearFilters : undefined}
+              compact
+              data-testid="empty-state-filtered"
+            />
+          ) : (
+            <DataEmptyState
+              variant="conversations"
+              compact
+              data-testid="empty-state-no-conversations"
+            />
+          )
         ) : (
-          <div className="flex flex-col">
-            {displayThreads.map(({ lead, last, unread, unreadCount }) => {
+          <div style={{ height: `${threadVirtualizer.getTotalSize()}px`, position: "relative" }}>
+            {threadVirtualizer.getVirtualItems().map((virtualItem) => {
+              const { lead, last, unread, unreadCount } = displayThreads[virtualItem.index];
               const active = selectedLeadId === lead.id;
-              // Show unread count badge if thread has unread messages and hasn't been opened this session
               const showUnreadBadge = unread && !readLeadIds.has(lead.id);
               return (
-                <button
+                <div
                   key={lead.id}
-                  type="button"
-                  onClick={() => onSelectLead(lead.id)}
-                  className={cn(
-                    "w-full text-left px-4 py-3 transition-colors",
-                    active ? "bg-primary/5" : "hover:bg-muted/20",
-                  )}
-                  data-testid={`button-thread-${lead.id}`}
+                  data-index={virtualItem.index}
+                  ref={threadVirtualizer.measureElement}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    transform: `translateY(${virtualItem.start}px)`,
+                  }}
                 >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={cn(
-                        "h-9 w-9 rounded-full grid place-items-center text-xs font-bold border shrink-0",
-                        active
-                          ? "bg-primary/10 text-primary border-primary/20"
-                          : "bg-muted/30 text-foreground border-border",
-                      )}
-                    >
-                      {initialsFor(lead)}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="font-semibold truncate">
-                          {lead.full_name ||
-                            `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() ||
-                            "Unknown"}
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {/* AI/Human state badge */}
-                          {lead.manual_takeover ? (
-                            <span
-                              className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20"
-                              title="Human takeover"
-                            >
-                              Human
-                            </span>
-                          ) : (
-                            <span
-                              className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20"
-                              title="AI managed"
-                            >
-                              AI
-                            </span>
-                          )}
-                          <div className="text-[11px] text-muted-foreground whitespace-nowrap">
-                            {last
-                              ? new Date(last.created_at ?? last.createdAt).toLocaleTimeString([], {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                              : "—"}
+                  <button
+                    type="button"
+                    onClick={() => onSelectLead(lead.id)}
+                    className={cn(
+                      "w-full text-left px-4 py-3 transition-colors",
+                      active ? "bg-primary/5" : "hover:bg-muted/20",
+                    )}
+                    data-testid={`button-thread-${lead.id}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={cn(
+                          "h-9 w-9 rounded-full grid place-items-center text-xs font-bold border shrink-0",
+                          active
+                            ? "bg-primary/10 text-primary border-primary/20"
+                            : "bg-muted/30 text-foreground border-border",
+                        )}
+                      >
+                        {initialsFor(lead)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="font-semibold truncate">
+                            {lead.full_name ||
+                              `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() ||
+                              "Unknown"}
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {lead.manual_takeover ? (
+                              <span
+                                className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                                title="Human takeover"
+                              >
+                                Human
+                              </span>
+                            ) : (
+                              <span
+                                className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                                title="AI managed"
+                              >
+                                AI
+                              </span>
+                            )}
+                            <div className="text-[11px] text-muted-foreground whitespace-nowrap">
+                              {last
+                                ? new Date(last.created_at ?? last.createdAt).toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                : "—"}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="mt-0.5 flex items-center justify-between gap-2">
-                        <div className="text-xs text-muted-foreground truncate">
-                          {last ? (last.content ?? last.Content ?? "") : "No messages yet."}
+                        <div className="mt-0.5 flex items-center justify-between gap-2">
+                          <div className="text-xs text-muted-foreground truncate">
+                            {last ? (last.content ?? last.Content ?? "") : "No messages yet."}
+                          </div>
+                          {showUnreadBadge && (
+                            <span
+                              className="min-w-[18px] h-[18px] rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center px-1 shrink-0"
+                              data-testid={`badge-unread-${lead.id}`}
+                              title={`${unreadCount} unread message${unreadCount !== 1 ? "s" : ""}`}
+                            >
+                              {unreadCount > 99 ? "99+" : unreadCount}
+                            </span>
+                          )}
                         </div>
-                        {showUnreadBadge && (
-                          <span
-                            className="min-w-[18px] h-[18px] rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center px-1 shrink-0"
-                            data-testid={`badge-unread-${lead.id}`}
-                            title={`${unreadCount} unread message${unreadCount !== 1 ? "s" : ""}`}
-                          >
-                            {unreadCount > 99 ? "99+" : unreadCount}
-                          </span>
-                        )}
                       </div>
                     </div>
-                  </div>
-                </button>
+                  </button>
+                </div>
               );
             })}
-            {displayThreads.length === 0 && !loading && (
-              (() => {
-                if (searchQuery) {
-                  // Search returned no results
-                  return (
-                    <DataEmptyState
-                      variant="search"
-                      title="No conversations found"
-                      description={`No conversations match "${searchQuery}". Try a different name or phone number.`}
-                      compact
-                      data-testid="empty-state-search"
-                    />
-                  );
-                }
-                if (hasActiveFilters || tab === "unread") {
-                  // Filters or unread tab returned no results
-                  const filterDesc =
-                    tab === "unread"
-                      ? "You have no unread conversations right now."
-                      : "No conversations match the selected filters. Try adjusting or clearing your filters.";
-                  return (
-                    <DataEmptyState
-                      variant="search"
-                      title={tab === "unread" ? "All caught up!" : "No matches"}
-                      description={filterDesc}
-                      actionLabel={hasActiveFilters ? "Clear filters" : undefined}
-                      onAction={hasActiveFilters && onClearFilters ? onClearFilters : undefined}
-                      compact
-                      data-testid="empty-state-filtered"
-                    />
-                  );
-                }
-                // No conversations at all
-                return (
-                  <DataEmptyState
-                    variant="conversations"
-                    compact
-                    data-testid="empty-state-no-conversations"
-                  />
-                );
-              })()
-            )}
           </div>
         )}
       </div>

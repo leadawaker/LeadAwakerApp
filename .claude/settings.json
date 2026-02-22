@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx playwright-cli:*)",
+      "Bash(dpkg:*)",
+      "Bash(sudo apt-get:*)",
+      "Bash(npx vite build:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "input=$(cat); if echo \"$input\" | grep -qE '\"file_path\"\\s*:\\s*\"[^\"]*\\.env'; then echo 'Blocked: .env files are protected. Do not edit secrets or credentials.' >&2; exit 2; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

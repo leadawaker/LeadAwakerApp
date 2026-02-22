@@ -409,7 +409,7 @@ export function RightSidebar({
       {/* DESKTOP SIDEBAR */}
       <aside
         className={cn(
-          "fixed left-0 top-0 bottom-0 bg-stone-200 dark:bg-stone-900 border-r border-stone-300/70 dark:border-stone-700/60 hidden md:flex flex-col overflow-hidden transition-all duration-200",
+          "fixed left-0 top-0 bottom-0 bg-card dark:bg-card border-r border-border hidden md:flex flex-col overflow-hidden transition-all duration-200",
           collapsed ? "w-[60px]" : "w-[180px]"
         )}
         data-sidebar-focus
@@ -418,7 +418,7 @@ export function RightSidebar({
           {/* LOGO — fixed 64px header matching topbar */}
           <div
             className={cn(
-              "h-16 flex items-center border-b border-stone-300/70 dark:border-stone-700/60 shrink-0",
+              "h-16 flex items-center border-b border-border shrink-0",
               collapsed ? "justify-center" : "px-4 gap-2.5"
             )}
           >
@@ -554,7 +554,7 @@ export function RightSidebar({
                     collapsed ? "h-10 w-10 mx-auto justify-center" : "px-3 h-9",
                     active
                       ? "bg-brand-blue text-white font-semibold shadow-sm"
-                      : "text-stone-600 dark:text-stone-400 hover:bg-black/8 dark:hover:bg-white/10 hover:text-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                   data-testid={`link-${it.testId}`}
                   data-active={active || undefined}
@@ -587,12 +587,12 @@ export function RightSidebar({
           </nav>
 
           {/* BOTTOM ACTIONS */}
-          <div className="px-2 mb-2 space-y-0.5 shrink-0 border-t border-stone-300/70 dark:border-stone-700/60 pt-2">
+          <div className="px-2 mb-2 space-y-0.5 shrink-0 border-t border-border pt-2">
             {/* COLLAPSE */}
             <button
               onClick={() => onCollapse(!collapsed)}
               className={cn(
-                "w-full h-9 rounded-lg flex items-center gap-3 text-stone-500 dark:text-stone-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/10 transition-colors",
+                "w-full h-9 rounded-lg flex items-center gap-3 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors",
                 collapsed ? "justify-center" : "px-3"
               )}
             >
@@ -609,7 +609,7 @@ export function RightSidebar({
               <DropdownMenuTrigger asChild>
                 <button
                   className={cn(
-                    "w-full h-9 rounded-lg flex items-center gap-3 text-stone-500 dark:text-stone-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/10 transition-colors",
+                    "w-full h-9 rounded-lg flex items-center gap-3 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors",
                     collapsed ? "justify-center" : "px-3"
                   )}
                 >

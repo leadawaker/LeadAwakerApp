@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/lib/utils";
 import {
   Phone,
@@ -11,12 +12,10 @@ import {
   Copy,
   Check,
   Star,
-  Target,
   ChevronRight,
   Send,
   Bot,
   User as UserIcon,
-  Zap,
 } from "lucide-react";
 import { useInteractions } from "@/hooks/useApiData";
 import { sendMessage } from "@/features/conversations/api/conversationsApi";
@@ -463,14 +462,14 @@ function ConversationWidget({ lead }: { lead: Record<string, any> }) {
           onKeyDown={handleKeyDown}
           placeholder="Type a message… (Enter to send)"
           rows={1}
-          className="flex-1 text-[12px] bg-muted/50 rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400/40 border border-border/40 placeholder:text-muted-foreground/50 transition-all"
+          className="flex-1 text-[12px] bg-muted/50 rounded-xl px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-brand-blue/40 border border-border/40 placeholder:text-muted-foreground/50 transition-all"
           style={{ minHeight: "36px", maxHeight: "80px" }}
           data-testid="input-message-compose"
         />
         <button
           onClick={handleSend}
           disabled={!draft.trim() || sending}
-          className="h-9 w-9 rounded-xl bg-indigo-500 text-white flex items-center justify-center hover:bg-indigo-600 disabled:opacity-40 shrink-0 transition-colors"
+          className="h-9 w-9 rounded-xl bg-brand-blue text-white flex items-center justify-center hover:bg-brand-blue/90 disabled:opacity-40 shrink-0 transition-colors"
           title="Send message"
           data-testid="btn-send-message"
         >
@@ -765,6 +764,7 @@ export function LeadsCardView({
   leadTagsInfo,
 }: LeadsCardViewProps) {
   const [listSearch, setListSearch] = useState("");
+  const listContainerRef = useRef<HTMLDivElement>(null);
 
   const filteredList = useMemo(() => {
     if (!listSearch.trim()) return leads;
@@ -778,6 +778,13 @@ export function LeadsCardView({
         String(l.phone || "").toLowerCase().includes(q)
     );
   }, [leads, listSearch]);
+
+  const rowVirtualizer = useVirtualizer({
+    count: filteredList.length,
+    getScrollElement: () => listContainerRef.current,
+    estimateSize: () => 72,
+    overscan: 5,
+  });
 
   return (
     <div className="flex h-full min-h-[600px] overflow-hidden gap-3">
@@ -793,20 +800,20 @@ export function LeadsCardView({
               {leads.length} record{leads.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <span className="text-[10px] font-semibold text-indigo-500 dark:text-indigo-400 uppercase tracking-widest px-2 py-1 rounded-md bg-indigo-50 dark:bg-indigo-950/40">
+          <span className="text-[10px] font-semibold text-brand-blue uppercase tracking-widest px-2 py-1 rounded-md bg-brand-blue/10">
             Active
           </span>
         </div>
 
         {/* Search */}
-        <div className="px-3 py-2.5 border-b border-stone-200/80 dark:border-stone-700/60 shrink-0 bg-stone-100 dark:bg-stone-900/60">
+        <div className="px-3 py-2.5 border-b border-border shrink-0 bg-muted/30">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60 pointer-events-none" />
             <input
               value={listSearch}
               onChange={(e) => setListSearch(e.target.value)}
               placeholder="Search leads..."
-              className="w-full h-8 pl-8 pr-3 rounded-lg bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-400/50 placeholder:text-muted-foreground/50 transition-all"
+              className="w-full h-8 pl-8 pr-3 rounded-lg bg-background border border-border text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue/50 placeholder:text-muted-foreground/50 transition-all"
             />
             {listSearch && (
               <button
@@ -820,7 +827,7 @@ export function LeadsCardView({
         </div>
 
         {/* Lead list */}
-        <div className="flex-1 overflow-y-auto">
+        <div ref={listContainerRef} className="flex-1 overflow-y-auto">
           {loading ? (
             <ListSkeleton />
           ) : filteredList.length === 0 ? (
@@ -831,19 +838,34 @@ export function LeadsCardView({
               </p>
             </div>
           ) : (
-            filteredList.map((lead) => {
-              const id = getLeadId(lead);
-              const selectedId = selectedLead ? getLeadId(selectedLead) : null;
-              return (
-                <LeadListCard
-                  key={id}
-                  lead={lead}
-                  isActive={selectedId === id}
-                  onClick={() => onSelectLead(lead)}
-                  leadTags={leadTagsInfo.get(id) || []}
-                />
-              );
-            })
+            <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: "relative" }}>
+              {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+                const lead = filteredList[virtualItem.index];
+                const id = getLeadId(lead);
+                const selectedId = selectedLead ? getLeadId(selectedLead) : null;
+                return (
+                  <div
+                    key={id}
+                    data-index={virtualItem.index}
+                    ref={rowVirtualizer.measureElement}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      transform: `translateY(${virtualItem.start}px)`,
+                    }}
+                  >
+                    <LeadListCard
+                      lead={lead}
+                      isActive={selectedId === id}
+                      onClick={() => onSelectLead(lead)}
+                      leadTags={leadTagsInfo.get(id) || []}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>

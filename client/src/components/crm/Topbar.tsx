@@ -80,7 +80,7 @@ export function Topbar({
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 h-16 bg-stone-200 dark:bg-stone-900 backdrop-blur-xl z-50 flex items-center px-4 md:px-8 transition-all duration-200 ease-out border-b border-stone-300/70 dark:border-stone-700/60",
+        "fixed top-0 right-0 h-16 bg-background/95 backdrop-blur-xl z-50 flex items-center px-4 md:px-8 transition-all duration-200 ease-out border-b border-border",
         "left-0",
         "md:left-[60px]",
         !collapsed && "md:left-[180px]"
@@ -91,7 +91,7 @@ export function Topbar({
         {/* Hamburger button - mobile only */}
         <button
           onClick={onToggleMobileMenu}
-          className="md:hidden p-2 rounded-xl hover:bg-black/8 dark:hover:bg-white/10 text-stone-600 dark:text-stone-400 transition-colors shrink-0"
+          className="md:hidden p-2 rounded-xl hover:bg-muted text-muted-foreground transition-colors shrink-0"
           data-testid="button-hamburger-menu"
           aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
         >
@@ -109,7 +109,7 @@ export function Topbar({
       <div className="flex items-center gap-1 md:gap-2 shrink-0">
         <button
           onClick={() => onOpenPanel('search')}
-          className="hidden sm:flex p-2 md:p-3 text-stone-500 dark:text-stone-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/10 rounded-full transition-all relative"
+          className="hidden sm:flex p-2 md:p-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-all relative"
           data-testid="button-search-top"
           aria-label="Search"
         >
@@ -119,7 +119,7 @@ export function Topbar({
         {/* Dark mode toggle */}
         <button
           onClick={toggleTheme}
-          className="p-2 md:p-3 text-stone-500 dark:text-stone-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/10 rounded-full transition-all relative"
+          className="p-2 md:p-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-all relative"
           data-testid="button-dark-mode-toggle"
           title={isDark ? "Switch to light mode" : "Switch to dark mode"}
           aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
@@ -130,7 +130,7 @@ export function Topbar({
         {/* Notifications */}
         <button
           onClick={() => onOpenPanel('notifications')}
-          className="p-2 md:p-3 text-stone-500 dark:text-stone-400 hover:text-foreground hover:bg-black/8 dark:hover:bg-white/10 rounded-full transition-all relative"
+          className="p-2 md:p-3 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-all relative"
           data-testid="button-notifications"
           aria-label={`Notifications${notificationsCount > 0 ? ` (${notificationsCount} unread)` : ''}`}
         >

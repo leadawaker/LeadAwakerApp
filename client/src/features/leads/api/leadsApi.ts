@@ -11,7 +11,7 @@ export const fetchLeads = async (accountId?: number) => {
   return Array.isArray(data) ? data : data?.list || [];
 };
 
-export const updateLead = async (rowId: number | string, patch: any) => {
+export const updateLead = async (rowId: number | string, patch: Record<string, unknown>) => {
   const res = await apiFetch(`/api/leads/${rowId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -21,7 +21,7 @@ export const updateLead = async (rowId: number | string, patch: any) => {
   return await res.json();
 };
 
-export const createLead = async (payload: any) => {
+export const createLead = async (payload: Record<string, unknown>) => {
   const res = await apiFetch("/api/leads", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

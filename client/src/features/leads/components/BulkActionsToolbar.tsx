@@ -189,7 +189,7 @@ export function BulkActionsToolbar({
       data-testid="bulk-actions-toolbar"
     >
       {/* Selection count */}
-      <Badge className="h-7 px-3 bg-brand-blue hover:bg-brand-blue/90 text-brand-blue-foreground text-sm font-semibold rounded-full">
+      <Badge className="h-7 px-3 bg-brand-blue hover:bg-brand-blue/90 text-white text-sm font-semibold rounded-full">
         {selectedIds.length} selected
       </Badge>
 

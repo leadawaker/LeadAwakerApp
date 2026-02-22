@@ -208,7 +208,7 @@ export default function AccountsPage() {
           <div className={cn(
             "fixed right-0 top-0 bottom-0 z-50 w-full max-w-[480px]",
             "bg-background border-l border-border shadow-2xl flex flex-col overflow-hidden",
-            "animate-in slide-in-from-right duration-250 ease-out"
+            "animate-in slide-in-from-right duration-200 ease-out"
           )}>
             <AccountDetailsDialog
               account={editAccount}

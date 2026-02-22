@@ -11,7 +11,7 @@ export const fetchCampaigns = async (accountId?: number) => {
   return Array.isArray(data) ? data : data?.list || [];
 };
 
-export const updateCampaign = async (rowId: number | string, patch: any) => {
+export const updateCampaign = async (rowId: number | string, patch: Record<string, unknown>) => {
   const res = await apiFetch(`/api/campaigns/${rowId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -21,7 +21,7 @@ export const updateCampaign = async (rowId: number | string, patch: any) => {
   return await res.json();
 };
 
-export const createCampaign = async (payload: any) => {
+export const createCampaign = async (payload: Record<string, unknown>) => {
   const res = await apiFetch("/api/campaigns", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
