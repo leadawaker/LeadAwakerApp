@@ -1196,3 +1196,28 @@ The feature was already fully implemented in the DataTable component (client/src
 - 206/207 features passing (99.5%)
 - Feature #72: Table responsive horizontal scroll - PASSING
 - Git commit: e568d36
+
+## Session 2026-02-22 - Coding Agent (Feature #73 - Table Dark Mode Variant)
+
+### Summary:
+Assigned Feature #73 "Table dark mode variant".
+
+Feature was already implemented in commit 441da3c from a prior session but had NOT been marked as passing. The implementation included:
+
+1. **TableHeader dark mode**: `dark:bg-muted/30` for proper dark background contrast
+2. **Alternating row striping**:
+   - Even rows: `bg-transparent hover:bg-muted/30 dark:hover:bg-muted/20`
+   - Odd rows: `bg-muted/[0.07] dark:bg-muted/[0.12] hover:bg-muted/30 dark:hover:bg-muted/20`
+3. **Selected row override**: `!bg-primary/5 hover:!bg-primary/10` (wins over striping)
+4. **data-testid attributes**: `data-testid="data-table"`, `data-testid="table-header"`, `data-testid="table-row"`
+5. All text and borders already use CSS variables (foreground, muted-foreground, border) which adapt to dark mode
+
+### Verification:
+- Vite build: 3990 modules, no TypeScript errors
+- Dark mode classes confirmed present in DataTable.tsx
+- No code changes needed (feature already implemented, just needed to be marked passing)
+
+### Current Status:
+- **207/207 features passing (100%)** 🎉
+- Feature #73: Table dark mode variant - PASSING
+- PROJECT COMPLETE!
