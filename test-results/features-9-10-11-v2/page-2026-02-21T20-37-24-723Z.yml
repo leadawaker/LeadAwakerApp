@@ -1,0 +1,518 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - region "Notifications (F8)":
+      - list
+    - main [ref=e4]:
+      - generic [ref=e5]:
+        - link "Skip to main content" [ref=e6] [cursor=pointer]:
+          - /url: "#main-content"
+        - generic [ref=e7]:
+          - generic [ref=e10]:
+            - heading "Dashboard" [level=1] [ref=e11]
+            - navigation "Breadcrumb" [ref=e12]:
+              - list [ref=e13]:
+                - listitem [ref=e14]:
+                  - generic [ref=e15]:
+                    - img [ref=e16]
+                    - text: Home
+          - generic [ref=e19]:
+            - button "Wow" [ref=e21] [cursor=pointer]:
+              - generic [ref=e22]: Wow
+              - img
+            - generic [ref=e23]:
+              - button "Search" [ref=e24] [cursor=pointer]:
+                - img [ref=e25]
+              - button "Switch to dark mode" [ref=e28] [cursor=pointer]:
+                - img [ref=e29]
+              - button "Notifications (3 unread)" [ref=e31] [cursor=pointer]:
+                - img [ref=e32]
+                - generic [ref=e36]: "3"
+              - button "Settings" [ref=e37] [cursor=pointer]:
+                - img [ref=e38]
+              - button "G2" [ref=e41] [cursor=pointer]:
+                - generic [ref=e43]: G2
+        - complementary [ref=e44]:
+          - generic [ref=e45]:
+            - link "Lead Awaker" [ref=e47] [cursor=pointer]:
+              - /url: /
+              - img "Lead Awaker" [ref=e48]
+            - button "P Pepsi" [active] [ref=e791] [cursor=pointer]:
+              - generic [ref=e51]: P
+              - generic:
+                - generic: Pepsi
+            - navigation [ref=e52]:
+              - link "Dashboard" [ref=e53] [cursor=pointer]:
+                - /url: /agency/dashboard
+                - img [ref=e54]
+                - generic:
+                  - generic: Dashboard
+              - link "Accounts" [ref=e59] [cursor=pointer]:
+                - /url: /agency/accounts
+                - img [ref=e60]
+                - generic:
+                  - generic: Accounts
+              - link "Campaigns" [ref=e64] [cursor=pointer]:
+                - /url: /agency/campaigns
+                - img [ref=e65]
+                - generic:
+                  - generic: Campaigns
+              - link "Leads" [ref=e68] [cursor=pointer]:
+                - /url: /agency/contacts
+                - img [ref=e69]
+                - generic:
+                  - generic: Leads
+              - link "Chats" [ref=e73] [cursor=pointer]:
+                - /url: /agency/conversations
+                - img [ref=e74]
+                - generic:
+                  - generic: Chats
+              - link "Calendar" [ref=e76] [cursor=pointer]:
+                - /url: /agency/calendar
+                - img [ref=e77]
+                - generic:
+                  - generic: Calendar
+              - link "Tags" [ref=e79] [cursor=pointer]:
+                - /url: /agency/tags
+                - img [ref=e80]
+                - generic:
+                  - generic: Tags
+              - link "Library" [ref=e83] [cursor=pointer]:
+                - /url: /agency/prompt-library
+                - img [ref=e84]
+                - generic:
+                  - generic: Library
+              - link "Users" [ref=e86] [cursor=pointer]:
+                - /url: /agency/users
+                - img [ref=e87]
+                - generic:
+                  - generic: Users
+              - link "Automations" [ref=e92] [cursor=pointer]:
+                - /url: /agency/automation-logs
+                - img [ref=e93]
+                - generic:
+                  - generic: Automations
+              - link "Settings" [ref=e96] [cursor=pointer]:
+                - /url: /agency/settings
+                - img [ref=e97]
+                - generic:
+                  - generic: Settings
+            - generic [ref=e100]:
+              - button [ref=e101] [cursor=pointer]:
+                - img [ref=e102]
+              - button [ref=e105] [cursor=pointer]:
+                - img [ref=e106]
+            - generic "DB Connected — 11/11 tables" [ref=e110]:
+              - generic [ref=e111]:
+                - generic:
+                  - generic:
+                    - text: DB Connected
+                    - generic: (11/11 tables)
+            - button "GB Gabriel Barbosa Fronza 2" [ref=e114] [cursor=pointer]:
+              - generic [ref=e115]: GB
+              - generic:
+                - generic: Gabriel Barbosa Fronza 2
+        - main [ref=e116]:
+          - generic [ref=e120]:
+            - generic [ref=e121]:
+              - generic [ref=e122]:
+                - generic [ref=e123]:
+                  - button "Today" [ref=e124] [cursor=pointer]
+                  - button "7d" [ref=e125] [cursor=pointer]
+                  - button "30d" [ref=e126] [cursor=pointer]
+                  - button "Custom" [ref=e127] [cursor=pointer]:
+                    - img [ref=e128]
+                    - text: Custom
+                - button "All Accounts" [ref=e131] [cursor=pointer]:
+                  - img [ref=e132]
+                  - generic [ref=e136]: All Accounts
+                  - img [ref=e137]
+                - button "All Campaigns" [ref=e140] [cursor=pointer]:
+                  - img [ref=e141]
+                  - generic [ref=e144]: All Campaigns
+                  - img [ref=e145]
+              - generic [ref=e147]:
+                - button "Refresh data now" [ref=e148] [cursor=pointer]:
+                  - img [ref=e149]
+                - generic "Auto-refresh every 60s" [ref=e154]:
+                  - img [ref=e155]
+                  - generic [ref=e158]: 17s
+            - generic [ref=e159]:
+              - generic [ref=e160]:
+                - generic [ref=e161]:
+                  - generic [ref=e164]:
+                    - generic [ref=e165]:
+                      - img [ref=e167]
+                      - generic [ref=e169]: Calls Booked
+                    - generic [ref=e170]:
+                      - generic [ref=e171]: "0"
+                      - generic [ref=e172]: ↓33%
+                  - img [ref=e177]
+                  - generic [ref=e184]:
+                    - generic [ref=e185]: North Star KPI
+                    - generic [ref=e186]:
+                      - button "7d" [ref=e187] [cursor=pointer]
+                      - button "30d" [ref=e188] [cursor=pointer]
+                - generic [ref=e189]:
+                  - generic [ref=e190]:
+                    - generic [ref=e191]: Response Rate
+                    - img [ref=e193]
+                  - generic [ref=e196]:
+                    - generic [ref=e197]: 0%
+                    - generic [ref=e198]: ↑1%
+                  - img [ref=e203]
+                - generic [ref=e210]:
+                  - generic [ref=e211]:
+                    - generic [ref=e212]: Total Leads
+                    - img [ref=e214]
+                  - generic [ref=e219]:
+                    - generic [ref=e220]: "4"
+                    - generic [ref=e221]: ↑5%
+                  - img [ref=e226]
+                - generic [ref=e233]:
+                  - generic [ref=e234]:
+                    - generic [ref=e235]: Active Campaigns
+                    - img [ref=e237]
+                  - generic [ref=e242]: "1"
+                - generic [ref=e243]:
+                  - generic [ref=e244]:
+                    - generic [ref=e245]: Messages Sent
+                    - img [ref=e247]
+                  - generic [ref=e249]:
+                    - generic [ref=e250]: "0"
+                    - generic [ref=e251]: ↑8%
+                  - img [ref=e256]
+              - generic [ref=e263]:
+                - button "Leads Manage contacts" [ref=e264] [cursor=pointer]:
+                  - img [ref=e266]
+                  - generic [ref=e271]:
+                    - generic [ref=e272]: Leads
+                    - generic [ref=e273]: Manage contacts
+                  - img [ref=e274]
+                - button "Campaigns View campaigns" [ref=e277] [cursor=pointer]:
+                  - img [ref=e279]
+                  - generic [ref=e282]:
+                    - generic [ref=e283]: Campaigns
+                    - generic [ref=e284]: View campaigns
+                  - img [ref=e285]
+                - button "Inbox Conversations" [ref=e288] [cursor=pointer]:
+                  - img [ref=e290]
+                  - generic [ref=e293]:
+                    - generic [ref=e294]: Inbox
+                    - generic [ref=e295]: Conversations
+                  - img [ref=e296]
+                - button "Calendar Scheduled calls" [ref=e299] [cursor=pointer]:
+                  - img [ref=e301]
+                  - generic [ref=e303]:
+                    - generic [ref=e304]: Calendar
+                    - generic [ref=e305]: Scheduled calls
+                  - img [ref=e306]
+              - generic [ref=e309]:
+                - heading "Campaign Performance" [level=3] [ref=e311]:
+                  - img [ref=e312]
+                  - text: Campaign Performance
+                - generic [ref=e315]:
+                  - generic [ref=e316]:
+                    - generic [ref=e317]:
+                      - generic [ref=e318]:
+                        - heading "Wow" [level=4] [ref=e319]
+                        - paragraph [ref=e320]: Campaign · 14 days tracked
+                      - generic [ref=e321]: Finished
+                    - generic [ref=e322]:
+                      - generic [ref=e323]:
+                        - generic [ref=e324]:
+                          - img [ref=e325]
+                          - generic [ref=e328]: Response Rate
+                        - generic [ref=e329]:
+                          - generic [ref=e330]: 29%
+                          - generic [ref=e331]: +12%
+                      - generic [ref=e332]:
+                        - generic [ref=e333]:
+                          - img [ref=e334]
+                          - generic [ref=e336]: Booking Rate
+                        - generic [ref=e337]:
+                          - generic [ref=e338]: 11%
+                          - generic [ref=e339]: +235%
+                    - generic [ref=e340]:
+                      - generic [ref=e341]:
+                        - generic [ref=e342]: Response Rate Trend
+                        - img [ref=e346]
+                      - generic [ref=e349]:
+                        - generic [ref=e350]: Booking Rate Trend
+                        - img [ref=e354]
+                    - generic [ref=e357]:
+                      - generic [ref=e358]:
+                        - generic [ref=e359]:
+                          - img [ref=e360]
+                          - generic [ref=e362]: Per Lead
+                        - generic [ref=e363]: $2.00
+                      - generic [ref=e364]:
+                        - generic [ref=e365]:
+                          - img [ref=e366]
+                          - generic [ref=e368]: Per Booking
+                        - generic [ref=e369]: $22.00
+                      - generic [ref=e370]:
+                        - generic [ref=e371]:
+                          - img [ref=e372]
+                          - generic [ref=e374]: ROI
+                        - generic [ref=e375]: 121%
+                    - generic [ref=e376]:
+                      - generic [ref=e377]:
+                        - img [ref=e378]
+                        - generic [ref=e380]: "209"
+                        - generic [ref=e381]: msgs sent
+                      - generic [ref=e382]:
+                        - img [ref=e383]
+                        - generic [ref=e385]: "7"
+                        - generic [ref=e386]: bookings
+                  - generic [ref=e387]:
+                    - generic [ref=e388]:
+                      - generic [ref=e389]:
+                        - heading "Bananas" [level=4] [ref=e390]
+                        - paragraph [ref=e391]: Campaign · 14 days tracked
+                      - generic [ref=e392]: Inactive
+                    - generic [ref=e393]:
+                      - generic [ref=e394]:
+                        - generic [ref=e395]:
+                          - img [ref=e396]
+                          - generic [ref=e399]: Response Rate
+                        - generic [ref=e400]:
+                          - generic [ref=e401]: 14%
+                          - generic [ref=e402]: "-19%"
+                      - generic [ref=e403]:
+                        - generic [ref=e404]:
+                          - img [ref=e405]
+                          - generic [ref=e407]: Booking Rate
+                        - generic [ref=e408]:
+                          - generic [ref=e409]: 3%
+                          - generic [ref=e410]: "-40%"
+                    - generic [ref=e411]:
+                      - generic [ref=e412]:
+                        - generic [ref=e413]: Response Rate Trend
+                        - img [ref=e417]
+                      - generic [ref=e420]:
+                        - generic [ref=e421]: Booking Rate Trend
+                        - img [ref=e425]
+                    - generic [ref=e428]:
+                      - generic [ref=e429]:
+                        - generic [ref=e430]:
+                          - img [ref=e431]
+                          - generic [ref=e433]: Per Lead
+                        - generic [ref=e434]: $3.00
+                      - generic [ref=e435]:
+                        - generic [ref=e436]:
+                          - img [ref=e437]
+                          - generic [ref=e439]: Per Booking
+                        - generic [ref=e440]: —
+                      - generic [ref=e441]:
+                        - generic [ref=e442]:
+                          - img [ref=e443]
+                          - generic [ref=e445]: ROI
+                        - generic [ref=e446]: 151%
+                    - generic [ref=e447]:
+                      - generic [ref=e448]:
+                        - img [ref=e449]
+                        - generic [ref=e451]: "127"
+                        - generic [ref=e452]: msgs sent
+                      - generic [ref=e453]:
+                        - img [ref=e454]
+                        - generic [ref=e456]: "8"
+                        - generic [ref=e457]: bookings
+                  - generic [ref=e458]:
+                    - generic [ref=e459]:
+                      - generic [ref=e460]:
+                        - heading "Reactivation of our liv" [level=4] [ref=e461]
+                        - paragraph [ref=e462]: Campaign · 14 days tracked
+                      - generic [ref=e463]: Active
+                    - generic [ref=e464]:
+                      - generic [ref=e465]:
+                        - generic [ref=e466]:
+                          - img [ref=e467]
+                          - generic [ref=e470]: Response Rate
+                        - generic [ref=e471]:
+                          - generic [ref=e472]: 31%
+                          - generic [ref=e473]: "-15%"
+                      - generic [ref=e474]:
+                        - generic [ref=e475]:
+                          - img [ref=e476]
+                          - generic [ref=e478]: Booking Rate
+                        - generic [ref=e479]:
+                          - generic [ref=e480]: 4%
+                          - generic [ref=e481]: "-65%"
+                    - generic [ref=e482]:
+                      - generic [ref=e483]:
+                        - generic [ref=e484]: Response Rate Trend
+                        - img [ref=e488]
+                      - generic [ref=e491]:
+                        - generic [ref=e492]: Booking Rate Trend
+                        - img [ref=e496]
+                    - generic [ref=e499]:
+                      - generic [ref=e500]:
+                        - generic [ref=e501]:
+                          - img [ref=e502]
+                          - generic [ref=e504]: Per Lead
+                        - generic [ref=e505]: $2.00
+                      - generic [ref=e506]:
+                        - generic [ref=e507]:
+                          - img [ref=e508]
+                          - generic [ref=e510]: Per Booking
+                        - generic [ref=e511]: $67.00
+                      - generic [ref=e512]:
+                        - generic [ref=e513]:
+                          - img [ref=e514]
+                          - generic [ref=e516]: ROI
+                        - generic [ref=e517]: 232%
+                    - generic [ref=e518]:
+                      - generic [ref=e519]:
+                        - img [ref=e520]
+                        - generic [ref=e522]: "290"
+                        - generic [ref=e523]: msgs sent
+                      - generic [ref=e524]:
+                        - img [ref=e525]
+                        - generic [ref=e527]: "28"
+                        - generic [ref=e528]: bookings
+              - generic [ref=e529]:
+                - generic [ref=e530]:
+                  - generic [ref=e531]:
+                    - generic [ref=e532]:
+                      - img [ref=e534]
+                      - heading "Hot Leads" [level=3] [ref=e536]
+                    - button "View All" [ref=e537] [cursor=pointer]:
+                      - text: View All
+                      - img [ref=e538]
+                  - generic [ref=e541]:
+                    - button "BZ bob Ziegfried New 13" [ref=e542] [cursor=pointer]:
+                      - generic [ref=e543]: BZ
+                      - generic [ref=e544]:
+                        - generic [ref=e545]: bob Ziegfried
+                        - generic [ref=e548]: New
+                      - generic [ref=e549]:
+                        - img [ref=e550]
+                        - generic [ref=e553]: "13"
+                      - img [ref=e554]
+                    - button "BS Bob2 Sanders New 13" [ref=e557] [cursor=pointer]:
+                      - generic [ref=e558]: BS
+                      - generic [ref=e559]:
+                        - generic [ref=e560]: Bob2 Sanders
+                        - generic [ref=e563]: New
+                      - generic [ref=e564]:
+                        - img [ref=e565]
+                        - generic [ref=e568]: "13"
+                      - img [ref=e569]
+                    - button "BL Bob Lazar Chay Chay New 13" [ref=e572] [cursor=pointer]:
+                      - generic [ref=e573]: BL
+                      - generic [ref=e574]:
+                        - generic [ref=e575]: Bob Lazar Chay Chay
+                        - generic [ref=e578]: New
+                      - generic [ref=e579]:
+                        - img [ref=e580]
+                        - generic [ref=e583]: "13"
+                      - img [ref=e584]
+                    - button "MT Michael Thompson New 13" [ref=e587] [cursor=pointer]:
+                      - generic [ref=e588]: MT
+                      - generic [ref=e589]:
+                        - generic [ref=e590]: Michael Thompson
+                        - generic [ref=e593]: New
+                      - generic [ref=e594]:
+                        - img [ref=e595]
+                        - generic [ref=e598]: "13"
+                      - img [ref=e599]
+                - generic [ref=e602]:
+                  - generic [ref=e603]:
+                    - generic [ref=e604]:
+                      - img [ref=e606]
+                      - heading "Lead Score Distribution" [level=3] [ref=e608]
+                    - generic [ref=e609]: 4 leads
+                  - generic [ref=e610]:
+                    - img [ref=e614]:
+                      - generic [ref=e618]:
+                        - generic [ref=e620]: 0–20
+                        - generic [ref=e622]: 21–40
+                        - generic [ref=e624]: 41–60
+                        - generic [ref=e626]: 61–80
+                        - generic [ref=e628]: 81–100
+                      - generic [ref=e630]:
+                        - generic [ref=e632]: "0"
+                        - generic [ref=e634]: "1"
+                        - generic [ref=e636]: "2"
+                        - generic [ref=e638]: "3"
+                        - generic [ref=e640]: "4"
+                    - generic [ref=e641]:
+                      - generic [ref=e644]: 0–20
+                      - generic [ref=e647]: 21–40
+                      - generic [ref=e650]: 41–60
+                      - generic [ref=e653]: 61–80
+                      - generic [ref=e656]: 81–100
+              - generic [ref=e657]:
+                - generic [ref=e658]:
+                  - generic [ref=e659]:
+                    - generic [ref=e660]:
+                      - heading "Coca-Cola 2" [level=2] [ref=e661]
+                      - paragraph
+                    - generic [ref=e662]: Active
+                  - generic [ref=e663]:
+                    - heading "Active Campaigns" [level=3] [ref=e664]
+                    - generic [ref=e666]:
+                      - img [ref=e668]
+                      - paragraph [ref=e671]: No campaigns yet
+                      - paragraph [ref=e672]: Create your first campaign to start engaging with leads via WhatsApp.
+                - generic [ref=e673]:
+                  - generic [ref=e674]:
+                    - generic [ref=e675]:
+                      - heading "TEST_CREATE_12345" [level=2] [ref=e676]
+                      - paragraph [ref=e677]: test@example.com
+                    - generic [ref=e678]: Active
+                  - generic [ref=e679]:
+                    - heading "Active Campaigns" [level=3] [ref=e680]
+                    - generic [ref=e682]:
+                      - img [ref=e684]
+                      - paragraph [ref=e687]: No campaigns yet
+                      - paragraph [ref=e688]: Create your first campaign to start engaging with leads via WhatsApp.
+                - generic [ref=e689]:
+                  - generic [ref=e690]:
+                    - generic [ref=e691]:
+                      - heading "van de Kerkhof" [level=2] [ref=e692]
+                      - paragraph [ref=e693]: 2222322@gmail.com
+                    - generic [ref=e694]: Active
+                  - generic [ref=e695]:
+                    - heading "Active Campaigns" [level=3] [ref=e696]
+                    - generic [ref=e698]:
+                      - img [ref=e700]
+                      - paragraph [ref=e703]: No campaigns yet
+                      - paragraph [ref=e704]: Create your first campaign to start engaging with leads via WhatsApp.
+                - generic [ref=e705]:
+                  - generic [ref=e706]:
+                    - generic [ref=e707]:
+                      - heading "Pepsi" [level=2] [ref=e708]
+                      - paragraph [ref=e709]: leada2wa232@gmail.com
+                    - generic [ref=e710]: Suspended
+                  - generic [ref=e711]:
+                    - heading "Active Campaigns" [level=3] [ref=e712]
+                    - generic [ref=e714]:
+                      - img [ref=e716]
+                      - paragraph [ref=e719]: No campaigns yet
+                      - paragraph [ref=e720]: Create your first campaign to start engaging with leads via WhatsApp.
+                - generic [ref=e721]:
+                  - generic [ref=e722]:
+                    - generic [ref=e723]:
+                      - heading "Paul Mackartney" [level=2] [ref=e724]
+                      - paragraph [ref=e725]: leada2wake2r@gmail.com
+                    - generic [ref=e726]: Trial
+                  - generic [ref=e727]:
+                    - heading "Active Campaigns" [level=3] [ref=e728]
+                    - generic [ref=e730]:
+                      - img [ref=e732]
+                      - paragraph [ref=e735]: No campaigns yet
+                      - paragraph [ref=e736]: Create your first campaign to start engaging with leads via WhatsApp.
+                - generic [ref=e737]:
+                  - generic [ref=e738]:
+                    - generic [ref=e739]:
+                      - heading "Astra-Zeneca 2" [level=2] [ref=e740]
+                      - paragraph [ref=e741]: 2222322233@gmail.com
+                    - generic [ref=e742]: Suspended
+                  - generic [ref=e743]:
+                    - heading "Active Campaigns" [level=3] [ref=e744]
+                    - generic [ref=e746]:
+                      - img [ref=e748]
+                      - paragraph [ref=e751]: No campaigns yet
+                      - paragraph [ref=e752]: Create your first campaign to start engaging with leads via WhatsApp.
+  - generic [ref=e753]: "0"

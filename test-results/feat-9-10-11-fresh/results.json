@@ -1,0 +1,83 @@
+{
+  "f9": {
+    "step1_expanded_labels": [
+      "Dashboard",
+      "Accounts",
+      "Campaigns",
+      "Leads",
+      "Chats",
+      "Calendar",
+      "Tags",
+      "Library",
+      "Users",
+      "Automations",
+      "Settings"
+    ],
+    "step1_pass": true,
+    "step2_collapsed_pass": true,
+    "step3_expand_pass": true,
+    "step4_persist_pass": true
+  },
+  "f10": {
+    "admin_count": 11,
+    "admin_items": [
+      "Dashboard",
+      "Accounts",
+      "Campaigns",
+      "Leads",
+      "Chats",
+      "Calendar",
+      "Tags",
+      "Library",
+      "Users",
+      "Automations",
+      "Settings"
+    ],
+    "admin_pass": true,
+    "viewer_count": 5,
+    "viewer_items": [
+      "Dashboard",
+      "Campaigns",
+      "Leads",
+      "Chats",
+      "Calendar"
+    ],
+    "viewer_pass": true,
+    "restricted_url": "http://localhost:5173/subaccount/dashboard",
+    "restricted_redirected": true
+  },
+  "f11": {
+    "admin_switcher_visible": true,
+    "accounts": [
+      {
+        "id": "sidebar-account-option-5",
+        "text": "PPepsi"
+      },
+      {
+        "id": "sidebar-account-option-25",
+        "text": "PPaul Mackartney"
+      },
+      {
+        "id": "sidebar-account-option-2",
+        "text": "vvan de Kerkhof"
+      },
+      {
+        "id": "sidebar-account-option-1",
+        "text": "WWowAgency"
+      },
+      {
+        "id": "sidebar-account-option-3",
+        "text": "AAstra-Zeneca 2"
+      },
+      {
+        "id": "sidebar-account-option-4",
+        "text": "CCoca-Cola 2"
+      }
+    ],
+    "switched": true,
+    "url_after_switch": "http://localhost:5173/subaccount/dashboard",
+    "is_subaccount": true,
+    "switcher_text_after": "PPepsi",
+    "viewer_no_switcher": true
+  }
+}
