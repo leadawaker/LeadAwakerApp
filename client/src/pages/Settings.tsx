@@ -160,6 +160,32 @@ export default function SettingsPage() {
     }
   };
 
+  const handleToggleDarkMode = async (checked: boolean) => {
+    // Apply immediately: toggleTheme updates localStorage + adds/removes html.dark class
+    toggleTheme();
+
+    // Also persist to user profile preferences JSON for cross-device sync
+    if (session.status !== "authenticated") return;
+    const userId = session.user.id;
+    setIsSavingTheme(true);
+    try {
+      const existingPrefsStr = localStorage.getItem("leadawaker_user_preferences") ?? "{}";
+      let existingPrefs: Record<string, unknown> = {};
+      try { existingPrefs = JSON.parse(existingPrefsStr); } catch { existingPrefs = {}; }
+      const merged = { ...existingPrefs, theme: checked ? "dark" : "light" };
+      localStorage.setItem("leadawaker_user_preferences", JSON.stringify(merged));
+      await apiFetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ preferences: JSON.stringify(merged) }),
+      });
+    } catch {
+      // Silently ignore — localStorage is already the primary persistence mechanism
+    } finally {
+      setIsSavingTheme(false);
+    }
+  };
+
   const handleToggleEmailNotification = async (checked: boolean) => {
     if (session.status !== "authenticated") return;
     const userId = session.user.id;
@@ -375,6 +401,41 @@ export default function SettingsPage() {
           </section>
 
           <div className="space-y-6" data-testid="col-settings-right">
+            {/* Appearance — Dark Mode Toggle */}
+            <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-appearance">
+              <div className="p-4 border-b border-border" data-testid="card-appearance-head">
+                <div className="font-semibold" data-testid="text-appearance-title">Appearance</div>
+                <div className="text-xs text-muted-foreground" data-testid="text-appearance-sub">
+                  Customize the look and feel of the application.
+                </div>
+              </div>
+              <div className="p-4" data-testid="card-appearance-body">
+                <div className="flex items-center justify-between gap-4" data-testid="row-dark-mode">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {isDark
+                      ? <Moon className="h-4 w-4 text-muted-foreground shrink-0" />
+                      : <Sun className="h-4 w-4 text-muted-foreground shrink-0" />
+                    }
+                    <div>
+                      <div className="text-sm font-medium leading-none" data-testid="label-dark-mode">
+                        Dark mode
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        Switch between dark and light theme.
+                        {isSavingTheme && <span className="ml-1 italic">Saving…</span>}
+                      </div>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={isDark}
+                    onCheckedChange={handleToggleDarkMode}
+                    data-testid="toggle-dark-mode"
+                    aria-label="Toggle dark mode"
+                  />
+                </div>
+              </div>
+            </section>
+
             {/* Notification Preferences */}
             <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-notification-preferences">
               <div className="p-4 border-b border-border" data-testid="card-notification-preferences-head">
@@ -512,129 +573,124 @@ export default function SettingsPage() {
               </div>
             </section>
 
+            {/* Change Password */}
             <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-change-password">
               <div className="p-4 border-b border-border" data-testid="card-change-password-head">
-                <div className="flex items-center gap-2 font-semibold" data-testid="text-password-title">
+                <div className="font-semibold flex items-center gap-2" data-testid="text-password-title">
                   <Lock className="h-4 w-4 text-muted-foreground" />
-                  Change password
+                  Change Password
                 </div>
                 <div className="text-xs text-muted-foreground" data-testid="text-password-sub">
-                  Enter your current password and choose a new one.
+                  Update your account password.
                 </div>
               </div>
               <div className="p-4 space-y-3" data-testid="card-change-password-body">
-                {/* Current password */}
-                <div data-testid="input-current-password-wrap">
-                  <label className="text-xs text-muted-foreground" data-testid="label-current-password">
-                    Current password
-                  </label>
+                {passwordError && (
+                  <div className="text-xs text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2" data-testid="text-password-error">
+                    {passwordError}
+                  </div>
+                )}
+                {/* Current Password */}
+                <div>
+                  <label className="text-xs text-muted-foreground">Current password</label>
                   <div className="relative mt-1">
                     <input
                       type={showCurrentPassword ? "text" : "password"}
                       value={currentPassword}
-                      onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError(null); }}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
                       className="h-10 w-full rounded-xl border border-border bg-muted/20 px-3 pr-10 text-sm"
                       data-testid="input-current-password"
-                      placeholder="Enter current password"
+                      placeholder="Current password"
                       autoComplete="current-password"
                     />
                     <button
                       type="button"
-                      onClick={() => setShowCurrentPassword((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      onClick={() => setShowCurrentPassword((p) => !p)}
+                      aria-label={showCurrentPassword ? "Hide password" : "Show password"}
                       data-testid="btn-toggle-current-password"
-                      aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
-                      tabIndex={-1}
                     >
                       {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
-
-                {/* New password */}
-                <div data-testid="input-new-password-wrap">
-                  <label className="text-xs text-muted-foreground" data-testid="label-new-password">
-                    New password
-                  </label>
+                {/* New Password */}
+                <div>
+                  <label className="text-xs text-muted-foreground">New password</label>
                   <div className="relative mt-1">
                     <input
                       type={showNewPassword ? "text" : "password"}
                       value={newPassword}
-                      onChange={(e) => { setNewPassword(e.target.value); setPasswordError(null); }}
+                      onChange={(e) => setNewPassword(e.target.value)}
                       className="h-10 w-full rounded-xl border border-border bg-muted/20 px-3 pr-10 text-sm"
                       data-testid="input-new-password"
-                      placeholder="At least 6 characters"
+                      placeholder="New password (min 6 chars)"
                       autoComplete="new-password"
                     />
                     <button
                       type="button"
-                      onClick={() => setShowNewPassword((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      onClick={() => setShowNewPassword((p) => !p)}
+                      aria-label={showNewPassword ? "Hide password" : "Show password"}
                       data-testid="btn-toggle-new-password"
-                      aria-label={showNewPassword ? "Hide new password" : "Show new password"}
-                      tabIndex={-1}
                     >
                       {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
-
-                {/* Confirm new password */}
-                <div data-testid="input-confirm-password-wrap">
-                  <label className="text-xs text-muted-foreground" data-testid="label-confirm-password">
-                    Confirm new password
-                  </label>
+                {/* Confirm Password */}
+                <div>
+                  <label className="text-xs text-muted-foreground">Confirm new password</label>
                   <div className="relative mt-1">
                     <input
                       type={showConfirmPassword ? "text" : "password"}
                       value={confirmPassword}
-                      onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(null); }}
-                      className={`h-10 w-full rounded-xl border px-3 pr-10 text-sm bg-muted/20 ${
-                        confirmPassword && newPassword !== confirmPassword
-                          ? "border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
-                          : "border-border"
-                      }`}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="h-10 w-full rounded-xl border border-border bg-muted/20 px-3 pr-10 text-sm"
                       data-testid="input-confirm-password"
-                      placeholder="Repeat new password"
+                      placeholder="Confirm new password"
                       autoComplete="new-password"
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      onClick={() => setShowConfirmPassword((p) => !p)}
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                       data-testid="btn-toggle-confirm-password"
-                      aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
-                      tabIndex={-1}
                     >
                       {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  {/* Inline mismatch hint */}
-                  {confirmPassword && newPassword !== confirmPassword && (
-                    <p className="mt-1 text-xs text-red-500" data-testid="text-password-mismatch">
-                      Passwords do not match.
-                    </p>
-                  )}
                 </div>
-
-                {/* Error message */}
-                {passwordError && (
-                  <p className="text-xs text-red-500" data-testid="text-password-error">
-                    {passwordError}
-                  </p>
-                )}
-
-                <div className="flex justify-end pt-1">
+                <div className="flex justify-end">
                   <button
                     type="button"
-                    className="h-10 px-4 rounded-xl border border-border bg-primary text-primary-foreground hover:opacity-90 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                    data-testid="button-change-password"
                     onClick={handleChangePassword}
                     disabled={isChangingPassword}
+                    className="h-10 px-4 rounded-xl border border-border bg-primary text-primary-foreground hover:opacity-90 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    data-testid="button-change-password"
                   >
-                    {isChangingPassword ? "Updating…" : "Update password"}
+                    {isChangingPassword ? "Changing…" : "Change password"}
                   </button>
                 </div>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-reset-password">
+              <div className="p-4 border-b border-border" data-testid="card-reset-password-head">
+                <div className="font-semibold" data-testid="text-password-title">Reset password</div>
+                <div className="text-xs text-muted-foreground" data-testid="text-password-sub">
+                  Generate a password reset flow (mock).
+                </div>
+              </div>
+              <div className="p-4" data-testid="card-reset-password-body">
+                <button
+                  type="button"
+                  className="h-10 w-full rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold"
+                  data-testid="button-reset-password"
+                >
+                  Send reset email
+                </button>
               </div>
             </section>
 
