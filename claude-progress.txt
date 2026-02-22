@@ -1,3 +1,77 @@
+## Session 2026-02-22 - Coding Agent (Feature #176)
+
+### Completed Features:
+- Feature #176: Search and filter prompts - PASSING
+
+### Implementation Details:
+
+Feature requirement: Search prompts by name and filter by status or model.
+
+The search by name (`input-prompt-search`) was already implemented. This session added the missing status and model filter dropdowns.
+
+**Modified: client/src/pages/PromptLibrary.tsx**
+
+1. Added `statusFilter` state: `const [statusFilter, setStatusFilter] = useState<string>("all")`
+2. Added `modelFilter` state: `const [modelFilter, setModelFilter] = useState<string>("all")`
+3. Added `availableModels` useMemo:
+   - Iterates all loaded prompts, collects unique non-empty model values
+   - Returns sorted array of model strings
+   - Used to populate model filter dropdown options dynamically
+
+4. Updated `rows` useMemo filter logic:
+   - Name search: `(p.name || "").toLowerCase().includes(q.toLowerCase())`
+   - Status filter: if statusFilter !== "all", compare normalized status
+   - Model filter: if modelFilter !== "all", compare exact model value
+   - Added statusFilter and modelFilter to dependency array
+
+5. Added `select-prompt-status-filter` dropdown in toolbar:
+   - Options: All Statuses, Active, Archived
+   - data-testid="select-prompt-status-filter"
+
+6. Added `select-prompt-model-filter` dropdown in toolbar:
+   - Options: All Models + dynamically loaded model options from data
+   - data-testid="select-prompt-model-filter"
+
+7. Updated empty state detection to trigger "search" variant when any filter is active
+
+### Verification (via browser automation):
+1. Navigated to /agency/prompt-library - 4 prompts loaded - PASS
+2. Search input present (input-prompt-search) - PASS
+3. Status filter present (select-prompt-status-filter) with options: All Statuses, Active, Archived - PASS
+4. Model filter present (select-prompt-model-filter) with options: All Models, gpt-3.5, gpt-4 - PASS
+5. Typed "Prompt" in search → 3 matching prompts shown (TEST_PROMPT_170_Active, TEST_PROMPT_170_Archived, Prompt), "Untitled" hidden - PASS
+6. Cleared search → all 4 prompts restored - PASS
+7. Status filter "Active" → only 1 active prompt shown ("Prompt" card) - PASS
+8. Status filter "Archived" → 3 archived prompts shown (TEST_PROMPT_170_Active, Untitled, TEST_PROMPT_170_Archived) - PASS
+9. Reset status, Model filter "gpt-4" → only TEST_PROMPT_170_Active shown (has gpt-4 model) - PASS
+10. Clear all filters → all 4 prompts restored - PASS
+11. Zero JS console errors - PASS
+
+### Screenshots:
+- test-results/feat-176/01-prompt-library-initial.png (4 prompts, both filter dropdowns visible)
+- test-results/feat-176/02-search-by-name.png (search "Prompt" shows 3 matching)
+- test-results/feat-176/03-filter-active.png (Active filter shows 1 prompt)
+- test-results/feat-176/04-filter-archived.png (Archived filter shows 3 prompts)
+- test-results/feat-176/05-filter-model-gpt4.png (gpt-4 model filter shows 1 prompt)
+
+### Code Changes:
+- MODIFIED: client/src/pages/PromptLibrary.tsx (+54 lines, -6 lines)
+  - Added statusFilter and modelFilter state variables
+  - Added availableModels useMemo
+  - Updated rows filter logic (name + status + model)
+  - Added two filter dropdowns in toolbar UI
+
+### Environment Notes:
+- API server on port 5001 (tsx watch)
+- Vite dev server on port 5173 (also accessible on 5000)
+- Login: leadawaker@gmail.com / test123
+- Prompt Library route: /agency/prompt-library
+
+### Current Status:
+- 147/207 features passing (146 at session start, +1 this session)
+- Feature #176 marked passing after thorough browser verification
+- Git commit: 7a6fbf7
+
 ## Session 2026-02-22 - Coding Agent (Feature #170)
 
 ### Completed Features:
@@ -6403,3 +6477,170 @@ Browser screenshot confirms:
 - 143/207 features passing (142 at session start, +1 this session)
 - Feature #172 marked passing after thorough browser verification
 - Git commit: af84a82
+
+## Session 2026-02-22 - Coding Agent (Feature #173)
+
+### Completed Features:
+- Feature #173: Prompt performance score display - PASSING
+
+### Implementation Details:
+
+Feature requirement: Display performance_score rating for each prompt.
+
+The performanceScore field was already returned by the API (text type, camelCase from Drizzle). The frontend code already had a basic display (`score: {p.performanceScore}`), but needed to be improved to meet the feature requirements:
+
+1. **Verify score displays when available** - was working but lacked visual clarity
+2. **Verify score formatting is clear** - improved with star icon + color coding
+3. **Verify empty state when no score exists** - added muted star + dash indicator
+
+**Modified: client/src/pages/PromptLibrary.tsx**
+
+1. Added `Star` to lucide-react imports
+2. Added `getScoreColorClasses(score)` helper function:
+   - Returns `text-emerald-*` for score >= 8
+   - Returns `text-amber-*` for score >= 6
+   - Returns `text-red-*` for score < 6
+   - Returns `text-muted-foreground` for NaN/null
+3. Updated performance score display:
+   - When score available: filled star (fill-current) + colored numeric value + "Performance score" title
+   - When no score: muted empty star + "—" dash + "No performance score yet" title
+   - data-testid: `text-prompt-score-{id}` (has value) and `text-prompt-score-empty-{id}` (no value)
+
+### Verification:
+1. Updated prompt 1 with performanceScore "8.5" via API to test display
+2. Screenshot shows green star ⭐ + "8.5" on "Prompt" card (score ≥ 8 = emerald green)
+3. Other 3 cards show muted empty star ☆ + "—" dash (no score = empty state)
+4. Zero JS console errors
+5. Cleaned up test data (reset to null after verification)
+
+### Screenshots:
+- test-results/feat-173/01-performance-score.png
+
+### Code Changes:
+- MODIFIED: client/src/pages/PromptLibrary.tsx (+27 lines, -4 lines)
+  - Added Star import
+  - Added getScoreColorClasses helper
+  - Improved score display with icon, color, empty state
+
+### Current Status:
+- 144/207 features passing (143 at session start, +1 this session)
+- Feature #173 marked passing after thorough browser verification
+- Git commit: b874f0a
+
+## Session 2026-02-22 - Coding Agent (Feature #174)
+
+### Completed Features:
+- Feature #174: Prompt use case and notes - PASSING
+
+### Implementation Details:
+
+Feature requirement: Display use_case and notes fields for prompt context.
+
+The useCase field was already partially displayed on the card (as plain text without conditional rendering). The notes field was missing entirely from both the form and the card display.
+
+**Modified: client/src/pages/PromptLibrary.tsx**
+
+1. Added notes: string to PromptFormData interface
+2. Added notes: "" to EMPTY_FORM constant
+3. Pre-populates notes: prompt.notes || "" when editing existing prompts
+4. Added notes: form.notes.trim() || null to submit payload
+5. Added Notes textarea in form dialog (between System Message and Model/Status row)
+   - label: "Notes", placeholder: "Additional notes or context about this prompt (optional)..."
+   - data-testid: textarea-prompt-notes
+6. Updated use_case display on card: now conditionally rendered (hidden when empty)
+   - data-testid: text-prompt-usecase-{id}
+7. Added notes display on card: conditionally rendered when non-empty
+   - italic style, line-clamp-2 for truncation, full text in title tooltip
+   - data-testid: text-prompt-notes-{id}
+
+### Verification (via browser automation):
+1. Navigated to /agency/prompt-library - PASS
+2. Clicked "Create Prompt" - dialog opened with Notes textarea present - PASS
+3. Created TEST_174_Notes with use_case and notes values - PASS
+4. Card displayed both use_case and notes after creation - PASS
+5. Opened Edit on card with empty use_case/notes - no crash, placeholders shown - PASS
+6. Deleted test prompt successfully - PASS
+7. Zero JS console errors - PASS
+
+### Screenshots:
+- test-results/feat-174/03-prompt-library.png
+- test-results/feat-174/04-create-dialog.png
+- test-results/feat-174/05-form-filled.png
+- test-results/feat-174/06-after-create.png
+- test-results/feat-174/07-edit-empty-card.png
+- test-results/feat-174/09-final-cleanup.png
+
+### Current Status:
+- 145/207 features passing (144 at session start, +1 this session)
+- Feature #174 marked passing after thorough browser verification
+- Git commit: fe67e4b
+
+## Session 2026-02-22 - Coding Agent (Feature #175)
+
+### Completed Features:
+- Feature #175: Prompt status toggle - PASSING
+
+### Implementation Details:
+
+Feature requirement: Toggle prompt between Active and Archived status via a clickable button directly on the card.
+
+**Modified: client/src/pages/PromptLibrary.tsx**
+
+1. Added `ToggleLeft` and `ToggleRight` to lucide-react imports
+
+2. Added `togglingIds` state:
+   - `const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set())`
+   - Set of prompt IDs currently being toggled (prevents double-click race conditions)
+
+3. Added `{ toast } = useToast()` to main PromptLibraryPage component (was missing)
+
+4. Added `handleToggleStatus(prompt, e)` async function:
+   - Stops event propagation
+   - Derives newStatus: "active" → "archived" or "archived" → "active"
+   - Checks togglingIds to prevent double-click
+   - **Optimistic update**: immediately updates local state with new status
+   - Calls `PUT /api/prompts/:id` with `{ status: newStatus }`
+   - On success: syncs with server response, shows success toast
+   - On error: **reverts optimistic update** to original status, shows error toast
+   - Always removes from togglingIds in finally block
+
+5. Replaced static status badge `<span>` with clickable `<button>`:
+   - `data-testid="button-toggle-status-{promptId}"`
+   - Shows `ToggleRight` icon when active (green badge)
+   - Shows `ToggleLeft` icon when archived (gray badge)
+   - Shows spinning indicator when toggling in progress
+   - Disabled + reduced opacity during API call
+   - Title tooltip: "Click to archive/activate this prompt"
+   - aria-label for accessibility
+
+### Verification (via browser automation):
+1. Navigated to /agency/prompt-library - 4 prompts loaded - PASS
+2. All cards show toggle buttons with correct initial status (active=green, archived=gray) - PASS
+3. Clicked "Prompt" card toggle (active → archived): badge changed to gray "archived" - PASS
+4. Clicked toggle again (archived → active): badge changed back to green "active" - PASS
+5. API persisted both changes (confirmed via reload showing correct status) - PASS
+6. Zero JS console errors - PASS
+
+### Screenshots:
+- test-results/feat-175/01-prompt-library-initial.png (Prompt card: green "active")
+- test-results/feat-175/02-after-toggle-to-archived.png (Prompt card: gray "archived")
+- test-results/feat-175/03-after-toggle-back-to-active.png (Prompt card: green "active" again)
+
+### Code Changes:
+- MODIFIED: client/src/pages/PromptLibrary.tsx (+68 lines, -6 lines)
+  - Added ToggleLeft, ToggleRight imports
+  - Added togglingIds state
+  - Added useToast to main component
+  - Added handleToggleStatus() handler
+  - Replaced status badge with clickable toggle button
+
+### Environment Notes:
+- API server on port 5001 (tsx watch)
+- Vite dev server on port 5173 (also accessible on 5000)
+- Login: leadawaker@gmail.com / test123
+- Prompt Library route: /agency/prompt-library
+
+### Current Status:
+- 146/207 features passing (145 at session start, +1 this session)
+- Feature #175 marked passing after thorough browser verification
+- Git commit: c86fa2c
