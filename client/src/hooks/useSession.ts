@@ -7,6 +7,8 @@ export type SessionUser = {
   role: string | null;
   accountsId: number | null;
   avatarUrl: string | null;
+  notificationEmail: boolean | null;
+  notificationSms: boolean | null;
 };
 
 type SessionState =

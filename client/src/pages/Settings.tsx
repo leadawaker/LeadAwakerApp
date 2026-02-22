@@ -36,6 +36,19 @@ export default function SettingsPage() {
   const [phone, setPhone] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
 
+  // Notification preference state
+  const [notifEmail, setNotifEmail] = useState<boolean>(true);
+  const [notifSms, setNotifSms] = useState<boolean>(false);
+  const [isSavingNotifications, setIsSavingNotifications] = useState(false);
+
+  // Initialize notification toggles from session user data when session loads
+  useEffect(() => {
+    if (session.status === "authenticated") {
+      setNotifEmail(session.user.notificationEmail ?? true);
+      setNotifSms(session.user.notificationSms ?? false);
+    }
+  }, [session.status]);
+
   // Fetch user profile once session is loaded
   useEffect(() => {
     if (session.status === "loading") return;
@@ -96,6 +109,58 @@ export default function SettingsPage() {
       toast({ variant: "destructive", title: "Save failed", description: err.message || "Could not save profile." });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleToggleEmailNotification = async (checked: boolean) => {
+    if (session.status !== "authenticated") return;
+    const userId = session.user.id;
+    const prev = notifEmail;
+    setNotifEmail(checked);
+    setIsSavingNotifications(true);
+    try {
+      const res = await apiFetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notificationEmail: checked }),
+      });
+      if (!res.ok) throw new Error(`Save failed (${res.status})`);
+      toast({
+        variant: "success",
+        title: "Preferences saved",
+        description: `Email notifications ${checked ? "enabled" : "disabled"}.`,
+      });
+    } catch (err: any) {
+      setNotifEmail(prev);
+      toast({ variant: "destructive", title: "Error", description: err.message || "Failed to save email notification preference." });
+    } finally {
+      setIsSavingNotifications(false);
+    }
+  };
+
+  const handleToggleSmsNotification = async (checked: boolean) => {
+    if (session.status !== "authenticated") return;
+    const userId = session.user.id;
+    const prev = notifSms;
+    setNotifSms(checked);
+    setIsSavingNotifications(true);
+    try {
+      const res = await apiFetch(`/api/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notificationSms: checked }),
+      });
+      if (!res.ok) throw new Error(`Save failed (${res.status})`);
+      toast({
+        variant: "success",
+        title: "Preferences saved",
+        description: `SMS notifications ${checked ? "enabled" : "disabled"}.`,
+      });
+    } catch (err: any) {
+      setNotifSms(prev);
+      toast({ variant: "destructive", title: "Error", description: err.message || "Failed to save SMS notification preference." });
+    } finally {
+      setIsSavingNotifications(false);
     }
   };
 
@@ -186,6 +251,67 @@ export default function SettingsPage() {
           </section>
 
           <div className="space-y-6" data-testid="col-settings-right">
+            {/* Notification Preferences */}
+            <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-notification-preferences">
+              <div className="p-4 border-b border-border" data-testid="card-notification-preferences-head">
+                <div className="font-semibold" data-testid="text-notification-title">Notification Preferences</div>
+                <div className="text-xs text-muted-foreground" data-testid="text-notification-sub">
+                  Choose how you receive notifications.
+                </div>
+              </div>
+              <div className="p-4 space-y-4" data-testid="card-notification-preferences-body">
+                {/* Email Notifications Toggle */}
+                <div
+                  className="flex items-center justify-between gap-4"
+                  data-testid="row-notification-email"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div>
+                      <div className="text-sm font-medium leading-none" data-testid="label-notification-email">
+                        Email notifications
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        Receive updates and alerts by email.
+                      </div>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={notifEmail}
+                    onCheckedChange={handleToggleEmailNotification}
+                    disabled={isSavingNotifications || session.status !== "authenticated"}
+                    data-testid="toggle-notification-email"
+                    aria-label="Toggle email notifications"
+                  />
+                </div>
+
+                {/* SMS Notifications Toggle */}
+                <div
+                  className="flex items-center justify-between gap-4"
+                  data-testid="row-notification-sms"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <MessageSquare className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div>
+                      <div className="text-sm font-medium leading-none" data-testid="label-notification-sms">
+                        SMS notifications
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        Receive text message alerts on your phone.
+                      </div>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={notifSms}
+                    onCheckedChange={handleToggleSmsNotification}
+                    disabled={isSavingNotifications || session.status !== "authenticated"}
+                    data-testid="toggle-notification-sms"
+                    aria-label="Toggle SMS notifications"
+                  />
+                </div>
+              </div>
+            </section>
+
             {/* Dashboard auto-refresh interval setting */}
             <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-refresh-interval">
               <div className="p-4 border-b border-border" data-testid="card-refresh-interval-head">
