@@ -85,6 +85,20 @@ export default function AutomationLogsPage() {
   const [allCampaigns, setAllCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  // Track expanded rows by their ID (for error detail expansion)
+  const [expandedRows, setExpandedRows] = useState<Set<string | number>>(new Set());
+
+  const toggleRow = (id: string | number) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -300,7 +314,8 @@ export default function AutomationLogsPage() {
           >
             <div className="overflow-x-auto flex-1 min-h-0 flex flex-col">
             {/* Header */}
-            <div className="shrink-0 grid grid-cols-[140px_140px_140px_1fr_1fr_1fr_1fr_110px_140px] min-w-[1040px] gap-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-card border-b border-border px-6 py-4 sticky top-0 z-10">
+            <div className="shrink-0 grid grid-cols-[32px_140px_140px_140px_1fr_1fr_1fr_1fr_110px_140px] min-w-[1072px] gap-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground bg-card border-b border-border px-6 py-4 sticky top-0 z-10">
+              <div></div>{/* expand toggle column */}
               <div>Workflow</div>
               <div>Step</div>
               <div>Status</div>
@@ -322,98 +337,207 @@ export default function AutomationLogsPage() {
                 const config = STATUS_CONFIG[status] || STATUS_CONFIG.success;
                 const StatusIcon = config.icon;
                 const isCritical = r.is_critical_error === true || r.is_critical_error === 1 || r.is_critical_error === "true";
+                const isFailed = status === "failed";
+                const rowId: string | number = r.id ?? r.Id ?? idx;
+                const isExpanded = expandedRows.has(rowId);
+
+                const errorCode: string | null = r.error_code || null;
+                const inputData: string | null = r.input_data || null;
+                const outputData: string | null = r.output_data || null;
 
                 return (
                   <div
-                    key={r.id || r.Id || idx}
+                    key={rowId}
                     data-testid={isCritical ? "row-critical-error" : "row-log"}
                     className={cn(
-                      "grid grid-cols-[140px_140px_140px_1fr_1fr_1fr_1fr_110px_140px] min-w-[1040px] gap-4 px-6 py-4 text-sm items-center transition-colors",
+                      "transition-colors",
                       isCritical
-                        ? "bg-red-500/5 border-l-2 border-l-red-500 hover:bg-red-500/10 dark:bg-red-950/20 dark:hover:bg-red-950/30"
-                        : "bg-card hover:bg-muted/30"
+                        ? "bg-red-500/5 border-l-2 border-l-red-500 dark:bg-red-950/20"
+                        : "bg-card"
                     )}
                   >
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        {isCritical && (
-                          <AlertTriangle
-                            className="h-3.5 w-3.5 text-red-500 dark:text-red-400 shrink-0"
-                            data-testid="icon-critical-error"
-                            aria-label="Critical error"
-                          />
+                    {/* Main row grid */}
+                    <div
+                      className={cn(
+                        "grid grid-cols-[32px_140px_140px_140px_1fr_1fr_1fr_1fr_110px_140px] min-w-[1072px] gap-4 px-6 py-4 text-sm items-center",
+                        isCritical
+                          ? "hover:bg-red-500/10 dark:hover:bg-red-950/30"
+                          : "hover:bg-muted/30"
+                      )}
+                    >
+                      {/* Expand toggle button (only for failed entries) */}
+                      <div className="flex items-center justify-center">
+                        {isFailed && (
+                          <button
+                            onClick={() => toggleRow(rowId)}
+                            className="h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                            data-testid="btn-expand-log"
+                            aria-label={isExpanded ? "Collapse error details" : "Expand error details"}
+                            aria-expanded={isExpanded}
+                          >
+                            {isExpanded
+                              ? <ChevronDown className="h-4 w-4" />
+                              : <ChevronRight className="h-4 w-4" />
+                            }
+                          </button>
                         )}
-                        <div className="font-medium text-foreground truncate" title={r.workflowName || r.workflow_name || "N/A"}>
-                          {r.workflowName || r.workflow_name || "N/A"}
+                      </div>
+
+                      {/* Workflow */}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          {isCritical && (
+                            <AlertTriangle
+                              className="h-3.5 w-3.5 text-red-500 dark:text-red-400 shrink-0"
+                              data-testid="icon-critical-error"
+                              aria-label="Critical error"
+                            />
+                          )}
+                          <div className="font-medium text-foreground truncate" title={r.workflowName || r.workflow_name || "N/A"}>
+                            {r.workflowName || r.workflow_name || "N/A"}
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="min-w-0">
-                      <div className="text-muted-foreground truncate text-xs" title={r.stepName || r.step_name || "N/A"}>
-                        {r.stepName || r.step_name || "N/A"}
+                      {/* Step */}
+                      <div className="min-w-0">
+                        <div className="text-muted-foreground truncate text-xs" title={r.stepName || r.step_name || "N/A"}>
+                          {r.stepName || r.step_name || "N/A"}
+                        </div>
                       </div>
-                    </div>
 
-                    <div>
+                      {/* Status badge */}
+                      <div>
+                        <div
+                          className={cn(
+                            "flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold uppercase w-fit",
+                            config.color
+                          )}
+                        >
+                          <StatusIcon className="h-3.5 w-3.5" />
+                          {status}
+                        </div>
+                      </div>
+
+                      {/* Lead */}
+                      <div className="min-w-0">
+                        <Link
+                          href={`${isAgencyView ? "/agency" : "/subaccount"}/contacts/${r.lead?.id || r.lead?.Id}`}
+                          className="font-semibold text-primary hover:underline truncate block"
+                        >
+                          {r.lead?.full_name || r.lead?.name || "Unknown"}
+                        </Link>
+                      </div>
+
+                      {/* Account */}
+                      <div className="text-muted-foreground truncate">
+                        {r.account?.name || "N/A"}
+                      </div>
+
+                      {/* Campaign */}
+                      <div className="text-muted-foreground truncate">
+                        {r.campaign?.name || "N/A"}
+                      </div>
+
+                      {/* Exec Time */}
                       <div
-                        className={cn(
-                          "flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold uppercase w-fit",
-                          config.color
-                        )}
+                        className="text-[11px] text-muted-foreground text-right"
+                        data-testid="cell-exec-time"
                       >
-                        <StatusIcon className="h-3.5 w-3.5" />
-                        {status}
+                        <span className={cn(
+                          "font-mono",
+                          r.execution_time_ms != null ? "text-foreground" : "text-muted-foreground/50"
+                        )}>
+                          {formatExecutionTime(r.execution_time_ms)}
+                        </span>
+                      </div>
+
+                      {/* Duration */}
+                      <div
+                        className="text-[11px] text-muted-foreground text-right"
+                        data-testid="cell-duration"
+                      >
+                        <span className={cn(
+                          "font-mono",
+                          r.duration_seconds != null ? "text-foreground" : "text-muted-foreground/50"
+                        )}>
+                          {formatDuration(r.duration_seconds) ?? "—"}
+                        </span>
+                      </div>
+
+                      {/* Created At */}
+                      <div className="text-[11px] text-muted-foreground text-right">
+                        {(r.created_at || r.CreatedAt) ? new Date(r.created_at || r.CreatedAt).toLocaleString([], {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        }) : "N/A"}
                       </div>
                     </div>
 
-                    <div className="min-w-0">
-                      <Link
-                        href={`${isAgencyView ? "/agency" : "/subaccount"}/contacts/${r.lead?.id || r.lead?.Id}`}
-                        className="font-semibold text-primary hover:underline truncate block"
+                    {/* Error detail expansion panel — only for failed rows when expanded */}
+                    {isFailed && isExpanded && (
+                      <div
+                        data-testid="log-error-detail"
+                        className="px-8 pb-4 pt-2 bg-muted/20 border-t border-border/40 space-y-3"
                       >
-                        {r.lead?.full_name || r.lead?.name || "Unknown"}
-                      </Link>
-                    </div>
+                        <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                          Error Details
+                        </div>
 
-                    <div className="text-muted-foreground truncate">
-                      {r.account?.name || "N/A"}
-                    </div>
+                        {/* Error Code */}
+                        {errorCode && (
+                          <div>
+                            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                              Error Code
+                            </div>
+                            <div
+                              data-testid="error-code"
+                              className="inline-flex items-center gap-1.5 text-sm font-mono text-rose-600 dark:text-rose-400 bg-rose-500/8 px-3 py-1.5 rounded-lg border border-rose-500/20"
+                            >
+                              <XCircle className="h-3.5 w-3.5 shrink-0" />
+                              {errorCode}
+                            </div>
+                          </div>
+                        )}
 
-                    <div className="text-muted-foreground truncate">
-                      {r.campaign?.name || "N/A"}
-                    </div>
+                        {/* Input Data */}
+                        {inputData && (
+                          <div>
+                            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                              Input Data
+                            </div>
+                            <pre
+                              data-testid="input-data"
+                              className="text-xs font-mono bg-muted/60 text-foreground/80 p-3 rounded-lg overflow-auto max-h-48 border border-border whitespace-pre-wrap break-all"
+                            >
+                              {formatJson(inputData)}
+                            </pre>
+                          </div>
+                        )}
 
-                    <div
-                      className="text-[11px] text-muted-foreground text-right"
-                      data-testid="cell-exec-time"
-                    >
-                      <span className={cn(
-                        "font-mono",
-                        r.execution_time_ms != null ? "text-foreground" : "text-muted-foreground/50"
-                      )}>
-                        {formatExecutionTime(r.execution_time_ms)}
-                      </span>
-                    </div>
+                        {/* Output Data */}
+                        {outputData && (
+                          <div>
+                            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                              Output Data
+                            </div>
+                            <pre
+                              data-testid="output-data"
+                              className="text-xs font-mono bg-muted/60 text-foreground/80 p-3 rounded-lg overflow-auto max-h-48 border border-border whitespace-pre-wrap break-all"
+                            >
+                              {formatJson(outputData)}
+                            </pre>
+                          </div>
+                        )}
 
-                    <div
-                      className="text-[11px] text-muted-foreground text-right"
-                      data-testid="cell-duration"
-                    >
-                      <span className={cn(
-                        "font-mono",
-                        r.duration_seconds != null ? "text-foreground" : "text-muted-foreground/50"
-                      )}>
-                        {formatDuration(r.duration_seconds) ?? "—"}
-                      </span>
-                    </div>
-
-                    <div className="text-[11px] text-muted-foreground text-right">
-                      {(r.created_at || r.CreatedAt) ? new Date(r.created_at || r.CreatedAt).toLocaleString([], {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      }) : "N/A"}
-                    </div>
+                        {/* Fallback when no error details are available */}
+                        {!errorCode && !inputData && !outputData && (
+                          <div className="text-sm text-muted-foreground italic">
+                            No error details available for this log entry.
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}
