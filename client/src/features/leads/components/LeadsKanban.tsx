@@ -25,6 +25,13 @@ import {
   Meh,
   ChevronLeft,
   ChevronRight,
+  Users,
+  PhoneCall,
+  MessageCircle,
+  Star,
+  Trophy,
+  BanIcon,
+  HeartCrack,
 } from "lucide-react";
 
 /* ─────────── Pipeline column configuration ─────────── */
@@ -173,6 +180,66 @@ const DEFAULT_STYLE = {
   headerBg: "bg-muted/40",
   labelCls: "text-foreground",
   accentBar: "bg-muted-foreground",
+};
+
+/* ─────────── Contextual empty state messages per pipeline stage ─────────── */
+
+type EmptyStateConfig = {
+  /** Primary message (e.g. "No new leads yet") */
+  message: string;
+  /** Sub-message with an action hint */
+  hint: string;
+  /** Icon to display above the message */
+  icon: React.FC<{ className?: string }>;
+};
+
+const STAGE_EMPTY_STATES: Record<string, EmptyStateConfig> = {
+  New: {
+    message: "No new leads yet",
+    hint: "Import contacts or add a lead to get started",
+    icon: Users,
+  },
+  Contacted: {
+    message: "No contacted leads",
+    hint: "Reach out to new leads to move them here",
+    icon: PhoneCall,
+  },
+  Responded: {
+    message: "No leads have responded",
+    hint: "Keep following up — responses will appear here",
+    icon: MessageCircle,
+  },
+  "Multiple Responses": {
+    message: "No active conversations",
+    hint: "Engage with your contacted leads to build dialogue",
+    icon: MessageSquare,
+  },
+  Qualified: {
+    message: "No qualified leads yet",
+    hint: "Qualify promising conversations to fill this stage",
+    icon: Star,
+  },
+  Booked: {
+    message: "No calls booked yet",
+    hint: "This is your north-star goal — keep pushing!",
+    icon: Trophy,
+  },
+  Lost: {
+    message: "No lost leads",
+    hint: "Great! All your leads are still in the pipeline",
+    icon: HeartCrack,
+  },
+  DND: {
+    message: "No leads on DND",
+    hint: "Leads who opt out will appear here",
+    icon: BanIcon,
+  },
+};
+
+const DEFAULT_EMPTY_STATE: EmptyStateConfig = {
+  message: "No leads in this stage",
+  hint: "Drag leads here to move them into this stage",
+  icon: AlertCircle,
 };
 
 /* ─────────── Infinite scroll batch size ─────────── */
@@ -659,12 +726,50 @@ function KanbanColumn({
           {leads.length === 0 ? (
             <div
               className={cn(
-                "flex flex-col items-center justify-center py-8 rounded-lg text-muted-foreground/50 transition-colors duration-150",
-                isOver && "bg-white/20 dark:bg-white/5"
+                "flex flex-col items-center justify-center py-10 px-3 rounded-lg transition-colors duration-150 select-none",
+                isOver
+                  ? "bg-white/30 dark:bg-white/5 border-2 border-dashed border-border/60"
+                  : "text-muted-foreground/40"
               )}
+              data-testid={`kanban-column-empty-${stage}`}
+              aria-label={`Empty stage: ${STAGE_LABELS[stage] ?? stage}`}
             >
-              <AlertCircle className="h-5 w-5 mb-1.5" />
-              <span className="text-xs">{isOver ? "Drop here" : "No leads"}</span>
+              {isOver ? (
+                /* Drop target hint when a card is dragged over the empty column */
+                <>
+                  <div className="h-10 w-10 rounded-full bg-muted/60 flex items-center justify-center mb-2">
+                    <ChevronRight className="h-5 w-5 text-muted-foreground rotate-[-90deg]" />
+                  </div>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Drop here
+                  </span>
+                  <span className="text-xs text-muted-foreground/60 mt-1">
+                    Move lead to {STAGE_LABELS[stage] ?? stage}
+                  </span>
+                </>
+              ) : (
+                /* Contextual idle empty state */
+                (() => {
+                  const config = STAGE_EMPTY_STATES[stage] || DEFAULT_EMPTY_STATE;
+                  const Icon = config.icon;
+                  return (
+                    <>
+                      <div className="h-10 w-10 rounded-full bg-muted/40 flex items-center justify-center mb-3">
+                        <Icon className="h-5 w-5 text-muted-foreground/40" />
+                      </div>
+                      <span
+                        className="text-xs font-medium text-muted-foreground/60 text-center leading-snug"
+                        data-testid={`kanban-empty-message-${stage}`}
+                      >
+                        {config.message}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground/40 text-center leading-snug mt-1 max-w-[180px]">
+                        {config.hint}
+                      </span>
+                    </>
+                  );
+                })()
+              )}
             </div>
           ) : (
             <>
