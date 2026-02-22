@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -12,11 +12,6 @@ import {
 } from "@dnd-kit/core";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
 import {
   Mail,
@@ -24,12 +19,9 @@ import {
   MessageSquare,
   Calendar,
   AlertCircle,
-  MapPin,
-  Brain,
-  Star,
-  FileText,
-  Activity,
-  ArrowUpDown,
+  SmilePlus,
+  Frown,
+  Meh,
 } from "lucide-react";
 
 /* ─────────── Pipeline column configuration ─────────── */
@@ -157,6 +149,79 @@ function priorityColor(priority: string | undefined) {
   }
 }
 
+/* ─────────── Score badge color helper ─────────── */
+
+function scoreBadgeClass(score: number) {
+  if (score >= 70)
+    return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+  if (score >= 40)
+    return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
+  return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+}
+
+/* ─────────── Sentiment indicator helper ─────────── */
+
+type SentimentInfo = {
+  label: string;
+  icon: React.ReactNode;
+  cls: string;
+};
+
+function getSentimentInfo(sentiment: string | null | undefined): SentimentInfo | null {
+  if (!sentiment) return null;
+  const lower = sentiment.toLowerCase();
+  if (
+    lower.includes("positive") ||
+    lower === "good" ||
+    lower === "happy"
+  ) {
+    return {
+      label: "Positive",
+      icon: <SmilePlus className="h-3 w-3" />,
+      cls: "text-green-600 dark:text-green-400",
+    };
+  }
+  if (
+    lower.includes("negative") ||
+    lower === "bad" ||
+    lower === "angry" ||
+    lower === "frustrated"
+  ) {
+    return {
+      label: "Negative",
+      icon: <Frown className="h-3 w-3" />,
+      cls: "text-red-500 dark:text-red-400",
+    };
+  }
+  if (lower.includes("neutral") || lower === "ok" || lower === "okay") {
+    return {
+      label: "Neutral",
+      icon: <Meh className="h-3 w-3" />,
+      cls: "text-muted-foreground",
+    };
+  }
+  // Show whatever value is present as a non-null fallback
+  return {
+    label: sentiment,
+    icon: <Meh className="h-3 w-3" />,
+    cls: "text-muted-foreground",
+  };
+}
+
+/* ─────────── Tag chip color helper ─────────── */
+
+function tagBgStyle(color: string | undefined): React.CSSProperties {
+  if (!color || color === "gray") return {};
+  if (color.startsWith("#")) {
+    return { backgroundColor: color + "30", borderColor: color + "60" };
+  }
+  // Named colors via color-mix for light tint
+  return {
+    backgroundColor: `color-mix(in srgb, ${color} 20%, transparent)`,
+    borderColor: `color-mix(in srgb, ${color} 40%, transparent)`,
+  };
+}
+
 /* ─────────── Format date helper ─────────── */
 
 function formatRelativeDate(dateStr: string | null | undefined): string {
@@ -179,13 +244,17 @@ function formatRelativeDate(dateStr: string | null | undefined): string {
 
 /* ─────────── Card content (reused by draggable card + drag overlay) ─────────── */
 
+interface KanbanCardContentProps {
+  lead: any;
+  isDragging?: boolean;
+  cardTags?: { name: string; color: string }[];
+}
+
 function KanbanCardContent({
   lead,
   isDragging = false,
-}: {
-  lead: any;
-  isDragging?: boolean;
-}) {
+  cardTags,
+}: KanbanCardContentProps) {
   const initials =
     lead.Image ||
     `${(lead.first_name || "").charAt(0)}${(lead.last_name || "").charAt(0)}`.toUpperCase() ||
@@ -196,6 +265,19 @@ function KanbanCardContent({
     lead.last_message_received_at ||
     lead.last_message_sent_at;
 
+  // Score from lead data (0-100)
+  const score = Number(lead.lead_score ?? lead.leadScore ?? lead.Lead_Score ?? 0);
+  const hasScore = score > 0;
+
+  // Sentiment
+  const sentimentRaw = lead.ai_sentiment || lead.aiSentiment || lead.Ai_Sentiment;
+  const sentiment = getSentimentInfo(sentimentRaw);
+
+  // Tags (passed from parent via leadTagsMap lookup)
+  const tags = cardTags || [];
+  const visibleTags = tags.slice(0, 3);
+  const extraTagCount = Math.max(0, tags.length - 3);
+
   return (
     <div
       className={cn(
@@ -205,13 +287,16 @@ function KanbanCardContent({
           : "hover:shadow-md group"
       )}
     >
-      {/* Header: Avatar + Name + Priority */}
+      {/* Header: Avatar + Name + Score badge */}
       <div className="flex items-start gap-2.5">
         <div className="w-8 h-8 rounded-lg bg-brand-blue/10 text-brand-blue flex items-center justify-center text-xs font-bold flex-shrink-0">
           {initials}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="font-semibold text-sm truncate text-foreground">
+          <div
+            className="font-semibold text-sm truncate text-foreground"
+            data-testid="kanban-card-name"
+          >
             {lead.full_name ||
               `${lead.first_name || ""} ${lead.last_name || ""}`.trim() ||
               "Unknown"}
@@ -222,7 +307,23 @@ function KanbanCardContent({
             </div>
           )}
         </div>
-        {lead.priority && (
+
+        {/* Score badge (color-coded: green ≥70, yellow 40-69, red <40) */}
+        {hasScore && (
+          <Badge
+            className={cn(
+              "text-[10px] px-1.5 py-0 h-5 font-semibold border-0 flex-shrink-0 tabular-nums",
+              scoreBadgeClass(score)
+            )}
+            data-testid="kanban-card-score"
+            title={`Lead score: ${score}`}
+          >
+            {score}
+          </Badge>
+        )}
+
+        {/* Priority badge (only shown if no score, to avoid clutter) */}
+        {!hasScore && lead.priority && (
           <Badge
             className={cn(
               "text-[10px] px-1.5 py-0 h-5 font-medium border-0 flex-shrink-0",
@@ -234,7 +335,7 @@ function KanbanCardContent({
         )}
       </div>
 
-      {/* Contact Info */}
+      {/* Contact Info: Phone (required per feature spec) */}
       <div className="mt-2 space-y-1">
         {lead.email && (
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -243,14 +344,44 @@ function KanbanCardContent({
           </div>
         )}
         {lead.phone && (
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <div
+            className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
+            data-testid="kanban-card-phone"
+          >
             <Phone className="h-3 w-3 flex-shrink-0 opacity-50" />
             <span className="truncate">{lead.phone}</span>
           </div>
         )}
       </div>
 
-      {/* Footer: Interactions + Last activity */}
+      {/* Tags: colored chips (up to 3 visible, rest as "+N" badge) */}
+      {visibleTags.length > 0 && (
+        <div
+          className="mt-2 flex flex-wrap gap-1"
+          data-testid="kanban-card-tags"
+        >
+          {visibleTags.map((tag) => (
+            <span
+              key={tag.name}
+              className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium border border-border/40"
+              style={tagBgStyle(tag.color)}
+              title={tag.name}
+            >
+              {tag.name}
+            </span>
+          ))}
+          {extraTagCount > 0 && (
+            <span
+              className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-muted text-muted-foreground"
+              title={`${extraTagCount} more tag${extraTagCount > 1 ? "s" : ""}`}
+            >
+              +{extraTagCount}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Footer: Interactions + sentiment + Last activity date */}
       <div className="mt-2.5 pt-2 border-t border-border/50 flex items-center justify-between">
         <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
           {(lead.Interactions > 0 || lead.message_count_sent > 0) && (
@@ -265,9 +396,25 @@ function KanbanCardContent({
               Booked
             </span>
           )}
+          {/* Sentiment indicator */}
+          {sentiment && (
+            <span
+              className={cn("flex items-center gap-0.5", sentiment.cls)}
+              data-testid="kanban-card-sentiment"
+              title={`Sentiment: ${sentiment.label}`}
+            >
+              {sentiment.icon}
+              <span className="text-[10px]">{sentiment.label}</span>
+            </span>
+          )}
         </div>
+
+        {/* Last interaction date */}
         {lastActivity && (
-          <span className="text-[10px] text-muted-foreground/70">
+          <span
+            className="text-[10px] text-muted-foreground/70"
+            data-testid="kanban-card-last-activity"
+          >
             {formatRelativeDate(lastActivity)}
           </span>
         )}
@@ -283,162 +430,15 @@ function KanbanCardContent({
   );
 }
 
-/* ─────────── Sentiment color helper ─────────── */
-
-function sentimentColor(sentiment: string | undefined) {
-  switch (sentiment?.toLowerCase()) {
-    case "positive":
-      return "text-emerald-600 dark:text-emerald-400";
-    case "negative":
-      return "text-rose-600 dark:text-rose-400";
-    case "neutral":
-      return "text-amber-600 dark:text-amber-400";
-    default:
-      return "text-muted-foreground";
-  }
-}
-
-/* ─────────── Hover Popover Content ─────────── */
-
-function LeadHoverPreview({ lead }: { lead: any }) {
-  const name =
-    lead.full_name ||
-    `${lead.first_name || ""} ${lead.last_name || ""}`.trim() ||
-    "Unknown";
-
-  const email = lead.email || lead.Email;
-  const phone = lead.phone;
-  const source = lead.Source || lead.source;
-  const notes = lead.notes;
-  const sentiment = lead.ai_sentiment;
-  const automationStatus = lead.automation_status;
-  const bumpStage = lead.current_bump_stage;
-  const msgSent = lead.message_count_sent;
-  const msgReceived = lead.message_count_received;
-  const score = lead.lead_score ?? lead.leadScore;
-
-  const hasDetails =
-    email ||
-    phone ||
-    source ||
-    notes ||
-    sentiment ||
-    automationStatus ||
-    bumpStage != null ||
-    msgSent != null ||
-    score != null;
-
-  return (
-    <div
-      className="p-4 space-y-3 w-72"
-      data-testid={`kanban-card-popover-${lead.Id || lead.id}`}
-    >
-      {/* Header */}
-      <div className="border-b border-border/50 pb-2.5">
-        <div className="font-semibold text-sm text-foreground">{name}</div>
-        {lead.Account && lead.Account !== "Unknown Account" && (
-          <div className="text-[11px] text-muted-foreground mt-0.5">
-            {lead.Account}
-          </div>
-        )}
-      </div>
-
-      {!hasDetails && (
-        <p className="text-xs text-muted-foreground italic">
-          No additional info available.
-        </p>
-      )}
-
-      {/* Contact fields */}
-      <div className="space-y-1.5">
-        {email && (
-          <div className="flex items-start gap-2 text-xs">
-            <Mail className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-muted-foreground/70" />
-            <span className="break-all text-foreground/90">{email}</span>
-          </div>
-        )}
-        {phone && (
-          <div className="flex items-center gap-2 text-xs">
-            <Phone className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/70" />
-            <span className="text-foreground/90">{phone}</span>
-          </div>
-        )}
-        {source && (
-          <div className="flex items-center gap-2 text-xs">
-            <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/70" />
-            <span className="text-foreground/90">{source}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Score + Sentiment row */}
-      {(score != null || sentiment) && (
-        <div className="flex items-center gap-3">
-          {score != null && (
-            <div className="flex items-center gap-1.5 text-xs">
-              <Star className="h-3.5 w-3.5 text-brand-yellow" />
-              <span className="font-medium text-foreground/90">
-                Score: {score}
-              </span>
-            </div>
-          )}
-          {sentiment && (
-            <div className="flex items-center gap-1.5 text-xs">
-              <Brain className="h-3.5 w-3.5 text-muted-foreground/70" />
-              <span className={cn("font-medium capitalize", sentimentColor(sentiment))}>
-                {sentiment}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Activity stats */}
-      {(msgSent != null || msgReceived != null || bumpStage != null) && (
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          {(msgSent != null || msgReceived != null) && (
-            <div className="flex items-center gap-1">
-              <MessageSquare className="h-3.5 w-3.5 opacity-70" />
-              <span>
-                {msgSent ?? 0} sent / {msgReceived ?? 0} rcvd
-              </span>
-            </div>
-          )}
-          {bumpStage != null && bumpStage > 0 && (
-            <div className="flex items-center gap-1">
-              <ArrowUpDown className="h-3.5 w-3.5 opacity-70" />
-              <span>Bump {bumpStage}</span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Automation status */}
-      {automationStatus && (
-        <div className="flex items-center gap-2 text-xs">
-          <Activity className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground/70" />
-          <span className="text-foreground/80 capitalize">{automationStatus}</span>
-        </div>
-      )}
-
-      {/* Notes */}
-      {notes && (
-        <div className="border-t border-border/50 pt-2.5">
-          <div className="flex items-start gap-2 text-xs">
-            <FileText className="h-3.5 w-3.5 mt-0.5 flex-shrink-0 text-muted-foreground/70" />
-            <p className="text-muted-foreground leading-relaxed line-clamp-4 italic">
-              {notes}
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 /* ─────────── Draggable Card wrapper ─────────── */
 
-function KanbanLeadCard({ lead, isDraggingAny }: { lead: any; isDraggingAny?: boolean }) {
+function KanbanLeadCard({
+  lead,
+  cardTags,
+}: {
+  lead: any;
+  cardTags?: { name: string; color: string }[];
+}) {
   const leadId = String(lead.Id || lead.id);
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: leadId,
@@ -446,33 +446,18 @@ function KanbanLeadCard({ lead, isDraggingAny }: { lead: any; isDraggingAny?: bo
   });
 
   return (
-    <HoverCard openDelay={700} closeDelay={100}>
-      <HoverCardTrigger asChild>
-        <div
-          ref={setNodeRef}
-          {...attributes}
-          {...listeners}
-          data-testid={`kanban-card-${leadId}`}
-          className={cn(
-            "cursor-grab active:cursor-grabbing touch-none select-none",
-            isDragging && "opacity-30"
-          )}
-        >
-          <KanbanCardContent lead={lead} />
-        </div>
-      </HoverCardTrigger>
-      {/* Only render popover when not in a drag session to avoid z-index conflicts */}
-      {!isDraggingAny && (
-        <HoverCardContent
-          className="p-0 shadow-lg"
-          side="right"
-          align="start"
-          sideOffset={8}
-        >
-          <LeadHoverPreview lead={lead} />
-        </HoverCardContent>
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      data-testid={`kanban-card-${leadId}`}
+      className={cn(
+        "cursor-grab active:cursor-grabbing touch-none select-none",
+        isDragging && "opacity-30"
       )}
-    </HoverCard>
+    >
+      <KanbanCardContent lead={lead} cardTags={cardTags} />
+    </div>
   );
 }
 
@@ -481,11 +466,11 @@ function KanbanLeadCard({ lead, isDraggingAny }: { lead: any; isDraggingAny?: bo
 function KanbanColumn({
   stage,
   leads,
-  isDraggingAny,
+  leadTagsMap,
 }: {
   stage: string;
   leads: any[];
-  isDraggingAny?: boolean;
+  leadTagsMap?: Map<number, { name: string; color: string }[]>;
 }) {
   const styles = STAGE_STYLES[stage] || DEFAULT_STYLE;
   const { setNodeRef, isOver } = useDroppable({ id: `column-${stage}` });
@@ -494,9 +479,7 @@ function KanbanColumn({
     <div
       className={cn(
         "flex flex-col rounded-xl border min-w-[260px] w-[280px] max-w-[300px] flex-shrink-0 transition-colors duration-150",
-        isOver
-          ? styles.dragOver
-          : cn(styles.bg, styles.border)
+        isOver ? styles.dragOver : cn(styles.bg, styles.border)
       )}
       data-testid={`kanban-column-${stage}`}
     >
@@ -511,6 +494,7 @@ function KanbanColumn({
             "ml-auto text-[11px] px-2 py-0 h-5 font-semibold border-0 rounded-md",
             styles.badge
           )}
+          data-testid={`kanban-column-count-${stage}`}
         >
           {leads.length}
         </Badge>
@@ -530,13 +514,17 @@ function KanbanColumn({
               <span className="text-xs">{isOver ? "Drop here" : "No leads"}</span>
             </div>
           ) : (
-            leads.map((lead) => (
-              <KanbanLeadCard
-                key={lead.Id || lead.id}
-                lead={lead}
-                isDraggingAny={isDraggingAny}
-              />
-            ))
+            leads.map((lead) => {
+              const leadId = Number(lead.Id || lead.id);
+              const cardTags = leadTagsMap?.get(leadId) || [];
+              return (
+                <KanbanLeadCard
+                  key={lead.Id || lead.id}
+                  lead={lead}
+                  cardTags={cardTags}
+                />
+              );
+            })
           )}
         </div>
       </ScrollArea>
@@ -549,22 +537,27 @@ function KanbanColumn({
 interface LeadsKanbanProps {
   leads: any[];
   loading?: boolean;
-  /** When set, used for context but stages are derived from lead data */
+  /** Optional campaign ID filter (accepted for compat with LeadsTable) */
   campaignId?: string;
   /** Called when a card is dropped into a different column; triggers the API update */
   onLeadMove?: (leadId: number | string, newStage: string) => void;
-  /** Extra map of tags per lead (not used in kanban but accepted for API compat) */
+  /** Tag info map passed from LeadsTable: leadId → [{name, color}] */
   leadTagsMap?: Map<number, { name: string; color: string }[]>;
 }
 
-export function LeadsKanban({ leads, loading, onLeadMove }: LeadsKanbanProps) {
+export function LeadsKanban({
+  leads,
+  loading,
+  onLeadMove,
+  leadTagsMap,
+}: LeadsKanbanProps) {
   // Local optimistic copy of leads so visual updates are instant
   const [localLeads, setLocalLeads] = useState<any[]>(leads);
   const [activeLead, setActiveLead] = useState<any | null>(null);
   const [isDraggingAny, setIsDraggingAny] = useState(false);
 
   // Sync with parent when not dragging (covers initial load and external refreshes)
-  useEffect(() => {
+  useMemo(() => {
     if (!isDraggingAny) {
       setLocalLeads(leads);
     }
@@ -704,7 +697,7 @@ export function LeadsKanban({ leads, loading, onLeadMove }: LeadsKanbanProps) {
             key={stage}
             stage={stage}
             leads={groupedLeads[stage]}
-            isDraggingAny={isDraggingAny}
+            leadTagsMap={leadTagsMap}
           />
         ))}
       </div>
@@ -713,7 +706,13 @@ export function LeadsKanban({ leads, loading, onLeadMove }: LeadsKanbanProps) {
       <DragOverlay dropAnimation={null}>
         {activeLead ? (
           <div className="w-[260px]">
-            <KanbanCardContent lead={activeLead} isDragging />
+            <KanbanCardContent
+              lead={activeLead}
+              isDragging
+              cardTags={
+                leadTagsMap?.get(Number(activeLead.Id || activeLead.id)) || []
+              }
+            />
           </div>
         ) : null}
       </DragOverlay>
