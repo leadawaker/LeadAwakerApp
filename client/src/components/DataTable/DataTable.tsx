@@ -1062,7 +1062,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
   };
 
   const renderHeader = (col: string, drag: { attributes: any; listeners: any }) => {
-    const isSorted = sortConfig.key === col;
+    const isSorted = sortConfig.key === col && sortConfig.direction !== null;
     const title = formatHeaderTitle(col);
 
     return (
@@ -1075,7 +1075,10 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
           {getIconForField(col)}
         </div>
         <span
-          className="flex-1 cursor-pointer select-none truncate"
+          className={cn(
+            "flex-1 cursor-pointer select-none truncate transition-colors",
+            isSorted ? "text-brand-blue font-semibold" : "hover:text-brand-blue/70",
+          )}
           onClick={() => {
             const nextDir =
               sortConfig.key === col
@@ -1087,16 +1090,23 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                 : "asc";
             onSortChange({ key: col, direction: nextDir });
           }}
+          title={isSorted ? `Sorted ${sortConfig.direction === "asc" ? "ascending" : "descending"} — click to ${sortConfig.direction === "asc" ? "reverse" : "clear"} sort` : `Click to sort by ${title}`}
+          data-testid={`sort-header-${col}`}
+          aria-sort={isSorted ? (sortConfig.direction === "asc" ? "ascending" : "descending") : "none"}
         >
           {title}
         </span>
-        {isSorted && (
-          <span className="text-brand-blue font-bold">
+        {isSorted ? (
+          <span className="text-brand-blue font-bold shrink-0" data-testid={`sort-indicator-${col}`} aria-hidden="true">
             {sortConfig.direction === "asc" ? (
               <ChevronUp className="h-3 w-3" />
             ) : (
               <ChevronDown className="h-3 w-3" />
             )}
+          </span>
+        ) : (
+          <span className="opacity-0 group-hover/h:opacity-30 transition-opacity shrink-0 text-muted-foreground" aria-hidden="true">
+            <ChevronUp className="h-3 w-3" />
           </span>
         )}
       </div>
