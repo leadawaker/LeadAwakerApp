@@ -22,6 +22,7 @@ import {
   Loader2,
   Globe,
   ArrowUpCircle,
+  BarChart2,
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -164,6 +165,47 @@ function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string })
       <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
         {title}
       </h3>
+    </div>
+  );
+}
+
+// ── Score Gauge ────────────────────────────────────────────────────────────
+
+function scoreColor(value: number): { bar: string; text: string } {
+  if (value < 30) return { bar: "bg-red-500", text: "text-red-600 dark:text-red-400" };
+  if (value <= 70) return { bar: "bg-amber-400", text: "text-amber-600 dark:text-amber-400" };
+  return { bar: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400" };
+}
+
+function ScoreGauge({
+  label,
+  value,
+  testId,
+}: {
+  label: string;
+  value: number | null | undefined;
+  testId: string;
+}) {
+  const numVal = typeof value === "number" ? Math.max(0, Math.min(100, value)) : null;
+  const colors = numVal !== null ? scoreColor(numVal) : { bar: "bg-muted", text: "text-muted-foreground" };
+
+  return (
+    <div className="flex flex-col gap-1" data-testid={testId}>
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] text-muted-foreground">{label}</span>
+        <span className={cn("text-[12px] font-bold tabular-nums", colors.text)} data-testid={`${testId}-value`}>
+          {numVal !== null ? numVal : "—"}
+          {numVal !== null && <span className="text-[10px] font-normal text-muted-foreground ml-0.5">/100</span>}
+        </span>
+      </div>
+      {/* Track */}
+      <div className="h-2 w-full rounded-full bg-muted overflow-hidden" data-testid={`${testId}-track`}>
+        <div
+          className={cn("h-full rounded-full transition-all duration-500", colors.bar)}
+          style={{ width: numVal !== null ? `${numVal}%` : "0%" }}
+          data-testid={`${testId}-bar`}
+        />
+      </div>
     </div>
   );
 }
@@ -330,6 +372,33 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
               value={lead.language}
             />
           </div>
+
+          {/* Lead Scores */}
+          {(lead.lead_score != null || lead.engagement_score != null || lead.activity_score != null) && (
+            <>
+              <SectionTitle icon={<BarChart2 className="h-3.5 w-3.5" />} title="Scores" />
+              <div
+                className="rounded-xl border border-border/40 bg-muted/20 px-3 py-3 flex flex-col gap-3"
+                data-testid="lead-score-gauges"
+              >
+                <ScoreGauge
+                  label="Lead Score"
+                  value={lead.lead_score}
+                  testId="lead-score-gauge-overall"
+                />
+                <ScoreGauge
+                  label="Engagement"
+                  value={lead.engagement_score}
+                  testId="lead-score-gauge-engagement"
+                />
+                <ScoreGauge
+                  label="Activity"
+                  value={lead.activity_score}
+                  testId="lead-score-gauge-activity"
+                />
+              </div>
+            </>
+          )}
 
           {/* Status */}
           <SectionTitle icon={<Activity className="h-3.5 w-3.5" />} title="Status" />
