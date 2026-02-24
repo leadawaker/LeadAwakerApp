@@ -69,7 +69,7 @@ export default function WorkflowVisualization() {
       setGuardrailsStatus(t('guardrails.messageSent'));
       setIsApproved(true);
       setIsEngaging(false);
-      await new Promise(r => setTimeout(r, 11500));
+      await new Promise(r => setTimeout(r, 21000));
 
       setActiveNode('contact');
       setVisitedNodes(new Set(['contact']));

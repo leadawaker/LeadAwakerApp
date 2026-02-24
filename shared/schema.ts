@@ -309,6 +309,7 @@ export const leads = nocodb.table("Leads", {
   accountName: text("account_name"),
   campaignName: text("campaign_name"),
   text2: text("Text_2"),
+  leadScore: integer("lead_score"),
 }, (t) => [
   index("leads_accounts_id_idx").on(t.accountsId),
   index("leads_campaigns_id_idx").on(t.campaignsId),

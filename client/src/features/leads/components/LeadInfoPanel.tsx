@@ -1,5 +1,7 @@
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { IconBtn } from "@/components/ui/icon-btn";
+import { getStatusAvatarColor } from "./LeadsCardView";
 import {
   Phone,
   Mail,
@@ -15,6 +17,7 @@ import {
   Meh,
   Frown,
   Clock,
+  X,
 } from "lucide-react";
 
 interface LeadInfoPanelProps {
@@ -140,13 +143,13 @@ export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPane
   if (collapsed) {
     return (
       <div className="flex-shrink-0 w-9 flex flex-col items-center pt-2 border-l border-border bg-card rounded-xl">
-        <button
+        <IconBtn
+          size="md"
           onClick={() => setCollapsed(false)}
-          className="p-1.5 rounded-lg hover:bg-muted/60 transition-colors text-muted-foreground hover:text-foreground"
           title="Expand panel"
         >
           <ChevronLeft className="h-4 w-4" />
-        </button>
+        </IconBtn>
       </div>
     );
   }
@@ -174,21 +177,21 @@ export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPane
         </span>
         <div className="flex items-center gap-1">
           {lead && (
-            <button
+            <IconBtn
+              size="sm"
               onClick={onClose}
-              className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors text-[10px]"
               title="Deselect lead"
             >
-              ✕
-            </button>
+              <X className="h-3 w-3" />
+            </IconBtn>
           )}
-          <button
+          <IconBtn
+            size="sm"
             onClick={() => setCollapsed(true)}
-            className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
             title="Collapse panel"
           >
             <ChevronRight className="h-3.5 w-3.5" />
-          </button>
+          </IconBtn>
         </div>
       </div>
 
@@ -219,9 +222,17 @@ export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPane
           <div className="space-y-3">
             {/* Avatar + name + status */}
             <div className="flex items-start gap-2.5">
-              <div className="w-11 h-11 rounded-xl bg-brand-blue/15 text-brand-blue flex items-center justify-center text-sm font-bold shrink-0">
-                {initials}
-              </div>
+              {(() => {
+                const avatarColor = getStatusAvatarColor(status);
+                return (
+                  <div
+                    className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+                    style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
+                  >
+                    {initials}
+                  </div>
+                );
+              })()}
               <div className="min-w-0 flex-1">
                 <div className="font-semibold text-sm text-foreground truncate" data-testid="lead-info-name">
                   {fullName}

@@ -211,7 +211,7 @@ export function ChatPanel({ selected, loading = false, sending, onSend, onToggle
           <button
             type="button"
             onClick={() => scrollToBottom("smooth")}
-            className="absolute bottom-3 right-3 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all duration-150"
+            className="absolute bottom-3 right-3 z-10 flex items-center justify-center w-8 h-8 rounded-full border-2 border-white/20 bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 active:scale-[0.92] transition-all duration-150"
             data-testid="button-scroll-to-bottom"
             title="Scroll to latest message"
             aria-label="Scroll to latest message"

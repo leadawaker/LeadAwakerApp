@@ -105,19 +105,22 @@ export function AccountListView({
       {/* ── LEFT PANE ─────────────────────────────────────────────── */}
       <div className="w-[300px] shrink-0 flex flex-col rounded-xl bg-stone-100 dark:bg-stone-900/60 overflow-hidden shadow-sm">
 
-        {/* Header with Add button */}
-        <div className="flex items-center justify-between px-4 pt-3 pb-2 shrink-0">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+        {/* Header */}
+        <div className="px-4 pt-4 pb-2 shrink-0">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-semibold font-heading text-foreground leading-tight">Accounts</h1>
+            <button
+              onClick={onAddAccount}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors"
+              data-testid="account-list-add-btn"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add
+            </button>
+          </div>
+          <span className="text-xs font-medium text-muted-foreground mt-0.5 block">
             {loading ? "Loading…" : `${filteredAccounts.length} account${filteredAccounts.length !== 1 ? "s" : ""}`}
           </span>
-          <button
-            onClick={onAddAccount}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors"
-            data-testid="account-list-add-btn"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Add
-          </button>
         </div>
 
         {/* Search */}

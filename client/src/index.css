@@ -7,10 +7,10 @@
   --font-sans: 'Inter', sans-serif;
   --font-heading: 'Outfit', sans-serif;
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: var(--radius);
   
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -73,28 +73,28 @@
 
 /* LIGHT MODE - Brand Colors derived from Lead Awaker */
 :root {
-  /* Blue Base - from logo #5170ff */
-  --background: 230 30% 98%; /* Very light blue tint */
-  --foreground: 230 60% 10%; /* Very dark blue/black */
-  --bg-main: 246 33% 97%; /* #F6F5FA */
+  /* Stone Gray Design System — floating cards aesthetic */
+  --background: 0 0% 82%; /* #D1D1D1 — page bg, sidebar, topbar (seamless base) */
+  --foreground: 0 0% 12%; /* Near black — high contrast on stone gray */
+  --bg-main: 0 0% 82%; /* Match background */
 
-  --card: 0 0% 100%;
-  --card-foreground: 230 60% 10%;
+  --card: 0 0% 94.5%; /* #F1F1F1 — floating cards, selectable elements */
+  --card-foreground: 0 0% 12%;
 
-  --popover: 0 0% 100%;
-  --popover-foreground: 230 60% 10%;
+  --popover: 0 0% 100%; /* White — popovers/dropdowns elevated above cards */
+  --popover-foreground: 0 0% 12%;
 
   /* Primary Brand Color: Brand Blue #5170FF */
   --primary: 229 100% 66%;
   --primary-foreground: 0 0% 100%;
 
-  /* Secondary: Softer Blue */
-  --secondary: 230 30% 90%;
-  --secondary-foreground: 230 100% 40%;
+  /* Secondary: Medium gray */
+  --secondary: 0 0% 89%;
+  --secondary-foreground: 0 0% 15%;
 
-  /* Muted */
-  --muted: 230 20% 94%;
-  --muted-foreground: 230 20% 40%;
+  /* Muted — secondary panels (#E3E3E3) */
+  --muted: 0 0% 89%;
+  --muted-foreground: 0 0% 38%;
 
   /* Accent: Orange/Gold from the "rays" in the logo */
   --accent: 35 95% 55%;
@@ -109,11 +109,11 @@
   --info: 229 100% 66%;
   --info-foreground: 0 0% 100%;
 
-  --border: 230 20% 90%;
-  --input: 230 20% 90%;
+  --border: 0 0% 75%; /* Slightly darker than bg — kept for system use, not visually rendered */
+  --input: 0 0% 89%; /* Same as muted for inputs */
   --ring: 229 100% 66%;
 
-  --radius: 0.75rem;
+  --radius: 1.5rem; /* 24px — rounder curvature for all bordered elements */
 
   /* Chart colors (light mode) — brand-aligned */
   --chart-1: 229 100% 66%;   /* Brand Blue */
@@ -139,9 +139,9 @@
   --brand-indigo: 243 75% 59%;
   --brand-indigo-foreground: 0 0% 100%;
 
-  /* Sidebar tokens (light mode) */
-  --sidebar-bg: 231 59% 18%;
-  --sidebar-foreground: 220 20% 90%;
+  /* Sidebar tokens (light mode) — sidebar now blends with page background */
+  --sidebar-bg: 0 0% 82%; /* Same as --background (#D1D1D1) */
+  --sidebar-foreground: 0 0% 25%; /* Dark text readable on light sidebar */
   --sidebar-active: 229 100% 66%;
   --sidebar-active-foreground: 0 0% 100%;
 }
@@ -1050,6 +1050,85 @@
 }
 
 /* ============================
+   Icon Circle — Unified Button Ring System
+   Lead Awaker Design System
+   2px border ring, 3 sizes, 5-state machine
+   ============================ */
+
+@utility icon-circle-lg {
+  height: 2.125rem;
+  width: 2.125rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  position: relative;
+}
+
+@utility icon-circle-md {
+  height: 1.875rem;
+  width: 1.875rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  position: relative;
+}
+
+@utility icon-circle-sm {
+  height: 1.625rem;
+  width: 1.625rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  position: relative;
+}
+
+@utility icon-circle-base {
+  border-width: 2px;
+  border-style: solid;
+  border-color: hsl(var(--border) / 0.30);
+  color: hsl(var(--muted-foreground));
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease,
+              color 150ms ease, transform 150ms ease;
+  &:hover:not(:disabled) {
+    background-color: hsl(var(--card));
+    border-color: hsl(var(--border) / 0.55);
+    color: hsl(var(--foreground));
+  }
+  &:active:not(:disabled) {
+    transform: scale(0.92);
+    background-color: hsl(var(--muted));
+    border-color: hsl(var(--border) / 0.70);
+    transition-duration: 80ms;
+  }
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  &:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+}
+
+@utility icon-circle-selected {
+  background-color: hsl(var(--brand-blue));
+  border-color: hsl(var(--brand-blue));
+  color: white;
+  &:hover:not(:disabled) {
+    background-color: hsl(var(--brand-blue) / 0.85);
+    border-color: hsl(var(--brand-blue) / 0.85);
+  }
+}
+
+/* ============================
    Custom Scrollbar Styling
    Matches app theme in light & dark mode.
    Thin, rounded, semi-transparent scrollbars.
@@ -1190,10 +1269,10 @@
     top: 1rem;
   }
 
-  /* Sidebar-specific focus ring: white/light ring on dark sidebar background */
+  /* Sidebar focus ring: use brand-blue (sidebar is now light) */
   [data-sidebar-focus] a:focus-visible,
   [data-sidebar-focus] button:focus-visible,
   [data-sidebar-focus] [role="button"]:focus-visible {
-    outline-color: rgba(255, 255, 255, 0.8);
+    outline-color: hsl(var(--ring));
   }
 }

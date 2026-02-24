@@ -37,7 +37,7 @@ function LogoAnimation() {
       onMouseEnter={replayTopWave}
       onClick={replayTopWave}
     >
-      <div className="w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96">
+      <div className="w-44 h-44 md:w-52 md:h-52 lg:w-64 lg:h-64">
         <div className="relative w-full h-full">
           <motion.img
             src="/Logo-Lead.svg"
@@ -101,7 +101,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="bg-muted/30 pt-20 pb-10 border-t border-border relative overflow-hidden">
+    <footer className="bg-slate-50 pt-20 pb-10 border-t border-slate-200 relative overflow-hidden">
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-4 md:mb-16 relative z-10">
           <div>
@@ -189,7 +189,7 @@ export function Footer() {
 
         {/* Mobile Logo */}
         <div className="flex justify-center items-center mt-1 mb-2 md:hidden">
-          <div className="relative w-[346px] h-[346px] -ml-2">
+          <div className="relative w-[220px] h-[220px]">
             <img src="/Logo-Lead.svg" className="absolute inset-0 w-full h-full object-contain" />
             <img src="/Logo-Awaker.svg" className="absolute inset-0 w-full h-full object-contain" />
             <img src="/Logo-Rooster.svg" className="absolute inset-0 w-full h-full object-contain" />
@@ -200,7 +200,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-border pt-8 flex flex-col md:flex-row justify-between items-center gap-1 text-sm text-muted-foreground relative z-10">
+        <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-1 text-sm text-muted-foreground relative z-10">
           <p>{t("footer.copyright", { year: new Date().getFullYear() })}</p>
           <div className="flex gap-6">
             <Link

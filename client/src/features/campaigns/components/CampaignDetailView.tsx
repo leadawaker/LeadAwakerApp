@@ -2,7 +2,6 @@ import { useMemo, useState, useCallback } from "react";
 import {
   Clock,
   MessageSquare,
-  Link2,
   Bot,
   Users,
   TrendingUp,
@@ -14,14 +13,15 @@ import {
   BarChart2,
   Settings,
   Layers,
-  ListChecks,
   Pencil,
   PauseCircle,
   PlayCircle,
   Copy,
   Check,
-  Target,
+  Trash2,
+  RefreshCw,
   BarChart3,
+  Megaphone,
 } from "lucide-react";
 import {
   LineChart,
@@ -38,37 +38,29 @@ import { cn } from "@/lib/utils";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-function getAvatarGradient(status: string): string {
-  switch (status) {
-    case "Active":     return "from-emerald-500 to-teal-600";
-    case "Paused":     return "from-amber-500 to-orange-600";
-    case "Completed":
-    case "Finished":   return "from-blue-500 to-indigo-600";
-    case "Inactive":
-    case "Archived":   return "from-slate-400 to-zinc-500";
-    default:           return "from-indigo-500 to-violet-600";
-  }
+const CAMPAIGN_STATUS_COLORS: Record<string, { bg: string; text: string }> = {
+  Active:    { bg: "#DCFCE7", text: "#15803D" },
+  Paused:    { bg: "#FEF3C7", text: "#92400E" },
+  Completed: { bg: "#DBEAFE", text: "#1D4ED8" },
+  Finished:  { bg: "#DBEAFE", text: "#1D4ED8" },
+  Inactive:  { bg: "#F4F4F5", text: "#52525B" },
+  Archived:  { bg: "#F4F4F5", text: "#52525B" },
+  Draft:     { bg: "#E5E7EB", text: "#374151" },
+};
+
+function getCampaignAvatarColor(status: string): { bg: string; text: string } {
+  return CAMPAIGN_STATUS_COLORS[status] ?? { bg: "#E5E7EB", text: "#374151" };
 }
 
-function getStatusBadge(status: string): string {
-  switch (status) {
-    case "Active":    return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700";
-    case "Paused":    return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700";
-    case "Completed":
-    case "Finished":  return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700";
-    default:          return "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/60 dark:text-slate-400 dark:border-slate-700";
-  }
-}
-
-function getStatusDotColor(status: string): string {
-  switch (status) {
-    case "Active":    return "bg-emerald-500";
-    case "Paused":    return "bg-amber-500";
-    case "Completed":
-    case "Finished":  return "bg-blue-500";
-    default:          return "bg-slate-400";
-  }
-}
+const CAMPAIGN_STATUS_HEX: Record<string, string> = {
+  Active:    "#22C55E",
+  Paused:    "#F59E0B",
+  Completed: "#3B82F6",
+  Finished:  "#3B82F6",
+  Inactive:  "#94A3B8",
+  Archived:  "#94A3B8",
+  Draft:     "#6B7280",
+};
 
 // ── Campaign lifecycle stepper ────────────────────────────────────────────────
 
@@ -81,36 +73,50 @@ const CAMPAIGN_LIFECYCLE = [
 
 function CampaignStatusStepper({ status }: { status: string }) {
   const normalized = status === "Finished" ? "Completed" : status;
-  const currentIdx = CAMPAIGN_LIFECYCLE.findIndex((s) => s.key === normalized);
+  const stages = CAMPAIGN_LIFECYCLE;
+
+  const currentIndex = stages.findIndex((s) => s.key === normalized);
 
   return (
-    <div className="flex items-center gap-0 overflow-x-auto scrollbar-hide">
-      {CAMPAIGN_LIFECYCLE.map((stage, i) => {
-        const isPast    = i < currentIdx;
-        const isCurrent = i === currentIdx;
-        return (
-          <div key={stage.key} className="flex items-center gap-0 shrink-0">
-            {i > 0 && (
-              <div className={cn(
-                "h-px w-5 shrink-0",
-                isPast || isCurrent ? "bg-emerald-300 dark:bg-emerald-700" : "bg-border/50"
-              )} />
-            )}
-            <div className={cn(
-              "flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap transition-colors",
-              isCurrent
-                ? cn("border", getStatusBadge(stage.key))
-                : isPast
-                ? "text-emerald-600 dark:text-emerald-500"
-                : "text-muted-foreground/50"
-            )}>
-              {isPast    && <Check className="h-2.5 w-2.5 shrink-0" />}
-              {isCurrent && <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80 shrink-0" />}
-              {stage.label}
+    <div className="w-full px-1">
+      <div className="flex items-start">
+        {stages.map((stage, i) => {
+          const hex = CAMPAIGN_STATUS_HEX[stage.key] || "#6B7280";
+          const isPast = i < currentIndex;
+          const isCurrent = i === currentIndex;
+
+          return (
+            <div key={stage.key} className="flex items-start flex-1" style={{ minWidth: 0 }}>
+              <div className="flex flex-col items-center gap-1 shrink-0">
+                <div className="h-[14px] flex items-center justify-center">
+                  {isCurrent ? (
+                    <div style={{ width: 14, height: 14, borderRadius: "50%", backgroundColor: hex, boxShadow: `0 0 0 3px ${hex}25, 0 0 8px ${hex}40` }} />
+                  ) : isPast ? (
+                    <div style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: hex }} />
+                  ) : (
+                    <div style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: "transparent", border: "2px solid #D1D5DB" }} />
+                  )}
+                </div>
+                <span
+                  className="text-[8px] leading-none text-center"
+                  style={{ color: isCurrent ? hex : "rgba(0,0,0,0.3)", fontWeight: isCurrent ? 700 : 500 }}
+                >
+                  {stage.label}
+                </span>
+              </div>
+              {i < stages.length - 1 && (
+                <div
+                  className="flex-1 mt-[6px]"
+                  style={{
+                    height: 2, minWidth: 4,
+                    backgroundColor: isPast ? (CAMPAIGN_STATUS_HEX[stages[i + 1]?.key] || hex) : "#E5E7EB",
+                  }}
+                />
+              )}
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -133,10 +139,10 @@ function formatDate(s: string | null | undefined): string {
 }
 
 function getRoiColor(roi: number | null): string {
-  if (roi === null) return "text-slate-500 dark:text-slate-400";
-  if (roi >= 100) return "text-emerald-600 dark:text-emerald-400";
-  if (roi >= 0) return "text-blue-600 dark:text-blue-400";
-  return "text-rose-600 dark:text-rose-400";
+  if (roi === null) return "text-muted-foreground";
+  if (roi >= 100) return "text-emerald-600";
+  if (roi >= 0) return "text-blue-600";
+  return "text-rose-600";
 }
 
 function getCampaignMetrics(campaign: Campaign, cMetrics: CampaignMetricsHistory[]) {
@@ -193,34 +199,10 @@ function getCampaignMetrics(campaign: Campaign, cMetrics: CampaignMetricsHistory
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 
-function WidgetCard({ title, icon, children, fullWidth = false, testId }: {
-  title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-  fullWidth?: boolean;
-  testId?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "bg-card border border-border rounded-xl shadow-sm overflow-hidden",
-        fullWidth && "col-span-2"
-      )}
-      data-testid={testId}
-    >
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-border/60 bg-muted/20">
-        <div className="text-muted-foreground">{icon}</div>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{title}</span>
-      </div>
-      <div className="p-4">{children}</div>
-    </div>
-  );
-}
-
 function InfoRow({ label, value, mono = false }: { label: string; value: React.ReactNode; mono?: boolean }) {
   return (
-    <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/40 last:border-0">
-      <span className="text-[11px] text-muted-foreground shrink-0 pt-0.5">{label}</span>
+    <div className="flex items-start justify-between gap-3 py-1.5 border-b border-white/20 last:border-0">
+      <span className="text-[11px] text-foreground/50 shrink-0 pt-0.5">{label}</span>
       <span className={cn("text-[12px] text-foreground text-right break-words max-w-[60%]", mono && "font-mono text-[11px]")}>
         {value ?? "—"}
       </span>
@@ -230,11 +212,11 @@ function InfoRow({ label, value, mono = false }: { label: string; value: React.R
 
 function BoolRow({ label, value }: { label: string; value: boolean | null | undefined }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-1.5 border-b border-border/40 last:border-0">
-      <span className="text-[11px] text-muted-foreground">{label}</span>
+    <div className="flex items-center justify-between gap-3 py-1.5 border-b border-white/20 last:border-0">
+      <span className="text-[11px] text-foreground/50">{label}</span>
       {value
         ? <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-        : <XCircle className="w-4 h-4 text-slate-400 shrink-0" />
+        : <XCircle className="w-4 h-4 text-foreground/25 shrink-0" />
       }
     </div>
   );
@@ -246,76 +228,21 @@ function BumpCard({ bumpNumber, template, delayHours }: {
   delayHours: number | null | undefined;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
+    <div className="rounded-xl bg-white/40 p-3 space-y-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Bump {bumpNumber}</span>
-          <ChevronRight className="w-3 h-3 text-muted-foreground/50" />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/50">Bump {bumpNumber}</span>
+          <ChevronRight className="w-3 h-3 text-foreground/30" />
         </div>
-        <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-1 text-[11px] text-foreground/50">
           <Clock className="w-3 h-3" />
           <span>Delay: {formatHours(delayHours)}</span>
         </div>
       </div>
       {template
         ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{template}</p>
-        : <p className="text-[11px] text-muted-foreground italic">No template set</p>
+        : <p className="text-[11px] text-foreground/40 italic">No template set</p>
       }
-    </div>
-  );
-}
-
-function QualificationCriteriaDisplay({ raw }: { raw: string | null | undefined }) {
-  if (!raw) {
-    return (
-      <div className="flex flex-col items-center justify-center py-6 text-center">
-        <ListChecks className="w-6 h-6 text-muted-foreground/30 mb-2" />
-        <p className="text-[12px] text-muted-foreground italic">No qualification criteria defined</p>
-      </div>
-    );
-  }
-
-  let parsed: Record<string, unknown> | null = null;
-  try {
-    const p = JSON.parse(raw);
-    if (typeof p === "object" && p !== null && !Array.isArray(p)) parsed = p as Record<string, unknown>;
-  } catch { /* plain text */ }
-
-  if (parsed) {
-    return (
-      <div className="space-y-2">
-        {Object.entries(parsed).map(([key, value]) => {
-          const label = key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-          let displayValue: React.ReactNode;
-          if (typeof value === "boolean") {
-            displayValue = value
-              ? <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="w-3.5 h-3.5" /> Yes</span>
-              : <span className="flex items-center gap-1 text-slate-500"><XCircle className="w-3.5 h-3.5" /> No</span>;
-          } else if (Array.isArray(value)) {
-            displayValue = (
-              <div className="flex flex-wrap gap-1 justify-end">
-                {(value as unknown[]).map((item, i) => (
-                  <span key={i} className="inline-block bg-muted rounded-md px-1.5 py-0.5 text-[10px] font-medium text-foreground">{String(item)}</span>
-                ))}
-              </div>
-            );
-          } else {
-            displayValue = <span className="text-[12px] text-foreground break-words text-right max-w-[60%]">{String(value ?? "—")}</span>;
-          }
-          return (
-            <div key={key} className="flex items-start justify-between gap-3 py-1.5 border-b border-border/40 last:border-0">
-              <span className="text-[11px] text-muted-foreground shrink-0 pt-0.5">{label}</span>
-              <span className="text-right">{displayValue}</span>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-lg bg-muted/30 p-3">
-      <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{raw}</p>
     </div>
   );
 }
@@ -337,8 +264,8 @@ function PerformanceChart({ metrics }: { metrics: CampaignMetricsHistory[] }) {
   if (chartData.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
-        <BarChart2 className="w-8 h-8 text-muted-foreground/30 mb-2" />
-        <p className="text-[12px] text-muted-foreground">No trend data yet</p>
+        <BarChart2 className="w-8 h-8 text-foreground/15 mb-2" />
+        <p className="text-[12px] text-foreground/40">No trend data yet</p>
       </div>
     );
   }
@@ -347,10 +274,10 @@ function PerformanceChart({ metrics }: { metrics: CampaignMetricsHistory[] }) {
     <div className="w-full" style={{ height: 180 }}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={{ top: 4, right: 4, bottom: 4, left: -20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-          <XAxis dataKey="date" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-          <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
-          <Tooltip contentStyle={{ borderRadius: "10px", border: "1px solid hsl(var(--border))", backgroundColor: "hsl(var(--card))", color: "hsl(var(--foreground))", fontSize: "11px", padding: "6px 10px" }} />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
+          <XAxis dataKey="date" tick={{ fontSize: 10, fill: "rgba(0,0,0,0.4)" }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+          <YAxis tick={{ fontSize: 10, fill: "rgba(0,0,0,0.4)" }} tickLine={false} axisLine={false} />
+          <Tooltip contentStyle={{ borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", backgroundColor: "rgba(255,255,255,0.95)", color: "#111", fontSize: "11px", padding: "6px 10px" }} />
           <Legend wrapperStyle={{ fontSize: "10px", paddingTop: "8px" }} />
           <Line type="monotone" dataKey="Response %" stroke="#6366f1" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
           <Line type="monotone" dataKey="Booking %" stroke="#f59e0b" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
@@ -373,7 +300,7 @@ function CopyButton({ value }: { value: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shrink-0"
+      className="p-1 rounded hover:bg-white/30 transition-colors text-foreground/40 hover:text-foreground shrink-0"
       title="Copy"
     >
       {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
@@ -385,13 +312,20 @@ function CopyButton({ value }: { value: string }) {
 
 export function CampaignDetailViewEmpty() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-8">
-      <div className="w-14 h-14 rounded-2xl bg-muted/60 flex items-center justify-center">
-        <Zap className="w-7 h-7 text-muted-foreground/40" />
+    <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8 text-center">
+      <div className="relative">
+        <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center ring-1 ring-amber-200/50">
+          <Megaphone className="h-10 w-10 text-amber-400" />
+        </div>
       </div>
-      <div>
+      <div className="space-y-1.5">
         <p className="text-sm font-semibold text-foreground/70">Select a campaign</p>
-        <p className="text-xs text-muted-foreground mt-1">Click any campaign on the left to see its details</p>
+        <p className="text-xs text-muted-foreground max-w-[180px] leading-relaxed">
+          Click any campaign on the left to see its performance, configuration, and message templates.
+        </p>
+      </div>
+      <div className="flex items-center gap-1.5 text-[11px] text-amber-500 font-medium">
+        <span>&larr; Choose from the list</span>
       </div>
     </div>
   );
@@ -418,9 +352,7 @@ export function CampaignDetailView({ campaign, metrics, onEdit, onToggleStatus }
   const agg = useMemo(() => getCampaignMetrics(campaign, campaignMetrics), [campaign, campaignMetrics]);
 
   const status = String(campaign.status || "");
-  const avatarGradient = getAvatarGradient(status);
-  const badgeCls = getStatusBadge(status);
-  const dotCls = getStatusDotColor(status);
+  const avatarColor = getCampaignAvatarColor(status);
 
   const initials = (campaign.name || "?")
     .split(" ")
@@ -438,216 +370,264 @@ export function CampaignDetailView({ campaign, metrics, onEdit, onToggleStatus }
     (agg.bookingRate !== null && agg.bookingRate > 0);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden" data-testid="campaign-detail-view">
+    <div className="relative flex flex-col h-full overflow-hidden" data-testid="campaign-detail-view">
 
-      {/* ── HEADER — D365 soft mint gradient ───────────────────────── */}
-      <div className="shrink-0 relative overflow-hidden border-b border-border/30" data-testid="campaign-detail-view-header">
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-blue/5 via-indigo-50/60 to-background dark:from-brand-blue/10 dark:via-indigo-950/20 dark:to-background" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(81,112,255,0.12)_0%,_transparent_65%)]" />
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-blue/20 to-transparent dark:via-brand-blue/30" />
+      {/* ── Full-height gradient: vivid yellow top-left → beige mid → blue lower ── */}
+      <div className="absolute inset-0 bg-[#F8F3EB]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_72%_56%_at_100%_0%,#FFFFFF_0%,rgba(255,255,255,0.80)_30%,transparent_60%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_95%_80%_at_0%_0%,#FFF0A0_0%,#FFF7CC_40%,rgba(255,248,210,0.40)_64%,transparent_80%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_62%_72%_at_100%_36%,rgba(241,218,162,0.62)_0%,transparent_64%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_92%_36%_at_48%_53%,rgba(210,188,130,0.22)_0%,transparent_72%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_98%_74%_at_50%_88%,rgba(105,170,255,0.60)_0%,transparent_74%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_54%_at_54%_60%,rgba(165,205,255,0.38)_0%,transparent_66%)]" />
 
-        <div className="relative px-4 pt-4 pb-3 space-y-2.5">
+      {/* ── Header content ── */}
+      <div className="shrink-0">
+        <div className="relative px-4 pt-6 pb-5 space-y-3">
 
-          {/* Row 1: Avatar + Name + Actions */}
-          <div className="flex items-start gap-3.5">
-            <div className={cn(
-              "w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-black text-white shadow-md shrink-0 ring-2 ring-white/60",
-              `bg-gradient-to-br ${avatarGradient}`
-            )}>
+          {/* Row 1: CRM action toolbar */}
+          <div className="flex items-center gap-1 flex-wrap">
+            <button
+              onClick={() => onEdit(campaign)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors"
+            >
+              <Pencil className="h-3 w-3" />
+              Edit
+            </button>
+            {canToggle && (
+              <button
+                onClick={() => onToggleStatus(campaign)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors"
+              >
+                {isActive
+                  ? <><PauseCircle className="h-3 w-3" />Pause</>
+                  : <><PlayCircle className="h-3 w-3" />Activate</>
+                }
+              </button>
+            )}
+            <button className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors">
+              <RefreshCw className="h-3 w-3" />
+              Refresh
+            </button>
+            <button className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors">
+              <Trash2 className="h-3 w-3" />
+              Delete
+            </button>
+          </div>
+
+          {/* Row 2: Avatar + Name */}
+          <div className="flex items-start gap-3">
+            <div
+              className="h-14 w-14 rounded-full flex items-center justify-center text-lg font-bold shrink-0"
+              style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
+            >
               {initials || <Zap className="w-6 h-6" />}
             </div>
 
-            <div className="flex-1 min-w-0 mt-0.5">
-              <h2 className="text-[20px] font-bold text-foreground leading-tight tracking-tight truncate" data-testid="campaign-detail-view-name">
+            <div className="flex-1 min-w-0 py-1">
+              <h2 className="text-[27px] font-semibold font-heading text-foreground leading-tight truncate" data-testid="campaign-detail-view-name">
                 {campaign.name || "Unnamed Campaign"}
               </h2>
-              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                <span
-                  className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border", badgeCls)}
-                  data-testid="campaign-detail-view-status"
-                >
-                  <span className={cn("w-1.5 h-1.5 rounded-full", dotCls)} />
-                  {status || "Unknown"}
-                </span>
-                {campaign.account_name && (
-                  <span className="text-[12px] text-foreground/60 truncate">{campaign.account_name}</span>
-                )}
-                {campaign.type && (
-                  <span className="text-[11px] text-foreground/50">{campaign.type}</span>
-                )}
-              </div>
-            </div>
 
-            {/* Action buttons */}
-            <div className="flex items-center gap-2 shrink-0 mt-0.5">
-              <button
-                onClick={() => onEdit(campaign)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-foreground/5 hover:bg-foreground/10 dark:bg-white/10 dark:hover:bg-white/15 text-foreground border border-border/50 text-xs font-semibold transition-colors"
-                data-testid="campaign-detail-view-edit"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </button>
-              {canToggle && (
-                <button
-                  onClick={() => onToggleStatus(campaign)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-foreground/5 hover:bg-foreground/10 dark:bg-white/10 dark:hover:bg-white/15 text-foreground border border-border/50 text-xs font-semibold transition-colors"
-                  data-testid="campaign-detail-view-toggle-status"
-                >
-                  {isActive
-                    ? <><PauseCircle className="w-3.5 h-3.5" />Pause</>
-                    : <><PlayCircle className="w-3.5 h-3.5" />Activate</>
-                  }
-                </button>
-              )}
+              <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                {/* Left: badges */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded border border-border/50 text-[10px] font-medium text-muted-foreground">
+                    Campaign
+                  </span>
+                  {status && (
+                    <span
+                      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
+                      style={{ backgroundColor: `${CAMPAIGN_STATUS_HEX[status]}20`, color: CAMPAIGN_STATUS_HEX[status] || "#6B7280" }}
+                      data-testid="campaign-detail-view-status"
+                    >
+                      <span
+                        className="w-1.5 h-1.5 rounded-full shrink-0"
+                        style={{ backgroundColor: CAMPAIGN_STATUS_HEX[status] || "#6B7280" }}
+                      />
+                      {status}
+                    </span>
+                  )}
+                  {campaign.account_name && (
+                    <span className="text-[11px] text-foreground/50">{campaign.account_name}</span>
+                  )}
+                </div>
+
+                {/* Right: meta strip */}
+                <div className="flex items-center gap-[25px] ml-4">
+                  <div>
+                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Leads</div>
+                    <div className="text-[13px] font-bold text-foreground tabular-nums">{agg.totalLeadsTargeted.toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Messages</div>
+                    <div className="text-[13px] font-bold text-foreground tabular-nums">{agg.totalMessagesSent.toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Response</div>
+                    <div className="text-[13px] font-bold text-foreground tabular-nums">{agg.responseRate != null ? `${agg.responseRate}%` : "—"}</div>
+                  </div>
+                  <div>
+                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Booking</div>
+                    <div className="text-[13px] font-bold text-foreground tabular-nums">{agg.bookingRate != null ? `${agg.bookingRate}%` : "—"}</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Row 2: Status lifecycle stepper */}
-          <CampaignStatusStepper status={status} />
+          {/* Row 3: Campaign lifecycle stepper */}
+          {status && <CampaignStatusStepper status={status} />}
 
         </div>
       </div>
 
-      {/* ── BODY — 3 cards in parallel, fixed height, no outer scroll ── */}
-      <div className="flex-1 grid grid-cols-3 gap-3 p-3 bg-slate-50/50 dark:bg-muted/10 min-h-0 overflow-hidden">
+      {/* ── Body — 3-column layout: [Performance] | [Configuration] | [Templates] ── */}
+      <div className="relative flex-1 overflow-hidden min-h-0 p-[3px] flex flex-col">
+        <div className="flex-1 grid gap-[3px]" style={{ gridTemplateColumns: "1fr 1.4fr 1fr" }}>
 
-        {/* Card 1: Performance */}
-        <div className="rounded-xl border border-border/50 bg-card overflow-hidden flex flex-col min-h-0" data-testid="campaign-detail-view-trends">
-          <div className="px-3 py-2.5 border-b border-border/30 flex items-center gap-1.5 shrink-0 bg-muted/20">
-            <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Performance</span>
-          </div>
-          <div className="flex-1 overflow-y-auto p-3">
-            {hasMetrics ? (
-              <div className="space-y-3">
-                {/* Stat grid */}
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { v: agg.totalLeadsTargeted.toLocaleString(), l: "Leads" },
-                    { v: agg.totalMessagesSent.toLocaleString(),  l: "Messages" },
-                    { v: `${agg.responseRate ?? 0}%`,             l: "Response" },
-                    { v: `${agg.bookingRate ?? 0}%`,              l: "Booking" },
-                  ].map((s) => (
-                    <div key={s.l} className="rounded-lg bg-muted/40 px-2 py-2 text-center">
-                      <div className="text-[15px] font-black text-foreground tabular-nums leading-tight">{s.v}</div>
-                      <div className="text-[9px] text-muted-foreground uppercase tracking-wider mt-0.5">{s.l}</div>
+          {/* Column 1: Performance */}
+          <div className="flex flex-col gap-[3px]">
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <div className="bg-white/60 rounded-xl p-4 flex flex-col gap-3 h-full" data-testid="campaign-detail-view-trends">
+                <p className="text-[17px] font-semibold font-heading text-foreground">Performance</p>
+
+                {hasMetrics ? (
+                  <div className="space-y-3">
+                    {/* Stat grid */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { v: agg.totalLeadsTargeted.toLocaleString(), l: "Leads" },
+                        { v: agg.totalMessagesSent.toLocaleString(),  l: "Messages" },
+                        { v: `${agg.responseRate ?? 0}%`,             l: "Response" },
+                        { v: `${agg.bookingRate ?? 0}%`,              l: "Booking" },
+                      ].map((s) => (
+                        <div key={s.l} className="rounded-lg bg-white/40 px-2 py-2 text-center">
+                          <div className="text-[15px] font-black text-foreground tabular-nums leading-tight">{s.v}</div>
+                          <div className="text-[9px] text-foreground/40 uppercase tracking-wider mt-0.5">{s.l}</div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                {/* ROI */}
-                <div className="flex items-center justify-between text-[12px] py-1 border-b border-border/30">
-                  <span className="text-muted-foreground">ROI</span>
-                  <span className={cn("font-bold", getRoiColor(agg.roiPercent))}>
-                    {agg.roiPercent != null
-                      ? `${agg.roiPercent >= 0 ? "+" : ""}${agg.roiPercent.toFixed(0)}%`
-                      : "—"}
-                  </span>
-                </div>
-                {/* Cost rows */}
-                <div className="space-y-1.5 text-[12px]">
-                  {[
-                    { l: "Total Cost",    v: `$${(agg.totalCost ?? 0).toFixed(2)}` },
-                    { l: "Cost / Lead",   v: `$${(agg.costPerLead ?? 0).toFixed(2)}` },
-                    { l: "Cost / Booking",v: `$${(agg.costPerBooking ?? 0).toFixed(2)}` },
-                  ].map((r) => (
-                    <div key={r.l} className="flex justify-between">
-                      <span className="text-muted-foreground">{r.l}</span>
-                      <span className="text-foreground font-medium">{r.v}</span>
+
+                    {/* ROI */}
+                    <div className="flex items-center justify-between text-[12px] py-1 border-b border-white/30">
+                      <span className="text-foreground/50">ROI</span>
+                      <span className={cn("font-bold", getRoiColor(agg.roiPercent))}>
+                        {agg.roiPercent != null
+                          ? `${agg.roiPercent >= 0 ? "+" : ""}${agg.roiPercent.toFixed(0)}%`
+                          : "—"}
+                      </span>
                     </div>
-                  ))}
-                </div>
-                {/* Trend chart */}
-                {campaignMetrics.length > 0 && (
-                  <div className="pt-1">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Trends</p>
-                    <PerformanceChart metrics={campaignMetrics} />
+
+                    {/* Cost rows */}
+                    <div className="space-y-1.5 text-[12px]">
+                      {[
+                        { l: "Total Cost",     v: `$${(agg.totalCost ?? 0).toFixed(2)}` },
+                        { l: "Cost / Lead",    v: `$${(agg.costPerLead ?? 0).toFixed(2)}` },
+                        { l: "Cost / Booking", v: `$${(agg.costPerBooking ?? 0).toFixed(2)}` },
+                      ].map((r) => (
+                        <div key={r.l} className="flex justify-between">
+                          <span className="text-foreground/50">{r.l}</span>
+                          <span className="text-foreground font-medium">{r.v}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Trend chart */}
+                    {campaignMetrics.length > 0 && (
+                      <div className="pt-1">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 mb-2">Trends</p>
+                        <PerformanceChart metrics={campaignMetrics} />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center flex-1 text-center py-8">
+                    <BarChart3 className="w-8 h-8 text-foreground/15 mb-2" />
+                    <p className="text-[12px] text-foreground/40">No metrics yet</p>
+                    <p className="text-[11px] text-foreground/30 mt-0.5">Metrics appear once the campaign runs</p>
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-center py-8">
-                <BarChart3 className="w-8 h-8 text-muted-foreground/25 mb-2" />
-                <p className="text-[12px] text-muted-foreground">No metrics yet</p>
-                <p className="text-[11px] text-muted-foreground/60 mt-0.5">Metrics appear once the campaign runs</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Card 2: Configuration */}
-        <div className="rounded-xl border border-border/50 bg-card overflow-hidden flex flex-col min-h-0" data-testid="campaign-detail-view-settings">
-          <div className="px-3 py-2.5 border-b border-border/30 flex items-center gap-1.5 shrink-0 bg-muted/20">
-            <Settings className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Configuration</span>
-          </div>
-          <div className="flex-1 overflow-y-auto p-3">
-            <div className="space-y-0">
-              <InfoRow label="Type" value={campaign.type} />
-              <InfoRow label="Description" value={campaign.description} />
-              <InfoRow label="Start date" value={formatDate(campaign.start_date)} />
-              <InfoRow label="End date" value={formatDate(campaign.end_date)} />
-              <InfoRow
-                label="Active hours"
-                value={campaign.active_hours_start || campaign.active_hours_end
-                  ? `${campaign.active_hours_start || "—"} → ${campaign.active_hours_end || "—"}`
-                  : null}
-              />
-              <InfoRow label="Daily limit" value={campaign.daily_lead_limit?.toLocaleString()} />
-              <InfoRow label="Interval" value={campaign.message_interval_minutes ? `${campaign.message_interval_minutes} min` : null} />
-              <BoolRow label="Stop on response" value={campaign.stop_on_response} />
-              <BoolRow label="Use AI bumps" value={campaign.use_ai_bumps} />
-              <InfoRow label="Max bumps" value={campaign.max_bumps} />
             </div>
+          </div>
 
-            {/* AI Config sub-section */}
-            <div className="mt-3 pt-3 border-t border-border/30">
-              <div className="flex items-center gap-1.5 mb-2">
-                <Bot className="w-3 h-3 text-muted-foreground" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">AI</span>
-              </div>
-              <div className="space-y-0">
-                <InfoRow label="Model" value={campaign.ai_model || "Default"} />
-                <InfoRow label="Temperature" value={campaign.ai_temperature != null ? String(campaign.ai_temperature) : null} />
-                <InfoRow label="Agent" value={campaign.agent_name} />
-                <InfoRow label="Service" value={campaign.service_name} />
-              </div>
-              {campaign.ai_prompt_template && (
-                <div className="mt-2">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Prompt</p>
-                  <p className="text-[11px] text-foreground leading-relaxed whitespace-pre-wrap bg-muted/30 rounded-lg p-2 break-words max-h-24 overflow-y-auto">
-                    {campaign.ai_prompt_template}
-                  </p>
+          {/* Column 2: Configuration (wider) */}
+          <div className="flex flex-col gap-[3px]">
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <div className="bg-white/60 rounded-xl p-4 flex flex-col gap-3 h-full" data-testid="campaign-detail-view-settings">
+                <p className="text-[17px] font-semibold font-heading text-foreground">Configuration</p>
+
+                <div className="space-y-0">
+                  <InfoRow label="Type" value={campaign.type} />
+                  <InfoRow label="Description" value={campaign.description} />
+                  <InfoRow label="Start date" value={formatDate(campaign.start_date)} />
+                  <InfoRow label="End date" value={formatDate(campaign.end_date)} />
+                  <InfoRow
+                    label="Active hours"
+                    value={campaign.active_hours_start || campaign.active_hours_end
+                      ? `${campaign.active_hours_start || "—"} → ${campaign.active_hours_end || "—"}`
+                      : null}
+                  />
+                  <InfoRow label="Daily limit" value={campaign.daily_lead_limit?.toLocaleString()} />
+                  <InfoRow label="Interval" value={campaign.message_interval_minutes ? `${campaign.message_interval_minutes} min` : null} />
+                  <BoolRow label="Stop on response" value={campaign.stop_on_response} />
+                  <BoolRow label="Use AI bumps" value={campaign.use_ai_bumps} />
+                  <InfoRow label="Max bumps" value={campaign.max_bumps} />
                 </div>
-              )}
+
+                {/* AI Config sub-section */}
+                <div className="mt-1 pt-3 border-t border-white/30">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Bot className="w-3 h-3 text-foreground/40" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">AI</span>
+                  </div>
+                  <div className="space-y-0">
+                    <InfoRow label="Model" value={campaign.ai_model || "Default"} />
+                    <InfoRow label="Temperature" value={campaign.ai_temperature != null ? String(campaign.ai_temperature) : null} />
+                    <InfoRow label="Agent" value={campaign.agent_name} />
+                    <InfoRow label="Service" value={campaign.service_name} />
+                  </div>
+                  {campaign.ai_prompt_template && (
+                    <div className="mt-2">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 mb-1.5">Prompt</p>
+                      <p className="text-[11px] text-foreground leading-relaxed whitespace-pre-wrap bg-white/30 rounded-lg p-2 break-words max-h-24 overflow-y-auto">
+                        {campaign.ai_prompt_template}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Card 3: Message Templates */}
-        <div className="rounded-xl border border-border/50 bg-card overflow-hidden flex flex-col min-h-0" data-testid="campaign-detail-view-templates">
-          <div className="px-3 py-2.5 border-b border-border/30 flex items-center gap-1.5 shrink-0 bg-muted/20">
-            <Layers className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Message Templates</span>
-          </div>
-          <div className="flex-1 overflow-y-auto p-3 space-y-3">
-            {/* First message */}
-            <div className="rounded-xl border border-border/50 bg-muted/30 p-3 space-y-1.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">First Message</span>
-              {campaign.first_message_template || campaign.First_Message
-                ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">
-                    {campaign.first_message_template || campaign.First_Message}
-                  </p>
-                : <p className="text-[11px] text-muted-foreground italic">No template set</p>
-              }
+          {/* Column 3: Message Templates */}
+          <div className="flex flex-col gap-[3px]">
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <div className="bg-white/60 rounded-xl p-4 flex flex-col gap-3 h-full" data-testid="campaign-detail-view-templates">
+                <p className="text-[17px] font-semibold font-heading text-foreground">Templates</p>
+
+                {/* First message */}
+                <div className="rounded-xl bg-white/40 p-3 space-y-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/50">First Message</span>
+                  {campaign.first_message_template || campaign.First_Message
+                    ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">
+                        {campaign.first_message_template || campaign.First_Message}
+                      </p>
+                    : <p className="text-[11px] text-foreground/40 italic">No template set</p>
+                  }
+                </div>
+
+                <BumpCard bumpNumber={1} template={campaign.bump_1_template} delayHours={campaign.bump_1_delay_hours} />
+                <BumpCard bumpNumber={2} template={campaign.bump_2_template} delayHours={campaign.bump_2_delay_hours} />
+                <BumpCard bumpNumber={3} template={campaign.bump_3_template} delayHours={campaign.bump_3_delay_hours} />
+              </div>
             </div>
-            <BumpCard bumpNumber={1} template={campaign.bump_1_template} delayHours={campaign.bump_1_delay_hours} />
-            <BumpCard bumpNumber={2} template={campaign.bump_2_template} delayHours={campaign.bump_2_delay_hours} />
-            <BumpCard bumpNumber={3} template={campaign.bump_3_template} delayHours={campaign.bump_3_delay_hours} />
           </div>
-        </div>
 
+        </div>
       </div>
+
     </div>
   );
 }

@@ -8,6 +8,18 @@ Lead Awaker is an AI-powered WhatsApp lead reactivation engine with a CRM and cl
 
 ---
 
+## Active Branch
+
+The UI redesign (leads page, sidebar tooltip, etc.) is being developed on the **`feat/leads-redesign`** branch.
+- `main` = stable, production-safe
+- `feat/leads-redesign` = active redesign work — always use this branch for UI changes until merged
+
+To check current branch: `git branch`
+To switch back if needed: `git checkout feat/leads-redesign`
+When the redesign is approved, merge into main: `git checkout main && git merge feat/leads-redesign`
+
+---
+
 ## Tech Stack
 
 **Frontend:**

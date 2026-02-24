@@ -30,7 +30,7 @@ import {
 } from "@shared/schema";
 import crypto from "crypto";
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "./dbKeys";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq, count, type SQL } from "drizzle-orm";
 import { ZodError } from "zod";
 
@@ -86,44 +86,11 @@ export async function registerRoutes(
   // ─── Auth Routes (public) ──────────────────────────────────────────
   registerAuthRoutes(app);
 
-  // ─── Health / Schema Check (public for monitoring) ────────────────
+  // ─── Health Check (public for monitoring) ─────────────────────────
   app.get("/api/health", async (_req, res) => {
     try {
-      // Quick connectivity check — count from each of the 11 tables
-      const tables = [
-        { name: "Accounts", query: () => db.select({ total: count() }).from(accounts) },
-        { name: "Leads", query: () => db.select({ total: count() }).from(leads) },
-        { name: "Campaigns", query: () => db.select({ total: count() }).from(campaigns) },
-        { name: "Interactions", query: () => db.select({ total: count() }).from(interactions) },
-        { name: "Users", query: () => db.select({ total: count() }).from(users) },
-        { name: "Tags", query: () => db.select({ total: count() }).from(tags) },
-        { name: "Leads_Tags", query: () => db.select({ total: count() }).from(leadsTags) },
-        { name: "Automation_Logs", query: () => db.select({ total: count() }).from(automationLogs) },
-        { name: "Prompt_Library", query: () => db.select({ total: count() }).from(promptLibrary) },
-        { name: "Lead_Score_History", query: () => db.select({ total: count() }).from(leadScoreHistory) },
-        { name: "Campaign_Metrics_History", query: () => db.select({ total: count() }).from(campaignMetricsHistory) },
-      ];
-
-      const results: Record<string, { accessible: boolean; rowCount: number; error?: string }> = {};
-      let allAccessible = true;
-
-      for (const t of tables) {
-        try {
-          const [row] = await t.query();
-          results[t.name] = { accessible: true, rowCount: row.total };
-        } catch (err: any) {
-          results[t.name] = { accessible: false, rowCount: 0, error: err.message };
-          allAccessible = false;
-        }
-      }
-
-      res.json({
-        status: allAccessible ? "healthy" : "degraded",
-        database: "connected",
-        tables: results,
-        totalTables: tables.length,
-        accessibleTables: Object.values(results).filter((r) => r.accessible).length,
-      });
+      await pool.query("SELECT 1");
+      res.json({ status: "healthy", database: "connected" });
     } catch (err: any) {
       res.status(500).json({ status: "error", database: "disconnected", error: err.message });
     }

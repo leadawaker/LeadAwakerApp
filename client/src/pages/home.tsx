@@ -24,6 +24,7 @@ import AnimatedCounter from "@/components/AnimatedCounter";
 import AnimatedRangeCounter from "@/components/AnimatedRangeCounter";
 import SalesRepSteps from "@/components/SalesRepSteps";
 import WorkflowVisualization from "@/components/WorkflowVisualization";
+import { FloatingPaths } from "@/components/ui/background-paths";
 
 export default function Home() {
   const { t, i18n } = useTranslation("home");
@@ -33,7 +34,7 @@ export default function Home() {
   const [isFinished, setIsFinished] = useState(false);
 
   return (
-    <div className="min-h-screen pt-32 overflow-x-hidden md:overflow-visible">
+    <div className="min-h-screen pt-32 overflow-x-hidden md:overflow-visible bg-white">
       {/* Hero Section */}
       <section className="relative overflow-hidden pb-20 md:pb-32">
         <div className="absolute top-0 right-0 -z-10 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent blur-3xl opacity-50" />
@@ -136,7 +137,7 @@ export default function Home() {
       <SalesRepSteps />
 
       {/* Conversion Pipeline */}
-      <section className="py-48 bg-muted/30">
+      <section className="py-48 bg-white">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
@@ -150,7 +151,7 @@ export default function Home() {
       </section>
 
       {/* Results/Metrics Section */}
-      <section className="pb-48 pt-16 bg-muted/30">
+      <section className="pb-48 pt-16 bg-white">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -205,7 +206,7 @@ export default function Home() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.1 * i }}
-                  className="bg-card p-6 rounded-2xl border border-border text-center flex flex-col justify-center flex-1 min-w-[280px]"
+                  className="bg-white p-6 rounded-2xl border border-border text-center flex flex-col justify-center flex-1 min-w-[280px]"
                 >
                   <div className={`font-bold text-primary mb-1 font-heading ${result.isRange ? 'text-4xl' : 'text-[48px]'}`}>
                     {result.isRange ? (
@@ -360,6 +361,9 @@ export default function Home() {
 
       {/* Bottom Demo CTA Section */}
       <section className="py-32 bg-primary text-primary-foreground relative overflow-hidden">
+        {/* Animated background paths — fade out after 20s, 12 paths on mobile / 36 on desktop */}
+        <FloatingPaths position={1} color="rgba(255,255,255,0.35)" />
+        <FloatingPaths position={-1} color="rgba(255,255,255,0.18)" />
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

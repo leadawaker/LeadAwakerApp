@@ -78,7 +78,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-20 bg-gradient-to-br from-background to-muted">
+    <div className="min-h-screen pt-24 pb-20 bg-slate-50">
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <motion.div
@@ -120,7 +120,7 @@ export default function Login() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="bg-card rounded-2xl shadow-xl border border-border p-8"
+            className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8"
           >
             <h2 className="text-2xl font-bold mb-6">{t("form.heading")}</h2>
 

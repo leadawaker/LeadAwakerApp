@@ -59,7 +59,7 @@ export default function About() {
       {/* SEO / hreflang hook */}
       <Seo />
 
-      <div className="min-h-screen pt-24 pb-20 text-center overflow-x-hidden">
+      <div className="min-h-screen pt-[126px] pb-20 text-center overflow-x-hidden bg-slate-50">
         <div className="container mx-auto px-6 md:px-12 lg:px-16 xl:px-20 2xl:px-24">
 
           {/* Intro Section */}
@@ -168,7 +168,7 @@ export default function About() {
             viewport={{ once: true }}
             className="max-w-5xl mx-auto mb-24"
           >
-            <div className="bg-card/50 border rounded-3xl p-8 md:p-12">
+            <div className="bg-white border border-slate-200 rounded-3xl p-8 md:p-12">
               <h2 className="text-4xl font-bold mb-12 text-left">
                 {t("faq.title")}
               </h2>
@@ -184,7 +184,7 @@ export default function About() {
                       {category.items.map((faq, itemIndex) => (
                         <div
                           key={itemIndex}
-                          className="border rounded-2xl bg-background overflow-hidden transition-all duration-300 hover:shadow-md"
+                          className="border border-slate-200 rounded-2xl bg-white overflow-hidden transition-all duration-300 hover:shadow-md"
                         >
                           <button
                             onClick={() =>

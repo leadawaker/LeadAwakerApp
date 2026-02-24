@@ -1,179 +1,183 @@
-import { useMemo, useState, useEffect, useCallback, memo } from "react";
-import DataTable, { SortConfig, RowSpacing } from "@/components/DataTable/DataTable";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { useLeadsData } from "../hooks/useLeadsData";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 import {
-  LeadFilters,
   applyLeadFilters,
   EMPTY_FILTERS,
   type LeadFilterState,
 } from "./LeadFilters";
-import { BulkActionsToolbar } from "./BulkActionsToolbar";
 import { LeadsKanban } from "./LeadsKanban";
-import { LeadsCardView } from "./LeadsCardView";
-import { LeadInfoPanel } from "./LeadInfoPanel";
+import {
+  LeadsCardView,
+  KanbanDetailPanel,
+  getLeadId as getLeadIdHelper,
+  getFullName as getFullNameHelper,
+  type GroupByOption,
+  type SortByOption,
+} from "./LeadsCardView";
+import { LeadsInlineTable } from "./LeadsInlineTable";
 import { CsvImportWizard } from "./CsvImportWizard";
-import { updateLead, bulkDeleteLeads } from "../api/leadsApi";
+import { updateLead, createLead } from "../api/leadsApi";
 import { apiFetch } from "@/lib/apiUtils";
-import { LayoutGrid, Table2, Upload, List } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import {
+  LayoutGrid, Table2, List,
+  Plus, Search, X, ArrowUpDown, Filter, Layers,
+  FileSpreadsheet, Eye, Check, Upload, Download,
+} from "lucide-react";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
-import { ViewTabStrip } from "@/components/crm/ViewTabStrip";
-
-const LEAD_COLUMNS = [
-  /* Core */
-  "Id",
-  "Image",
-  "full_name",
-  "first_name",
-  "last_name",
-
-  /* Contact */
-  "email",
-  "phone",
-  "language",
-
-  /* Status */
-  "conversion_status",
-  "priority",
-  "automation_status",
-  "manual_takeover",
-  "opted_out",
-  "dnc_reason",
-
-  /* Relations */
-  "Account",
-  "Campaign",
-
-  /* Activity */
-  "Interactions",
-  "last_interaction_at",
-  "last_message_sent_at",
-  "last_message_received_at",
-  "message_count_sent",
-  "message_count_received",
-
-  /* Booking */
-  "booked_call_date",
-  "booking_confirmed_at",
-  "booking_confirmation_sent",
-  "no_show",
-  "re-scheduled_count",
-
-  /* Automation */
-  "current_bump_stage",
-  "next_action_at",
-  "first_message_sent_at",
-  "bump_1_sent_at",
-  "bump_2_sent_at",
-  "bump_3_sent_at",
-
-  /* AI */
-  "ai_sentiment",
-  "ai_memory",
-
-  /* Notes */
-  "notes",
-
-  /* Meta */
-  "created_at",
-  "updated_at",
-];
-
-const SMALL_WIDTH_COLS = new Set([
-  "Id",
-  "Image",
-  "conversion_status",
-  "priority",
-  "Interactions",
-  "current_bump_stage",
-  "manual_takeover",
-  "opted_out",
-  "booking_confirmation_sent",
-  "no_show",
-]);
-
-// ── Stable module-level constants (prevent new array references on every render) ──
-const STATUS_OPTIONS = ["New", "Contacted", "Responded", "Multiple Responses", "Qualified", "Booked", "Lost", "DND"];
-const AUTOMATION_STATUS_OPTIONS = ["completed", "queued", "active", "paused", "dnd", "error"];
-const SMALL_WIDTH_COLS_ARRAY = Array.from(SMALL_WIDTH_COLS);
-const PAGINATION_OPTIONS = [25, 50, 100];
-const NON_EDITABLE_FIELDS = ["created_at", "updated_at"];
-const EMPTY_ARRAY: string[] = [];
-const GROUP_OPTIONS = [
-  { value: "None", label: "No Grouping" },
-  { value: "conversion_status", label: "By Stage" },
-  { value: "Campaign", label: "By Campaign" },
-  { value: "_primary_tag", label: "By Tag" },
-  { value: "automation_status", label: "By Automation" },
-  { value: "Account", label: "By Account" },
-];
-
-// Memoized DataTable — prevents re-render when only panel state changes (selectedLead / detailPanelOpen)
-const MemoTable = memo(DataTable) as typeof DataTable;
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import type { VirtualListItem } from "./LeadsCardView";
 
 type ViewMode = "list" | "table" | "kanban";
+type TableSortByOption  = "recent" | "name_asc" | "name_desc" | "score_desc" | "score_asc";
+type TableGroupByOption = "status" | "campaign" | "account" | "none";
 
-/* ── Folder tab definition ── */
-const VIEW_TABS: { id: ViewMode; label: string; icon: typeof List }[] = [
-  { id: "list", label: "List", icon: List },
-  { id: "table", label: "Table", icon: Table2 },
-  { id: "kanban", label: "Kanban", icon: LayoutGrid },
+const VIEW_MODE_KEY    = "leads-view-mode";
+const VISIBLE_COLS_KEY = "leads-table-visible-cols";
+
+/* ── Column metadata for the visibility dropdown ── */
+const TABLE_COL_META = [
+  { key: "name",         label: "Name",          defaultVisible: true  },
+  { key: "status",       label: "Status",        defaultVisible: true  },
+  { key: "score",        label: "Score",         defaultVisible: true  },
+  { key: "phone",        label: "Phone",         defaultVisible: true  },
+  { key: "email",        label: "Email",         defaultVisible: true  },
+  { key: "campaign",     label: "Campaign",      defaultVisible: true  },
+  { key: "tags",         label: "Tags",          defaultVisible: true  },
+  { key: "lastActivity", label: "Last Activity", defaultVisible: true  },
+  { key: "notes",        label: "Notes",         defaultVisible: true  },
+  { key: "account",      label: "Account",       defaultVisible: false },
+  { key: "source",       label: "Source",        defaultVisible: false },
+  { key: "company",      label: "Company",       defaultVisible: false },
+  { key: "bumpStage",    label: "Bump Stage",    defaultVisible: false },
+  { key: "createdAt",    label: "Created",       defaultVisible: false },
+  { key: "assignedTo",   label: "Assigned To",   defaultVisible: false },
 ];
+
+const DEFAULT_VISIBLE_COLS = TABLE_COL_META
+  .filter((c) => c.defaultVisible)
+  .map((c) => c.key);
+
+/* ── Tab definitions ── */
+const VIEW_TABS: { id: ViewMode; label: string; icon: typeof List }[] = [
+  { id: "list",   label: "List",   icon: List       },
+  { id: "table",  label: "Table",  icon: Table2     },
+  { id: "kanban", label: "Kanban", icon: LayoutGrid  },
+];
+
+/* ── Status group ordering ── */
+const STATUS_GROUP_ORDER = [
+  "New", "Contacted", "Responded", "Multiple Responses",
+  "Qualified", "Booked", "Lost", "DND",
+];
+
+const STATUS_OPTIONS = STATUS_GROUP_ORDER;
+
+const STATUS_DOT: Record<string, string> = {
+  New:                  "bg-gray-400",
+  Contacted:            "bg-blue-500",
+  Responded:            "bg-teal-500",
+  "Multiple Responses": "bg-green-500",
+  Qualified:            "bg-lime-500",
+  Booked:               "bg-amber-400",
+  Lost:                 "bg-red-500",
+  DND:                  "bg-zinc-500",
+};
+
+const TABLE_SORT_LABELS: Record<TableSortByOption, string> = {
+  recent:     "Most Recent",
+  name_asc:   "Name A → Z",
+  name_desc:  "Name Z → A",
+  score_desc: "Score ↓",
+  score_asc:  "Score ↑",
+};
+
+const TABLE_GROUP_LABELS: Record<TableGroupByOption, string> = {
+  status:   "Status",
+  campaign: "Campaign",
+  account:  "Account",
+  none:     "None",
+};
 
 export function LeadsTable() {
   const { currentAccountId, isAgencyView } = useWorkspace();
-  // For agency view with account 1 selected (all accounts), don't filter; otherwise filter by selected account
   const filterAccountId = (isAgencyView && currentAccountId === 1) ? undefined : currentAccountId;
-  const { leads, loading, error, handleRefresh, updateLeadRow, setLeads } = useLeadsData(filterAccountId);
-  const [search, setSearch] = useState("");
-  const [viewMode, setViewMode] = useState<ViewMode>("list");
-  const BASIC_DEFAULT_COLUMNS = ["Id", "Image", "full_name", "email", "phone", "updated_at", "Leads_Tags", "conversion_status"];
-  const VISIBLE_COLS_KEY = "leads-visible-columns";
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
+  const { leads, loading, error, handleRefresh, setLeads } = useLeadsData(filterAccountId);
+
+  /* ── View mode (persisted) ─────────────────────────────────────────────── */
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    try {
+      const stored = localStorage.getItem(VIEW_MODE_KEY);
+      if (stored && ["list", "table", "kanban"].includes(stored)) return stored as ViewMode;
+    } catch {}
+    return "list";
+  });
+
+  const [selectedLead,   setSelectedLead]   = useState<Record<string, any> | null>(null);
+  const [importWizardOpen, setImportWizardOpen] = useState(false);
+  const [leadFilters]    = useState<LeadFilterState>({ ...EMPTY_FILTERS });
+
+  /* ── Tag data ────────────────────────────────────────────────────────────── */
+  const [leadTagMap,   setLeadTagMap]   = useState<Map<number, number[]>>(new Map());
+  const [leadTagsInfo, setLeadTagsInfo] = useState<Map<number, { name: string; color: string }[]>>(new Map());
+  const [allTagsById,  setAllTagsById]  = useState<Map<number, { name: string; color: string }>>(new Map());
+
+  /* ── Lifted list-view controls ───────────────────────────────────────────── */
+  const [listSearch,   setListSearch]   = useState("");
+  const [searchOpen,   setSearchOpen]   = useState(false);
+  const [groupBy,      setGroupBy]      = useState<GroupByOption>("date");
+  const [sortBy,       setSortBy]       = useState<SortByOption>("recent");
+  const [filterStatus, setFilterStatus] = useState<string[]>([]);
+  const [filterTags,   setFilterTags]   = useState<string[]>([]);
+
+  /* ── Table toolbar state ─────────────────────────────────────────────────── */
+  const [tableSearch,         setTableSearch]         = useState("");
+  const [tableSearchOpen,     setTableSearchOpen]     = useState(false);
+  const [tableSortBy,         setTableSortBy]         = useState<TableSortByOption>("recent");
+  const [tableFilterStatus,   setTableFilterStatus]   = useState<string[]>([]);
+  const [tableFilterCampaign, setTableFilterCampaign] = useState<string>("");
+  const [tableFilterAccount,  setTableFilterAccount]  = useState<string>("");
+  const [tableGroupBy,        setTableGroupBy]        = useState<TableGroupByOption>("status");
+
+  /* ── Column visibility (persisted) ──────────────────────────────────────── */
+  const [visibleCols, setVisibleCols] = useState<Set<string>>(() => {
     try {
       const stored = localStorage.getItem(VISIBLE_COLS_KEY);
-      if (stored) return JSON.parse(stored) as string[];
+      if (stored) {
+        const arr = JSON.parse(stored);
+        if (Array.isArray(arr) && arr.length > 0) return new Set(arr);
+      }
     } catch {}
-    return BASIC_DEFAULT_COLUMNS;
+    return new Set(DEFAULT_VISIBLE_COLS);
   });
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [selectedLead, setSelectedLead] = useState<Record<string, any> | null>(null);
-  const [importWizardOpen, setImportWizardOpen] = useState(false);
-  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: "", direction: null });
-  const [groupBy, setGroupBy] = useState<string>("conversion_status");
-  const [rowSpacing, setRowSpacing] = useState<RowSpacing>("medium");
-  const [showVerticalLines, setShowVerticalLines] = useState<boolean>(true);
-  const [colWidths, setColWidths] = useState<Record<string, number>>({});
 
-  // Lead filter state
-  const [leadFilters, setLeadFilters] = useState<LeadFilterState>({ ...EMPTY_FILTERS });
+  /* ── Accounts (agency view) ──────────────────────────────────────────────── */
+  const [accountsById, setAccountsById] = useState<Map<number, string>>(new Map());
 
-  // Lead-tag mapping for tag-based filtering (leadId → tag ID array)
-  const [leadTagMap, setLeadTagMap] = useState<Map<number, number[]>>(new Map());
-  // Full tag info for Kanban card display (leadId → [{name, color}])
-  const [leadTagsInfo, setLeadTagsInfo] = useState<Map<number, { name: string; color: string }[]>>(new Map());
-  // All tags by ID for quick lookup
-  const [allTagsById, setAllTagsById] = useState<Map<number, { name: string; color: string }>>(new Map());
-
+  /* ── Persist view mode ───────────────────────────────────────────────────── */
   useEffect(() => {
-    const defaults = LEAD_COLUMNS.reduce((acc, c) => {
-      if (c === "Id") acc[c] = 44;
-      else if (c === "Image") acc[c] = 48;
-      else acc[c] = c === "conversion_status" ? 180 : SMALL_WIDTH_COLS.has(c) ? 120 : 200;
-      return acc;
-    }, {} as Record<string, number>);
-    setColWidths((prev) => ({ ...defaults, ...prev }));
-  }, []);
+    try { localStorage.setItem(VIEW_MODE_KEY, viewMode); } catch {}
+  }, [viewMode]);
 
-  // Persist visible columns to localStorage whenever they change
+  /* ── Persist visible columns ────────────────────────────────────────────── */
   useEffect(() => {
-    try { localStorage.setItem(VISIBLE_COLS_KEY, JSON.stringify(visibleColumns)); } catch {}
-  }, [visibleColumns]);
+    try { localStorage.setItem(VISIBLE_COLS_KEY, JSON.stringify(Array.from(visibleCols))); } catch {}
+  }, [visibleCols]);
 
-  // Fetch all tags once for tag-name/color lookup
+  /* ── Clear topbar actions ───────────────────────────────────────────────── */
+  const { clearTopbarActions } = useTopbarActions();
+  useEffect(() => { clearTopbarActions(); }, [clearTopbarActions]);
+
+  /* ── Fetch all tags ─────────────────────────────────────────────────────── */
   useEffect(() => {
     const fetchAllTags = async () => {
       try {
@@ -187,21 +191,39 @@ export function LeadsTable() {
           });
           setAllTagsById(byId);
         }
-      } catch (err) {
-        console.error("Failed to fetch all tags", err);
-      }
+      } catch (err) { console.error("Failed to fetch all tags", err); }
     };
     fetchAllTags();
   }, []);
 
-  // Fetch lead-tag mappings when leads change (for tag-based filtering + Kanban card display)
+  /* ── Fetch accounts (agency view) ───────────────────────────────────────── */
+  useEffect(() => {
+    if (!isAgencyView) return;
+    const fetchAccountData = async () => {
+      try {
+        const res = await apiFetch("/api/accounts");
+        if (res.ok) {
+          const data = await res.json();
+          const list = Array.isArray(data) ? data : data?.list || [];
+          const byId = new Map<number, string>();
+          list.forEach((a: any) => {
+            const id = a.id ?? a.Id;
+            byId.set(Number(id), a.name || a.Name || `Account ${id}`);
+          });
+          setAccountsById(byId);
+        }
+      } catch (err) { console.error("Failed to fetch accounts", err); }
+    };
+    fetchAccountData();
+  }, [isAgencyView]);
+
+  /* ── Fetch lead-tag mappings ────────────────────────────────────────────── */
   useEffect(() => {
     const fetchLeadTags = async () => {
       if (leads.length === 0) return;
       try {
         const batchSize = 10;
         const batches: Promise<{ leadId: number; tagIds: number[] }[]>[] = [];
-
         for (let i = 0; i < leads.length; i += batchSize) {
           const batch = leads.slice(i, i + batchSize);
           batches.push(
@@ -225,21 +247,18 @@ export function LeadsTable() {
             )
           );
         }
-
         const allBatchResults = await Promise.all(batches);
         const tagMap = new Map<number, number[]>();
         allBatchResults.flat().forEach(({ leadId, tagIds }) => {
           tagMap.set(leadId, tagIds);
         });
         setLeadTagMap(tagMap);
-      } catch (err) {
-        console.error("Failed to fetch lead tags for filtering", err);
-      }
+      } catch (err) { console.error("Failed to fetch lead tags for filtering", err); }
     };
     fetchLeadTags();
   }, [leads]);
 
-  // Build leadTagsInfo (leadId → [{name, color}]) whenever tagMap or allTagsById changes
+  /* ── Build leadTagsInfo ─────────────────────────────────────────────────── */
   useEffect(() => {
     if (allTagsById.size === 0) return;
     const info = new Map<number, { name: string; color: string }[]>();
@@ -252,242 +271,462 @@ export function LeadsTable() {
     setLeadTagsInfo(info);
   }, [leadTagMap, allTagsById]);
 
-  // Apply search filter and structured filters
+  /* ── Filtered leads (applies list-view structured filters) ──────────────── */
   const filteredLeads = useMemo(() => {
-    // First apply search
-    let result = leads;
-    if (search) {
-      const q = search.toLowerCase();
-      result = result.filter((l) => {
-        const fullName = String(l.full_name || "").toLowerCase();
-        const firstName = String(l.first_name || "").toLowerCase();
-        const lastName = String(l.last_name || "").toLowerCase();
-        const email = String(l.email || "").toLowerCase();
-        const phone = String(l.phone || "").toLowerCase();
-        const notes = String(l.notes || "").toLowerCase();
-        return (
-          fullName.includes(q) ||
-          firstName.includes(q) ||
-          lastName.includes(q) ||
-          email.includes(q) ||
-          phone.includes(q) ||
-          notes.includes(q)
-        );
-      });
-    }
-
-    // Then apply structured filters
-    result = applyLeadFilters(result, leadFilters, leadTagMap);
-
-    // Augment each lead with a _primary_tag field (first tag name) for tag-based grouping.
-    // Falls back to "Untagged" when no tags are assigned.
+    let result = applyLeadFilters(leads, leadFilters, leadTagMap);
     result = result.map((l) => {
       const tags = leadTagsInfo.get(l.Id);
       const primaryTag = tags && tags.length > 0 ? tags[0].name : "Untagged";
       return { ...l, _primary_tag: primaryTag };
     });
-
     return result;
-  }, [leads, search, leadFilters, leadTagMap, leadTagsInfo]);
+  }, [leads, leadFilters, leadTagMap, leadTagsInfo]);
 
-  // Detect whether any filter is currently active (search, structured filters, or column filters)
-  const hasActiveFilters = useMemo(() => {
-    if (search) return true;
-    if (leadFilters.pipelineStage) return true;
-    if (leadFilters.campaignId) return true;
-    if (leadFilters.tags.length > 0) return true;
-    if (leadFilters.scoreMin > 0 || leadFilters.scoreMax < 100) return true;
-    if (leadFilters.priority) return true;
-    if (leadFilters.dateFrom || leadFilters.dateTo) return true;
-    return false;
-  }, [search, leadFilters]);
+  /* ── Derived data for table filter dropdowns ─────────────────────────────── */
+  const availableCampaigns = useMemo(() => {
+    const set = new Set<string>();
+    filteredLeads.forEach((l) => {
+      const c = l.Campaign || l.campaign || l.campaign_name || "";
+      if (c) set.add(c);
+    });
+    return Array.from(set).sort();
+  }, [filteredLeads]);
 
-  // Clear all active filters and search in one click
-  const handleClearAllFilters = useCallback(() => {
-    setSearch("");
-    setLeadFilters({ ...EMPTY_FILTERS });
-  }, []);
+  const availableAccounts = useMemo(() => {
+    if (!isAgencyView) return [];
+    const result: { id: string; name: string }[] = [];
+    const seen = new Set<string>();
+    filteredLeads.forEach((l) => {
+      const accountId = String(l.Accounts_id || l.account_id || "");
+      if (accountId && !seen.has(accountId)) {
+        seen.add(accountId);
+        const name = accountsById.get(Number(accountId)) || `Account ${accountId}`;
+        result.push({ id: accountId, name });
+      }
+    });
+    return result.sort((a, b) => a.name.localeCompare(b.name));
+  }, [filteredLeads, isAgencyView, accountsById]);
 
-  const handleUpdate = useCallback(async (rowId: number, col: string, value: any) => {
-    try {
-      await updateLeadRow(rowId, col, value);
-    } catch (err) {}
-  }, [updateLeadRow]);
+  /* ── Table flat items — filtered, sorted, grouped ───────────────────────── */
+  const tableFlatItems = useMemo((): VirtualListItem[] => {
+    let source = filteredLeads;
 
-  const handleDelete = useCallback(async (ids: number[]) => {
-    try {
-      await bulkDeleteLeads(ids);
-      setLeads((prev) => prev.filter((l) => !ids.includes(l.Id ?? l.id)));
-      setSelectedIds([]);
-    } catch (err) {
-      console.error("Failed to delete leads", err);
-      handleRefresh();
+    if (tableFilterStatus.length > 0) {
+      source = source.filter((l) =>
+        tableFilterStatus.includes(l.conversion_status || l.Conversion_Status || "")
+      );
     }
-  }, [setLeads, handleRefresh]);
+    if (tableFilterCampaign) {
+      source = source.filter((l) =>
+        (l.Campaign || l.campaign || l.campaign_name || "") === tableFilterCampaign
+      );
+    }
+    if (tableFilterAccount) {
+      source = source.filter((l) =>
+        String(l.Accounts_id || l.account_id || "") === tableFilterAccount
+      );
+    }
+    if (tableSortBy !== "recent") {
+      source = [...source].sort((a, b) => {
+        switch (tableSortBy) {
+          case "name_asc":   return getFullNameHelper(a).localeCompare(getFullNameHelper(b));
+          case "name_desc":  return getFullNameHelper(b).localeCompare(getFullNameHelper(a));
+          case "score_desc": return Number(b.lead_score ?? b.leadScore ?? 0) - Number(a.lead_score ?? a.leadScore ?? 0);
+          case "score_asc":  return Number(a.lead_score ?? a.leadScore ?? 0) - Number(b.lead_score ?? b.leadScore ?? 0);
+          default: return 0;
+        }
+      });
+    }
 
-  const handleAdd = useCallback(() => {
-    console.log("Add lead");
-  }, []);
+    if (tableGroupBy === "none") {
+      const result: VirtualListItem[] = [];
+      source.forEach((l) =>
+        result.push({ kind: "lead", lead: l, tags: leadTagsInfo.get(l.Id || l.id) || [] })
+      );
+      return result;
+    }
 
-  /**
-   * Called by LeadsKanban when a card is dragged to a different column.
-   * 1. Optimistically updates the parent leads state so the kanban reflects the move instantly.
-   * 2. Fires the PATCH API call (using the DB column name "Conversion_Status").
-   * 3. On API failure:
-   *    a. Calls handleRefresh() to revert the parent leads state from the server.
-   *    b. Re-throws the error so LeadsKanban can immediately roll back its local
-   *       snapshot without waiting for the server refresh to complete.
-   */
+    const buckets = new Map<string, Record<string, any>[]>();
+    source.forEach((l) => {
+      let groupKey: string;
+      switch (tableGroupBy) {
+        case "campaign":
+          groupKey = l.Campaign || l.campaign || l.campaign_name || "No Campaign";
+          break;
+        case "account":
+          groupKey = accountsById.get(Number(l.Accounts_id || l.account_id)) ||
+            (l.Accounts_id || l.account_id ? `Account ${l.Accounts_id || l.account_id}` : "No Account");
+          break;
+        default: // status
+          groupKey = l.conversion_status || l.Conversion_Status || "Unknown";
+      }
+      if (!buckets.has(groupKey)) buckets.set(groupKey, []);
+      buckets.get(groupKey)!.push(l);
+    });
+
+    const orderedKeys =
+      tableGroupBy === "status"
+        ? STATUS_GROUP_ORDER.filter((k) => buckets.has(k))
+            .concat(Array.from(buckets.keys()).filter((k) => !STATUS_GROUP_ORDER.includes(k)))
+        : Array.from(buckets.keys()).sort();
+
+    const result: VirtualListItem[] = [];
+    orderedKeys.forEach((key) => {
+      const group = buckets.get(key);
+      if (!group || group.length === 0) return;
+      result.push({ kind: "header", label: key, count: group.length });
+      group.forEach((l) =>
+        result.push({ kind: "lead", lead: l, tags: leadTagsInfo.get(l.Id || l.id) || [] })
+      );
+    });
+    return result;
+  }, [filteredLeads, leadTagsInfo, tableFilterStatus, tableFilterCampaign, tableFilterAccount, tableSortBy, tableGroupBy, accountsById]);
+
+  /* ── Kanban drag ────────────────────────────────────────────────────────── */
   const handleKanbanLeadMove = useCallback(
     async (leadId: number | string, newStage: string) => {
-      // Optimistic update in parent state (normalise both key forms used by the app)
       setLeads((prev) =>
         prev.map((l) =>
           l.Id === leadId || l.id === leadId
-            ? {
-                ...l,
-                conversion_status: newStage,
-                Conversion_Status: newStage,
-              }
+            ? { ...l, conversion_status: newStage, Conversion_Status: newStage }
             : l
         )
       );
-
       try {
-        // The PATCH route calls fromDbKeys which maps "Conversion_Status" → "conversionStatus"
         await updateLead(leadId, { Conversion_Status: newStage });
       } catch (err) {
         console.error("Failed to move lead to new stage", err);
-        // Revert parent optimistic update by re-fetching from the server
         handleRefresh();
-        // Re-throw so the Kanban's snapshot-based rollback fires immediately,
-        // before the server refresh completes (gives instant UI feedback).
         throw err;
       }
     },
     [setLeads, handleRefresh]
   );
 
-  const handleRowClick = useCallback((row: Record<string, any>) => {
-    setSelectedLead(row);
-  }, []);
-
-  const handleClosePanel = useCallback(() => {
-    setSelectedLead(null);
-  }, []);
-
-  const handleBulkActionComplete = useCallback(() => {
-    // Refresh leads data and clear selection after any bulk action
-    handleRefresh();
-    setSelectedIds([]);
-  }, [handleRefresh]);
-
-  const renderBulkActions = useCallback(
-    (ids: number[], clearSelection: () => void) => (
-      <BulkActionsToolbar
-        selectedIds={ids}
-        onClearSelection={clearSelection}
-        onActionComplete={handleBulkActionComplete}
-      />
-    ),
-    [handleBulkActionComplete],
-  );
-
-  // Switch view and clear selected lead
   const handleViewSwitch = useCallback((mode: ViewMode) => {
     setViewMode(mode);
     setSelectedLead(null);
   }, []);
 
-  const { setTopbarActions, clearTopbarActions } = useTopbarActions();
+  const handleClosePanel = useCallback(() => { setSelectedLead(null); }, []);
 
-  useEffect(() => {
-    setTopbarActions(
-      <ViewTabStrip tabs={VIEW_TABS} activeTab={viewMode} onTabChange={handleViewSwitch} />
-    );
-    return () => clearTopbarActions();
-  }, [viewMode, setTopbarActions, clearTopbarActions, handleViewSwitch]);
-
-  // Filter slot — rendered inside DataTable toolbar next to Group By
-  const filterSlotNode = useMemo(() => (
-    <div className="flex items-center gap-2 flex-wrap">
-      <LeadFilters filters={leadFilters} onFiltersChange={setLeadFilters} />
-      {leadFilters.pipelineStage && (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-blue/10 text-brand-blue text-xs font-medium">
-          Stage: {leadFilters.pipelineStage}
-          <button className="ml-0.5 hover:text-red-600" onClick={() => setLeadFilters({ ...leadFilters, pipelineStage: "" })}>&times;</button>
-        </span>
-      )}
-      {leadFilters.campaignId && (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-green-50 text-green-700 text-xs font-medium">
-          Campaign: #{leadFilters.campaignId}
-          <button className="ml-0.5 hover:text-red-600" onClick={() => setLeadFilters({ ...leadFilters, campaignId: "" })}>&times;</button>
-        </span>
-      )}
-      {leadFilters.tags.length > 0 && (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-50 text-purple-700 text-xs font-medium">
-          {leadFilters.tags.length} tag{leadFilters.tags.length > 1 ? "s" : ""}
-          <button className="ml-0.5 hover:text-red-600" onClick={() => setLeadFilters({ ...leadFilters, tags: [] })}>&times;</button>
-        </span>
-      )}
-      {(leadFilters.scoreMin > 0 || leadFilters.scoreMax < 100) && (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-yellow/10 text-brand-yellow text-xs font-medium">
-          Score: {leadFilters.scoreMin}–{leadFilters.scoreMax}
-          <button className="ml-0.5 hover:text-red-600" onClick={() => setLeadFilters({ ...leadFilters, scoreMin: 0, scoreMax: 100 })}>&times;</button>
-        </span>
-      )}
-      {leadFilters.priority && (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-red-50 text-red-700 text-xs font-medium">
-          Priority: {leadFilters.priority}
-          <button className="ml-0.5 hover:text-red-600" onClick={() => setLeadFilters({ ...leadFilters, priority: "" })}>&times;</button>
-        </span>
-      )}
-      {(leadFilters.dateFrom || leadFilters.dateTo) && (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-muted text-foreground text-xs font-medium">
-          Date range
-          <button className="ml-0.5 hover:text-red-600" onClick={() => setLeadFilters({ ...leadFilters, dateFrom: undefined, dateTo: undefined })}>&times;</button>
-        </span>
-      )}
-    </div>
-  ), [leadFilters]);
-
-  // Import slot — rendered inside DataTable toolbar next to Export
-  const importSlotNode = useMemo(() => (
-    <Button
-      variant="outline"
-      className="h-10 px-3 gap-1.5 text-sm font-semibold rounded-xl bg-card dark:bg-secondary border-border shadow-none"
-      onClick={() => setImportWizardOpen(true)}
-      data-testid="import-csv-button"
-    >
-      <Upload className="h-4 w-4 text-muted-foreground" />
-      <span className="hidden sm:inline">Import</span>
-    </Button>
-  ), []);
-
-  // Auto-select first lead in list view when none selected
+  /* ── Auto-select first lead (list view) ─────────────────────────────────── */
   useEffect(() => {
     if (!selectedLead && filteredLeads.length > 0 && viewMode === "list") {
       setSelectedLead(filteredLeads[0]);
     }
   }, [filteredLeads, selectedLead, viewMode]);
 
-  // Show error fallback when data fetch fails and we have no cached data to show
+  /* ── List-view helpers ──────────────────────────────────────────────────── */
+  const allTags = useMemo(() => {
+    const seen = new Map<string, { name: string; color: string }>();
+    leadTagsInfo.forEach((tags) => tags.forEach((t) => { if (!seen.has(t.name)) seen.set(t.name, t); }));
+    return Array.from(seen.values());
+  }, [leadTagsInfo]);
+
+  const isGroupNonDefault     = groupBy !== "date";
+  const isSortNonDefault      = sortBy !== "recent";
+  const isFilterActive        = filterStatus.length > 0 || filterTags.length > 0;
+  const hasNonDefaultControls = isGroupNonDefault || isSortNonDefault || isFilterActive;
+
+  const toggleFilterStatus  = useCallback((s: string) =>
+    setFilterStatus((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]), []);
+  const toggleFilterTag     = useCallback((t: string) =>
+    setFilterTags((prev) => prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]), []);
+  const handleResetControls = useCallback(() => {
+    setFilterStatus([]); setFilterTags([]); setGroupBy("date"); setSortBy("recent");
+  }, []);
+
+  /* ── Table toolbar helpers ──────────────────────────────────────────────── */
+  const toggleTableFilterStatus = useCallback((s: string) =>
+    setTableFilterStatus((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]), []);
+  const clearTableFilters = useCallback(() => {
+    setTableFilterStatus([]); setTableFilterCampaign(""); setTableFilterAccount("");
+  }, []);
+  const isTableFilterActive    = tableFilterStatus.length > 0 || !!tableFilterCampaign || !!tableFilterAccount;
+  const tableActiveFilterCount = tableFilterStatus.length + (tableFilterCampaign ? 1 : 0) + (tableFilterAccount ? 1 : 0);
+
+  const handleAddLead = useCallback(async () => {
+    try { await createLead({ first_name: "New", last_name: "Lead", phone: "" }); handleRefresh(); }
+    catch (err) { console.error("Create lead failed", err); }
+  }, [handleRefresh]);
+
+  const handleExportCsv = useCallback(() => {
+    const headers = ["Name", "Status", "Score", "Phone", "Email", "Campaign", "Tags", "Last Activity", "Notes"];
+    const rows = tableFlatItems
+      .filter((i): i is Extract<VirtualListItem, { kind: "lead" }> => i.kind === "lead")
+      .map((item) => {
+        const l = item.lead;
+        const tags = leadTagsInfo.get(l.Id ?? l.id ?? 0) || [];
+        const name = getFullNameHelper(l);
+        const d    = l.last_interaction_at || l.last_message_received_at || l.last_message_sent_at || "";
+        let lastActivity = "";
+        if (d) {
+          try {
+            const diffDays = Math.floor((Date.now() - new Date(d).getTime()) / 86_400_000);
+            if (diffDays === 0) lastActivity = "Today";
+            else if (diffDays === 1) lastActivity = "Yesterday";
+            else if (diffDays < 7)  lastActivity = `${diffDays}d ago`;
+            else                    lastActivity = `${Math.floor(diffDays / 7)}w ago`;
+          } catch {}
+        }
+        const row = [
+          name,
+          l.conversion_status || l.Conversion_Status || "",
+          String(l.lead_score || l.leadScore || 0),
+          l.phone || l.Phone || "",
+          l.email || l.Email || "",
+          l.Campaign || l.campaign || l.campaign_name || "",
+          tags.map((t) => t.name).join("; "),
+          lastActivity,
+          l.notes || l.Notes || "",
+        ];
+        return row.map((v) =>
+          v.includes(",") || v.includes('"') || v.includes("\n") ? `"${v.replace(/"/g, '""')}"` : v
+        ).join(",");
+      });
+    const csv  = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [tableFlatItems, leadTagsInfo]);
+
+  /* ── Error fallback ─────────────────────────────────────────────────────── */
   if (error && leads.length === 0 && !loading) {
-    return (
-      <ApiErrorFallback
-        error={error}
-        onRetry={handleRefresh}
-        isRetrying={loading}
-      />
-    );
+    return <ApiErrorFallback error={error} onRetry={handleRefresh} isRetrying={loading} />;
   }
 
+  /* ── Table toolbar (rendered inline with tabs) ──────────────────────────── */
+  const tableToolbar = (
+    <>
+      <div className="w-px h-4 bg-border/25 mx-0.5 shrink-0" />
+
+      {/* +Add */}
+      <button
+        onClick={handleAddLead}
+        className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium border border-border/30 bg-transparent text-muted-foreground hover:bg-card hover:text-foreground shrink-0 transition-colors"
+      >
+        <Plus className="h-3.5 w-3.5" />
+        Add
+      </button>
+
+      {/* Search */}
+      {tableSearchOpen ? (
+        <div className="flex items-center gap-1.5 rounded-full border border-border/30 bg-card/60 px-2.5 py-1 shrink-0">
+          <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <input
+            autoFocus
+            value={tableSearch}
+            onChange={(e) => setTableSearch(e.target.value)}
+            placeholder="Search..."
+            onBlur={() => { if (!tableSearch) setTableSearchOpen(false); }}
+            className="text-[12px] bg-transparent outline-none w-24 min-w-0 text-foreground placeholder:text-muted-foreground/60"
+          />
+          <button onClick={() => { setTableSearch(""); setTableSearchOpen(false); }}>
+            <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setTableSearchOpen(true)}
+          className={cn(
+            "h-7 w-7 rounded-full border flex items-center justify-center shrink-0 transition-colors",
+            tableSearch
+              ? "border-brand-blue/40 text-brand-blue"
+              : "border-border/30 text-muted-foreground hover:text-foreground hover:bg-card"
+          )}
+        >
+          <Search className="h-3.5 w-3.5" />
+        </button>
+      )}
+
+      {/* Sort */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className={cn(
+            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium border bg-transparent hover:bg-card hover:text-foreground shrink-0 transition-colors",
+            tableSortBy !== "recent" ? "border-brand-blue/40 text-brand-blue" : "border-border/30 text-muted-foreground"
+          )}>
+            <ArrowUpDown className="h-3.5 w-3.5" />
+            Sort{tableSortBy !== "recent" ? ` · ${TABLE_SORT_LABELS[tableSortBy].split(" ")[0]}` : ""}
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-44">
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Sort by</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {(["recent", "name_asc", "name_desc", "score_desc", "score_asc"] as TableSortByOption[]).map((opt) => (
+            <DropdownMenuItem key={opt} onClick={() => setTableSortBy(opt)} className={cn("text-[12px]", tableSortBy === opt && "font-semibold text-brand-blue")}>
+              {TABLE_SORT_LABELS[opt]}
+              {tableSortBy === opt && <Check className="h-3 w-3 ml-auto" />}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Filter */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className={cn(
+            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium border bg-transparent hover:bg-card hover:text-foreground shrink-0 transition-colors",
+            isTableFilterActive ? "border-brand-blue/40 text-brand-blue" : "border-border/30 text-muted-foreground"
+          )}>
+            <Filter className="h-3.5 w-3.5" />
+            Filter{isTableFilterActive ? ` · ${tableActiveFilterCount}` : ""}
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Status</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {STATUS_OPTIONS.map((s) => (
+            <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleTableFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
+              <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", STATUS_DOT[s] ?? "bg-zinc-400")} />
+              <span className="flex-1">{s}</span>
+              {tableFilterStatus.includes(s) && <Check className="h-3 w-3 text-brand-blue shrink-0" />}
+            </DropdownMenuItem>
+          ))}
+
+          {availableCampaigns.length > 0 && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Campaign</DropdownMenuLabel>
+              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterCampaign(""); }} className={cn("text-[12px]", !tableFilterCampaign && "font-semibold text-brand-blue")}>
+                All Campaigns {!tableFilterCampaign && <Check className="h-3 w-3 ml-auto" />}
+              </DropdownMenuItem>
+              {availableCampaigns.map((c) => (
+                <DropdownMenuItem key={c} onClick={(e) => { e.preventDefault(); setTableFilterCampaign((p) => p === c ? "" : c); }} className={cn("text-[12px]", tableFilterCampaign === c && "font-semibold text-brand-blue")}>
+                  <span className="flex-1 truncate">{c}</span>
+                  {tableFilterCampaign === c && <Check className="h-3 w-3 ml-1 shrink-0" />}
+                </DropdownMenuItem>
+              ))}
+            </>
+          )}
+
+          {availableAccounts.length > 0 && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Account</DropdownMenuLabel>
+              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterAccount(""); }} className={cn("text-[12px]", !tableFilterAccount && "font-semibold text-brand-blue")}>
+                All Accounts {!tableFilterAccount && <Check className="h-3 w-3 ml-auto" />}
+              </DropdownMenuItem>
+              {availableAccounts.map((a) => (
+                <DropdownMenuItem key={a.id} onClick={(e) => { e.preventDefault(); setTableFilterAccount((p) => p === a.id ? "" : a.id); }} className={cn("text-[12px]", tableFilterAccount === a.id && "font-semibold text-brand-blue")}>
+                  <span className="flex-1 truncate">{a.name}</span>
+                  {tableFilterAccount === a.id && <Check className="h-3 w-3 ml-1 shrink-0" />}
+                </DropdownMenuItem>
+              ))}
+            </>
+          )}
+
+          {isTableFilterActive && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={clearTableFilters} className="text-[12px] text-destructive">Clear all filters</DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Group */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className={cn(
+            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium border bg-transparent hover:bg-card hover:text-foreground shrink-0 transition-colors",
+            tableGroupBy !== "status" ? "border-brand-blue/40 text-brand-blue" : "border-border/30 text-muted-foreground"
+          )}>
+            <Layers className="h-3.5 w-3.5" />
+            Group{tableGroupBy !== "status" ? ` · ${TABLE_GROUP_LABELS[tableGroupBy]}` : ""}
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-44">
+          {(["status", "campaign", "account", "none"] as TableGroupByOption[]).map((opt) => (
+            <DropdownMenuItem key={opt} onClick={() => setTableGroupBy(opt)} className={cn("text-[12px]", tableGroupBy === opt && "font-semibold text-brand-blue")}>
+              {TABLE_GROUP_LABELS[opt]}
+              {tableGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Fields (Visibility) */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className={cn(
+            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium border bg-transparent hover:bg-card hover:text-foreground shrink-0 transition-colors",
+            visibleCols.size !== DEFAULT_VISIBLE_COLS.length ? "border-brand-blue/40 text-brand-blue" : "border-border/30 text-muted-foreground"
+          )}>
+            <Eye className="h-3.5 w-3.5" />
+            Fields
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Show / Hide Columns</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {TABLE_COL_META.map((col) => {
+            const isVisible = visibleCols.has(col.key);
+            return (
+              <DropdownMenuItem
+                key={col.key}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setVisibleCols((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(col.key)) { if (next.size > 1) next.delete(col.key); }
+                    else next.add(col.key);
+                    return next;
+                  });
+                }}
+                className="flex items-center gap-2 text-[12px]"
+              >
+                <div className={cn(
+                  "h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0",
+                  isVisible ? "bg-brand-blue border-brand-blue" : "border-border/50"
+                )}>
+                  {isVisible && <Check className="h-2 w-2 text-white" />}
+                </div>
+                <span className="flex-1">{col.label}</span>
+                {!col.defaultVisible && (
+                  <span className="text-[9px] text-muted-foreground/40 px-1 bg-muted rounded font-medium">+</span>
+                )}
+              </DropdownMenuItem>
+            );
+          })}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setVisibleCols(new Set(DEFAULT_VISIBLE_COLS))} className="text-[12px] text-muted-foreground">
+            Reset to default
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* CSV */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium border border-border/30 bg-transparent text-muted-foreground hover:bg-card hover:text-foreground shrink-0 transition-colors">
+            <FileSpreadsheet className="h-3.5 w-3.5" />
+            CSV
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-44">
+          <DropdownMenuItem onClick={() => setImportWizardOpen(true)} className="text-[12px]">
+            <Upload className="h-3.5 w-3.5 mr-2" /> Import CSV
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleExportCsv} className="text-[12px]">
+            <Download className="h-3.5 w-3.5 mr-2" /> Export CSV
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
+  );
+
   return (
-    <div className="flex flex-col gap-3">
-      {/* Content card */}
-      <div className="border border-border rounded-xl bg-card overflow-hidden">
-        {/* List / Card view (D365-style split-panel with indigo gradient detail) */}
-        {viewMode === "list" && (
+    <div className="flex flex-col h-full">
+
+      {/* ── List view ── */}
+      {viewMode === "list" && (
+        <div className="flex-1 min-h-0 overflow-hidden">
           <LeadsCardView
             leads={filteredLeads}
             loading={loading}
@@ -495,100 +734,121 @@ export function LeadsTable() {
             onSelectLead={setSelectedLead}
             onClose={handleClosePanel}
             leadTagsInfo={leadTagsInfo}
+            onRefresh={handleRefresh}
+            listSearch={listSearch}
+            groupBy={groupBy}
+            sortBy={sortBy}
+            filterStatus={filterStatus}
+            filterTags={filterTags}
+            viewMode={viewMode}
+            onViewModeChange={handleViewSwitch}
+            searchOpen={searchOpen}
+            onSearchOpenChange={setSearchOpen}
+            onListSearchChange={setListSearch}
+            onGroupByChange={setGroupBy}
+            onSortByChange={setSortBy}
+            onToggleFilterStatus={toggleFilterStatus}
+            onToggleFilterTag={toggleFilterTag}
+            allTags={allTags}
+            hasNonDefaultControls={hasNonDefaultControls}
+            isGroupNonDefault={isGroupNonDefault}
+            isSortNonDefault={isSortNonDefault}
+            onResetControls={handleResetControls}
           />
-        )}
+        </div>
+      )}
 
-        {/* Table view */}
-        {viewMode === "table" && (
-          <div className="flex gap-3 p-3">
-            <div className="flex-1 min-w-0 overflow-hidden">
-              <MemoTable
-                loading={loading}
-                rows={filteredLeads}
-                columns={LEAD_COLUMNS}
-                visibleColumns={visibleColumns}
-                onVisibleColumnsChange={setVisibleColumns}
-                selectedIds={selectedIds}
-                onSelectedIdsChange={setSelectedIds}
-                sortConfig={sortConfig}
-                onSortChange={setSortConfig}
-                groupBy={groupBy}
-                onGroupByChange={setGroupBy}
-                groupOptions={GROUP_OPTIONS}
-                colWidths={colWidths}
-                onColWidthsChange={setColWidths}
-                rowSpacing={rowSpacing}
-                onRowSpacingChange={setRowSpacing}
-                showVerticalLines={showVerticalLines}
-                onShowVerticalLinesChange={setShowVerticalLines}
-                onUpdate={handleUpdate}
-                onDelete={handleDelete}
-                onAdd={handleAdd}
-                statusOptions={STATUS_OPTIONS}
-                automationStatusOptions={AUTOMATION_STATUS_OPTIONS}
-                typeOptions={EMPTY_ARRAY}
-                timezoneOptions={EMPTY_ARRAY}
-                hiddenFields={EMPTY_ARRAY}
-                nonEditableFields={NON_EDITABLE_FIELDS}
-                smallWidthCols={SMALL_WIDTH_COLS_ARRAY}
-                searchValue={search}
-                onSearchValueChange={setSearch}
-                onRefresh={handleRefresh}
-                isRefreshing={loading}
-                virtualized={true}
-                pageSizeOptions={PAGINATION_OPTIONS}
-                emptyStateVariant={hasActiveFilters ? "search" : "leads"}
-                emptyStateTitle={hasActiveFilters ? "No leads match your filters" : undefined}
-                emptyStateDescription={
-                  hasActiveFilters
-                    ? "Try adjusting your search query or clearing active filters to see more results."
-                    : undefined
-                }
-                emptyStateActionLabel={hasActiveFilters ? "Clear all filters" : undefined}
-                emptyStateOnAction={hasActiveFilters ? handleClearAllFilters : undefined}
-                renderBulkActions={renderBulkActions}
-                onRowClick={handleRowClick}
-                exportable={true}
-                exportFilename="leads"
-                nonResizableCols={["Id", "Image"]}
-                filterSlot={filterSlotNode}
-                importSlot={importSlotNode}
-              />
-            </div>
-            <LeadInfoPanel
-              lead={selectedLead}
-              onClose={handleClosePanel}
-              totalLeads={filteredLeads.length}
-              leads={filteredLeads}
-            />
-          </div>
-        )}
+      {/* ── Table / Kanban ── */}
+      {(viewMode === "table" || viewMode === "kanban") && (
+        <div className="flex-1 min-h-0 flex gap-[3px] overflow-hidden">
 
-        {/* Kanban view — detail panel only shows when a card is clicked */}
-        {viewMode === "kanban" && (
-          <div className={cn("flex gap-3 p-3", selectedLead ? "items-start" : "")}>
-            <div className="flex-1 min-w-0 overflow-hidden">
-              <LeadsKanban
-                leads={filteredLeads}
-                loading={loading}
-                campaignId={leadFilters.campaignId || undefined}
-                leadTagsMap={leadTagsInfo}
-                onLeadMove={handleKanbanLeadMove}
-                onCardClick={setSelectedLead}
-                selectedLeadId={selectedLead?.Id ?? selectedLead?.id}
-              />
+          {/* Left panel */}
+          <div className="flex flex-col bg-muted rounded-lg overflow-hidden flex-1 min-w-0">
+
+            {/* Title */}
+            <div className="px-3.5 pt-7 pb-1 shrink-0">
+              <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">My Leads</h2>
             </div>
-            {selectedLead && (
-              <LeadInfoPanel
-                lead={selectedLead}
-                onClose={handleClosePanel}
-                totalLeads={filteredLeads.length}
-                leads={filteredLeads}
-              />
+
+            {/* Controls row: tabs + table toolbar (inline, no count badge) */}
+            <div className="px-3 pt-1.5 pb-2.5 shrink-0 flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
+              {VIEW_TABS.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = viewMode === tab.id;
+                return isActive ? (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleViewSwitch(tab.id)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFF375] text-foreground text-[12px] font-semibold shrink-0"
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {tab.label}
+                  </button>
+                ) : (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleViewSwitch(tab.id)}
+                    title={tab.label}
+                    className="h-6 w-6 rounded-full border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors shrink-0"
+                  >
+                    <Icon className="h-3 w-3" />
+                  </button>
+                );
+              })}
+
+              {/* Inline toolbar — table view only */}
+              {viewMode === "table" && tableToolbar}
+            </div>
+
+            {/* Table content */}
+            {viewMode === "table" && (
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <LeadsInlineTable
+                  flatItems={tableFlatItems}
+                  loading={loading}
+                  selectedLeadId={selectedLead ? (selectedLead.Id ?? selectedLead.id ?? null) : null}
+                  onSelectLead={setSelectedLead}
+                  leadTagsInfo={leadTagsInfo}
+                  onRefresh={handleRefresh}
+                  visibleCols={visibleCols}
+                  tableSearch={tableSearch}
+                />
+              </div>
+            )}
+
+            {/* Kanban board */}
+            {viewMode === "kanban" && (
+              <div
+                className="flex-1 flex flex-col overflow-hidden p-[3px]"
+                onClick={handleClosePanel}
+              >
+                <div className="flex-1 flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                  <LeadsKanban
+                    leads={filteredLeads}
+                    loading={loading}
+                    campaignId={undefined}
+                    leadTagsMap={leadTagsInfo}
+                    onLeadMove={handleKanbanLeadMove}
+                    onCardClick={setSelectedLead}
+                    selectedLeadId={selectedLead?.Id ?? selectedLead?.id}
+                  />
+                </div>
+              </div>
             )}
           </div>
-        )}
-      </div>
+
+          {/* Right detail panel (kanban) */}
+          {viewMode === "kanban" && selectedLead && (
+            <div className="w-[380px] flex-shrink-0 flex flex-col min-w-0 overflow-hidden bg-card rounded-lg">
+              <KanbanDetailPanel
+                lead={selectedLead}
+                onClose={handleClosePanel}
+                leadTags={leadTagsInfo.get(getLeadIdHelper(selectedLead)) || []}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* CSV Import Wizard */}
       <CsvImportWizard

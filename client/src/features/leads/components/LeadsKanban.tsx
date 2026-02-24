@@ -3,42 +3,50 @@ import {
   DndContext,
   DragOverlay,
   MouseSensor,
-  PointerSensor,
   TouchSensor,
+  MeasuringStrategy,
   useSensor,
   useSensors,
   useDroppable,
   useDraggable,
   type DragEndEvent,
   type DragStartEvent,
+  type Modifier,
 } from "@dnd-kit/core";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { getEventCoordinates } from "@dnd-kit/utilities";
+
+/** Snaps the ghost card's center to the cursor so it tracks right under the pointer */
+const snapCenterToCursor: Modifier = ({ activatorEvent, draggingNodeRect, transform }) => {
+  if (draggingNodeRect && activatorEvent) {
+    const coords = getEventCoordinates(activatorEvent);
+    if (!coords) return transform;
+    return {
+      ...transform,
+      x: transform.x + draggingNodeRect.width / 2 - (coords.x - draggingNodeRect.left),
+      y: transform.y + draggingNodeRect.height / 2 - (coords.y - draggingNodeRect.top),
+    };
+  }
+  return transform;
+};
 import { cn } from "@/lib/utils";
+import { getStatusAvatarColor } from "./LeadsCardView";
 import {
-  Mail,
   Phone,
-  MessageSquare,
-  Calendar,
-  AlertCircle,
-  SmilePlus,
-  Frown,
-  Meh,
   ChevronLeft,
   ChevronRight,
   Users,
   PhoneCall,
   MessageCircle,
+  MessageSquare,
   Star,
   Trophy,
   BanIcon,
   HeartCrack,
+  AlertCircle,
 } from "lucide-react";
 
 /* ─────────── Pipeline column configuration ─────────── */
 
-// DB values for Conversion_Status field
 const PIPELINE_STAGES = [
   "New",
   "Contacted",
@@ -50,7 +58,6 @@ const PIPELINE_STAGES = [
   "DND",
 ] as const;
 
-// Display labels for each pipeline stage (may differ from DB value)
 const STAGE_LABELS: Record<string, string> = {
   New: "New",
   Contacted: "Contacted",
@@ -62,186 +69,35 @@ const STAGE_LABELS: Record<string, string> = {
   DND: "DND",
 };
 
-const STAGE_STYLES: Record<
-  string,
-  {
-    bg: string;
-    border: string;
-    badge: string;
-    dot: string;
-    dragOver: string;
-    /** Tinted background for the column header area */
-    headerBg: string;
-    /** Colored text class for the stage label in the header */
-    labelCls: string;
-    /** Top accent bar color (thin strip at top of the column for visual distinction) */
-    accentBar: string;
-  }
-> = {
-  New: {
-    /* Dark gray */
-    bg: "bg-slate-50/50 dark:bg-slate-900/20",
-    border: "border-slate-200/50 dark:border-slate-700/30",
-    badge: "bg-slate-100 text-slate-600 dark:bg-slate-800/40 dark:text-slate-400",
-    dot: "bg-slate-500",
-    dragOver:
-      "bg-slate-100/70 dark:bg-slate-800/40 border-slate-400/60 dark:border-slate-600/50",
-    headerBg: "bg-slate-100/60 dark:bg-slate-800/30",
-    labelCls: "text-slate-600 dark:text-slate-400",
-    accentBar: "bg-slate-500 dark:bg-slate-500",
-  },
-  Contacted: {
-    /* Dark blue (near-navy) */
-    bg: "bg-blue-950/5 dark:bg-blue-950/25",
-    border: "border-blue-900/20 dark:border-blue-800/30",
-    badge:
-      "bg-blue-900/15 text-blue-900 dark:bg-blue-900/40 dark:text-blue-300",
-    dot: "bg-blue-900",
-    dragOver:
-      "bg-blue-900/20 dark:bg-blue-900/40 border-blue-800/60 dark:border-blue-700/50",
-    headerBg: "bg-blue-900/10 dark:bg-blue-950/35",
-    labelCls: "text-blue-900 dark:text-blue-300",
-    accentBar: "bg-blue-900 dark:bg-blue-700",
-  },
-  Responded: {
-    /* Standard blue */
-    bg: "bg-blue-50/50 dark:bg-blue-950/20",
-    border: "border-blue-200/50 dark:border-blue-800/30",
-    badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-    dot: "bg-blue-500",
-    dragOver:
-      "bg-blue-100/70 dark:bg-blue-900/40 border-blue-400/60 dark:border-blue-600/50",
-    headerBg: "bg-blue-100/60 dark:bg-blue-900/30",
-    labelCls: "text-blue-700 dark:text-blue-300",
-    accentBar: "bg-blue-500 dark:bg-blue-500",
-  },
-  "Multiple Responses": {
-    /* Slightly teal */
-    bg: "bg-teal-50/50 dark:bg-teal-950/20",
-    border: "border-teal-200/50 dark:border-teal-800/30",
-    badge:
-      "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
-    dot: "bg-teal-500",
-    dragOver:
-      "bg-teal-100/70 dark:bg-teal-900/40 border-teal-400/60 dark:border-teal-600/50",
-    headerBg: "bg-teal-100/60 dark:bg-teal-900/30",
-    labelCls: "text-teal-700 dark:text-teal-300",
-    accentBar: "bg-teal-400 dark:bg-teal-500",
-  },
-  Qualified: {
-    /* Green */
-    bg: "bg-emerald-50/50 dark:bg-emerald-950/20",
-    border: "border-emerald-200/50 dark:border-emerald-800/30",
-    badge:
-      "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-    dot: "bg-emerald-500",
-    dragOver:
-      "bg-emerald-100/70 dark:bg-emerald-900/40 border-emerald-400/60 dark:border-emerald-600/50",
-    headerBg: "bg-emerald-100/60 dark:bg-emerald-900/30",
-    labelCls: "text-emerald-700 dark:text-emerald-300",
-    accentBar: "bg-emerald-400 dark:bg-emerald-500",
-  },
-  Booked: {
-    /* Brand yellow — north-star "Call Booked" */
-    bg: "bg-brand-yellow/5 dark:bg-brand-yellow/10",
-    border: "border-brand-yellow/40 dark:border-brand-yellow/25",
-    badge:
-      "bg-brand-yellow/20 text-brand-yellow dark:bg-brand-yellow/25 dark:text-brand-yellow",
-    dot: "bg-brand-yellow",
-    dragOver: "bg-brand-yellow/20 dark:bg-brand-yellow/25 border-brand-yellow/60",
-    headerBg: "bg-brand-yellow/20 dark:bg-brand-yellow/20",
-    labelCls: "text-brand-yellow font-bold",
-    accentBar: "bg-brand-yellow",
-  },
-  Lost: {
-    /* Gray */
-    bg: "bg-zinc-50/50 dark:bg-zinc-900/20",
-    border: "border-zinc-200/50 dark:border-zinc-700/30",
-    badge: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800/40 dark:text-zinc-400",
-    dot: "bg-zinc-400",
-    dragOver:
-      "bg-zinc-100/70 dark:bg-zinc-800/40 border-zinc-400/60 dark:border-zinc-600/50",
-    headerBg: "bg-zinc-100/60 dark:bg-zinc-800/30",
-    labelCls: "text-zinc-600 dark:text-zinc-400",
-    accentBar: "bg-zinc-400 dark:bg-zinc-500",
-  },
-  DND: {
-    /* Gray column, red title */
-    bg: "bg-zinc-50/50 dark:bg-zinc-900/20",
-    border: "border-zinc-200/50 dark:border-zinc-700/30",
-    badge: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800/40 dark:text-zinc-400",
-    dot: "bg-zinc-400",
-    dragOver:
-      "bg-zinc-100/70 dark:bg-zinc-800/40 border-zinc-400/60 dark:border-zinc-600/50",
-    headerBg: "bg-zinc-100/60 dark:bg-zinc-800/30",
-    labelCls: "text-red-600 dark:text-red-400",
-    accentBar: "bg-zinc-400 dark:bg-zinc-500",
-  },
-};
-
-const DEFAULT_STYLE = {
-  bg: "bg-muted/30",
-  border: "border-border/50",
-  badge: "bg-muted text-muted-foreground",
-  dot: "bg-muted-foreground",
-  dragOver: "bg-muted/60 border-border",
-  headerBg: "bg-muted/40",
-  labelCls: "text-foreground",
-  accentBar: "bg-muted-foreground",
+/** Hex color for each pipeline stage — used for title text and the stage dot */
+const PIPELINE_HEX: Record<string, string> = {
+  New:                  "#6B7280",
+  Contacted:            "#5170FF",
+  Responded:            "#14B8A6",
+  "Multiple Responses": "#22C55E",
+  Qualified:            "#84CC16",
+  Booked:               "#FCB803",
+  Lost:                 "#EF4444",
+  DND:                  "#71717A",
 };
 
 /* ─────────── Contextual empty state messages per pipeline stage ─────────── */
 
 type EmptyStateConfig = {
-  /** Primary message (e.g. "No new leads yet") */
   message: string;
-  /** Sub-message with an action hint */
   hint: string;
-  /** Icon to display above the message */
   icon: React.FC<{ className?: string }>;
 };
 
 const STAGE_EMPTY_STATES: Record<string, EmptyStateConfig> = {
-  New: {
-    message: "No new leads yet",
-    hint: "Import contacts or add a lead to get started",
-    icon: Users,
-  },
-  Contacted: {
-    message: "No contacted leads",
-    hint: "Reach out to new leads to move them here",
-    icon: PhoneCall,
-  },
-  Responded: {
-    message: "No leads have responded",
-    hint: "Keep following up — responses will appear here",
-    icon: MessageCircle,
-  },
-  "Multiple Responses": {
-    message: "No active conversations",
-    hint: "Engage with your contacted leads to build dialogue",
-    icon: MessageSquare,
-  },
-  Qualified: {
-    message: "No qualified leads yet",
-    hint: "Qualify promising conversations to fill this stage",
-    icon: Star,
-  },
-  Booked: {
-    message: "No calls booked yet",
-    hint: "This is your north-star goal — keep pushing!",
-    icon: Trophy,
-  },
-  Lost: {
-    message: "No lost leads",
-    hint: "Great! All your leads are still in the pipeline",
-    icon: HeartCrack,
-  },
-  DND: {
-    message: "No leads on DND",
-    hint: "Leads who opt out will appear here",
-    icon: BanIcon,
-  },
+  New:                  { message: "No new leads yet",          hint: "Import contacts or add a lead to get started",            icon: Users        },
+  Contacted:            { message: "No contacted leads",         hint: "Reach out to new leads to move them here",                icon: PhoneCall    },
+  Responded:            { message: "No leads have responded",    hint: "Keep following up — responses will appear here",          icon: MessageCircle },
+  "Multiple Responses": { message: "No active conversations",    hint: "Engage with your contacted leads to build dialogue",      icon: MessageSquare },
+  Qualified:            { message: "No qualified leads yet",     hint: "Qualify promising conversations to fill this stage",      icon: Star         },
+  Booked:               { message: "No calls booked yet",        hint: "This is your north-star goal — keep pushing!",           icon: Trophy       },
+  Lost:                 { message: "No lost leads",              hint: "Great! All your leads are still in the pipeline",         icon: HeartCrack   },
+  DND:                  { message: "No leads on DND",            hint: "Leads who opt out will appear here",                      icon: BanIcon      },
 };
 
 const DEFAULT_EMPTY_STATE: EmptyStateConfig = {
@@ -251,110 +107,59 @@ const DEFAULT_EMPTY_STATE: EmptyStateConfig = {
 };
 
 /* ─────────── Infinite scroll batch size ─────────── */
-/** Number of leads initially rendered per column, and loaded per scroll batch */
 const COLUMN_BATCH_SIZE = 20;
 
-/* ─────────── Priority badge colors ─────────── */
+/* ─────────── Score color helpers (same as LeadsCardView) ─────────── */
 
-function priorityColor(priority: string | undefined) {
-  switch (priority?.toLowerCase()) {
-    case "urgent":
-      return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
-    case "high":
-      return "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400";
-    case "medium":
-      return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
-    case "low":
-      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
-    default:
-      return "bg-muted text-muted-foreground";
-  }
+function getScorePastelBg(score: number): string {
+  const t = Math.max(0, Math.min(1, score / 100));
+  const h = Math.round(229 - t * (229 - 45));
+  return `hsl(${h}, 55%, 88%)`;
 }
 
-/* ─────────── Score badge color helper ─────────── */
-
-function scoreBadgeClass(score: number) {
-  if (score >= 70)
-    return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
-  if (score >= 40)
-    return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
-  return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+function getScoreDarkText(score: number): string {
+  const t = Math.max(0, Math.min(1, score / 100));
+  const h = Math.round(229 - t * (229 - 45));
+  return `hsl(${h}, 75%, 36%)`;
 }
 
-/* ─────────── Sentiment indicator helper ─────────── */
+/* ─────────── Data helpers ─────────── */
 
-type SentimentInfo = {
-  label: string;
-  icon: React.ReactNode;
-  cls: string;
-};
-
-function getSentimentInfo(sentiment: string | null | undefined): SentimentInfo | null {
-  if (!sentiment) return null;
-  const lower = sentiment.toLowerCase();
-  if (
-    lower.includes("positive") ||
-    lower === "good" ||
-    lower === "happy"
-  ) {
-    return {
-      label: "Positive",
-      icon: <SmilePlus className="h-3 w-3" />,
-      cls: "text-green-600 dark:text-green-400",
-    };
-  }
-  if (
-    lower.includes("negative") ||
-    lower === "bad" ||
-    lower === "angry" ||
-    lower === "frustrated"
-  ) {
-    return {
-      label: "Negative",
-      icon: <Frown className="h-3 w-3" />,
-      cls: "text-red-500 dark:text-red-400",
-    };
-  }
-  if (lower.includes("neutral") || lower === "ok" || lower === "okay") {
-    return {
-      label: "Neutral",
-      icon: <Meh className="h-3 w-3" />,
-      cls: "text-muted-foreground",
-    };
-  }
-  // Show whatever value is present as a non-null fallback
-  return {
-    label: sentiment,
-    icon: <Meh className="h-3 w-3" />,
-    cls: "text-muted-foreground",
-  };
+function getFullName(lead: any): string {
+  return lead.full_name || [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "Unknown";
 }
 
-/* ─────────── Tag chip color helper ─────────── */
-
-function tagBgStyle(color: string | undefined): React.CSSProperties {
-  if (!color || color === "gray") return {};
-  if (color.startsWith("#")) {
-    return { backgroundColor: color + "30", borderColor: color + "60" };
-  }
-  // Named colors via color-mix for light tint
-  return {
-    backgroundColor: `color-mix(in srgb, ${color} 20%, transparent)`,
-    borderColor: `color-mix(in srgb, ${color} 40%, transparent)`,
-  };
+function getInitials(name: string): string {
+  return name.split(" ").map((w: string) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "?";
 }
 
-/* ─────────── Format date helper ─────────── */
+function getScore(lead: any): number {
+  return Number(lead.lead_score ?? lead.leadScore ?? lead.Lead_Score ?? 0);
+}
+
+function getStatus(lead: any): string {
+  return lead.conversion_status || lead.Conversion_Status || "New";
+}
+
+function getPhone(lead: any): string {
+  return lead.phone || lead.Phone || "";
+}
+
+function getLastMessage(lead: any): string {
+  return lead.last_message || lead.last_message_received || lead.last_reply || lead.last_message_sent || "";
+}
 
 function formatRelativeDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "";
   try {
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return "";
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return "Today";
+    const diffMs = Date.now() - date.getTime();
+    const diffDays = Math.floor(diffMs / 86_400_000);
+    if (diffDays === 0) {
+      const h = Math.floor(diffMs / 3_600_000);
+      return h === 0 ? "Now" : `${h}h ago`;
+    }
     if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays}d ago`;
     if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
@@ -364,190 +169,122 @@ function formatRelativeDate(dateStr: string | null | undefined): string {
   }
 }
 
-/* ─────────── Card content (reused by draggable card + drag overlay) ─────────── */
+/* ─────────── Card content — matches LeadListCard from LeadsCardView ─────────── */
 
 interface KanbanCardContentProps {
   lead: any;
   isDragging?: boolean;
+  isSelected?: boolean;
   cardTags?: { name: string; color: string }[];
 }
 
 function KanbanCardContent({
   lead,
   isDragging = false,
+  isSelected = false,
   cardTags,
 }: KanbanCardContentProps) {
-  const initials =
-    lead.Image ||
-    `${(lead.first_name || "").charAt(0)}${(lead.last_name || "").charAt(0)}`.toUpperCase() ||
-    "?";
-
-  const lastActivity =
-    lead.last_interaction_at ||
-    lead.last_message_received_at ||
-    lead.last_message_sent_at;
-
-  // Score from lead data (0-100)
-  const score = Number(lead.lead_score ?? lead.leadScore ?? lead.Lead_Score ?? 0);
-  const hasScore = score > 0;
-
-  // Sentiment
-  const sentimentRaw = lead.ai_sentiment || lead.aiSentiment || lead.Ai_Sentiment;
-  const sentiment = getSentimentInfo(sentimentRaw);
-
-  // Tags (passed from parent via leadTagsMap lookup)
-  const tags = cardTags || [];
-  const visibleTags = tags.slice(0, 3);
-  const extraTagCount = Math.max(0, tags.length - 3);
+  const name       = getFullName(lead);
+  const initials   = getInitials(name);
+  const status     = getStatus(lead);
+  const score      = getScore(lead);
+  const phone      = getPhone(lead);
+  const lastMsg    = getLastMessage(lead);
+  const avatarColor  = getStatusAvatarColor(status);
+  const lastActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
+  const visibleTags  = (cardTags || []).slice(0, 2);
 
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-card p-3 shadow-sm transition-all duration-200",
-        isDragging
-          ? "shadow-xl ring-2 ring-brand-blue/40 opacity-95 rotate-1 scale-105"
-          : "hover:shadow-md group"
+        "relative mx-0.5 my-0.5 rounded-xl transition-colors",
+        isSelected
+          ? "bg-[#FFF6C8]"
+          : "bg-white hover:bg-white",
+        isDragging && "scale-[1.02] rotate-1 opacity-95"
       )}
     >
-      {/* Header: Avatar + Name + Score badge */}
-      <div className="flex items-start gap-2.5">
-        <div className="w-8 h-8 rounded-lg bg-brand-blue/10 text-brand-blue flex items-center justify-center text-xs font-bold flex-shrink-0">
-          {initials}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div
-            className="font-semibold text-sm truncate text-foreground"
-            data-testid="kanban-card-name"
-          >
-            {lead.full_name ||
-              `${lead.first_name || ""} ${lead.last_name || ""}`.trim() ||
-              "Unknown"}
+      <div className="px-2.5 pt-2.5 pb-2 flex flex-col gap-1.5">
+
+        {/* Phone icon — absolute top-right with tooltip on hover */}
+        {phone && (
+          <div className="absolute top-2.5 right-2.5 group/phone z-10">
+            <div className="h-7 w-7 rounded-full border border-border/50 flex items-center justify-center bg-background/40">
+              <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+            </div>
+            <div className="absolute right-0 bottom-9 z-20 hidden group-hover/phone:block">
+              <div className="bg-popover text-foreground text-[11px] px-2.5 py-1.5 rounded-lg shadow-md whitespace-nowrap">
+                {phone}
+              </div>
+            </div>
           </div>
-          {lead.Account && lead.Account !== "Unknown Account" && (
-            <div className="text-[11px] text-muted-foreground truncate">
-              {lead.Account}
+        )}
+
+        {/* Row 1: Avatar + Name */}
+        <div className="flex items-start gap-2 pr-8">
+          <div
+            className="h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
+            style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
+          >
+            {initials}
+          </div>
+          <div className="flex-1 min-w-0 pt-0.5">
+            <p
+              className="text-[13px] font-semibold font-heading leading-tight truncate text-foreground"
+              data-testid="kanban-card-name"
+            >
+              {name}
+            </p>
+          </div>
+        </div>
+
+        {/* Row 2: Last message snippet */}
+        {lastMsg && (
+          <p className="text-[10px] text-muted-foreground truncate italic">
+            {lastMsg}
+          </p>
+        )}
+
+        {/* Row 3: Tags (left) | Time (middle) | Score circle (right) */}
+        <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 flex-wrap flex-1 min-w-0">
+            {visibleTags.map((t) => (
+              <span
+                key={t.name}
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-black/[0.06] text-foreground/55"
+                data-testid="kanban-card-tags"
+              >
+                {t.name}
+              </span>
+            ))}
+          </div>
+
+          {lastActivity && (
+            <span
+              className="text-[10px] text-muted-foreground/70 shrink-0 tabular-nums"
+              data-testid="kanban-card-last-activity"
+            >
+              {formatRelativeDate(lastActivity)}
+            </span>
+          )}
+
+          {score > 0 && (
+            <div
+              className="h-7 w-7 rounded-full flex items-center justify-center text-[9px] font-bold tabular-nums shrink-0"
+              style={
+                isSelected
+                  ? { backgroundColor: "#000", color: "#fff" }
+                  : { backgroundColor: getScorePastelBg(score), color: getScoreDarkText(score) }
+              }
+              data-testid="kanban-card-score"
+              title={`Lead score: ${score}`}
+            >
+              {score}
             </div>
           )}
         </div>
 
-        {/* Score badge (color-coded: green ≥70, yellow 40-69, red <40) */}
-        {hasScore && (
-          <Badge
-            className={cn(
-              "text-[10px] px-1.5 py-0 h-5 font-semibold border-0 flex-shrink-0 tabular-nums",
-              scoreBadgeClass(score)
-            )}
-            data-testid="kanban-card-score"
-            title={`Lead score: ${score}`}
-          >
-            {score}
-          </Badge>
-        )}
-
-        {/* Priority badge (only shown if no score, to avoid clutter) */}
-        {!hasScore && lead.priority && (
-          <Badge
-            className={cn(
-              "text-[10px] px-1.5 py-0 h-5 font-medium border-0 flex-shrink-0",
-              priorityColor(lead.priority)
-            )}
-          >
-            {lead.priority}
-          </Badge>
-        )}
       </div>
-
-      {/* Contact Info: Phone (required per feature spec) */}
-      <div className="mt-2 space-y-1">
-        {lead.email && (
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Mail className="h-3 w-3 flex-shrink-0 opacity-50" />
-            <span className="truncate">{lead.email}</span>
-          </div>
-        )}
-        {lead.phone && (
-          <div
-            className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
-            data-testid="kanban-card-phone"
-          >
-            <Phone className="h-3 w-3 flex-shrink-0 opacity-50" />
-            <span className="truncate">{lead.phone}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Tags: colored chips (up to 3 visible, rest as "+N" badge) */}
-      {visibleTags.length > 0 && (
-        <div
-          className="mt-2 flex flex-wrap gap-1"
-          data-testid="kanban-card-tags"
-        >
-          {visibleTags.map((tag) => (
-            <span
-              key={tag.name}
-              className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium border border-border/40"
-              style={tagBgStyle(tag.color)}
-              title={tag.name}
-            >
-              {tag.name}
-            </span>
-          ))}
-          {extraTagCount > 0 && (
-            <span
-              className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-muted text-muted-foreground"
-              title={`${extraTagCount} more tag${extraTagCount > 1 ? "s" : ""}`}
-            >
-              +{extraTagCount}
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Footer: Interactions + sentiment + Last activity date */}
-      <div className="mt-2.5 pt-2 border-t border-border/50 flex items-center justify-between">
-        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-          {(lead.Interactions > 0 || lead.message_count_sent > 0) && (
-            <span className="flex items-center gap-1">
-              <MessageSquare className="h-3 w-3 opacity-50" />
-              {lead.Interactions || lead.message_count_sent || 0}
-            </span>
-          )}
-          {lead.booked_call_date && (
-            <span className="flex items-center gap-1 text-brand-yellow">
-              <Calendar className="h-3 w-3" />
-              Booked
-            </span>
-          )}
-          {/* Sentiment indicator */}
-          {sentiment && (
-            <span
-              className={cn("flex items-center gap-0.5", sentiment.cls)}
-              data-testid="kanban-card-sentiment"
-              title={`Sentiment: ${sentiment.label}`}
-            >
-              {sentiment.icon}
-              <span className="text-[10px]">{sentiment.label}</span>
-            </span>
-          )}
-        </div>
-
-        {/* Last interaction date */}
-        {lastActivity && (
-          <span
-            className="text-[10px] text-muted-foreground/70"
-            data-testid="kanban-card-last-activity"
-          >
-            {formatRelativeDate(lastActivity)}
-          </span>
-        )}
-      </div>
-
-      {/* Notes preview (if any) */}
-      {lead.notes && (
-        <div className="mt-2 text-[11px] text-muted-foreground/80 line-clamp-2 italic">
-          {lead.notes}
-        </div>
-      )}
     </div>
   );
 }
@@ -577,14 +314,17 @@ function KanbanLeadCard({
       {...attributes}
       {...listeners}
       data-testid={`kanban-card-${leadId}`}
-      onClick={() => onCardClick?.(lead)}
+      onClick={(e) => { e.stopPropagation(); onCardClick?.(lead); }}
       className={cn(
         "cursor-grab active:cursor-grabbing touch-none select-none",
-        isDragging && "opacity-30",
-        isSelected && "ring-2 ring-brand-blue/60 rounded-xl"
+        isDragging && "opacity-30"
       )}
     >
-      <KanbanCardContent lead={lead} cardTags={cardTags} />
+      <KanbanCardContent
+        lead={lead}
+        cardTags={cardTags}
+        isSelected={isSelected}
+      />
     </div>
   );
 }
@@ -608,72 +348,59 @@ function KanbanColumn({
   onCardClick?: (lead: any) => void;
   selectedLeadId?: number | string;
 }) {
-  const styles = STAGE_STYLES[stage] || DEFAULT_STYLE;
+  const hex = PIPELINE_HEX[stage] || "#6B7280";
   const { setNodeRef, isOver } = useDroppable({ id: `column-${stage}` });
+  const isBookedStage = stage === "Booked";
 
   /* ── Infinite scroll state ── */
-  // visibleCount tracks how many leads to render; expands as user scrolls
   const [visibleCount, setVisibleCount] = useState(COLUMN_BATCH_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  // Reset visible count when the column's lead list changes (e.g. campaign switch, filter)
   useEffect(() => {
     setVisibleCount(COLUMN_BATCH_SIZE);
   }, [stage, leads.length]);
 
-  // IntersectionObserver: when the bottom sentinel enters the viewport, load the next batch
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel || visibleCount >= leads.length) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
           setVisibleCount((prev) => Math.min(prev + COLUMN_BATCH_SIZE, leads.length));
         }
       },
-      // Trigger 80px before the sentinel actually reaches the viewport bottom for smooth UX
       { threshold: 0, rootMargin: "80px" }
     );
-
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [visibleCount, leads.length]);
 
-  // Only render the first `visibleCount` leads for performance
-  const visibleLeads = leads.slice(0, visibleCount);
-  const hasMore = visibleCount < leads.length;
-  const remainingCount = leads.length - visibleCount;
+  const visibleLeads    = leads.slice(0, visibleCount);
+  const hasMore         = visibleCount < leads.length;
+  const remainingCount  = leads.length - visibleCount;
 
-  /* ── Collapsed / minimal indicator ── */
+  /* ── Collapsed state ── */
   if (isCollapsed) {
     return (
       <div
-        className={cn(
-          "flex flex-col items-center rounded-xl border w-10 flex-shrink-0 transition-all duration-200 cursor-pointer select-none",
-          cn(styles.bg, styles.border)
-        )}
+        className="flex flex-col items-center bg-muted rounded-lg w-10 flex-shrink-0 cursor-pointer select-none"
         data-testid={`kanban-column-${stage}`}
         data-collapsed="true"
         title={`${STAGE_LABELS[stage] ?? stage} (${leads.length}) — click to expand`}
         onClick={() => onToggleCollapse?.(stage)}
       >
-        {/* Expand chevron */}
         <div className="py-2 flex items-center justify-center w-full">
           <ChevronRight
             className="h-4 w-4 text-muted-foreground"
             data-testid={`kanban-column-expand-${stage}`}
           />
         </div>
-
-        {/* Color dot */}
-        <div className={cn("w-2 h-2 rounded-full flex-shrink-0 mt-1", styles.dot)} />
-
-        {/* Stage label — rotated vertically, colored per stage */}
+        <div className="w-2 h-2 rounded-full flex-shrink-0 mt-1" style={{ backgroundColor: hex }} />
         <div className="flex-1 flex items-center justify-center py-3">
           <span
-            className={cn("font-semibold text-[11px]", styles.labelCls)}
+            className="font-semibold text-[11px]"
             style={{
+              color: hex,
               writingMode: "vertical-rl",
               textOrientation: "mixed",
               transform: "rotate(180deg)",
@@ -683,151 +410,94 @@ function KanbanColumn({
             {STAGE_LABELS[stage] ?? stage}
           </span>
         </div>
-
-        {/* Count badge */}
-        <Badge
-          className={cn(
-            "mb-2 text-[10px] px-1 py-0 h-5 font-semibold border-0 rounded-md",
-            styles.badge
-          )}
+        <span
+          className="mb-2 text-[10px] font-semibold text-muted-foreground/70 tabular-nums"
           data-testid={`kanban-column-count-${stage}`}
         >
           {leads.length}
-        </Badge>
+        </span>
       </div>
     );
   }
 
-  /** Whether this column is the north-star "Call Booked" stage */
-  const isBookedStage = stage === "Booked";
-
   return (
     <div
       className={cn(
-        "flex flex-col rounded-xl border flex-shrink-0 transition-all duration-200 overflow-hidden snap-start snap-always",
-        // Call Booked is slightly wider to visually emphasise north-star status
+        "flex flex-col bg-card rounded-lg flex-shrink-0 overflow-hidden snap-start snap-always h-full",
         isBookedStage
           ? "min-w-[280px] w-[300px] max-w-[320px]"
           : "min-w-[260px] w-[280px] max-w-[300px]",
-        isOver ? styles.dragOver : cn(styles.bg, styles.border)
+        isOver && "ring-2 ring-inset ring-border/40"
       )}
-      style={
-        isBookedStage
-          ? {
-              // Subtle yellow glow: inner ring + diffuse outer halo
-              boxShadow:
-                "0 0 0 1.5px rgba(252,184,3,0.55), 0 4px 24px rgba(252,184,3,0.22), 0 0 0 4px rgba(252,184,3,0.08)",
-            }
-          : undefined
-      }
       data-testid={`kanban-column-${stage}`}
       data-stage={stage}
       data-collapsed="false"
       data-visible-count={visibleCount}
       data-total-count={leads.length}
     >
-      {/* Color accent bar — distinct color per pipeline stage; thicker for Call Booked (north star) */}
+      {/* Column Header — only the text is colored */}
       <div
-        className={cn(
-          "w-full flex-shrink-0",
-          styles.accentBar,
-          isBookedStage ? "h-1.5" : "h-1"
-        )}
-        data-testid={`kanban-column-accent-${stage}`}
-      />
-
-      {/* Column Header — color-coded background + colored label; taller + larger text for Call Booked */}
-      <div
-        className={cn(
-          "flex items-center gap-2 px-3 border-b border-border/30",
-          styles.headerBg,
-          isBookedStage ? "py-3.5 flex-wrap" : "py-2.5"
-        )}
+        className="flex items-center gap-2 px-3 py-2.5 shrink-0"
         data-testid={`kanban-column-header-${stage}`}
       >
-        {/* Stage label row */}
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div
-            className={cn(
-              "rounded-full flex-shrink-0",
-              styles.dot,
-              isBookedStage ? "w-2.5 h-2.5" : "w-2 h-2"
-            )}
-          />
-          <span
-            className={cn(
-              "font-semibold truncate",
-              styles.labelCls,
-              isBookedStage ? "text-base" : "text-sm"
-            )}
-          >
-            {STAGE_LABELS[stage] ?? stage}
-          </span>
+        {/* Stage color dot */}
+        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: hex }} />
 
-          {/* North Star badge — only on Call Booked column */}
+        {/* Stage label — colored text only */}
+        <span
+          className={cn("font-semibold text-sm truncate flex-1", isBookedStage && "font-bold")}
+          style={{ color: hex }}
+        >
+          {STAGE_LABELS[stage] ?? stage}
           {isBookedStage && (
-            <span
-              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide bg-brand-yellow text-black flex-shrink-0"
-              data-testid="kanban-column-north-star-badge"
-              title="North Star KPI — goal of the funnel"
-            >
-              ★ Goal
-            </span>
+            <span className="ml-1 text-[10px] font-bold tracking-wide">★</span>
           )}
-        </div>
+        </span>
 
-        <Badge
-          className={cn(
-            "text-[11px] px-2 py-0 h-5 font-semibold border-0 rounded-md flex-shrink-0",
-            styles.badge
-          )}
+        {/* Count */}
+        <span
+          className="text-[11px] font-semibold text-muted-foreground/70 tabular-nums flex-shrink-0"
           data-testid={`kanban-column-count-${stage}`}
         >
           {leads.length}
-        </Badge>
+        </span>
 
         {/* Collapse button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-5 w-5 ml-1 flex-shrink-0 text-muted-foreground hover:text-foreground"
+        <button
           onClick={() => onToggleCollapse?.(stage)}
           data-testid={`kanban-column-collapse-${stage}`}
           title="Collapse column"
+          className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground hover:bg-background/40 flex-shrink-0"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
-        </Button>
+        </button>
       </div>
 
-      {/* Column Body – the ref is on the inner div so the drop target covers the list area */}
-      <ScrollArea className="flex-1 max-h-[calc(100vh-260px)]">
-        <div ref={setNodeRef} className="p-2 space-y-2 min-h-[80px]">
+      {/* Column Body — drop target covers the list area */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <div ref={setNodeRef} className="px-[3px] pb-2 min-h-[80px]">
           {leads.length === 0 ? (
             <div
               className={cn(
-                "flex flex-col items-center justify-center py-10 px-3 rounded-lg transition-colors duration-150 select-none",
+                "flex flex-col items-center justify-center py-10 px-3 rounded-lg select-none",
                 isOver
-                  ? "bg-white/30 dark:bg-white/5 border-2 border-dashed border-border/60"
+                  ? "bg-background/30"
                   : "text-muted-foreground/40"
               )}
               data-testid={`kanban-column-empty-${stage}`}
               aria-label={`Empty stage: ${STAGE_LABELS[stage] ?? stage}`}
             >
               {isOver ? (
-                /* Drop target hint when a card is dragged over the empty column */
                 <>
                   <div className="h-10 w-10 rounded-full bg-muted/60 flex items-center justify-center mb-2">
                     <ChevronRight className="h-5 w-5 text-muted-foreground rotate-[-90deg]" />
                   </div>
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Drop here
-                  </span>
+                  <span className="text-sm font-medium text-muted-foreground">Drop here</span>
                   <span className="text-xs text-muted-foreground/60 mt-1">
                     Move lead to {STAGE_LABELS[stage] ?? stage}
                   </span>
                 </>
               ) : (
-                /* Contextual idle empty state */
                 (() => {
                   const config = STAGE_EMPTY_STATES[stage] || DEFAULT_EMPTY_STATE;
                   const Icon = config.icon;
@@ -853,7 +523,7 @@ function KanbanColumn({
           ) : (
             <>
               {visibleLeads.map((lead) => {
-                const leadId = Number(lead.Id || lead.id);
+                const leadId   = Number(lead.Id || lead.id);
                 const cardTags = leadTagsMap?.get(leadId) || [];
                 const isSelected = selectedLeadId !== undefined &&
                   (lead.Id ?? lead.id) === selectedLeadId;
@@ -868,7 +538,7 @@ function KanbanColumn({
                 );
               })}
 
-              {/* Sentinel element: when it enters the viewport the next batch loads */}
+              {/* Sentinel for infinite scroll */}
               {hasMore && (
                 <div
                   ref={sentinelRef}
@@ -887,7 +557,7 @@ function KanbanColumn({
             </>
           )}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
@@ -897,19 +567,10 @@ function KanbanColumn({
 interface LeadsKanbanProps {
   leads: any[];
   loading?: boolean;
-  /** Optional campaign ID filter (accepted for compat with LeadsTable) */
   campaignId?: string;
-  /**
-   * Called when a card is dropped into a different column; triggers the API update.
-   * May return a Promise – if the promise rejects, the Kanban rolls back the
-   * optimistic update immediately (in addition to any parent-level rollback).
-   */
   onLeadMove?: (leadId: number | string, newStage: string) => void | Promise<void>;
-  /** Tag info map passed from LeadsTable: leadId → [{name, color}] */
   leadTagsMap?: Map<number, { name: string; color: string }[]>;
-  /** Called when a card is clicked (not dragged) */
   onCardClick?: (lead: Record<string, any>) => void;
-  /** ID of the currently selected lead (for ring highlight) */
   selectedLeadId?: number | string;
 }
 
@@ -921,81 +582,51 @@ export function LeadsKanban({
   onCardClick,
   selectedLeadId,
 }: LeadsKanbanProps) {
-  // Local optimistic copy of leads so visual updates are instant
-  const [localLeads, setLocalLeads] = useState<any[]>(leads);
-  const [activeLead, setActiveLead] = useState<any | null>(null);
+  const [localLeads, setLocalLeads]   = useState<any[]>(leads);
+  const [activeLead, setActiveLead]   = useState<any | null>(null);
   const [isDraggingAny, setIsDraggingAny] = useState(false);
-
-  // Snapshot of leads taken just before an optimistic update.
-  // Used to immediately roll back if the API call fails.
   const snapshotRef = useRef<any[]>([]);
 
-  // Collapsed column state (persisted in localStorage)
   const [collapsedStages, setCollapsedStages] = useState<Set<string>>(() => {
     try {
       const stored = localStorage.getItem("kanban_collapsed_stages");
       if (stored) return new Set(JSON.parse(stored) as string[]);
-    } catch {
-      // ignore parse errors
-    }
+    } catch { /* ignore */ }
     return new Set<string>();
   });
 
   const toggleColumnCollapse = useCallback((stage: string) => {
     setCollapsedStages((prev) => {
       const next = new Set(prev);
-      if (next.has(stage)) {
-        next.delete(stage);
-      } else {
-        next.add(stage);
-      }
+      next.has(stage) ? next.delete(stage) : next.add(stage);
       try {
         localStorage.setItem("kanban_collapsed_stages", JSON.stringify(Array.from(next)));
-      } catch {
-        // ignore storage errors
-      }
+      } catch { /* ignore */ }
       return next;
     });
   }, []);
 
-  // Sync with parent when not dragging (covers initial load, external refreshes,
-  // and rollback after an API failure where the parent re-fetches fresh data).
   useEffect(() => {
-    if (!isDraggingAny) {
-      setLocalLeads(leads);
-    }
+    if (!isDraggingAny) setLocalLeads(leads);
   }, [leads, isDraggingAny]);
 
   const groupedLeads = useMemo(() => {
     const groups: Record<string, any[]> = {};
     for (const stage of PIPELINE_STAGES) groups[stage] = [];
-
     for (const lead of localLeads) {
-      const status =
-        lead.conversion_status || lead.Conversion_Status || "New";
+      const status = lead.conversion_status || lead.Conversion_Status || "New";
       if (groups[status]) {
         groups[status].push(lead);
       } else {
         groups["New"].push(lead);
       }
     }
-
     return groups;
   }, [localLeads]);
 
   const sensors = useSensors(
-    // Mouse: activate drag after 8px movement
-    useSensor(MouseSensor, {
-      activationConstraint: { distance: 8 },
-    }),
-    // Touch: activate drag only after a 250ms hold (long-press)
-    // This allows quick horizontal swipes to scroll the board on mobile/tablet
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      },
-    })
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
   );
 
   const handleDragStart = useCallback(
@@ -1003,7 +634,6 @@ export function LeadsKanban({
       const lead = event.active.data.current?.lead ?? null;
       setActiveLead(lead);
       setIsDraggingAny(true);
-      // Snapshot parent leads so local state is fresh for this drag session
       setLocalLeads(leads);
     },
     [leads]
@@ -1014,117 +644,85 @@ export function LeadsKanban({
       const { active, over } = event;
       setActiveLead(null);
       setIsDraggingAny(false);
-
       if (!over) return;
 
-      // over.id == "column-{stage}"
       const targetStage = String(over.id).replace(/^column-/, "");
       if (!PIPELINE_STAGES.includes(targetStage as (typeof PIPELINE_STAGES)[number])) return;
 
-      const draggedId = String(active.id);
-      const draggedLead = localLeads.find(
-        (l) => String(l.Id || l.id) === draggedId
-      );
+      const draggedId   = String(active.id);
+      const draggedLead = localLeads.find((l) => String(l.Id || l.id) === draggedId);
       if (!draggedLead) return;
 
-      const currentStage =
-        draggedLead.conversion_status ||
-        draggedLead.Conversion_Status ||
-        "New";
+      const currentStage = draggedLead.conversion_status || draggedLead.Conversion_Status || "New";
+      if (currentStage === targetStage) return;
 
-      if (currentStage === targetStage) return; // same column – no-op
-
-      // Take a snapshot of the current leads BEFORE applying the optimistic update.
-      // If the API call fails, this snapshot is used to restore the original state.
       snapshotRef.current = [...localLeads];
 
-      // ── Optimistic UI update (instant visual feedback) ──────────────────────
-      // The card moves to the new column immediately, before the server confirms.
       setLocalLeads((prev) =>
         prev.map((l) =>
           String(l.Id || l.id) === draggedId
-            ? {
-                ...l,
-                conversion_status: targetStage,
-                Conversion_Status: targetStage,
-              }
+            ? { ...l, conversion_status: targetStage, Conversion_Status: targetStage }
             : l
         )
       );
 
-      // ── API call in background ───────────────────────────────────────────────
-      // onLeadMove may return a Promise. If it rejects (API failure), we
-      // immediately roll back to the snapshot so the card returns to its original
-      // column without waiting for the parent to re-fetch from the server.
       const result = onLeadMove?.(draggedLead.Id ?? draggedLead.id, targetStage);
       if (result instanceof Promise) {
-        result.catch(() => {
-          // Rollback: restore the pre-drag snapshot
-          setLocalLeads(snapshotRef.current);
-        });
+        result.catch(() => setLocalLeads(snapshotRef.current));
       }
     },
     [localLeads, onLeadMove]
   );
 
+  /* ── Loading skeleton ── */
   if (loading) {
     return (
       <div
-        className="flex gap-3 overflow-x-auto pb-4 px-1 -mx-1 scroll-smooth snap-x snap-mandatory"
+        className="flex gap-[3px] overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory"
         style={{ overscrollBehaviorX: "contain" } as React.CSSProperties}
         data-testid="kanban-loading-skeleton"
       >
-        {PIPELINE_STAGES.map((stage) => {
-          const styles = STAGE_STYLES[stage] || DEFAULT_STYLE;
-          return (
-            <div
-              key={stage}
-              className={cn(
-                "flex flex-col rounded-xl border min-w-[260px] w-[280px] flex-shrink-0 snap-start snap-always",
-                styles.bg,
-                styles.border
-              )}
-              data-testid="kanban-skeleton-column"
-            >
-              {/* Column header skeleton */}
-              <div className="px-3 py-2.5 border-b border-border/30 flex items-center gap-2">
-                <div className={cn("h-2 w-2 rounded-full animate-pulse shrink-0", styles.dot)} />
-                <div className="h-4 bg-muted animate-pulse rounded flex-1 max-w-[5rem]" />
-                <div className="h-5 w-7 bg-muted animate-pulse rounded-full shrink-0" />
-              </div>
-              {/* Card skeletons */}
-              <div className="p-2 space-y-2">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="rounded-xl border border-border bg-card p-3 space-y-2.5 animate-pulse"
-                    data-testid="kanban-skeleton-card"
-                  >
-                    {/* Avatar + Name + Score badge */}
-                    <div className="flex items-start gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-muted shrink-0" />
-                      <div className="flex-1 min-w-0 space-y-1.5 pt-0.5">
-                        <div className="h-3.5 bg-muted rounded w-3/4" />
-                        <div className="h-2.5 bg-muted rounded w-1/2" />
-                      </div>
-                      <div className="h-5 w-8 bg-muted rounded-full shrink-0" />
-                    </div>
-                    {/* Tags row */}
-                    <div className="flex gap-1.5">
-                      <div className="h-4 w-12 bg-muted rounded-full" />
-                      <div className="h-4 w-14 bg-muted rounded-full" />
-                    </div>
-                    {/* Metadata row */}
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-14 bg-muted rounded" />
-                      <div className="h-3 w-10 bg-muted rounded" />
+        {PIPELINE_STAGES.map((stage) => (
+          <div
+            key={stage}
+            className="flex flex-col bg-muted rounded-lg min-w-[260px] w-[280px] flex-shrink-0 snap-start snap-always"
+            data-testid="kanban-skeleton-column"
+          >
+            {/* Header skeleton */}
+            <div className="px-3 py-2.5 flex items-center gap-2">
+              <div
+                className="h-2 w-2 rounded-full shrink-0"
+                style={{ backgroundColor: PIPELINE_HEX[stage] || "#6B7280", opacity: 0.4 }}
+              />
+              <div className="h-3.5 bg-foreground/10 animate-pulse rounded flex-1 max-w-[5rem]" />
+              <div className="h-3 w-5 bg-foreground/8 animate-pulse rounded shrink-0" />
+            </div>
+            {/* Card skeletons */}
+            <div className="px-[3px] pb-2 space-y-0">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="mx-0.5 my-0.5 rounded-xl bg-[#F1F1F1] px-2.5 pt-2.5 pb-2 space-y-2 animate-pulse"
+                  data-testid="kanban-skeleton-card"
+                  style={{ animationDelay: `${i * 80}ms` }}
+                >
+                  <div className="flex items-center gap-2 pr-8">
+                    <div className="w-8 h-8 rounded-full bg-foreground/10 shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 bg-foreground/10 rounded-full w-3/4" />
+                      <div className="h-2.5 bg-foreground/8 rounded-full w-1/2" />
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="flex gap-1.5 items-center">
+                    <div className="h-4 w-12 bg-foreground/8 rounded-full" />
+                    <div className="h-4 w-14 bg-foreground/8 rounded-full" />
+                    <div className="ml-auto h-7 w-7 rounded-full bg-foreground/10" />
+                  </div>
+                </div>
+              ))}
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     );
   }
@@ -1132,12 +730,13 @@ export function LeadsKanban({
   return (
     <DndContext
       sensors={sensors}
+      measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      {/* Horizontal scroll container — supports touch-friendly swipe on mobile/tablet */}
+      {/* Horizontal scroll container */}
       <div
-        className="flex gap-3 overflow-x-auto pb-4 px-1 -mx-1 scroll-smooth snap-x snap-mandatory"
+        className="flex h-full gap-[3px] overflow-x-auto pb-0 scroll-smooth snap-x snap-mandatory"
         style={{ overscrollBehaviorX: "contain" } as React.CSSProperties}
         data-testid="kanban-board"
       >
@@ -1156,15 +755,13 @@ export function LeadsKanban({
       </div>
 
       {/* Ghost card that follows the cursor during drag */}
-      <DragOverlay dropAnimation={null}>
+      <DragOverlay dropAnimation={null} modifiers={[snapCenterToCursor]}>
         {activeLead ? (
           <div className="w-[260px]">
             <KanbanCardContent
               lead={activeLead}
               isDragging
-              cardTags={
-                leadTagsMap?.get(Number(activeLead.Id || activeLead.id)) || []
-              }
+              cardTags={leadTagsMap?.get(Number(activeLead.Id || activeLead.id)) || []}
             />
           </div>
         ) : null}

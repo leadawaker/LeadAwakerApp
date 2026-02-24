@@ -6,7 +6,18 @@
       "Bash(npx playwright-cli:*)",
       "Bash(dpkg:*)",
       "Bash(sudo apt-get:*)",
-      "Bash(npx vite build:*)"
+      "Bash(npx vite build:*)",
+      "Bash(lsof:*)",
+      "Read(//tmp/**)",
+      "Bash(pkill:*)",
+      "Bash(nginx -t:*)",
+      "Bash(caddy version:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(npm run dev:*)"
+    ],
+    "additionalDirectories": [
+      "/config/workspace/LeadAwakerApp"
     ]
   },
   "hooks": {

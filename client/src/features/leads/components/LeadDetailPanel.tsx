@@ -215,7 +215,7 @@ function InfoRow({
 function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
     <div className="flex items-center gap-2 mb-2 mt-4 first:mt-0">
-      <span className="text-muted-foreground">{icon}</span>
+      <div className="icon-circle-sm border-2 border-border/25 text-muted-foreground flex items-center justify-center shrink-0">{icon}</div>
       <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
         {title}
       </h3>
@@ -411,7 +411,7 @@ function InlineEditField({
           <button
             type="button"
             onClick={handleStartEdit}
-            className="opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 text-muted-foreground/60 hover:text-brand-blue"
+            className="opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 icon-circle-sm icon-circle-base hover:border-brand-blue/40 hover:text-brand-blue"
             aria-label={`Edit ${label}`}
             data-testid={`${testId}-edit-btn`}
           >

@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import {
-  Search,
-  Bell,
-  Moon,
   HelpCircle,
   Headphones,
   LayoutDashboard,
@@ -17,15 +14,12 @@ import {
   PanelRightClose,
   PanelRightOpen,
   BookUser,
-  ChevronDown,
   ChevronsUpDown,
   Check,
   Menu,
   X,
   Building2,
   LogOut,
-  User,
-  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -41,8 +35,8 @@ export function RightSidebar({
   collapsed,
   onCollapse,
   onOpenSupport,
-  onOpenSearch,
-  onOpenNotifications,
+  onOpenSearch: _onOpenSearch,
+  onOpenNotifications: _onOpenNotifications,
   onToggleHelp,
   notificationsCount,
   isMobileMenuOpen = false,
@@ -72,8 +66,7 @@ export function RightSidebar({
     isAgencyUser,
   } = useWorkspace();
 
-  const [openSwitcher, setOpenSwitcher] = useState(false);
-  const [dark, setDark] = useState(false);
+  const [hoveredNav, setHoveredNav] = useState<{ label: string; active: boolean; y: number } | null>(null);
 
   // Read current user info from localStorage
   const userName = localStorage.getItem("leadawaker_user_name") || localStorage.getItem("leadawaker_user_email") || "User";
@@ -85,8 +78,6 @@ export function RightSidebar({
     .slice(0, 2)
     .join("")
     .toUpperCase() || "U";
-
-  const count = notificationsCount ?? 0;
 
   /** Handle account switch with route transition */
   const handleAccountSelect = (id: number) => {
@@ -110,10 +101,6 @@ export function RightSidebar({
     const nextPath = `${nextBase}${safeTail || "/dashboard"}`;
     setLocation(nextPath);
   };
-
-  // ✅ AGENCY CHECK — agency users have accountsId === 1
-  const isAgency =
-    localStorage.getItem("leadawaker_current_account_id") === "1";
 
   useEffect(() => {
     onCloseMobileMenu?.();
@@ -337,7 +324,7 @@ export function RightSidebar({
                 </div>
                 <button
                   onClick={() => { onLogout?.(); onCloseMobileMenu?.(); }}
-                  className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors shrink-0"
+                  className="icon-circle-lg icon-circle-base hover:text-red-600 hover:border-red-400/40 hover:bg-red-50 dark:hover:bg-red-950/30"
                   title="Logout"
                   data-testid="mobile-sidebar-logout-btn"
                 >
@@ -409,211 +396,189 @@ export function RightSidebar({
       {/* DESKTOP SIDEBAR */}
       <aside
         className={cn(
-          "fixed left-0 top-0 bottom-0 bg-card dark:bg-card border-r border-border hidden md:flex flex-col overflow-hidden transition-all duration-200",
-          collapsed ? "w-[60px]" : "w-[180px]"
+          "fixed left-0 top-16 bottom-0 bg-background hidden md:flex flex-col overflow-hidden transition-all duration-200",
+          collapsed ? "w-[72px]" : "w-[216px]"
         )}
         data-sidebar-focus
       >
         <div className="h-full flex flex-col overflow-hidden">
-          {/* LOGO — fixed 64px header matching topbar */}
+          {/* HEADER — "Menu" label + collapse button */}
           <div
             className={cn(
-              "h-16 flex items-center border-b border-border shrink-0",
-              collapsed ? "justify-center" : "px-4 gap-2.5"
+              "flex items-center shrink-0 px-2 mt-7 mb-2 h-[48px]",
+              collapsed ? "justify-center" : "justify-between"
             )}
           >
-            <Link href="/">
-              <img
-                src="/6. Favicon.svg"
-                alt="Lead Awaker"
-                className="h-8 w-8 shrink-0"
-              />
-            </Link>
             {!collapsed && (
-              <div className="flex flex-col gap-0 min-w-0">
-                <span className="text-[13px] font-bold text-foreground tracking-tight leading-none truncate">
-                  Lead Awaker
-                </span>
-                <span className="text-[10px] text-muted-foreground font-medium tracking-tight leading-tight">
-                  Sales CRM
-                </span>
-              </div>
+              <span className="text-2xl font-semibold font-heading text-foreground pl-1">Menu</span>
             )}
+            <button
+              onClick={() => onCollapse(!collapsed)}
+              className="icon-circle-lg icon-circle-base"
+              title={collapsed ? "Expand menu" : "Collapse menu"}
+            >
+              {collapsed ? (
+                <PanelRightClose className="h-3.5 w-3.5" />
+              ) : (
+                <PanelRightOpen className="h-3.5 w-3.5" />
+              )}
+            </button>
           </div>
 
-          {/* ACCOUNT SWITCHER — agency users only */}
-          {isAgencyUser && (
-            <div className="px-3 mb-3" data-testid="sidebar-account-switcher">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  {collapsed ? (
-                    <button
-                      className="relative group w-full h-10 rounded-xl flex items-center justify-center hover:bg-black/8 dark:hover:bg-white/10 transition-colors"
-                      data-testid="sidebar-account-switcher-trigger"
-                    >
-                      <div
-                        className={cn(
-                          "h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0",
-                          currentAccountId === 1
-                            ? "bg-brand-yellow text-brand-yellow-foreground"
-                            : "bg-brand-blue text-brand-blue-foreground"
-                        )}
-                      >
-                        {currentAccount?.name?.[0] || "?"}
-                      </div>
-                      {/* Tooltip on hover */}
-                      <div className="absolute left-[40px] opacity-0 group-hover:opacity-100 transition-opacity z-[120] pointer-events-none">
-                        <div className="px-3 py-2 rounded-xl text-sm font-semibold whitespace-nowrap bg-card text-foreground shadow-lg">
-                          {currentAccount?.name || "Select Account"}
-                        </div>
-                      </div>
-                    </button>
-                  ) : (
-                    <button
-                      className={cn(
-                        "w-full rounded-xl border border-stone-300/80 dark:border-stone-600/60 px-3 py-2.5 flex items-center gap-2 hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-left",
-                        currentAccountId === 1
-                          ? "bg-brand-yellow/10"
-                          : "bg-brand-blue/10"
-                      )}
-                      data-testid="sidebar-account-switcher-trigger"
-                    >
-                      <div
-                        className={cn(
-                          "h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0",
-                          currentAccountId === 1
-                            ? "bg-brand-yellow text-brand-yellow-foreground"
-                            : "bg-brand-blue text-brand-blue-foreground"
-                        )}
-                      >
-                        {currentAccount?.name?.[0] || "?"}
-                      </div>
-                      <span className="text-xs font-semibold truncate flex-1 text-foreground">
-                        {currentAccount?.name || "Select Account"}
-                      </span>
-                      <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    </button>
-                  )}
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  side="right"
-                  align="start"
-                  className="w-56 rounded-2xl shadow-xl border-border bg-background"
-                >
-                  <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                    Switch Account
-                  </div>
-                  {[...accounts].sort((a, b) => a.id === 1 ? -1 : b.id === 1 ? 1 : 0).map((acc) => (
-                    <DropdownMenuItem
-                      key={acc.id}
-                      onClick={() => handleAccountSelect(acc.id)}
-                      className={cn(
-                        "flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1",
-                        currentAccountId === acc.id && "bg-muted font-bold"
-                      )}
-                      data-testid={`sidebar-account-option-${acc.id}`}
-                    >
-                      <div
-                        className={cn(
-                          "h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0",
-                          acc.id === 1
-                            ? "bg-brand-yellow text-brand-yellow-foreground"
-                            : "bg-brand-blue text-brand-blue-foreground"
-                        )}
-                      >
-                        {acc.name?.[0] || "?"}
-                      </div>
-                      <span className="text-sm truncate flex-1">{acc.name}</span>
-                      {currentAccountId === acc.id && (
-                        <Check className="h-4 w-4 text-brand-blue shrink-0" />
-                      )}
-                      {acc.id === 1 && (
-                        <span className="text-[9px] bg-brand-yellow/15 text-brand-yellow px-1 rounded uppercase font-bold tracking-tighter shrink-0">
-                          Agency
-                        </span>
-                      )}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
-
-          {/* NAV */}
-          <nav className="px-2 space-y-0.5 flex-1 overflow-y-auto min-h-0 py-2">
-            {visibleNavItems.map((it) => {
+          {/* NAV — categorized sections */}
+          <nav className="px-2 flex-1 overflow-y-auto min-h-0 pb-2">
+            {/* Section: (top — Dashboard) */}
+            {visibleNavItems.filter(it => it.label === "Dashboard").map((it) => {
               const active = isActive(it.href);
               const Icon = it.icon;
-
               return (
                 <Link
                   key={it.href}
                   href={it.href}
                   className={cn(
-                    "relative group flex items-center gap-3 rounded-lg transition-colors",
-                    collapsed ? "h-10 w-10 mx-auto justify-center" : "px-3 h-9",
+                    "relative flex items-center gap-2.5 transition-colors mb-0.5 rounded-full",
+                    collapsed ? "w-full h-[48px] justify-center" : "h-[48px] pl-[2px] pr-2",
                     active
-                      ? "bg-brand-blue text-white font-semibold shadow-sm"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      ? "bg-[#FFF375] text-foreground font-semibold"
+                      : "text-muted-foreground hover:bg-card hover:text-foreground"
                   )}
                   data-testid={`link-${it.testId}`}
                   data-active={active || undefined}
+                  onMouseEnter={collapsed ? (e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setHoveredNav({ label: it.label, active, y: rect.top });
+                  } : undefined}
+                  onMouseLeave={collapsed ? () => setHoveredNav(null) : undefined}
                 >
-                  <Icon className="h-4 w-4 shrink-0" />
+                  <div className="h-[44px] w-[44px] rounded-full border-2 border-border/30 flex items-center justify-center shrink-0">
+                    <Icon className="h-[17px] w-[17px]" />
+                  </div>
                   {!collapsed && (
-                    <span className="text-sm font-medium">
-                      {it.label}
-                    </span>
-                  )}
-
-                  {/* Collapsed tooltip */}
-                  {collapsed && (
-                    <div className="absolute left-[44px] opacity-0 group-hover:opacity-100 transition-opacity z-[120] pointer-events-none">
-                      <div
-                        className={cn(
-                          "px-3 py-2 rounded-lg text-sm font-semibold whitespace-nowrap shadow-lg",
-                          active
-                            ? "bg-brand-blue text-white"
-                            : "bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-foreground"
-                        )}
-                      >
-                        {it.label}
-                      </div>
-                    </div>
+                    <span className="text-sm font-medium">{it.label}</span>
                   )}
                 </Link>
               );
             })}
+
+            {/* Section: Engage */}
+            {(() => {
+              const engageItems = visibleNavItems.filter(it =>
+                ["Campaigns", "Leads", "Chats", "Calendar"].includes(it.label)
+              );
+              if (engageItems.length === 0) return null;
+              return (
+                <div className="mt-1">
+                  {collapsed ? (
+                    <div className="mx-auto w-5 border-t border-border/30 my-1.5" />
+                  ) : (
+                    <div className="px-1 pt-1.5 pb-0.5">
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                        Engage
+                      </span>
+                    </div>
+                  )}
+                  {engageItems.map((it) => {
+                    const active = isActive(it.href);
+                    const Icon = it.icon;
+                    return (
+                      <Link
+                        key={it.href}
+                        href={it.href}
+                        className={cn(
+                          "relative flex items-center gap-2.5 rounded-full transition-colors mb-0.5",
+                          collapsed ? "w-full h-[48px] justify-center" : "h-[48px] pl-[2px] pr-2",
+                          active
+                            ? "bg-[#FFF375] text-foreground font-semibold"
+                            : "text-muted-foreground hover:bg-card hover:text-foreground"
+                        )}
+                        data-testid={`link-${it.testId}`}
+                        data-active={active || undefined}
+                        onMouseEnter={collapsed ? (e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setHoveredNav({ label: it.label, active, y: rect.top });
+                        } : undefined}
+                        onMouseLeave={collapsed ? () => setHoveredNav(null) : undefined}
+                      >
+                        <div className="h-[44px] w-[44px] rounded-full border-2 border-border/30 flex items-center justify-center shrink-0">
+                          <Icon className="h-[17px] w-[17px]" />
+                        </div>
+                        {!collapsed && (
+                          <span className="text-sm font-medium">{it.label}</span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
+            {/* Section: Admin (agency only) */}
+            {(() => {
+              const adminItems = visibleNavItems.filter(it =>
+                ["Accounts", "Users", "Tags", "Library", "Automations"].includes(it.label)
+              );
+              if (adminItems.length === 0) return null;
+              return (
+                <div className="mt-1">
+                  {collapsed ? (
+                    <div className="mx-auto w-5 border-t border-border/30 my-1.5" />
+                  ) : (
+                    <div className="px-1 pt-1.5 pb-0.5">
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                        Admin
+                      </span>
+                    </div>
+                  )}
+                  {adminItems.map((it) => {
+                    const active = isActive(it.href);
+                    const Icon = it.icon;
+                    return (
+                      <Link
+                        key={it.href}
+                        href={it.href}
+                        className={cn(
+                          "relative flex items-center gap-2.5 rounded-full transition-colors mb-0.5",
+                          collapsed ? "w-full h-[48px] justify-center" : "h-[48px] pl-[2px] pr-2",
+                          active
+                            ? "bg-[#FFF375] text-foreground font-semibold"
+                            : "text-muted-foreground hover:bg-card hover:text-foreground"
+                        )}
+                        data-testid={`link-${it.testId}`}
+                        data-active={active || undefined}
+                        onMouseEnter={collapsed ? (e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setHoveredNav({ label: it.label, active, y: rect.top });
+                        } : undefined}
+                        onMouseLeave={collapsed ? () => setHoveredNav(null) : undefined}
+                      >
+                        <div className="h-[44px] w-[44px] rounded-full border-2 border-border/30 flex items-center justify-center shrink-0">
+                          <Icon className="h-[17px] w-[17px]" />
+                        </div>
+                        {!collapsed && (
+                          <span className="text-sm font-medium">{it.label}</span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </nav>
 
           {/* BOTTOM ACTIONS */}
-          <div className="px-2 mb-2 space-y-0.5 shrink-0 border-t border-border pt-2">
-            {/* COLLAPSE */}
-            <button
-              onClick={() => onCollapse(!collapsed)}
-              className={cn(
-                "w-full h-9 rounded-lg flex items-center gap-3 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors",
-                collapsed ? "justify-center" : "px-3"
-              )}
-            >
-              {collapsed ? (
-                <PanelRightClose className="h-5 w-5" />
-              ) : (
-                <PanelRightOpen className="h-5 w-5" />
-              )}
-              {!collapsed && <span className="font-bold text-sm">Collapse</span>}
-            </button>
-
+          <div className="px-2 mb-2 shrink-0 pt-1">
             {/* HELP */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   className={cn(
-                    "w-full h-9 rounded-lg flex items-center gap-3 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors",
-                    collapsed ? "justify-center" : "px-3"
+                    "w-full h-[48px] rounded-full flex items-center gap-2.5 text-muted-foreground hover:text-foreground hover:bg-card transition-colors",
+                    collapsed ? "justify-center" : "px-2"
                   )}
                 >
-                  <HelpCircle className="h-4 w-4 shrink-0" />
+                  <div className="h-[44px] w-[44px] rounded-full border-2 border-border/30 flex items-center justify-center shrink-0">
+                    <HelpCircle className="h-[17px] w-[17px]" />
+                  </div>
                   {!collapsed && <span className="font-medium text-sm">Help</span>}
                 </button>
               </DropdownMenuTrigger>
@@ -636,6 +601,24 @@ export function RightSidebar({
           </div>
 
         </div>
+
+        {/* Fixed-position pill tooltip — appears as an extension of the nav button */}
+        {collapsed && hoveredNav && (
+          <div
+            className={cn(
+              "fixed z-[150] pointer-events-none",
+              "flex items-center h-10 px-3 pr-4 whitespace-nowrap",
+              "text-sm font-semibold rounded-r-lg",
+              "shadow-[2px_2px_10px_rgba(0,0,0,0.12)]",
+              hoveredNav.active
+                ? "bg-[#FFF375] text-foreground"
+                : "bg-card text-foreground"
+            )}
+            style={{ left: 72, top: hoveredNav.y }}
+          >
+            {hoveredNav.label}
+          </div>
+        )}
       </aside>
     </>
   );

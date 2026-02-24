@@ -7,6 +7,14 @@ import { setupAuth } from "./auth";
 const app = express();
 const httpServer = createServer(app);
 
+// Prevent unhandled errors from crashing the process
+process.on("uncaughtException", (err) => {
+  console.error("[express] uncaughtException:", err);
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("[express] unhandledRejection:", reason);
+});
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
@@ -70,8 +78,8 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
+    console.error(`[express] unhandled error:`, err);
     res.status(status).json({ message });
-    throw err;
   });
 
   // In production, serve the pre-built static files.

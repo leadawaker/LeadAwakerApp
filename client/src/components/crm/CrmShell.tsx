@@ -3,8 +3,6 @@ import { useLocation } from "wouter";
 import { RightSidebar } from "./RightSidebar";
 import { Topbar } from "@/components/crm/Topbar";
 import { SupportChat } from "@/components/crm/SupportChat";
-import { SearchModal } from "@/components/crm/SearchModal";
-import { NotificationsPanel } from "@/components/crm/NotificationsPanel";
 import { PageTransition } from "@/components/crm/PageTransition";
 import { CommandPalette } from "@/components/crm/CommandPalette";
 import { ErrorBoundary } from "@/components/crm/ErrorBoundary";
@@ -24,7 +22,6 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   const isAgencyView = location.startsWith("/agency");
   const { isDark, toggleTheme } = useTheme();
   const [activePanel, setActivePanel] = useState<string | null>(null);
-  const [unreadCount, setUnreadCount] = useState(3);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     const saved = localStorage.getItem("sidebar-collapsed");
@@ -55,7 +52,6 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         collapsed={collapsed}
         isMobileMenuOpen={isMobileMenuOpen}
         onToggleMobileMenu={() => setIsMobileMenuOpen((v) => !v)}
-        notificationsCount={unreadCount}
         onLogout={handleLogout}
       />
       <div className="fixed left-0 top-0 bottom-0 z-40" data-testid="wrap-left-nav">
@@ -65,7 +61,6 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
           onOpenSupport={() => setActivePanel('support')}
           onOpenSearch={() => setActivePanel('search')}
           onOpenNotifications={() => setActivePanel('notifications')}
-          notificationsCount={unreadCount}
           onToggleHelp={() => setActivePanel('help')}
           isMobileMenuOpen={isMobileMenuOpen}
           onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
@@ -78,11 +73,11 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         <div className="fixed inset-0 z-[70] pointer-events-none" data-testid="unified-overlay">
           <button
             type="button"
-            className="absolute inset-0 bg-black/25 glass-overlay pointer-events-auto"
+            className="absolute inset-0 bg-black/25 pointer-events-auto"
             onClick={closePanel}
           />
-          <aside className="absolute right-0 top-0 bottom-0 w-full sm:right-4 sm:top-8 sm:bottom-4 sm:w-[400px] border border-border/60 bg-background/90 dark:bg-background/85 glass-accent shadow-sm sm:rounded-2xl pointer-events-auto flex flex-col overflow-hidden">
-            <div className="h-14 px-6 flex items-center justify-between border-b border-border/50 bg-background/80 glass-divider sticky top-0 z-10 shrink-0">
+          <aside className="absolute right-0 top-0 bottom-0 w-full sm:right-4 sm:top-8 sm:bottom-4 sm:w-[400px] border border-border/60 bg-background shadow-sm sm:rounded-2xl pointer-events-auto flex flex-col overflow-hidden">
+            <div className="h-14 px-6 flex items-center justify-between border-b border-border/50 bg-background sticky top-0 z-10 shrink-0">
               <div className="font-bold text-lg capitalize">{activePanel.replace('-', ' ')}</div>
               <button onClick={closePanel} className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center">
                 <X className="h-4 w-4" />
@@ -90,12 +85,6 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
             </div>
             
             <div className="flex-grow overflow-hidden h-full">
-              {activePanel === 'search' && (
-                <SearchModal open={true} onOpenChange={(open) => !open && closePanel()} inline />
-              )}
-              {activePanel === 'notifications' && (
-                <NotificationsPanel open={true} onClose={closePanel} onMarkAllRead={() => setUnreadCount(0)} inline />
-              )}
               {activePanel === 'settings' && (
                 <div className="p-6 space-y-8 overflow-auto h-full">
                   <section className="bg-card rounded-2xl p-6 shadow-sm border border-border">
@@ -179,14 +168,14 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
       <main
         id="main-content"
         className={cn(
-          "h-screen flex flex-col bg-muted/30 dark:bg-background transition-all duration-200 overflow-hidden",
-          collapsed ? "md:pl-[60px]" : "md:pl-[180px]",
+          "h-screen flex flex-col bg-background transition-all duration-200 overflow-hidden",
+          collapsed ? "md:pl-[72px]" : "md:pl-[216px]",
           "pb-[64px] md:pb-0 pt-[56px]"
         )}
         data-testid="main-crm"
       >
         <ConnectionBanner />
-        <div className="h-full w-full px-4 md:pl-10 md:pr-10 pt-4 pb-0 overflow-y-auto">
+        <div className="h-full w-full px-3 md:pl-[10px] md:pr-5 pt-4 pb-0 overflow-y-auto">
           <ErrorBoundary>
             <PageTransition>
               {children}
