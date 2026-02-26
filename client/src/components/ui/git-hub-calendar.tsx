@@ -66,10 +66,10 @@ export function GitHubCalendar({
 
   const getColor = (count: number): string => {
     if (count === 0) return "bg-muted/25";
-    if (count === 1) return "bg-brand-blue/30";
-    if (count <= 3) return "bg-brand-blue/55";
-    if (count <= 5) return "bg-brand-blue/80";
-    return "bg-brand-blue";
+    if (count === 1) return "bg-brand-indigo/30";
+    if (count <= 3) return "bg-brand-indigo/55";
+    if (count <= 5) return "bg-brand-indigo/80";
+    return "bg-brand-indigo";
   };
 
   // Each cell is 13×13 px; gap between cells is 2px

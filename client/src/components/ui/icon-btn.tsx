@@ -2,7 +2,7 @@ import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface IconBtnProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  /** Whether this button is in its selected/active toggle state (brand-blue fill). */
+  /** Whether this button is in its selected/active toggle state (brand-indigo fill). */
   active?: boolean;
 }
 

@@ -270,7 +270,7 @@ export default function AutomationLogsPage() {
                   {rows.length}
                 </span>
                 {activeFilterCount > 0 && (
-                  <span className="h-5 px-1.5 rounded-full bg-brand-blue/15 flex items-center justify-center text-[10px] font-semibold text-brand-blue shrink-0">
+                  <span className="h-5 px-1.5 rounded-full bg-brand-indigo/15 flex items-center justify-center text-[10px] font-semibold text-brand-indigo shrink-0">
                     {activeFilterCount} filter{activeFilterCount !== 1 && "s"}
                   </span>
                 )}
@@ -311,7 +311,7 @@ export default function AutomationLogsPage() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => { setCampaignId("all"); setPage(0); }}
-                    className={cn("text-[12px]", campaignId === "all" && "font-semibold text-brand-blue")}
+                    className={cn("text-[12px]", campaignId === "all" && "font-semibold text-brand-indigo")}
                   >
                     All Campaigns
                     {campaignId === "all" && <Check className="h-3 w-3 ml-auto" />}
@@ -322,7 +322,7 @@ export default function AutomationLogsPage() {
                       <DropdownMenuItem
                         key={cId}
                         onClick={() => { setCampaignId(cId); setPage(0); }}
-                        className={cn("text-[12px]", campaignId === cId && "font-semibold text-brand-blue")}
+                        className={cn("text-[12px]", campaignId === cId && "font-semibold text-brand-indigo")}
                       >
                         {c.name || `Campaign ${cId}`}
                         {campaignId === cId && <Check className="h-3 w-3 ml-auto" />}
@@ -357,7 +357,7 @@ export default function AutomationLogsPage() {
                     <DropdownMenuItem
                       key={opt.value}
                       onClick={() => { setStatusFilter(opt.value); setPage(0); }}
-                      className={cn("text-[12px]", statusFilter === opt.value && "font-semibold text-brand-blue")}
+                      className={cn("text-[12px]", statusFilter === opt.value && "font-semibold text-brand-indigo")}
                     >
                       {opt.label}
                       {statusFilter === opt.value && <Check className="h-3 w-3 ml-auto" />}
@@ -393,7 +393,7 @@ export default function AutomationLogsPage() {
                         type="date"
                         value={dateFrom}
                         onChange={(e) => { setDateFrom(e.target.value); setPage(0); }}
-                        className="w-full h-10 rounded-lg border border-border bg-card px-2 text-[12px] outline-none focus:ring-1 focus:ring-brand-blue/30"
+                        className="w-full h-10 rounded-lg border border-border bg-card px-2 text-[12px] outline-none focus:ring-1 focus:ring-brand-indigo/30"
                       />
                     </div>
                     <div className="space-y-1">
@@ -402,7 +402,7 @@ export default function AutomationLogsPage() {
                         type="date"
                         value={dateTo}
                         onChange={(e) => { setDateTo(e.target.value); setPage(0); }}
-                        className="w-full h-10 rounded-lg border border-border bg-card px-2 text-[12px] outline-none focus:ring-1 focus:ring-brand-blue/30"
+                        className="w-full h-10 rounded-lg border border-border bg-card px-2 text-[12px] outline-none focus:ring-1 focus:ring-brand-indigo/30"
                       />
                     </div>
                   </div>
@@ -689,7 +689,7 @@ export default function AutomationLogsPage() {
                         className={cn(
                           "h-8 min-w-[32px] px-2 rounded-full text-[12px] font-semibold",
                           page === i
-                            ? "bg-brand-blue text-white"
+                            ? "bg-brand-indigo text-white"
                             : "text-muted-foreground hover:bg-card hover:text-foreground",
                         )}
                       >

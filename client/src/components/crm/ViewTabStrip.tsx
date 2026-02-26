@@ -37,7 +37,7 @@ export function ViewTabStrip<T extends string>({
             className={cn(
               "inline-flex items-center gap-1.5 px-2.5 h-7 rounded-md text-xs font-medium transition-all duration-150 select-none shrink-0",
               isActive
-                ? "bg-background shadow-sm text-brand-blue border border-border/60"
+                ? "bg-background shadow-sm text-brand-indigo border border-border/60"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
             )}
           >

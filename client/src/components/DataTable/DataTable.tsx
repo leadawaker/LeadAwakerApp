@@ -544,7 +544,7 @@ const DateTimeCell = ({ value }: { value: any }) => {
 
   return (
     <div className="flex items-center gap-3 whitespace-nowrap">
-      <span className={cn(isToday ? "text-brand-blue font-semibold" : "")}>
+      <span className={cn(isToday ? "text-brand-indigo font-semibold" : "")}>
         {parts.date}
       </span>
       <span className="text-muted-foreground">{parts.time}</span>
@@ -596,7 +596,7 @@ const TruncatedCell = ({
     return (
       <Input
         autoFocus
-        className="h-8 w-auto min-w-[200px] max-w-none bg-card dark:bg-card shadow-lg border-brand-blue focus:ring-2 focus:ring-brand-blue/20 relative z-30"
+        className="h-8 w-auto min-w-[200px] max-w-none bg-card dark:bg-card shadow-lg border-brand-indigo focus:ring-2 focus:ring-brand-indigo/20 relative z-30"
         style={{ width: `${widthCh}ch` }}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
@@ -689,7 +689,7 @@ const RollupCell = ({ value, type }: { value: any; type: string }) => {
             <h4 className="font-black text-[10px] uppercase tracking-widest text-muted-foreground">
               {type}
             </h4>
-            <Badge className="bg-brand-blue/10 text-brand-blue border-brand-blue/20">
+            <Badge className="bg-brand-indigo/10 text-brand-indigo border-brand-indigo/20">
               {count}
             </Badge>
           </div>
@@ -757,7 +757,7 @@ const SortableTableHead = ({
       {children({ attributes, listeners })}
       {!nonResizable && (
         <div
-          className="absolute right-[-4px] top-0 bottom-0 w-[8px] cursor-col-resize hover:bg-brand-blue/50 active:bg-brand-blue z-20"
+          className="absolute right-[-4px] top-0 bottom-0 w-[8px] cursor-col-resize hover:bg-brand-indigo/50 active:bg-brand-indigo z-20"
           onMouseDown={(e) => handleResize(col, e)}
         />
       )}
@@ -1239,14 +1239,14 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
         <div
           {...drag.attributes}
           {...drag.listeners}
-          className="cursor-grab active:cursor-grabbing hover:text-brand-blue transition-colors"
+          className="cursor-grab active:cursor-grabbing hover:text-brand-indigo transition-colors"
         >
           {getIconForField(col)}
         </div>
         <span
           className={cn(
             "flex-1 cursor-pointer select-none truncate transition-colors",
-            isSorted ? "text-brand-blue font-semibold" : "hover:text-brand-blue/70",
+            isSorted ? "text-brand-indigo font-semibold" : "hover:text-brand-indigo/70",
           )}
           onClick={() => {
             const nextDir =
@@ -1266,7 +1266,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
           {title}
         </span>
         {isSorted ? (
-          <span className="text-brand-blue font-bold shrink-0" data-testid={`sort-indicator-${col}`} aria-hidden="true">
+          <span className="text-brand-indigo font-bold shrink-0" data-testid={`sort-indicator-${col}`} aria-hidden="true">
             {sortConfig.direction === "asc" ? (
               <ChevronUp className="h-3 w-3" />
             ) : (
@@ -1380,7 +1380,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                   <Filter className="h-4 w-4" />
                   <span>Filter</span>
                   {filterCount > 0 && (
-                    <Badge className="absolute -top-2 -right-2 h-4 w-4 flex items-center justify-center p-0 bg-brand-blue">
+                    <Badge className="absolute -top-2 -right-2 h-4 w-4 flex items-center justify-center p-0 bg-brand-indigo">
                       {filterCount}
                     </Badge>
                   )}
@@ -1445,9 +1445,9 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                       className="h-8 w-8 p-0 hover:bg-muted rounded-lg"
                     >
                       {groupSortOrder === "asc" ? (
-                        <ChevronUp className="h-4 w-4 text-brand-blue" />
+                        <ChevronUp className="h-4 w-4 text-brand-indigo" />
                       ) : (
-                        <ChevronDown className="h-4 w-4 text-brand-blue" />
+                        <ChevronDown className="h-4 w-4 text-brand-indigo" />
                       )}
                     </Button>
                   </DropdownMenuTrigger>
@@ -1482,7 +1482,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                 renderBulkActions(selectedIds, () => onSelectedIdsChange([]))
               ) : (
                 <>
-                  <Badge className="h-7 px-3 bg-brand-blue hover:bg-brand-blue/90 text-brand-blue-foreground text-sm font-semibold rounded-full">
+                  <Badge className="h-7 px-3 bg-brand-indigo hover:bg-brand-indigo/90 text-brand-indigo-foreground text-sm font-semibold rounded-full">
                     {selectedIds.length} selected
                   </Badge>
                   <Button
@@ -1583,7 +1583,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                       {hiddenCount > 0 && (
                         <span
                           data-testid="column-config-hidden-count"
-                          className="ml-0.5 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-brand-blue text-brand-blue-foreground text-[10px] font-bold"
+                          className="ml-0.5 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-brand-indigo text-brand-indigo-foreground text-[10px] font-bold"
                         >
                           {hiddenCount}
                         </span>
@@ -1603,7 +1603,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                         <button
                           data-testid="column-config-show-all"
                           onClick={() => onVisibleColumnsChange(toggleableCols)}
-                          className="text-[11px] text-brand-blue hover:text-brand-blue/80 font-medium px-1.5 py-0.5 rounded hover:bg-brand-blue/10 transition-colors"
+                          className="text-[11px] text-brand-indigo hover:text-brand-indigo/80 font-medium px-1.5 py-0.5 rounded hover:bg-brand-indigo/10 transition-colors"
                         >
                           All
                         </button>
@@ -1671,7 +1671,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
 
           {onAdd && (
             <Button
-              className="h-10 px-4 rounded-xl bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90 text-sm font-semibold gap-2 shadow-none border-none"
+              className="h-10 px-4 rounded-xl bg-brand-indigo text-brand-indigo-foreground hover:bg-brand-indigo/90 text-sm font-semibold gap-2 shadow-none border-none"
               onClick={onAdd}
             >
               <Plus className="h-4 w-4" /> {addLabel}
@@ -1868,7 +1868,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                           : g === "type"
                           ? row._groupName.toLowerCase() === "agency"
                             ? { bg: "bg-brand-yellow/20", text: "text-brand-yellow" }
-                            : { bg: "bg-brand-blue/20", text: "text-brand-blue" }
+                            : { bg: "bg-brand-indigo/20", text: "text-brand-indigo" }
                           : null
                         : null;
                       return (
@@ -1961,7 +1961,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                               <Sheet>
                                 <SheetTrigger asChild>
                                   {col === "full_name" ? (
-                                    <div className="font-bold text-brand-blue cursor-pointer hover:text-brand-blue/80 transition-colors">
+                                    <div className="font-bold text-brand-indigo cursor-pointer hover:text-brand-indigo/80 transition-colors">
                                       {row[col]}
                                     </div>
                                   ) : (
@@ -2011,7 +2011,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                             <Input
                                               value={row[c] || ""}
                                               onChange={(e) => handleUpdate(row.Id, c, e.target.value)}
-                                              className="bg-card dark:bg-secondary border-border focus:ring-brand-blue"
+                                              className="bg-card dark:bg-secondary border-border focus:ring-brand-indigo"
                                             />
                                           )}
                                         </div>
@@ -2069,7 +2069,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                               </Select>
                             ) : col === "type" ? (
                               <Select value={row[col] || ""} onValueChange={(v) => handleUpdate(row.Id, col, v)}>
-                                <SelectTrigger className={cn("h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate", row[col]?.toLowerCase() === "agency" ? "bg-brand-yellow/20 text-brand-yellow" : "bg-brand-blue/20 text-brand-blue")}>
+                                <SelectTrigger className={cn("h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate", row[col]?.toLowerCase() === "agency" ? "bg-brand-yellow/20 text-brand-yellow" : "bg-brand-indigo/20 text-brand-indigo")}>
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -2138,7 +2138,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                 else if (g === "automation_status") color = (automationStatusColors as any)[groupName];
                                 else if (g === "type") {
                                   if (groupName.toLowerCase() === "agency") color = { bg: "bg-brand-yellow/20", text: "text-brand-yellow" };
-                                  else color = { bg: "bg-brand-blue/20", text: "text-brand-blue" };
+                                  else color = { bg: "bg-brand-indigo/20", text: "text-brand-indigo" };
                                 }
                               }
 
@@ -2239,7 +2239,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                               <Sheet>
                                 <SheetTrigger asChild>
                                   {col === "full_name" ? (
-                                    <div className="font-bold text-brand-blue cursor-pointer hover:text-brand-blue/80 transition-colors">
+                                    <div className="font-bold text-brand-indigo cursor-pointer hover:text-brand-indigo/80 transition-colors">
                                       {row[col]}
                                     </div>
                                   ) : (
@@ -2300,11 +2300,11 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                             <React.Fragment key={c}>
                                               {showTwilioHeader && (
                                                 <div className="flex items-center gap-2 pt-2">
-                                                  <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-brand-blue">
+                                                  <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-brand-indigo">
                                                     <Zap className="h-3.5 w-3.5" />
                                                     <span>Twilio Configuration</span>
                                                   </div>
-                                                  <div className="flex-1 h-px bg-brand-blue/20" />
+                                                  <div className="flex-1 h-px bg-brand-indigo/20" />
                                                 </div>
                                               )}
                                               {isTwilio ? (
@@ -2390,7 +2390,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                                           e.target.value,
                                                         )
                                                       }
-                                                      className="bg-card dark:bg-secondary border-border focus:ring-brand-blue"
+                                                      className="bg-card dark:bg-secondary border-border focus:ring-brand-indigo"
                                                     />
                                                   )}
                                                 </div>
@@ -2507,7 +2507,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                                     "h-7 px-2 rounded-lg border-none shadow-none font-bold text-[10px] uppercase tracking-wider w-full truncate",
                                     row[col]?.toLowerCase() === "agency"
                                       ? "bg-brand-yellow/20 text-brand-yellow"
-                                      : "bg-brand-blue/20 text-brand-blue",
+                                      : "bg-brand-indigo/20 text-brand-indigo",
                                   )}
                                 >
                                   <SelectValue />
@@ -2712,7 +2712,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
               <div className="flex gap-2">
                 <button
                   data-testid="export-select-all"
-                  className="text-[11px] text-brand-blue hover:text-brand-blue/80 font-medium px-1.5 py-0.5 rounded hover:bg-brand-blue/10 transition-colors"
+                  className="text-[11px] text-brand-indigo hover:text-brand-indigo/80 font-medium px-1.5 py-0.5 rounded hover:bg-brand-indigo/10 transition-colors"
                   onClick={() => setExportSelectedFields([...columns])}
                 >
                   All
@@ -2779,7 +2779,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
               onClick={generateAndDownloadCSV}
               disabled={exportSelectedFields.length === 0}
               data-testid="export-confirm"
-              className="bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90 gap-2"
+              className="bg-brand-indigo text-brand-indigo-foreground hover:bg-brand-indigo/90 gap-2"
             >
               <Download className="h-4 w-4" />
               Download CSV

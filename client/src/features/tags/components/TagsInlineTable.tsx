@@ -320,9 +320,9 @@ export function TagsInlineTable({
                       className={cn(
                         "h-4 w-4 rounded border flex items-center justify-center cursor-pointer",
                         allSelected
-                          ? "border-brand-blue bg-brand-blue"
+                          ? "border-brand-indigo bg-brand-indigo"
                           : someSelected
-                            ? "border-brand-blue bg-brand-blue/30"
+                            ? "border-brand-indigo bg-brand-indigo/30"
                             : "border-border/40",
                       )}
                       onClick={handleSelectAll}
@@ -407,7 +407,7 @@ export function TagsInlineTable({
                             className={cn(
                               "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
                               isSelected
-                                ? "border-brand-blue bg-brand-blue"
+                                ? "border-brand-indigo bg-brand-indigo"
                                 : "border-border/40",
                             )}
                             onClick={(e) => handleCheckboxClick(tag.id, e)}
@@ -462,7 +462,7 @@ export function TagsInlineTable({
                                 if (e.key === "Escape") cancelEdit();
                               }}
                               onClick={(e) => e.stopPropagation()}
-                              className="w-full h-[28px] text-[12px] bg-white px-1.5 rounded ring-1 ring-brand-blue/40 outline-none"
+                              className="w-full h-[28px] text-[12px] bg-white px-1.5 rounded ring-1 ring-brand-indigo/40 outline-none"
                             />
                           ) : (
                             <span
@@ -509,7 +509,7 @@ export function TagsInlineTable({
                                 if (e.key === "Escape") cancelEdit();
                               }}
                               onClick={(e) => e.stopPropagation()}
-                              className="w-full h-[28px] text-[12px] bg-white px-1.5 rounded ring-1 ring-brand-blue/40 outline-none"
+                              className="w-full h-[28px] text-[12px] bg-white px-1.5 rounded ring-1 ring-brand-indigo/40 outline-none"
                             />
                           ) : (
                             <span
@@ -684,7 +684,7 @@ export function TagsInlineTable({
                                 if (e.key === "Escape") cancelEdit();
                               }}
                               onClick={(e) => e.stopPropagation()}
-                              className="w-full h-[28px] text-[12px] bg-white px-1.5 rounded ring-1 ring-brand-blue/40 outline-none"
+                              className="w-full h-[28px] text-[12px] bg-white px-1.5 rounded ring-1 ring-brand-indigo/40 outline-none"
                             />
                           ) : (
                             <span

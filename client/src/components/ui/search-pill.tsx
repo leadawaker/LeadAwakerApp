@@ -36,7 +36,7 @@ export function SearchPill({ value, onChange, open, onOpenChange, placeholder = 
       onClick={() => onOpenChange(true)}
       className={cn(
         "icon-circle-lg icon-circle-base",
-        value && "border-brand-blue/40 text-brand-blue",
+        value && "border-brand-indigo/40 text-brand-indigo",
         className,
       )}
     >

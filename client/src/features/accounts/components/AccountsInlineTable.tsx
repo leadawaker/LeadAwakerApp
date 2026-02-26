@@ -142,7 +142,7 @@ function EditableCell({
         onChange={(e) => onSave(e.target.value)}
         onBlur={() => onSave(editValue)}
         onKeyDown={(e) => { if (e.key === "Escape") onCancel(); }}
-        className="w-full h-[28px] text-[11px] bg-white rounded px-1.5 ring-1 ring-brand-blue/40 outline-none cursor-pointer"
+        className="w-full h-[28px] text-[11px] bg-white rounded px-1.5 ring-1 ring-brand-indigo/40 outline-none cursor-pointer"
       >
         {STATUS_OPTIONS.map((s) => (
           <option key={s} value={s}>{s}</option>
@@ -163,7 +163,7 @@ function EditableCell({
           if (e.key === "Enter") e.currentTarget.blur();
           if (e.key === "Escape") onCancel();
         }}
-        className="w-full h-[28px] text-[11px] bg-white px-1.5 rounded ring-1 ring-brand-blue/40 outline-none"
+        className="w-full h-[28px] text-[11px] bg-white px-1.5 rounded ring-1 ring-brand-indigo/40 outline-none"
       />
     );
   }
@@ -182,7 +182,7 @@ function EditableCell({
         {value || <span className="text-muted-foreground/35 italic not-italic">—</span>}
       </span>
       {isSaving && (
-        <div className="h-2.5 w-2.5 border border-brand-blue/40 border-t-brand-blue rounded-full animate-spin ml-1 shrink-0" />
+        <div className="h-2.5 w-2.5 border border-brand-indigo/40 border-t-brand-indigo rounded-full animate-spin ml-1 shrink-0" />
       )}
       {hasError && !isSaving && (
         <span className="text-red-500 ml-1 shrink-0 text-[9px] font-bold">!</span>
@@ -534,7 +534,7 @@ export function AccountsInlineTable({
                                 <div
                                   className={cn(
                                     "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
-                                    isMultiSelected ? "border-brand-blue bg-brand-blue" : "border-border/40"
+                                    isMultiSelected ? "border-brand-indigo bg-brand-indigo" : "border-border/40"
                                   )}
                                   onClick={(e) => {
                                     e.stopPropagation();

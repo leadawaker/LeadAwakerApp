@@ -124,7 +124,7 @@ function ConfirmToolbarButton({
       <div className="h-10 flex items-center gap-1 rounded-full border border-border/30 bg-card px-2.5 text-[12px] shrink-0">
         <span className="text-foreground/60 mr-0.5 whitespace-nowrap">{label}?</span>
         <button
-          className="px-2 py-0.5 rounded-full bg-brand-blue text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
+          className="px-2 py-0.5 rounded-full bg-brand-indigo text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
           onClick={async () => { setLoading(true); try { await onConfirm(); } finally { setLoading(false); setConfirming(false); } }}
           disabled={loading}
         >
@@ -650,7 +650,7 @@ function UsersContent() {
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Sort by</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {(Object.keys(TABLE_SORT_LABELS) as TableSortBy[]).map((opt) => (
-            <DropdownMenuItem key={opt} onClick={() => setTableSortBy(opt)} className={cn("text-[12px]", tableSortBy === opt && "font-semibold text-brand-blue")}>
+            <DropdownMenuItem key={opt} onClick={() => setTableSortBy(opt)} className={cn("text-[12px]", tableSortBy === opt && "font-semibold text-brand-indigo")}>
               {TABLE_SORT_LABELS[opt]}
               {tableSortBy === opt && <Check className="h-3 w-3 ml-auto" />}
             </DropdownMenuItem>
@@ -674,7 +674,7 @@ function UsersContent() {
           {ROLE_OPTIONS.map((r) => (
             <DropdownMenuItem key={r} onClick={(e) => { e.preventDefault(); toggleTableFilterRole(r); }} className="flex items-center gap-2 text-[12px]">
               <span className="flex-1">{r}</span>
-              {tableFilterRole.includes(r) && <Check className="h-3 w-3 text-brand-blue shrink-0" />}
+              {tableFilterRole.includes(r) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
             </DropdownMenuItem>
           ))}
           <DropdownMenuSeparator />
@@ -683,7 +683,7 @@ function UsersContent() {
           {STATUS_OPTIONS.map((s) => (
             <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleTableFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
               <span className="flex-1">{s}</span>
-              {tableFilterStatus.includes(s) && <Check className="h-3 w-3 text-brand-blue shrink-0" />}
+              {tableFilterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
             </DropdownMenuItem>
           ))}
           {isTableFilterActive && (
@@ -707,7 +707,7 @@ function UsersContent() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           {(Object.keys(TABLE_GROUP_LABELS) as TableGroupBy[]).map((opt) => (
-            <DropdownMenuItem key={opt} onClick={() => setTableGroupBy(opt)} className={cn("text-[12px]", tableGroupBy === opt && "font-semibold text-brand-blue")}>
+            <DropdownMenuItem key={opt} onClick={() => setTableGroupBy(opt)} className={cn("text-[12px]", tableGroupBy === opt && "font-semibold text-brand-indigo")}>
               {TABLE_GROUP_LABELS[opt]}
               {tableGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
             </DropdownMenuItem>
@@ -735,7 +735,7 @@ function UsersContent() {
                 onClick={(e) => { e.preventDefault(); setVisibleCols((prev) => { const next = new Set(prev); if (next.has(col.key)) { if (next.size > 1) next.delete(col.key); } else next.add(col.key); return next; }); }}
                 className="flex items-center gap-2 text-[12px]"
               >
-                <div className={cn("h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0", isVisible ? "bg-brand-blue border-brand-blue" : "border-border/50")}>
+                <div className={cn("h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0", isVisible ? "bg-brand-indigo border-brand-indigo" : "border-border/50")}>
                   {isVisible && <Check className="h-2 w-2 text-white" />}
                 </div>
                 <span className="flex-1">{col.label}</span>
@@ -842,7 +842,7 @@ function UsersContent() {
         <DialogContent className="max-w-md" data-testid="dialog-invite-user">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Mail className="w-5 h-5 text-brand-blue" />
+              <Mail className="w-5 h-5 text-brand-indigo" />
               Invite New User
             </DialogTitle>
             <DialogDescription>
@@ -908,7 +908,7 @@ function UsersContent() {
         <DialogContent className="max-w-lg" data-testid="dialog-user-detail">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <User className="w-5 h-5 text-brand-blue" />
+              <User className="w-5 h-5 text-brand-indigo" />
               User Profile
             </DialogTitle>
             <DialogDescription>Full profile details for this user.</DialogDescription>

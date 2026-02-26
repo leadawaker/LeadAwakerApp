@@ -139,7 +139,7 @@ export function PromptsToolbar({
             <DropdownMenuItem
               key={opt}
               onClick={() => onSortByChange(opt)}
-              className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-blue")}
+              className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}
             >
               {PROMPT_SORT_LABELS[opt]}
               {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
@@ -171,7 +171,7 @@ export function PromptsToolbar({
               onClick={(e) => { e.preventDefault(); onStatusFilterChange(opt); }}
             >
               {opt === "all" ? "All Statuses" : opt.charAt(0).toUpperCase() + opt.slice(1)}
-              {statusFilter === opt && <Check className="h-3 w-3 text-brand-blue" />}
+              {statusFilter === opt && <Check className="h-3 w-3 text-brand-indigo" />}
             </DropdownMenuItem>
           ))}
 
@@ -183,7 +183,7 @@ export function PromptsToolbar({
                 Model
               </DropdownMenuLabel>
               <DropdownMenuItem
-                className={cn("text-[12px]", modelFilter === "all" && "font-semibold text-brand-blue")}
+                className={cn("text-[12px]", modelFilter === "all" && "font-semibold text-brand-indigo")}
                 onClick={(e) => { e.preventDefault(); onModelFilterChange("all"); }}
               >
                 All Models
@@ -192,7 +192,7 @@ export function PromptsToolbar({
               {availableModels.map((m) => (
                 <DropdownMenuItem
                   key={m}
-                  className={cn("text-[12px]", modelFilter === m && "font-semibold text-brand-blue")}
+                  className={cn("text-[12px]", modelFilter === m && "font-semibold text-brand-indigo")}
                   onClick={(e) => { e.preventDefault(); onModelFilterChange(m); }}
                 >
                   <span className="truncate flex-1">{m}</span>
@@ -210,7 +210,7 @@ export function PromptsToolbar({
                 Campaign
               </DropdownMenuLabel>
               <DropdownMenuItem
-                className={cn("text-[12px]", !campaignFilter && "font-semibold text-brand-blue")}
+                className={cn("text-[12px]", !campaignFilter && "font-semibold text-brand-indigo")}
                 onClick={(e) => { e.preventDefault(); onCampaignFilterChange(""); }}
               >
                 All Campaigns
@@ -219,7 +219,7 @@ export function PromptsToolbar({
               {availableCampaigns.map((c) => (
                 <DropdownMenuItem
                   key={c.id}
-                  className={cn("text-[12px]", campaignFilter === String(c.id) && "font-semibold text-brand-blue")}
+                  className={cn("text-[12px]", campaignFilter === String(c.id) && "font-semibold text-brand-indigo")}
                   onClick={(e) => { e.preventDefault(); onCampaignFilterChange(campaignFilter === String(c.id) ? "" : String(c.id)); }}
                 >
                   <span className="truncate flex-1">{c.name}</span>
@@ -257,7 +257,7 @@ export function PromptsToolbar({
               <DropdownMenuItem
                 key={opt}
                 onClick={() => onGroupByChange(opt)}
-                className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-blue")}
+                className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}
               >
                 {PROMPT_GROUP_LABELS[opt]}
                 {groupBy === opt && <Check className="h-3 w-3 ml-auto" />}
@@ -303,7 +303,7 @@ export function PromptsToolbar({
                 >
                   <div className={cn(
                     "h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0",
-                    isVisible ? "bg-brand-blue border-brand-blue" : "border-border/50",
+                    isVisible ? "bg-brand-indigo border-brand-indigo" : "border-border/50",
                   )}>
                     {isVisible && <Check className="h-2 w-2 text-white" />}
                   </div>

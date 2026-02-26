@@ -157,7 +157,7 @@ export function DateRangeFilter({ value, onChange, allFrom }: DateRangeFilterPro
   }, [value]);
 
   const btnBase = "h-8 px-2.5 text-[11px] font-semibold transition-colors whitespace-nowrap rounded-full";
-  const btnActive = "bg-brand-blue/15 text-brand-blue";
+  const btnActive = "bg-brand-indigo/15 text-brand-indigo";
   const btnInactive = "text-foreground/40 hover:text-foreground/70";
 
   return (

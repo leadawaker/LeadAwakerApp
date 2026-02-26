@@ -234,7 +234,7 @@ export function RightSidebar({
               <span className="text-sm font-bold">{it.label}</span>
             )}
             {it.testId === "nav-chats" && !collapsed && !!unreadChatCount && unreadChatCount > 0 && (
-              <span className="ml-auto h-4 min-w-[1rem] px-1 rounded-full bg-brand-blue text-white text-[10px] font-bold flex items-center justify-center">
+              <span className="ml-auto h-4 min-w-[1rem] px-1 rounded-full bg-brand-indigo text-white text-[10px] font-bold flex items-center justify-center">
                 {unreadChatCount > 9 ? "9+" : unreadChatCount}
               </span>
             )}
@@ -295,7 +295,7 @@ export function RightSidebar({
                         "w-full rounded-xl border border-border/60 px-3 py-2.5 flex items-center gap-2 hover:bg-muted/60 transition-colors text-left",
                         currentAccountId === 1
                           ? "bg-brand-yellow/10 dark:bg-brand-yellow/10"
-                          : "bg-brand-blue/10 dark:bg-brand-blue/10"
+                          : "bg-brand-indigo/10 dark:bg-brand-indigo/10"
                       )}
                       data-testid="mobile-sidebar-account-switcher-trigger"
                     >
@@ -304,7 +304,7 @@ export function RightSidebar({
                           "h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0",
                           currentAccountId === 1
                             ? "bg-brand-yellow text-brand-yellow-foreground"
-                            : "bg-brand-blue text-brand-blue-foreground"
+                            : "bg-brand-indigo text-brand-indigo-foreground"
                         )}
                       >
                         {currentAccount?.name?.[0] || "?"}
@@ -338,14 +338,14 @@ export function RightSidebar({
                             "h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0",
                             acc.id === 1
                               ? "bg-brand-yellow text-brand-yellow-foreground"
-                              : "bg-brand-blue text-brand-blue-foreground"
+                              : "bg-brand-indigo text-brand-indigo-foreground"
                           )}
                         >
                           {acc.name?.[0] || "?"}
                         </div>
                         <span className="text-sm truncate flex-1">{acc.name}</span>
                         {currentAccountId === acc.id && (
-                          <Check className="h-4 w-4 text-brand-blue shrink-0" />
+                          <Check className="h-4 w-4 text-brand-indigo shrink-0" />
                         )}
                         {acc.id === 1 && (
                           <span className="text-[9px] bg-brand-yellow/15 text-brand-yellow px-1 rounded uppercase font-bold tracking-tighter shrink-0">

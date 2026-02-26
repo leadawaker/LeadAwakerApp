@@ -28,7 +28,7 @@ function statusTone(status: Lead["conversion_status"]) {
     case "Booked":
       return "bg-brand-yellow/10 text-brand-yellow border-brand-yellow/20";
     case "Qualified":
-      return "bg-brand-blue/10 text-brand-blue border-brand-blue/20";
+      return "bg-brand-indigo/10 text-brand-indigo border-brand-indigo/20";
     case "Responded":
       return "bg-violet-500/10 text-violet-700 border-violet-500/20";
     case "DND":

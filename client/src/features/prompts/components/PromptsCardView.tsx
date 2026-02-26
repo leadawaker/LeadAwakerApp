@@ -122,11 +122,11 @@ function EditPanel({
   }
 
   const inputCls =
-    "w-full h-9 rounded-xl border bg-popover px-2.5 text-[12px] outline-none focus:ring-2 focus:ring-brand-blue/30";
+    "w-full h-9 rounded-xl border bg-popover px-2.5 text-[12px] outline-none focus:ring-2 focus:ring-brand-indigo/30";
   const textareaCls =
-    "w-full rounded-xl border bg-popover px-2.5 py-2 text-[12px] outline-none focus:ring-2 focus:ring-brand-blue/30 resize-y";
+    "w-full rounded-xl border bg-popover px-2.5 py-2 text-[12px] outline-none focus:ring-2 focus:ring-brand-indigo/30 resize-y";
   const selectCls =
-    "w-full h-9 rounded-xl border bg-popover px-2.5 text-[12px] outline-none focus:ring-2 focus:ring-brand-blue/30";
+    "w-full h-9 rounded-xl border bg-popover px-2.5 text-[12px] outline-none focus:ring-2 focus:ring-brand-indigo/30";
   const labelCls = "text-[10px] uppercase tracking-wider text-muted-foreground/60 mb-0.5 block";
 
   return (
@@ -257,7 +257,7 @@ function EditPanel({
         <button
           onClick={handleSave}
           disabled={saving}
-          className="h-9 px-4 rounded-xl bg-brand-blue text-white text-[12px] font-semibold hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5"
+          className="h-9 px-4 rounded-xl bg-brand-indigo text-white text-[12px] font-semibold hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5"
         >
           <Save className="h-3.5 w-3.5" />
           {saving ? "Saving…" : "Save Changes"}

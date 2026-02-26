@@ -375,7 +375,7 @@ export function Topbar({
                     <Bell className="h-4 w-4" />
                     {unreadCount > 0 && (
                       <div
-                        className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-brand-blue rounded-full flex items-center justify-center border-2 border-background"
+                        className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-brand-indigo rounded-full flex items-center justify-center border-2 border-background"
                         data-testid="badge-notifications-count"
                         aria-hidden="true"
                       >
@@ -448,7 +448,7 @@ export function Topbar({
                     isAgencyUser && currentAccountId === 1
                       ? "bg-brand-yellow text-brand-yellow-foreground"
                       : isAgencyUser
-                      ? "bg-brand-blue text-brand-blue-foreground"
+                      ? "bg-brand-indigo text-brand-indigo-foreground"
                       : "bg-primary text-primary-foreground"
                   )}>
                     {userInitials}
@@ -479,7 +479,7 @@ export function Topbar({
                     >
                       <div className={cn(
                         "h-4 w-4 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0",
-                        acc.id === 1 ? "bg-brand-yellow text-brand-yellow-foreground" : "bg-brand-blue text-brand-blue-foreground"
+                        acc.id === 1 ? "bg-brand-yellow text-brand-yellow-foreground" : "bg-brand-indigo text-brand-indigo-foreground"
                       )}>
                         {acc.name?.[0] || "?"}
                       </div>

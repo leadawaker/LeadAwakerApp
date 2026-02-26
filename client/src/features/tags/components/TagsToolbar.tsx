@@ -99,7 +99,7 @@ function ConfirmToolbarButton({
           {label}?
         </span>
         <button
-          className="px-2 py-0.5 rounded-full bg-brand-blue text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
+          className="px-2 py-0.5 rounded-full bg-brand-indigo text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
           onClick={async () => {
             setLoading(true);
             try {
@@ -268,7 +268,7 @@ export function TagsToolbar({
               placeholder="Tag name"
               value={createName}
               onChange={(e) => setCreateName(e.target.value)}
-              className="w-full h-9 px-2.5 rounded-lg border border-border/30 bg-background text-[12px] placeholder:text-muted-foreground/40 outline-none focus:ring-1 focus:ring-brand-blue/40"
+              className="w-full h-9 px-2.5 rounded-lg border border-border/30 bg-background text-[12px] placeholder:text-muted-foreground/40 outline-none focus:ring-1 focus:ring-brand-indigo/40"
             />
             <div className="flex items-center gap-2">
               <InlineColorPicker value={createColor} onChange={setCreateColor} />
@@ -276,13 +276,13 @@ export function TagsToolbar({
                 placeholder="Category"
                 value={createCategory}
                 onChange={(e) => setCreateCategory(e.target.value)}
-                className="flex-1 h-9 px-2.5 rounded-lg border border-border/30 bg-background text-[12px] placeholder:text-muted-foreground/40 outline-none focus:ring-1 focus:ring-brand-blue/40"
+                className="flex-1 h-9 px-2.5 rounded-lg border border-border/30 bg-background text-[12px] placeholder:text-muted-foreground/40 outline-none focus:ring-1 focus:ring-brand-indigo/40"
               />
             </div>
             <button
               disabled={!createName.trim() || creating}
               onClick={handleCreateSubmit}
-              className="w-full h-9 rounded-lg bg-brand-blue text-white text-[12px] font-semibold hover:opacity-90 disabled:opacity-50"
+              className="w-full h-9 rounded-lg bg-brand-indigo text-white text-[12px] font-semibold hover:opacity-90 disabled:opacity-50"
             >
               {creating ? "Creating..." : "Create"}
             </button>
@@ -308,13 +308,13 @@ export function TagsToolbar({
         <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
           <DropdownMenuItem className="text-[12px]" onClick={() => onAccountChange("all")}>
             All Accounts
-            {selectedAccountId === "all" && <Check className="h-3.5 w-3.5 text-brand-blue ml-auto" />}
+            {selectedAccountId === "all" && <Check className="h-3.5 w-3.5 text-brand-indigo ml-auto" />}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           {accounts.map((acc: any) => (
             <DropdownMenuItem key={acc.id} className="text-[12px]" onClick={() => onAccountChange(String(acc.id))}>
               <span className="flex-1 truncate">{acc.name}</span>
-              {selectedAccountId === String(acc.id) && <Check className="h-3.5 w-3.5 text-brand-blue ml-1" />}
+              {selectedAccountId === String(acc.id) && <Check className="h-3.5 w-3.5 text-brand-indigo ml-1" />}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
@@ -338,13 +338,13 @@ export function TagsToolbar({
         <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
           <DropdownMenuItem className="text-[12px]" onClick={() => onCampaignChange("all")}>
             All Campaigns
-            {campaignId === "all" && <Check className="h-3.5 w-3.5 text-brand-blue ml-auto" />}
+            {campaignId === "all" && <Check className="h-3.5 w-3.5 text-brand-indigo ml-auto" />}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           {campaigns.map((camp: any) => (
             <DropdownMenuItem key={camp.id} className="text-[12px]" onClick={() => onCampaignChange(String(camp.id))}>
               <span className="flex-1 truncate">{camp.name}</span>
-              {campaignId === String(camp.id) && <Check className="h-3.5 w-3.5 text-brand-blue ml-1" />}
+              {campaignId === String(camp.id) && <Check className="h-3.5 w-3.5 text-brand-indigo ml-1" />}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
@@ -379,7 +379,7 @@ export function TagsToolbar({
               >
                 {label}
                 {sortBy === key && (
-                  <Check className="h-3.5 w-3.5 text-brand-blue" />
+                  <Check className="h-3.5 w-3.5 text-brand-indigo" />
                 )}
               </DropdownMenuItem>
             ),
@@ -424,7 +424,7 @@ export function TagsToolbar({
                   className={cn(
                     "h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0",
                     checked
-                      ? "border-brand-blue bg-brand-blue"
+                      ? "border-brand-indigo bg-brand-indigo"
                       : "border-border/50",
                   )}
                 >
@@ -452,7 +452,7 @@ export function TagsToolbar({
             >
               {opt.charAt(0).toUpperCase() + opt.slice(1)}
               {filterAutoApplied === opt && (
-                <Check className="h-3.5 w-3.5 text-brand-blue" />
+                <Check className="h-3.5 w-3.5 text-brand-indigo" />
               )}
             </DropdownMenuItem>
           ))}
@@ -488,7 +488,7 @@ export function TagsToolbar({
               >
                 {label}
                 {groupBy === key && (
-                  <Check className="h-3.5 w-3.5 text-brand-blue" />
+                  <Check className="h-3.5 w-3.5 text-brand-indigo" />
                 )}
               </DropdownMenuItem>
             ),
@@ -527,7 +527,7 @@ export function TagsToolbar({
                   className={cn(
                     "h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0",
                     checked
-                      ? "border-brand-blue bg-brand-blue"
+                      ? "border-brand-indigo bg-brand-indigo"
                       : "border-border/50",
                   )}
                 >

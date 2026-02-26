@@ -125,11 +125,11 @@ export function PromptFormDialog({ open, onClose, prompt, onSaved, campaigns = [
   }
 
   // INPUT STYLING — stone-gray system:
-  // Use: border-border/30 bg-card/60 rounded-xl focus:ring-2 focus:ring-brand-blue/30
+  // Use: border-border/30 bg-card/60 rounded-xl focus:ring-2 focus:ring-brand-indigo/30
   // Error state: border-red-400
-  const inputBase = "w-full h-10 rounded-xl border bg-card/60 px-3 text-sm outline-none focus:ring-2 focus:ring-brand-blue/30";
-  const textareaBase = "w-full rounded-xl border bg-card/60 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-blue/30 resize-y";
-  const selectBase = "w-full h-10 rounded-xl border bg-card/60 px-3 text-sm outline-none focus:ring-2 focus:ring-brand-blue/30";
+  const inputBase = "w-full h-10 rounded-xl border bg-card/60 px-3 text-sm outline-none focus:ring-2 focus:ring-brand-indigo/30";
+  const textareaBase = "w-full rounded-xl border bg-card/60 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-brand-indigo/30 resize-y";
+  const selectBase = "w-full h-10 rounded-xl border bg-card/60 px-3 text-sm outline-none focus:ring-2 focus:ring-brand-indigo/30";
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v && !saving) onClose(); }}>

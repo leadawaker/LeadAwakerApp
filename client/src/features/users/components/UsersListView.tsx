@@ -232,7 +232,7 @@ function CropModal({
           <DialogDescription>Drag to reposition · scroll slider to zoom</DialogDescription>
         </DialogHeader>
         <div className="flex flex-col items-center gap-4 py-2">
-          <div className="rounded-full overflow-hidden ring-2 ring-brand-blue/20" style={{ width: PREVIEW, height: PREVIEW }}>
+          <div className="rounded-full overflow-hidden ring-2 ring-brand-indigo/20" style={{ width: PREVIEW, height: PREVIEW }}>
             <canvas
               ref={canvasRef}
               width={PREVIEW}
@@ -257,7 +257,7 @@ function CropModal({
               step="0.01"
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
-              className="flex-1 accent-brand-blue"
+              className="flex-1 accent-brand-indigo"
             />
             <button
               type="button"
@@ -325,7 +325,7 @@ function InlineEditField({
       type={type}
       autoFocus
       className={cn(
-        "text-[12px] text-foreground bg-white/80 rounded px-1.5 py-0.5 -mx-1.5 -my-0.5 outline-none ring-1 ring-brand-blue/40 w-full",
+        "text-[12px] text-foreground bg-white/80 rounded px-1.5 py-0.5 -mx-1.5 -my-0.5 outline-none ring-1 ring-brand-indigo/40 w-full",
         mono && "font-mono"
       )}
     />
@@ -572,7 +572,7 @@ function EmptyDetailState({ count, onInviteUser }: { count: number; onInviteUser
         <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50 flex items-center justify-center ring-1 ring-blue-200/50 dark:ring-blue-800/30">
           <Users className="h-10 w-10 text-blue-400 dark:text-blue-500" />
         </div>
-        <div className="absolute -top-2 -right-2 h-10 w-10 rounded-full bg-brand-blue flex items-center justify-center shadow-md ring-2 ring-background">
+        <div className="absolute -top-2 -right-2 h-10 w-10 rounded-full bg-brand-indigo flex items-center justify-center shadow-md ring-2 ring-background">
           <span className="text-[10px] font-bold text-white">{count > 99 ? "99+" : count}</span>
         </div>
       </div>
@@ -961,7 +961,7 @@ function UserDetailView({
           {isAdmin && onInviteUser && (
             <button
               onClick={onInviteUser}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-brand-blue/30 text-brand-blue hover:bg-brand-blue/5 transition-colors"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-brand-indigo/30 text-brand-indigo hover:bg-brand-indigo/5 transition-colors"
             >
               <UserPlus className="h-3 w-3" /> Invite
             </button>
@@ -1047,7 +1047,7 @@ function UserDetailView({
                   if (e.key === "Escape") { setNameDraft(user.fullName1 || ""); setEditingName(false); }
                 }}
                 autoFocus
-                className="text-[27px] font-semibold font-heading text-foreground leading-tight bg-transparent outline-none ring-1 ring-brand-blue/40 rounded px-1 -mx-1 w-full"
+                className="text-[27px] font-semibold font-heading text-foreground leading-tight bg-transparent outline-none ring-1 ring-brand-indigo/40 rounded px-1 -mx-1 w-full"
               />
             ) : (
               <h2
@@ -1068,13 +1068,13 @@ function UserDetailView({
               {isAdmin ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <span className={cn("px-2.5 py-0.5 rounded-lg text-xs font-semibold cursor-pointer hover:ring-1 hover:ring-brand-blue/30", ROLE_BADGE[user.role || ""] ?? "bg-muted text-muted-foreground")}>
+                    <span className={cn("px-2.5 py-0.5 rounded-lg text-xs font-semibold cursor-pointer hover:ring-1 hover:ring-brand-indigo/30", ROLE_BADGE[user.role || ""] ?? "bg-muted text-muted-foreground")}>
                       {user.role || "Set role"}
                     </span>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-36">
                     {ROLE_OPTIONS.map((r) => (
-                      <DropdownMenuItem key={r} onClick={() => onUpdateField(user.id, "role", r)} className={cn("text-[12px]", user.role === r && "font-semibold text-brand-blue")}>
+                      <DropdownMenuItem key={r} onClick={() => onUpdateField(user.id, "role", r)} className={cn("text-[12px]", user.role === r && "font-semibold text-brand-indigo")}>
                         {r}
                         {user.role === r && <Check className="h-3 w-3 ml-auto" />}
                       </DropdownMenuItem>
@@ -1160,12 +1160,12 @@ function UserDetailView({
                         </div>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="w-44 max-h-60 overflow-y-auto">
-                        <DropdownMenuItem onClick={() => onUpdateField(user.id, "accountsId", null)} className={cn("text-[12px]", !user.accountsId && "font-semibold text-brand-blue")}>
+                        <DropdownMenuItem onClick={() => onUpdateField(user.id, "accountsId", null)} className={cn("text-[12px]", !user.accountsId && "font-semibold text-brand-indigo")}>
                           No account
                           {!user.accountsId && <Check className="h-3 w-3 ml-auto" />}
                         </DropdownMenuItem>
                         {Object.entries(accounts).map(([id, aName]) => (
-                          <DropdownMenuItem key={id} onClick={() => onUpdateField(user.id, "accountsId", Number(id))} className={cn("text-[12px]", user.accountsId === Number(id) && "font-semibold text-brand-blue")}>
+                          <DropdownMenuItem key={id} onClick={() => onUpdateField(user.id, "accountsId", Number(id))} className={cn("text-[12px]", user.accountsId === Number(id) && "font-semibold text-brand-indigo")}>
                             {aName}
                             {user.accountsId === Number(id) && <Check className="h-3 w-3 ml-auto" />}
                           </DropdownMenuItem>
@@ -1423,7 +1423,7 @@ export function UsersListView({
                   onChange={(e) => onListSearchChange(e.target.value)}
                   placeholder="Search users..."
                   autoFocus
-                  className="w-full h-8 px-3 rounded-lg bg-muted/60 text-[12px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-blue/30 placeholder:text-muted-foreground/60"
+                  className="w-full h-8 px-3 rounded-lg bg-muted/60 text-[12px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-indigo/30 placeholder:text-muted-foreground/60"
                 />
               </PopoverContent>
             </Popover>
@@ -1440,11 +1440,11 @@ export function UsersListView({
                   <DropdownMenuSubTrigger className="text-[12px]">
                     <Layers className="h-3.5 w-3.5 mr-2" />
                     Group
-                    {isGroupNonDefault && <span className="ml-auto text-[10px] text-brand-blue font-medium">{USERS_GROUP_LABELS[groupBy]}</span>}
+                    {isGroupNonDefault && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{USERS_GROUP_LABELS[groupBy]}</span>}
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="w-40">
                     {(["role", "status", "account", "none"] as UsersGroupBy[]).map((opt) => (
-                      <DropdownMenuItem key={opt} onClick={() => onGroupByChange(opt)} className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-blue")}>
+                      <DropdownMenuItem key={opt} onClick={() => onGroupByChange(opt)} className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}>
                         {USERS_GROUP_LABELS[opt]}
                         {groupBy === opt && <Check className="h-3 w-3 ml-auto" />}
                       </DropdownMenuItem>
@@ -1456,11 +1456,11 @@ export function UsersListView({
                   <DropdownMenuSubTrigger className="text-[12px]">
                     <ArrowUpDown className="h-3.5 w-3.5 mr-2" />
                     Sort
-                    {isSortNonDefault && <span className="ml-auto text-[10px] text-brand-blue font-medium">{USERS_SORT_LABELS[sortBy]}</span>}
+                    {isSortNonDefault && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{USERS_SORT_LABELS[sortBy]}</span>}
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="w-44">
                     {(["name_asc", "name_desc", "recent"] as UsersSortBy[]).map((opt) => (
-                      <DropdownMenuItem key={opt} onClick={() => onSortByChange(opt)} className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-blue")}>
+                      <DropdownMenuItem key={opt} onClick={() => onSortByChange(opt)} className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}>
                         {USERS_SORT_LABELS[opt]}
                         {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
                       </DropdownMenuItem>
@@ -1474,13 +1474,13 @@ export function UsersListView({
                   <DropdownMenuSubTrigger className="text-[12px]">
                     <Filter className="h-3.5 w-3.5 mr-2" />
                     Filter Role
-                    {filterRole.length > 0 && <span className="ml-auto text-[10px] text-brand-blue font-medium">{filterRole.length}</span>}
+                    {filterRole.length > 0 && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{filterRole.length}</span>}
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="w-44">
                     {ROLE_OPTIONS.map((r) => (
                       <DropdownMenuItem key={r} onClick={(e) => { e.preventDefault(); onToggleFilterRole(r); }} className="flex items-center gap-2 text-[12px]">
                         <span className="flex-1">{r}</span>
-                        {filterRole.includes(r) && <Check className="h-3 w-3 text-brand-blue shrink-0" />}
+                        {filterRole.includes(r) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuSubContent>
@@ -1490,13 +1490,13 @@ export function UsersListView({
                   <DropdownMenuSubTrigger className="text-[12px]">
                     <Filter className="h-3.5 w-3.5 mr-2" />
                     Filter Status
-                    {filterStatus.length > 0 && <span className="ml-auto text-[10px] text-brand-blue font-medium">{filterStatus.length}</span>}
+                    {filterStatus.length > 0 && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{filterStatus.length}</span>}
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="w-44">
                     {STATUS_OPTIONS.map((s) => (
                       <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
                         <span className="flex-1">{s}</span>
-                        {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-blue shrink-0" />}
+                        {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuSubContent>
