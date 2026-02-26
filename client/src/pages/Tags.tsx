@@ -474,44 +474,6 @@ export default function TagsPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select
-                value={selectedAccountId}
-                onValueChange={(v) => {
-                  setSelectedAccountId(v);
-                  setCampaignId("all");
-                }}
-              >
-                <SelectTrigger
-                  data-testid="select-account-filter"
-                  className="w-[180px] h-10 rounded-xl bg-card"
-                >
-                  <SelectValue placeholder="All Accounts" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Accounts</SelectItem>
-                  {accounts.map((acc: any) => (
-                    <SelectItem key={acc.id} value={String(acc.id)}>
-                      {acc.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={campaignId} onValueChange={setCampaignId}>
-                <SelectTrigger
-                  data-testid="select-campaign-filter"
-                  className="w-[180px] h-10 rounded-xl bg-card"
-                >
-                  <SelectValue placeholder="All Campaigns" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Campaigns</SelectItem>
-                  {campaignOptions.map((c: any) => (
-                    <SelectItem key={c.id ?? c.Id} value={String(c.id ?? c.Id)}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
             <div className="flex items-center gap-3">
               <div className="text-xs text-muted-foreground whitespace-nowrap">
@@ -767,7 +729,7 @@ export default function TagsPage() {
                         <div
                           key={t.id}
                           className={cn(
-                            "relative group flex items-center gap-3 px-3 py-2 rounded-xl transition text-left border border-transparent cursor-pointer",
+                            "relative group flex items-center gap-3 px-3 py-2 rounded-xl transition-colors text-left border border-transparent cursor-pointer",
                             selectedTagId === t.id
                               ? "ring-2 ring-primary bg-card"
                               : "hover:bg-muted/5"

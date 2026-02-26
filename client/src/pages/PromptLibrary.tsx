@@ -6,6 +6,7 @@ import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 import { SkeletonCardGrid } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -289,17 +290,19 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
               <label className="text-sm font-medium text-foreground" htmlFor="prompt-model">
                 Model
               </label>
-              <select
-                id="prompt-model"
-                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-                value={form.model}
-                onChange={(e) => setField("model", e.target.value)}
-                data-testid="select-prompt-model"
-              >
-                {MODEL_OPTIONS.map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
+              <Select value={form.model} onValueChange={(v) => setField("model", v)}>
+                <SelectTrigger
+                  className="w-full h-10 rounded-lg bg-card"
+                  data-testid="select-prompt-model"
+                >
+                  <SelectValue placeholder="Select model" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MODEL_OPTIONS.map((m) => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Status */}
@@ -307,16 +310,18 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
               <label className="text-sm font-medium text-foreground" htmlFor="prompt-status">
                 Status
               </label>
-              <select
-                id="prompt-status"
-                className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-                value={form.status}
-                onChange={(e) => setField("status", e.target.value)}
-                data-testid="select-prompt-status"
-              >
-                <option value="active">Active</option>
-                <option value="archived">Archived</option>
-              </select>
+              <Select value={form.status} onValueChange={(v) => setField("status", v)}>
+                <SelectTrigger
+                  className="w-full h-10 rounded-lg bg-card"
+                  data-testid="select-prompt-status"
+                >
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -629,28 +634,34 @@ export default function PromptLibraryPage() {
             data-testid="input-prompt-search"
           />
           {/* Status filter */}
-          <select
-            className="h-10 rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            data-testid="select-prompt-status-filter"
-          >
-            <option value="all">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="archived">Archived</option>
-          </select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger
+              className="h-10 w-[160px] rounded-xl bg-card"
+              data-testid="select-prompt-status-filter"
+            >
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="archived">Archived</SelectItem>
+            </SelectContent>
+          </Select>
           {/* Model filter */}
-          <select
-            className="h-10 rounded-xl border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer"
-            value={modelFilter}
-            onChange={(e) => setModelFilter(e.target.value)}
-            data-testid="select-prompt-model-filter"
-          >
-            <option value="all">All Models</option>
-            {availableModels.map((m) => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
+          <Select value={modelFilter} onValueChange={setModelFilter}>
+            <SelectTrigger
+              className="h-10 w-[180px] rounded-xl bg-card"
+              data-testid="select-prompt-model-filter"
+            >
+              <SelectValue placeholder="All Models" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Models</SelectItem>
+              {availableModels.map((m) => (
+                <SelectItem key={m} value={m}>{m}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <div className="ml-auto">
             <Button
               size="sm"

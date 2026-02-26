@@ -365,7 +365,7 @@ export default function UsersPage() {
           <div className="flex items-center justify-between mb-6 shrink-0 gap-3 flex-wrap">
             <div className="flex items-center gap-2 w-full md:w-auto flex-wrap" data-testid="bar-users">
               <input
-                className="h-10 w-full md:w-[280px] rounded-xl border border-border bg-card px-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/30 transition-all text-foreground"
+                className="h-10 w-full md:w-[280px] rounded-xl border border-border bg-card px-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-indigo/30 transition-colors text-foreground"
                 placeholder="Search name or email…"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -594,7 +594,7 @@ export default function UsersPage() {
                   {rows.map((u) => (
                     <div
                       key={u.id}
-                      className="grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_120px_150px] min-w-[800px] px-6 py-5 text-sm items-center hover:bg-muted/50 transition-colors"
+                      className="grid grid-cols-[80px_1.5fr_1.2fr_1.5fr_1fr_1fr_120px_150px] min-w-[800px] px-6 h-[52px] text-sm items-center hover:bg-muted/50 transition-colors"
                       data-testid={`row-user-${u.id}`}
                     >
                       <div className="text-muted-foreground font-mono text-xs">#{u.id}</div>
@@ -690,7 +690,7 @@ export default function UsersPage() {
           <DialogContent className="max-w-md" data-testid="dialog-invite-user">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Mail className="w-5 h-5 text-brand-blue" />
+                <Mail className="w-5 h-5 text-brand-indigo" />
                 Invite New User
               </DialogTitle>
               <DialogDescription>
@@ -802,7 +802,7 @@ export default function UsersPage() {
           <DialogContent className="max-w-lg" data-testid="dialog-user-detail">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <User className="w-5 h-5 text-brand-blue" />
+                <User className="w-5 h-5 text-brand-indigo" />
                 User Profile
               </DialogTitle>
               <DialogDescription>

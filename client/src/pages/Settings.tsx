@@ -524,8 +524,8 @@ export default function SettingsPage() {
                       }}
                       className={
                         intervalSeconds === option.value
-                          ? "h-9 rounded-xl border-2 border-brand-yellow bg-brand-yellow/10 text-sm font-bold text-foreground transition-all"
-                          : "h-9 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold transition-all"
+                          ? "h-9 rounded-xl border-2 border-brand-yellow bg-brand-yellow/10 text-sm font-bold text-foreground transition-colors"
+                          : "h-9 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold transition-colors"
                       }
                       data-testid={`refresh-interval-option-${option.value}`}
                     >
@@ -562,7 +562,7 @@ export default function SettingsPage() {
                 </button>
                 <button
                   type="button"
-                  className="h-10 w-full rounded-xl border border-brand-blue/30 bg-brand-blue/10 hover:bg-brand-blue/20 text-sm font-semibold text-brand-blue"
+                  className="h-10 w-full rounded-xl border border-brand-indigo/30 bg-brand-indigo/10 hover:bg-brand-indigo/20 text-sm font-semibold text-brand-indigo"
                   data-testid="button-toast-info"
                   onClick={() => toast({ variant: "info", title: "Info", description: "New campaign data is being synced." })}
                 >
