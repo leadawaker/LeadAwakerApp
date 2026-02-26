@@ -54,8 +54,8 @@ export function AccountCreatePanel({ onCreate, onClose }: AccountCreatePanelProp
       {/* Sticky header */}
       <div className="shrink-0 flex items-start justify-between px-5 pt-6 pb-4 border-b border-border/30">
         <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-full bg-brand-blue/10 flex items-center justify-center">
-            <Building2 className="h-4 w-4 text-brand-blue" />
+          <div className="h-8 w-8 rounded-full bg-brand-indigo/10 flex items-center justify-center">
+            <Building2 className="h-4 w-4 text-brand-indigo" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-foreground font-heading leading-tight">New Account</h2>
@@ -93,7 +93,7 @@ export function AccountCreatePanel({ onCreate, onClose }: AccountCreatePanelProp
                   value={form.name}
                   onChange={(e) => set("name", e.target.value)}
                   placeholder="e.g. Acme Corp"
-                  className="w-full h-9 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/30 focus:border-brand-blue/50"
+                  className="w-full h-10 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-brand-indigo/30 focus:border-brand-indigo/50"
                 />
                 {nameError && (
                   <p className="text-[11px] text-red-500 mt-1">{nameError}</p>
@@ -106,7 +106,7 @@ export function AccountCreatePanel({ onCreate, onClose }: AccountCreatePanelProp
                   <select
                     value={form.status}
                     onChange={(e) => set("status", e.target.value)}
-                    className="w-full h-9 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-blue/30"
+                    className="w-full h-10 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
                   >
                     {STATUS_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
                   </select>
@@ -116,7 +116,7 @@ export function AccountCreatePanel({ onCreate, onClose }: AccountCreatePanelProp
                   <select
                     value={form.type}
                     onChange={(e) => set("type", e.target.value)}
-                    className="w-full h-9 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-blue/30"
+                    className="w-full h-10 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
                   >
                     {TYPE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
                   </select>
@@ -130,7 +130,7 @@ export function AccountCreatePanel({ onCreate, onClose }: AccountCreatePanelProp
                   value={form.business_niche}
                   onChange={(e) => set("business_niche", e.target.value)}
                   placeholder="e.g. Real Estate"
-                  className="w-full h-9 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/30"
+                  className="w-full h-10 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
                 />
               </div>
             </div>
@@ -147,7 +147,7 @@ export function AccountCreatePanel({ onCreate, onClose }: AccountCreatePanelProp
                   value={form.owner_email}
                   onChange={(e) => set("owner_email", e.target.value)}
                   placeholder="owner@example.com"
-                  className="w-full h-9 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/30"
+                  className="w-full h-10 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -158,7 +158,7 @@ export function AccountCreatePanel({ onCreate, onClose }: AccountCreatePanelProp
                     value={form.phone}
                     onChange={(e) => set("phone", e.target.value)}
                     placeholder="+1 (555) 000-0000"
-                    className="w-full h-9 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/30"
+                    className="w-full h-10 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
                   />
                 </div>
                 <div>
@@ -168,7 +168,7 @@ export function AccountCreatePanel({ onCreate, onClose }: AccountCreatePanelProp
                     value={form.website}
                     onChange={(e) => set("website", e.target.value)}
                     placeholder="https://example.com"
-                    className="w-full h-9 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/30"
+                    className="w-full h-10 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
                   />
                 </div>
               </div>
@@ -183,7 +183,7 @@ export function AccountCreatePanel({ onCreate, onClose }: AccountCreatePanelProp
               <select
                 value={form.timezone}
                 onChange={(e) => set("timezone", e.target.value)}
-                className="w-full h-9 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-blue/30"
+                className="w-full h-10 rounded-lg border border-border/50 bg-card px-3 text-[13px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
               >
                 {TIMEZONE_OPTIONS.map((tz) => <option key={tz} value={tz}>{tz}</option>)}
               </select>
@@ -196,9 +196,9 @@ export function AccountCreatePanel({ onCreate, onClose }: AccountCreatePanelProp
             <textarea
               value={form.notes}
               onChange={(e) => set("notes", e.target.value)}
-              placeholder="Internal notes about this account…"
+              placeholder="Internal notes about this account..."
               rows={4}
-              className="w-full rounded-lg border border-border/50 bg-card px-3 py-2.5 text-[13px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-brand-blue/30 resize-none leading-relaxed"
+              className="w-full rounded-lg border border-border/50 bg-card px-3 py-2.5 text-[13px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-brand-indigo/30 resize-none leading-relaxed"
             />
           </section>
 
@@ -211,7 +211,7 @@ export function AccountCreatePanel({ onCreate, onClose }: AccountCreatePanelProp
           type="button"
           onClick={onClose}
           disabled={saving}
-          className="h-9 px-4 rounded-lg text-[13px] text-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
+          className="h-10 px-4 rounded-lg text-[13px] text-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
         >
           Cancel
         </button>
@@ -219,9 +219,9 @@ export function AccountCreatePanel({ onCreate, onClose }: AccountCreatePanelProp
           type="submit"
           form="account-create-form"
           disabled={saving}
-          className="h-9 px-5 text-[13px] bg-foreground text-background hover:bg-foreground/90"
+          className="h-10 px-5 text-[13px] bg-brand-indigo text-white hover:bg-brand-indigo/90"
         >
-          {saving ? "Creating…" : "Create Account"}
+          {saving ? "Creating..." : "Create Account"}
         </Button>
       </div>
     </div>

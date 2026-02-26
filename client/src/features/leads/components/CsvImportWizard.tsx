@@ -161,7 +161,7 @@ function StepIndicator({ current }: { current: Step }) {
               idx < currentIdx
                 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                 : idx === currentIdx
-                  ? "bg-brand-blue text-white"
+                  ? "bg-brand-indigo text-white"
                   : "bg-muted text-muted-foreground",
             )}
           >
@@ -364,7 +364,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
       <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
           <DialogTitle className="flex items-center gap-2 text-lg">
-            <FileText className="h-4 w-4 text-brand-blue" />
+            <FileText className="h-4 w-4 text-brand-indigo" />
             Import Leads from CSV
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
@@ -382,8 +382,8 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
                 className={cn(
                   "border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-colors",
                   isDragging
-                    ? "border-brand-blue bg-brand-blue/5"
-                    : "border-border hover:border-brand-blue/50 hover:bg-muted/30",
+                    ? "border-brand-indigo bg-brand-indigo/5"
+                    : "border-border hover:border-brand-indigo/50 hover:bg-muted/30",
                 )}
                 onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                 onDragLeave={() => setIsDragging(false)}
@@ -394,7 +394,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
                 <Upload className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
                 <p className="text-sm font-medium">
                   Drag & drop a CSV file here, or{" "}
-                  <span className="text-brand-blue underline">browse</span>
+                  <span className="text-brand-indigo underline">browse</span>
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Supports .csv files up to 10 MB · Max 5,000 leads per import
@@ -434,7 +434,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium">
-                    File: <span className="text-brand-blue">{fileName}</span>
+                    File: <span className="text-brand-indigo">{fileName}</span>
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {csvRows.length} data row{csvRows.length !== 1 ? "s" : ""} · {csvHeaders.length} columns detected
@@ -499,7 +499,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
                           }
                           data-testid={`mapping-select-${header}`}
                         >
-                          <SelectTrigger className="h-9 text-sm">
+                          <SelectTrigger className="h-10 text-sm">
                             <SelectValue placeholder="Select field..." />
                           </SelectTrigger>
                           <SelectContent>
@@ -693,7 +693,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
 
           {step === "mapping" && (
             <Button
-              className="gap-2 bg-brand-blue hover:bg-brand-blue/90 text-white"
+              className="gap-2 bg-brand-indigo hover:bg-brand-indigo/90 text-white"
               onClick={() => setStep("preview")}
               disabled={mappedCount === 0 || hasDuplicates}
               data-testid="csv-mapping-next"
@@ -705,7 +705,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
 
           {step === "preview" && (
             <Button
-              className="gap-2 bg-brand-blue hover:bg-brand-blue/90 text-white"
+              className="gap-2 bg-brand-indigo hover:bg-brand-indigo/90 text-white"
               onClick={handleImport}
               disabled={importing}
               data-testid="csv-import-confirm"

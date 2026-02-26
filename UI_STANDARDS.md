@@ -657,6 +657,21 @@ Only two elements — view tabs are **not** here (moved to left panel):
 
 ---
 
+## §19 — Modal & Overlay Policy
+
+**BANNED: Dark blurry overlay modals** — Never use `Dialog`/`Modal` components with backdrop-blur or dark overlays for in-context pickers, dropdowns, or selection UIs. The only exception is full-screen edit dialogs (logo crop, confirmation dialogs).
+
+**USE INSTEAD: Tooltip-style floating panels**
+- Appearance: `bg-white rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] ring-1 ring-black/[0.06] border border-border/30`
+- Sizing: `min-w-[220px] max-w-[280px]` — never full-screen, never darkens background
+- Positioning: `absolute z-50` anchored to the triggering button, `top-full mt-1` or `bottom-full mb-1` as space allows
+- Dismiss: click outside (mousedown listener), Escape key
+- Content: small search input at top + scrollable list `max-h-[280px] overflow-y-auto p-1.5`
+- Row style: `px-2.5 py-1.5 rounded-lg hover:bg-muted/60 text-[12px] cursor-pointer flex items-center gap-2`
+- Reference implementation: notification tooltip in Topbar.tsx
+
+---
+
 ## Changelog
 
 - **2026-02-25:** Initial creation. Consolidated from CLAUDE.md, frontend.md, DESIGN_TOKENS.md, BUTTONS.md. Color system overhauled: primary shifted from `#5170FF` (periwinkle) → `#4F46E5` (indigo-600). Highlight system shifted from `#FFF375` (lime) → Indian Yellow `#E3A857` derived tints. `#FCB803` reserved for KPI/data emphasis only.

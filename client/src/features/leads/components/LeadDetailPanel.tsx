@@ -129,12 +129,13 @@ function fmtDateTime(s: string | null | undefined): string {
 }
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  New: { bg: "bg-blue-500/15", text: "text-blue-600 dark:text-blue-400" },
-  Contacted: { bg: "bg-indigo-500/15", text: "text-indigo-600 dark:text-indigo-400" },
-  Responded: { bg: "bg-violet-500/15", text: "text-violet-600 dark:text-violet-400" },
-  "Multiple Responses": { bg: "bg-purple-500/15", text: "text-purple-600 dark:text-purple-400" },
-  Qualified: { bg: "bg-emerald-500/15", text: "text-emerald-600 dark:text-emerald-400" },
-  Booked: { bg: "bg-amber-400/20", text: "text-brand-yellow font-bold" },
+  New: { bg: "bg-gray-500/15", text: "text-gray-600 dark:text-gray-400" },
+  Contacted: { bg: "bg-indigo-600/15", text: "text-indigo-600 dark:text-indigo-400" },
+  Responded: { bg: "bg-teal-500/15", text: "text-teal-600 dark:text-teal-400" },
+  "Multiple Responses": { bg: "bg-green-500/15", text: "text-green-600 dark:text-green-400" },
+  Qualified: { bg: "bg-lime-500/15", text: "text-lime-600 dark:text-lime-400" },
+  Booked: { bg: "bg-amber-400/20", text: "text-amber-600 dark:text-amber-400" },
+  Closed: { bg: "bg-emerald-500/15", text: "text-emerald-600 dark:text-emerald-400" },
   Lost: { bg: "bg-red-500/15", text: "text-red-600 dark:text-red-400" },
   DND: { bg: "bg-zinc-500/15", text: "text-zinc-600 dark:text-zinc-400" },
 };
@@ -232,6 +233,7 @@ const PIPELINE_STAGES = [
   "Multiple Responses",
   "Qualified",
   "Booked",
+  "Closed",
   "Lost",
   "DND",
 ] as const;
@@ -379,7 +381,7 @@ function InlineEditField({
               value={localValue}
               onChange={(e) => setLocalValue(e.target.value)}
               onBlur={handleSave}
-              className="text-[12px] bg-background border border-border rounded px-1.5 py-0.5 max-w-[140px] focus:outline-none focus:ring-1 focus:ring-brand-blue/50"
+              className="text-[12px] bg-background border border-border rounded px-1.5 py-0.5 max-w-[140px] focus:outline-none focus:ring-1 focus:ring-brand-indigo/50"
               data-testid={`${testId}-select`}
               autoFocus
             >
@@ -395,7 +397,7 @@ function InlineEditField({
               onChange={(e) => setLocalValue(e.target.value)}
               onBlur={handleSave}
               onKeyDown={handleKeyDown}
-              className="text-[12px] bg-background border border-border rounded px-1.5 py-0.5 max-w-[160px] focus:outline-none focus:ring-1 focus:ring-brand-blue/50"
+              className="text-[12px] bg-background border border-border rounded px-1.5 py-0.5 max-w-[160px] focus:outline-none focus:ring-1 focus:ring-brand-indigo/50"
               data-testid={`${testId}-input`}
               disabled={saving}
             />
@@ -411,7 +413,7 @@ function InlineEditField({
           <button
             type="button"
             onClick={handleStartEdit}
-            className="opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 icon-circle-lg icon-circle-base hover:border-brand-blue/40 hover:text-brand-blue"
+            className="opacity-0 group-hover:opacity-100 transition-opacity ml-0.5 icon-circle-lg icon-circle-base hover:border-brand-indigo/40 hover:text-brand-indigo"
             aria-label={`Edit ${label}`}
             data-testid={`${testId}-edit-btn`}
           >
@@ -455,7 +457,7 @@ function ScoreGauge({
       {/* Track */}
       <div className="h-2 w-full rounded-full bg-muted overflow-hidden" data-testid={`${testId}-track`}>
         <div
-          className={cn("h-full rounded-full transition-all duration-500", colors.bar)}
+          className={cn("h-full rounded-full transition-[width] duration-500", colors.bar)}
           style={{ width: numVal !== null ? `${numVal}%` : "0%" }}
           data-testid={`${testId}-bar`}
         />
@@ -883,7 +885,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
           {/* Row 4: View full page */}
           <button
             onClick={handleViewFull}
-            className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-brand-blue hover:text-brand-blue/80 font-medium transition-colors"
+            className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-brand-indigo hover:text-brand-indigo/80 font-medium transition-colors"
             data-testid="lead-detail-panel-view-full"
           >
             <ExternalLink className="h-3 w-3" />
@@ -1109,7 +1111,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                     onBlur={handleDncReasonSave}
                     onKeyDown={(e) => { if (e.key === "Enter") handleDncReasonSave(); }}
                     placeholder="Enter DNC reason…"
-                    className="flex-1 text-[12px] bg-background border border-border/60 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-blue/50"
+                    className="flex-1 text-[12px] bg-background border border-border/60 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-indigo/50"
                     data-testid="dnc-reason-input"
                     disabled={savingDnc}
                   />
@@ -1140,8 +1142,8 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                       <div
                         key={stage}
                         className={cn(
-                          "flex-1 h-2 rounded-full transition-all duration-300",
-                          done ? "bg-brand-blue" : "bg-muted"
+                          "flex-1 h-2 rounded-full transition-[width] duration-300",
+                          done ? "bg-brand-indigo" : "bg-muted"
                         )}
                         data-testid={`bump-stage-step-${stage}`}
                         data-done={done ? "true" : "false"}
@@ -1477,7 +1479,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                             className={cn(
                               "text-[10px] font-bold uppercase tracking-wide shrink-0",
                               outbound
-                                ? "text-brand-blue"
+                                ? "text-brand-indigo"
                                 : "text-emerald-600 dark:text-emerald-400"
                             )}
                             data-testid={`interaction-direction-${m.id}`}

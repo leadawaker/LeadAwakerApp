@@ -102,11 +102,11 @@ const STAGE_LABELS: Record<string, string> = {
 
 /** Hex color for each pipeline stage — matches dashboard subdued palette */
 const PIPELINE_HEX: Record<string, string> = {
-  New:                  "#1a3a6f",
-  Contacted:            "#2d5aa8",
-  Responded:            "#1E90FF",
-  "Multiple Responses": "#17A398",
-  Qualified:            "#10b981",
+  New:                  "#6B7280",
+  Contacted:            "#4F46E5",
+  Responded:            "#14B8A6",
+  "Multiple Responses": "#22C55E",
+  Qualified:            "#84CC16",
   Booked:               "#FCB803",
   Closed:               "#10b981",
   Lost:                 "#ef4444",
@@ -128,11 +128,11 @@ const STAGE_ICONS: Record<string, LucideIcon> = {
 
 /** Background fill color for stage icon circles */
 const STAGE_ICON_BG: Record<string, string> = {
-  New:                  "#1a3a6f",
-  Contacted:            "#2d5aa8",
-  Responded:            "#1E90FF",
-  "Multiple Responses": "#17A398",
-  Qualified:            "#10b981",
+  New:                  "#6B7280",
+  Contacted:            "#4F46E5",
+  Responded:            "#14B8A6",
+  "Multiple Responses": "#22C55E",
+  Qualified:            "#84CC16",
   Booked:               "#FCB803",
   Closed:               "#10b981",
   Lost:                 "#ef4444",
@@ -317,7 +317,7 @@ function KanbanCardContent({
   return (
     <div
       className={cn(
-        "group/card relative mx-0.5 my-0.5 rounded-xl transition-all duration-150",
+        "group/card relative mx-0.5 my-0.5 rounded-xl transition-shadow duration-150",
         isSelected
           ? "bg-[#FFF1C8]"
           : "bg-white hover:bg-white hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]",
@@ -369,7 +369,7 @@ function KanbanCardContent({
 
         {/* Hover-expanded (or always-on when showTagsAlways): last message → tags → phone/email */}
         <div className={cn(
-          "overflow-hidden transition-all duration-200 ease-out",
+          "overflow-hidden transition-[max-height,opacity] duration-200 ease-out",
           showTagsAlways
             ? "max-h-36 opacity-100"
             : "max-h-0 opacity-0 group-hover/card:max-h-36 group-hover/card:opacity-100"
@@ -571,7 +571,7 @@ function KanbanColumn({
         isBookedStage
           ? "min-w-[280px] w-[300px] max-w-[320px] border-l-2 border-[#FCB803]/50"
           : "min-w-[260px] w-[280px] max-w-[300px]",
-        isOver && "ring-2 ring-inset ring-border/40"
+        isOver && "ring-2 ring-inset ring-brand-indigo/50"
       )}
       data-testid={`kanban-column-${stage}`}
       data-stage={stage}
@@ -618,7 +618,7 @@ function KanbanColumn({
 
       {/* Column Body — drop target covers the list area */}
       <div
-        className={cn("flex-1 overflow-y-auto min-h-0", isOver && "bg-brand-blue/[0.04]")}
+        className={cn("flex-1 overflow-y-auto min-h-0", isOver && "bg-brand-indigo/[0.04]")}
         onScroll={(e) => setIsBodyScrolled(e.currentTarget.scrollTop > 2)}
       >
         <div ref={setNodeRef} className="px-[3px] pb-2 min-h-[80px]">

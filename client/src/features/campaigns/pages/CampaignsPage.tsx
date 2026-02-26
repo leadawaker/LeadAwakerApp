@@ -1,8 +1,13 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
-  List, Table2, Plus, Trash2, Copy, ArrowUpDown, Filter, Layers, Eye, Check,
-  PanelRightClose, PanelRightOpen,
+  List, Table2, Plus, Trash2, Copy, Filter, Layers, Eye, Check, Search, X,
+  PanelRightClose, PanelRightOpen, ChevronDown, ChevronUp, Activity,
 } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
 import { CampaignListView } from "../components/CampaignListView";
@@ -24,6 +29,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ActivityFeed } from "@/components/crm/ActivityFeed";
 import { createCampaign, deleteCampaign, updateCampaign } from "../api/campaignsApi";
 
 export type CampaignViewMode = "list" | "table";
@@ -52,17 +59,8 @@ const TABLE_COL_META = [
 
 const DEFAULT_VISIBLE = TABLE_COL_META.filter((c) => c.defaultVisible).map((c) => c.key);
 
-/* ── Table sort / group / filter types ── */
-type TableSortByOption  = "recent" | "name_asc" | "name_desc" | "leads_desc" | "response_desc";
+/* ── Table group / filter types ── */
 type TableGroupByOption = "status" | "account" | "type" | "none";
-
-const TABLE_SORT_LABELS: Record<TableSortByOption, string> = {
-  recent:        "Most Recent",
-  name_asc:      "Name A → Z",
-  name_desc:     "Name Z → A",
-  leads_desc:    "Most Leads",
-  response_desc: "Highest Response",
-};
 
 const TABLE_GROUP_LABELS: Record<TableGroupByOption, string> = {
   status:  "Status",
@@ -173,12 +171,21 @@ function CampaignsContent() {
   const [editPanelOpen, setEditPanelOpen] = useState(false);
   const [editCampaign, setEditCampaign] = useState<Campaign | null>(null);
 
+  // ── Activity feed (collapsible bottom panel) ──────────────────────
+  const [activityOpen, setActivityOpen] = useState(() => {
+    try { return localStorage.getItem("campaigns-activity-open") !== "false"; } catch { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("campaigns-activity-open", String(activityOpen)); } catch {}
+  }, [activityOpen]);
+
   const [filterAccountId] = useState<number | "all">("all");
 
   // ── Table toolbar state ────────────────────────────────────────────────────
   const [tableSearch,        setTableSearch]        = useState("");
   const [tableSearchOpen,    setTableSearchOpen]    = useState(false);
-  const [tableSortBy,        setTableSortBy]        = useState<TableSortByOption>("recent");
+  const [tableSortCol,       setTableSortCol]       = useState<string>("lastModified");
+  const [tableSortDir,       setTableSortDir]       = useState<"asc" | "desc">("desc");
   const [tableGroupBy,       setTableGroupBy]       = useState<TableGroupByOption>("status");
   const [tableFilterStatus,  setTableFilterStatus]  = useState<string[]>([]);
   const [tableFilterAccount, setTableFilterAccount] = useState<string>("");
@@ -198,6 +205,20 @@ function CampaignsContent() {
   useEffect(() => {
     try { localStorage.setItem(VISIBLE_COLS_KEY, JSON.stringify(Array.from(visibleCols))); } catch {}
   }, [visibleCols]);
+
+  // ── Responsive toolbar ──────────────────────────────────────────────────────
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const [isNarrow, setIsNarrow] = useState(false);
+
+  useEffect(() => {
+    const el = toolbarRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver(([entry]) => {
+      setIsNarrow(entry.contentRect.width < 920);
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   // ── Workspace & data ───────────────────────────────────────────────────────
   const { currentAccountId, isAgencyUser } = useWorkspace();
@@ -295,6 +316,17 @@ function CampaignsContent() {
     setTableFilterStatus([]);
     setTableFilterAccount("");
   }, []);
+  const handleTableSortChange = useCallback((col: string) => {
+    setTableSortCol((prev) => {
+      if (prev === col) {
+        setTableSortDir((d) => d === "asc" ? "desc" : "asc");
+        return col;
+      }
+      setTableSortDir("asc");
+      return col;
+    });
+  }, []);
+
   const isTableFilterActive    = tableFilterStatus.length > 0 || !!tableFilterAccount;
   const tableActiveFilterCount = tableFilterStatus.length + (tableFilterAccount ? 1 : 0);
 
@@ -361,15 +393,52 @@ function CampaignsContent() {
     if (tableFilterAccount) {
       source = source.filter((c) => String(c.account_name || "") === tableFilterAccount);
     }
-    // Sort
-    if (tableSortBy !== "recent") {
+    // Sort by column
+    if (tableSortCol) {
+      const dir = tableSortDir === "asc" ? 1 : -1;
       source.sort((a, b) => {
-        switch (tableSortBy) {
-          case "name_asc":      return getCampaignName(a).localeCompare(getCampaignName(b));
-          case "name_desc":     return getCampaignName(b).localeCompare(getCampaignName(a));
-          case "leads_desc":    return Number(b.total_leads_targeted ?? 0) - Number(a.total_leads_targeted ?? 0);
-          case "response_desc": return Number(b.response_rate_percent ?? 0) - Number(a.response_rate_percent ?? 0);
-          default: return 0;
+        let va: any, vb: any;
+        switch (tableSortCol) {
+          case "name":
+            return dir * getCampaignName(a).localeCompare(getCampaignName(b));
+          case "status":
+            return dir * String(a.status || "").localeCompare(String(b.status || ""));
+          case "account":
+            return dir * String(a.account_name || "").localeCompare(String(b.account_name || ""));
+          case "type":
+            return dir * String(a.type || "").localeCompare(String(b.type || ""));
+          case "leads":
+            va = Number(a.total_leads_targeted ?? 0);
+            vb = Number(b.total_leads_targeted ?? 0);
+            return dir * (va - vb);
+          case "responseRate":
+            va = Number(a.response_rate_percent ?? 0);
+            vb = Number(b.response_rate_percent ?? 0);
+            return dir * (va - vb);
+          case "bookingRate":
+            va = Number(a.booking_rate_percent ?? 0);
+            vb = Number(b.booking_rate_percent ?? 0);
+            return dir * (va - vb);
+          case "cost":
+            va = Number(a.total_cost ?? 0);
+            vb = Number(b.total_cost ?? 0);
+            return dir * (va - vb);
+          case "roi":
+            va = Number(a.roi_percent ?? 0);
+            vb = Number(b.roi_percent ?? 0);
+            return dir * (va - vb);
+          case "startDate":
+            return dir * (new Date(a.start_date || 0).getTime() - new Date(b.start_date || 0).getTime());
+          case "endDate":
+            return dir * (new Date(a.end_date || 0).getTime() - new Date(b.end_date || 0).getTime());
+          case "lastModified":
+            va = new Date((a as any).updated_at || (a as any).nc_updated_at || 0).getTime();
+            vb = new Date((b as any).updated_at || (b as any).nc_updated_at || 0).getTime();
+            return dir * (va - vb);
+          case "description":
+            return dir * String(a.description || "").localeCompare(String(b.description || ""));
+          default:
+            return 0;
         }
       });
     }
@@ -406,64 +475,73 @@ function CampaignsContent() {
       group.forEach((c) => result.push({ kind: "campaign", campaign: c }));
     });
     return result;
-  }, [campaigns, tableFilterStatus, tableFilterAccount, tableSortBy, tableGroupBy]);
+  }, [campaigns, tableFilterStatus, tableFilterAccount, tableSortCol, tableSortDir, tableGroupBy]);
+
+  // ── Responsive toolbar class tokens ─────────────────────────────────────────
+  const tbBase = "h-10 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
+  const tbDefault = "border border-border/55 text-foreground/60 hover:text-foreground hover:bg-card";
+  const tbActive  = "bg-card border border-border/55 text-foreground";
 
   // ── Table toolbar (rendered inline with tab buttons) ───────────────────────
   const tableToolbar = (
     <>
       <div className="w-px h-4 bg-border/25 mx-0.5 shrink-0" />
 
-      {/* Search — always expanded, before Add */}
-      <div className="flex items-center gap-1.5 h-10 rounded-full border border-border/30 bg-card/60 px-2.5 shrink-0">
-        <svg className="h-3.5 w-3.5 text-muted-foreground shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input
-          value={tableSearch}
-          onChange={(e) => setTableSearch(e.target.value)}
-          placeholder="Search campaigns..."
-          className="text-[12px] bg-transparent outline-none w-28 min-w-0 text-foreground placeholder:text-muted-foreground/60"
-        />
-        {tableSearch && (
-          <button type="button" onClick={() => setTableSearch("")}>
-            <svg className="h-3 w-3 text-muted-foreground hover:text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
-          </button>
-        )}
-      </div>
+      {/* Search — responsive: expanded when wide, popover when narrow */}
+      {isNarrow ? (
+        <Popover open={tableSearchOpen} onOpenChange={setTableSearchOpen}>
+          <PopoverTrigger asChild>
+            <button className={cn(tbBase, "w-10 px-0 justify-center", tableSearch ? tbActive : tbDefault)}>
+              <Search className="h-4 w-4" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent side="bottom" align="start" className="w-56 p-2">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
+              <input
+                autoFocus
+                value={tableSearch}
+                onChange={(e) => setTableSearch(e.target.value)}
+                placeholder="Search campaigns..."
+                className="w-full pl-7 pr-7 py-1.5 text-[12px] rounded-md border border-border bg-popover placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-brand-indigo/50"
+              />
+              {tableSearch && (
+                <button
+                  onClick={() => setTableSearch("")}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
+      ) : (
+        <div className="flex items-center gap-1.5 h-10 rounded-full border border-border/30 bg-card/60 px-2.5 shrink-0">
+          <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <input
+            value={tableSearch}
+            onChange={(e) => setTableSearch(e.target.value)}
+            placeholder="Search campaigns..."
+            className="text-[12px] bg-transparent outline-none w-28 min-w-0 text-foreground placeholder:text-muted-foreground/60"
+          />
+          {tableSearch && (
+            <button type="button" onClick={() => setTableSearch("")}>
+              <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* +Add with confirmation */}
       <ConfirmToolbarButton icon={Plus} label="Add" onConfirm={handleAddCampaign} />
 
-      {/* Sort */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(
-            "toolbar-pill-base shrink-0",
-            tableSortBy !== "recent" && "toolbar-pill-active"
-          )}>
-            <ArrowUpDown className="h-4 w-4" />
-            Sort{tableSortBy !== "recent" ? ` · ${TABLE_SORT_LABELS[tableSortBy].split(" ")[0]}` : ""}
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Sort by</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {(Object.keys(TABLE_SORT_LABELS) as TableSortByOption[]).map((opt) => (
-            <DropdownMenuItem key={opt} onClick={() => setTableSortBy(opt)} className={cn("text-[12px]", tableSortBy === opt && "font-semibold text-brand-blue")}>
-              {TABLE_SORT_LABELS[opt]}
-              {tableSortBy === opt && <Check className="h-3 w-3 ml-auto" />}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
       {/* Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(
-            "toolbar-pill-base shrink-0",
-            isTableFilterActive && "toolbar-pill-active"
-          )}>
+          <button className={cn(tbBase, isTableFilterActive ? tbActive : tbDefault)}>
             <Filter className="h-4 w-4" />
-            Filter{isTableFilterActive ? ` · ${tableActiveFilterCount}` : ""}
+            {!isNarrow && <>Filter{isTableFilterActive ? ` \u00b7 ${tableActiveFilterCount}` : ""}</>}
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
@@ -505,12 +583,9 @@ function CampaignsContent() {
       {/* Group */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(
-            "toolbar-pill-base shrink-0",
-            tableGroupBy !== "status" && "toolbar-pill-active"
-          )}>
+          <button className={cn(tbBase, tableGroupBy !== "status" ? tbActive : tbDefault)}>
             <Layers className="h-4 w-4" />
-            Group{tableGroupBy !== "status" ? ` · ${TABLE_GROUP_LABELS[tableGroupBy]}` : ""}
+            {!isNarrow && <>Group{tableGroupBy !== "status" ? ` \u00b7 ${TABLE_GROUP_LABELS[tableGroupBy]}` : ""}</>}
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
@@ -526,12 +601,9 @@ function CampaignsContent() {
       {/* Fields (Column Visibility) */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(
-            "toolbar-pill-base shrink-0",
-            visibleCols.size !== DEFAULT_VISIBLE.length && "toolbar-pill-active"
-          )}>
+          <button className={cn(tbBase, visibleCols.size !== DEFAULT_VISIBLE.length ? tbActive : tbDefault)}>
             <Eye className="h-4 w-4" />
-            Fields
+            {!isNarrow && "Fields"}
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
@@ -573,7 +645,7 @@ function CampaignsContent() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* ── Selection actions — far right, visible when rows selected ── */}
+      {/* ── Selection actions -- far right, visible when rows selected ── */}
       {tableSelectedIds.size > 0 && (
         <>
           <div className="flex-1 min-w-0" />
@@ -589,7 +661,7 @@ function CampaignsContent() {
   return (
     <>
       <div className="flex flex-col h-full">
-        <div className="flex-1 overflow-hidden">
+        <div className={cn("overflow-hidden", activityOpen ? "flex-1 min-h-0" : "flex-1")}>
           {viewMode === "list" ? (
             <CampaignListView
               campaigns={campaigns}
@@ -642,7 +714,7 @@ function CampaignsContent() {
                   </div>
                 </div>
                 {/* Controls row: tabs + inline toolbar */}
-                <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
+                <div ref={toolbarRef} className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
                   {VIEW_TABS.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = viewMode === tab.id;
@@ -682,6 +754,9 @@ function CampaignsContent() {
                     tableSearch={tableSearch}
                     selectedIds={tableSelectedIds}
                     onSelectionChange={setTableSelectedIds}
+                    sortCol={tableSortCol}
+                    sortDir={tableSortDir}
+                    onSortChange={handleTableSortChange}
                   />
                 </div>
               </div>
@@ -706,6 +781,37 @@ function CampaignsContent() {
             </div>
           )}
         </div>
+
+        {/* ── Recent Activity — collapsible bottom panel ──────────── */}
+        <Collapsible open={activityOpen} onOpenChange={setActivityOpen}>
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="w-full shrink-0 flex items-center gap-2 px-4 py-2 bg-card/80 border-t border-border/30 hover:bg-card transition-colors select-none"
+            >
+              <Activity className="h-4 w-4 text-muted-foreground" />
+              <span className="text-[13px] font-semibold text-foreground">
+                Recent Activity
+              </span>
+              <span className="flex-1" />
+              {activityOpen ? (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              )}
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="max-h-[260px] overflow-y-auto border-t border-border/20 bg-popover">
+              <ActivityFeed
+                accountId={effectiveAccountId}
+                limit={20}
+                compact
+                className="px-1 py-1"
+              />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
 
       {/* Edit slide-over */}

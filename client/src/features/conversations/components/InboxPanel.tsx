@@ -349,7 +349,7 @@ export function InboxPanel({
                 onChange={(e) => onSearchChange(e.target.value)}
                 placeholder="Search contacts..."
                 autoFocus
-                className="w-full h-8 px-3 rounded-lg bg-muted/60 text-[12px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-blue/30 placeholder:text-muted-foreground/60"
+                className="w-full h-8 px-3 rounded-lg bg-muted/60 text-[12px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-indigo/30 placeholder:text-muted-foreground/60"
               />
             </PopoverContent>
           </Popover>
@@ -371,11 +371,11 @@ export function InboxPanel({
                 <DropdownMenuSubTrigger className="text-[12px]">
                   <Layers className="h-3.5 w-3.5 mr-2" />
                   Group
-                  {isGroupNonDefault && <span className="ml-auto text-[10px] text-brand-blue font-medium">{GROUP_LABELS[groupBy]}</span>}
+                  {isGroupNonDefault && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{GROUP_LABELS[groupBy]}</span>}
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-40">
                   {(Object.keys(GROUP_LABELS) as ChatGroupBy[]).map((opt) => (
-                    <DropdownMenuItem key={opt} onClick={() => setGroupBy(opt)} className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-blue")}>
+                    <DropdownMenuItem key={opt} onClick={() => setGroupBy(opt)} className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}>
                       {GROUP_LABELS[opt]}
                       {groupBy === opt && <Check className="h-3 w-3 ml-auto" />}
                     </DropdownMenuItem>
@@ -388,11 +388,11 @@ export function InboxPanel({
                 <DropdownMenuSubTrigger className="text-[12px]">
                   <ArrowUpDown className="h-3.5 w-3.5 mr-2" />
                   Sort
-                  {isSortNonDefault && <span className="ml-auto text-[10px] text-brand-blue font-medium">{SORT_LABELS[sortBy]}</span>}
+                  {isSortNonDefault && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{SORT_LABELS[sortBy]}</span>}
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-44">
                   {(Object.keys(SORT_LABELS) as ChatSortBy[]).map((opt) => (
-                    <DropdownMenuItem key={opt} onClick={() => setSortBy(opt)} className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-blue")}>
+                    <DropdownMenuItem key={opt} onClick={() => setSortBy(opt)} className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}>
                       {SORT_LABELS[opt]}
                       {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
                     </DropdownMenuItem>
@@ -407,14 +407,14 @@ export function InboxPanel({
                 <DropdownMenuSubTrigger className="text-[12px]">
                   <Filter className="h-3.5 w-3.5 mr-2" />
                   Filter Status
-                  {filterStatus.length > 0 && <span className="ml-auto text-[10px] text-brand-blue font-medium">{filterStatus.length}</span>}
+                  {filterStatus.length > 0 && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{filterStatus.length}</span>}
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-48 max-h-60 overflow-y-auto">
                   {PIPELINE_STATUSES.map((s) => (
                     <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); handleToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
                       <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PIPELINE_HEX[s] ?? "#6B7280" }} />
                       <span className="flex-1">{s}</span>
-                      {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-blue shrink-0" />}
+                      {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuSubContent>
@@ -428,18 +428,18 @@ export function InboxPanel({
                     <DropdownMenuSubTrigger className="text-[12px]">
                       Account
                       {selectedAccountId !== "all" && (
-                        <span className="ml-auto text-[10px] text-brand-blue font-medium truncate max-w-[80px]">
+                        <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[80px]">
                           {accounts.find((a) => a.id === selectedAccountId)?.name ?? ""}
                         </span>
                       )}
                     </DropdownMenuSubTrigger>
                     <DropdownMenuSubContent className="w-44 max-h-60 overflow-y-auto">
-                      <DropdownMenuItem onClick={() => onAccountChange("all")} className={cn("text-[12px]", selectedAccountId === "all" && "font-semibold text-brand-blue")}>
+                      <DropdownMenuItem onClick={() => onAccountChange("all")} className={cn("text-[12px]", selectedAccountId === "all" && "font-semibold text-brand-indigo")}>
                         All Accounts
                         {selectedAccountId === "all" && <Check className="h-3 w-3 ml-auto" />}
                       </DropdownMenuItem>
                       {accounts.map((a) => (
-                        <DropdownMenuItem key={a.id} onClick={() => onAccountChange(a.id)} className={cn("text-[12px]", selectedAccountId === a.id && "font-semibold text-brand-blue")}>
+                        <DropdownMenuItem key={a.id} onClick={() => onAccountChange(a.id)} className={cn("text-[12px]", selectedAccountId === a.id && "font-semibold text-brand-indigo")}>
                           {a.name}
                           {selectedAccountId === a.id && <Check className="h-3 w-3 ml-auto" />}
                         </DropdownMenuItem>
@@ -454,18 +454,18 @@ export function InboxPanel({
                 <DropdownMenuSubTrigger className="text-[12px]">
                   Campaign
                   {selectedCampaignId !== "all" && (
-                    <span className="ml-auto text-[10px] text-brand-blue font-medium truncate max-w-[80px]">
+                    <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[80px]">
                       {campaigns.find((c) => c.id === selectedCampaignId)?.name ?? ""}
                     </span>
                   )}
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-44 max-h-60 overflow-y-auto">
-                  <DropdownMenuItem onClick={() => onCampaignChange("all")} className={cn("text-[12px]", selectedCampaignId === "all" && "font-semibold text-brand-blue")}>
+                  <DropdownMenuItem onClick={() => onCampaignChange("all")} className={cn("text-[12px]", selectedCampaignId === "all" && "font-semibold text-brand-indigo")}>
                     All Campaigns
                     {selectedCampaignId === "all" && <Check className="h-3 w-3 ml-auto" />}
                   </DropdownMenuItem>
                   {campaigns.map((c) => (
-                    <DropdownMenuItem key={c.id} onClick={() => onCampaignChange(c.id)} className={cn("text-[12px]", selectedCampaignId === c.id && "font-semibold text-brand-blue")}>
+                    <DropdownMenuItem key={c.id} onClick={() => onCampaignChange(c.id)} className={cn("text-[12px]", selectedCampaignId === c.id && "font-semibold text-brand-indigo")}>
                       {c.name}
                       {selectedCampaignId === c.id && <Check className="h-3 w-3 ml-auto" />}
                     </DropdownMenuItem>
@@ -588,7 +588,7 @@ export function InboxPanel({
                     onKeyDown={(e) => e.key === "Enter" && onSelectLead(lead.id)}
                     className={cn(
                       "relative mx-[3px] my-0.5 rounded-xl cursor-pointer transition-colors",
-                      active ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] hover:bg-[#FAFAFA]"
+                      active ? "bg-[#FFF1C8]" : "bg-white hover:bg-[#FAFAFA]"
                     )}
                     data-testid={`button-thread-${lead.id}`}
                   >
@@ -607,7 +607,7 @@ export function InboxPanel({
                           {showUnreadBadge && (
                             <span
                               className={cn(
-                                "absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] rounded-full bg-[#FCB803] text-white text-[8px] font-bold flex items-center justify-center px-0.5",
+                                "absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] rounded-full bg-[#FCB803] text-[#131B49] text-[8px] font-bold flex items-center justify-center px-0.5",
                                 active ? "shadow-[0_0_0_2px_#FFF1C8]" : "shadow-[0_0_0_2px_#F1F1F1]"
                               )}
                             >
@@ -619,7 +619,7 @@ export function InboxPanel({
                         {/* Name + conversion status */}
                         <div className="flex-1 min-w-0 pt-0.5">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="text-[15px] font-semibold font-heading leading-tight truncate text-foreground">
+                            <p className="text-[13px] font-semibold font-heading leading-tight truncate text-foreground">
                               {lead.full_name ||
                                 `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() ||
                                 "Unknown"}

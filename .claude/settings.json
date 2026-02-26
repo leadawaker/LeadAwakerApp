@@ -1,6 +1,8 @@
 {
   "permissions": {
     "allow": [
+      "Edit",
+      "Write",
       "Bash(node:*)",
       "Bash(npx tsc:*)",
       "Bash(npx playwright-cli:*)",
@@ -14,7 +16,10 @@
       "Bash(caddy version:*)",
       "Bash(python3:*)",
       "Bash(python:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(git:*)",
+      "Bash(rm:*)",
+      "Bash(mkdir:*)"
     ],
     "additionalDirectories": [
       "/config/workspace/LeadAwakerApp"

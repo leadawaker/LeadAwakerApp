@@ -28,12 +28,13 @@ interface LeadInfoPanelProps {
 }
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
-  New: { bg: "bg-blue-500/15", text: "text-blue-600 dark:text-blue-400", dot: "bg-blue-500" },
-  Contacted: { bg: "bg-indigo-500/15", text: "text-indigo-600 dark:text-indigo-400", dot: "bg-indigo-500" },
-  Responded: { bg: "bg-violet-500/15", text: "text-violet-600 dark:text-violet-400", dot: "bg-violet-500" },
-  "Multiple Responses": { bg: "bg-purple-500/15", text: "text-purple-600 dark:text-purple-400", dot: "bg-purple-500" },
-  Qualified: { bg: "bg-emerald-500/15", text: "text-emerald-600 dark:text-emerald-400", dot: "bg-emerald-500" },
+  New: { bg: "bg-gray-500/15", text: "text-gray-600 dark:text-gray-400", dot: "bg-gray-500" },
+  Contacted: { bg: "bg-indigo-600/15", text: "text-indigo-600 dark:text-indigo-400", dot: "bg-indigo-600" },
+  Responded: { bg: "bg-teal-500/15", text: "text-teal-600 dark:text-teal-400", dot: "bg-teal-500" },
+  "Multiple Responses": { bg: "bg-green-500/15", text: "text-green-600 dark:text-green-400", dot: "bg-green-500" },
+  Qualified: { bg: "bg-lime-500/15", text: "text-lime-600 dark:text-lime-400", dot: "bg-lime-500" },
   Booked: { bg: "bg-amber-400/20", text: "text-amber-600 dark:text-amber-400", dot: "bg-amber-500" },
+  Closed: { bg: "bg-emerald-500/15", text: "text-emerald-600 dark:text-emerald-400", dot: "bg-emerald-500" },
   Lost: { bg: "bg-red-500/15", text: "text-red-600 dark:text-red-400", dot: "bg-red-500" },
   DND: { bg: "bg-zinc-500/15", text: "text-zinc-600 dark:text-zinc-400", dot: "bg-zinc-500" },
 };
@@ -251,7 +252,7 @@ export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPane
                 </div>
                 <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                   <div
-                    className={cn("h-full rounded-full transition-all", scoreBarColor(score))}
+                    className={cn("h-full rounded-full transition-[width]", scoreBarColor(score))}
                     style={{ width: `${score}%` }}
                   />
                 </div>

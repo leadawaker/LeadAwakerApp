@@ -213,7 +213,7 @@ export function RightSidebar({
               active
                 ? collapsed
                   ? "text-foreground font-semibold"
-                  : "bg-[#FFE35B] text-foreground font-semibold"
+                  : "bg-[var(--highlight-active)] text-foreground font-semibold"
                 : "text-muted-foreground hover:bg-card hover:text-foreground"
             )}
             data-testid={`link-${it.testId}`}
@@ -222,7 +222,7 @@ export function RightSidebar({
             <div className={cn(
               "relative h-10 w-10 rounded-full flex items-center justify-center shrink-0",
               active && collapsed
-                ? "bg-[#FFE35B]"
+                ? "bg-[var(--highlight-active)]"
                 : !active ? "border border-border/65" : ""
             )}>
               <Icon className="h-4 w-4" />
@@ -245,7 +245,7 @@ export function RightSidebar({
             side="right"
             className={cn(
               "rounded-lg px-3 h-10 flex items-center text-sm font-semibold shadow-md border-0 ml-1",
-              isActive(it.href) ? "bg-[#FFE35B] text-foreground" : "bg-card text-foreground"
+              isActive(it.href) ? "bg-[var(--highlight-active)] text-foreground" : "bg-card text-foreground"
             )}
           >
             {it.label}
@@ -371,7 +371,7 @@ export function RightSidebar({
                     className={cn(
                       "flex items-center gap-3 px-3 py-3 rounded-xl transition-colors",
                       active
-                        ? "bg-brand-blue text-brand-blue-foreground font-bold shadow-sm"
+                        ? "bg-[var(--highlight-active)] text-foreground font-bold shadow-sm"
                         : "text-muted-foreground hover:bg-muted"
                     )}
                     data-testid={`mobile-${it.testId}`}
@@ -433,7 +433,7 @@ export function RightSidebar({
           className={cn(
             "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
             isActive(`${prefix}/campaigns`)
-              ? "text-brand-blue"
+              ? "text-brand-indigo"
               : "text-muted-foreground"
           )}
           data-testid="mobile-nav-campaigns"
@@ -447,7 +447,7 @@ export function RightSidebar({
           className={cn(
             "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
             isActive(`${prefix}/contacts`)
-              ? "text-brand-blue"
+              ? "text-brand-indigo"
               : "text-muted-foreground"
           )}
           data-testid="mobile-nav-contacts"
@@ -461,7 +461,7 @@ export function RightSidebar({
           className={cn(
             "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
             isActive(`${prefix}/conversations`)
-              ? "text-brand-blue"
+              ? "text-brand-indigo"
               : "text-muted-foreground"
           )}
           data-testid="mobile-nav-conversations"
@@ -474,7 +474,7 @@ export function RightSidebar({
           onClick={onToggleMobileMenu}
           className={cn(
             "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
-            isMobileMenuOpen ? "text-brand-blue" : "text-muted-foreground"
+            isMobileMenuOpen ? "text-brand-indigo" : "text-muted-foreground"
           )}
           data-testid="mobile-nav-menu"
         >
@@ -486,7 +486,7 @@ export function RightSidebar({
       {/* DESKTOP SIDEBAR */}
       <aside
         className={cn(
-          "fixed left-0 top-14 bottom-0 bg-background hidden md:flex flex-col overflow-hidden transition-all duration-200",
+          "fixed left-0 top-14 bottom-0 bg-background hidden md:flex flex-col overflow-hidden transition-[width] duration-200",
           collapsed ? "w-[86px]" : "w-[259px]"
         )}
         data-sidebar-focus

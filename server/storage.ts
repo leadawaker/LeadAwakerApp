@@ -16,6 +16,7 @@ import {
   invoices,
   contracts,
   expenses,
+  notifications,
   type Accounts,
   type InsertAccounts,
   type Campaigns,
@@ -41,6 +42,8 @@ import {
   type InsertContracts,
   type Expenses,
   type InsertExpenses,
+  type Notifications,
+  type InsertNotifications,
 } from "@shared/schema";
 
 
@@ -152,6 +155,15 @@ export interface IStorage {
   createExpense(data: InsertExpenses): Promise<Expenses>;
   updateExpense(id: number, data: Partial<InsertExpenses>): Promise<Expenses | undefined>;
   deleteExpense(id: number): Promise<boolean>;
+
+  // Notifications
+  getNotificationsByUserId(userId: number, opts?: { limit?: number; offset?: number; unreadOnly?: boolean }): Promise<Notifications[]>;
+  getNotificationById(id: number): Promise<Notifications | undefined>;
+  getUnreadNotificationCount(userId: number): Promise<number>;
+  getTotalNotificationCount(userId: number): Promise<number>;
+  createNotification(data: InsertNotifications): Promise<Notifications>;
+  updateNotification(id: number, data: Partial<InsertNotifications>): Promise<Notifications | undefined>;
+  markAllNotificationsRead(userId: number): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -601,6 +613,64 @@ export class DatabaseStorage implements IStorage {
   async deleteExpense(id: number): Promise<boolean> {
     const result = await db.delete(expenses).where(eq(expenses.id, id)).returning({ id: expenses.id });
     return result.length > 0;
+  }
+
+  // ─── Notifications ──────────────────────────────────────────────────────
+
+  async getNotificationsByUserId(userId: number, opts?: { limit?: number; offset?: number; unreadOnly?: boolean }): Promise<Notifications[]> {
+    const limit = opts?.limit ?? 50;
+    const offset = opts?.offset ?? 0;
+    const conditions = [eq(notifications.userId, userId)];
+    if (opts?.unreadOnly) {
+      conditions.push(eq(notifications.read, false));
+    }
+    return db
+      .select()
+      .from(notifications)
+      .where(and(...conditions))
+      .orderBy(desc(notifications.createdAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getNotificationById(id: number): Promise<Notifications | undefined> {
+    const [row] = await db.select().from(notifications).where(eq(notifications.id, id));
+    return row;
+  }
+
+  async getUnreadNotificationCount(userId: number): Promise<number> {
+    const [result] = await db
+      .select({ total: count() })
+      .from(notifications)
+      .where(and(eq(notifications.userId, userId), eq(notifications.read, false)));
+    return result?.total ?? 0;
+  }
+
+  async getTotalNotificationCount(userId: number): Promise<number> {
+    const [result] = await db
+      .select({ total: count() })
+      .from(notifications)
+      .where(eq(notifications.userId, userId));
+    return result?.total ?? 0;
+  }
+
+  async createNotification(data: InsertNotifications): Promise<Notifications> {
+    const [row] = await db.insert(notifications).values(data as any).returning();
+    return row;
+  }
+
+  async updateNotification(id: number, data: Partial<InsertNotifications>): Promise<Notifications | undefined> {
+    const [row] = await db.update(notifications).set(data as any).where(eq(notifications.id, id)).returning();
+    return row;
+  }
+
+  async markAllNotificationsRead(userId: number): Promise<number> {
+    const rows = await db
+      .update(notifications)
+      .set({ read: true })
+      .where(and(eq(notifications.userId, userId), eq(notifications.read, false)))
+      .returning({ id: notifications.id });
+    return rows.length;
   }
 }
 

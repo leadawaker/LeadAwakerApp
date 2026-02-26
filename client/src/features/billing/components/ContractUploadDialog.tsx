@@ -261,7 +261,7 @@ export function ContractUploadDialog({
           <div className="space-y-1.5">
             <Label>PDF File</Label>
             <div
-              className="border-2 border-dashed border-border/60 rounded-xl p-8 text-center hover:border-brand-blue/40 transition-colors cursor-pointer"
+              className="border-2 border-dashed border-border/60 rounded-xl p-8 text-center hover:border-brand-indigo/40 transition-colors cursor-pointer"
               onClick={() => fileInputRef.current?.click()}
               onDrop={handleDrop}
               onDragOver={handleDragOver}

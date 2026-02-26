@@ -120,9 +120,9 @@ export function parseLineItems(raw: InvoiceLineItem[] | string | null): InvoiceL
   try { return JSON.parse(raw); } catch { return []; }
 }
 
-export function formatCurrency(value: string | number | null | undefined, currency = "USD"): string {
+export function formatCurrency(value: string | number | null | undefined, currency = "EUR"): string {
   const num = typeof value === "string" ? parseFloat(value) : (value ?? 0);
-  if (isNaN(num)) return "$0.00";
+  if (isNaN(num)) return "\u20AC0.00";
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(num);
 }
 

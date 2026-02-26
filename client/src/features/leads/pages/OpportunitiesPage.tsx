@@ -360,7 +360,7 @@ export function OpportunitiesPage() {
                       "h-10 px-4 rounded-full flex items-center gap-2 text-sm font-medium transition-colors",
                       selectedAccountId === "all"
                         ? "border border-border/60 text-muted-foreground hover:bg-card hover:text-foreground"
-                        : "bg-brand-blue/10 text-brand-blue border border-brand-blue/20"
+                        : "bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/20"
                     )}
                   >
                     <Building2 className="h-4 w-4 shrink-0" />
@@ -382,7 +382,7 @@ export function OpportunitiesPage() {
                   >
                     <span className="text-sm flex-1">All Accounts</span>
                     {selectedAccountId === "all" && (
-                      <Check className="h-4 w-4 text-brand-blue shrink-0" />
+                      <Check className="h-4 w-4 text-brand-indigo shrink-0" />
                     )}
                   </DropdownMenuItem>
                   {accounts
@@ -398,7 +398,7 @@ export function OpportunitiesPage() {
                       >
                         <span className="text-sm truncate flex-1">{acc.name}</span>
                         {selectedAccountId === acc.id && (
-                          <Check className="h-4 w-4 text-brand-blue shrink-0" />
+                          <Check className="h-4 w-4 text-brand-indigo shrink-0" />
                         )}
                       </DropdownMenuItem>
                     ))}
@@ -437,7 +437,7 @@ export function OpportunitiesPage() {
                   >
                     <span className="text-sm flex-1">All Campaigns</span>
                     {selectedCampaignId === "all" && (
-                      <Check className="h-4 w-4 text-brand-blue shrink-0" />
+                      <Check className="h-4 w-4 text-brand-indigo shrink-0" />
                     )}
                   </DropdownMenuItem>
                   {filteredCampaigns.map((c: any) => (
@@ -451,7 +451,7 @@ export function OpportunitiesPage() {
                     >
                       <span className="text-sm truncate flex-1">{c.name}</span>
                       {selectedCampaignId === c.id && (
-                        <Check className="h-4 w-4 text-brand-blue shrink-0" />
+                        <Check className="h-4 w-4 text-brand-indigo shrink-0" />
                       )}
                     </DropdownMenuItem>
                   ))}
@@ -464,7 +464,7 @@ export function OpportunitiesPage() {
               className={cn(
                 "h-10 flex items-center gap-2 px-3 rounded-full border transition-colors",
                 searchQuery
-                  ? "bg-brand-blue/5 border-brand-blue/30"
+                  ? "bg-brand-indigo/5 border-brand-indigo/30"
                   : "bg-card border-border/60"
               )}
             >
@@ -493,14 +493,14 @@ export function OpportunitiesPage() {
                   className={cn(
                     "h-10 px-4 rounded-full flex items-center gap-2 text-sm font-medium transition-colors",
                     isFilterActive
-                      ? "bg-brand-blue/10 text-brand-blue border border-brand-blue/20"
+                      ? "bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/20"
                       : "border border-border/60 text-muted-foreground hover:bg-card hover:text-foreground"
                   )}
                 >
                   <SlidersHorizontal className="h-4 w-4 shrink-0" />
                   <span>Filter</span>
                   {isFilterActive && (
-                    <span className="h-4 w-4 rounded-full bg-brand-blue text-white text-[9px] font-bold flex items-center justify-center shrink-0">
+                    <span className="h-4 w-4 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center shrink-0">
                       {activeFilterCount}
                     </span>
                   )}
@@ -520,7 +520,7 @@ export function OpportunitiesPage() {
                   <span className={cn("text-sm flex-1", showHighScore && "font-semibold")}>
                     High Score (70+)
                   </span>
-                  {showHighScore && <Check className="h-4 w-4 text-brand-blue shrink-0" />}
+                  {showHighScore && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setFilterHasPhone((v) => !v)}
@@ -529,13 +529,13 @@ export function OpportunitiesPage() {
                   <Phone
                     className={cn(
                       "h-4 w-4 shrink-0",
-                      filterHasPhone ? "text-brand-blue" : "text-muted-foreground"
+                      filterHasPhone ? "text-brand-indigo" : "text-muted-foreground"
                     )}
                   />
                   <span className={cn("text-sm flex-1", filterHasPhone && "font-semibold")}>
                     Has Phone
                   </span>
-                  {filterHasPhone && <Check className="h-4 w-4 text-brand-blue shrink-0" />}
+                  {filterHasPhone && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setFilterHasEmail((v) => !v)}
@@ -544,13 +544,13 @@ export function OpportunitiesPage() {
                   <Mail
                     className={cn(
                       "h-4 w-4 shrink-0",
-                      filterHasEmail ? "text-brand-blue" : "text-muted-foreground"
+                      filterHasEmail ? "text-brand-indigo" : "text-muted-foreground"
                     )}
                   />
                   <span className={cn("text-sm flex-1", filterHasEmail && "font-semibold")}>
                     Has Email
                   </span>
-                  {filterHasEmail && <Check className="h-4 w-4 text-brand-blue shrink-0" />}
+                  {filterHasEmail && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
 
                 {isFilterActive && (
@@ -575,7 +575,7 @@ export function OpportunitiesPage() {
                   className={cn(
                     "h-10 px-4 rounded-full flex items-center gap-2 text-sm font-medium transition-colors",
                     isSortActive
-                      ? "bg-brand-blue/10 text-brand-blue border border-brand-blue/20"
+                      ? "bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/20"
                       : "border border-border/60 text-muted-foreground hover:bg-card hover:text-foreground"
                   )}
                 >
@@ -591,7 +591,7 @@ export function OpportunitiesPage() {
                   <span className={cn("text-sm flex-1", sortBy === null && "font-semibold")}>
                     Default
                   </span>
-                  {sortBy === null && <Check className="h-4 w-4 text-brand-blue shrink-0" />}
+                  {sortBy === null && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setSortBy("score-desc")}
@@ -603,7 +603,7 @@ export function OpportunitiesPage() {
                     Score (High → Low)
                   </span>
                   {sortBy === "score-desc" && (
-                    <Check className="h-4 w-4 text-brand-blue shrink-0" />
+                    <Check className="h-4 w-4 text-brand-indigo shrink-0" />
                   )}
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -615,7 +615,7 @@ export function OpportunitiesPage() {
                   >
                     Recency (Newest first)
                   </span>
-                  {sortBy === "recency" && <Check className="h-4 w-4 text-brand-blue shrink-0" />}
+                  {sortBy === "recency" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setSortBy("alpha")}
@@ -624,7 +624,7 @@ export function OpportunitiesPage() {
                   <span className={cn("text-sm flex-1", sortBy === "alpha" && "font-semibold")}>
                     Alphabetical (A → Z)
                   </span>
-                  {sortBy === "alpha" && <Check className="h-4 w-4 text-brand-blue shrink-0" />}
+                  {sortBy === "alpha" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -670,12 +670,12 @@ export function OpportunitiesPage() {
                       onKeyDown={(e) => {
                         if (e.key === "Enter") applyFold();
                       }}
-                      className="h-9 w-20 rounded-xl border border-border bg-background px-3 text-sm text-center font-semibold focus:outline-none focus:ring-2 focus:ring-brand-blue/30"
+                      className="h-9 w-20 rounded-xl border border-border bg-background px-3 text-sm text-center font-semibold focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
                     />
                     <span className="text-sm text-muted-foreground flex-1">leads</span>
                     <button
                       onClick={applyFold}
-                      className="h-9 px-4 rounded-xl bg-brand-blue text-white text-sm font-semibold hover:bg-brand-blue/90 transition-colors"
+                      className="h-9 px-4 rounded-xl bg-brand-indigo text-white text-sm font-semibold hover:bg-brand-indigo/90 transition-colors"
                     >
                       Apply
                     </button>

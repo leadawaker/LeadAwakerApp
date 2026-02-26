@@ -123,7 +123,7 @@ export function InvoiceDetailView({
   const displayStatus = isOverdue(invoice) ? "Overdue" : (invoice.status || "Draft");
   const statusColors = INVOICE_STATUS_COLORS[displayStatus] || INVOICE_STATUS_COLORS.Draft;
   const lineItems = parseLineItems(invoice.line_items);
-  const currency = invoice.currency || "USD";
+  const currency = invoice.currency || "EUR";
 
   // ── Per-client invoice number ────────────────────────────────────────────
   const clientInvoiceNum = (() => {

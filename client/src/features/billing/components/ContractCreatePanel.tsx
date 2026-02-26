@@ -48,8 +48,8 @@ const CADENCE_OPTIONS = [
 ] as const;
 
 const PAYMENT_PRESETS = [
-  { value: "EU", label: "EU — N26",      summary: "IBAN: DE35 1001 1001 2939 5454 81" },
-  { value: "BR", label: "BR — Banco 380", summary: "Conta: 98927440-3" },
+  { value: "EU", label: "EU — N26",      summary: "EU bank account" },
+  { value: "BR", label: "BR — Banco 380", summary: "BR bank account" },
 ] as const;
 
 function todayISO(): string {

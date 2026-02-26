@@ -218,7 +218,7 @@ export function useConversationsData(
     async (
       leadId: number,
       content: string,
-      type = "SMS",
+      type = "WhatsApp",
     ) => {
       const lead = leadsRef.current.find((l) => l.id === leadId);
       if (!lead || !content.trim()) return;

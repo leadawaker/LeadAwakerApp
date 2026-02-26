@@ -454,7 +454,7 @@ export function ContractsInlineTable({
                         className={cn(
                           "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
                           isMultiSelected
-                            ? "border-brand-blue bg-brand-blue"
+                            ? "border-brand-indigo bg-brand-indigo"
                             : "border-border/40 group-hover/row:border-border/60"
                         )}
                         onClick={(e) => handleCheckboxClick(contract, e)}

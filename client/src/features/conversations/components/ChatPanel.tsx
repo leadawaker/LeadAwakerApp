@@ -282,7 +282,7 @@ export function ChatPanel({
             <button
               type="button"
               onClick={() => scrollToBottom("smooth")}
-              className="absolute bottom-3 right-3 z-10 h-10 w-10 rounded-full border border-border/65 bg-card flex items-center justify-center text-foreground shadow-sm hover:bg-muted active:scale-[0.92] transition-all duration-150"
+              className="absolute bottom-3 right-3 z-10 h-10 w-10 rounded-full border border-border/65 bg-card flex items-center justify-center text-foreground shadow-sm hover:bg-muted active:scale-[0.92] transition-[background-color,transform] duration-150"
               data-testid="button-scroll-to-bottom"
               title="Scroll to latest message"
               aria-label="Scroll to latest message"
@@ -295,7 +295,7 @@ export function ChatPanel({
         {/* Compose area — send button embedded, matching leads ConversationWidget */}
         <div className="p-3 flex items-end gap-2 shrink-0" data-testid="chat-compose">
           <textarea
-            className="flex-1 text-[12px] bg-muted rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-brand-blue/30 placeholder:text-muted-foreground/50"
+            className="flex-1 text-[12px] bg-muted rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-brand-indigo/30 placeholder:text-muted-foreground/50"
             style={{ minHeight: "36px", maxHeight: "80px" }}
             placeholder={!selected ? "Select a contact first" : isHuman ? "Taking over from AI \u2014 Enter to send" : "Type a message\u2026 (Enter to send)"}
             disabled={!selected || sending}
@@ -312,16 +312,16 @@ export function ChatPanel({
           />
           <button
             type="button"
-            className="h-10 w-10 rounded-lg bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 disabled:opacity-40 shrink-0"
+            className="h-10 w-10 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0"
             disabled={!selected || !draft.trim() || sending}
             onClick={handleSubmit}
             data-testid="button-compose-send"
             title="Send message"
           >
             {sending ? (
-              <div className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              <div className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
             ) : (
-              <Send className="h-3.5 w-3.5 text-white" />
+              <Send className="h-4 w-4 text-white" />
             )}
           </button>
         </div>
@@ -381,7 +381,7 @@ function MessageStatusIcon({ isSending, isSent, isDelivered, isRead, isFailed }:
   if (isSending) {
     return (
       <span className="inline-flex items-center gap-0.5 ml-1" data-testid="status-sending" title="Sending…">
-        <Clock className="w-3 h-3 animate-pulse opacity-70" />
+        <Clock className="w-4 h-4 animate-pulse opacity-70" />
         <span className="text-[10px] italic opacity-70">sending…</span>
       </span>
     );
@@ -389,7 +389,7 @@ function MessageStatusIcon({ isSending, isSent, isDelivered, isRead, isFailed }:
   if (isFailed) {
     return (
       <span className="inline-flex items-center gap-0.5 ml-1 text-destructive" data-testid="status-failed" title="Message failed to send">
-        <AlertCircle className="w-3 h-3" />
+        <AlertCircle className="w-4 h-4" />
         <span className="text-[10px] font-semibold">failed</span>
       </span>
     );
@@ -397,21 +397,21 @@ function MessageStatusIcon({ isSending, isSent, isDelivered, isRead, isFailed }:
   if (isRead) {
     return (
       <span className="inline-flex items-center ml-1 text-sky-300" data-testid="status-read" title="Read">
-        <CheckCheck className="w-3.5 h-3.5" />
+        <CheckCheck className="w-4 h-4" />
       </span>
     );
   }
   if (isDelivered) {
     return (
       <span className="inline-flex items-center ml-1 opacity-80" data-testid="status-delivered" title="Delivered">
-        <CheckCheck className="w-3.5 h-3.5" />
+        <CheckCheck className="w-4 h-4" />
       </span>
     );
   }
   if (isSent) {
     return (
       <span className="inline-flex items-center ml-1 opacity-60" data-testid="status-sent" title="Sent">
-        <Check className="w-3 h-3" />
+        <Check className="w-4 h-4" />
       </span>
     );
   }
@@ -668,7 +668,7 @@ function ChatBubble({ item, onRetry }: { item: Interaction; onRetry?: (failedMsg
           // AI-generated outbound — brand blue
           aiMsg && "bg-primary text-white border-primary/20",
           // Human outbound — dark navy blue with white text
-          humanAgentMsg && "bg-[#166534] text-white border-[#166534]/60",
+          humanAgentMsg && "bg-brand-indigo/85 text-white border-brand-indigo/40",
           isFailed && "border-destructive/50 opacity-80",
         )}
         data-message-type={inbound ? "lead" : aiMsg ? "ai" : "agent"}

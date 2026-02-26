@@ -266,12 +266,12 @@ function ViewPanel({
               </div>
               <div className="flex items-center justify-end gap-1">
                 <Star
-                  className={cn("h-4 w-4 fill-current shrink-0", getScoreColorClasses(score))}
+                  className={cn("h-4 w-4 fill-current shrink-0", getScoreColorClasses(String(score)))}
                 />
                 <span
                   className={cn(
                     "text-[12px] font-semibold tabular-nums",
-                    getScoreColorClasses(score),
+                    getScoreColorClasses(String(score)),
                   )}
                 >
                   {score}

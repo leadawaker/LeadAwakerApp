@@ -179,7 +179,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
           <Filter className="h-4 w-4" />
           <span>Filter</span>
           {activeCount > 0 && (
-            <Badge className="absolute -top-2 -right-2 h-4 w-4 flex items-center justify-center p-0 bg-brand-blue">
+            <Badge className="absolute -top-2 -right-2 h-4 w-4 flex items-center justify-center p-0 bg-brand-indigo">
               {activeCount}
             </Badge>
           )}
@@ -219,7 +219,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                   update({ pipelineStage: v === "__all__" ? "" : v })
                 }
               >
-                <SelectTrigger className="h-9 text-sm bg-card border-border">
+                <SelectTrigger className="h-10 text-sm bg-card border-border">
                   <SelectValue placeholder="All stages" />
                 </SelectTrigger>
                 <SelectContent>
@@ -244,7 +244,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                   update({ campaignId: v === "__all__" ? "" : v })
                 }
               >
-                <SelectTrigger className="h-9 text-sm bg-card border-border">
+                <SelectTrigger className="h-10 text-sm bg-card border-border">
                   <SelectValue placeholder="All campaigns" />
                 </SelectTrigger>
                 <SelectContent>
@@ -263,7 +263,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
               <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">
                 Tags{" "}
                 {filters.tags.length > 0 && (
-                  <span className="text-brand-blue ml-1">
+                  <span className="text-brand-indigo ml-1">
                     ({filters.tags.length})
                   </span>
                 )}
@@ -272,7 +272,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full h-9 justify-between text-sm font-normal border-border"
+                    className="w-full h-10 justify-between text-sm font-normal border-border"
                   >
                     <span className="truncate">
                       {filters.tags.length === 0
@@ -408,7 +408,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                   update({ priority: v === "__all__" ? "" : v })
                 }
               >
-                <SelectTrigger className="h-9 text-sm bg-card border-border">
+                <SelectTrigger className="h-10 text-sm bg-card border-border">
                   <SelectValue placeholder="All priorities" />
                 </SelectTrigger>
                 <SelectContent>
@@ -433,7 +433,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                     <Button
                       variant="outline"
                       className={cn(
-                        "flex-1 h-9 justify-start text-sm font-normal border-border",
+                        "flex-1 h-10 justify-start text-sm font-normal border-border",
                         !filters.dateFrom && "text-muted-foreground"
                       )}
                     >
@@ -458,7 +458,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                     <Button
                       variant="outline"
                       className={cn(
-                        "flex-1 h-9 justify-start text-sm font-normal border-border",
+                        "flex-1 h-10 justify-start text-sm font-normal border-border",
                         !filters.dateTo && "text-muted-foreground"
                       )}
                     >

@@ -1,5 +1,4 @@
 import { useState, useMemo, useCallback, useRef, useEffect, type ReactNode } from "react";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
   Phone,
@@ -45,6 +44,7 @@ import {
   Zap,
   ArrowRight,
   CircleDot,
+  Kanban,
 } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
 import { updateLead, deleteLead } from "../api/leadsApi";
@@ -71,25 +71,7 @@ import { sendMessage } from "@/features/conversations/api/conversationsApi";
 import type { Interaction } from "@/types/models";
 import { resolveColor } from "@/features/tags/types";
 
-export type ViewMode = "list" | "table";
-
-/* ── Card stagger animation variants ── */
-const staggerContainerVariants = {
-  hidden: {},
-  visible: (count: number) => ({
-    transition: {
-      staggerChildren: Math.min(1 / Math.max(count, 1), 0.08),
-    },
-  }),
-};
-const staggerItemVariants = {
-  hidden: { opacity: 0, y: 8 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as const },
-  },
-};
+export type ViewMode = "list" | "table" | "pipeline";
 
 interface LeadsCardViewProps {
   leads: Record<string, any>[];
@@ -152,14 +134,14 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; dot: string; bad
 
 // ── Pipeline stage hex colors — exact match to LeadsKanban.tsx ────────────────
 export const PIPELINE_HEX: Record<string, string> = {
-  New:                  "#1a3a6f",
-  Contacted:            "#2d5aa8",
-  Responded:            "#1E90FF",
-  "Multiple Responses": "#17A398",
-  Qualified:            "#10b981",
+  New:                  "#6B7280",
+  Contacted:            "#4F46E5",
+  Responded:            "#14B8A6",
+  "Multiple Responses": "#22C55E",
+  Qualified:            "#84CC16",
   Booked:               "#FCB803",
-  Closed:               "#10b981",
-  Lost:                 "#ef4444",
+  Closed:               "#10B981",
+  Lost:                 "#EF4444",
   DND:                  "#71717A",
 };
 
@@ -167,17 +149,17 @@ export const PIPELINE_HEX: Record<string, string> = {
 export function getStatusAvatarColor(status: string): { bg: string; text: string } {
   // Colors derived from the Kanban PIPELINE_HEX palette for visual consistency
   const solids: Record<string, { bg: string; text: string }> = {
-    New:                  { bg: "#c8d8f7", text: "#1a3a6f" },   // dark navy tint (New = deep blue)
-    Contacted:            { bg: "#c5d7f5", text: "#1e3f7a" },   // brand blue tint
-    Responded:            { bg: "#b8dcff", text: "#0a4d8e" },   // dodger-blue tint
-    "Multiple Responses": { bg: "#b3ede8", text: "#0b5c55" },   // teal tint
-    Qualified:            { bg: "#a7f3d0", text: "#065f46" },   // emerald tint
+    New:                  { bg: "#d1d5db", text: "#374151" },   // gray tint
+    Contacted:            { bg: "#c7d2fe", text: "#3730a3" },   // indigo tint
+    Responded:            { bg: "#99f6e4", text: "#0f766e" },   // teal tint
+    "Multiple Responses": { bg: "#bbf7d0", text: "#166534" },   // green tint
+    Qualified:            { bg: "#d9f99d", text: "#3f6212" },   // lime tint
     Booked:               { bg: "#fde68a", text: "#78350f" },   // amber/brand-yellow tint
     Closed:               { bg: "#a7f3d0", text: "#065f46" },   // emerald tint
     Lost:                 { bg: "#fecaca", text: "#991b1b" },   // red tint
     DND:                  { bg: "#e4e4e7", text: "#52525b" },   // zinc tint
   };
-  return solids[status] ?? { bg: "#c8d8f7", text: "#1a3a6f" };
+  return solids[status] ?? { bg: "#d1d5db", text: "#374151" };
 }
 
 // ── Score color — blue (#4F46E5) at 0 → yellow (#FCB803) at 100 ───────────────
@@ -954,7 +936,7 @@ function ConversationWidget({ lead, showHeader = false }: { lead: Record<string,
             }}
             placeholder="Type a message… (Enter to send)"
             rows={1}
-            className="flex-1 text-[12px] bg-[#F6F6F6] rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-brand-blue/30 placeholder:text-muted-foreground/40"
+            className="flex-1 text-[12px] bg-[#F6F6F6] rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-brand-indigo/30 placeholder:text-muted-foreground/40"
             style={{ minHeight: "36px", maxHeight: "80px" }}
             data-testid="input-message-compose"
           />
@@ -1805,7 +1787,7 @@ function LeadListCard({
     <div
       className={cn(
         "relative group/card mx-[3px] my-0.5 rounded-xl cursor-pointer transition-colors",
-        isActive ? "bg-[#FFF1C8]" : "bg-[#F4F4F4] hover:bg-white hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+        isActive ? "bg-[#FFF1C8]" : "bg-white hover:bg-white hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
       )}
       onClick={onClick}
       role="button"
@@ -1845,7 +1827,7 @@ function LeadListCard({
 
         {/* Hover-expanded (or always-on when showTagsAlways): lastMessage → tags → phone/email */}
         <div className={cn(
-          "overflow-hidden transition-all duration-200 ease-out",
+          "overflow-hidden transition-[max-height,opacity] duration-200 ease-out",
           showTagsAlways
             ? "max-h-36 opacity-100"
             : "max-h-0 opacity-0 group-hover/card:max-h-36 group-hover/card:opacity-100"
@@ -2008,7 +1990,7 @@ export function KanbanDetailPanel({
             <button
               onClick={onOpenFullProfile}
               title="Open full lead profile"
-              className="flex items-center gap-1 text-[11px] font-medium text-brand-blue/80 hover:text-brand-blue transition-colors px-2 py-1 rounded-lg hover:bg-brand-blue/5 shrink-0 mt-1"
+              className="flex items-center gap-1 text-[11px] font-medium text-brand-indigo/80 hover:text-brand-indigo transition-colors px-2 py-1 rounded-lg hover:bg-brand-indigo/5 shrink-0 mt-1"
             >
               <span>Full profile</span>
               <ExternalLink className="h-3 w-3" />
@@ -2121,8 +2103,9 @@ export function KanbanDetailPanel({
 
 // ── Main export ───────────────────────────────────────────────────────────────
 const VIEW_TABS: TabDef[] = [
-  { id: "list",   label: "List",   icon: List },
-  { id: "table",  label: "Table",  icon: Table2 },
+  { id: "list",     label: "List",     icon: List   },
+  { id: "table",    label: "Table",    icon: Table2 },
+  { id: "pipeline", label: "Pipeline", icon: Kanban },
 ];
 
 export function LeadsCardView({
@@ -2294,7 +2277,7 @@ export function LeadsCardView({
                   onChange={(e) => onListSearchChange(e.target.value)}
                   placeholder="Search leads..."
                   autoFocus
-                  className="w-full h-8 px-3 rounded-lg bg-muted/60 text-[12px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-blue/30 placeholder:text-muted-foreground/60"
+                  className="w-full h-8 px-3 rounded-lg bg-muted/60 text-[12px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-indigo/30 placeholder:text-muted-foreground/60"
                 />
               </PopoverContent>
             </Popover>
@@ -2311,11 +2294,11 @@ export function LeadsCardView({
                   <DropdownMenuSubTrigger className="text-[12px]">
                     <Layers className="h-3.5 w-3.5 mr-2" />
                     Group
-                    {isGroupNonDefault && <span className="ml-auto text-[10px] text-brand-blue font-medium">{GROUP_LABELS[groupBy]}</span>}
+                    {isGroupNonDefault && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{GROUP_LABELS[groupBy]}</span>}
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="w-40">
                     {(["date", "status", "campaign", "tag", "none"] as GroupByOption[]).map((opt) => (
-                      <DropdownMenuItem key={opt} onClick={() => onGroupByChange(opt)} className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-blue")}>
+                      <DropdownMenuItem key={opt} onClick={() => onGroupByChange(opt)} className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}>
                         {GROUP_LABELS[opt]}
                         {groupBy === opt && <Check className="h-3 w-3 ml-auto" />}
                       </DropdownMenuItem>
@@ -2327,11 +2310,11 @@ export function LeadsCardView({
                   <DropdownMenuSubTrigger className="text-[12px]">
                     <ArrowUpDown className="h-3.5 w-3.5 mr-2" />
                     Sort
-                    {isSortNonDefault && <span className="ml-auto text-[10px] text-brand-blue font-medium">{SORT_LABELS[sortBy]}</span>}
+                    {isSortNonDefault && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{SORT_LABELS[sortBy]}</span>}
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="w-44">
                     {(["recent", "name_asc", "name_desc", "score_desc", "score_asc"] as SortByOption[]).map((opt) => (
-                      <DropdownMenuItem key={opt} onClick={() => onSortByChange(opt)} className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-blue")}>
+                      <DropdownMenuItem key={opt} onClick={() => onSortByChange(opt)} className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}>
                         {SORT_LABELS[opt]}
                         {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
                       </DropdownMenuItem>
@@ -2345,14 +2328,14 @@ export function LeadsCardView({
                   <DropdownMenuSubTrigger className="text-[12px]">
                     <Filter className="h-3.5 w-3.5 mr-2" />
                     Filter Status
-                    {filterStatus.length > 0 && <span className="ml-auto text-[10px] text-brand-blue font-medium">{filterStatus.length}</span>}
+                    {filterStatus.length > 0 && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{filterStatus.length}</span>}
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="w-48 max-h-60 overflow-y-auto">
                     {STATUS_GROUP_ORDER.map((s) => (
                       <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
                         <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PIPELINE_HEX[s] ?? "#6B7280" }} />
                         <span className="flex-1">{s}</span>
-                        {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-blue shrink-0" />}
+                        {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuSubContent>
@@ -2363,13 +2346,13 @@ export function LeadsCardView({
                     <DropdownMenuSubTrigger className="text-[12px]">
                       <Filter className="h-3.5 w-3.5 mr-2" />
                       Filter Tags
-                      {filterTags.length > 0 && <span className="ml-auto text-[10px] text-brand-blue font-medium">{filterTags.length}</span>}
+                      {filterTags.length > 0 && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{filterTags.length}</span>}
                     </DropdownMenuSubTrigger>
                     <DropdownMenuSubContent className="w-44 max-h-60 overflow-y-auto">
                       {allTags.map((t) => (
                         <DropdownMenuItem key={t.name} onClick={(e) => { e.preventDefault(); onToggleFilterTag(t.name); }} className="flex items-center gap-2 text-[12px]">
                           <span className="flex-1">{t.name}</span>
-                          {filterTags.includes(t.name) && <Check className="h-3 w-3 text-brand-blue shrink-0" />}
+                          {filterTags.includes(t.name) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuSubContent>
@@ -2412,23 +2395,17 @@ export function LeadsCardView({
             </div>
           ) : (
             <>
-              <motion.div
-                key={`page-${currentPage}`}
-                variants={staggerContainerVariants}
-                initial="hidden"
-                animate="visible"
-                custom={Math.min(flatItems.length - currentPage * PAGE_SIZE, PAGE_SIZE)}
-              >
+              <div key={`page-${currentPage}`}>
                 {flatItems
                   .slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
                   .map((item, i) => {
                     const selectedId = selectedLead ? getLeadId(selectedLead) : null;
                     return item.kind === "header" ? (
-                      <motion.div key={`h-${item.label}-${i}`} variants={staggerItemVariants}>
+                      <div key={`h-${item.label}-${i}`}>
                         <GroupHeader label={item.label} count={item.count} />
-                      </motion.div>
+                      </div>
                     ) : (
-                      <motion.div key={getLeadId(item.lead)} variants={staggerItemVariants}>
+                      <div key={getLeadId(item.lead)}>
                         <LeadListCard
                           lead={item.lead}
                           isActive={selectedId === getLeadId(item.lead)}
@@ -2436,10 +2413,10 @@ export function LeadsCardView({
                           leadTags={item.tags}
                           showTagsAlways={showTagsAlways}
                         />
-                      </motion.div>
+                      </div>
                     );
                   })}
-              </motion.div>
+              </div>
 
               {/* Pagination — below last card, inside scroll area */}
               {flatItems.length > PAGE_SIZE && (

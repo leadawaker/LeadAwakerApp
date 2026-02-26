@@ -674,3 +674,31 @@ export const insertExpensesSchema = createInsertSchema(expenses).omit({
 });
 export type Expenses = typeof expenses.$inferSelect;
 export type InsertExpenses = z.infer<typeof insertExpensesSchema>;
+
+
+// ─── Notifications ──────────────────────────────────────────────────────────
+
+export const notifications = nocodb.table("Notifications", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(), // "message" | "takeover" | "booking" | "campaign" | "task" | "system"
+  title: text("title").notNull(),
+  body: text("body"),
+  leadId: integer("lead_id"),
+  userId: integer("user_id").notNull(), // recipient
+  accountId: integer("account_id"),
+  read: boolean("read").notNull().default(false),
+  link: text("link"), // URL path to navigate to
+  createdAt: timestamp("created_at").defaultNow(),
+}, (t) => [
+  index("notifications_user_id_idx").on(t.userId),
+  index("notifications_account_id_idx").on(t.accountId),
+  index("notifications_created_at_idx").on(t.createdAt),
+  index("notifications_read_idx").on(t.read),
+]);
+
+export const insertNotificationsSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+});
+export type Notifications = typeof notifications.$inferSelect;
+export type InsertNotifications = z.infer<typeof insertNotificationsSchema>;

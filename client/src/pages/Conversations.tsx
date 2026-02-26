@@ -144,7 +144,7 @@ export default function ConversationsPage() {
           {mobileView === "chat" && (
             <button
               onClick={() => setMobileView("inbox")}
-              className="h-9 w-9 rounded-full border border-border bg-background grid place-items-center"
+              className="h-10 w-10 rounded-full border border-border bg-background grid place-items-center"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>

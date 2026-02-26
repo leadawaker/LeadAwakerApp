@@ -161,14 +161,14 @@ function SectionHeader({
       data-testid={`section-toggle-${id}`}
     >
       <div className="flex items-center gap-2">
-        <Icon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground" />
+        <Icon className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
         <span className="text-[13px] font-semibold font-heading text-foreground">{label}</span>
       </div>
       <div className="flex items-center gap-1.5">
         {trailing}
         <ChevronDown
           className={cn(
-            "h-3.5 w-3.5 text-muted-foreground transition-transform duration-200",
+            "h-4 w-4 text-muted-foreground transition-transform duration-200",
             collapsed && "-rotate-90",
           )}
         />
@@ -347,10 +347,10 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
               <div className="px-4 pb-3">
                 <div className="bg-white/60 rounded-xl p-3.5 flex flex-col gap-2.5">
                   {[
-                    selected.lead.phone && { icon: <Phone className="h-3.5 w-3.5" />, label: "Phone", value: selected.lead.phone, mono: true },
-                    (selected.lead.Email ?? selected.lead.email) && { icon: <Mail className="h-3.5 w-3.5" />, label: "Email", value: selected.lead.Email ?? selected.lead.email },
+                    selected.lead.phone && { icon: <Phone className="h-4 w-4" />, label: "Phone", value: selected.lead.phone, mono: true },
+                    (selected.lead.Email ?? selected.lead.email) && { icon: <Mail className="h-4 w-4" />, label: "Email", value: selected.lead.Email ?? selected.lead.email },
                     (selected.lead.booked_call_date ?? selected.lead.bookedCallDate) && {
-                      icon: <Calendar className="h-3.5 w-3.5" />,
+                      icon: <Calendar className="h-4 w-4" />,
                       label: "Booked Call",
                       value: new Date(selected.lead.booked_call_date ?? selected.lead.bookedCallDate)
                         .toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }),
@@ -382,7 +382,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                       <SelectTrigger className="h-9 text-[12px] rounded-lg bg-white/60 border-border/30">
                         <div className="flex items-center gap-2">
                           <CircleDot
-                            className="h-3.5 w-3.5 shrink-0"
+                            className="h-4 w-4 shrink-0"
                             style={{ color: PIPELINE_HEX[localStatus] ?? "#6B7280" }}
                           />
                           <SelectValue />
@@ -393,7 +393,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                           <SelectItem key={s} value={s} className="text-[12px]">
                             <div className="flex items-center gap-2">
                               <CircleDot
-                                className="h-3.5 w-3.5 shrink-0"
+                                className="h-4 w-4 shrink-0"
                                 style={{ color: PIPELINE_HEX[s] ?? "#6B7280" }}
                               />
                               {s}
@@ -409,7 +409,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                 <div className="mt-2.5" data-testid="contact-tags">
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
-                      <Tag className="h-3 w-3" />
+                      <Tag className="h-4 w-4" />
                       Tags
                     </div>
                     {lead && (
@@ -417,11 +417,11 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                         <PopoverTrigger asChild>
                           <button
                             onClick={(e) => e.stopPropagation()}
-                            className="h-6 w-6 rounded-full border border-border/40 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/60"
+                            className="h-10 w-10 rounded-full border border-border/40 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/60"
                             title="Add tag"
                             data-testid="btn-add-tag"
                           >
-                            <Plus className="h-3 w-3" />
+                            <Plus className="h-4 w-4" />
                           </button>
                         </PopoverTrigger>
                         <PopoverContent

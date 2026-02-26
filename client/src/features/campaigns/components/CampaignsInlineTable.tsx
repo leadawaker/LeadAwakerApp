@@ -6,6 +6,7 @@ import {
   X,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -41,22 +42,28 @@ const ALL_TABLE_COLUMNS: ColumnDef[] = [
   { key: "responseRate", label: "Response %",    width: 100, editable: false, type: "text"   },
   { key: "bookingRate",  label: "Booking %",     width: 100, editable: false, type: "text"   },
   { key: "cost",         label: "Cost",          width: 90,  editable: false, type: "text"   },
-  { key: "roi",          label: "ROI %",         width: 80,  editable: false, type: "text"   },
+  { key: "roi",          label: "ROI",           width: 80,  editable: false, type: "text"   },
   { key: "description",  label: "Description",   width: 200, editable: true,  type: "text"   },
-  { key: "startDate",    label: "Start",         width: 110, editable: false, type: "text"   },
-  { key: "endDate",      label: "End",           width: 110, editable: false, type: "text"   },
-  { key: "lastModified", label: "Last Modified", width: 110, editable: false, type: "text"   },
+  { key: "startDate",    label: "Start",         width: 100, editable: false, type: "text"   },
+  { key: "endDate",      label: "End",           width: 100, editable: false, type: "text"   },
+  { key: "lastModified", label: "Modified",      width: 100, editable: false, type: "text"   },
 ];
 
-export const DEFAULT_CAMPAIGN_COLS = [
-  "name", "status", "account", "type", "leads", "responseRate", "bookingRate", "description",
-];
-
-const STATUS_OPTIONS = ["Active", "Paused", "Completed", "Inactive", "Draft"];
+const STATUS_OPTIONS = ["Active", "Paused", "Completed", "Inactive", "Archived", "Draft"];
 
 const DB_FIELD_MAP: Partial<Record<ColKey, string>> = {
   status:      "status",
   description: "description",
+};
+
+const STATUS_DOT: Record<string, string> = {
+  Active:    "bg-emerald-500",
+  Paused:    "bg-amber-400",
+  Completed: "bg-blue-500",
+  Finished:  "bg-blue-500",
+  Inactive:  "bg-zinc-400",
+  Archived:  "bg-zinc-400",
+  Draft:     "bg-gray-400",
 };
 
 const CAMPAIGN_STATUS_HEX: Record<string, string> = {
@@ -64,19 +71,9 @@ const CAMPAIGN_STATUS_HEX: Record<string, string> = {
   Paused:    "#F59E0B",
   Completed: "#3B82F6",
   Finished:  "#3B82F6",
-  Inactive:  "#94A3B8",
-  Archived:  "#94A3B8",
-  Draft:     "#6B7280",
-};
-
-const STATUS_DOT: Record<string, string> = {
-  Active:    "bg-green-500",
-  Paused:    "bg-amber-500",
-  Completed: "bg-blue-500",
-  Finished:  "bg-blue-500",
-  Inactive:  "bg-slate-400",
-  Archived:  "bg-slate-400",
-  Draft:     "bg-gray-400",
+  Inactive:  "#71717A",
+  Archived:  "#71717A",
+  Draft:     "#9CA3AF",
 };
 
 const CAMPAIGN_STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -131,12 +128,20 @@ function formatRelativeTime(dateStr: string | null | undefined): string {
   } catch { return ""; }
 }
 
+// ── Sort icon ────────────────────────────────────────────────────────────────
+function SortIcon({ col, sortCol, sortDir }: { col: string; sortCol: string; sortDir: "asc" | "desc" }) {
+  if (col !== sortCol) return null;
+  return sortDir === "asc"
+    ? <ChevronUp className="h-3 w-3 text-brand-indigo ml-0.5 shrink-0" />
+    : <ChevronDown className="h-3 w-3 text-brand-indigo ml-0.5 shrink-0" />;
+}
+
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 function TableSkeleton() {
   return (
     <div className="p-3 space-y-1.5">
       <div className="h-8 bg-[#D1D1D1] rounded animate-pulse mb-2" />
-      {Array.from({ length: 10 }).map((_, i) => (
+      {Array.from({ length: 12 }).map((_, i) => (
         <div
           key={i}
           className="h-[52px] bg-[#F1F1F1]/70 rounded-xl animate-pulse"
@@ -173,7 +178,7 @@ function EditableCell({
         onChange={(e) => onSave(e.target.value)}
         onBlur={() => onSave(editValue)}
         onKeyDown={(e) => { if (e.key === "Escape") onCancel(); }}
-        className="w-full h-[28px] text-[11px] bg-white rounded px-1.5 ring-1 ring-brand-blue/40 outline-none cursor-pointer"
+        className="w-full h-[28px] text-[11px] bg-white rounded px-1.5 ring-1 ring-brand-indigo/40 outline-none cursor-pointer"
       >
         {STATUS_OPTIONS.map((s) => (
           <option key={s} value={s}>{s}</option>
@@ -194,7 +199,7 @@ function EditableCell({
           if (e.key === "Enter") e.currentTarget.blur();
           if (e.key === "Escape") onCancel();
         }}
-        className="w-full h-[28px] text-[11px] bg-white px-1.5 rounded ring-1 ring-brand-blue/40 outline-none"
+        className="w-full h-[28px] text-[11px] bg-white px-1.5 rounded ring-1 ring-brand-indigo/40 outline-none"
       />
     );
   }
@@ -213,7 +218,7 @@ function EditableCell({
         {value || <span className="text-muted-foreground/35 italic not-italic">—</span>}
       </span>
       {isSaving && (
-        <div className="h-2.5 w-2.5 border border-brand-blue/40 border-t-brand-blue rounded-full animate-spin ml-1 shrink-0" />
+        <div className="h-2.5 w-2.5 border border-brand-indigo/40 border-t-brand-indigo rounded-full animate-spin ml-1 shrink-0" />
       )}
       {hasError && !isSaving && (
         <span className="text-red-500 ml-1 shrink-0 text-[9px] font-bold">!</span>
@@ -234,6 +239,10 @@ interface CampaignsInlineTableProps {
   /** Multi-select state — lifted to parent */
   selectedIds: Set<number>;
   onSelectionChange: (ids: Set<number>) => void;
+  /** Sort state — lifted to parent */
+  sortCol: string;
+  sortDir: "asc" | "desc";
+  onSortChange: (col: string) => void;
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
@@ -247,6 +256,9 @@ export function CampaignsInlineTable({
   tableSearch,
   selectedIds,
   onSelectionChange,
+  sortCol,
+  sortDir,
+  onSortChange,
 }: CampaignsInlineTableProps) {
 
   // ── Editing state ─────────────────────────────────────────────────────────
@@ -275,7 +287,7 @@ export function CampaignsInlineTable({
     () => ALL_TABLE_COLUMNS.filter((c) => visibleCols.has(c.key)),
     [visibleCols]
   );
-  const colSpan = visibleColumns.length;
+  const colSpan = visibleColumns.length + 1; // +1 for select-all checkbox column
 
   // ── Filter by text search ─────────────────────────────────────────────────
   const displayItems = useMemo(() => {
@@ -306,7 +318,47 @@ export function CampaignsInlineTable({
   );
 
   const campaignCount = campaignOnlyItems.length;
-  const hasSelection = selectedIds.size > 0;
+
+  // ── Select-all toggle ───────────────────────────────────────────────────
+  const allCampaignIds = useMemo(() => campaignOnlyItems.map((i) => getCampaignId(i.campaign)), [campaignOnlyItems]);
+  const allSelected = campaignCount > 0 && allCampaignIds.every((id) => selectedIds.has(id));
+  const someSelected = !allSelected && allCampaignIds.some((id) => selectedIds.has(id));
+
+  const handleSelectAll = useCallback(() => {
+    if (allSelected) {
+      onSelectionChange(new Set());
+    } else {
+      onSelectionChange(new Set(allCampaignIds));
+    }
+  }, [allSelected, allCampaignIds, onSelectionChange]);
+
+  // ── Group selection helpers (leads-style) ─────────────────────────────────
+  const getGroupCampaignIds = useCallback((groupLabel: string): number[] => {
+    const ids: number[] = [];
+    let inGroup = false;
+    for (const item of displayItems) {
+      if (item.kind === "header") {
+        inGroup = item.label === groupLabel;
+        continue;
+      }
+      if (inGroup && item.kind === "campaign") {
+        ids.push(getCampaignId(item.campaign));
+      }
+    }
+    return ids;
+  }, [displayItems]);
+
+  const handleGroupCheckbox = useCallback((groupLabel: string) => {
+    const groupIds = getGroupCampaignIds(groupLabel);
+    const allInGroupSelected = groupIds.every((id) => selectedIds.has(id));
+    const next = new Set(selectedIds);
+    if (allInGroupSelected) {
+      groupIds.forEach((id) => next.delete(id));
+    } else {
+      groupIds.forEach((id) => next.add(id));
+    }
+    onSelectionChange(next);
+  }, [getGroupCampaignIds, selectedIds, onSelectionChange]);
 
   // ── getCellValue ──────────────────────────────────────────────────────────
   function getCellValue(campaign: Campaign, field: ColKey): string {
@@ -380,7 +432,6 @@ export function CampaignsInlineTable({
   }, []);
 
   // ── Row click handler ──────────────────────────────────────────────────────
-  // Simple click = single select + open detail (checkbox checked)
   const handleRowClick = useCallback((campaign: Campaign, e: React.MouseEvent) => {
     const cid = getCampaignId(campaign);
     const idx = campaignIndexMap.get(cid) ?? -1;
@@ -406,7 +457,6 @@ export function CampaignsInlineTable({
       }
       lastClickedIndexRef.current = idx;
     } else {
-      // Simple click: single select + open detail
       onSelectionChange(new Set([cid]));
       onSelectCampaign(campaign);
       lastClickedIndexRef.current = idx;
@@ -467,25 +517,50 @@ export function CampaignsInlineTable({
       {loading ? (
         <TableSkeleton />
       ) : (
-        <div className="flex-1 min-h-0 overflow-auto bg-[#F1F1F1]">
+        <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full" style={{ borderCollapse: "collapse", minWidth: 600 }}>
 
-            {/* Sticky header */}
+            {/* Sticky header with select-all checkbox */}
             <thead className="sticky top-0 z-20">
               <tr>
-                {visibleColumns.map((col, ci) => (
+                {/* Select-all checkbox */}
+                <th
+                  className="px-2 py-2 bg-muted border-b border-border/20 sticky left-0 z-30"
+                  style={{ width: 36, minWidth: 36 }}
+                >
+                  <button
+                    onClick={handleSelectAll}
+                    className={cn(
+                      "h-4 w-4 rounded border flex items-center justify-center transition-colors",
+                      allSelected
+                        ? "bg-brand-indigo border-brand-indigo text-white"
+                        : someSelected
+                          ? "bg-brand-indigo/30 border-brand-indigo/50"
+                          : "border-border/50 hover:border-foreground/30"
+                    )}
+                    title={allSelected ? "Deselect all" : "Select all"}
+                  >
+                    {allSelected && <Check className="h-2.5 w-2.5" />}
+                    {someSelected && !allSelected && <div className="h-1.5 w-1.5 bg-brand-indigo rounded-sm" />}
+                  </button>
+                </th>
+                {visibleColumns.map((col) => (
                   <th
                     key={col.key}
                     className={cn(
-                      "px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/50 whitespace-nowrap select-none bg-muted border-b border-border/20",
-                      ci === 0 && "sticky left-0 z-30",
+                      "px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider whitespace-nowrap select-none bg-muted border-b border-border/20 cursor-pointer hover:text-foreground/70",
+                      sortCol === col.key ? "text-foreground/70" : "text-foreground/50",
                     )}
                     style={{
                       width: col.key === "description" ? undefined : col.width,
                       minWidth: col.width,
                     }}
+                    onClick={() => onSortChange(col.key)}
                   >
-                    {col.label}
+                    <span className="inline-flex items-center">
+                      {col.label}
+                      <SortIcon col={col.key} sortCol={sortCol} sortDir={sortDir} />
+                    </span>
                   </th>
                 ))}
               </tr>
@@ -508,15 +583,32 @@ export function CampaignsInlineTable({
                     currentGroup = item.label;
                     const isCollapsed = collapsedGroups.has(item.label);
                     const hexColor = CAMPAIGN_STATUS_HEX[item.label] || "#6B7280";
+                    const groupIds = getGroupCampaignIds(item.label);
+                    const isGroupFullySelected = groupIds.length > 0 && groupIds.every((id) => selectedIds.has(id));
                     return (
                       <tr
                         key={`h-${item.label}-${index}`}
-                        className="cursor-pointer select-none hover:bg-black/[0.02]"
+                        className="cursor-pointer select-none"
                         onClick={() => toggleGroupCollapse(item.label)}
                       >
-                        {/* Sticky group title — stays fixed during horizontal scroll */}
-                        <td colSpan={colSpan} className="px-4 pt-4 pb-1.5 sticky left-0 z-30 bg-muted">
+                        <td
+                          colSpan={colSpan}
+                          className="px-4 pt-4 pb-1.5 sticky left-0 z-30"
+                          style={{ backgroundColor: `${hexColor}12` }}
+                        >
                           <div className="flex items-center gap-2">
+                            <div
+                              className={cn(
+                                "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
+                                isGroupFullySelected ? "border-brand-indigo bg-brand-indigo" : "border-border/40"
+                              )}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleGroupCheckbox(item.label);
+                              }}
+                            >
+                              {isGroupFullySelected && <Check className="h-2.5 w-2.5 text-white" />}
+                            </div>
                             <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: hexColor }} />
                             <span className="text-[11px] font-bold uppercase tracking-widest text-foreground/55">{item.label}</span>
                             <span className="text-[10px] text-muted-foreground/40 font-medium tabular-nums">{item.count}</span>
@@ -558,16 +650,16 @@ export function CampaignsInlineTable({
                           isFirst && (isHighlighted ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] group-hover/row:bg-[#F8F8F8]"),
                         );
 
-                        // ── Name ──
+                        // ── Name (with checkbox inside, like leads table) ──
                         if (col.key === "name") {
                           return (
                             <td key="name" className={cn("px-2.5", tdClass)} style={{ width: 200, minWidth: 200 }}>
                               <div className="flex items-center gap-2 min-w-0">
-                                {/* Checkbox — always visible */}
+                                {/* Checkbox */}
                                 <div
                                   className={cn(
                                     "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
-                                    isMultiSelected ? "border-brand-blue bg-brand-blue" : "border-border/40"
+                                    isMultiSelected ? "border-brand-indigo bg-brand-indigo" : "border-border/40"
                                   )}
                                   onClick={(e) => {
                                     e.stopPropagation();

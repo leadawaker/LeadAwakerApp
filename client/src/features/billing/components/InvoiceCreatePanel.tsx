@@ -21,34 +21,17 @@ import { fetchCampaigns } from "../../campaigns/api/campaignsApi";
 
 export type SenderPreset = "EU" | "BR";
 
+// TODO: Fetch from server-side API
 export const SENDER_PRESETS: Record<SenderPreset, { label: string; flag: string; paymentInfo: string }> = {
   EU: {
     label: "EU — N26",
     flag: "🇳🇱",
-    paymentInfo: [
-      "Account holder: Gabriel Barbosa Fronza",
-      "Bank: N26",
-      "IBAN: DE35 1001 1001 2939 5454 81",
-      "Company registration (KVK): 99366738",
-      "Address: Christiaan Huygensweg 32, s'Hertogenbosch, The Netherlands",
-      "Email: gabriel@leadawaker.com",
-      "Phone: +55 47 97400 2162",
-    ].join("\n"),
+    paymentInfo: "",
   },
   BR: {
     label: "BR — Banco 380",
     flag: "🇧🇷",
-    paymentInfo: [
-      "Titular: Gabriel Barbosa Fronza",
-      "Banco: 380 (PicPay / Original)",
-      "Agência: 0001",
-      "Conta Corrente: 98927440-3",
-      "CPF: 056.536.669.63",
-      "Endereço: Rua Julieta Lins, 155, apto 2702, Bairro Pioneiros",
-      "Balneário Camboriú - SC, CEP 88331-010",
-      "Email: gabriel@leadawaker.com",
-      "Telefone: +55 47 97400 2162",
-    ].join("\n"),
+    paymentInfo: "",
   },
 };
 

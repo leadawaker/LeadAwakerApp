@@ -83,8 +83,8 @@ const STATUS_GROUP_ORDER = [
 const STATUS_OPTIONS = STATUS_GROUP_ORDER;
 
 const STATUS_DOT: Record<string, string> = {
-  New:                  "bg-gray-400",
-  Contacted:            "bg-blue-500",
+  New:                  "bg-gray-500",
+  Contacted:            "bg-indigo-600",
   Responded:            "bg-teal-500",
   "Multiple Responses": "bg-green-500",
   Qualified:            "bg-lime-500",
@@ -124,7 +124,7 @@ function ConfirmToolbarButton({
       <div className="h-10 flex items-center gap-1 rounded-full border border-border/30 bg-card px-2.5 text-[12px] shrink-0">
         <span className="text-foreground/60 mr-0.5 whitespace-nowrap">{label}?</span>
         <button
-          className="px-2 py-0.5 rounded-full bg-brand-blue text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
+          className="px-2 py-0.5 rounded-full bg-brand-indigo text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
           onClick={async () => { setLoading(true); try { await onConfirm(); } finally { setLoading(false); setConfirming(false); } }}
           disabled={loading}
         >
@@ -609,7 +609,7 @@ export function LeadsTable() {
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Sort by</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {(["recent", "name_asc", "name_desc", "score_desc", "score_asc"] as TableSortByOption[]).map((opt) => (
-            <DropdownMenuItem key={opt} onClick={() => setTableSortBy(opt)} className={cn("text-[12px]", tableSortBy === opt && "font-semibold text-brand-blue")}>
+            <DropdownMenuItem key={opt} onClick={() => setTableSortBy(opt)} className={cn("text-[12px]", tableSortBy === opt && "font-semibold text-brand-indigo")}>
               {TABLE_SORT_LABELS[opt]}
               {tableSortBy === opt && <Check className="h-3 w-3 ml-auto" />}
             </DropdownMenuItem>
@@ -629,7 +629,7 @@ export function LeadsTable() {
             <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleTableFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
               <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", STATUS_DOT[s] ?? "bg-zinc-400")} />
               <span className="flex-1">{s}</span>
-              {tableFilterStatus.includes(s) && <Check className="h-3 w-3 text-brand-blue shrink-0" />}
+              {tableFilterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
             </DropdownMenuItem>
           ))}
 
@@ -637,11 +637,11 @@ export function LeadsTable() {
             <>
               <DropdownMenuSeparator />
               <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Campaign</DropdownMenuLabel>
-              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterCampaign(""); }} className={cn("text-[12px]", !tableFilterCampaign && "font-semibold text-brand-blue")}>
+              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterCampaign(""); }} className={cn("text-[12px]", !tableFilterCampaign && "font-semibold text-brand-indigo")}>
                 All Campaigns {!tableFilterCampaign && <Check className="h-3 w-3 ml-auto" />}
               </DropdownMenuItem>
               {availableCampaigns.map((c) => (
-                <DropdownMenuItem key={c} onClick={(e) => { e.preventDefault(); setTableFilterCampaign((p) => p === c ? "" : c); }} className={cn("text-[12px]", tableFilterCampaign === c && "font-semibold text-brand-blue")}>
+                <DropdownMenuItem key={c} onClick={(e) => { e.preventDefault(); setTableFilterCampaign((p) => p === c ? "" : c); }} className={cn("text-[12px]", tableFilterCampaign === c && "font-semibold text-brand-indigo")}>
                   <span className="flex-1 truncate">{c}</span>
                   {tableFilterCampaign === c && <Check className="h-3 w-3 ml-1 shrink-0" />}
                 </DropdownMenuItem>
@@ -653,11 +653,11 @@ export function LeadsTable() {
             <>
               <DropdownMenuSeparator />
               <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Account</DropdownMenuLabel>
-              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterAccount(""); }} className={cn("text-[12px]", !tableFilterAccount && "font-semibold text-brand-blue")}>
+              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterAccount(""); }} className={cn("text-[12px]", !tableFilterAccount && "font-semibold text-brand-indigo")}>
                 All Accounts {!tableFilterAccount && <Check className="h-3 w-3 ml-auto" />}
               </DropdownMenuItem>
               {availableAccounts.map((a) => (
-                <DropdownMenuItem key={a.id} onClick={(e) => { e.preventDefault(); setTableFilterAccount((p) => p === a.id ? "" : a.id); }} className={cn("text-[12px]", tableFilterAccount === a.id && "font-semibold text-brand-blue")}>
+                <DropdownMenuItem key={a.id} onClick={(e) => { e.preventDefault(); setTableFilterAccount((p) => p === a.id ? "" : a.id); }} className={cn("text-[12px]", tableFilterAccount === a.id && "font-semibold text-brand-indigo")}>
                   <span className="flex-1 truncate">{a.name}</span>
                   {tableFilterAccount === a.id && <Check className="h-3 w-3 ml-1 shrink-0" />}
                 </DropdownMenuItem>
@@ -681,7 +681,7 @@ export function LeadsTable() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           {(["status", "campaign", "account", "none"] as TableGroupByOption[]).map((opt) => (
-            <DropdownMenuItem key={opt} onClick={() => setTableGroupBy(opt)} className={cn("text-[12px]", tableGroupBy === opt && "font-semibold text-brand-blue")}>
+            <DropdownMenuItem key={opt} onClick={() => setTableGroupBy(opt)} className={cn("text-[12px]", tableGroupBy === opt && "font-semibold text-brand-indigo")}>
               {TABLE_GROUP_LABELS[opt]}
               {tableGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
             </DropdownMenuItem>
@@ -715,7 +715,7 @@ export function LeadsTable() {
               >
                 <div className={cn(
                   "h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0",
-                  isVisible ? "bg-brand-blue border-brand-blue" : "border-border/50"
+                  isVisible ? "bg-brand-indigo border-brand-indigo" : "border-border/50"
                 )}>
                   {isVisible && <Check className="h-2 w-2 text-white" />}
                 </div>

@@ -17,6 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
 import { apiFetch } from "@/lib/apiUtils";
+import { BookedCallsKpi } from "@/components/crm/BookedCallsKpi";
 import { useQuery } from "@tanstack/react-query";
 
 type NotifItem = { id: string; type: 'inbound' | 'booking' | 'error'; title: string; description: string; at: string; leadId?: number };
@@ -203,6 +204,12 @@ export function Topbar({
 
       <TooltipProvider delayDuration={400}>
         <div className="flex items-center gap-1 md:gap-2 shrink-0">
+
+          {/* ── Booked Calls KPI (compact) ── */}
+          <BookedCallsKpi
+            variant="compact"
+            accountId={currentAccountId !== 1 ? currentAccountId : undefined}
+          />
 
           {/* ── Search Popover ── */}
           <Popover open={searchOpen} onOpenChange={setSearchOpen}>

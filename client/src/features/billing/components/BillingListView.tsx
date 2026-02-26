@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { motion } from "framer-motion";
 import { deleteExpense as deleteExpenseApi } from "../api/expensesApi";
 import {
   Search,
@@ -93,24 +92,6 @@ const SORT_LABELS: Record<SortBy, string> = {
   name_asc:    "Name A–Z",
 };
 
-// ── Stagger animation variants ───────────────────────────────────────────────
-
-const staggerContainerVariants = {
-  hidden: {},
-  visible: (count: number) => ({
-    transition: {
-      staggerChildren: Math.min(1 / Math.max(count, 1), 0.08),
-    },
-  }),
-};
-const staggerItemVariants = {
-  hidden: { opacity: 0, y: 8 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as const },
-  },
-};
 
 // ── Date grouping ────────────────────────────────────────────────────────────
 
@@ -819,7 +800,7 @@ export function BillingListView({
                   placeholder={isInvoicesTab ? "Search invoices..." : "Search contracts..."}
                   value={listSearch}
                   onChange={(e) => setListSearch(e.target.value)}
-                  className="w-full pl-7 pr-7 py-1.5 text-[12px] rounded-md border border-border bg-popover placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-brand-blue/50"
+                  className="w-full pl-7 pr-7 py-1.5 text-[12px] rounded-md border border-border bg-popover placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-brand-indigo/50"
                 />
                 {listSearch && (
                   <button
@@ -854,7 +835,7 @@ export function BillingListView({
                     onClick={() => setAccountFilter("all")}
                     className={cn(
                       "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted",
-                      accountFilter === "all" && "font-semibold text-brand-blue"
+                      accountFilter === "all" && "font-semibold text-brand-indigo"
                     )}
                   >
                     <span className="flex-1 text-left">All Accounts</span>
@@ -866,7 +847,7 @@ export function BillingListView({
                       onClick={() => setAccountFilter(acct.id)}
                       className={cn(
                         "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted",
-                        accountFilter === acct.id && "font-semibold text-brand-blue"
+                        accountFilter === acct.id && "font-semibold text-brand-indigo"
                       )}
                     >
                       <Building2 className="h-3 w-3 shrink-0 text-muted-foreground" />
@@ -898,7 +879,7 @@ export function BillingListView({
                   onClick={() => setSortBy(opt)}
                   className={cn(
                     "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted",
-                    sortBy === opt && "font-semibold text-brand-blue"
+                    sortBy === opt && "font-semibold text-brand-indigo"
                   )}
                 >
                   <span className="flex-1 text-left">{label}</span>
@@ -936,7 +917,7 @@ export function BillingListView({
                           style={{ backgroundColor: color?.dot || "#94A3B8" }}
                         />
                         <span className="flex-1 text-left">{s}</span>
-                        {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-blue shrink-0" />}
+                        {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                       </button>
                     );
                   })}
@@ -961,7 +942,7 @@ export function BillingListView({
                       onClick={() => setYearFilter(yearFilter === year ? null : year)}
                       className={cn(
                         "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted",
-                        yearFilter === year && "font-semibold text-brand-blue"
+                        yearFilter === year && "font-semibold text-brand-indigo"
                       )}
                     >
                       <span className="flex-1 text-left">{year}</span>
@@ -992,7 +973,7 @@ export function BillingListView({
                   onClick={() => setQuarterFilter(quarterFilter === id ? null : id)}
                   className={cn(
                     "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted",
-                    quarterFilter === id && "font-semibold text-brand-blue"
+                    quarterFilter === id && "font-semibold text-brand-indigo"
                   )}
                 >
                   <span className="flex-1 text-left">{label}</span>
@@ -1029,45 +1010,39 @@ export function BillingListView({
             )}
           </div>
         ) : (
-          <motion.div
-            key={`billing-page-${currentPage}-${activeTab}`}
-            variants={staggerContainerVariants}
-            initial="hidden"
-            animate="visible"
-            custom={flatItems.length}
-          >
+          <div key={`billing-page-${currentPage}-${activeTab}`}>
             {flatItems.map((item, idx) => {
               if (item.kind === "header") {
                 return (
-                  <motion.div key={`h-${item.label}-${idx}`} variants={staggerItemVariants}>
+                  <div key={`h-${item.label}-${idx}`}>
                     <GroupHeader label={item.label} count={item.count} />
-                  </motion.div>
+                  </div>
                 );
               }
               if (item.kind === "invoice") {
                 const isSelected = effectiveSelectedInvoice?.id === item.invoice.id && rightPanelMode === "view";
                 return (
-                  <motion.div key={item.invoice.id || idx} variants={staggerItemVariants}>
+                  <div key={item.invoice.id || idx}>
                     <InvoiceCard
                       invoice={item.invoice}
                       isSelected={isSelected}
                       onClick={() => handleSelectInvoice(item.invoice)}
                     />
-                  </motion.div>
+                  </div>
                 );
               }
               const isSelected = selectedContract?.id === item.contract.id;
               return (
-                <motion.div key={item.contract.id || idx} variants={staggerItemVariants}>
+                <div key={item.contract.id || idx}>
                   <ContractCard
                     contract={item.contract}
                     isSelected={isSelected}
                     onClick={() => onSelectContract(item.contract)}
                   />
-                </motion.div>
+                </div>
               );
             })}
-          </motion.div>
+          </div>
         )}
       </div>
 
@@ -1210,7 +1185,7 @@ export function BillingListView({
               <PopoverTrigger asChild>
                 <button
                   title="Search"
-                  className={cn("icon-circle-lg icon-circle-base", listSearch && "ring-2 ring-brand-blue/30")}
+                  className={cn("icon-circle-lg icon-circle-base", listSearch && "ring-2 ring-brand-indigo/30")}
                 >
                   <Search className="h-4 w-4" />
                 </button>
@@ -1224,7 +1199,7 @@ export function BillingListView({
                     placeholder={isInvoicesTab ? "Search invoices…" : "Search contracts…"}
                     value={listSearch}
                     onChange={(e) => setListSearch(e.target.value)}
-                    className="w-full pl-7 pr-7 py-1.5 text-[12px] rounded-md border border-border bg-popover placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-brand-blue/50"
+                    className="w-full pl-7 pr-7 py-1.5 text-[12px] rounded-md border border-border bg-popover placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-brand-indigo/50"
                   />
                   {listSearch && (
                     <button
@@ -1281,7 +1256,7 @@ export function BillingListView({
             <button
               key={opt}
               onClick={() => { setSortBy(opt); setToolbarSortOpen(false); }}
-              className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted", sortBy === opt && "font-semibold text-brand-blue")}
+              className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted", sortBy === opt && "font-semibold text-brand-indigo")}
             >
               <span className="flex-1 text-left">{SORT_LABELS[opt]}</span>
               {sortBy === opt && <Check className="h-3 w-3 shrink-0" />}
@@ -1321,7 +1296,7 @@ export function BillingListView({
                 <button
                   key={year}
                   onClick={() => setYearFilter(yearFilter === year ? null : year)}
-                  className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted", yearFilter === year && "font-semibold text-brand-blue")}
+                  className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted", yearFilter === year && "font-semibold text-brand-indigo")}
                 >
                   <span className="flex-1 text-left">{year}</span>
                   {yearFilter === year && <Check className="h-3 w-3 shrink-0" />}
@@ -1343,7 +1318,7 @@ export function BillingListView({
             <button
               key={id}
               onClick={() => setQuarterFilter(quarterFilter === id ? null : id)}
-              className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted", quarterFilter === id && "font-semibold text-brand-blue")}
+              className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted", quarterFilter === id && "font-semibold text-brand-indigo")}
             >
               <span className="flex-1 text-left flex items-center gap-2">
                 <span className="font-medium text-foreground">{id}</span>
@@ -1445,7 +1420,7 @@ export function BillingListView({
                 >
                   <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color?.dot || "#94A3B8" }} />
                   <span className="flex-1 text-left">{s}</span>
-                  {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-blue shrink-0" />}
+                  {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                 </button>
               );
             })}
@@ -1462,7 +1437,7 @@ export function BillingListView({
                 <div className="max-h-40 overflow-y-auto">
                   <button
                     onClick={() => setAccountFilter("all")}
-                    className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted", accountFilter === "all" && "font-semibold text-brand-blue")}
+                    className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted", accountFilter === "all" && "font-semibold text-brand-indigo")}
                   >
                     <span className="flex-1 text-left">All Accounts</span>
                     {accountFilter === "all" && <Check className="h-3 w-3 shrink-0" />}
@@ -1471,7 +1446,7 @@ export function BillingListView({
                     <button
                       key={acct.id}
                       onClick={() => setAccountFilter(acct.id)}
-                      className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted", accountFilter === acct.id && "font-semibold text-brand-blue")}
+                      className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted", accountFilter === acct.id && "font-semibold text-brand-indigo")}
                     >
                       <Building2 className="h-3 w-3 shrink-0 text-muted-foreground" />
                       <span className="flex-1 text-left truncate">{acct.name}</span>
@@ -1522,7 +1497,7 @@ export function BillingListView({
                 >
                   <span className={cn(
                     "w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0",
-                    isVisible ? "bg-brand-blue border-brand-blue" : "border-border"
+                    isVisible ? "bg-brand-indigo border-brand-indigo" : "border-border"
                   )}>
                     {isVisible && <Check className="h-2.5 w-2.5 text-white" />}
                   </span>
@@ -1537,7 +1512,7 @@ export function BillingListView({
                 else setVisibleContractColumns(new Set(ALL_CONTRACT_COLS));
                 setToolbarFieldsOpen(false);
               }}
-              className="w-full px-2 py-1.5 text-[11px] text-brand-blue hover:bg-muted rounded-md text-left"
+              className="w-full px-2 py-1.5 text-[11px] text-brand-indigo hover:bg-muted rounded-md text-left"
             >
               Show all fields
             </button>
@@ -1880,7 +1855,7 @@ export function BillingListView({
                   {isAgencyUser && (
                     <button
                       onClick={() => { onSelectContract(null); setRightPanelMode("create"); }}
-                      className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-brand-blue text-white hover:opacity-90"
+                      className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-brand-indigo text-white hover:opacity-90"
                     >
                       Upload Contract
                     </button>

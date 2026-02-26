@@ -22,6 +22,7 @@ import {
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
 import { apiFetch } from "@/lib/apiUtils";
+import { BookedCallsKpi } from "@/components/crm/BookedCallsKpi";
 import { GitHubCalendar, type ContributionDay } from "@/components/ui/git-hub-calendar";
 import {
   DndContext,
@@ -45,7 +46,7 @@ function formatDate(date: Date) {
   return `${day} ${month} - ${year}`;
 }
 
-type ViewMode = "year" | "month" | "week" | "day";
+type ViewMode = "month" | "week" | "day";
 
 type Appointment = {
   id: number;
@@ -192,7 +193,7 @@ function DroppableDay({
       onClick={onClick}
       onKeyDown={onKeyDown}
       aria-label={ariaLabel}
-      className={cn(className, isOver && "ring-2 ring-inset ring-brand-blue bg-brand-blue/10")}
+      className={cn(className, isOver && "ring-2 ring-inset ring-brand-indigo bg-brand-indigo/10")}
       data-testid={dataTestId}
     >
       {children}
@@ -220,7 +221,7 @@ function DroppableTimeSlot({
   return (
     <div
       ref={setNodeRef}
-      className={cn("absolute left-0 right-0", className, isOver && "bg-brand-blue/10")}
+      className={cn("absolute left-0 right-0", className, isOver && "bg-brand-indigo/10")}
       style={{ top: hour * hourHeight, height: hourHeight }}
       data-testid={`timeslot-${dateKey}-${hour}`}
     />
@@ -273,7 +274,7 @@ function AppointmentCard({
     <div
       className={cn(
         "group/card relative mx-[3px] my-0.5 rounded-xl cursor-pointer",
-        isActive ? "bg-brand-blue/10" : "bg-card hover:bg-popover"
+        isActive ? "bg-[var(--highlight-selected)]" : "bg-card hover:bg-popover"
       )}
       onClick={onSelect}
       role="button"
@@ -324,7 +325,7 @@ function AppointmentCard({
 
         {/* Right column: time + date */}
         <div className="shrink-0 flex flex-col items-end gap-0.5 min-w-[68px]">
-          <span className={cn("text-[15px] font-bold tabular-nums leading-tight", appt.no_show ? "text-red-500" : "text-brand-blue")} data-testid={`time-${appt.id}`}>
+          <span className={cn("text-[15px] font-bold tabular-nums leading-tight", appt.no_show ? "text-red-500" : "text-brand-indigo")} data-testid={`time-${appt.id}`}>
             {appt.time}
           </span>
           <span className="text-[10px] text-muted-foreground tabular-nums leading-tight" data-testid={`date-${appt.id}`}>
@@ -391,6 +392,10 @@ export default function CalendarPage() {
   const [apptSortBy, setApptSortBy] = useState<ApptSortBy>("time");
   const [apptGroupBy, setApptGroupBy] = useState<ApptGroupBy>("date");
   const [apptFilterStatuses, setApptFilterStatuses] = useState<ApptFilterStatus[]>([]);
+
+  // Search state
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Lead detail panel state
   const [selectedLead, setSelectedLead] = useState<Record<string, any> | null>(null);
@@ -544,7 +549,16 @@ export default function CalendarPage() {
 
   // Filtered + sorted appointments for left panel
   const sortedAppts = useMemo(() => {
-    const source = selectedDate ? appointmentsForSelectedDate : appts;
+    let source = selectedDate ? appointmentsForSelectedDate : appts;
+
+    // Apply search
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      source = source.filter((a) =>
+        a.lead_name.toLowerCase().includes(q) ||
+        (a.campaign_name || "").toLowerCase().includes(q)
+      );
+    }
 
     // Apply filters
     let filtered = source;
@@ -574,7 +588,7 @@ export default function CalendarPage() {
         break; // already sorted by time
     }
     return sorted;
-  }, [appts, selectedDate, appointmentsForSelectedDate, apptSortBy, apptFilterStatuses]);
+  }, [appts, selectedDate, appointmentsForSelectedDate, apptSortBy, apptFilterStatuses, searchQuery]);
 
   // Grouped appointments for left panel
   const groupedAppts = useMemo(() => {
@@ -641,9 +655,7 @@ export default function CalendarPage() {
 
   const navigate = (direction: number) => {
     const next = new Date(anchorDate);
-    if (viewMode === "year") {
-      next.setFullYear(anchorDate.getFullYear() + direction);
-    } else if (viewMode === "month") {
+    if (viewMode === "month") {
       next.setMonth(anchorDate.getMonth() + direction);
     } else if (viewMode === "week") {
       next.setDate(anchorDate.getDate() + (direction * 7));
@@ -654,7 +666,6 @@ export default function CalendarPage() {
   };
 
   const viewLabel = useMemo(() => {
-    if (viewMode === "year") return String(anchorDate.getFullYear());
     if (viewMode === "month") return `${FULL_MONTHS[anchorDate.getMonth()]} ${anchorDate.getFullYear()}`;
     if (viewMode === "week") {
       const start = weekDays[0];
@@ -671,38 +682,6 @@ export default function CalendarPage() {
 
   const HOUR_H = 80;
   const LABEL_W = 56;
-
-  // ── Yearly view data ────────────────────────────────────────────────────────
-  const yearlyData = useMemo((): ContributionDay[] => {
-    const targetYear = anchorDate.getFullYear();
-    const countMap = new Map<string, number>();
-    for (const a of appts) {
-      const d = new Date(a.raw_booked_call_date);
-      if (d.getFullYear() !== targetYear) continue;
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-      countMap.set(key, (countMap.get(key) ?? 0) + 1);
-    }
-    return Array.from(countMap.entries()).map(([date, count]) => ({ date, count }));
-  }, [appts, anchorDate]);
-
-  const yearlyStats = useMemo(() => {
-    const targetYear = anchorDate.getFullYear();
-    const yearAppts = appts.filter(
-      (a) => new Date(a.raw_booked_call_date).getFullYear() === targetYear
-    );
-    const activeDays = yearlyData.filter((d) => d.count > 0).length;
-    const monthCounts = Array(12).fill(0) as number[];
-    yearAppts.forEach((a) => {
-      monthCounts[new Date(a.raw_booked_call_date).getMonth()]++;
-    });
-    const maxMonthCount = Math.max(0, ...monthCounts);
-    const bestMonthIdx = maxMonthCount > 0 ? monthCounts.indexOf(maxMonthCount) : -1;
-    return {
-      total: yearAppts.length,
-      activeDays,
-      bestMonth: bestMonthIdx >= 0 ? FULL_MONTHS[bestMonthIdx] : "—",
-    };
-  }, [appts, anchorDate, yearlyData]);
 
   const campaignOptions = useMemo(() => {
     const fromLeads = new Map<number, string>();
@@ -940,25 +919,15 @@ export default function CalendarPage() {
               <div className="px-3.5 pt-5 pb-2.5 flex flex-wrap items-center gap-2 shrink-0">
                 {/* Date navigation */}
                 <div className="flex items-center gap-1.5">
-                  <button
-                    className="h-10 w-10 rounded-full border border-border/65 flex items-center justify-center bg-transparent hover:bg-card"
-                    onClick={() => navigate(-1)}
-                    data-testid="button-prev"
-                    aria-label="Previous"
-                  >
+                  <IconBtn title="Previous" onClick={() => navigate(-1)} data-testid="button-prev">
                     <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <div className="text-2xl font-semibold font-heading text-center leading-tight" data-testid="text-view-label">
+                  </IconBtn>
+                  <div className="text-[12px] font-semibold font-heading text-center leading-tight" data-testid="text-view-label">
                     {viewLabel}
                   </div>
-                  <button
-                    className="h-10 w-10 rounded-full border border-border/65 flex items-center justify-center bg-transparent hover:bg-card"
-                    onClick={() => navigate(1)}
-                    data-testid="button-next"
-                    aria-label="Next"
-                  >
+                  <IconBtn title="Next" onClick={() => navigate(1)} data-testid="button-next">
                     <ChevronRight className="h-4 w-4" />
-                  </button>
+                  </IconBtn>
                 </div>
 
                 {/* Today button */}
@@ -972,50 +941,13 @@ export default function CalendarPage() {
                 </button>
               </div>
 
-              {/* ── Year view ── */}
-              {viewMode === "year" && (
-                <div
-                  className="flex-1 overflow-y-auto p-4 md:p-6"
-                  data-testid="view-year"
-                >
-                  <div className="grid grid-cols-3 gap-3 mb-6">
-                    <div className="bg-card rounded-xl p-4 text-center">
-                      <div className="text-3xl font-black text-brand-blue" data-testid="stat-total-bookings">
-                        {yearlyStats.total}
-                      </div>
-                      <div className="text-[11px] text-muted-foreground mt-1 font-medium uppercase tracking-wider">
-                        Total Bookings
-                      </div>
-                    </div>
-                    <div className="bg-card rounded-xl p-4 text-center">
-                      <div className="text-3xl font-black text-foreground" data-testid="stat-active-days">
-                        {yearlyStats.activeDays}
-                      </div>
-                      <div className="text-[11px] text-muted-foreground mt-1 font-medium uppercase tracking-wider">
-                        Active Days
-                      </div>
-                    </div>
-                    <div className="bg-card rounded-xl p-4 text-center">
-                      <div className="text-xl font-black text-foreground truncate" data-testid="stat-best-month">
-                        {yearlyStats.bestMonth}
-                      </div>
-                      <div className="text-[11px] text-muted-foreground mt-1 font-medium uppercase tracking-wider">
-                        Busiest Month
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-muted rounded-xl p-4">
-                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-                      {anchorDate.getFullYear()} Booking Activity
-                    </div>
-                    <GitHubCalendar
-                      data={yearlyData}
-                      year={anchorDate.getFullYear()}
-                    />
-                  </div>
-                </div>
-              )}
+              {/* ── Booked Calls KPI Banner ── */}
+              <div className="px-3.5 pb-2 shrink-0">
+                <BookedCallsKpi
+                  variant="hero"
+                  accountId={isAgencyUser ? (effectiveAccountFilter === "all" ? undefined : effectiveAccountFilter) : currentAccountId}
+                />
+              </div>
 
               {/* ── Month view ── */}
               {viewMode === "month" && (
@@ -1024,7 +956,7 @@ export default function CalendarPage() {
                     {(() => {
                       const todayDow = new Date().getDay(); // 0=Sun
                       return ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((d, i) => (
-                        <div key={i} className={cn("px-3 py-3", (i === 0 || i === 6) && "bg-muted/10 opacity-70", i === todayDow && "text-brand-blue")} data-testid={`dow-${i}`}>{d}</div>
+                        <div key={i} className={cn("px-3 py-3", (i === 0 || i === 6) && "bg-muted/10 opacity-70", i === todayDow && "text-brand-indigo")} data-testid={`dow-${i}`}>{d}</div>
                       ));
                     })()}
                   </div>
@@ -1046,15 +978,15 @@ export default function CalendarPage() {
                             "min-h-[100px] border-b border-r border-border/30 last:border-r-0 p-2 cursor-pointer hover:bg-muted/30 relative",
                             !inMonth && "bg-muted/5 opacity-40",
                             isWeekend && inMonth && "bg-muted/[0.12]",
-                            isSelected && "bg-brand-blue/10 z-10",
-                            isToday && !isSelected && "bg-brand-blue/5"
+                            isSelected && "bg-[var(--highlight-selected)] z-10",
+                            isToday && !isSelected && "bg-brand-indigo/5"
                           )}
                           data-testid={`day-${idx}`}
                         >
                           <div className="flex justify-between items-start">
                             <div className={cn(
                               "text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full",
-                              isToday ? "text-white bg-brand-blue" : inMonth ? "text-foreground" : "text-muted-foreground"
+                              isToday ? "text-white bg-brand-indigo" : inMonth ? "text-foreground" : "text-muted-foreground"
                             )}>
                               {d.date.getDate()}
                             </div>
@@ -1066,7 +998,7 @@ export default function CalendarPage() {
                                   key={a.id}
                                   appt={a}
                                   onClick={(e) => { e.stopPropagation(); setSelectedBooking(a); }}
-                                  className={cn("text-left overflow-hidden hover:ring-1 hover:ring-inset", a.no_show ? "hover:ring-red-400" : "hover:ring-brand-blue")}
+                                  className={cn("text-left overflow-hidden hover:ring-1 hover:ring-inset", a.no_show ? "hover:ring-red-400" : "hover:ring-brand-indigo")}
                                 >
                                   {(() => {
                                     const apptDate = new Date(a.raw_booked_call_date);
@@ -1079,16 +1011,16 @@ export default function CalendarPage() {
                                           ? "bg-muted/70 text-muted-foreground"
                                           : a.no_show
                                             ? "bg-red-600/15 border-l-2 border-red-600"
-                                            : "bg-brand-blue/15 border-l-2 border-brand-blue"
+                                            : "bg-brand-indigo/15 border-l-2 border-brand-indigo"
                                       )}>
                                         <div className={cn("w-1.5 h-1.5 rounded-full shrink-0",
-                                          isPast ? "bg-muted-foreground/50" : a.no_show ? "bg-red-600" : "bg-brand-blue"
+                                          isPast ? "bg-muted-foreground/50" : a.no_show ? "bg-red-600" : "bg-brand-indigo"
                                         )} />
                                         <span className={cn("text-[9px] font-bold truncate flex-1 leading-none",
-                                          isPast ? "text-muted-foreground" : a.no_show ? "text-red-700 dark:text-red-400" : "text-brand-deep-blue dark:text-brand-blue"
+                                          isPast ? "text-muted-foreground" : a.no_show ? "text-red-700 dark:text-red-400" : "text-brand-deep-blue dark:text-brand-indigo"
                                         )} data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</span>
                                         <span className={cn("text-[8px] font-medium shrink-0 tabular-nums leading-none",
-                                          isPast ? "text-muted-foreground" : a.no_show ? "text-red-500" : "text-brand-blue"
+                                          isPast ? "text-muted-foreground" : a.no_show ? "text-red-500" : "text-brand-indigo"
                                         )} data-testid={`booking-time-${a.id}`}>{a.time}</span>
                                       </div>
                                     );
@@ -1126,13 +1058,13 @@ export default function CalendarPage() {
                         return (
                           <div key={i} className={cn(
                             "flex-1 flex flex-col items-center justify-center border-r border-border/20 last:border-r-0 gap-0.5",
-                            isToday && "bg-brand-blue/5",
+                            isToday && "bg-brand-indigo/5",
                             isWeekend && "bg-muted/50"
                           )}>
                             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                               {["SUN","MON","TUE","WED","THU","FRI","SAT"][d.getDay()]}
                             </span>
-                            <span className={cn("text-lg font-black leading-none", isToday ? "text-brand-blue" : "text-foreground")}>
+                            <span className={cn("text-lg font-black leading-none", isToday ? "text-brand-indigo" : "text-foreground")}>
                               {d.getDate()}
                             </span>
                           </div>
@@ -1175,7 +1107,7 @@ export default function CalendarPage() {
                             <div key={i} className={cn(
                               "flex-1 relative border-r border-border/20 last:border-r-0",
                               isWeekend && "bg-muted/[0.03]",
-                              isToday && "bg-brand-blue/[0.03]"
+                              isToday && "bg-brand-indigo/[0.03]"
                             )}>
                               {/* Gridlines */}
                               {hours.map(h => (
@@ -1217,7 +1149,7 @@ export default function CalendarPage() {
                                       "absolute left-1 right-1 px-2 py-1.5 rounded-xl shadow-sm z-10 hover:ring-2 overflow-hidden",
                                       a.no_show
                                         ? "bg-red-500/10 border-l-4 border-red-500 hover:ring-red-400"
-                                        : "bg-brand-blue/10 border-l-4 border-brand-blue hover:ring-brand-blue"
+                                        : "bg-brand-indigo/10 border-l-4 border-brand-indigo hover:ring-brand-indigo"
                                     )}
                                     style={{
                                       top: `${(a.hour * 60 + a.minutes) * (HOUR_H / 60)}px`,
@@ -1225,9 +1157,9 @@ export default function CalendarPage() {
                                     }}
                                   >
                                     <div className="flex items-center gap-1 min-w-0">
-                                      <div className={cn("text-[10px] font-bold truncate flex-1", a.no_show ? "text-red-600 dark:text-red-400" : "text-brand-deep-blue dark:text-brand-blue")} data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</div>
+                                      <div className={cn("text-[10px] font-bold truncate flex-1", a.no_show ? "text-red-600 dark:text-red-400" : "text-brand-deep-blue dark:text-brand-indigo")} data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</div>
                                     </div>
-                                    <div className={cn("text-[9px] font-medium", a.no_show ? "text-red-500" : "text-brand-blue")} data-testid={`booking-time-${a.id}`}>
+                                    <div className={cn("text-[9px] font-medium", a.no_show ? "text-red-500" : "text-brand-indigo")} data-testid={`booking-time-${a.id}`}>
                                       {a.time} — {endStr}
                                     </div>
                                   </DraggableBookingCard>
@@ -1266,7 +1198,7 @@ export default function CalendarPage() {
 
               {/* ── Panel header ── */}
               <div className="px-3.5 pt-5 pb-1 shrink-0 flex items-center justify-between">
-                <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight" data-testid="text-list-title">
+                <h2 className="text-[12px] font-semibold font-heading text-foreground leading-tight" data-testid="text-list-title">
                   My Calendar
                 </h2>
                 <span className="w-10 text-center text-[12px] font-medium text-muted-foreground tabular-nums">{totalApptCount}</span>
@@ -1339,7 +1271,7 @@ export default function CalendarPage() {
                           placeholder="Search lead by name..."
                           value={bookLeadSearch}
                           onChange={(e) => { setBookLeadSearch(e.target.value); setBookSelectedLead(null); }}
-                          className="w-full h-9 px-3 rounded-lg border border-border/55 bg-muted text-[12px] placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-brand-blue/30"
+                          className="w-full h-9 px-3 rounded-lg border border-border/55 bg-muted text-[12px] placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
                         />
                         {bookLeadSearch && !bookSelectedLead && bookFilteredLeads.length > 0 && (
                           <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border border-border/55 rounded-lg shadow-lg max-h-40 overflow-y-auto">
@@ -1358,9 +1290,9 @@ export default function CalendarPage() {
                       {/* Date */}
                       <div className="flex gap-2">
                         <input type="date" value={bookDate} onChange={(e) => setBookDate(e.target.value)}
-                          className="flex-1 h-9 px-2 rounded-lg border border-border/55 bg-muted text-[12px] focus:outline-none focus:ring-2 focus:ring-brand-blue/30" />
+                          className="flex-1 h-9 px-2 rounded-lg border border-border/55 bg-muted text-[12px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                         <input type="time" value={bookTime} onChange={(e) => setBookTime(e.target.value)}
-                          className="w-24 h-9 px-2 rounded-lg border border-border/55 bg-muted text-[12px] focus:outline-none focus:ring-2 focus:ring-brand-blue/30" />
+                          className="w-24 h-9 px-2 rounded-lg border border-border/55 bg-muted text-[12px] focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
                       </div>
                       {/* Duration */}
                       <select value={bookDuration} onChange={(e) => setBookDuration(Number(e.target.value))}
@@ -1380,7 +1312,7 @@ export default function CalendarPage() {
                 </Popover>
 
                 {/* Search */}
-                <IconBtn title="Search appointments" onClick={() => {}}>
+                <IconBtn title="Search appointments" active={searchOpen} onClick={() => { setSearchOpen((p) => !p); if (searchOpen) setSearchQuery(""); }}>
                   <Search className="h-4 w-4" />
                 </IconBtn>
 
@@ -1399,7 +1331,7 @@ export default function CalendarPage() {
                             <DropdownMenuSubTrigger className="text-[12px]">
                               <Building2 className="h-3.5 w-3.5 mr-2" />
                               Account
-                              {calendarAccountFilter !== "all" && <span className="ml-auto text-[10px] text-brand-blue font-medium truncate max-w-[72px]">{selectedAccountName}</span>}
+                              {calendarAccountFilter !== "all" && <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[72px]">{selectedAccountName}</span>}
                             </DropdownMenuSubTrigger>
                             <DropdownMenuSubContent className="w-52 max-h-64 overflow-y-auto">
                               <DropdownMenuItem
@@ -1408,7 +1340,7 @@ export default function CalendarPage() {
                                 data-testid="account-filter-option-all"
                               >
                                 All Accounts
-                                {calendarAccountFilter === "all" && <Check className="h-3 w-3 ml-auto text-brand-blue" />}
+                                {calendarAccountFilter === "all" && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
                               </DropdownMenuItem>
                               {(accounts || []).filter((a: any) => (a.id || a.Id) !== 1).length > 0 && (
                                 <DropdownMenuSeparator />
@@ -1425,7 +1357,7 @@ export default function CalendarPage() {
                                       data-testid={`account-filter-option-${accId}`}
                                     >
                                       <span className="truncate">{acc.name || acc.Name}</span>
-                                      {calendarAccountFilter === accId && <Check className="h-3 w-3 ml-auto text-brand-blue shrink-0" />}
+                                      {calendarAccountFilter === accId && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
                                     </DropdownMenuItem>
                                   );
                                 })
@@ -1441,7 +1373,7 @@ export default function CalendarPage() {
                         <DropdownMenuSubTrigger className="text-[12px]">
                           <Filter className="h-3.5 w-3.5 mr-2" />
                           Campaign
-                          {campaignId !== "all" && <span className="ml-auto text-[10px] text-brand-blue font-medium truncate max-w-[72px]">{selectedCampaignName ?? ""}</span>}
+                          {campaignId !== "all" && <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[72px]">{selectedCampaignName ?? ""}</span>}
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent className="w-52 max-h-64 overflow-y-auto">
                           <DropdownMenuItem
@@ -1450,13 +1382,13 @@ export default function CalendarPage() {
                             data-testid="campaign-filter-all"
                           >
                             All Campaigns
-                            {campaignId === "all" && <Check className="h-3 w-3 ml-auto text-brand-blue" />}
+                            {campaignId === "all" && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
                           </DropdownMenuItem>
                           {campaignOptions.length > 0 && <DropdownMenuSeparator />}
                           {campaignOptions.map((c: any) => (
                             <DropdownMenuItem
                               key={c.id}
-                              className={cn("flex items-center gap-2 px-3 py-2 text-[12px] rounded-lg cursor-pointer", campaignId === c.id && "font-bold text-brand-blue")}
+                              className={cn("flex items-center gap-2 px-3 py-2 text-[12px] rounded-lg cursor-pointer", campaignId === c.id && "font-bold text-brand-indigo")}
                               onClick={() => setCampaignId(c.id)}
                               data-testid={`campaign-filter-option-${c.id}`}
                             >
@@ -1471,7 +1403,7 @@ export default function CalendarPage() {
                                   {c.status}
                                 </span>
                               )}
-                              {campaignId === c.id && <Check className="h-3 w-3 text-brand-blue shrink-0" />}
+                              {campaignId === c.id && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                             </DropdownMenuItem>
                           ))}
                           {campaignOptions.length === 0 && (
@@ -1486,11 +1418,11 @@ export default function CalendarPage() {
                         <DropdownMenuSubTrigger className="text-[12px]">
                           <Layers className="h-3.5 w-3.5 mr-2" />
                           Group
-                          {apptGroupBy !== "date" && <span className="ml-auto text-[10px] text-brand-blue font-medium">{APPT_GROUP_LABELS[apptGroupBy]}</span>}
+                          {apptGroupBy !== "date" && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{APPT_GROUP_LABELS[apptGroupBy]}</span>}
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent className="w-40">
                           {(["date", "campaign", "status", "none"] as ApptGroupBy[]).map((opt) => (
-                            <DropdownMenuItem key={opt} onClick={() => setApptGroupBy(opt)} className={cn("text-[12px]", apptGroupBy === opt && "font-semibold text-brand-blue")}>
+                            <DropdownMenuItem key={opt} onClick={() => setApptGroupBy(opt)} className={cn("text-[12px]", apptGroupBy === opt && "font-semibold text-brand-indigo")}>
                               {APPT_GROUP_LABELS[opt]}
                               {apptGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
                             </DropdownMenuItem>
@@ -1502,11 +1434,11 @@ export default function CalendarPage() {
                         <DropdownMenuSubTrigger className="text-[12px]">
                           <ArrowUpDown className="h-3.5 w-3.5 mr-2" />
                           Sort
-                          {apptSortBy !== "time" && <span className="ml-auto text-[10px] text-brand-blue font-medium">{APPT_SORT_LABELS[apptSortBy]}</span>}
+                          {apptSortBy !== "time" && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{APPT_SORT_LABELS[apptSortBy]}</span>}
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent className="w-44">
                           {(["time", "name", "campaign", "status"] as ApptSortBy[]).map((opt) => (
-                            <DropdownMenuItem key={opt} onClick={() => setApptSortBy(opt)} className={cn("text-[12px]", apptSortBy === opt && "font-semibold text-brand-blue")}>
+                            <DropdownMenuItem key={opt} onClick={() => setApptSortBy(opt)} className={cn("text-[12px]", apptSortBy === opt && "font-semibold text-brand-indigo")}>
                               {APPT_SORT_LABELS[opt]}
                               {apptSortBy === opt && <Check className="h-3 w-3 ml-auto" />}
                             </DropdownMenuItem>
@@ -1520,7 +1452,7 @@ export default function CalendarPage() {
                         <DropdownMenuSubTrigger className="text-[12px]">
                           <Filter className="h-3.5 w-3.5 mr-2" />
                           Filter
-                          {apptFilterStatuses.length > 0 && <span className="ml-auto text-[10px] text-brand-blue font-medium">{apptFilterStatuses.length}</span>}
+                          {apptFilterStatuses.length > 0 && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{apptFilterStatuses.length}</span>}
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent className="w-48">
                           {(["no_show", "rescheduled", "confirmed"] as ApptFilterStatus[]).map((opt) => (
@@ -1530,7 +1462,7 @@ export default function CalendarPage() {
                               className="flex items-center gap-2 text-[12px]"
                             >
                               <span className="flex-1">{APPT_FILTER_LABELS[opt]}</span>
-                              {apptFilterStatuses.includes(opt) && <Check className="h-3 w-3 text-brand-blue shrink-0" />}
+                              {apptFilterStatuses.includes(opt) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                             </DropdownMenuItem>
                           ))}
                         </DropdownMenuSubContent>
@@ -1547,6 +1479,21 @@ export default function CalendarPage() {
                     </DropdownMenuContent>
                   </DropdownMenu>
               </div>
+
+              {/* ── Search bar (collapsible) ── */}
+              {searchOpen && (
+                <div className="px-3 pb-2 shrink-0">
+                  <input
+                    type="text"
+                    autoFocus
+                    placeholder="Search by name or campaign..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full h-9 px-3 rounded-lg border border-border/55 bg-card text-[12px] placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
+                    data-testid="search-appointments-input"
+                  />
+                </div>
+              )}
 
               {/* ── Appointment list ── */}
               <div className="flex-1 overflow-y-auto">
@@ -1593,14 +1540,14 @@ export default function CalendarPage() {
                   "px-2 py-1.5 rounded-xl shadow-xl border-l-4 opacity-90 min-w-[120px] max-w-[200px]",
                   activeAppt.no_show
                     ? "bg-red-500/30 border-red-500"
-                    : "bg-brand-blue/30 border-brand-blue"
+                    : "bg-brand-indigo/30 border-brand-indigo"
                 )}
                 data-testid="drag-overlay"
               >
-                <div className={cn("text-[10px] font-bold truncate", activeAppt.no_show ? "text-red-700 dark:text-red-300" : "text-brand-deep-blue dark:text-brand-blue")}>
+                <div className={cn("text-[10px] font-bold truncate", activeAppt.no_show ? "text-red-700 dark:text-red-300" : "text-brand-deep-blue dark:text-brand-indigo")}>
                   {activeAppt.lead_name}
                 </div>
-                <div className={cn("text-[9px] font-medium", activeAppt.no_show ? "text-red-500" : "text-brand-blue")}>
+                <div className={cn("text-[9px] font-medium", activeAppt.no_show ? "text-red-500" : "text-brand-indigo")}>
                   {activeAppt.time}
                 </div>
               </div>

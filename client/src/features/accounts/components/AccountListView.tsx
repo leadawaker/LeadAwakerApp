@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   Search,
   Building2,
@@ -31,30 +30,12 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { IconBtn } from "@/components/ui/icon-btn";
-import type { AccountRow } from "./AccountDetailsDialog";
+import { AccountDetailsDialog, type AccountRow } from "./AccountDetailsDialog";
 import { AccountDetailView, AccountDetailViewEmpty } from "./AccountDetailView";
 import { AccountCreatePanel } from "./AccountCreatePanel";
 import type { NewAccountForm } from "./AccountCreateDialog";
 import type { AccountViewMode, AccountGroupBy, AccountSortBy } from "../pages/AccountsPage";
 import { apiFetch } from "@/lib/apiUtils";
-
-/* ── Card stagger animation variants ── */
-const staggerContainerVariants = {
-  hidden: {},
-  visible: (count: number) => ({
-    transition: {
-      staggerChildren: Math.min(1 / Math.max(count, 1), 0.08),
-    },
-  }),
-};
-const staggerItemVariants = {
-  hidden: { opacity: 0, y: 8 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as const },
-  },
-};
 
 // ── Status colors ─────────────────────────────────────────────────────────────
 
@@ -140,12 +121,12 @@ function AccountListCard({
   account,
   isActive,
   onClick,
-  campaignCount,
+  campaignNames,
 }: {
   account: AccountRow;
   isActive: boolean;
   onClick: () => void;
-  campaignCount: number;
+  campaignNames: string[];
 }) {
   const name = String(account.name || "Unnamed Account");
   const initials = getAccountInitials(name);
@@ -156,17 +137,22 @@ function AccountListCard({
   const email = String(account.owner_email || "");
   const phone = String((account as any).phone || "");
   const niche = String(account.business_niche || "");
+  const timezone = String(account.timezone || "");
   const type = String(account.type || "");
 
-  const hasHoverContent = !!(email || phone);
+  const hasHoverContent = !!(email || phone || campaignNames.length > 0);
+
+  // Campaign pills: max 3 visible, then "+N more"
+  const visibleCampaigns = campaignNames.slice(0, 3);
+  const extraCount = campaignNames.length - visibleCampaigns.length;
 
   return (
     <div
       className={cn(
         "group mx-[3px] my-0.5 rounded-xl cursor-pointer",
-        "transition-all duration-150 ease-out",
+        "transition-[background-color,box-shadow] duration-150 ease-out",
         "hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]",
-        isActive ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] hover:bg-[#FAFAFA]"
+        isActive ? "bg-[#FFF1C8]" : "bg-white hover:bg-[#FAFAFA]"
       )}
       onClick={onClick}
       role="button"
@@ -189,7 +175,7 @@ function AccountListCard({
           </div>
           <div className="flex-1 min-w-0 pt-0.5">
             <div className="flex items-start justify-between gap-1.5">
-              <p className="text-[14px] font-semibold font-heading leading-tight truncate text-foreground">
+              <p className="text-[13px] font-semibold font-heading leading-tight truncate text-foreground">
                 {name}
               </p>
               {type && (
@@ -216,28 +202,59 @@ function AccountListCard({
           </div>
         </div>
 
-        {/* Campaign count */}
-        {campaignCount > 0 && (
-          <span className="inline-flex items-center self-start px-1.5 py-px rounded-full text-[10px] font-medium bg-black/[0.06] text-foreground/55">
-            {campaignCount} {campaignCount === 1 ? "campaign" : "campaigns"}
-          </span>
+        {/* Always-visible: niche + timezone */}
+        {(niche || timezone) && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {niche && (
+              <span className="text-[10px] text-foreground/40 truncate">{niche}</span>
+            )}
+            {niche && timezone && (
+              <span className="text-[10px] text-foreground/25 shrink-0">&middot;</span>
+            )}
+            {timezone && (
+              <span className="text-[10px] text-foreground/40 truncate">{timezone}</span>
+            )}
+          </div>
         )}
 
-        {/* Hover-reveal: email + phone only */}
+        {/* Hover-reveal: email + phone + campaign pills */}
         {hasHoverContent && (
-          <div className="overflow-hidden max-h-0 opacity-0 group-hover:max-h-[28px] group-hover:opacity-100 transition-all duration-200 ease-out">
-            <div className="flex items-center gap-3 min-w-0 pt-1.5 border-t border-black/[0.06]">
-              {email && (
-                <span className="flex items-center gap-1 text-[10px] text-muted-foreground/60 truncate min-w-0">
-                  <Mail className="h-3 w-3 shrink-0 text-muted-foreground/35" />
-                  <span className="truncate">{email}</span>
-                </span>
+          <div className="overflow-hidden max-h-0 opacity-0 group-hover:max-h-[60px] group-hover:opacity-100 transition-[max-height,opacity] duration-200 ease-out">
+            <div className="flex flex-col gap-1.5 pt-1.5 border-t border-black/[0.06]">
+              {/* Email + phone row */}
+              {(email || phone) && (
+                <div className="flex items-center gap-3 min-w-0">
+                  {email && (
+                    <span className="flex items-center gap-1 text-[10px] text-muted-foreground/60 truncate min-w-0">
+                      <Mail className="h-3 w-3 shrink-0 text-muted-foreground/35" />
+                      <span className="truncate">{email}</span>
+                    </span>
+                  )}
+                  {phone && (
+                    <span className="flex items-center gap-1 text-[10px] text-muted-foreground/60 shrink-0">
+                      <Phone className="h-3 w-3 shrink-0 text-muted-foreground/35" />
+                      {phone}
+                    </span>
+                  )}
+                </div>
               )}
-              {phone && (
-                <span className="flex items-center gap-1 text-[10px] text-muted-foreground/60 shrink-0">
-                  <Phone className="h-3 w-3 shrink-0 text-muted-foreground/35" />
-                  {phone}
-                </span>
+              {/* Campaign name pills */}
+              {visibleCampaigns.length > 0 && (
+                <div className="flex items-center gap-1 flex-wrap">
+                  {visibleCampaigns.map((cname, i) => (
+                    <span
+                      key={i}
+                      className="text-[9px] font-medium bg-black/[0.06] text-foreground/50 rounded px-1.5 py-0.5 truncate max-w-[100px]"
+                    >
+                      {cname}
+                    </span>
+                  ))}
+                  {extraCount > 0 && (
+                    <span className="text-[9px] font-medium bg-black/[0.06] text-foreground/50 rounded px-1.5 py-0.5">
+                      +{extraCount} more
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -347,20 +364,27 @@ export function AccountListView({
 }: AccountListViewProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const [panelMode, setPanelMode] = useState<"view" | "create">("view");
+  const [editDialogAccount, setEditDialogAccount] = useState<AccountRow | null>(null);
   const PAGE_SIZE = 25;
 
-  // Campaign counts per account
-  const [campaignCounts, setCampaignCounts] = useState<Map<number, number>>(new Map());
+  // Campaign names per account — fetched once, used for card hover pills
+  const [campaignNamesByAccount, setCampaignNamesByAccount] = useState<Map<number, string[]>>(new Map());
   useEffect(() => {
     apiFetch("/api/campaigns")
+      .then((r: any) => r.json())
       .then((data: any) => {
         const list: any[] = Array.isArray(data) ? data : (data?.list ?? data?.data ?? []);
-        const counts = new Map<number, number>();
+        const byAccount = new Map<number, string[]>();
         list.forEach((c) => {
-          const aid = c.Accounts_id ?? c.accountId ?? c.account_id;
-          if (aid) counts.set(Number(aid), (counts.get(Number(aid)) ?? 0) + 1);
+          const aid = c.Accounts_id ?? c.accountsId ?? c.accountId ?? c.account_id;
+          const cname = String(c.name || c.Name || "").trim();
+          if (aid && cname) {
+            const key = Number(aid);
+            if (!byAccount.has(key)) byAccount.set(key, []);
+            byAccount.get(key)!.push(cname);
+          }
         });
-        setCampaignCounts(counts);
+        setCampaignNamesByAccount(byAccount);
       })
       .catch(() => {});
   }, []);
@@ -482,13 +506,13 @@ export function AccountListView({
         {/* Header: title + count */}
         <div className="px-3.5 pt-5 pb-1 shrink-0 flex items-center justify-between">
           <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Accounts</h2>
-          <span className="w-10 text-center text-[12px] font-medium text-muted-foreground tabular-nums">{totalAccounts}</span>
+          <span className="text-[12px] font-medium text-muted-foreground tabular-nums">{totalAccounts}</span>
         </div>
 
         {/* Controls row: tabs (left) + search & settings (right) */}
         <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center justify-between gap-2">
           {/* Tab buttons */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             {VIEW_TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = viewMode === tab.id;
@@ -516,8 +540,8 @@ export function AccountListView({
 
           {/* Right controls: + / search / settings */}
           <div className="flex items-center gap-1.5 shrink-0">
-            {/* New account */}
-            <IconBtn title="New Account" onClick={onAddAccount}>
+            {/* New account — wired to open create panel */}
+            <IconBtn title="New Account" onClick={() => setPanelMode("create")}>
               <Plus className="h-4 w-4" />
             </IconBtn>
 
@@ -542,7 +566,7 @@ export function AccountListView({
                     placeholder="Search accounts..."
                     value={listSearch}
                     onChange={(e) => onListSearchChange(e.target.value)}
-                    className="w-full pl-7 pr-7 py-1.5 text-[12px] rounded-md border border-border bg-popover placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-brand-blue/50"
+                    className="w-full pl-7 pr-7 py-1.5 text-[12px] rounded-md border border-border bg-popover placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-brand-indigo/50"
                   />
                   {listSearch && (
                     <button
@@ -569,14 +593,14 @@ export function AccountListView({
                   <DropdownMenuSubTrigger>
                     <Layers className="h-3.5 w-3.5 mr-2" />
                     <span>Group</span>
-                    {isGroupNonDefault && <span className="ml-auto text-[10px] text-brand-blue font-semibold">{GROUP_LABELS[groupBy]}</span>}
+                    {isGroupNonDefault && <span className="ml-auto text-[10px] text-brand-indigo font-semibold">{GROUP_LABELS[groupBy]}</span>}
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
                     {(Object.keys(GROUP_LABELS) as AccountGroupBy[]).map((g) => (
                       <DropdownMenuItem
                         key={g}
                         onClick={() => onGroupByChange(g)}
-                        className={cn(groupBy === g && "font-bold text-brand-blue")}
+                        className={cn(groupBy === g && "font-bold text-brand-indigo")}
                       >
                         {GROUP_LABELS[g]}
                       </DropdownMenuItem>
@@ -589,14 +613,14 @@ export function AccountListView({
                   <DropdownMenuSubTrigger>
                     <ArrowUpDown className="h-3.5 w-3.5 mr-2" />
                     <span>Sort</span>
-                    {isSortNonDefault && <span className="ml-auto text-[10px] text-brand-blue font-semibold">{SORT_LABELS[sortBy].split(" ")[0]}</span>}
+                    {isSortNonDefault && <span className="ml-auto text-[10px] text-brand-indigo font-semibold">{SORT_LABELS[sortBy].split(" ")[0]}</span>}
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
                     {(Object.keys(SORT_LABELS) as AccountSortBy[]).map((s) => (
                       <DropdownMenuItem
                         key={s}
                         onClick={() => onSortByChange(s)}
-                        className={cn(sortBy === s && "font-bold text-brand-blue")}
+                        className={cn(sortBy === s && "font-bold text-brand-indigo")}
                       >
                         {SORT_LABELS[s]}
                       </DropdownMenuItem>
@@ -609,7 +633,7 @@ export function AccountListView({
                   <DropdownMenuSubTrigger>
                     <Filter className="h-3.5 w-3.5 mr-2" />
                     <span>Filter Status</span>
-                    {isFilterActive && <span className="ml-auto text-[10px] text-brand-blue font-semibold">{filterStatus.length}</span>}
+                    {isFilterActive && <span className="ml-auto text-[10px] text-brand-indigo font-semibold">{filterStatus.length}</span>}
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
                     {STATUS_FILTER_OPTIONS.map((s) => (
@@ -622,8 +646,8 @@ export function AccountListView({
                           className="h-2 w-2 rounded-full shrink-0"
                           style={{ backgroundColor: ACCOUNT_STATUS_HEX[s] || "#94A3B8" }}
                         />
-                        <span className={cn(filterStatus.includes(s) && "font-bold text-brand-blue")}>{s}</span>
-                        {filterStatus.includes(s) && <span className="ml-auto text-brand-blue">✓</span>}
+                        <span className={cn(filterStatus.includes(s) && "font-bold text-brand-indigo")}>{s}</span>
+                        {filterStatus.includes(s) && <span className="ml-auto text-brand-indigo">{"\u2713"}</span>}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuSubContent>
@@ -654,35 +678,29 @@ export function AccountListView({
               {listSearch && <p className="text-xs text-muted-foreground/70 mt-1">Try a different search</p>}
             </div>
           ) : (
-            <motion.div
-              key={`page-${currentPage}`}
-              variants={staggerContainerVariants}
-              initial="hidden"
-              animate="visible"
-              custom={paginatedItems.length}
-            >
+            <div>
               {paginatedItems.map((item, idx) => {
                 if (item.kind === "header") {
                   return (
-                    <motion.div key={`h-${item.label}`} variants={staggerItemVariants}>
+                    <div key={`h-${item.label}`}>
                       <GroupHeader label={item.label} count={item.count} />
-                    </motion.div>
+                    </div>
                   );
                 }
                 const aid = getAccountId(item.account);
                 const isSelected = selectedAccount ? getAccountId(selectedAccount) === aid : false;
                 return (
-                  <motion.div key={aid || idx} variants={staggerItemVariants}>
+                  <div key={aid || idx}>
                     <AccountListCard
                       account={item.account}
                       isActive={isSelected}
                       onClick={() => onSelectAccount(item.account)}
-                      campaignCount={campaignCounts.get(getAccountId(item.account)) ?? 0}
+                      campaignNames={campaignNamesByAccount.get(getAccountId(item.account)) ?? []}
                     />
-                  </motion.div>
+                  </div>
                 );
               })}
-            </motion.div>
+            </div>
           )}
         </div>
 
@@ -697,7 +715,7 @@ export function AccountListView({
               Previous
             </button>
             <span className="text-[10px] text-muted-foreground tabular-nums">
-              {currentPage * PAGE_SIZE + 1}–{Math.min((currentPage + 1) * PAGE_SIZE, totalAccounts)} of {totalAccounts}
+              {currentPage * PAGE_SIZE + 1}&ndash;{Math.min((currentPage + 1) * PAGE_SIZE, totalAccounts)} of {totalAccounts}
             </span>
             <button
               onClick={() => setCurrentPage((p) => Math.min(maxPage, p + 1))}
@@ -720,13 +738,25 @@ export function AccountListView({
         ) : selectedAccount ? (
           <AccountDetailView
             account={selectedAccount}
-            onSave={onSave}
-            onAddAccount={() => setPanelMode("create")}
-            onDelete={onDelete}
+            onEdit={(acc) => setEditDialogAccount(acc)}
             onToggleStatus={onToggleStatus}
           />
         ) : (
           <AccountDetailViewEmpty />
+        )}
+        {/* Edit dialog — opened when Edit button is clicked in AccountDetailView */}
+        {editDialogAccount && (
+          <AccountDetailsDialog
+            open={true}
+            account={editDialogAccount}
+            onClose={() => setEditDialogAccount(null)}
+            onSave={async (accountId, patch) => {
+              for (const [field, value] of Object.entries(patch)) {
+                if (value !== undefined) await onSave(field, String(value));
+              }
+              setEditDialogAccount(null);
+            }}
+          />
         )}
       </div>
     </div>

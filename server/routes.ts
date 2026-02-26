@@ -581,6 +581,168 @@ export async function registerRoutes(
     res.json(data);
   }));
 
+  // ─── Activity Feed ───────────────────────────────────────────────
+
+  app.get("/api/activity-feed", requireAuth, scopeToAccount, wrapAsync(async (req, res) => {
+    const forcedId = (req as any).forcedAccountId as number | undefined;
+    const accountId = forcedId ?? (req.query.accountId ? Number(req.query.accountId) : undefined);
+    const limit = Math.min(Number(req.query.limit) || 50, 200);
+    const offset = Number(req.query.offset) || 0;
+
+    // NocoDB schema name
+    const schema = "p2mxx34fvbf3ll6";
+
+    // Build the account filter clause for each sub-query
+    const acctFilter = accountId ? `AND t."Accounts_id" = $1` : "";
+    const acctFilterLeads = accountId ? `AND l."Accounts_id" = $1` : "";
+    const params: unknown[] = accountId ? [accountId] : [];
+
+    // Sub-query 1: Recent interactions (messages) — last 7 days
+    const interactionsQ = `
+      SELECT
+        CASE
+          WHEN i."direction" = 'inbound' THEN 'message_received'
+          WHEN i."direction" = 'outbound' AND i."ai_generated" = true THEN 'message_sent'
+          ELSE 'message_sent'
+        END AS type,
+        CASE
+          WHEN i."direction" = 'inbound' THEN COALESCE(i."lead_name", 'Lead') || ' responded'
+          WHEN i."ai_generated" = true THEN 'AI sent message to ' || COALESCE(i."lead_name", 'lead')
+          ELSE 'Message sent to ' || COALESCE(i."lead_name", 'lead')
+        END AS title,
+        LEFT(i."Content", 120) AS description,
+        COALESCE(i."Leads_id", i."lead_id"::int) AS lead_id,
+        COALESCE(i."lead_name", '') AS lead_name,
+        i."created_at" AS timestamp,
+        CASE
+          WHEN i."direction" = 'inbound' THEN 'message'
+          WHEN i."ai_generated" = true THEN 'bot'
+          ELSE 'user'
+        END AS icon
+      FROM "${schema}"."Interactions" i
+      WHERE i."created_at" > NOW() - INTERVAL '7 days'
+        ${acctFilter.replace('t.', 'i.')}
+    `;
+
+    // Sub-query 2: Lead status changes (Booked / Qualified / Lost) — last 7 days
+    const statusQ = `
+      SELECT
+        CASE
+          WHEN l."Conversion_Status" = 'Booked' THEN 'call_booked'
+          ELSE 'status_change'
+        END AS type,
+        CASE
+          WHEN l."Conversion_Status" = 'Booked' THEN 'Call booked: ' || COALESCE(CONCAT_WS(' ', l."first_name", l."last_name"), 'Lead')
+          ELSE COALESCE(CONCAT_WS(' ', l."first_name", l."last_name"), 'Lead') || ' moved to ' || l."Conversion_Status"
+        END AS title,
+        CASE
+          WHEN l."Conversion_Status" = 'Booked' AND l."booked_call_date" IS NOT NULL
+            THEN TO_CHAR(l."booked_call_date", 'Mon DD at HH12:MI AM')
+          ELSE 'Status: ' || l."Conversion_Status"
+        END AS description,
+        l."id" AS lead_id,
+        COALESCE(CONCAT_WS(' ', l."first_name", l."last_name"), '') AS lead_name,
+        l."updated_at" AS timestamp,
+        CASE
+          WHEN l."Conversion_Status" = 'Booked' THEN 'phone'
+          ELSE 'arrow'
+        END AS icon
+      FROM "${schema}"."Leads" l
+      WHERE l."updated_at" > NOW() - INTERVAL '7 days'
+        AND l."Conversion_Status" IN ('Booked', 'Qualified', 'Lost')
+        ${acctFilterLeads}
+    `;
+
+    // Sub-query 3: Automation events — last 7 days
+    const automationQ = `
+      SELECT
+        'automation' AS type,
+        COALESCE(a."workflow_name", 'Workflow') || ' — ' || COALESCE(a."status", 'ran') AS title,
+        CASE
+          WHEN a."lead_name" IS NOT NULL THEN 'Lead: ' || a."lead_name"
+          ELSE COALESCE(a."step_name", '')
+        END AS description,
+        COALESCE(a."Leads_id", a."lead_id"::int) AS lead_id,
+        COALESCE(a."lead_name", '') AS lead_name,
+        a."created_at" AS timestamp,
+        'bot' AS icon
+      FROM "${schema}"."Automation_Logs" a
+      WHERE a."created_at" > NOW() - INTERVAL '7 days'
+        ${acctFilter.replace('t.', 'a.')}
+    `;
+
+    // Sub-query 4: Manual takeover events — last 7 days
+    const takeoverQ = `
+      SELECT
+        'takeover' AS type,
+        'Manual takeover: ' || COALESCE(CONCAT_WS(' ', l."first_name", l."last_name"), 'Lead') AS title,
+        'Agent took over the conversation' AS description,
+        l."id" AS lead_id,
+        COALESCE(CONCAT_WS(' ', l."first_name", l."last_name"), '') AS lead_name,
+        l."updated_at" AS timestamp,
+        'user' AS icon
+      FROM "${schema}"."Leads" l
+      WHERE l."manual_takeover" = true
+        AND l."updated_at" > NOW() - INTERVAL '7 days'
+        ${acctFilterLeads}
+    `;
+
+    // Count query (for total)
+    const countQuery = `
+      SELECT COUNT(*) AS total FROM (
+        ${interactionsQ}
+        UNION ALL
+        ${statusQ}
+        UNION ALL
+        ${automationQ}
+        UNION ALL
+        ${takeoverQ}
+      ) sub
+    `;
+
+    // Data query with sorting and pagination
+    const dataQuery = `
+      SELECT * FROM (
+        ${interactionsQ}
+        UNION ALL
+        ${statusQ}
+        UNION ALL
+        ${automationQ}
+        UNION ALL
+        ${takeoverQ}
+      ) combined
+      ORDER BY timestamp DESC NULLS LAST
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+
+    try {
+      const [countResult, dataResult] = await Promise.all([
+        pool.query(countQuery, params),
+        pool.query(dataQuery, params),
+      ]);
+
+      const total = Number(countResult.rows[0]?.total ?? 0);
+      const items = dataResult.rows.map((row: any) => ({
+        type: row.type,
+        title: row.title,
+        description: row.description || "",
+        leadId: row.lead_id ?? null,
+        leadName: row.lead_name || "",
+        timestamp: row.timestamp ? new Date(row.timestamp).toISOString() : null,
+        icon: row.icon,
+      }));
+
+      res.json({
+        items,
+        total,
+        hasMore: offset + items.length < total,
+      });
+    } catch (err: any) {
+      console.error("[activity-feed] query error:", err);
+      res.status(500).json({ message: "Failed to fetch activity feed", error: err.message });
+    }
+  }));
+
   // ─── Users ────────────────────────────────────────────────────────
 
   app.get("/api/users", requireAgency, wrapAsync(async (_req, res) => {
@@ -1144,6 +1306,100 @@ export async function registerRoutes(
     } as any);
     if (!contract) return res.status(404).json({ message: "Contract not found" });
     res.json(toDbKeys(contract as any, contracts));
+  }));
+
+  // ── SignWell: send contract for e-signature ───────────────────────────────────
+  app.post("/api/contracts/:id/send-for-signature", requireAgency, wrapAsync(async (req, res) => {
+    const contractId = Number(req.params.id);
+    const { signerEmail, signerName, testMode = true } = req.body as {
+      signerEmail?: string;
+      signerName?: string;
+      testMode?: boolean;
+    };
+
+    if (!signerEmail) return res.status(400).json({ error: "signerEmail is required" });
+
+    const existing = await storage.getContractById(contractId);
+    if (!existing) return res.status(404).json({ message: "Contract not found" });
+
+    const contractText = (existing as any).contractText || existing.title || "Service Agreement";
+    const contractTitle = existing.title || "Service Agreement";
+    const signerDisplayName = signerName || (existing as any).signerName || signerEmail;
+
+    // Wrap plain text in a minimal HTML document (SignWell accepts HTML)
+    const escapedText = String(contractText)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    const htmlDoc = [
+      "<!DOCTYPE html>",
+      "<html><head><meta charset=\"utf-8\"><style>",
+      "  body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.6; margin: 40px; color: #111; }",
+      "  pre  { white-space: pre-wrap; font-family: inherit; margin: 0; }",
+      "</style></head><body>",
+      `<pre>${escapedText}</pre>`,
+      "</body></html>",
+    ].join("\n");
+
+    const base64Content = Buffer.from(htmlDoc).toString("base64");
+
+    // API key — set SIGNWELL_API_KEY in env for production
+    const SIGNWELL_API_KEY = process.env.SIGNWELL_API_KEY || "ae5a778f3a71902abe20c24c9926d1b7";
+
+    const swRes = await fetch("https://www.signwell.com/api/v1/documents/", {
+      method: "POST",
+      headers: {
+        "X-Api-Key": SIGNWELL_API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        test_mode:  testMode,
+        name:       contractTitle,
+        files: [{
+          name:        "contract.html",
+          file_base64: base64Content,
+        }],
+        recipients: [{
+          id:    "1",
+          name:  signerDisplayName,
+          email: signerEmail,
+        }],
+        fields: [[{
+          type:         "signature",
+          required:     true,
+          x:            30,
+          y:            85,
+          page:         1,
+          recipient_id: "1",
+        }]],
+        subject: `Please sign: ${contractTitle}`,
+        message: "Please review and sign the attached service agreement with Lead Awaker.",
+      }),
+    });
+
+    const swData = await swRes.json() as any;
+
+    if (!swRes.ok) {
+      console.error("[SignWell] API error:", JSON.stringify(swData));
+      return res.status(502).json({ error: "SignWell API error", details: swData });
+    }
+
+    // Mark contract as Sent
+    await storage.updateContract(contractId, {
+      status:  "Sent",
+      sentAt:  new Date(),
+    } as any);
+
+    const signingUrl = swData.recipients?.[0]?.signing_url
+      || swData.recipients?.[0]?.embedded_signing_url;
+
+    res.json({
+      ok:         true,
+      signingUrl,
+      documentId: swData.id,
+      testMode,
+    });
   }));
 
   app.delete("/api/contracts/:id", requireAgency, wrapAsync(async (req, res) => {

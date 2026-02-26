@@ -2,9 +2,11 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Download, Link, FileSignature, Trash2,
   Eye, Calendar, FileText, Copy, Check, Plus, Upload,
-  Pencil, Send, X,
+  Pencil, Send, X, ExternalLink,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/apiUtils";
 import type { ContractRow } from "../types";
 import { CONTRACT_STATUS_COLORS } from "../types";
 import { useToast } from "@/hooks/use-toast";
@@ -147,6 +149,14 @@ export function ContractDetailView({
   const [editText,   setEditText]   = useState("");
   const [editSaving, setEditSaving] = useState(false);
 
+  // ── SignWell state ────────────────────────────────────────────────────────
+  const [swDialogOpen,  setSwDialogOpen]  = useState(false);
+  const [swEmail,       setSwEmail]       = useState("");
+  const [swSending,     setSwSending]     = useState(false);
+  const [swSigningUrl,  setSwSigningUrl]  = useState<string | null>(null);
+  const [swUrlCopied,   setSwUrlCopied]   = useState(false);
+  const [swTestMode,    setSwTestMode]    = useState(true);   // flip to false for real sends
+
   // ── Upload state ──────────────────────────────────────────────────────────
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploading,  setUploading]  = useState(false);
@@ -164,9 +174,54 @@ export function ContractDetailView({
     setEditSaving(false);
     setUploadOpen(false);
     setUploading(false);
+    setSwDialogOpen(false);
+    setSwEmail("");
+    setSwSigningUrl(null);
   }, [contract.id]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
+
+  /** Send via SignWell — creates a document and returns a signing URL */
+  const handleSendSignWell = useCallback(async () => {
+    if (!swEmail.trim()) return;
+    setSwSending(true);
+    try {
+      const res = await apiFetch(`/api/contracts/${contract.id}/send-for-signature`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          signerEmail: swEmail.trim(),
+          signerName:  contract.signer_name || undefined,
+          testMode:    swTestMode,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const msg = data?.details?.message || data?.error || "Failed to send";
+        toast({ title: "SignWell error", description: msg, variant: "destructive" });
+        return;
+      }
+      setSwSigningUrl(data.signingUrl || null);
+      toast({
+        title:       swTestMode ? "Test document created" : "Sent for signature",
+        description: swTestMode
+          ? "Test mode — no real email sent. Copy the signing link below."
+          : `Signing link sent to ${swEmail}.`,
+      });
+      onRefresh();
+    } catch (err) {
+      toast({ title: "Network error", description: String(err), variant: "destructive" });
+    } finally {
+      setSwSending(false);
+    }
+  }, [contract.id, contract.signer_name, swEmail, swTestMode, onRefresh, toast]);
+
+  const handleCopySigningUrl = useCallback(async () => {
+    if (!swSigningUrl) return;
+    await navigator.clipboard.writeText(swSigningUrl);
+    setSwUrlCopied(true);
+    setTimeout(() => setSwUrlCopied(false), 2000);
+  }, [swSigningUrl]);
 
   const handleCopyLink = useCallback(() => {
     const url = `${window.location.origin}/api/contracts/view/${contract.view_token}`;
@@ -374,17 +429,30 @@ export function ContractDetailView({
                   </button>
                 )}
 
+                {/* Mark sent (simple status update + copy link) */}
                 <button
                   onClick={handleSend}
                   disabled={sending}
-                  className={cn(
-                    actionBtn,
-                    "bg-brand-indigo/10 border-brand-indigo/30 text-brand-indigo hover:bg-brand-indigo/20 disabled:opacity-50"
-                  )}
+                  className={cn(actionBtn, "disabled:opacity-50")}
                 >
-                  <Send className="h-3 w-3" />
-                  {sending ? "Sending..." : "Send to Client"}
+                  <Link className="h-3 w-3" />
+                  {sending ? "Sending..." : "Mark Sent"}
                 </button>
+
+                {/* Sign via SignWell */}
+                {contract.contract_text && (
+                  <button
+                    onClick={() => setSwDialogOpen(v => !v)}
+                    className={cn(
+                      actionBtn,
+                      "bg-brand-indigo/10 border-brand-indigo/30 text-brand-indigo hover:bg-brand-indigo/20",
+                      swDialogOpen && "bg-brand-indigo/20"
+                    )}
+                  >
+                    <Send className="h-3 w-3" />
+                    Sign via SignWell
+                  </button>
+                )}
               </>
             )}
 
@@ -417,6 +485,104 @@ export function ContractDetailView({
               <Trash2 className="h-3 w-3" />
               {deleteConfirm ? "Confirm?" : "Delete"}
             </button>
+          </div>
+        )}
+
+        {/* ── SignWell inline dialog ── */}
+        {swDialogOpen && (
+          <div className="mx-3 mb-1 rounded-xl border border-brand-indigo/20 bg-brand-indigo/5 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[13px] font-semibold text-foreground">Send for e-Signature via SignWell</p>
+                <p className="text-[11px] text-foreground/50 mt-0.5">
+                  {swTestMode
+                    ? "Test mode — no real email sent, signing link returned directly."
+                    : "Live — SignWell will email the signer automatically."}
+                </p>
+              </div>
+              <button
+                onClick={() => { setSwDialogOpen(false); setSwSigningUrl(null); }}
+                className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-card border border-border/40 transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+
+            {/* Signer email input */}
+            {!swSigningUrl && (
+              <div className="flex gap-2">
+                <Input
+                  type="email"
+                  placeholder="Signer email address"
+                  value={swEmail}
+                  onChange={e => setSwEmail(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") handleSendSignWell(); }}
+                  className="flex-1 h-9 text-[12px]"
+                />
+                <button
+                  onClick={handleSendSignWell}
+                  disabled={swSending || !swEmail.trim()}
+                  className="h-9 px-4 rounded-lg text-[12px] font-semibold bg-brand-indigo text-white hover:bg-brand-indigo/90 disabled:opacity-50 transition-colors shrink-0"
+                >
+                  {swSending ? "Creating..." : "Send"}
+                </button>
+              </div>
+            )}
+
+            {/* Test mode toggle */}
+            {!swSigningUrl && (
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <div
+                  onClick={() => setSwTestMode(v => !v)}
+                  className={cn(
+                    "w-8 h-4 rounded-full transition-colors cursor-pointer relative",
+                    swTestMode ? "bg-amber-400" : "bg-brand-indigo"
+                  )}
+                >
+                  <div className={cn(
+                    "absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-transform",
+                    swTestMode ? "translate-x-0.5" : "translate-x-4"
+                  )} />
+                </div>
+                <span className="text-[11px] text-foreground/60">
+                  {swTestMode ? "Test mode ON (safe to try)" : "Live mode — will send real email"}
+                </span>
+              </label>
+            )}
+
+            {/* Signing URL result */}
+            {swSigningUrl && (
+              <div className="space-y-2">
+                <p className="text-[11px] font-semibold text-emerald-700">
+                  Document created. Share this signing link:
+                </p>
+                <div className="flex gap-2">
+                  <div className="flex-1 px-3 py-2 rounded-lg bg-white border border-border/50 font-mono text-[10px] text-foreground/70 truncate">
+                    {swSigningUrl}
+                  </div>
+                  <button
+                    onClick={handleCopySigningUrl}
+                    className="h-9 px-3 rounded-lg text-[12px] font-medium bg-card border border-border/50 hover:bg-muted/60 transition-colors shrink-0 flex items-center gap-1"
+                  >
+                    {swUrlCopied
+                      ? <><Check className="h-3 w-3 text-emerald-600" /> Copied</>
+                      : <><Copy className="h-3 w-3" /> Copy</>}
+                  </button>
+                  <a
+                    href={swSigningUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="h-9 px-3 rounded-lg text-[12px] font-medium bg-card border border-border/50 hover:bg-muted/60 transition-colors shrink-0 flex items-center gap-1"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    Open
+                  </a>
+                </div>
+                <p className="text-[10px] text-foreground/40">
+                  {swTestMode ? "⚠ Test document — no real signature legally binding." : "Contract sent. Status updated to Sent."}
+                </p>
+              </div>
+            )}
           </div>
         )}
 
