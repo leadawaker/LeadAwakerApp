@@ -4,13 +4,13 @@ import { Database } from "lucide-react";
 
 /**
  * A small status indicator showing PostgreSQL connection health.
- * Shows a colored dot with optional label in expanded mode.
+ * Shows a database icon circle with a colored status dot badge.
  * - Green: healthy (all tables accessible)
  * - Yellow: degraded (some tables inaccessible)
  * - Red: error (API unreachable or DB disconnected)
  * - Gray pulse: loading (initial check)
  */
-export function DbStatusIndicator({ collapsed = false }: { collapsed?: boolean }) {
+export function DbStatusIndicator({ collapsed: _collapsed = false }: { collapsed?: boolean }) {
   const health = useHealthCheck(60000); // check every 60s
 
   const dotColor = {
@@ -33,36 +33,31 @@ export function DbStatusIndicator({ collapsed = false }: { collapsed?: boolean }
 
   return (
     <div
-      className={cn(
-        "flex items-center gap-2 rounded-lg transition-colors",
-        collapsed ? "justify-center py-1" : "px-3 py-1.5"
-      )}
+      className="relative group"
       data-testid="db-status-indicator"
       data-status={health.status}
       title={`${label}${detail ? ` — ${detail}` : ""}`}
     >
-      {collapsed ? (
-        /* Collapsed: just show the dot */
-        <div className="relative group flex items-center justify-center">
-          <span className={cn("h-2.5 w-2.5 rounded-full", dotColor)} />
-          {/* Tooltip on hover */}
-          <div className="absolute left-[20px] opacity-0 group-hover:opacity-100 transition-opacity z-[120] pointer-events-none">
-            <div className="px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-muted text-foreground shadow-lg border border-border/40">
-              {label}
-              {detail && <span className="text-muted-foreground ml-1">({detail})</span>}
-            </div>
-          </div>
+      {/* Database icon in standardized circle */}
+      <div className="h-10 w-10 rounded-full border border-border/65 flex items-center justify-center bg-transparent text-muted-foreground">
+        <Database className="h-4 w-4" />
+      </div>
+
+      {/* Status dot badge */}
+      <span
+        className={cn(
+          "absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background",
+          dotColor
+        )}
+      />
+
+      {/* Hover tooltip */}
+      <div className="absolute left-[calc(100%+8px)] top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-[120] pointer-events-none">
+        <div className="px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap bg-muted text-foreground shadow-lg border border-border/40">
+          {label}
+          {detail && <span className="text-muted-foreground ml-1">({detail})</span>}
         </div>
-      ) : (
-        /* Expanded: dot + label */
-        <>
-          <Database className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-          <span className={cn("h-2 w-2 rounded-full shrink-0", dotColor)} />
-          <span className="text-[10px] text-muted-foreground font-medium truncate">
-            {label}
-          </span>
-        </>
-      )}
+      </div>
     </div>
   );
 }

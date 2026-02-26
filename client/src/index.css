@@ -63,6 +63,13 @@
   /* Brand Indigo: #4f46e5 — card view gradient, detail panel header */
   --color-brand-indigo: hsl(var(--brand-indigo));
   --color-brand-indigo-foreground: hsl(var(--brand-indigo-foreground));
+  /* Indian Yellow: #E3A857 — derived source for UI highlight tints */
+  --color-brand-indian-yellow: hsl(var(--brand-indian-yellow));
+  --color-brand-indian-yellow-foreground: hsl(var(--brand-indian-yellow-foreground));
+  /* Highlight tokens — active/selected state colors */
+  --color-highlight-active: hsl(var(--highlight-active));
+  --color-highlight-selected: hsl(var(--highlight-selected));
+  --color-highlight-hover: hsl(var(--highlight-hover));
 
   /* Sidebar-specific semantic tokens */
   --color-sidebar-bg: hsl(var(--sidebar-bg));
@@ -84,8 +91,8 @@
   --popover: 0 0% 100%; /* White — popovers/dropdowns elevated above cards */
   --popover-foreground: 0 0% 12%;
 
-  /* Primary Brand Color: Brand Blue #5170FF */
-  --primary: 229 100% 66%;
+  /* Primary Brand Color: Brand Indigo #4F46E5 */
+  --primary: 243 75% 59%;
   --primary-foreground: 0 0% 100%;
 
   /* Secondary: Medium gray */
@@ -106,25 +113,25 @@
   /* Toast semantic colors */
   --success: 142 71% 45%;
   --success-foreground: 0 0% 100%;
-  --info: 229 100% 66%;
+  --info: 243 75% 59%;
   --info-foreground: 0 0% 100%;
 
   --border: 0 0% 75%; /* Slightly darker than bg — kept for system use, not visually rendered */
   --input: 0 0% 89%; /* Same as muted for inputs */
-  --ring: 229 100% 66%;
+  --ring: 243 75% 59%;
 
   --radius: 1.5rem; /* 24px — rounder curvature for all bordered elements */
 
   /* Chart colors (light mode) — brand-aligned */
-  --chart-1: 229 100% 66%;   /* Brand Blue */
+  --chart-1: 243 75% 59%;    /* Brand Indigo */
   --chart-2: 160 60% 45%;    /* Teal */
   --chart-3: 44 98% 50%;     /* Brand Yellow */
   --chart-4: 280 65% 55%;    /* Purple */
   --chart-5: 0 72% 55%;      /* Red */
 
   /* ── Brand Tokens (Light Mode) ── */
-  /* Brand Blue: #5170FF — primary actions, buttons, links */
-  --brand-blue: 229 100% 66%;
+  /* Brand Indigo: #4F46E5 — primary actions, buttons, links (replaces old #5170FF periwinkle) */
+  --brand-blue: 243 75% 59%;
   --brand-blue-foreground: 0 0% 100%;
   /* Deep Blue: #131B49 — sidebar, headers, strong emphasis */
   --brand-deep-blue: 231 59% 18%;
@@ -135,14 +142,21 @@
   /* Soft Yellow: #FCCA47 — secondary highlights, hover states */
   --brand-soft-yellow: 43 97% 63%;
   --brand-soft-yellow-foreground: 231 59% 18%;
-  /* Brand Indigo: #4f46e5 (indigo-600) — card view gradient, detail panel header */
+  /* Brand Indigo: #4f46e5 (indigo-600) — now also the primary, merged with brand-blue */
   --brand-indigo: 243 75% 59%;
   --brand-indigo-foreground: 0 0% 100%;
+  /* Indian Yellow: #E3A857 — source for UI highlight tints */
+  --brand-indian-yellow: 35 71% 62%;
+  --brand-indian-yellow-foreground: 231 59% 18%;
+  /* Highlight tokens — active/selected UI state colors */
+  --highlight-active: 50 100% 68%;   /* #FFE35B — active pill, nav, tab, bloom */
+  --highlight-selected: 45 100% 89%; /* #FFF1C8 — selected card, table row */
+  --highlight-hover: 50 100% 60%;    /* #FFD938 — hover on already-highlighted element */
 
   /* Sidebar tokens (light mode) — sidebar now blends with page background */
   --sidebar-bg: 0 0% 82%; /* Same as --background (#D1D1D1) */
   --sidebar-foreground: 0 0% 25%; /* Dark text readable on light sidebar */
-  --sidebar-active: 229 100% 66%;
+  --sidebar-active: 243 75% 59%;
   --sidebar-active-foreground: 0 0% 100%;
 }
 
@@ -161,8 +175,8 @@
   --popover: 226 32% 14%;
   --popover-foreground: 220 20% 93%;
 
-  /* Primary: Brand Blue #5170FF — slightly brighter for dark bg legibility */
-  --primary: 229 100% 70%;
+  /* Primary: Brand Indigo #4F46E5 — brighter for dark bg legibility */
+  --primary: 243 85% 68%;
   --primary-foreground: 0 0% 100%;
 
   /* Secondary: subtle blue-tinted dark surface */
@@ -184,13 +198,13 @@
   /* Toast semantic colors (dark mode) */
   --success: 142 71% 45%;
   --success-foreground: 0 0% 100%;
-  --info: 229 100% 70%;
+  --info: 243 85% 68%;
   --info-foreground: 0 0% 100%;
 
   /* Borders: visible but subtle on dark surfaces */
   --border: 226 25% 20%;
   --input: 226 25% 20%;
-  --ring: 229 100% 70%;
+  --ring: 243 85% 68%;
 
   /* Chart colors adjusted for dark */
   --chart-1: 230 80% 65%;
@@ -200,7 +214,7 @@
   --chart-5: 0 72% 55%;
 
   /* ── Brand Tokens (Dark Mode) ── */
-  --brand-blue: 229 100% 70%;
+  --brand-blue: 243 85% 68%;
   --brand-blue-foreground: 0 0% 100%;
   --brand-deep-blue: 228 35% 10%;
   --brand-deep-blue-foreground: 220 20% 93%;
@@ -211,11 +225,18 @@
   /* Brand Indigo (dark mode — slightly brighter for dark bg) */
   --brand-indigo: 243 85% 68%;
   --brand-indigo-foreground: 0 0% 100%;
+  /* Indian Yellow (dark mode) */
+  --brand-indian-yellow: 35 60% 52%;
+  --brand-indian-yellow-foreground: 0 0% 100%;
+  /* Highlight tokens (dark mode — muted warm gold on dark) */
+  --highlight-active: 40 40% 30%;
+  --highlight-selected: 40 30% 18%;
+  --highlight-hover: 40 50% 36%;
 
   /* Sidebar tokens (dark mode) */
   --sidebar-bg: 228 40% 8%;
   --sidebar-foreground: 220 20% 85%;
-  --sidebar-active: 229 100% 70%;
+  --sidebar-active: 243 85% 68%;
   --sidebar-active-foreground: 0 0% 100%;
 }
 
@@ -1052,34 +1073,12 @@
 /* ============================
    Icon Circle — Unified Button Ring System
    Lead Awaker Design System
-   2px border ring, 3 sizes, 5-state machine
+   ONE size: 40px. Icons: h-4 w-4 (16px). No variants.
    ============================ */
 
 @utility icon-circle-lg {
-  height: 2.125rem;
-  width: 2.125rem;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  position: relative;
-}
-
-@utility icon-circle-md {
-  height: 1.875rem;
-  width: 1.875rem;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  position: relative;
-}
-
-@utility icon-circle-sm {
-  height: 1.625rem;
-  width: 1.625rem;
+  height: 2.5rem;
+  width: 2.5rem;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -1089,9 +1088,9 @@
 }
 
 @utility icon-circle-base {
-  border-width: 2px;
+  border-width: 1px;
   border-style: solid;
-  border-color: hsl(var(--border) / 0.30);
+  border-color: hsl(var(--border) / 0.65);
   color: hsl(var(--muted-foreground));
   background-color: transparent;
   cursor: pointer;
@@ -1099,13 +1098,13 @@
               color 150ms ease, transform 150ms ease;
   &:hover:not(:disabled) {
     background-color: hsl(var(--card));
-    border-color: hsl(var(--border) / 0.55);
+    border-color: hsl(var(--border) / 0.90);
     color: hsl(var(--foreground));
   }
   &:active:not(:disabled) {
     transform: scale(0.92);
     background-color: hsl(var(--muted));
-    border-color: hsl(var(--border) / 0.70);
+    border-color: hsl(var(--border));
     transition-duration: 80ms;
   }
   &:disabled {
@@ -1119,13 +1118,56 @@
 }
 
 @utility icon-circle-selected {
-  background-color: hsl(var(--brand-blue));
-  border-color: hsl(var(--brand-blue));
+  background-color: hsl(var(--brand-indigo));
+  border-color: hsl(var(--brand-indigo));
   color: white;
   &:hover:not(:disabled) {
-    background-color: hsl(var(--brand-blue) / 0.85);
-    border-color: hsl(var(--brand-blue) / 0.85);
+    background-color: hsl(var(--brand-indigo) / 0.85);
+    border-color: hsl(var(--brand-indigo) / 0.85);
   }
+}
+
+/* ============================
+   Toolbar Pill — Text button variant
+   Same 40px height as icon-circle-lg.
+   ============================ */
+
+@utility toolbar-pill-base {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  padding-left: 0.625rem;
+  padding-right: 0.625rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+  border-width: 1px;
+  border-style: solid;
+  border-color: hsl(var(--border) / 0.3);
+  background-color: transparent;
+  color: hsl(var(--muted-foreground));
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+  &:hover:not(:disabled) {
+    background-color: hsl(var(--card));
+    color: hsl(var(--foreground));
+  }
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  &:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+}
+
+@utility toolbar-pill-active {
+  border-color: hsl(var(--brand-indigo) / 0.4);
+  color: hsl(var(--brand-indigo));
 }
 
 /* ============================

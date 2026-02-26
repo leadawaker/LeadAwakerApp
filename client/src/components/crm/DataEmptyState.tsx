@@ -151,7 +151,7 @@ export function DataEmptyState({
         data-variant={variant}
       >
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted dark:bg-muted/50">
-          <Icon className="h-5 w-5 text-muted-foreground" />
+          <Icon className="h-4 w-4 text-muted-foreground" />
         </div>
         <p className="text-sm font-medium text-foreground">{title}</p>
         <p className="text-xs text-muted-foreground max-w-[280px]">{description}</p>

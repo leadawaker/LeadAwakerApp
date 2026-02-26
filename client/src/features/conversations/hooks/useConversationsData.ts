@@ -5,6 +5,7 @@ import {
   fetchInteractions,
   sendMessage,
   updateLeadTakeover,
+  updateLead,
 } from "../api/conversationsApi";
 
 export interface Lead {
@@ -83,6 +84,7 @@ export function useConversationsData(
   searchQuery = "",
   aiStateFilter: AiStateFilter = "all",
   sortOrder: SortOrder = "newest",
+  lastReadAt?: Map<number, string>,
 ) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [interactions, setInteractions] = useState<Interaction[]>([]);
@@ -154,9 +156,12 @@ export function useConversationsData(
           );
         const last = msgs[msgs.length - 1];
         const inboundMsgs = msgs.filter((m) => m.direction === "Inbound");
-        const unreadCount = inboundMsgs.length;
-        // A thread is unread if it has any inbound messages
-        // (message_count_received from the DB may be stale/zero, so we rely on actual message data)
+        // Compare inbound messages against the last-read timestamp for this lead
+        const lastRead = lastReadAt?.get(leadId);
+        const unreadMsgs = lastRead
+          ? inboundMsgs.filter((m) => (m.created_at ?? m.createdAt ?? "") > lastRead)
+          : inboundMsgs;
+        const unreadCount = unreadMsgs.length;
         const unread = unreadCount > 0;
         return { lead, msgs, last, unread, unreadCount };
       })
@@ -202,7 +207,11 @@ export function useConversationsData(
 
     if (tab === "unread") return stateFiltered.filter((t) => t.unread);
     return stateFiltered;
-  }, [leads, interactions, currentAccountId, campaignId, tab, searchQuery, aiStateFilter, sortOrder]);
+  }, [leads, interactions, currentAccountId, campaignId, tab, searchQuery, aiStateFilter, sortOrder, lastReadAt]);
+
+  // Keep a ref to `leads` so handleSend never closes over stale data
+  const leadsRef = useRef(leads);
+  leadsRef.current = leads;
 
   // Send message
   const handleSend = useCallback(
@@ -211,11 +220,12 @@ export function useConversationsData(
       content: string,
       type = "SMS",
     ) => {
-      const lead = leads.find((l) => l.id === leadId);
+      const lead = leadsRef.current.find((l) => l.id === leadId);
       if (!lead || !content.trim()) return;
 
       const accountId = lead.accounts_id ?? lead.account_id;
       const campaignIdVal = lead.campaigns_id ?? lead.campaign_id;
+      const isManual = lead.manual_takeover === true;
 
       // Optimistic update
       const tempId = Date.now();
@@ -234,6 +244,8 @@ export function useConversationsData(
         content: content.trim(),
         status: "sending",
         who: "Agent",
+        ai_generated: false,
+        is_manual_follow_up: isManual,
       };
 
       setInteractions((prev) => [...prev, optimistic]);
@@ -249,11 +261,27 @@ export function useConversationsData(
           direction: "Outbound",
           status: "sent",
           who: "Agent",
+          aiGenerated: false,
+          isManualFollowUp: isManual,
         });
+
+        // Normalise the server response so it has both key variants
+        // (the API returns DB column names like Content, Who, Leads_id)
+        const normalised = {
+          ...saved,
+          content: saved.content ?? saved.Content,
+          who: saved.who ?? saved.Who,
+          lead_id: saved.lead_id ?? saved.leads_id ?? saved.Leads_id,
+          leads_id: saved.leads_id ?? saved.Leads_id ?? saved.lead_id,
+          created_at: saved.created_at ?? saved.createdAt,
+          createdAt: saved.createdAt ?? saved.created_at,
+          direction: saved.direction ?? "Outbound",
+          status: saved.status ?? "sent",
+        };
 
         // Replace optimistic with real
         setInteractions((prev) =>
-          prev.map((i) => (i.id === tempId ? saved : i)),
+          prev.map((i) => (i.id === tempId ? normalised : i)),
         );
         toast({ title: "Message sent" });
       } catch (err) {
@@ -268,7 +296,7 @@ export function useConversationsData(
         setSending(false);
       }
     },
-    [leads, toast],
+    [toast],
   );
 
   // Toggle AI / Human takeover for a lead
@@ -283,10 +311,10 @@ export function useConversationsData(
       try {
         await updateLeadTakeover(leadId, manualTakeover);
         toast({
-          title: manualTakeover ? "Switched to Human mode" : "Switched to AI mode",
+          title: manualTakeover ? "You are now managing this conversation" : "AI is now managing this conversation",
           description: manualTakeover
-            ? "AI paused. You are now managing this conversation."
-            : "AI is now managing this conversation.",
+            ? "AI paused. Send messages directly to this lead."
+            : "AI will handle responses from here.",
         });
       } catch (err) {
         // Revert on failure
@@ -301,6 +329,37 @@ export function useConversationsData(
     [toast],
   );
 
+  // Update a lead field (status, notes, etc.) with optimistic update
+  const handleUpdateLead = useCallback(
+    async (leadId: number, patch: Record<string, unknown>) => {
+      const prevLeads = [...leads];
+      setLeads((prev) =>
+        prev.map((l) => (l.id === leadId ? { ...l, ...patch } : l)),
+      );
+      try {
+        await updateLead(leadId, patch);
+        toast({ title: "Lead updated" });
+      } catch (err) {
+        setLeads(prevLeads);
+        toast({ variant: "destructive", title: "Failed to update lead" });
+      }
+    },
+    [leads, toast],
+  );
+
+  // Retry a failed message — remove the failed entry and re-send
+  const handleRetry = useCallback(
+    async (failedMsg: Interaction) => {
+      setInteractions((prev) => prev.filter((i) => i.id !== failedMsg.id));
+      await handleSend(
+        failedMsg.lead_id ?? failedMsg.leads_id,
+        failedMsg.content ?? failedMsg.Content ?? "",
+        failedMsg.type,
+      );
+    },
+    [handleSend],
+  );
+
   return {
     leads,
     interactions,
@@ -310,6 +369,8 @@ export function useConversationsData(
     sending,
     handleSend,
     handleToggleTakeover,
+    handleUpdateLead,
+    handleRetry,
     refresh: loadData,
   };
 }

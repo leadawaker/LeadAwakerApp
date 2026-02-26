@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { useLeadsData } from "../hooks/useLeadsData";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
@@ -7,10 +7,8 @@ import {
   EMPTY_FILTERS,
   type LeadFilterState,
 } from "./LeadFilters";
-import { LeadsKanban } from "./LeadsKanban";
 import {
   LeadsCardView,
-  KanbanDetailPanel,
   getLeadId as getLeadIdHelper,
   getFullName as getFullNameHelper,
   type GroupByOption,
@@ -18,13 +16,15 @@ import {
 } from "./LeadsCardView";
 import { LeadsInlineTable } from "./LeadsInlineTable";
 import { CsvImportWizard } from "./CsvImportWizard";
-import { updateLead, createLead } from "../api/leadsApi";
+import { createLead, bulkDeleteLeads } from "../api/leadsApi";
 import { apiFetch } from "@/lib/apiUtils";
 import {
-  LayoutGrid, Table2, List,
-  Plus, Search, X, ArrowUpDown, Filter, Layers,
+  Table2, List,
+  Plus, Trash2, Copy, ArrowUpDown, Filter, Layers,
   FileSpreadsheet, Eye, Check, Upload, Download,
 } from "lucide-react";
+import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
+import { ToolbarPill } from "@/components/ui/toolbar-pill";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
 import {
   DropdownMenu,
@@ -35,9 +35,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { usePersistedSelection } from "@/hooks/usePersistedSelection";
 import type { VirtualListItem } from "./LeadsCardView";
 
-type ViewMode = "list" | "table" | "kanban";
+type ViewMode = "list" | "table";
 type TableSortByOption  = "recent" | "name_asc" | "name_desc" | "score_desc" | "score_asc";
 type TableGroupByOption = "status" | "campaign" | "account" | "none";
 
@@ -68,16 +69,15 @@ const DEFAULT_VISIBLE_COLS = TABLE_COL_META
   .map((c) => c.key);
 
 /* ── Tab definitions ── */
-const VIEW_TABS: { id: ViewMode; label: string; icon: typeof List }[] = [
+const VIEW_TABS: TabDef[] = [
   { id: "list",   label: "List",   icon: List       },
   { id: "table",  label: "Table",  icon: Table2     },
-  { id: "kanban", label: "Kanban", icon: LayoutGrid  },
 ];
 
 /* ── Status group ordering ── */
 const STATUS_GROUP_ORDER = [
   "New", "Contacted", "Responded", "Multiple Responses",
-  "Qualified", "Booked", "Lost", "DND",
+  "Qualified", "Booked", "Closed", "Lost", "DND",
 ];
 
 const STATUS_OPTIONS = STATUS_GROUP_ORDER;
@@ -89,6 +89,7 @@ const STATUS_DOT: Record<string, string> = {
   "Multiple Responses": "bg-green-500",
   Qualified:            "bg-lime-500",
   Booked:               "bg-amber-400",
+  Closed:               "bg-emerald-500",
   Lost:                 "bg-red-500",
   DND:                  "bg-zinc-500",
 };
@@ -108,22 +109,74 @@ const TABLE_GROUP_LABELS: Record<TableGroupByOption, string> = {
   none:     "None",
 };
 
+// ── Inline confirmation button ────────────────────────────────────────────────
+function ConfirmToolbarButton({
+  icon: Icon, label, onConfirm, variant = "default",
+}: {
+  icon: React.ElementType; label: string;
+  onConfirm: () => Promise<void> | void;
+  variant?: "default" | "danger";
+}) {
+  const [confirming, setConfirming] = useState(false);
+  const [loading, setLoading] = useState(false);
+  if (confirming) {
+    return (
+      <div className="h-10 flex items-center gap-1 rounded-full border border-border/30 bg-card px-2.5 text-[12px] shrink-0">
+        <span className="text-foreground/60 mr-0.5 whitespace-nowrap">{label}?</span>
+        <button
+          className="px-2 py-0.5 rounded-full bg-brand-blue text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
+          onClick={async () => { setLoading(true); try { await onConfirm(); } finally { setLoading(false); setConfirming(false); } }}
+          disabled={loading}
+        >
+          {loading ? "…" : "Yes"}
+        </button>
+        <button
+          className="px-2 py-0.5 rounded-full text-muted-foreground text-[11px] hover:text-foreground"
+          onClick={() => setConfirming(false)}
+        >
+          No
+        </button>
+      </div>
+    );
+  }
+  return (
+    <button
+      className={cn(
+        "h-10 inline-flex items-center gap-1.5 rounded-full border px-3 text-[12px] font-medium shrink-0",
+        variant === "danger"
+          ? "border-red-300/50 text-red-600 hover:bg-red-50/60"
+          : "border-border/30 text-foreground/70 hover:bg-card hover:text-foreground",
+      )}
+      onClick={() => setConfirming(true)}
+    >
+      <Icon className="h-4 w-4" />
+      {label}
+    </button>
+  );
+}
+
 export function LeadsTable() {
   const { currentAccountId, isAgencyView } = useWorkspace();
   const filterAccountId = (isAgencyView && currentAccountId === 1) ? undefined : currentAccountId;
-  const { leads, loading, error, handleRefresh, setLeads } = useLeadsData(filterAccountId);
+  const { leads, loading, error, handleRefresh } = useLeadsData(filterAccountId);
 
   /* ── View mode (persisted) ─────────────────────────────────────────────── */
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     try {
       const stored = localStorage.getItem(VIEW_MODE_KEY);
-      if (stored && ["list", "table", "kanban"].includes(stored)) return stored as ViewMode;
+      if (stored && ["list", "table"].includes(stored)) return stored as ViewMode;
     } catch {}
     return "list";
   });
 
-  const [selectedLead,   setSelectedLead]   = useState<Record<string, any> | null>(null);
+  const [selectedLead,   setSelectedLead]   = usePersistedSelection<Record<string, any>>(
+    "selected-lead-id",
+    (l) => l.Id ?? l.id,
+    leads,
+  );
   const [importWizardOpen, setImportWizardOpen] = useState(false);
+  // ── Lifted multi-select state ─────────────────────────────────────────────
+  const [tableSelectedIds, setTableSelectedIds] = useState<Set<number>>(new Set());
   const [leadFilters]    = useState<LeadFilterState>({ ...EMPTY_FILTERS });
 
   /* ── Tag data ────────────────────────────────────────────────────────────── */
@@ -141,7 +194,7 @@ export function LeadsTable() {
 
   /* ── Table toolbar state ─────────────────────────────────────────────────── */
   const [tableSearch,         setTableSearch]         = useState("");
-  const [tableSearchOpen,     setTableSearchOpen]     = useState(false);
+  const [tableSearchOpen,     setTableSearchOpen]     = useState(true); // always expanded
   const [tableSortBy,         setTableSortBy]         = useState<TableSortByOption>("recent");
   const [tableFilterStatus,   setTableFilterStatus]   = useState<string[]>([]);
   const [tableFilterCampaign, setTableFilterCampaign] = useState<string>("");
@@ -382,27 +435,6 @@ export function LeadsTable() {
     return result;
   }, [filteredLeads, leadTagsInfo, tableFilterStatus, tableFilterCampaign, tableFilterAccount, tableSortBy, tableGroupBy, accountsById]);
 
-  /* ── Kanban drag ────────────────────────────────────────────────────────── */
-  const handleKanbanLeadMove = useCallback(
-    async (leadId: number | string, newStage: string) => {
-      setLeads((prev) =>
-        prev.map((l) =>
-          l.Id === leadId || l.id === leadId
-            ? { ...l, conversion_status: newStage, Conversion_Status: newStage }
-            : l
-        )
-      );
-      try {
-        await updateLead(leadId, { Conversion_Status: newStage });
-      } catch (err) {
-        console.error("Failed to move lead to new stage", err);
-        handleRefresh();
-        throw err;
-      }
-    },
-    [setLeads, handleRefresh]
-  );
-
   const handleViewSwitch = useCallback((mode: ViewMode) => {
     setViewMode(mode);
     setSelectedLead(null);
@@ -411,9 +443,18 @@ export function LeadsTable() {
   const handleClosePanel = useCallback(() => { setSelectedLead(null); }, []);
 
   /* ── Auto-select first lead (list view) ─────────────────────────────────── */
+  /* Only fires when there is no persisted selection to restore. If a stored ID
+     exists AND that lead is present in the current list, defer to
+     usePersistedSelection to restore it instead of clobbering it. */
   useEffect(() => {
     if (!selectedLead && filteredLeads.length > 0 && viewMode === "list") {
-      setSelectedLead(filteredLeads[0]);
+      const storedId = localStorage.getItem("selected-lead-id");
+      const storedLeadExists =
+        storedId &&
+        filteredLeads.some((l) => String(l.Id ?? l.id) === storedId);
+      if (!storedLeadExists) {
+        setSelectedLead(filteredLeads[0]);
+      }
     }
   }, [filteredLeads, selectedLead, viewMode]);
 
@@ -447,9 +488,44 @@ export function LeadsTable() {
   const tableActiveFilterCount = tableFilterStatus.length + (tableFilterCampaign ? 1 : 0) + (tableFilterAccount ? 1 : 0);
 
   const handleAddLead = useCallback(async () => {
-    try { await createLead({ first_name: "New", last_name: "Lead", phone: "" }); handleRefresh(); }
-    catch (err) { console.error("Create lead failed", err); }
-  }, [handleRefresh]);
+    try {
+      const newLead = await createLead({ first_name: "New", last_name: "Lead", phone: "" });
+      await handleRefresh();
+      if (newLead?.id || newLead?.Id) {
+        setSelectedLead(newLead);
+        setTableSelectedIds(new Set([newLead.id ?? newLead.Id]));
+      }
+    } catch (err) { console.error("Create lead failed", err); }
+  }, [handleRefresh, setSelectedLead]);
+
+  const handleBulkDeleteLeads = useCallback(async () => {
+    if (tableSelectedIds.size === 0) return;
+    try {
+      await bulkDeleteLeads(Array.from(tableSelectedIds));
+      setTableSelectedIds(new Set());
+      setSelectedLead(null);
+      handleRefresh();
+    } catch (err) { console.error("Bulk delete failed", err); }
+  }, [tableSelectedIds, handleRefresh, setSelectedLead]);
+
+  const handleDuplicateLeads = useCallback(async () => {
+    if (tableSelectedIds.size === 0) return;
+    try {
+      const leadsToClone = leads.filter((l) => tableSelectedIds.has(l.Id ?? l.id ?? 0));
+      for (const lead of leadsToClone) {
+        await createLead({
+          first_name: lead.first_name || lead.full_name || "Copy",
+          last_name: lead.last_name || "",
+          phone: lead.phone || lead.Phone || "",
+          email: lead.email || lead.Email || "",
+          Conversion_Status: lead.conversion_status || lead.Conversion_Status || "New",
+          notes: lead.notes || lead.Notes || "",
+        });
+      }
+      setTableSelectedIds(new Set());
+      handleRefresh();
+    } catch (err) { console.error("Duplicate leads failed", err); }
+  }, [tableSelectedIds, leads, handleRefresh]);
 
   const handleExportCsv = useCallback(() => {
     const headers = ["Name", "Status", "Score", "Phone", "Email", "Campaign", "Tags", "Last Activity", "Notes"];
@@ -505,55 +581,29 @@ export function LeadsTable() {
     <>
       <div className="w-px h-4 bg-border/25 mx-0.5 shrink-0" />
 
-      {/* +Add */}
-      <button
-        onClick={handleAddLead}
-        className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium border border-border/30 bg-transparent text-muted-foreground hover:bg-card hover:text-foreground shrink-0 transition-colors"
-      >
-        <Plus className="h-3.5 w-3.5" />
-        Add
-      </button>
-
-      {/* Search */}
-      {tableSearchOpen ? (
-        <div className="flex items-center gap-1.5 rounded-full border border-border/30 bg-card/60 px-2.5 py-1 shrink-0">
-          <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-          <input
-            autoFocus
-            value={tableSearch}
-            onChange={(e) => setTableSearch(e.target.value)}
-            placeholder="Search..."
-            onBlur={() => { if (!tableSearch) setTableSearchOpen(false); }}
-            className="text-[12px] bg-transparent outline-none w-24 min-w-0 text-foreground placeholder:text-muted-foreground/60"
-          />
-          <button onClick={() => { setTableSearch(""); setTableSearchOpen(false); }}>
-            <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+      {/* Search — always expanded, before Add */}
+      <div className="flex items-center gap-1.5 h-10 rounded-full border border-border/30 bg-card/60 px-2.5 shrink-0">
+        <svg className="h-3.5 w-3.5 text-muted-foreground shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input
+          value={tableSearch}
+          onChange={(e) => setTableSearch(e.target.value)}
+          placeholder="Search leads..."
+          className="text-[12px] bg-transparent outline-none w-28 min-w-0 text-foreground placeholder:text-muted-foreground/60"
+        />
+        {tableSearch && (
+          <button type="button" onClick={() => setTableSearch("")}>
+            <svg className="h-3 w-3 text-muted-foreground hover:text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
           </button>
-        </div>
-      ) : (
-        <button
-          onClick={() => setTableSearchOpen(true)}
-          className={cn(
-            "h-7 w-7 rounded-full border flex items-center justify-center shrink-0 transition-colors",
-            tableSearch
-              ? "border-brand-blue/40 text-brand-blue"
-              : "border-border/30 text-muted-foreground hover:text-foreground hover:bg-card"
-          )}
-        >
-          <Search className="h-3.5 w-3.5" />
-        </button>
-      )}
+        )}
+      </div>
+
+      {/* +Add with confirmation */}
+      <ConfirmToolbarButton icon={Plus} label="Add" onConfirm={handleAddLead} />
 
       {/* Sort */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(
-            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium border bg-transparent hover:bg-card hover:text-foreground shrink-0 transition-colors",
-            tableSortBy !== "recent" ? "border-brand-blue/40 text-brand-blue" : "border-border/30 text-muted-foreground"
-          )}>
-            <ArrowUpDown className="h-3.5 w-3.5" />
-            Sort{tableSortBy !== "recent" ? ` · ${TABLE_SORT_LABELS[tableSortBy].split(" ")[0]}` : ""}
-          </button>
+          <ToolbarPill icon={ArrowUpDown} label="Sort" active={tableSortBy !== "recent"} activeValue={tableSortBy !== "recent" ? TABLE_SORT_LABELS[tableSortBy].split(" ")[0] : undefined} />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Sort by</DropdownMenuLabel>
@@ -570,13 +620,7 @@ export function LeadsTable() {
       {/* Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(
-            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium border bg-transparent hover:bg-card hover:text-foreground shrink-0 transition-colors",
-            isTableFilterActive ? "border-brand-blue/40 text-brand-blue" : "border-border/30 text-muted-foreground"
-          )}>
-            <Filter className="h-3.5 w-3.5" />
-            Filter{isTableFilterActive ? ` · ${tableActiveFilterCount}` : ""}
-          </button>
+          <ToolbarPill icon={Filter} label="Filter" active={isTableFilterActive} activeValue={isTableFilterActive ? tableActiveFilterCount : undefined} />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Status</DropdownMenuLabel>
@@ -633,13 +677,7 @@ export function LeadsTable() {
       {/* Group */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(
-            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium border bg-transparent hover:bg-card hover:text-foreground shrink-0 transition-colors",
-            tableGroupBy !== "status" ? "border-brand-blue/40 text-brand-blue" : "border-border/30 text-muted-foreground"
-          )}>
-            <Layers className="h-3.5 w-3.5" />
-            Group{tableGroupBy !== "status" ? ` · ${TABLE_GROUP_LABELS[tableGroupBy]}` : ""}
-          </button>
+          <ToolbarPill icon={Layers} label="Group" active={tableGroupBy !== "status"} activeValue={tableGroupBy !== "status" ? TABLE_GROUP_LABELS[tableGroupBy] : undefined} />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           {(["status", "campaign", "account", "none"] as TableGroupByOption[]).map((opt) => (
@@ -654,13 +692,7 @@ export function LeadsTable() {
       {/* Fields (Visibility) */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(
-            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium border bg-transparent hover:bg-card hover:text-foreground shrink-0 transition-colors",
-            visibleCols.size !== DEFAULT_VISIBLE_COLS.length ? "border-brand-blue/40 text-brand-blue" : "border-border/30 text-muted-foreground"
-          )}>
-            <Eye className="h-3.5 w-3.5" />
-            Fields
-          </button>
+          <ToolbarPill icon={Eye} label="Fields" active={visibleCols.size !== DEFAULT_VISIBLE_COLS.length} />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Show / Hide Columns</DropdownMenuLabel>
@@ -704,10 +736,7 @@ export function LeadsTable() {
       {/* CSV */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium border border-border/30 bg-transparent text-muted-foreground hover:bg-card hover:text-foreground shrink-0 transition-colors">
-            <FileSpreadsheet className="h-3.5 w-3.5" />
-            CSV
-          </button>
+          <ToolbarPill icon={FileSpreadsheet} label="CSV" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           <DropdownMenuItem onClick={() => setImportWizardOpen(true)} className="text-[12px]">
@@ -718,6 +747,26 @@ export function LeadsTable() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* ── Selection actions — far right, visible when rows selected ── */}
+      {tableSelectedIds.size > 0 && (
+        <>
+          <div className="flex-1 min-w-0" />
+          <div className="flex items-center gap-1 shrink-0">
+            <ConfirmToolbarButton
+              icon={Copy}
+              label="Duplicate"
+              onConfirm={handleDuplicateLeads}
+            />
+            <ConfirmToolbarButton
+              icon={Trash2}
+              label="Delete"
+              onConfirm={handleBulkDeleteLeads}
+              variant="danger"
+            />
+          </div>
+        </>
+      )}
     </>
   );
 
@@ -754,47 +803,26 @@ export function LeadsTable() {
             isGroupNonDefault={isGroupNonDefault}
             isSortNonDefault={isSortNonDefault}
             onResetControls={handleResetControls}
+            onCreateLead={handleAddLead}
           />
         </div>
       )}
 
-      {/* ── Table / Kanban ── */}
-      {(viewMode === "table" || viewMode === "kanban") && (
+      {/* ── Table view ── */}
+      {viewMode === "table" && (
         <div className="flex-1 min-h-0 flex gap-[3px] overflow-hidden">
 
           {/* Left panel */}
           <div className="flex flex-col bg-muted rounded-lg overflow-hidden flex-1 min-w-0">
 
             {/* Title */}
-            <div className="px-3.5 pt-7 pb-1 shrink-0">
+            <div className="px-3.5 pt-5 pb-1 shrink-0 flex items-center justify-between">
               <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">My Leads</h2>
             </div>
 
             {/* Controls row: tabs + table toolbar (inline, no count badge) */}
             <div className="px-3 pt-1.5 pb-2.5 shrink-0 flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
-              {VIEW_TABS.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = viewMode === tab.id;
-                return isActive ? (
-                  <button
-                    key={tab.id}
-                    onClick={() => handleViewSwitch(tab.id)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFF375] text-foreground text-[12px] font-semibold shrink-0"
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    {tab.label}
-                  </button>
-                ) : (
-                  <button
-                    key={tab.id}
-                    onClick={() => handleViewSwitch(tab.id)}
-                    title={tab.label}
-                    className="h-6 w-6 rounded-full border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors shrink-0"
-                  >
-                    <Icon className="h-3 w-3" />
-                  </button>
-                );
-              })}
+              <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as ViewMode)} />
 
               {/* Inline toolbar — table view only */}
               {viewMode === "table" && tableToolbar}
@@ -808,45 +836,16 @@ export function LeadsTable() {
                   loading={loading}
                   selectedLeadId={selectedLead ? (selectedLead.Id ?? selectedLead.id ?? null) : null}
                   onSelectLead={setSelectedLead}
-                  leadTagsInfo={leadTagsInfo}
                   onRefresh={handleRefresh}
                   visibleCols={visibleCols}
                   tableSearch={tableSearch}
+                  selectedIds={tableSelectedIds}
+                  onSelectionChange={setTableSelectedIds}
                 />
               </div>
             )}
 
-            {/* Kanban board */}
-            {viewMode === "kanban" && (
-              <div
-                className="flex-1 flex flex-col overflow-hidden p-[3px]"
-                onClick={handleClosePanel}
-              >
-                <div className="flex-1 flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                  <LeadsKanban
-                    leads={filteredLeads}
-                    loading={loading}
-                    campaignId={undefined}
-                    leadTagsMap={leadTagsInfo}
-                    onLeadMove={handleKanbanLeadMove}
-                    onCardClick={setSelectedLead}
-                    selectedLeadId={selectedLead?.Id ?? selectedLead?.id}
-                  />
-                </div>
-              </div>
-            )}
           </div>
-
-          {/* Right detail panel (kanban) */}
-          {viewMode === "kanban" && selectedLead && (
-            <div className="w-[380px] flex-shrink-0 flex flex-col min-w-0 overflow-hidden bg-card rounded-lg">
-              <KanbanDetailPanel
-                lead={selectedLead}
-                onClose={handleClosePanel}
-                leadTags={leadTagsInfo.get(getLeadIdHelper(selectedLead)) || []}
-              />
-            </div>
-          )}
         </div>
       )}
 

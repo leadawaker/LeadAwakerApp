@@ -1,9 +1,37 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Bot, User, UserCheck, Check, CheckCheck, Clock, AlertCircle, FileText, Music, Video, Download, ExternalLink, MessageSquare, ChevronDown } from "lucide-react";
+import {
+  Check,
+  CheckCheck,
+  Clock,
+  AlertCircle,
+  FileText,
+  Music,
+  Video,
+  Download,
+  ExternalLink,
+  MessageSquare,
+  ChevronDown,
+  Send,
+  Bot,
+  PanelRight,
+  ArrowUpCircle,
+  RotateCcw,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { SkeletonChatThread } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { Thread, Interaction } from "../hooks/useConversationsData";
+import { formatRelativeTime } from "../utils/conversationHelpers";
 
 interface ChatPanelProps {
   selected: Thread | null;
@@ -11,16 +39,37 @@ interface ChatPanelProps {
   sending: boolean;
   onSend: (leadId: number, content: string, type?: string) => Promise<void>;
   onToggleTakeover?: (leadId: number, manualTakeover: boolean) => Promise<void>;
+  onRetry?: (failedMsg: Interaction) => Promise<void>;
+  showContactPanel?: boolean;
+  onShowContactPanel?: () => void;
   className?: string;
 }
 
-export function ChatPanel({ selected, loading = false, sending, onSend, onToggleTakeover, className }: ChatPanelProps) {
+export function ChatPanel({
+  selected,
+  loading = false,
+  sending,
+  onSend,
+  onToggleTakeover,
+  onRetry,
+  showContactPanel,
+  onShowContactPanel,
+  className,
+}: ChatPanelProps) {
   const isHuman = selected?.lead.manual_takeover === true;
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevLeadId = useRef<number | null>(null);
   const prevMsgCount = useRef(0);
   const [showScrollButton, setShowScrollButton] = useState(false);
+
+  // Takeover flow state
+  const [hasConfirmedTakeover, setHasConfirmedTakeover] = useState(false);
+  const [showTakeoverConfirm, setShowTakeoverConfirm] = useState(false);
+  const [pendingDraft, setPendingDraft] = useState("");
+
+  // AI resume flow state
+  const [showAiResumeConfirm, setShowAiResumeConfirm] = useState(false);
 
   /** Scroll the chat area to the very bottom. */
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
@@ -36,15 +85,12 @@ export function ChatPanel({ selected, loading = false, sending, onSend, onToggle
     if (leadId !== prevLeadId.current) {
       prevLeadId.current = leadId;
       prevMsgCount.current = selected?.msgs.length ?? 0;
-      // Use "instant" (no animation) when switching threads so the user
-      // immediately sees the latest message instead of watching it scroll.
       setTimeout(() => scrollToBottom("instant"), 0);
       setShowScrollButton(false);
     }
   }, [selected?.lead.id, scrollToBottom]);
 
-  /** When new messages arrive in the current thread, smooth-scroll to bottom
-   *  only if the user is already near the bottom (within 200 px). */
+  /** When new messages arrive, smooth-scroll if near bottom. */
   useEffect(() => {
     const count = selected?.msgs.length ?? 0;
     if (count !== prevMsgCount.current) {
@@ -54,9 +100,7 @@ export function ChatPanel({ selected, loading = false, sending, onSend, onToggle
         const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
         if (distanceFromBottom < 200) {
           scrollToBottom("smooth");
-        }
-        // If user is far up, show the scroll-to-bottom button instead
-        else {
+        } else {
           setShowScrollButton(true);
         }
       }
@@ -73,9 +117,42 @@ export function ChatPanel({ selected, loading = false, sending, onSend, onToggle
 
   const handleSubmit = async () => {
     if (!selected || !draft.trim() || sending) return;
+
+    // If AI is still active and the user hasn't confirmed takeover this session,
+    // intercept and show confirmation first
+    if (!isHuman && !hasConfirmedTakeover) {
+      setPendingDraft(draft);
+      setDraft("");
+      setShowTakeoverConfirm(true);
+      return;
+    }
+
     const text = draft;
     setDraft("");
     await onSend(selected.lead.id, text);
+  };
+
+  const handleTakeoverConfirm = async () => {
+    if (!selected) return;
+    setHasConfirmedTakeover(true);
+    setShowTakeoverConfirm(false);
+    if (onToggleTakeover) {
+      await onToggleTakeover(selected.lead.id, true);
+    }
+    await onSend(selected.lead.id, pendingDraft);
+    setPendingDraft("");
+  };
+
+  const handleTakeoverCancel = () => {
+    setDraft(pendingDraft);
+    setPendingDraft("");
+    setShowTakeoverConfirm(false);
+  };
+
+  const handleAiResumeConfirm = async () => {
+    if (!selected || !onToggleTakeover) return;
+    setShowAiResumeConfirm(false);
+    await onToggleTakeover(selected.lead.id, false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -86,167 +163,207 @@ export function ChatPanel({ selected, loading = false, sending, onSend, onToggle
   };
 
   return (
-    <section
-      className={cn(
-        "rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col h-full transition-all duration-250 ease-out",
-        className,
-      )}
-      data-testid="panel-chat"
-    >
-      <div className="px-4 py-3 border-b border-border shrink-0" data-testid="panel-chat-head">
-        <div className="flex items-center justify-between gap-4">
-          <div className="min-w-0">
-            {loading && !selected ? (
-              <div className="space-y-1.5">
-                <div className="h-4 w-40 rounded bg-primary/10 animate-pulse" />
-                <div className="h-3 w-56 rounded bg-primary/10 animate-pulse" />
-              </div>
-            ) : (
-              <>
-                <div className="text-sm font-semibold truncate">
-                  {selected
-                    ? selected.lead.full_name ||
-                      `${selected.lead.first_name ?? ""} ${selected.lead.last_name ?? ""}`.trim()
-                    : "Select a conversation"}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {selected ? `${selected.lead.phone ?? ""} • ${selected.lead.email ?? ""}` : ""}
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            {/* AI / Human takeover toggle */}
-            {selected && onToggleTakeover && (
-              <button
-                type="button"
-                data-testid="takeover-toggle"
-                onClick={() => onToggleTakeover(selected.lead.id, !isHuman)}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
-                  isHuman
-                    ? "bg-amber-500/15 text-amber-600 border-amber-500/30 hover:bg-amber-500/25 dark:text-amber-400"
-                    : "bg-emerald-500/15 text-emerald-700 border-emerald-500/30 hover:bg-emerald-500/25 dark:text-emerald-400",
-                )}
-                title={isHuman ? "Switch back to AI mode" : "Take over from AI"}
-              >
-                {isHuman ? (
-                  <>
-                    <User className="h-3.5 w-3.5" />
-                    <span data-testid="takeover-state-label">Human Active</span>
-                  </>
-                ) : (
-                  <>
-                    <Bot className="h-3.5 w-3.5" />
-                    <span data-testid="takeover-state-label">AI Active</span>
-                  </>
-                )}
-              </button>
-            )}
-
-            {selected && (
-              <a
-                href={`/app/contacts/${selected.lead.id}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  window.history.pushState({}, "", `/app/contacts/${selected.lead.id}`);
-                  window.dispatchEvent(new PopStateEvent("popstate"));
-                }}
-                className="text-xs font-semibold text-primary hover:underline"
-              >
-                Open contact
-              </a>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Scroll container wrapper — relative so the FAB button can be positioned inside */}
-      <div className="flex-1 overflow-hidden relative">
-        <div
-          className="h-full overflow-y-auto p-4 space-y-3"
-          ref={scrollRef}
-          onScroll={handleScroll}
-          data-testid="chat-scroll"
-        >
-          {loading && !selected ? (
-            // Loading skeleton — mimics chat bubbles while data loads
-            <SkeletonChatThread data-testid="skeleton-chat-thread" />
-          ) : !selected ? (
-            <div className="flex items-center justify-center h-full">
-              <DataEmptyState
-                variant="conversations"
-                title="Select a conversation"
-                description="Pick a contact on the left to view their messages."
-                compact
-              />
-            </div>
-          ) : selected.msgs.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <DataEmptyState
-                variant="conversations"
-                title="No messages yet"
-                description="Start the conversation by sending a message below."
-                compact
-              />
-            </div>
-          ) : (() => {
-            const threadGroups = groupMessagesByThread(selected.msgs);
-            return threadGroups.map((group, gi) => (
-              <div key={group.threadId} data-testid={`thread-group-${gi}`}>
-                {/* Thread boundary divider — always shown so boundaries are always visible */}
-                <ThreadDivider group={group} total={threadGroups.length} />
-                {/* Messages within this thread in chronological order */}
-                {group.msgs.map((m) => (
-                  <ChatBubble key={m.id} item={m} />
-                ))}
-              </div>
-            ));
-          })()}
-        </div>
-
-        {/* Scroll-to-bottom floating button — appears when user has scrolled up */}
-        {showScrollButton && (
-          <button
-            type="button"
-            onClick={() => scrollToBottom("smooth")}
-            className="absolute bottom-3 right-3 z-10 flex items-center justify-center w-8 h-8 rounded-full border-2 border-white/20 bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 active:scale-[0.92] transition-all duration-150"
-            data-testid="button-scroll-to-bottom"
-            title="Scroll to latest message"
-            aria-label="Scroll to latest message"
-          >
-            <ChevronDown className="h-4 w-4" />
-          </button>
+    <>
+      <section
+        className={cn(
+          "flex flex-col rounded-lg overflow-hidden h-full relative",
+          className,
         )}
-      </div>
+        data-testid="panel-chat"
+      >
+        {/* ── Gradient background ── */}
+        <div className="absolute inset-0 bg-[#F5F1EA]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_70%_at_10%_5%,rgba(255,242,134,0.35)_0%,transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_20%,rgba(255,255,255,0.5)_0%,transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_100%_80%_at_90%_95%,rgba(79,70,229,0.30)_0%,rgba(105,170,255,0.15)_35%,transparent_65%)]" />
 
-      <div className="p-4 border-t border-border shrink-0" data-testid="chat-compose">
-        <div className="flex items-end gap-2">
-          <div className="flex-1">
-            <label className="text-xs text-muted-foreground">Manual send (takeover)</label>
-            <textarea
-              className="mt-1 w-full min-h-[44px] max-h-40 rounded-xl bg-muted/30 border border-border p-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-              placeholder={selected ? "Type a message… (Enter to send, Shift+Enter for newline)" : "Select a contact first"}
-              disabled={!selected || sending}
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={handleKeyDown}
-              data-testid="input-compose"
-            />
+        {/* ── Content above gradient ── */}
+        <div className="relative flex flex-col h-full overflow-hidden">
+
+        {/* Header */}
+        <div className="px-4 pt-5 pb-3 border-b border-border/20 shrink-0" data-testid="panel-chat-head">
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              {loading && !selected ? (
+                <div className="space-y-1.5">
+                  <div className="h-4 w-40 rounded bg-foreground/10 animate-pulse" />
+                  <div className="h-3 w-56 rounded bg-foreground/8 animate-pulse" />
+                </div>
+              ) : (
+                <>
+                  <div className="text-[15px] font-semibold font-heading truncate">
+                    {selected
+                      ? selected.lead.full_name ||
+                        `${selected.lead.first_name ?? ""} ${selected.lead.last_name ?? ""}`.trim()
+                      : "Select a conversation"}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    {selected ? `${selected.lead.phone ?? ""} • ${selected.lead.email ?? ""}` : ""}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* "Let AI continue" — only shown when human has taken over */}
+              {selected && isHuman && onToggleTakeover && (
+                <button
+                  type="button"
+                  data-testid="btn-ai-resume"
+                  onClick={() => setShowAiResumeConfirm(true)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[12px] font-medium border border-amber-500/30 bg-amber-500/15 text-amber-600 hover:bg-amber-500/25 dark:text-amber-400 transition-colors"
+                  title="Hand back to AI"
+                >
+                  <Bot className="h-4 w-4" />
+                  Let AI continue
+                </button>
+              )}
+
+              {/* View button — reopens contact panel when closed */}
+              {!showContactPanel && onShowContactPanel && (
+                <button
+                  type="button"
+                  onClick={onShowContactPanel}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[12px] font-medium border border-border/30 bg-transparent text-muted-foreground hover:bg-card hover:text-foreground transition-colors"
+                  data-testid="btn-show-contact-panel"
+                  title="Show lead context panel"
+                >
+                  <PanelRight className="h-4 w-4" />
+                  View
+                </button>
+              )}
+            </div>
           </div>
+        </div>
+
+        {/* Scroll container wrapper */}
+        <div className="flex-1 overflow-hidden relative">
+          <div
+            className="h-full overflow-y-auto p-4 space-y-3"
+            ref={scrollRef}
+            onScroll={handleScroll}
+            data-testid="chat-scroll"
+          >
+            {loading && !selected ? (
+              <SkeletonChatThread data-testid="skeleton-chat-thread" />
+            ) : !selected ? (
+              <div className="flex items-center justify-center h-full">
+                <DataEmptyState
+                  variant="conversations"
+                  title="Your conversations, one click away"
+                  description="Select a lead from the inbox to view their full message history with the AI."
+                  compact
+                />
+              </div>
+            ) : selected.msgs.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <DataEmptyState
+                  variant="conversations"
+                  title="No messages yet"
+                  description="Start the conversation by sending a message below."
+                  compact
+                />
+              </div>
+            ) : (() => {
+              const threadGroups = groupMessagesByThread(selected.msgs);
+              return threadGroups.map((group, gi) => (
+                <div key={group.threadId} data-testid={`thread-group-${gi}`}>
+                  <ThreadDivider group={group} total={threadGroups.length} />
+                  {group.msgs.map((m) => (
+                    <ChatBubble key={m.id} item={m} onRetry={onRetry} />
+                  ))}
+                </div>
+              ));
+            })()}
+          </div>
+
+          {/* Scroll-to-bottom floating button — standard 34px circle */}
+          {showScrollButton && (
+            <button
+              type="button"
+              onClick={() => scrollToBottom("smooth")}
+              className="absolute bottom-3 right-3 z-10 h-10 w-10 rounded-full border border-border/65 bg-card flex items-center justify-center text-foreground shadow-sm hover:bg-muted active:scale-[0.92] transition-all duration-150"
+              data-testid="button-scroll-to-bottom"
+              title="Scroll to latest message"
+              aria-label="Scroll to latest message"
+            >
+              <ChevronDown className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Compose area — send button embedded, matching leads ConversationWidget */}
+        <div className="p-3 flex items-end gap-2 shrink-0" data-testid="chat-compose">
+          <textarea
+            className="flex-1 text-[12px] bg-muted rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-brand-blue/30 placeholder:text-muted-foreground/50"
+            style={{ minHeight: "36px", maxHeight: "80px" }}
+            placeholder={!selected ? "Select a contact first" : isHuman ? "Taking over from AI \u2014 Enter to send" : "Type a message\u2026 (Enter to send)"}
+            disabled={!selected || sending}
+            value={draft}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              const el = e.target;
+              el.style.height = "auto";
+              el.style.height = Math.min(el.scrollHeight, 80) + "px";
+            }}
+            onKeyDown={handleKeyDown}
+            rows={1}
+            data-testid="input-compose"
+          />
           <button
             type="button"
-            className="h-11 px-4 rounded-xl bg-primary text-primary-foreground font-semibold disabled:opacity-50"
+            className="h-10 w-10 rounded-lg bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 disabled:opacity-40 shrink-0"
             disabled={!selected || !draft.trim() || sending}
             onClick={handleSubmit}
             data-testid="button-compose-send"
+            title="Send message"
           >
-            {sending ? "Sending…" : "Send"}
+            {sending ? (
+              <div className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            ) : (
+              <Send className="h-3.5 w-3.5 text-white" />
+            )}
           </button>
         </div>
-      </div>
-    </section>
+        </div>
+      </section>
+
+      {/* Human takeover confirmation dialog */}
+      <AlertDialog open={showTakeoverConfirm} onOpenChange={(open) => { if (!open) handleTakeoverCancel(); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Take over this conversation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Sending this message will switch the conversation to human mode. The AI will stop responding and you'll be in control. You won't be asked again this session.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleTakeoverCancel}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleTakeoverConfirm}>
+              Take over &amp; Send
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Let AI continue confirmation dialog */}
+      <AlertDialog open={showAiResumeConfirm} onOpenChange={setShowAiResumeConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hand back to AI?</AlertDialogTitle>
+            <AlertDialogDescription>
+              AI will resume managing this conversation from this point forward. You can always take over again by sending a message.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleAiResumeConfirm}>
+              Let AI continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
@@ -263,11 +380,7 @@ interface MessageStatusIconProps {
 function MessageStatusIcon({ isSending, isSent, isDelivered, isRead, isFailed }: MessageStatusIconProps) {
   if (isSending) {
     return (
-      <span
-        className="inline-flex items-center gap-0.5 ml-1"
-        data-testid="status-sending"
-        title="Sending…"
-      >
+      <span className="inline-flex items-center gap-0.5 ml-1" data-testid="status-sending" title="Sending…">
         <Clock className="w-3 h-3 animate-pulse opacity-70" />
         <span className="text-[10px] italic opacity-70">sending…</span>
       </span>
@@ -275,11 +388,7 @@ function MessageStatusIcon({ isSending, isSent, isDelivered, isRead, isFailed }:
   }
   if (isFailed) {
     return (
-      <span
-        className="inline-flex items-center gap-0.5 ml-1 text-destructive"
-        data-testid="status-failed"
-        title="Message failed to send"
-      >
+      <span className="inline-flex items-center gap-0.5 ml-1 text-destructive" data-testid="status-failed" title="Message failed to send">
         <AlertCircle className="w-3 h-3" />
         <span className="text-[10px] font-semibold">failed</span>
       </span>
@@ -287,33 +396,21 @@ function MessageStatusIcon({ isSending, isSent, isDelivered, isRead, isFailed }:
   }
   if (isRead) {
     return (
-      <span
-        className="inline-flex items-center ml-1 text-sky-300"
-        data-testid="status-read"
-        title="Read"
-      >
+      <span className="inline-flex items-center ml-1 text-sky-300" data-testid="status-read" title="Read">
         <CheckCheck className="w-3.5 h-3.5" />
       </span>
     );
   }
   if (isDelivered) {
     return (
-      <span
-        className="inline-flex items-center ml-1 opacity-80"
-        data-testid="status-delivered"
-        title="Delivered"
-      >
+      <span className="inline-flex items-center ml-1 opacity-80" data-testid="status-delivered" title="Delivered">
         <CheckCheck className="w-3.5 h-3.5" />
       </span>
     );
   }
   if (isSent) {
     return (
-      <span
-        className="inline-flex items-center ml-1 opacity-60"
-        data-testid="status-sent"
-        title="Sent"
-      >
+      <span className="inline-flex items-center ml-1 opacity-60" data-testid="status-sent" title="Sent">
         <Check className="w-3 h-3" />
       </span>
     );
@@ -340,35 +437,16 @@ function isHumanAgentMessage(item: Interaction): boolean {
   return true;
 }
 
-/** Returns true if this interaction is flagged as a manual follow-up by human */
-function isManualFollowUp(item: Interaction): boolean {
-  return (
-    item.is_manual_follow_up === true ||
-    item.isManualFollowUp === true
-  );
-}
-
 // ─── Thread Grouping ──────────────────────────────────────────────────────────
 
-/** A logical thread group: all messages sharing a conversation_thread_id (or inferred) */
 interface ThreadGroup {
   threadId: string;
   threadIndex: number;
   msgs: Interaction[];
 }
 
-/** 2 hours in milliseconds — gap beyond which a new thread is inferred */
 const THREAD_GAP_MS = 2 * 60 * 60 * 1000;
 
-/**
- * Groups messages into conversation threads.
- *
- * Priority order:
- *  1. If message has conversation_thread_id → use that as group key
- *  2. If message has bump_number → use "bump-{n}" as group key
- *  3. Otherwise → infer threads by significant time gaps (>2h) between consecutive messages
- *     Messages with null timestamps are treated as the same session / most recent thread.
- */
 function groupMessagesByThread(msgs: Interaction[]): ThreadGroup[] {
   if (msgs.length === 0) return [];
 
@@ -376,13 +454,12 @@ function groupMessagesByThread(msgs: Interaction[]): ThreadGroup[] {
   let currentGroup: ThreadGroup | null = null;
   let groupIndex = 0;
 
-  // Helper: derive a stable thread key for a message
   function getThreadKey(m: Interaction): string | null {
     const tid = m.conversation_thread_id ?? m.conversationThreadId;
     if (tid) return `thread-${tid}`;
     if (m.bump_number != null) return `bump-${m.bump_number}`;
     if (m.is_bump && m.Who) return `bump-who-${m.Who.toLowerCase().replace(/\s+/g, "-")}`;
-    return null; // no explicit key — use time-gap heuristic
+    return null;
   }
 
   let lastTimestamp: number | null = null;
@@ -392,16 +469,13 @@ function groupMessagesByThread(msgs: Interaction[]): ThreadGroup[] {
     const ts = m.created_at || m.createdAt;
     const currentTimestamp = ts ? new Date(ts).getTime() : null;
 
-    // Determine if we should start a new thread group
     let startNew = false;
 
     if (!currentGroup) {
       startNew = true;
     } else if (key !== null) {
-      // If the key differs from the current group's key → new group
       if (key !== currentGroup.threadId) startNew = true;
     } else {
-      // No explicit key — check time gap heuristic
       if (
         currentTimestamp !== null &&
         lastTimestamp !== null &&
@@ -409,7 +483,6 @@ function groupMessagesByThread(msgs: Interaction[]): ThreadGroup[] {
       ) {
         startNew = true;
       }
-      // If both timestamps are null → continue same group (same session / no data)
     }
 
     if (startNew) {
@@ -425,10 +498,8 @@ function groupMessagesByThread(msgs: Interaction[]): ThreadGroup[] {
   return groups;
 }
 
-/** Format a thread label shown in the divider */
 function formatThreadLabel(group: ThreadGroup, total: number): string {
   const { threadId, threadIndex } = group;
-  // Bump-based labels
   if (threadId.startsWith("bump-who-")) {
     const who = threadId.replace("bump-who-", "").replace(/-/g, " ");
     return who.charAt(0).toUpperCase() + who.slice(1);
@@ -439,15 +510,12 @@ function formatThreadLabel(group: ThreadGroup, total: number): string {
   }
   if (threadId.startsWith("thread-")) {
     const id = threadId.replace("thread-", "");
-    // If it looks like a UUID, shorten it
     return id.length > 12 ? `Thread ${threadIndex + 1}` : `Thread ${id}`;
   }
-  // session-N fallback: show "Conversation {n+1}" if more than 1 group
   if (total === 1) return "Conversation";
   return `Conversation ${threadIndex + 1}`;
 }
 
-/** Visual separator between thread groups */
 function ThreadDivider({ group, total }: { group: ThreadGroup; total: number }) {
   const label = formatThreadLabel(group, total);
   const firstMsg = group.msgs[0];
@@ -455,39 +523,56 @@ function ThreadDivider({ group, total }: { group: ThreadGroup; total: number }) 
   const dateStr = ts
     ? new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
     : null;
+  const relativeStr = ts ? formatRelativeTime(ts) : null;
+  const isBump = group.threadId.startsWith("bump-");
+
+  // Who initiated this thread?
+  const initiator = firstMsg
+    ? firstMsg.direction === "Inbound"
+      ? "Lead replied"
+      : isAiMessage(firstMsg)
+        ? "AI started"
+        : "You replied"
+    : null;
 
   return (
     <div
-      className="flex items-center gap-3 my-3"
+      className="flex items-center gap-3 my-5"
       data-testid={`thread-divider-${group.threadIndex}`}
       data-thread-id={group.threadId}
     >
-      <div className="flex-1 h-px bg-border/60" />
-      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/60 border border-border/40 text-[10px] font-semibold text-muted-foreground select-none whitespace-nowrap">
-        <MessageSquare className="w-3 h-3 shrink-0 opacity-60" />
-        <span>{label}</span>
-        {dateStr && <span className="opacity-60">· {dateStr}</span>}
+      <div className="flex-1 h-px bg-border/40" />
+      <div className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl bg-muted/80 border border-border/30">
+        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground/80 select-none whitespace-nowrap">
+          {isBump
+            ? <ArrowUpCircle className="w-3 h-3 shrink-0 text-amber-500" />
+            : <MessageSquare className="w-3 h-3 shrink-0 opacity-60" />
+          }
+          <span>{label}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground select-none">
+          {initiator && <span>{initiator}</span>}
+          {initiator && dateStr && <span>·</span>}
+          {dateStr && <span>{dateStr}</span>}
+          {relativeStr && <span className="opacity-60">({relativeStr})</span>}
+        </div>
       </div>
-      <div className="flex-1 h-px bg-border/60" />
+      <div className="flex-1 h-px bg-border/40" />
     </div>
   );
 }
 
-/** Determine media type from URL or content-type hints in the URL */
 function getAttachmentType(url: string): "image" | "video" | "audio" | "document" {
-  const lower = url.toLowerCase().split("?")[0]; // strip query params for extension check
+  const lower = url.toLowerCase().split("?")[0];
   if (/\.(jpg|jpeg|png|gif|webp|svg|bmp|avif)$/.test(lower)) return "image";
   if (/\.(mp4|mov|avi|webm|mkv|ogg)$/.test(lower)) return "video";
   if (/\.(mp3|ogg|wav|m4a|aac|opus|flac)$/.test(lower)) return "audio";
   return "document";
 }
 
-/** Inline attachment preview shown inside a chat bubble */
 function AttachmentPreview({ url, outbound }: { url: string; outbound: boolean }) {
   const [imgError, setImgError] = useState(false);
   const type = getAttachmentType(url);
-
-  // Derive a friendly filename from the URL
   const filename = decodeURIComponent(url.split("/").pop()?.split("?")[0] ?? "attachment");
 
   const linkClasses = cn(
@@ -506,13 +591,7 @@ function AttachmentPreview({ url, outbound }: { url: string; outbound: boolean }
           onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
           title="Click to open full size"
         />
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={linkClasses}
-          data-testid="attachment-link"
-        >
+        <a href={url} target="_blank" rel="noopener noreferrer" className={linkClasses} data-testid="attachment-link">
           <ExternalLink className="w-3 h-3 shrink-0" />
           <span className="truncate max-w-[200px]">{filename}</span>
         </a>
@@ -523,19 +602,8 @@ function AttachmentPreview({ url, outbound }: { url: string; outbound: boolean }
   if (type === "video") {
     return (
       <div className="mt-2" data-testid="attachment-video">
-        <video
-          src={url}
-          controls
-          className="max-w-full max-h-48 rounded-lg border border-white/20"
-          preload="metadata"
-        />
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={linkClasses}
-          data-testid="attachment-link"
-        >
+        <video src={url} controls className="max-w-full max-h-48 rounded-lg border border-white/20" preload="metadata" />
+        <a href={url} target="_blank" rel="noopener noreferrer" className={linkClasses} data-testid="attachment-link">
           <Video className="w-3 h-3 shrink-0" />
           <span className="truncate max-w-[200px]">{filename}</span>
         </a>
@@ -546,19 +614,8 @@ function AttachmentPreview({ url, outbound }: { url: string; outbound: boolean }
   if (type === "audio") {
     return (
       <div className="mt-2" data-testid="attachment-audio">
-        <audio
-          src={url}
-          controls
-          className="w-full max-w-xs rounded-lg"
-          preload="metadata"
-        />
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={linkClasses}
-          data-testid="attachment-link"
-        >
+        <audio src={url} controls className="w-full max-w-xs rounded-lg" preload="metadata" />
+        <a href={url} target="_blank" rel="noopener noreferrer" className={linkClasses} data-testid="attachment-link">
           <Music className="w-3 h-3 shrink-0" />
           <span className="truncate max-w-[200px]">{filename}</span>
         </a>
@@ -566,7 +623,6 @@ function AttachmentPreview({ url, outbound }: { url: string; outbound: boolean }
     );
   }
 
-  // Generic document/file download link
   return (
     <div className="mt-2" data-testid="attachment-document">
       <a
@@ -590,10 +646,9 @@ function AttachmentPreview({ url, outbound }: { url: string; outbound: boolean }
   );
 }
 
-function ChatBubble({ item }: { item: Interaction }) {
+function ChatBubble({ item, onRetry }: { item: Interaction; onRetry?: (failedMsg: Interaction) => Promise<void> }) {
   const outbound = item.direction === "Outbound";
   const inbound = !outbound;
-  // Normalise status to lowercase so we handle "Sent", "sent", "SENT" equally
   const statusNorm = (item.status ?? "").toLowerCase();
   const isFailed = statusNorm === "failed";
   const isSending = statusNorm === "sending";
@@ -602,75 +657,23 @@ function ChatBubble({ item }: { item: Interaction }) {
   const isRead = statusNorm === "read";
   const aiMsg = outbound && isAiMessage(item);
   const humanAgentMsg = outbound && isHumanAgentMessage(item);
-  const manualFollowUp = isManualFollowUp(item);
 
   return (
     <div className={cn("flex flex-col", outbound ? "items-end" : "items-start")}>
-      {/* Sender label above bubble */}
-      {aiMsg && (
-        <div
-          className="flex items-center gap-1 mb-1 px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 text-[10px] font-semibold border border-violet-200 dark:border-violet-700/50 select-none"
-          data-testid="ai-badge"
-          title="AI-generated message"
-        >
-          <Bot className="w-3 h-3 shrink-0" />
-          <span>AI</span>
-          {item.Who && item.Who !== "AI" && (
-            <span className="opacity-70">· {item.Who}</span>
-          )}
-        </div>
-      )}
-      {humanAgentMsg && (
-        <div
-          className="flex items-center gap-1 mb-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold border border-primary/20 select-none"
-          data-testid="agent-badge"
-          title="Human agent message"
-        >
-          <User className="w-3 h-3 shrink-0" />
-          <span>Agent</span>
-          {manualFollowUp && (
-            <span
-              className="flex items-center gap-0.5 ml-1 px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-400/30 text-[9px] font-bold"
-              data-testid="manual-follow-up-badge"
-              title="Manual follow-up message"
-            >
-              <UserCheck className="w-2.5 h-2.5 shrink-0" />
-              Manual
-            </span>
-          )}
-        </div>
-      )}
-      {inbound && (
-        <div
-          className="flex items-center gap-1 mb-1 px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-semibold border border-border select-none"
-          data-testid="lead-badge"
-          title="Message from lead"
-        >
-          <User className="w-3 h-3 shrink-0" />
-          <span>Lead</span>
-        </div>
-      )}
-
       <div
         className={cn(
           "max-w-[78%] rounded-2xl px-3 py-2 text-sm border",
-          // Inbound (lead message) — muted/neutral left-aligned bubble
-          inbound && "bg-muted/40 dark:bg-muted/70 text-foreground border-border",
-          // AI-generated outbound — violet bubble with dashed border
-          aiMsg &&
-            "bg-violet-600/90 dark:bg-violet-700/80 text-white border-dashed border-violet-400/60 dark:border-violet-500/50",
-          // Human agent outbound — primary/brand color solid bubble
-          humanAgentMsg && !manualFollowUp && "bg-primary text-primary-foreground border-primary/20",
-          // Manual follow-up by human agent — amber/warm tint to distinguish
-          humanAgentMsg && manualFollowUp && "bg-amber-500 text-white border-amber-400/40",
+          // Inbound (lead message) — clean white
+          inbound && "bg-white text-foreground border-border dark:bg-muted/80 dark:text-foreground dark:border-border",
+          // AI-generated outbound — brand blue
+          aiMsg && "bg-primary text-white border-primary/20",
+          // Human outbound — dark navy blue with white text
+          humanAgentMsg && "bg-[#166534] text-white border-[#166534]/60",
           isFailed && "border-destructive/50 opacity-80",
         )}
-        data-message-type={
-          inbound ? "lead" : aiMsg ? "ai" : manualFollowUp ? "manual-follow-up" : "agent"
-        }
+        data-message-type={inbound ? "lead" : aiMsg ? "ai" : "agent"}
       >
         <div className="whitespace-pre-wrap leading-relaxed">{item.content ?? item.Content}</div>
-        {/* Inline attachment display — image/video/audio/document */}
         {(item.attachment ?? item.Attachment) && (
           <AttachmentPreview
             url={(item.attachment ?? item.Attachment) as string}
@@ -680,14 +683,15 @@ function ChatBubble({ item }: { item: Interaction }) {
         <div
           className={cn(
             "mt-1 text-[11px] flex items-center gap-1 flex-wrap",
-            outbound ? "text-white/70" : "text-muted-foreground opacity-70 dark:opacity-90",
+            outbound ? "opacity-70" : "text-muted-foreground opacity-70 dark:opacity-90",
+            // Adjust timestamp color for navy bubble
+            humanAgentMsg && "text-white/60",
           )}
         >
           {item.created_at || item.createdAt
             ? new Date(item.created_at ?? item.createdAt).toLocaleString()
             : ""}{" "}
-          • {item.type}
-          {/* Message delivery status icons — outbound messages only */}
+          {"\u2022"} {item.type}
           {outbound && (
             <MessageStatusIcon
               status={statusNorm}
@@ -698,7 +702,27 @@ function ChatBubble({ item }: { item: Interaction }) {
               isFailed={isFailed}
             />
           )}
+          {isFailed && onRetry && (
+            <button
+              type="button"
+              onClick={() => onRetry(item)}
+              className="inline-flex items-center gap-0.5 ml-1 text-[10px] font-semibold text-destructive hover:text-destructive/80 underline underline-offset-2 cursor-pointer"
+              data-testid="button-retry-message"
+              title="Retry sending this message"
+            >
+              <RotateCcw className="w-3 h-3" />
+              Retry
+            </button>
+          )}
         </div>
+      </div>
+      {/* Sender label below bubble */}
+      <div className={cn(
+        "mt-0.5 text-[9px] font-medium select-none",
+        outbound ? "text-right" : "text-left",
+        "text-muted-foreground/50"
+      )}>
+        {inbound ? "Lead" : aiMsg ? (item.ai_model ? `AI (${item.ai_model})` : "AI") : "You"}
       </div>
     </div>
   );

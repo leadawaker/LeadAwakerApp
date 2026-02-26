@@ -31,6 +31,19 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /config/workspace/LeadAwakerApp/.claude/tsc-check.sh",
+            "timeout": 30,
+            "statusMessage": "Checking TypeScript..."
+          }
+        ]
+      }
     ]
   }
 }

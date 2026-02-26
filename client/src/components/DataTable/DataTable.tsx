@@ -1380,7 +1380,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                   <Filter className="h-4 w-4" />
                   <span>Filter</span>
                   {filterCount > 0 && (
-                    <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-brand-blue">
+                    <Badge className="absolute -top-2 -right-2 h-4 w-4 flex items-center justify-center p-0 bg-brand-blue">
                       {filterCount}
                     </Badge>
                   )}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { fetchCampaigns, updateCampaign } from "../api/campaignsApi";
 import { fetchAccounts } from "../../accounts/api/accountsApi";
 import { useToast } from "@/hooks/use-toast";
@@ -15,8 +15,15 @@ export function useCampaignsData(accountId?: number) {
     setLoading(true);
     setError(null);
     try {
-      const accountsList = await fetchAccounts();
-      setAccounts(accountsList);
+      // Fetch accounts for name resolution — failure here must NOT block campaigns loading.
+      // Non-agency users get 403 on /api/accounts, but can still view campaigns.
+      let accountsList: any[] = [];
+      try {
+        accountsList = await fetchAccounts();
+        setAccounts(accountsList);
+      } catch {
+        // Silently ignore — campaigns will show with "Unknown Account" for account names
+      }
 
       const campaignsList = await fetchCampaigns(accountId);
       

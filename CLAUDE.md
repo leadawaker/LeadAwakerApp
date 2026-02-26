@@ -10,34 +10,15 @@ Lead Awaker is an AI-powered WhatsApp lead reactivation engine with a CRM and cl
 
 ## Active Branch
 
-The UI redesign (leads page, sidebar tooltip, etc.) is being developed on the **`feat/leads-redesign`** branch.
+The UI redesign is being developed on **`feat/leads-redesign`**.
 - `main` = stable, production-safe
-- `feat/leads-redesign` = active redesign work — always use this branch for UI changes until merged
-
-To check current branch: `git branch`
-To switch back if needed: `git checkout feat/leads-redesign`
-When the redesign is approved, merge into main: `git checkout main && git merge feat/leads-redesign`
+- `feat/leads-redesign` = active redesign — always use this branch for UI changes until merged
 
 ---
 
 ## Tech Stack
 
-**Frontend:**
-- React 19 with TypeScript
-- Vite 7
-- Tailwind CSS v4
-- Shadcn/ui + Radix UI
-- TanStack Query (data fetching)
-- Wouter (routing)
-- @dnd-kit (drag and drop)
-- Recharts (charts)
-- react-resizable-panels
-
-**Backend (do not modify Express logic):**
-- Node.js / Express
-- PostgreSQL (schema: `p2mxx34fvbf3ll6`, 11 tables, 315+ columns)
-- n8n workflows
-- Twilio (WhatsApp/SMS)
+Primary: React 19, TypeScript, Vite 7, Tailwind CSS v4, shadcn/ui, TanStack Query, Wouter, @dnd-kit. Backend: Node.js/Express + PostgreSQL (locked — do not modify). See `package.json` for full dependency list.
 
 **API:** REST — use `apiFetch` from `apiUtils.ts` and `apiRequest` from `queryClient.ts` for all API calls.
 
@@ -57,23 +38,9 @@ When the redesign is approved, merge into main: `git checkout main && git merge 
 
 ---
 
-## Database Tables
+## Database
 
-| Table | Description |
-|-------|-------------|
-| `Accounts` | Organization/client config, Twilio integration, AI preferences, business settings |
-| `Leads` | Prospects with engagement tracking, lead scoring (0–100), bump stages, pipeline status |
-| `Campaigns` | Messaging campaigns with AI templates, bump configs, performance metrics |
-| `Interactions` | Individual messages/communications with analytics |
-| `Users` | Team members with authentication, roles, invite system |
-| `Tags` | Lead classification with categories, colors, auto-apply rules |
-| `Leads_Tags` | Many-to-many junction: Leads ↔ Tags |
-| `Automation_Logs` | n8n workflow execution tracking with error flagging |
-| `Prompt_Library` | AI prompt templates with versioning and performance scores |
-| `Lead_Score_History` | Lead scoring trends over time |
-| `Campaign_Metrics_History` | Daily campaign performance snapshots for ROI analysis |
-
-Full schema reference: `/home/gabriel/LEADAWAKER_DATABASE_SCHEMA.md`
+Key tables: `Leads`, `Campaigns`, `Accounts`, `Interactions`, `Tags`, `Users`, `Leads_Tags`, `Automation_Logs`, `Prompt_Library`, `Lead_Score_History`, `Campaign_Metrics_History`. Full schema: `/home/gabriel/LEADAWAKER_DATABASE_SCHEMA.md`
 
 ---
 
@@ -97,62 +64,23 @@ All API calls must include account scoping for subaccount users (Manager/Viewer)
 
 ---
 
-## Design System
+## Design System & UI Standards
 
-- **North Star KPI:** Calls Booked — must be the most prominent element on the Dashboard
-- **Mental Model:** Accounts → Campaigns → Leads → Interactions → Pipeline Movement
-- **Default Pipeline:** New → Contacted → Responded → Multiple Responses → Qualified → Call Booked → Lost → DND
-- **Typography:** Inter (body), Outfit (headings)
-- **Style Reference:** Modern Salesforce / Linear / Premium SaaS
-- **Performance:** Lightweight, virtualized, Raspberry Pi–friendly (no heavy animations, use virtualized tables for large datasets)
+> **Canonical reference: [`UI_STANDARDS.md`](UI_STANDARDS.md)** — READ THIS FILE before any frontend/UI work.
+> It contains the complete color system, component patterns, spacing rules, animation standards, and coding rules.
+> If a rule exists in `UI_STANDARDS.md`, it overrides anything else.
 
-### Color Palette
+**Key brand colors (see `UI_STANDARDS.md` §2 for full palette):**
+- Primary: Indigo `#4F46E5` — buttons, links, focus rings, CTAs
+- KPI accent: Yellow `#FCB803` — Call Booked highlights, badges, data emphasis
+- UI highlights: Indian Yellow `#E3A857` derived tints — active pills, selected cards, nav highlights
+- Deep Blue: `#131B49` — text on yellow, strong emphasis
 
-**Brand:**
-| Token | Hex | Usage |
-|-------|-----|-------|
-| Blue | `#5170FF` | Primary actions, active states |
-| Deep Blue | `#131B49` | Sidebar, headers, dark accents |
-| Yellow | `#FCB803` | Call Booked highlight, important alerts |
-| Soft Yellow | `#FCCA47` | Secondary highlights |
+**Banned colors:** `#FFF375` (lime yellow), `#FFF6C8` (lime cream), `#5170FF` (old periwinkle blue).
 
-**Base / Neutrals:**
-| Token | Hex | Usage |
-|-------|-----|-------|
-| White | `#FFFFFF` | Card backgrounds, surfaces |
-| Light Gray | `#F8F9FA` | Page backgrounds |
-| Medium Gray | `#E5E7EB` | Borders, dividers |
-| Dark Gray | `#374151` | Secondary text |
-| Near Black | `#111827` | Primary text |
-
-**Dark Mode:** Use brand-tinted dark surfaces (not pure black). Soft gray backgrounds with proper contrast. Adjust brand colors for legibility on dark backgrounds.
-
-**Glassmorphism:** Only on decorative accents. Never on functional data surfaces (pipeline cards, tables, chat bubbles).
+**Performance:** Lightweight, virtualized, Raspberry Pi–friendly (no heavy animations, virtualized tables for large datasets).
 
 ---
-
-## Product Identity
-
-**Lead Awaker IS:**
-- A Lead Reactivation Engine
-- A Pipeline-centric system
-- An Automation-first platform
-- An Observability dashboard
-
-**Lead Awaker IS NOT:**
-- A generic CRM
-- A deal management system
-- A marketing automation suite
-- An email marketing tool
-
-## Design Priorities
-
-When making tradeoffs, apply this order:
-1. Pipeline visibility
-2. Perceived speed
-3. Cognitive clarity
-4. Operational efficiency
-5. Professional SaaS polish
 
 ## Folder Structure
 
@@ -171,6 +99,8 @@ client/src/
 └── lib/              ← Utilities, API helpers
 ```
 
+See `FILE_MAP.md` in project root for a quick-lookup index of every key component file.
+
 ---
 
 ## API Conventions
@@ -183,24 +113,12 @@ client/src/
 
 ---
 
-## Feature Categories
+## Feature-Specific Guides
 
-Features are organized into these categories:
+- **[`EXPENSES.md`](EXPENSES.md)** — Expenses tab (Billing section): PostgreSQL table, Dutch BTW/VAT logic, OpenAI PDF parsing, disk storage, frontend architecture. **Read this before touching anything expenses-related.**
 
-- **Infrastructure** (indices 0–7) — API health, DB connectivity, role-aware filtering, error handling
-- **App Shell & Navigation** — Layout, sidebar, topbar, account switcher
-- **Dashboard** — KPI cards, charts, calls booked prominence
-- **Leads — Shared** — Search, filters, bulk select, bulk actions, view toggle (shared between Kanban and Table)
-- **Leads — Kanban** — Columns, drag-drop, cards, hover preview
-- **Leads — Table** — Virtualized rendering, column config, CSV export, grouping
-- **Lead Detail Panel** — Full lead info, interaction history, tags, pipeline actions
-- **Chats / Inbox** — Conversation view, WhatsApp message thread, AI intervention
-- **Campaigns** — Campaign list, metrics, configuration
-- **Calendar** — Drag-and-drop booking, time slots
-- **Accounts** — Account management (admin only)
-- **Users** — User management, invite system (admin only)
-- **Tags** — Tag CRUD, color/category config
-- **Prompt Library** — AI prompt templates, versioning
-- **Automation Logs** — n8n execution history, error flags
-- **Settings** — Account-level settings
-- **Design System & Polish** — Theming, dark mode, responsive breakpoints, micro-interactions
+---
+
+## Active Implementation Plans
+
+- **`contract_plan.md`** (project root) — Contract Deal Structure feature: schema additions for `deal_type`/`value_per_booking`/`payment_trigger` on contracts, campaign→contract reference, Financials widget ROI redesign, Billing Expenses tab, Plus button move, and role-access updates. **If this topic comes up, read `contract_plan.md` first.** Delete `contract_plan.md` once all tasks in it are verified complete.

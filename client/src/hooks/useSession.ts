@@ -39,9 +39,8 @@ export function useSession(): SessionState {
           if (user.fullName) {
             localStorage.setItem("leadawaker_user_name", user.fullName);
           }
-          if (user.avatarUrl) {
-            localStorage.setItem("leadawaker_user_avatar", user.avatarUrl);
-          }
+          localStorage.setItem("leadawaker_user_avatar", user.avatarUrl ?? "");
+          window.dispatchEvent(new Event("leadawaker-avatar-changed"));
           localStorage.setItem(
             "leadawaker_current_account_id",
             String(user.accountsId ?? 1),

@@ -179,7 +179,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
           <Filter className="h-4 w-4" />
           <span>Filter</span>
           {activeCount > 0 && (
-            <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-brand-blue">
+            <Badge className="absolute -top-2 -right-2 h-4 w-4 flex items-center justify-center p-0 bg-brand-blue">
               {activeCount}
             </Badge>
           )}

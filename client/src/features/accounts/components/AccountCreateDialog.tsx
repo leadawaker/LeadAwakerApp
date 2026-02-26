@@ -173,7 +173,7 @@ export function AccountCreateDialog({
         <DialogHeader>
           <div className="flex items-start gap-3 pr-6">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-              <Plus className="h-5 w-5 text-primary" />
+              <Plus className="h-4 w-4 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
               <DialogTitle className="text-xl font-semibold">

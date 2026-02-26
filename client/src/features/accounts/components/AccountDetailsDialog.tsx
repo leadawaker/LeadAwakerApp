@@ -74,6 +74,9 @@ export interface AccountRow {
   service_categories?: string;
   opt_out_keyword?: string;
   data_collection_disclosure?: string;
+  address?: string | null;
+  tax_id?: string | null;
+  logo_url?: string | null;
 }
 
 interface AccountDetailsDialogProps {
@@ -494,7 +497,7 @@ export function AccountDetailsDialog({
   const headerContent = (
     <div className="flex items-start gap-3">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-        <Building2 className="h-5 w-5 text-primary" />
+        <Building2 className="h-4 w-4 text-primary" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-xl font-semibold truncate leading-tight">

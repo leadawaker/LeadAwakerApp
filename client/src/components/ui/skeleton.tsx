@@ -35,7 +35,7 @@ function SkeletonBadge({ className, ...props }: React.HTMLAttributes<HTMLDivElem
 
 /** Icon-sized square placeholder */
 function SkeletonIcon({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <Skeleton className={cn("h-5 w-5 rounded", className)} {...props} />
+  return <Skeleton className={cn("h-4 w-4 rounded", className)} {...props} />
 }
 
 /** Card placeholder with header, body lines, and optional footer */

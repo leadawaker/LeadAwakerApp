@@ -5,7 +5,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import { TrendingUp, CalendarIcon, MessageSquare, Megaphone, DollarSign, BarChart3 } from "lucide-react";
+import { TrendingUp, TrendingDown, CalendarIcon, MessageSquare, Megaphone, BarChart3 } from "lucide-react";
 import type { Campaign, CampaignMetricsHistory } from "@/types/models";
 import { cn } from "@/lib/utils";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
@@ -136,15 +136,28 @@ export function CampaignPerformanceCards({
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="rounded-2xl border border-border bg-card p-5 shadow-sm animate-pulse"
+            className="rounded-2xl border border-border bg-card p-4 shadow-sm animate-pulse min-h-[180px]"
           >
-            <div className="h-4 w-2/3 bg-muted rounded mb-4" />
-            <div className="h-8 w-full bg-muted rounded mb-3" />
-            <div className="h-4 w-1/2 bg-muted rounded" />
+            <div className="flex items-center justify-between mb-3">
+              <div className="h-3.5 w-1/2 bg-muted rounded" />
+              <div className="h-5 w-14 bg-muted rounded-full" />
+            </div>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="space-y-1.5">
+                <div className="h-2.5 w-16 bg-muted rounded" />
+                <div className="h-6 w-12 bg-muted rounded" />
+              </div>
+              <div className="space-y-1.5">
+                <div className="h-2.5 w-16 bg-muted rounded" />
+                <div className="h-6 w-12 bg-muted rounded" />
+              </div>
+            </div>
+            <div className="h-2.5 w-full bg-muted rounded mb-3" />
+            <div className="h-8 w-full bg-muted rounded" />
           </div>
         ))}
       </div>
@@ -182,15 +195,14 @@ export function CampaignPerformanceCards({
           Campaign Performance
         </h3>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {campaignsWithMetrics.map((campaign) => {
           const cMetrics = metricsByCampaign[campaign.id] || [];
           const statusColor = getStatusColor(campaign.status);
 
-          // Prepare sparkline data
+          // Prepare sparkline data (booking rate only)
           const sparkData = cMetrics.map((m) => ({
             date: m.metric_date ? m.metric_date.substring(5) : "",
-            response_rate: m.response_rate_percent,
             booking_rate: m.booking_rate_percent,
           }));
 
@@ -202,33 +214,33 @@ export function CampaignPerformanceCards({
           const totalMsgsSent = cMetrics.reduce((s, m) => s + m.total_messages_sent, 0);
           const totalBookings = cMetrics.reduce((s, m) => s + m.bookings_generated, 0);
 
-          // Cost metrics — use latest metric entry values (most recent snapshot)
+          // ROI — use latest metric entry value
           const latestMetric = cMetrics.length > 0 ? cMetrics[cMetrics.length - 1] : null;
-          const costPerLead = latestMetric ? Number(latestMetric.cost_per_lead) || 0 : 0;
-          const costPerBooking = latestMetric ? Number(latestMetric.cost_per_booking) || 0 : 0;
           const roiPercent = latestMetric ? Number(latestMetric.roi_percent) || 0 : 0;
 
           return (
             <div
               key={campaign.id}
-              className={cn(
-                "rounded-2xl border border-border bg-card p-5 shadow-sm",
-                "hover:shadow-md hover:border-border transition-all duration-200"
-              )}
+              className="rounded-2xl border border-border bg-card p-4 shadow-sm hover:shadow-md hover:border-border/90 transition-[box-shadow,border-color] duration-200 min-h-[180px] flex flex-col"
               data-testid={`campaign-card-${campaign.id}`}
             >
-              {/* Header */}
-              <div className="flex items-start justify-between mb-4">
+              {/* Header — name + type dot + status badge */}
+              <div className="flex items-start justify-between mb-3">
                 <div className="min-w-0 flex-1">
-                  <h4 className="text-sm font-bold text-foreground truncate" title={campaign.name}>
+                  <h4 className="text-sm font-bold text-foreground truncate leading-snug" title={campaign.name}>
                     {campaign.name}
                   </h4>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {campaign.type || "Campaign"} &middot; {cMetrics.length} days tracked
+                  <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                    <span
+                      className="inline-block h-1.5 w-1.5 rounded-full shrink-0"
+                      style={{ backgroundColor: statusColor }}
+                      aria-hidden="true"
+                    />
+                    {campaign.type || "Campaign"}
                   </p>
                 </div>
                 <span
-                  className="shrink-0 ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
+                  className="shrink-0 ml-2 mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide"
                   style={{
                     backgroundColor: `${statusColor}20`,
                     color: statusColor,
@@ -239,157 +251,127 @@ export function CampaignPerformanceCards({
                 </span>
               </div>
 
-              {/* Metrics Row */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              {/* Key Metrics Row — Response Rate | Booking Rate */}
+              <div className="grid grid-cols-2 gap-3 mb-3">
                 {/* Response Rate */}
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3 text-blue-500" />
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                      Response Rate
-                    </span>
-                  </div>
-                  <div className="flex items-baseline gap-1.5">
+                <div>
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Response
+                  </span>
+                  <div className="flex items-baseline gap-1.5 mt-0.5">
                     <span
-                      className="text-xl font-black text-foreground tabular-nums"
+                      className="text-2xl font-black text-foreground tabular-nums leading-none"
                       data-testid={`campaign-response-rate-${campaign.id}`}
                     >
                       {respTrend.current}%
                     </span>
                     {respTrend.trend !== null && (
-                      <span
-                        className={cn(
-                          "text-[10px] font-bold",
-                          respTrend.trend >= 0 ? "text-green-500" : "text-red-500"
-                        )}
-                      >
-                        {respTrend.trend >= 0 ? "+" : ""}
-                        {respTrend.trend}%
-                      </span>
+                      <TrendArrow trend={respTrend.trend} />
                     )}
                   </div>
                 </div>
 
                 {/* Booking Rate */}
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1">
-                    <CalendarIcon className="w-3 h-3 text-amber-500" />
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                      Booking Rate
-                    </span>
-                  </div>
-                  <div className="flex items-baseline gap-1.5">
+                <div>
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Booked
+                  </span>
+                  <div className="flex items-baseline gap-1.5 mt-0.5">
                     <span
-                      className="text-xl font-black text-foreground tabular-nums"
+                      className="text-2xl font-black text-foreground tabular-nums leading-none"
                       data-testid={`campaign-booking-rate-${campaign.id}`}
                     >
                       {bookTrend.current}%
                     </span>
                     {bookTrend.trend !== null && (
-                      <span
-                        className={cn(
-                          "text-[10px] font-bold",
-                          bookTrend.trend >= 0 ? "text-green-500" : "text-red-500"
-                        )}
-                      >
-                        {bookTrend.trend >= 0 ? "+" : ""}
-                        {bookTrend.trend}%
-                      </span>
+                      <TrendArrow trend={bookTrend.trend} />
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* Sparklines */}
-              <div className="space-y-2 mb-3">
+              {/* Secondary Metrics Row — Messages Sent | Bookings | ROI */}
+              <div className="grid grid-cols-3 gap-2 mb-3 pt-2.5 border-t border-border/50">
                 <div>
-                  <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">
-                    Response Rate Trend
+                  <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Sent
+                  </span>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <MessageSquare className="w-3 h-3 text-muted-foreground/60 shrink-0" />
+                    <span className="text-[13px] font-bold text-foreground tabular-nums">
+                      {totalMsgsSent}
+                    </span>
                   </div>
-                  <Sparkline
-                    data={sparkData}
-                    dataKey="response_rate"
-                    color="#3B82F6"
-                    height={36}
-                  />
                 </div>
+
                 <div>
-                  <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">
-                    Booking Rate Trend
-                  </div>
-                  <Sparkline
-                    data={sparkData}
-                    dataKey="booking_rate"
-                    color="#FCB803"
-                    height={36}
-                  />
-                </div>
-              </div>
-
-              {/* Cost Metrics Row */}
-              <div className="grid grid-cols-3 gap-2 mb-3 pt-3 border-t border-border">
-                {/* Cost per Lead */}
-                <div className="space-y-0.5" data-testid={`campaign-cost-per-lead-${campaign.id}`}>
-                  <div className="flex items-center gap-1">
-                    <DollarSign className="w-3 h-3 text-emerald-500" />
-                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
-                      Per Lead
+                  <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Bookings
+                  </span>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <CalendarIcon className="w-3 h-3 text-muted-foreground/60 shrink-0" />
+                    <span className="text-[13px] font-bold text-foreground tabular-nums">
+                      {totalBookings}
                     </span>
-                  </div>
-                  <div className="text-base font-black text-foreground tabular-nums">
-                    ${costPerLead.toFixed(2)}
                   </div>
                 </div>
 
-                {/* Cost per Booking */}
-                <div className="space-y-0.5" data-testid={`campaign-cost-per-booking-${campaign.id}`}>
-                  <div className="flex items-center gap-1">
-                    <DollarSign className="w-3 h-3 text-orange-500" />
-                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
-                      Per Booking
+                <div data-testid={`campaign-roi-percent-${campaign.id}`}>
+                  <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    ROI
+                  </span>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <BarChart3 className="w-3 h-3 text-muted-foreground/60 shrink-0" />
+                    <span
+                      className={cn(
+                        "text-[13px] font-bold tabular-nums",
+                        roiPercent >= 100
+                          ? "text-emerald-500"
+                          : roiPercent >= 50
+                          ? "text-amber-500"
+                          : "text-foreground"
+                      )}
+                    >
+                      {roiPercent > 0 ? `${roiPercent.toFixed(0)}%` : "—"}
                     </span>
-                  </div>
-                  <div className="text-base font-black text-foreground tabular-nums">
-                    {costPerBooking > 0 ? `$${costPerBooking.toFixed(2)}` : "—"}
-                  </div>
-                </div>
-
-                {/* ROI % */}
-                <div className="space-y-0.5" data-testid={`campaign-roi-percent-${campaign.id}`}>
-                  <div className="flex items-center gap-1">
-                    <BarChart3 className="w-3 h-3 text-purple-500" />
-                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
-                      ROI
-                    </span>
-                  </div>
-                  <div
-                    className={cn(
-                      "text-base font-black tabular-nums",
-                      roiPercent >= 100 ? "text-emerald-500" : roiPercent >= 50 ? "text-amber-500" : "text-foreground"
-                    )}
-                  >
-                    {roiPercent > 0 ? `${roiPercent.toFixed(0)}%` : "—"}
                   </div>
                 </div>
               </div>
 
-              {/* Footer Stats */}
-              <div className="flex items-center justify-between pt-3 border-t border-border">
-                <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <MessageSquare className="w-3 h-3" />
-                  <span className="font-semibold">{totalMsgsSent}</span>
-                  <span>msgs sent</span>
-                </div>
-                <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <CalendarIcon className="w-3 h-3" />
-                  <span className="font-semibold">{totalBookings}</span>
-                  <span>bookings</span>
-                </div>
+              {/* Booking Rate Sparkline — unlabeled, subtle, at the bottom */}
+              <div className="mt-auto pt-1">
+                <Sparkline
+                  data={sparkData}
+                  dataKey="booking_rate"
+                  color="#FCB803"
+                  height={32}
+                />
               </div>
             </div>
           );
         })}
       </div>
     </div>
+  );
+}
+
+/** Inline trend arrow with delta text — up/down color coded. */
+function TrendArrow({ trend }: { trend: number }) {
+  const isUp = trend >= 0;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-0.5 text-[10px] font-bold leading-none",
+        isUp ? "text-emerald-500" : "text-red-500"
+      )}
+    >
+      {isUp ? (
+        <TrendingUp className="w-2.5 h-2.5" />
+      ) : (
+        <TrendingDown className="w-2.5 h-2.5" />
+      )}
+      {isUp ? "+" : ""}
+      {trend}%
+    </span>
   );
 }

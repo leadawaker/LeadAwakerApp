@@ -1,12 +1,12 @@
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
   Pencil,
   Check,
   X,
-  Trash2,
   ChevronDown,
   ChevronRight,
+  Tag as TagIcon,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -16,9 +16,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { updateLead, bulkDeleteLeads, bulkUpdateLeads } from "../api/leadsApi";
+import { updateLead, bulkUpdateLeads } from "../api/leadsApi";
+import { resolveColor } from "@/features/tags/types";
 import type { VirtualListItem } from "./LeadsCardView";
-import { getStatusAvatarColor, PIPELINE_HEX } from "./LeadsCardView";
+import { getStatusAvatarColor, PIPELINE_HEX, ListScoreRing } from "./LeadsCardView";
 
 // ── Column definitions ─────────────────────────────────────────────────────────
 type ColKey =
@@ -91,16 +92,6 @@ function getScore(lead: Record<string, any>): number {
 }
 function getStatus(lead: Record<string, any>): string {
   return lead.conversion_status || lead.Conversion_Status || "";
-}
-function getScorePastelBg(score: number): string {
-  const t = Math.max(0, Math.min(1, score / 100));
-  const h = Math.round(229 - t * (229 - 45));
-  return `hsl(${h}, 55%, 88%)`;
-}
-function getScoreDarkText(score: number): string {
-  const t = Math.max(0, Math.min(1, score / 100));
-  const h = Math.round(229 - t * (229 - 45));
-  return `hsl(${h}, 75%, 36%)`;
 }
 function formatRelativeTime(dateStr: string | null | undefined): string {
   if (!dateStr) return "";
@@ -217,12 +208,14 @@ interface LeadsInlineTableProps {
   loading: boolean;
   selectedLeadId: number | null;
   onSelectLead: (lead: Record<string, any>) => void;
-  leadTagsInfo: Map<number, { name: string; color: string }[]>;
   onRefresh?: () => void;
   /** Visible column keys — managed by parent (persistent via localStorage) */
   visibleCols: Set<string>;
   /** Text search — managed by parent (rendered inline with tabs) */
   tableSearch: string;
+  /** Multi-select state — lifted to parent */
+  selectedIds: Set<number>;
+  onSelectionChange: (ids: Set<number>) => void;
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
@@ -231,10 +224,11 @@ export function LeadsInlineTable({
   loading,
   selectedLeadId,
   onSelectLead,
-  leadTagsInfo,
   onRefresh,
   visibleCols,
   tableSearch,
+  selectedIds,
+  onSelectionChange,
 }: LeadsInlineTableProps) {
 
   // ── Editing state ─────────────────────────────────────────────────────────
@@ -244,12 +238,14 @@ export function LeadsInlineTable({
   const [saveError,      setSaveError]      = useState<{ leadId: number; field: ColKey } | null>(null);
   const [localOverrides, setLocalOverrides] = useState<Map<number, Partial<Record<ColKey, string>>>>(new Map());
 
-  // ── Multi-select state ─────────────────────────────────────────────────────
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  // ── Shift-click ref ────────────────────────────────────────────────────────
   const lastClickedIndexRef = useRef<number>(-1);
 
-  // ── Dialogs ────────────────────────────────────────────────────────────────
-  const [deleting,      setDeleting]      = useState(false);
+  // ── Table pagination ─────────────────────────────────────────────────────
+  const TABLE_PAGE_SIZE = 50;
+  const [tablePage, setTablePage] = useState(0);
+
+  // ── Bulk stage change (still in inline table) ──────────────────────────────
   const [bulkStageOpen, setBulkStageOpen] = useState(false);
 
   // ── Group collapse ─────────────────────────────────────────────────────────
@@ -267,7 +263,7 @@ export function LeadsInlineTable({
     () => ALL_TABLE_COLUMNS.filter((c) => visibleCols.has(c.key)),
     [visibleCols]
   );
-  const colSpan = visibleColumns.length;
+  const colSpan = visibleColumns.length + 1; // +1 for select-all checkbox column
 
   // ── Filter by text search (parent manages sort/filter; we only do text) ───
   const displayItems = useMemo(() => {
@@ -297,8 +293,7 @@ export function LeadsInlineTable({
     [displayItems],
   );
 
-  const leadCount  = leadOnlyItems.length;
-  const hasSelection = selectedIds.size > 0;
+  const leadCount = leadOnlyItems.length;
 
   // ── getCellValue ──────────────────────────────────────────────────────────
   function getCellValue(lead: Record<string, any>, field: ColKey): string {
@@ -370,61 +365,126 @@ export function LeadsInlineTable({
   }, []);
 
   // ── Row click handler ──────────────────────────────────────────────────────
+  // Simple click = single select + open detail (checkbox checked)
+  // Ctrl+Click = toggle selection (multi-select)
+  // Shift+Click = range select
   const handleRowClick = useCallback((lead: Record<string, any>, e: React.MouseEvent) => {
     const leadId = getLeadId(lead);
     const idx    = leadIndexMap.get(leadId) ?? -1;
 
-    if (e.ctrlKey || e.metaKey) {
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        if (next.has(leadId)) next.delete(leadId); else next.add(leadId);
-        return next;
-      });
-      lastClickedIndexRef.current = idx;
-    } else if (e.shiftKey && lastClickedIndexRef.current >= 0) {
+    if (e.shiftKey && lastClickedIndexRef.current >= 0) {
       const lo = Math.min(lastClickedIndexRef.current, idx);
       const hi = Math.max(lastClickedIndexRef.current, idx);
       const rangeIds = leadOnlyItems.slice(lo, hi + 1).map((item) => getLeadId(item.lead));
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        rangeIds.forEach((id) => next.add(id));
-        return next;
-      });
+      const next = new Set(selectedIds);
+      rangeIds.forEach((id) => next.add(id));
+      onSelectionChange(next);
+      if (next.size === 1) {
+        const only = leadOnlyItems.find((i) => getLeadId(i.lead) === Array.from(next)[0]);
+        if (only) onSelectLead(only.lead);
+      }
+    } else if (e.ctrlKey || e.metaKey) {
+      const next = new Set(selectedIds);
+      if (next.has(leadId)) next.delete(leadId); else next.add(leadId);
+      onSelectionChange(next);
+      if (next.size === 1) {
+        const only = leadOnlyItems.find((i) => getLeadId(i.lead) === Array.from(next)[0]);
+        if (only) onSelectLead(only.lead);
+      }
+      lastClickedIndexRef.current = idx;
     } else {
+      // Simple click: single select + open detail
+      onSelectionChange(new Set([leadId]));
       onSelectLead(lead);
-      setSelectedIds(new Set());
       lastClickedIndexRef.current = idx;
     }
-  }, [leadIndexMap, leadOnlyItems, onSelectLead]);
+  }, [leadIndexMap, leadOnlyItems, onSelectLead, onSelectionChange, selectedIds]);
 
-  // ── Bulk actions ───────────────────────────────────────────────────────────
-  const handleBulkDelete = useCallback(async () => {
-    if (selectedIds.size === 0) return;
-    setDeleting(true);
-    try {
-      await bulkDeleteLeads(Array.from(selectedIds));
-      setSelectedIds(new Set());
-      onRefresh?.();
-    } catch (err) { console.error("Bulk delete failed", err); }
-    finally { setDeleting(false); }
-  }, [selectedIds, onRefresh]);
-
+  // ── Bulk stage change (still useful as inline action) ──────────────────────
   const handleBulkStageChange = useCallback(async (stage: string) => {
     if (selectedIds.size === 0) return;
     try {
       await bulkUpdateLeads(Array.from(selectedIds), { Conversion_Status: stage });
-      setSelectedIds(new Set());
+      onSelectionChange(new Set());
       setBulkStageOpen(false);
       onRefresh?.();
     } catch (err) { console.error("Bulk stage change failed", err); }
-  }, [selectedIds, onRefresh]);
+  }, [selectedIds, onRefresh, onSelectionChange]);
+
+  // ── Select-all toggle ───────────────────────────────────────────────────
+  const allLeadIds = useMemo(() => leadOnlyItems.map((i) => getLeadId(i.lead)), [leadOnlyItems]);
+  const allSelected = leadCount > 0 && allLeadIds.every((id) => selectedIds.has(id));
+  const someSelected = !allSelected && allLeadIds.some((id) => selectedIds.has(id));
+
+  const handleSelectAll = useCallback(() => {
+    if (allSelected) {
+      onSelectionChange(new Set());
+    } else {
+      onSelectionChange(new Set(allLeadIds));
+    }
+  }, [allSelected, allLeadIds, onSelectionChange]);
+
+  const getGroupLeadIds = useCallback((groupLabel: string): number[] => {
+    const ids: number[] = [];
+    let inGroup = false;
+    for (const item of displayItems) {
+      if (item.kind === "header") {
+        inGroup = item.label === groupLabel;
+        continue;
+      }
+      if (inGroup && item.kind === "lead") {
+        ids.push(getLeadId(item.lead));
+      }
+    }
+    return ids;
+  }, [displayItems]);
+
+  const handleGroupCheckbox = useCallback((groupLabel: string) => {
+    const groupIds = getGroupLeadIds(groupLabel);
+    const allInGroupSelected = groupIds.every((id) => selectedIds.has(id));
+    const next = new Set(selectedIds);
+    if (allInGroupSelected) {
+      groupIds.forEach((id) => next.delete(id));
+    } else {
+      groupIds.forEach((id) => next.add(id));
+    }
+    onSelectionChange(next);
+  }, [getGroupLeadIds, selectedIds, onSelectionChange]);
+
+  // ── Paginated display items ────────────────────────────────────────────
+  // Reset page when data changes
+  useEffect(() => { setTablePage(0); }, [displayItems.length]);
+
+  const totalPages = Math.ceil(leadCount / TABLE_PAGE_SIZE);
+  const paginatedItems = useMemo(() => {
+    if (leadCount <= TABLE_PAGE_SIZE) return displayItems;
+    // We need to keep headers and paginate lead items
+    let leadIdx = 0;
+    const startIdx = tablePage * TABLE_PAGE_SIZE;
+    const endIdx = startIdx + TABLE_PAGE_SIZE;
+    const result: typeof displayItems = [];
+    let lastHeader: typeof displayItems[0] | null = null;
+    for (const item of displayItems) {
+      if (item.kind === "header") {
+        lastHeader = item;
+        continue;
+      }
+      if (leadIdx >= startIdx && leadIdx < endIdx) {
+        if (lastHeader) { result.push(lastHeader); lastHeader = null; }
+        result.push(item);
+      }
+      leadIdx++;
+      if (leadIdx >= endIdx) break;
+    }
+    return result;
+  }, [displayItems, tablePage, leadCount]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-transparent">
 
-      {/* ── Bulk action bar (only when selection active) ── */}
-      {hasSelection && (
-        <div className="shrink-0 px-3 py-2 flex items-center gap-1.5 border-b border-border/20">
+      {/* ── Change Stage bar (only when multi-selection active) ── */}
+      {selectedIds.size > 1 && (
+        <div className="shrink-0 px-3 py-1.5 flex items-center gap-1.5 border-b border-border/20">
           <span className="text-[11px] font-semibold text-foreground tabular-nums mr-1">
             {selectedIds.size} selected
           </span>
@@ -449,19 +509,8 @@ export function LeadsInlineTable({
           </DropdownMenu>
 
           <button
-            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border border-red-300/40 text-red-600 hover:bg-red-50 hover:border-red-300/60"
-            onClick={handleBulkDelete}
-            disabled={deleting}
-          >
-            {deleting
-              ? <div className="h-3 w-3 border border-red-400 border-t-red-600 rounded-full animate-spin" />
-              : <Trash2 className="h-3 w-3" />}
-            Delete
-          </button>
-
-          <button
             className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground"
-            onClick={() => setSelectedIds(new Set())}
+            onClick={() => onSelectionChange(new Set())}
           >
             <X className="h-3 w-3" />
             Clear
@@ -476,16 +525,34 @@ export function LeadsInlineTable({
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full" style={{ borderCollapse: "collapse", minWidth: 600 }}>
 
-            {/* Sticky header */}
+            {/* Sticky header with select-all checkbox */}
             <thead className="sticky top-0 z-20">
               <tr>
-                {visibleColumns.map((col, ci) => (
+                {/* Select-all checkbox */}
+                <th
+                  className="px-2 py-2 bg-muted border-b border-border/20 sticky left-0 z-30"
+                  style={{ width: 36, minWidth: 36 }}
+                >
+                  <button
+                    onClick={handleSelectAll}
+                    className={cn(
+                      "h-4 w-4 rounded border flex items-center justify-center transition-colors",
+                      allSelected
+                        ? "bg-brand-indigo border-brand-indigo text-white"
+                        : someSelected
+                          ? "bg-brand-indigo/30 border-brand-indigo/50"
+                          : "border-border/50 hover:border-foreground/30"
+                    )}
+                    title={allSelected ? "Deselect all" : "Select all"}
+                  >
+                    {allSelected && <Check className="h-2.5 w-2.5" />}
+                    {someSelected && !allSelected && <div className="h-1.5 w-1.5 bg-brand-indigo rounded-sm" />}
+                  </button>
+                </th>
+                {visibleColumns.map((col) => (
                   <th
                     key={col.key}
-                    className={cn(
-                      "px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/50 whitespace-nowrap select-none bg-muted border-b border-border/20",
-                      ci === 0 && "sticky left-0 z-30",
-                    )}
+                    className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/50 whitespace-nowrap select-none bg-muted border-b border-border/20"
                     style={{
                       width:    col.key === "notes" ? undefined : col.width,
                       minWidth: col.width,
@@ -509,19 +576,37 @@ export function LeadsInlineTable({
 
               {(() => {
                 let currentGroup: string | null = null;
-                return displayItems.map((item, index) => {
+                return paginatedItems.map((item, index) => {
                   if (item.kind === "header") {
                     currentGroup = item.label;
                     const isCollapsed = collapsedGroups.has(item.label);
                     const hexColor    = PIPELINE_HEX[item.label] || "#6B7280";
+                    const groupIds = getGroupLeadIds(item.label);
+                    const isGroupFullySelected = groupIds.length > 0 && groupIds.every((id) => selectedIds.has(id));
                     return (
                       <tr
                         key={`h-${item.label}-${index}`}
-                        className="cursor-pointer select-none hover:bg-black/[0.02]"
+                        className="cursor-pointer select-none"
                         onClick={() => toggleGroupCollapse(item.label)}
                       >
-                        <td colSpan={colSpan} className="px-4 pt-4 pb-1.5">
+                        <td
+                          colSpan={colSpan}
+                          className="px-4 pt-4 pb-1.5 sticky left-0 z-30"
+                          style={{ backgroundColor: `${hexColor}12` }}
+                        >
                           <div className="flex items-center gap-2">
+                            <div
+                              className={cn(
+                                "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
+                                isGroupFullySelected ? "border-brand-indigo bg-brand-indigo" : "border-border/40"
+                              )}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleGroupCheckbox(item.label);
+                              }}
+                            >
+                              {isGroupFullySelected && <Check className="h-2.5 w-2.5 text-white" />}
+                            </div>
                             <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: hexColor }} />
                             <span className="text-[11px] font-bold uppercase tracking-widest text-foreground/55">{item.label}</span>
                             <span className="text-[10px] text-muted-foreground/40 font-medium tabular-nums">{item.count}</span>
@@ -552,8 +637,8 @@ export function LeadsInlineTable({
                     <tr
                       key={leadId}
                       className={cn(
-                        "group/row cursor-pointer h-10 border-b border-border/15",
-                        isHighlighted ? "bg-[#FFF6C8]" : "bg-[#F1F1F1] hover:bg-[#F8F8F8]",
+                        "group/row cursor-pointer h-[52px] border-b border-border/15",
+                        isHighlighted ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] hover:bg-[#F8F8F8]",
                       )}
                       onClick={(e) => handleRowClick(lead, e)}
                     >
@@ -561,7 +646,7 @@ export function LeadsInlineTable({
                         const isFirst = ci === 0;
                         const tdClass = cn(
                           isFirst && "sticky left-0 z-10",
-                          isFirst && (isHighlighted ? "bg-[#FFF6C8]" : "bg-[#F1F1F1] group-hover/row:bg-[#F8F8F8]"),
+                          isFirst && (isHighlighted ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] group-hover/row:bg-[#F8F8F8]"),
                         );
 
                         // ── Name ──
@@ -569,23 +654,32 @@ export function LeadsInlineTable({
                           return (
                             <td key="name" className={cn("px-2.5", tdClass)} style={{ width: 200, minWidth: 200 }}>
                               <div className="flex items-center gap-2 min-w-0">
-                                {hasSelection && (
-                                  <div
-                                    className="h-4 w-4 rounded border border-border/40 flex items-center justify-center shrink-0 cursor-pointer"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedIds((prev) => {
-                                        const next = new Set(prev);
-                                        if (next.has(leadId)) next.delete(leadId); else next.add(leadId);
-                                        return next;
-                                      });
-                                    }}
-                                  >
-                                    {isMultiSelected && <Check className="h-2.5 w-2.5 text-brand-blue" />}
-                                  </div>
-                                )}
+                                {/* Checkbox — always visible */}
                                 <div
-                                  className="h-6 w-6 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0"
+                                  className={cn(
+                                    "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
+                                    isMultiSelected ? "border-brand-blue bg-brand-blue" : "border-border/40"
+                                  )}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const next = new Set(selectedIds);
+                                    if (next.has(leadId)) {
+                                      next.delete(leadId);
+                                      // If deselecting and something remains, keep selection
+                                    } else {
+                                      next.add(leadId);
+                                    }
+                                    onSelectionChange(next);
+                                    if (next.size === 1) {
+                                      const only = leadOnlyItems.find((i) => getLeadId(i.lead) === Array.from(next)[0]);
+                                      if (only) onSelectLead(only.lead);
+                                    }
+                                  }}
+                                >
+                                  {isMultiSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                                </div>
+                                <div
+                                  className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0"
                                   style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
                                 >
                                   {getInitials(name)}
@@ -628,19 +722,7 @@ export function LeadsInlineTable({
                           return (
                             <td key="score" className={cn("px-2.5", tdClass)} style={{ width: 70, minWidth: 70 }}>
                               {score > 0 ? (
-                                <div className="flex flex-col items-center gap-0.5 w-fit">
-                                  <div
-                                    className="h-6 w-6 rounded-full flex items-center justify-center text-[9px] font-bold tabular-nums"
-                                    style={
-                                      isDetailSelected
-                                        ? { backgroundColor: "#000", color: "#fff" }
-                                        : { backgroundColor: getScorePastelBg(score), color: getScoreDarkText(score) }
-                                    }
-                                  >
-                                    {score}
-                                  </div>
-                                  {isDetailSelected && <div className="h-1.5 w-1.5 rounded-full bg-black" />}
-                                </div>
+                                <ListScoreRing score={score} status={leadStatus} />
                               ) : (
                                 <span className="text-muted-foreground/30 text-[11px]">—</span>
                               )}
@@ -664,14 +746,18 @@ export function LeadsInlineTable({
                           return (
                             <td key="tags" className={cn("px-2", tdClass)} style={{ width: 160, minWidth: 160 }}>
                               <div className="flex items-center gap-1 overflow-hidden">
-                                {tags.slice(0, 2).map((t) => (
-                                  <span
-                                    key={t.name}
-                                    className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-black/[0.06] text-foreground/55 whitespace-nowrap shrink-0"
-                                  >
-                                    {t.name}
-                                  </span>
-                                ))}
+                                {tags.slice(0, 2).map((t) => {
+                                  const hex = resolveColor(t.color);
+                                  return (
+                                    <span
+                                      key={t.name}
+                                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold whitespace-nowrap shrink-0"
+                                      style={{ backgroundColor: `${hex}20`, color: hex }}
+                                    >
+                                      <TagIcon className="h-2 w-2" />{t.name}
+                                    </span>
+                                  );
+                                })}
                                 {tags.length > 2 && (
                                   <span className="text-[9px] text-muted-foreground/40 shrink-0">+{tags.length - 2}</span>
                                 )}
@@ -733,6 +819,42 @@ export function LeadsInlineTable({
               })()}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* ── Pagination footer (when >50 leads) ── */}
+      {totalPages > 1 && (
+        <div className="shrink-0 px-3 py-2 flex items-center justify-between gap-2 border-t border-border/20 bg-muted">
+          <button
+            onClick={() => setTablePage((p) => Math.max(0, p - 1))}
+            disabled={tablePage === 0}
+            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border border-border/30 text-muted-foreground hover:text-foreground hover:bg-card disabled:opacity-30 disabled:pointer-events-none"
+          >
+            <ChevronDown className="h-3 w-3 rotate-90" /> Prev
+          </button>
+          <div className="flex items-center gap-1">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => setTablePage(i)}
+                className={cn(
+                  "h-6 min-w-[24px] rounded-full text-[10px] font-bold tabular-nums transition-colors",
+                  tablePage === i
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                )}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setTablePage((p) => Math.min(totalPages - 1, p + 1))}
+            disabled={tablePage >= totalPages - 1}
+            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border border-border/30 text-muted-foreground hover:text-foreground hover:bg-card disabled:opacity-30 disabled:pointer-events-none"
+          >
+            Next <ChevronDown className="h-3 w-3 -rotate-90" />
+          </button>
         </div>
       )}
 

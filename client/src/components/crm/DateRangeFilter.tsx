@@ -1,16 +1,15 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { DayPicker, type DayButtonProps } from "react-day-picker";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
 
-export type DatePreset = "today" | "7d" | "30d" | "custom";
+export type DatePreset = "today" | "7d" | "30d" | "all" | "custom";
 
 export interface DateRangeValue {
   preset: DatePreset;
@@ -18,7 +17,7 @@ export interface DateRangeValue {
   to: Date;
 }
 
-function getPresetRange(preset: Exclude<DatePreset, "custom">): { from: Date; to: Date } {
+function getPresetRange(preset: Exclude<DatePreset, "custom" | "all">): { from: Date; to: Date } {
   const now = new Date();
   const to = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
@@ -42,12 +41,6 @@ function getPresetRange(preset: Exclude<DatePreset, "custom">): { from: Date; to
   }
 }
 
-const PRESETS: { label: string; value: Exclude<DatePreset, "custom"> }[] = [
-  { label: "Today", value: "today" },
-  { label: "7d", value: "7d" },
-  { label: "30d", value: "30d" },
-];
-
 function formatDateShort(date: Date): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
@@ -57,36 +50,84 @@ export function getDefaultDateRange(): DateRangeValue {
   return { preset: "30d", from, to };
 }
 
+// ── Custom Day Button ─────────────────────────────────────────────────────────
+
+function CampaignDayButton({ day, modifiers, onClick, onKeyDown, onMouseEnter, onMouseLeave, tabIndex, "aria-label": ariaLabel }: DayButtonProps) {
+  const isWeekend = day.date.getDay() === 0 || day.date.getDay() === 6;
+  const isSelected = modifiers.range_start || modifiers.range_end;
+  const isMiddle = modifiers.range_middle;
+  const isToday = modifiers.today;
+  const isDisabled = modifiers.disabled;
+  const isOutside = modifiers.outside;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onKeyDown={onKeyDown}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      tabIndex={tabIndex}
+      aria-label={ariaLabel}
+      disabled={isDisabled}
+      className={cn(
+        "flex h-8 w-8 items-center justify-center rounded-lg text-[13px] select-none mx-auto",
+        "hover:bg-orange-100/60 transition-colors",
+        isDisabled && "opacity-25 pointer-events-none",
+        isOutside && "opacity-0 pointer-events-none",
+        // Order matters — more specific wins
+        (isSelected || isMiddle) && "text-orange-500 font-bold hover:bg-orange-100/60",
+        !isSelected && !isMiddle && isToday && "text-blue-500 font-bold",
+        !isSelected && !isMiddle && !isToday && isWeekend && "text-foreground/35 font-normal",
+        !isSelected && !isMiddle && !isToday && !isWeekend && "text-foreground font-normal",
+      )}
+    >
+      {day.date.getDate()}
+    </button>
+  );
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
+
 interface DateRangeFilterProps {
   value: DateRangeValue;
   onChange: (value: DateRangeValue) => void;
+  /** If provided, enables an "All" button showing data from this date to now. */
+  allFrom?: Date;
 }
 
-export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
+const PRESET_LABELS: Array<{ label: string; value: Exclude<DatePreset, "all" | "custom"> }> = [
+  { label: "1D",  value: "today" },
+  { label: "7D",  value: "7d"   },
+  { label: "1M",  value: "30d"  },
+];
+
+export function DateRangeFilter({ value, onChange, allFrom }: DateRangeFilterProps) {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [pendingRange, setPendingRange] = useState<DateRange | undefined>(undefined);
 
   const handlePresetClick = useCallback(
-    (preset: Exclude<DatePreset, "custom">) => {
+    (preset: Exclude<DatePreset, "custom" | "all">) => {
       const range = getPresetRange(preset);
       onChange({ preset, ...range });
     },
     [onChange]
   );
 
+  const handleAllClick = useCallback(() => {
+    if (!allFrom) return;
+    const to = new Date();
+    to.setHours(23, 59, 59, 999);
+    onChange({ preset: "all", from: allFrom, to });
+  }, [allFrom, onChange]);
+
   const handleCalendarSelect = useCallback(
     (range: DateRange | undefined) => {
       setPendingRange(range);
       if (range?.from && range?.to) {
-        // Only close and apply when a real range is selected (two distinct clicks).
-        // react-day-picker sets from === to on the first click, then updates
-        // to a proper range on the second click. We track via pendingRange:
-        // if pendingRange already had a from but no to, or from === to,
-        // then this second selection completes the range.
         const rangeIsComplete =
           pendingRange?.from != null &&
           range.from.getTime() !== range.to.getTime();
-        // Also allow same-day range if the user explicitly re-clicks the same day
         const isSameDayReclick =
           pendingRange?.from != null &&
           pendingRange?.to != null &&
@@ -110,27 +151,23 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
 
   const displayLabel = useMemo(() => {
     if (value.preset === "custom") {
-      return `${formatDateShort(value.from)} - ${formatDateShort(value.to)}`;
+      return `${formatDateShort(value.from)} – ${formatDateShort(value.to)}`;
     }
     return null;
   }, [value]);
 
+  const btnBase = "h-8 px-2.5 text-[11px] font-semibold transition-colors whitespace-nowrap rounded-full";
+  const btnActive = "bg-brand-blue/15 text-brand-blue";
+  const btnInactive = "text-foreground/40 hover:text-foreground/70";
+
   return (
-    <div
-      className="inline-flex items-center gap-1 rounded-xl border border-border bg-muted/20 p-1"
-      data-testid="date-range-filter"
-    >
-      {PRESETS.map((p) => (
+    <div className="inline-flex items-center gap-0.5 rounded-full border border-border/40 bg-card/70 px-1 py-0.5" data-testid="date-range-filter">
+      {PRESET_LABELS.map((p) => (
         <button
           key={p.value}
           type="button"
           onClick={() => handlePresetClick(p.value)}
-          className={cn(
-            "h-8 px-3 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap",
-            value.preset === p.value
-              ? "bg-background shadow-sm text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          )}
+          className={cn(btnBase, value.preset === p.value ? btnActive : btnInactive)}
           data-testid={`date-preset-${p.value}`}
           data-active={value.preset === p.value}
         >
@@ -138,30 +175,92 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
         </button>
       ))}
 
+      {allFrom && (
+        <button
+          type="button"
+          onClick={handleAllClick}
+          className={cn(btnBase, value.preset === "all" ? btnActive : btnInactive)}
+          data-testid="date-preset-all"
+          data-active={value.preset === "all"}
+        >
+          All
+        </button>
+      )}
+
       <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
         <PopoverTrigger asChild>
           <button
             type="button"
             className={cn(
-              "h-8 px-3 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 whitespace-nowrap",
-              value.preset === "custom"
-                ? "bg-background shadow-sm text-foreground"
-                : "text-muted-foreground hover:text-foreground"
+              btnBase,
+              "flex items-center gap-1",
+              value.preset === "custom" ? btnActive : btnInactive
             )}
             data-testid="date-preset-custom"
             data-active={value.preset === "custom"}
           >
-            <CalendarIcon className="w-3.5 h-3.5" />
+            <CalendarIcon className="w-3 h-3" />
             {displayLabel || "Custom"}
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="end" sideOffset={8}>
-          <Calendar
+        <PopoverContent
+          className="w-auto p-4 rounded-2xl border border-border/20 shadow-[0_8px_40px_rgba(0,0,0,0.10)]"
+          align="end"
+          sideOffset={10}
+        >
+          <DayPicker
             mode="range"
+            numberOfMonths={1}
+            showOutsideDays={false}
             selected={pendingRange || (value.preset === "custom" ? { from: value.from, to: value.to } : undefined)}
             onSelect={handleCalendarSelect}
-            numberOfMonths={2}
             disabled={{ after: new Date() }}
+            formatters={{
+              formatWeekdayName: (date) => ["S","M","T","W","T","F","S"][date.getDay()],
+              formatMonthCaption: (date) =>
+                date.toLocaleString("default", { month: "short", year: "numeric" }),
+            }}
+            components={{
+              DayButton: CampaignDayButton,
+              Nav: ({ onPreviousClick, onNextClick }) => (
+                <div className="flex items-center justify-between mb-3">
+                  <button
+                    type="button"
+                    onClick={onPreviousClick}
+                    className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted/50 text-foreground/50 hover:text-foreground transition-colors"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onNextClick}
+                    className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-muted/50 text-foreground/50 hover:text-foreground transition-colors"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              ),
+            }}
+            classNames={{
+              root: "w-[260px]",
+              months: "flex flex-col",
+              month: "flex flex-col",
+              month_caption: "flex justify-center mb-2",
+              caption_label: "text-[13px] font-semibold text-foreground",
+              nav: "",
+              table: "w-full border-collapse",
+              weekdays: "flex",
+              weekday: "flex-1 text-center text-[11px] font-medium text-foreground/30 pb-2",
+              week: "flex w-full mt-1",
+              day: "flex-1 flex items-center justify-center",
+              range_start: "",
+              range_middle: "",
+              range_end: "",
+              today: "",
+              outside: "",
+              disabled: "",
+              hidden: "invisible",
+            }}
           />
         </PopoverContent>
       </Popover>
@@ -171,7 +270,6 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
 
 /**
  * Utility to check if a date string/timestamp falls within a DateRangeValue.
- * Used to filter data client-side based on the selected date range.
  */
 export function isWithinDateRange(
   dateStr: string | number | null | undefined,

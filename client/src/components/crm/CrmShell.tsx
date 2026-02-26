@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { RightSidebar } from "./RightSidebar";
 import { Topbar } from "@/components/crm/Topbar";
@@ -7,12 +7,15 @@ import { PageTransition } from "@/components/crm/PageTransition";
 import { CommandPalette } from "@/components/crm/CommandPalette";
 import { ErrorBoundary } from "@/components/crm/ErrorBoundary";
 import { ConnectionBanner } from "@/components/crm/ConnectionBanner";
+import { SettingsPanel } from "@/components/crm/SettingsPanel";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
 import { X, Search, Bell, HelpCircle, Headphones, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { logout } from "@/hooks/useSession";
 import { TopbarActionsProvider } from "@/contexts/TopbarActionsContext";
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "@/lib/apiUtils";
 
 export function CrmShell({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
@@ -40,6 +43,31 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
     setLocation("/login");
   };
 
+  // ── Notifications for unread chat badge ─────────────────────────────────────
+  const { data: notifData = [] } = useQuery<{ id: string; type: string; at: string }[]>({
+    queryKey: ['/api/notifications'],
+    queryFn: async () => {
+      const res = await apiFetch('/api/notifications');
+      if (!res.ok) return [];
+      return res.json();
+    },
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
+
+  // Track last time user visited chats
+  useEffect(() => {
+    if (location.includes('/conversations')) {
+      localStorage.setItem("leadawaker_lastChatVisitedAt", new Date().toISOString());
+    }
+  }, [location]);
+
+  const unreadChatCount = useMemo(() => {
+    const lastVisit = localStorage.getItem("leadawaker_lastChatVisitedAt");
+    const cutoff = lastVisit ? new Date(lastVisit) : null;
+    return notifData.filter(n => n.type === 'inbound' && (!cutoff || new Date(n.at) > cutoff)).length;
+  }, [notifData]);
+
   return (
     <TopbarActionsProvider>
     <div className={cn("min-h-screen bg-background", isAgencyView && "agency-mode")} data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
@@ -62,10 +90,12 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
           onOpenSearch={() => setActivePanel('search')}
           onOpenNotifications={() => setActivePanel('notifications')}
           onToggleHelp={() => setActivePanel('help')}
+          onOpenSettings={() => setActivePanel('settings')}
           isMobileMenuOpen={isMobileMenuOpen}
           onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
           onToggleMobileMenu={() => setIsMobileMenuOpen((v) => !v)}
           onLogout={handleLogout}
+          unreadChatCount={unreadChatCount}
         />
       </div>
 
@@ -76,78 +106,25 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
             className="absolute inset-0 bg-black/25 pointer-events-auto"
             onClick={closePanel}
           />
-          <aside className="absolute right-0 top-0 bottom-0 w-full sm:right-4 sm:top-8 sm:bottom-4 sm:w-[400px] border border-border/60 bg-background shadow-sm sm:rounded-2xl pointer-events-auto flex flex-col overflow-hidden">
-            <div className="h-14 px-6 flex items-center justify-between border-b border-border/50 bg-background sticky top-0 z-10 shrink-0">
-              <div className="font-bold text-lg capitalize">{activePanel.replace('-', ' ')}</div>
-              <button onClick={closePanel} className="h-9 w-9 rounded-xl hover:bg-muted/30 grid place-items-center">
+          <aside className={cn(
+            "absolute right-0 top-0 bottom-0 w-full sm:right-4 sm:top-8 sm:bottom-4 border border-border/60 bg-background shadow-sm sm:rounded-2xl pointer-events-auto flex flex-col overflow-hidden",
+            activePanel === 'settings' ? "sm:w-[540px]" : "sm:w-[400px]"
+          )}>
+            <div className="h-14 px-4 flex items-center justify-between border-b border-border/30 bg-background sticky top-0 z-10 shrink-0">
+              <div className="font-bold text-base capitalize pl-1">
+                {activePanel === 'settings' ? 'Settings' : activePanel.replace('-', ' ')}
+              </div>
+              <button
+                onClick={closePanel}
+                className="icon-circle-lg icon-circle-base"
+                aria-label="Close"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
-            
-            <div className="flex-grow overflow-hidden h-full">
-              {activePanel === 'settings' && (
-                <div className="p-6 space-y-8 overflow-auto h-full">
-                  <section className="bg-card rounded-2xl p-6 shadow-sm border border-border">
-                    <h3 className="text-xs font-bold uppercase text-muted-foreground mb-4 tracking-widest">System Actions</h3>
-                    <div className="grid grid-cols-2 gap-3 mb-8">
-                      <button onClick={() => { setActivePanel('search'); }} className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors">
-                        <Search className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-xs font-semibold">Search</span>
-                      </button>
-                      <button onClick={() => { setActivePanel('notifications'); }} className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors">
-                        <Bell className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-xs font-semibold">Alerts</span>
-                      </button>
-                      <button onClick={() => { setActivePanel('help'); }} className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors">
-                        <HelpCircle className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-xs font-semibold">Help</span>
-                      </button>
-                      <button onClick={() => { setActivePanel('support'); }} className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors">
-                        <Headphones className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-xs font-semibold">Support</span>
-                      </button>
-                      <button
-                        onClick={toggleTheme}
-                        className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 transition-colors"
-                      >
-                        {isDark ? <Sun className="h-5 w-5 text-muted-foreground" /> : <Moon className="h-5 w-5 text-muted-foreground" />}
-                        <span className="text-xs font-semibold">{isDark ? "Light Mode" : "Dark Mode"}</span>
-                      </button>
-                      <button
-                        onClick={handleLogout}
-                        className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-red-500/10 hover:bg-red-500/20 transition-colors col-span-2 mt-2"
-                      >
-                        <span className="text-xs font-bold text-red-600">Logout</span>
-                      </button>
-                    </div>
 
-                    <h3 className="text-xs font-bold uppercase text-muted-foreground mb-4 tracking-widest">Profile</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-xs text-muted-foreground">Name</label>
-                        <input className="mt-1 h-10 w-full rounded-xl border border-border bg-muted/20 px-3 text-sm" defaultValue={currentAccount?.name || ''} />
-                      </div>
-                      <div>
-                        <label className="text-xs text-muted-foreground">Email</label>
-                        <input className="mt-1 h-10 w-full rounded-xl border border-border bg-muted/20 px-3 text-sm" defaultValue={currentAccount?.owner_email || ''} />
-                      </div>
-                    </div>
-                  </section>
-                  <section className="bg-card rounded-2xl p-6 shadow-sm border border-border">
-                    <h3 className="text-sm font-bold uppercase text-muted-foreground mb-4 tracking-widest">Security</h3>
-                    <button className="h-10 w-full rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold">
-                      Send reset email
-                    </button>
-                  </section>
-                  <section className="bg-card rounded-2xl p-6 shadow-sm border border-border">
-                    <h3 className="text-sm font-bold uppercase text-muted-foreground mb-4 tracking-widest">Users</h3>
-                    <div className="space-y-2">
-                      <button className="h-10 w-full rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold text-left px-4">Invite user</button>
-                      <button className="h-10 w-full rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold text-left px-4">Manage roles</button>
-                    </div>
-                  </section>
-                </div>
-              )}
+            <div className="flex-grow overflow-hidden h-full">
+              {activePanel === 'settings' && <SettingsPanel />}
               {activePanel === 'help' && (
                 <div className="p-4 space-y-2 overflow-auto h-full">
                   <a href="#" className="block rounded-xl px-4 py-3 text-sm hover:bg-muted/30 transition-colors font-medium border border-transparent hover:border-border">Documentation</a>
@@ -169,13 +146,13 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         id="main-content"
         className={cn(
           "h-screen flex flex-col bg-background transition-all duration-200 overflow-hidden",
-          collapsed ? "md:pl-[72px]" : "md:pl-[216px]",
-          "pb-[64px] md:pb-0 pt-[56px]"
+          collapsed ? "md:pl-[86px]" : "md:pl-[259px]",
+          "pb-[64px] md:pb-0 pt-14"
         )}
         data-testid="main-crm"
       >
         <ConnectionBanner />
-        <div className="h-full w-full px-3 md:pl-[10px] md:pr-5 pt-4 pb-0 overflow-y-auto">
+        <div className="h-full w-full px-3 md:pl-[10px] md:pr-5 pt-2 pb-0 overflow-y-auto">
           <ErrorBoundary>
             <PageTransition>
               {children}

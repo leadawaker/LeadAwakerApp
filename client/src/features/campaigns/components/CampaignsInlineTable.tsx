@@ -4,7 +4,6 @@ import {
   Pencil,
   Check,
   X,
-  Trash2,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
@@ -16,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { updateCampaign, deleteCampaign } from "../api/campaignsApi";
+import { updateCampaign } from "../api/campaignsApi";
 import type { Campaign } from "@/types/models";
 
 // ── Column definitions ─────────────────────────────────────────────────────────
@@ -140,7 +139,7 @@ function TableSkeleton() {
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}
-          className="h-9 bg-[#F1F1F1]/70 rounded-xl animate-pulse"
+          className="h-[52px] bg-[#F1F1F1]/70 rounded-xl animate-pulse"
           style={{ animationDelay: `${i * 35}ms` }}
         />
       ))}
@@ -232,6 +231,9 @@ interface CampaignsInlineTableProps {
   onRefresh?: () => void;
   visibleCols: Set<string>;
   tableSearch: string;
+  /** Multi-select state — lifted to parent */
+  selectedIds: Set<number>;
+  onSelectionChange: (ids: Set<number>) => void;
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
@@ -243,6 +245,8 @@ export function CampaignsInlineTable({
   onRefresh,
   visibleCols,
   tableSearch,
+  selectedIds,
+  onSelectionChange,
 }: CampaignsInlineTableProps) {
 
   // ── Editing state ─────────────────────────────────────────────────────────
@@ -252,11 +256,8 @@ export function CampaignsInlineTable({
   const [saveError,      setSaveError]      = useState<{ cid: number; field: ColKey } | null>(null);
   const [localOverrides, setLocalOverrides] = useState<Map<number, Partial<Record<ColKey, string>>>>(new Map());
 
-  // ── Multi-select state ─────────────────────────────────────────────────────
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  // ── Shift-click ref ────────────────────────────────────────────────────────
   const lastClickedIndexRef = useRef<number>(-1);
-
-  const [deleting, setDeleting] = useState(false);
   const [bulkStageOpen, setBulkStageOpen] = useState(false);
 
   // ── Group collapse ─────────────────────────────────────────────────────────
@@ -379,61 +380,56 @@ export function CampaignsInlineTable({
   }, []);
 
   // ── Row click handler ──────────────────────────────────────────────────────
+  // Simple click = single select + open detail (checkbox checked)
   const handleRowClick = useCallback((campaign: Campaign, e: React.MouseEvent) => {
     const cid = getCampaignId(campaign);
     const idx = campaignIndexMap.get(cid) ?? -1;
 
-    if (e.ctrlKey || e.metaKey) {
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        if (next.has(cid)) next.delete(cid); else next.add(cid);
-        return next;
-      });
-      lastClickedIndexRef.current = idx;
-    } else if (e.shiftKey && lastClickedIndexRef.current >= 0) {
+    if (e.shiftKey && lastClickedIndexRef.current >= 0) {
       const lo = Math.min(lastClickedIndexRef.current, idx);
       const hi = Math.max(lastClickedIndexRef.current, idx);
       const rangeIds = campaignOnlyItems.slice(lo, hi + 1).map((item) => getCampaignId(item.campaign));
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        rangeIds.forEach((id) => next.add(id));
-        return next;
-      });
+      const next = new Set(selectedIds);
+      rangeIds.forEach((id) => next.add(id));
+      onSelectionChange(next);
+      if (next.size === 1) {
+        const only = campaignOnlyItems.find((i) => getCampaignId(i.campaign) === Array.from(next)[0]);
+        if (only) onSelectCampaign(only.campaign);
+      }
+    } else if (e.ctrlKey || e.metaKey) {
+      const next = new Set(selectedIds);
+      if (next.has(cid)) next.delete(cid); else next.add(cid);
+      onSelectionChange(next);
+      if (next.size === 1) {
+        const only = campaignOnlyItems.find((i) => getCampaignId(i.campaign) === Array.from(next)[0]);
+        if (only) onSelectCampaign(only.campaign);
+      }
+      lastClickedIndexRef.current = idx;
     } else {
+      // Simple click: single select + open detail
+      onSelectionChange(new Set([cid]));
       onSelectCampaign(campaign);
-      setSelectedIds(new Set());
       lastClickedIndexRef.current = idx;
     }
-  }, [campaignIndexMap, campaignOnlyItems, onSelectCampaign]);
+  }, [campaignIndexMap, campaignOnlyItems, onSelectCampaign, onSelectionChange, selectedIds]);
 
-  // ── Bulk actions ───────────────────────────────────────────────────────────
-  const handleBulkDelete = useCallback(async () => {
-    if (selectedIds.size === 0) return;
-    setDeleting(true);
-    try {
-      await Promise.all(Array.from(selectedIds).map((id) => deleteCampaign(id)));
-      setSelectedIds(new Set());
-      onRefresh?.();
-    } catch (err) { console.error("Bulk delete failed", err); }
-    finally { setDeleting(false); }
-  }, [selectedIds, onRefresh]);
-
+  // ── Bulk stage change ─────────────────────────────────────────────────────
   const handleBulkStageChange = useCallback(async (stage: string) => {
     if (selectedIds.size === 0) return;
     try {
       await Promise.all(Array.from(selectedIds).map((id) => updateCampaign(id, { status: stage })));
-      setSelectedIds(new Set());
+      onSelectionChange(new Set());
       setBulkStageOpen(false);
       onRefresh?.();
     } catch (err) { console.error("Bulk stage change failed", err); }
-  }, [selectedIds, onRefresh]);
+  }, [selectedIds, onRefresh, onSelectionChange]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-transparent">
 
-      {/* ── Bulk action bar ── */}
-      {hasSelection && (
-        <div className="shrink-0 px-3 py-2 flex items-center gap-1.5 border-b border-border/20">
+      {/* ── Change Status bar (only when multi-selection active) ── */}
+      {selectedIds.size > 1 && (
+        <div className="shrink-0 px-3 py-1.5 flex items-center gap-1.5 border-b border-border/20">
           <span className="text-[11px] font-semibold text-foreground tabular-nums mr-1">
             {selectedIds.size} selected
           </span>
@@ -458,19 +454,8 @@ export function CampaignsInlineTable({
           </DropdownMenu>
 
           <button
-            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border border-red-300/40 text-red-600 hover:bg-red-50 hover:border-red-300/60"
-            onClick={handleBulkDelete}
-            disabled={deleting}
-          >
-            {deleting
-              ? <div className="h-3 w-3 border border-red-400 border-t-red-600 rounded-full animate-spin" />
-              : <Trash2 className="h-3 w-3" />}
-            Delete
-          </button>
-
-          <button
             className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground"
-            onClick={() => setSelectedIds(new Set())}
+            onClick={() => onSelectionChange(new Set())}
           >
             <X className="h-3 w-3" />
             Clear
@@ -482,7 +467,7 @@ export function CampaignsInlineTable({
       {loading ? (
         <TableSkeleton />
       ) : (
-        <div className="flex-1 min-h-0 overflow-auto">
+        <div className="flex-1 min-h-0 overflow-auto bg-[#F1F1F1]">
           <table className="w-full" style={{ borderCollapse: "collapse", minWidth: 600 }}>
 
             {/* Sticky header */}
@@ -529,7 +514,8 @@ export function CampaignsInlineTable({
                         className="cursor-pointer select-none hover:bg-black/[0.02]"
                         onClick={() => toggleGroupCollapse(item.label)}
                       >
-                        <td colSpan={colSpan} className="px-4 pt-4 pb-1.5">
+                        {/* Sticky group title — stays fixed during horizontal scroll */}
+                        <td colSpan={colSpan} className="px-4 pt-4 pb-1.5 sticky left-0 z-30 bg-muted">
                           <div className="flex items-center gap-2">
                             <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: hexColor }} />
                             <span className="text-[11px] font-bold uppercase tracking-widest text-foreground/55">{item.label}</span>
@@ -560,8 +546,8 @@ export function CampaignsInlineTable({
                     <tr
                       key={cid}
                       className={cn(
-                        "group/row cursor-pointer h-10 border-b border-border/15",
-                        isHighlighted ? "bg-[#FFF6C8]" : "bg-[#F1F1F1] hover:bg-[#F8F8F8]",
+                        "group/row cursor-pointer h-[52px] border-b border-border/15",
+                        isHighlighted ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] hover:bg-[#F8F8F8]",
                       )}
                       onClick={(e) => handleRowClick(campaign, e)}
                     >
@@ -569,7 +555,7 @@ export function CampaignsInlineTable({
                         const isFirst = ci === 0;
                         const tdClass = cn(
                           isFirst && "sticky left-0 z-10",
-                          isFirst && (isHighlighted ? "bg-[#FFF6C8]" : "bg-[#F1F1F1] group-hover/row:bg-[#F8F8F8]"),
+                          isFirst && (isHighlighted ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] group-hover/row:bg-[#F8F8F8]"),
                         );
 
                         // ── Name ──
@@ -577,23 +563,27 @@ export function CampaignsInlineTable({
                           return (
                             <td key="name" className={cn("px-2.5", tdClass)} style={{ width: 200, minWidth: 200 }}>
                               <div className="flex items-center gap-2 min-w-0">
-                                {hasSelection && (
-                                  <div
-                                    className="h-4 w-4 rounded border border-border/40 flex items-center justify-center shrink-0 cursor-pointer"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedIds((prev) => {
-                                        const next = new Set(prev);
-                                        if (next.has(cid)) next.delete(cid); else next.add(cid);
-                                        return next;
-                                      });
-                                    }}
-                                  >
-                                    {isMultiSelected && <Check className="h-2.5 w-2.5 text-brand-blue" />}
-                                  </div>
-                                )}
+                                {/* Checkbox — always visible */}
                                 <div
-                                  className="h-6 w-6 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0"
+                                  className={cn(
+                                    "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
+                                    isMultiSelected ? "border-brand-blue bg-brand-blue" : "border-border/40"
+                                  )}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const next = new Set(selectedIds);
+                                    if (next.has(cid)) next.delete(cid); else next.add(cid);
+                                    onSelectionChange(next);
+                                    if (next.size === 1) {
+                                      const only = campaignOnlyItems.find((i) => getCampaignId(i.campaign) === Array.from(next)[0]);
+                                      if (only) onSelectCampaign(only.campaign);
+                                    }
+                                  }}
+                                >
+                                  {isMultiSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                                </div>
+                                <div
+                                  className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0"
                                   style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
                                 >
                                   {getCampaignInitials(name)}

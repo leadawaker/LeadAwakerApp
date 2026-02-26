@@ -194,8 +194,9 @@ export function useAccountsData(currentAccountId?: number) {
         setColWidths(initialWidths);
       }
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
-      toast({ variant: "destructive", title: "Error fetching data" });
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(err instanceof Error ? err : new Error(msg));
+      toast({ variant: "destructive", title: "Could not load accounts", description: msg });
     } finally {
       setLoading(false);
     }

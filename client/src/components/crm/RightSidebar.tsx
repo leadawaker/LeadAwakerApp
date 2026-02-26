@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import {
   HelpCircle,
   Headphones,
-  LayoutDashboard,
   MessageSquare,
   Megaphone,
   Calendar,
@@ -11,8 +10,8 @@ import {
   Users,
   Tag,
   BookOpen,
-  PanelRightClose,
-  PanelRightOpen,
+  PanelLeftClose,
+  PanelLeftOpen,
   BookUser,
   ChevronsUpDown,
   Check,
@@ -20,16 +19,25 @@ import {
   X,
   Building2,
   LogOut,
+  Lightbulb,
+  Receipt,
+  ReceiptText,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { DbStatusIndicator } from "@/components/crm/DbStatusIndicator";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 
 export function RightSidebar({
   collapsed,
@@ -38,11 +46,13 @@ export function RightSidebar({
   onOpenSearch: _onOpenSearch,
   onOpenNotifications: _onOpenNotifications,
   onToggleHelp,
+  onOpenSettings,
   notificationsCount,
   isMobileMenuOpen = false,
   onCloseMobileMenu,
   onToggleMobileMenu,
   onLogout,
+  unreadChatCount,
 }: {
   collapsed: boolean;
   onCollapse: (v: boolean) => void;
@@ -50,11 +60,13 @@ export function RightSidebar({
   onOpenSearch: () => void;
   onOpenNotifications: () => void;
   onToggleHelp: () => void;
+  onOpenSettings?: () => void;
   notificationsCount?: number;
   isMobileMenuOpen?: boolean;
   onCloseMobileMenu?: () => void;
   onToggleMobileMenu?: () => void;
   onLogout?: () => void;
+  unreadChatCount?: number;
 }) {
   const [location, setLocation] = useLocation();
   const {
@@ -65,8 +77,6 @@ export function RightSidebar({
     accounts,
     isAgencyUser,
   } = useWorkspace();
-
-  const [hoveredNav, setHoveredNav] = useState<{ label: string; active: boolean; y: number } | null>(null);
 
   // Read current user info from localStorage
   const userName = localStorage.getItem("leadawaker_user_name") || localStorage.getItem("leadawaker_user_email") || "User";
@@ -93,12 +103,12 @@ export function RightSidebar({
       ? location.slice(prevBase.length)
       : location.replace(/^\/(agency|subaccount)/, "");
 
-    // Agency-only pages don't exist in subaccount view — always go to dashboard
-    const agencyOnlyPaths = ["/accounts", "/tags", "/users", "/prompt-library", "/automation-logs"];
+    // Agency-only pages don't exist in subaccount view — always go to campaigns
+    const agencyOnlyPaths = ["/accounts", "/tags", "/prompt-library", "/automation-logs", "/expenses"];
     const isAgencyOnlyPage = agencyOnlyPaths.some((p) => tail.startsWith(p));
-    const safeTail = (!nextIsAgency && isAgencyOnlyPage) ? "/dashboard" : tail;
+    const safeTail = (!nextIsAgency && isAgencyOnlyPage) ? "/campaigns" : tail;
 
-    const nextPath = `${nextBase}${safeTail || "/dashboard"}`;
+    const nextPath = `${nextBase}${safeTail || "/campaigns"}`;
     setLocation(nextPath);
   };
 
@@ -117,7 +127,7 @@ export function RightSidebar({
     agencyOnly?: boolean;
     agencyViewOnly?: boolean;
   }[] = [
-    { href: `${prefix}/dashboard`, label: "Dashboard", icon: LayoutDashboard, testId: "nav-home" },
+    { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
     {
       href: `${prefix}/accounts`,
       label: "Accounts",
@@ -126,8 +136,8 @@ export function RightSidebar({
       agencyOnly: true,
       agencyViewOnly: true,
     },
-    { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
     { href: `${prefix}/contacts`, label: "Leads", icon: BookUser, testId: "nav-contacts" },
+    { href: `${prefix}/opportunities`, label: "Opportunities", icon: Lightbulb, testId: "nav-opportunities" },
     { href: `${prefix}/conversations`, label: "Chats", icon: MessageSquare, testId: "nav-chats" },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "nav-calendar" },
     { href: `${prefix}/tags`, label: "Tags", icon: Tag, testId: "nav-tags", agencyOnly: true },
@@ -138,7 +148,26 @@ export function RightSidebar({
       testId: "nav-library",
       agencyOnly: true,
     },
-    { href: `${prefix}/users`, label: "Users", icon: Users, testId: "nav-users", agencyOnly: true },
+    { href: `${prefix}/users`, label: "Users", icon: Users, testId: "nav-users" },
+    {
+      href: `${prefix}/invoices`,
+      label: "Invoices",
+      icon: Receipt,
+      testId: "nav-invoices",
+    },
+    {
+      href: `${prefix}/expenses`,
+      label: "Expenses",
+      icon: ReceiptText,
+      testId: "nav-expenses",
+      agencyOnly: true,
+    },
+    {
+      href: `${prefix}/contracts`,
+      label: "Contracts",
+      icon: FileText,
+      testId: "nav-contracts",
+    },
     {
       href: `${prefix}/automation-logs`,
       label: "Automations",
@@ -160,9 +189,70 @@ export function RightSidebar({
   const isActive = (href: string) => {
     if (location === href) return true;
     // For sub-routes like /agency/contacts/123, highlight the parent nav item
-    // But don't let /agency/contacts match /agency/contact (partial word)
-    if (href !== `${prefix}/dashboard` && location.startsWith(href + '/')) return true;
+    // But don't let /agency/campaigns match sub-routes (campaigns has no sub-routes)
+    if (href !== `${prefix}/campaigns` && location.startsWith(href + '/')) return true;
     return false;
+  };
+
+  /** Render a single desktop nav link with Radix Tooltip support */
+  const renderDesktopNavLink = (it: typeof navItems[0]) => {
+    const active = isActive(it.href);
+    const Icon = it.icon;
+    const showUnreadDot = it.testId === "nav-chats" && !!unreadChatCount && unreadChatCount > 0;
+
+    return (
+      <Tooltip key={it.href}>
+        <TooltipTrigger asChild>
+          <Link
+            href={it.href}
+            className={cn(
+              "relative flex items-center rounded-full transition-colors mb-0.5",
+              collapsed
+                ? "h-10 w-10 mx-auto justify-center"
+                : "h-[43px] pl-[1.5px] pr-2 gap-2.5",
+              active
+                ? collapsed
+                  ? "text-foreground font-semibold"
+                  : "bg-[#FFE35B] text-foreground font-semibold"
+                : "text-muted-foreground hover:bg-card hover:text-foreground"
+            )}
+            data-testid={`link-${it.testId}`}
+            data-active={active || undefined}
+          >
+            <div className={cn(
+              "relative h-10 w-10 rounded-full flex items-center justify-center shrink-0",
+              active && collapsed
+                ? "bg-[#FFE35B]"
+                : !active ? "border border-border/65" : ""
+            )}>
+              <Icon className="h-4 w-4" />
+              {showUnreadDot && (
+                <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 border border-background" />
+              )}
+            </div>
+            {!collapsed && (
+              <span className="text-sm font-bold">{it.label}</span>
+            )}
+            {it.testId === "nav-chats" && !collapsed && !!unreadChatCount && unreadChatCount > 0 && (
+              <span className="ml-auto h-4 min-w-[1rem] px-1 rounded-full bg-brand-blue text-white text-[10px] font-bold flex items-center justify-center">
+                {unreadChatCount > 9 ? "9+" : unreadChatCount}
+              </span>
+            )}
+          </Link>
+        </TooltipTrigger>
+        {collapsed && (
+          <TooltipContent
+            side="right"
+            className={cn(
+              "rounded-lg px-3 h-10 flex items-center text-sm font-semibold shadow-md border-0 ml-1",
+              isActive(it.href) ? "bg-[#FFE35B] text-foreground" : "bg-card text-foreground"
+            )}
+          >
+            {it.label}
+          </TooltipContent>
+        )}
+      </Tooltip>
+    );
   };
 
   return (
@@ -287,7 +377,7 @@ export function RightSidebar({
                     data-testid={`mobile-${it.testId}`}
                     data-active={active || undefined}
                   >
-                    <Icon className="h-5 w-5" />
+                    <Icon className="h-4 w-4" />
                     <span className="text-sm font-semibold">{it.label}</span>
                   </Link>
                 );
@@ -300,14 +390,14 @@ export function RightSidebar({
                 onClick={() => { onOpenSupport(); onCloseMobileMenu?.(); }}
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-muted transition-colors"
               >
-                <Headphones className="h-5 w-5" />
+                <Headphones className="h-4 w-4" />
                 <span className="text-sm font-semibold">Support</span>
               </button>
               <button
                 onClick={() => { onToggleHelp(); onCloseMobileMenu?.(); }}
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-muted transition-colors"
               >
-                <HelpCircle className="h-5 w-5" />
+                <HelpCircle className="h-4 w-4" />
                 <span className="text-sm font-semibold">Help</span>
               </button>
             </div>
@@ -315,7 +405,7 @@ export function RightSidebar({
             {/* USER FOOTER */}
             <div className="px-3 pb-6 pt-2 border-t border-border/40" data-testid="mobile-sidebar-user-footer">
               <div className="flex items-center gap-3 px-3 py-2">
-                <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
+                <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
                   {userInitials}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -339,18 +429,18 @@ export function RightSidebar({
       {/* MOBILE BOTTOM BAR */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 h-[64px] border-t border-border/50 bg-white/80 dark:bg-card/80 glass-nav z-[100] flex justify-around items-center">
         <button
-          onClick={() => setLocation(`${prefix}/dashboard`)}
+          onClick={() => setLocation(`${prefix}/campaigns`)}
           className={cn(
             "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
-            isActive(`${prefix}/dashboard`)
+            isActive(`${prefix}/campaigns`)
               ? "text-brand-blue"
               : "text-muted-foreground"
           )}
-          data-testid="mobile-nav-dashboard"
-          data-active={isActive(`${prefix}/dashboard`) || undefined}
+          data-testid="mobile-nav-campaigns"
+          data-active={isActive(`${prefix}/campaigns`) || undefined}
         >
-          <LayoutDashboard className="h-5 w-5" />
-          <span className="text-[10px] font-semibold">Dashboard</span>
+          <Megaphone className="h-4 w-4" />
+          <span className="text-[10px] font-semibold">Campaigns</span>
         </button>
         <button
           onClick={() => setLocation(`${prefix}/contacts`)}
@@ -363,7 +453,7 @@ export function RightSidebar({
           data-testid="mobile-nav-contacts"
           data-active={isActive(`${prefix}/contacts`) || undefined}
         >
-          <BookUser className="h-5 w-5" />
+          <BookUser className="h-4 w-4" />
           <span className="text-[10px] font-semibold">Contacts</span>
         </button>
         <button
@@ -377,7 +467,7 @@ export function RightSidebar({
           data-testid="mobile-nav-conversations"
           data-active={isActive(`${prefix}/conversations`) || undefined}
         >
-          <MessageSquare className="h-5 w-5" />
+          <MessageSquare className="h-4 w-4" />
           <span className="text-[10px] font-semibold">Chats</span>
         </button>
         <button
@@ -388,7 +478,7 @@ export function RightSidebar({
           )}
           data-testid="mobile-nav-menu"
         >
-          {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           <span className="text-[10px] font-semibold">Menu</span>
         </button>
       </div>
@@ -396,8 +486,8 @@ export function RightSidebar({
       {/* DESKTOP SIDEBAR */}
       <aside
         className={cn(
-          "fixed left-0 top-16 bottom-0 bg-background hidden md:flex flex-col overflow-hidden transition-all duration-200",
-          collapsed ? "w-[72px]" : "w-[216px]"
+          "fixed left-0 top-14 bottom-0 bg-background hidden md:flex flex-col overflow-hidden transition-all duration-200",
+          collapsed ? "w-[86px]" : "w-[259px]"
         )}
         data-sidebar-focus
       >
@@ -405,7 +495,7 @@ export function RightSidebar({
           {/* HEADER — "Menu" label + collapse button */}
           <div
             className={cn(
-              "flex items-center shrink-0 px-2 mt-7 mb-2 h-[48px]",
+              "flex items-center shrink-0 px-2 mt-7 mb-2 h-10",
               collapsed ? "justify-center" : "justify-between"
             )}
           >
@@ -418,207 +508,111 @@ export function RightSidebar({
               title={collapsed ? "Expand menu" : "Collapse menu"}
             >
               {collapsed ? (
-                <PanelRightClose className="h-3.5 w-3.5" />
+                <PanelLeftOpen className="h-4 w-4" />
               ) : (
-                <PanelRightOpen className="h-3.5 w-3.5" />
+                <PanelLeftClose className="h-4 w-4" />
               )}
             </button>
           </div>
 
           {/* NAV — categorized sections */}
-          <nav className="px-2 flex-1 overflow-y-auto min-h-0 pb-2">
-            {/* Section: (top — Dashboard) */}
-            {visibleNavItems.filter(it => it.label === "Dashboard").map((it) => {
-              const active = isActive(it.href);
-              const Icon = it.icon;
-              return (
-                <Link
-                  key={it.href}
-                  href={it.href}
-                  className={cn(
-                    "relative flex items-center gap-2.5 transition-colors mb-0.5 rounded-full",
-                    collapsed ? "w-full h-[48px] justify-center" : "h-[48px] pl-[2px] pr-2",
-                    active
-                      ? "bg-[#FFF375] text-foreground font-semibold"
-                      : "text-muted-foreground hover:bg-card hover:text-foreground"
-                  )}
-                  data-testid={`link-${it.testId}`}
-                  data-active={active || undefined}
-                  onMouseEnter={collapsed ? (e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    setHoveredNav({ label: it.label, active, y: rect.top });
-                  } : undefined}
-                  onMouseLeave={collapsed ? () => setHoveredNav(null) : undefined}
-                >
-                  <div className="h-[44px] w-[44px] rounded-full border-2 border-border/30 flex items-center justify-center shrink-0">
-                    <Icon className="h-[17px] w-[17px]" />
+          <TooltipProvider delayDuration={300}>
+            <nav className="px-2 flex-1 overflow-y-auto min-h-0 pb-2">
+              {/* Section: (top — Campaigns) */}
+              {visibleNavItems.filter(it => it.label === "Campaigns").map((it) => renderDesktopNavLink(it))}
+
+              {/* Section: Engage */}
+              {(() => {
+                const engageItems = visibleNavItems.filter(it =>
+                  ["Leads", "Opportunities", "Chats", "Calendar"].includes(it.label)
+                );
+                if (engageItems.length === 0) return null;
+                return (
+                  <div className="mt-4">
+                    {collapsed ? (
+                      <div className="mx-auto w-5 border-t border-border/30 my-3" />
+                    ) : (
+                      <div className="px-1 pt-1.5 pb-0.5">
+                        <span className="text-[11px] font-bold tracking-wide text-muted-foreground/60">
+                          Engage
+                        </span>
+                      </div>
+                    )}
+                    {engageItems.map((it) => renderDesktopNavLink(it))}
                   </div>
-                  {!collapsed && (
-                    <span className="text-sm font-medium">{it.label}</span>
-                  )}
-                </Link>
-              );
-            })}
+                );
+              })()}
 
-            {/* Section: Engage */}
-            {(() => {
-              const engageItems = visibleNavItems.filter(it =>
-                ["Campaigns", "Leads", "Chats", "Calendar"].includes(it.label)
-              );
-              if (engageItems.length === 0) return null;
-              return (
-                <div className="mt-1">
-                  {collapsed ? (
-                    <div className="mx-auto w-5 border-t border-border/30 my-1.5" />
-                  ) : (
-                    <div className="px-1 pt-1.5 pb-0.5">
-                      <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                        Engage
-                      </span>
-                    </div>
-                  )}
-                  {engageItems.map((it) => {
-                    const active = isActive(it.href);
-                    const Icon = it.icon;
-                    return (
-                      <Link
-                        key={it.href}
-                        href={it.href}
-                        className={cn(
-                          "relative flex items-center gap-2.5 rounded-full transition-colors mb-0.5",
-                          collapsed ? "w-full h-[48px] justify-center" : "h-[48px] pl-[2px] pr-2",
-                          active
-                            ? "bg-[#FFF375] text-foreground font-semibold"
-                            : "text-muted-foreground hover:bg-card hover:text-foreground"
-                        )}
-                        data-testid={`link-${it.testId}`}
-                        data-active={active || undefined}
-                        onMouseEnter={collapsed ? (e) => {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          setHoveredNav({ label: it.label, active, y: rect.top });
-                        } : undefined}
-                        onMouseLeave={collapsed ? () => setHoveredNav(null) : undefined}
-                      >
-                        <div className="h-[44px] w-[44px] rounded-full border-2 border-border/30 flex items-center justify-center shrink-0">
-                          <Icon className="h-[17px] w-[17px]" />
-                        </div>
-                        {!collapsed && (
-                          <span className="text-sm font-medium">{it.label}</span>
-                        )}
-                      </Link>
-                    );
-                  })}
-                </div>
-              );
-            })()}
-
-            {/* Section: Admin (agency only) */}
-            {(() => {
-              const adminItems = visibleNavItems.filter(it =>
-                ["Accounts", "Users", "Tags", "Library", "Automations"].includes(it.label)
-              );
-              if (adminItems.length === 0) return null;
-              return (
-                <div className="mt-1">
-                  {collapsed ? (
-                    <div className="mx-auto w-5 border-t border-border/30 my-1.5" />
-                  ) : (
-                    <div className="px-1 pt-1.5 pb-0.5">
-                      <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                        Admin
-                      </span>
-                    </div>
-                  )}
-                  {adminItems.map((it) => {
-                    const active = isActive(it.href);
-                    const Icon = it.icon;
-                    return (
-                      <Link
-                        key={it.href}
-                        href={it.href}
-                        className={cn(
-                          "relative flex items-center gap-2.5 rounded-full transition-colors mb-0.5",
-                          collapsed ? "w-full h-[48px] justify-center" : "h-[48px] pl-[2px] pr-2",
-                          active
-                            ? "bg-[#FFF375] text-foreground font-semibold"
-                            : "text-muted-foreground hover:bg-card hover:text-foreground"
-                        )}
-                        data-testid={`link-${it.testId}`}
-                        data-active={active || undefined}
-                        onMouseEnter={collapsed ? (e) => {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          setHoveredNav({ label: it.label, active, y: rect.top });
-                        } : undefined}
-                        onMouseLeave={collapsed ? () => setHoveredNav(null) : undefined}
-                      >
-                        <div className="h-[44px] w-[44px] rounded-full border-2 border-border/30 flex items-center justify-center shrink-0">
-                          <Icon className="h-[17px] w-[17px]" />
-                        </div>
-                        {!collapsed && (
-                          <span className="text-sm font-medium">{it.label}</span>
-                        )}
-                      </Link>
-                    );
-                  })}
-                </div>
-              );
-            })()}
-          </nav>
-
-          {/* BOTTOM ACTIONS */}
-          <div className="px-2 mb-2 shrink-0 pt-1">
-            {/* HELP */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className={cn(
-                    "w-full h-[48px] rounded-full flex items-center gap-2.5 text-muted-foreground hover:text-foreground hover:bg-card transition-colors",
-                    collapsed ? "justify-center" : "px-2"
-                  )}
-                >
-                  <div className="h-[44px] w-[44px] rounded-full border-2 border-border/30 flex items-center justify-center shrink-0">
-                    <HelpCircle className="h-[17px] w-[17px]" />
+              {/* Section: Admin (agency only) */}
+              {(() => {
+                const adminItems = visibleNavItems.filter(it =>
+                  ["Accounts", "Users"].includes(it.label)
+                );
+                if (adminItems.length === 0) return null;
+                return (
+                  <div className="mt-4">
+                    {collapsed ? (
+                      <div className="mx-auto w-5 border-t border-border/30 my-3" />
+                    ) : (
+                      <div className="px-1 pt-1.5 pb-0.5">
+                        <span className="text-[11px] font-bold tracking-wide text-muted-foreground/60">
+                          Admin
+                        </span>
+                      </div>
+                    )}
+                    {adminItems.map((it) => renderDesktopNavLink(it))}
                   </div>
-                  {!collapsed && <span className="font-medium text-sm">Help</span>}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="right" align="start">
-                <DropdownMenuItem onClick={onOpenSupport}>
-                  <Headphones className="h-4 w-4 mr-2" />
-                  Support
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onToggleHelp}>
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Documentation
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+                );
+              })()}
 
-          {/* DB STATUS INDICATOR */}
-          <div className="px-3 mb-1 shrink-0">
-            <DbStatusIndicator collapsed={collapsed} />
-          </div>
+              {/* Section: Billing */}
+              {(() => {
+                const billingItems = visibleNavItems.filter(it =>
+                  ["Invoices", "Expenses", "Contracts"].includes(it.label)
+                );
+                if (billingItems.length === 0) return null;
+                return (
+                  <div className="mt-4">
+                    {collapsed ? (
+                      <div className="mx-auto w-5 border-t border-border/30 my-3" />
+                    ) : (
+                      <div className="px-1 pt-1.5 pb-0.5">
+                        <span className="text-[11px] font-bold tracking-wide text-muted-foreground/60">
+                          Billing
+                        </span>
+                      </div>
+                    )}
+                    {billingItems.map((it) => renderDesktopNavLink(it))}
+                  </div>
+                );
+              })()}
+
+              {/* Section: Backend (agency only) */}
+              {(() => {
+                const backendItems = visibleNavItems.filter(it =>
+                  ["Tags", "Library", "Automations"].includes(it.label)
+                );
+                if (backendItems.length === 0) return null;
+                return (
+                  <div className="mt-4">
+                    {collapsed ? (
+                      <div className="mx-auto w-5 border-t border-border/30 my-3" />
+                    ) : (
+                      <div className="px-1 pt-1.5 pb-0.5">
+                        <span className="text-[11px] font-bold tracking-wide text-muted-foreground/60">
+                          Backend
+                        </span>
+                      </div>
+                    )}
+                    {backendItems.map((it) => renderDesktopNavLink(it))}
+                  </div>
+                );
+              })()}
+            </nav>
+          </TooltipProvider>
+
 
         </div>
-
-        {/* Fixed-position pill tooltip — appears as an extension of the nav button */}
-        {collapsed && hoveredNav && (
-          <div
-            className={cn(
-              "fixed z-[150] pointer-events-none",
-              "flex items-center h-10 px-3 pr-4 whitespace-nowrap",
-              "text-sm font-semibold rounded-r-lg",
-              "shadow-[2px_2px_10px_rgba(0,0,0,0.12)]",
-              hoveredNav.active
-                ? "bg-[#FFF375] text-foreground"
-                : "bg-card text-foreground"
-            )}
-            style={{ left: 72, top: hoveredNav.y }}
-          >
-            {hoveredNav.label}
-          </div>
-        )}
       </aside>
     </>
   );

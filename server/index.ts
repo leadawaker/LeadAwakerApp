@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { setupAuth } from "./auth";
+import { verifySmtp } from "./email";
 
 const app = express();
 const httpServer = createServer(app);
@@ -23,6 +24,7 @@ declare module "http" {
 
 app.use(
   express.json({
+    limit: "20mb",
     verify: (req, _res, buf) => {
       req.rawBody = buf;
     },
@@ -73,6 +75,7 @@ app.use((req, res, next) => {
 
 (async () => {
   await registerRoutes(httpServer, app);
+  verifySmtp(); // Log SMTP status at startup (non-blocking)
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

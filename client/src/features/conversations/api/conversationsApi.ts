@@ -33,6 +33,33 @@ export const updateLeadTakeover = async (leadId: number, manualTakeover: boolean
   return await res.json();
 };
 
+export const updateLead = async (leadId: number, patch: Record<string, unknown>) => {
+  const res = await apiFetch(`/api/leads/${leadId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) throw new Error("Failed to update lead");
+  return await res.json();
+};
+
+export const addLeadTag = async (leadId: number, tagId: number) => {
+  const res = await apiFetch(`/api/leads/${leadId}/tags`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tagId }),
+  });
+  if (!res.ok) throw new Error("Failed to add tag");
+  return await res.json();
+};
+
+export const removeLeadTag = async (leadId: number, tagId: number) => {
+  const res = await apiFetch(`/api/leads/${leadId}/tags/${tagId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to remove tag");
+};
+
 export const sendMessage = async (payload: {
   leadsId: number;
   accountsId: number;
@@ -42,6 +69,8 @@ export const sendMessage = async (payload: {
   direction: string;
   status: string;
   who?: string;
+  aiGenerated?: boolean;
+  isManualFollowUp?: boolean;
 }) => {
   const res = await apiFetch("/api/interactions", {
     method: "POST",

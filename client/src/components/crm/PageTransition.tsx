@@ -5,22 +5,21 @@ interface PageTransitionProps {
 }
 
 /**
- * Wraps page content with a subtle fade + slide-up animation on mount.
- * Each CrmShell page mounts fresh, so this provides a smooth enter transition.
- * Animations are fast (220ms) and use GPU-accelerated properties (opacity, transform).
- * Uses the design system easing: cubic-bezier(0.25, 0.1, 0.25, 1) — smooth deceleration.
+ * Wraps page content with a fast opacity-only fade on mount.
+ * Pure crossfade (no spatial motion) so identical bg-muted panels
+ * appear to persist across page navigations without any visible jump.
  */
 export function PageTransition({ children }: PageTransitionProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{
-        duration: 0.22,
+        duration: 0.15,
         ease: [0.25, 0.1, 0.25, 1],
       }}
       className="h-full w-full"
-      style={{ willChange: "opacity, transform" }}
+      style={{ willChange: "opacity" }}
     >
       {children}
     </motion.div>

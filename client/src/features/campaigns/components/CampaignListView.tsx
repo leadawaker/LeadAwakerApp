@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { motion } from "framer-motion";
 import {
   Search,
   Zap,
@@ -10,6 +11,8 @@ import {
   Filter,
   X,
   Megaphone,
+  Building2,
+  Plus,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -27,6 +30,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import type { Campaign, CampaignMetricsHistory } from "@/types/models";
+import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
+import { IconBtn } from "@/components/ui/icon-btn";
 import { cn } from "@/lib/utils";
 import { CampaignDetailView, CampaignDetailViewEmpty } from "./CampaignDetailView";
 import type {
@@ -34,6 +39,24 @@ import type {
   CampaignGroupBy,
   CampaignSortBy,
 } from "../pages/CampaignsPage";
+
+/* ── Card stagger animation variants ── */
+const staggerContainerVariants = {
+  hidden: {},
+  visible: (count: number) => ({
+    transition: {
+      staggerChildren: Math.min(1 / Math.max(count, 1), 0.08),
+    },
+  }),
+};
+const staggerItemVariants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as const },
+  },
+};
 
 // ── Campaign status → avatar pastel colors ────────────────────────────────────
 const CAMPAIGN_STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -115,7 +138,7 @@ const STATUS_GROUP_ORDER = ["Active", "Paused", "Completed", "Finished", "Draft"
 const STATUS_FILTER_OPTIONS = ["Active", "Paused", "Completed", "Inactive", "Draft"];
 
 // ── View tab definitions ────────────────────────────────────────────────────
-const VIEW_TABS: { id: CampaignViewMode; label: string; icon: typeof List }[] = [
+const VIEW_TABS: TabDef[] = [
   { id: "list",  label: "List",  icon: List },
   { id: "table", label: "Table", icon: Table2 },
 ];
@@ -141,6 +164,7 @@ function CampaignListCard({
   const avatarColor = getCampaignAvatarColor(status);
   const leads = getLeadCount(campaign);
   const responseRate = getResponseRate(campaign);
+  const bookingRate = Number(campaign.booking_rate_percent ?? 0);
   const lastUpdated = (campaign as any).updated_at || (campaign as any).nc_updated_at || (campaign as any).created_at;
   const accountName = campaign.account_name || "";
   const statusHex = CAMPAIGN_STATUS_HEX[status] || "#6B7280";
@@ -149,84 +173,74 @@ function CampaignListCard({
     <div
       className={cn(
         "relative mx-[3px] my-0.5 rounded-xl cursor-pointer transition-colors",
-        isActive ? "bg-[#FFF6C8]" : "bg-[#F1F1F1] hover:bg-[#FAFAFA]"
+        isActive ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] hover:bg-[#FAFAFA]"
       )}
       onClick={onClick}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onClick()}
     >
-      <div className="px-2.5 pt-4 pb-2 flex flex-col gap-2">
+      <div className="px-2.5 pt-3.5 pb-2.5 flex flex-col gap-2.5">
 
-        {/* Top row: Avatar + Name/Status */}
-        <div className="flex items-start gap-2">
+        {/* Top row: Avatar + Name + Status badge */}
+        <div className="flex items-center gap-2.5">
           <div
-            className="h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
+            className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0"
             style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
           >
             {initials}
           </div>
-          <div className="flex-1 min-w-0 pt-0.5">
-            <p className="text-[17px] font-semibold font-heading leading-tight truncate text-foreground">
+          <div className="flex-1 min-w-0">
+            <p className="text-[14px] font-semibold font-heading leading-tight truncate text-foreground">
               {name}
             </p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span
-                className="inline-flex items-center gap-1 text-[11px] text-muted-foreground leading-tight"
-              >
-                <span
-                  className="h-1.5 w-1.5 rounded-full shrink-0"
-                  style={{ backgroundColor: statusHex }}
-                />
-                {status || "Unknown"}
-              </span>
-              {leads > 0 && (
-                <span className="text-[10px] text-muted-foreground/70">· {leads} leads</span>
-              )}
-              {responseRate > 0 && (
-                <span className="text-[10px] text-muted-foreground/70">· {responseRate}%</span>
-              )}
+                className="h-1.5 w-1.5 rounded-full shrink-0"
+                style={{ backgroundColor: statusHex }}
+              />
+              <span className="text-[11px] text-muted-foreground leading-none">{status || "Unknown"}</span>
             </div>
+            {accountName && (
+              <div className="flex items-center gap-1 mt-1">
+                <Building2 className="h-2.5 w-2.5 text-muted-foreground/50 shrink-0" />
+                <span className="text-[11px] font-medium text-foreground/65 truncate">{accountName}</span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Description snippet */}
-        {campaign.description && (
-          <p className="text-[10px] text-muted-foreground truncate italic">
-            {campaign.description}
-          </p>
-        )}
+        {/* Metrics strip: 3 stats side by side */}
+        <div className={cn(
+          "grid grid-cols-3 gap-px rounded-lg overflow-hidden",
+          isActive ? "bg-[#EFE4A0]/60" : "bg-foreground/8"
+        )}>
+          {[
+            { label: "Leads", value: leads > 0 ? leads.toLocaleString() : "—" },
+            { label: "Response", value: responseRate > 0 ? `${responseRate}%` : "—" },
+            { label: "Booked", value: bookingRate > 0 ? `${bookingRate}%` : "—" },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className={cn(
+                "flex flex-col items-center py-1.5",
+                isActive ? "bg-[#FFF1C8]" : "bg-[#F1F1F1]"
+              )}
+            >
+              <span className="text-[13px] font-bold tabular-nums text-foreground leading-tight">{stat.value}</span>
+              <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wide mt-0.5">{stat.label}</span>
+            </div>
+          ))}
+        </div>
 
-        {/* Bottom row: account (left) | time (middle) | lead count circle (right) */}
-        <div className="flex items-center gap-1.5">
-          <div className="flex items-center gap-1 flex-wrap flex-1 min-w-0">
-            {accountName && (
-              <span className="inline-flex items-center px-1.5 py-px rounded-full text-[10px] font-medium bg-black/[0.06] text-foreground/55">
-                {accountName}
-              </span>
-            )}
-            {campaign.type && (
-              <span className="inline-flex items-center px-1.5 py-px rounded-full text-[10px] font-medium bg-black/[0.06] text-foreground/55">
-                {campaign.type}
-              </span>
-            )}
-          </div>
-          {lastUpdated && (
-            <span className="text-[10px] text-muted-foreground/70 shrink-0 tabular-nums">
+        {/* Bottom row: timestamp */}
+        {lastUpdated && (
+          <div className="flex items-center justify-end">
+            <span className="text-[10px] text-muted-foreground/50 tabular-nums">
               {formatRelativeTime(lastUpdated)}
             </span>
-          )}
-          <div
-            className="h-[34px] w-[34px] rounded-full flex items-center justify-center text-[9px] font-bold tabular-nums shrink-0"
-            style={
-              isActive
-                ? { backgroundColor: "#000", color: "#fff" }
-                : { backgroundColor: `${statusHex}20`, color: statusHex }
-            }
-          >
-            {leads > 0 ? leads : "—"}
           </div>
-        </div>
+        )}
 
       </div>
     </div>
@@ -236,13 +250,9 @@ function CampaignListCard({
 // ── Group header ─────────────────────────────────────────────────────────────
 function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div className="sticky top-0 z-20 bg-muted px-3 pt-1.5 pb-1.5">
-      <div className="flex items-center gap-0">
-        <div className="flex-1 h-px bg-foreground/15 mx-[8px]" />
-        <span className="text-[10px] font-bold text-foreground/55 uppercase tracking-widest shrink-0">{label}</span>
-        <span className="ml-1 text-[9px] text-muted-foreground/45 font-semibold shrink-0">{count}</span>
-        <div className="flex-1 h-px bg-foreground/15 mx-[8px]" />
-      </div>
+    <div className="sticky top-0 z-20 bg-muted px-4 pt-3 pb-1.5 flex items-center gap-2">
+      <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">{label}</span>
+      <span className="text-[9px] font-semibold text-muted-foreground/40 tabular-nums bg-foreground/8 px-1.5 py-px rounded-full">{count}</span>
     </div>
   );
 }
@@ -257,7 +267,7 @@ function ListSkeleton() {
           className="flex items-center gap-3 px-4 py-3.5 rounded-lg animate-pulse"
           style={{ animationDelay: `${i * 50}ms` }}
         >
-          <div className="h-9 w-9 rounded-full bg-foreground/10 shrink-0" />
+          <div className="h-10 w-10 rounded-full bg-foreground/10 shrink-0" />
           <div className="flex-1 space-y-2">
             <div className="h-3 bg-foreground/10 rounded-full w-2/3" />
             <div className="h-2.5 bg-foreground/8 rounded-full w-1/2" />
@@ -277,6 +287,8 @@ interface CampaignListViewProps {
   onSelectCampaign: (campaign: Campaign) => void;
   onEditCampaign: (campaign: Campaign) => void;
   onToggleStatus: (campaign: Campaign) => void;
+  onSave: (id: number, patch: Record<string, unknown>) => Promise<void>;
+  onCreateCampaign: () => void;
   // Lifted controls
   viewMode: CampaignViewMode;
   onViewModeChange: (v: CampaignViewMode) => void;
@@ -290,6 +302,9 @@ interface CampaignListViewProps {
   onSortByChange: (v: CampaignSortBy) => void;
   filterStatus: string[];
   onToggleFilterStatus: (s: string) => void;
+  filterAccount?: string;
+  onFilterAccountChange?: (a: string) => void;
+  availableAccounts?: string[];
   hasNonDefaultControls: boolean;
   isGroupNonDefault: boolean;
   isSortNonDefault: boolean;
@@ -305,6 +320,8 @@ export function CampaignListView({
   onSelectCampaign,
   onEditCampaign,
   onToggleStatus,
+  onSave,
+  onCreateCampaign,
   viewMode,
   onViewModeChange,
   listSearch,
@@ -317,6 +334,9 @@ export function CampaignListView({
   onSortByChange,
   filterStatus,
   onToggleFilterStatus,
+  filterAccount = "",
+  onFilterAccountChange,
+  availableAccounts = [],
   hasNonDefaultControls,
   isGroupNonDefault,
   isSortNonDefault,
@@ -344,6 +364,11 @@ export function CampaignListView({
         const s = String(c.status || "");
         return filterStatus.includes(s) || (filterStatus.includes("Completed") && s === "Finished");
       });
+    }
+
+    // 2b. Account filter
+    if (filterAccount) {
+      filtered = filtered.filter((c) => String(c.account_name || "") === filterAccount);
     }
 
     // 3. Sort
@@ -399,7 +424,7 @@ export function CampaignListView({
     });
 
     return result;
-  }, [campaigns, listSearch, filterStatus, sortBy, groupBy]);
+  }, [campaigns, listSearch, filterStatus, filterAccount, sortBy, groupBy]);
 
   // Paginate
   const totalCampaigns = flatItems.filter((i) => i.kind === "campaign").length;
@@ -435,7 +460,22 @@ export function CampaignListView({
   }, [flatItems, currentPage, totalCampaigns]);
 
   // Reset page on filter change
-  useEffect(() => { setCurrentPage(0); }, [listSearch, filterStatus, groupBy, sortBy]);
+  useEffect(() => { setCurrentPage(0); }, [listSearch, filterStatus, filterAccount, groupBy, sortBy]);
+
+  // ── Responsive compact layout for right panel ─────────────────────────────
+  // Right panel is flex-1. Compact (stacked) when < 700px wide.
+  const rightPanelRef = useRef<HTMLDivElement>(null);
+  const [isDetailCompact, setIsDetailCompact] = useState(true);
+
+  useEffect(() => {
+    const el = rightPanelRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setIsDetailCompact(entry.contentRect.width < 700);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Auto-select first campaign
   useEffect(() => {
@@ -446,69 +486,38 @@ export function CampaignListView({
   }, [flatItems, selectedCampaign, campaigns.length, onSelectCampaign]);
 
   // Active filter / sort / group state booleans for button highlights
-  const isFilterActive = filterStatus.length > 0;
+  const isFilterActive = filterStatus.length > 0 || !!filterAccount;
 
   return (
     <div className="flex h-full gap-[3px]" data-testid="campaign-list-view">
 
       {/* ── LEFT PANEL: campaign list ─────────────────────────────────── */}
-      <div className="w-[300px] shrink-0 flex flex-col bg-muted rounded-lg overflow-hidden">
+      <div className="w-[340px] shrink-0 flex flex-col bg-muted rounded-lg overflow-hidden">
 
-        {/* Header: title + count badge */}
-        <div className="px-3.5 pt-7 pb-1 shrink-0">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">My Campaigns</h2>
-            <span className="h-8 w-8 rounded-full border border-border/50 flex items-center justify-center text-[10px] font-semibold tabular-nums text-muted-foreground shrink-0">
-              {totalCampaigns}
-            </span>
-          </div>
+        {/* Header: title + count */}
+        <div className="px-3.5 pt-5 pb-1 shrink-0 flex items-center justify-between">
+          <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Campaigns</h2>
+          <span className="w-10 text-center text-[12px] font-medium text-muted-foreground tabular-nums">{totalCampaigns}</span>
         </div>
 
         {/* Controls row: tabs (left) + search & settings (right) */}
         <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center justify-between gap-2">
           {/* Tab buttons */}
-          <div className="flex items-center gap-1">
-            {VIEW_TABS.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = viewMode === tab.id;
-              return isActive ? (
-                <button
-                  key={tab.id}
-                  onClick={() => onViewModeChange(tab.id)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFF375] text-foreground text-[12px] font-semibold"
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {tab.label}
-                </button>
-              ) : (
-                <button
-                  key={tab.id}
-                  onClick={() => onViewModeChange(tab.id)}
-                  title={tab.label}
-                  className="h-8 w-8 rounded-full border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                </button>
-              );
-            })}
-          </div>
+          <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as CampaignViewMode)} />
 
-          {/* Right controls: search + settings */}
-          <div className="flex items-center gap-1">
+          {/* Right controls: + / search / settings */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* New campaign */}
+            <IconBtn title="New Campaign" onClick={onCreateCampaign}>
+              <Plus className="h-4 w-4" />
+            </IconBtn>
+
             {/* Search popover */}
             <Popover open={searchOpen} onOpenChange={onSearchOpenChange}>
               <PopoverTrigger asChild>
-                <button
-                  className={cn(
-                    "h-8 w-8 rounded-full border flex items-center justify-center transition-colors",
-                    listSearch
-                      ? "border-brand-blue/40 text-brand-blue"
-                      : "border-border/50 text-muted-foreground hover:text-foreground hover:border-foreground/30"
-                  )}
-                  title="Search"
-                >
-                  <Search className="h-3.5 w-3.5" />
-                </button>
+                <IconBtn active={!!listSearch} title="Search">
+                  <Search className="h-4 w-4" />
+                </IconBtn>
               </PopoverTrigger>
               <PopoverContent
                 side="bottom"
@@ -538,20 +547,12 @@ export function CampaignListView({
               </PopoverContent>
             </Popover>
 
-            {/* Settings dropdown */}
+            {/* Settings */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button
-                  className={cn(
-                    "h-8 w-8 rounded-full border flex items-center justify-center transition-colors",
-                    hasNonDefaultControls
-                      ? "border-brand-blue/40 text-brand-blue"
-                      : "border-border/50 text-muted-foreground hover:text-foreground hover:border-foreground/30"
-                  )}
-                  title="Settings"
-                >
-                  <SlidersHorizontal className="h-3.5 w-3.5" />
-                </button>
+                <IconBtn active={hasNonDefaultControls} title="Group, Sort & Filter">
+                  <SlidersHorizontal className="h-4 w-4" />
+                </IconBtn>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 {/* Group sub-menu */}
@@ -594,12 +595,12 @@ export function CampaignListView({
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
 
-                {/* Filter sub-menu */}
+                {/* Filter Status sub-menu */}
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
                     <Filter className="h-3.5 w-3.5 mr-2" />
                     <span>Filter Status</span>
-                    {isFilterActive && <span className="ml-auto text-[10px] text-brand-blue font-semibold">{filterStatus.length}</span>}
+                    {filterStatus.length > 0 && <span className="ml-auto text-[10px] text-brand-blue font-semibold">{filterStatus.length}</span>}
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
                     {STATUS_FILTER_OPTIONS.map((s) => (
@@ -621,6 +622,37 @@ export function CampaignListView({
                     ))}
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
+
+                {/* Filter Account sub-menu — agency users only */}
+                {availableAccounts.length > 0 && (
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <Building2 className="h-3.5 w-3.5 mr-2" />
+                      <span>Filter Account</span>
+                      {filterAccount && <span className="ml-auto text-[10px] text-brand-blue font-semibold truncate max-w-[60px]">{filterAccount}</span>}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="max-h-60 overflow-y-auto">
+                      <DropdownMenuItem
+                        onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(""); }}
+                        className={cn("flex items-center gap-2", !filterAccount && "font-bold text-brand-blue")}
+                      >
+                        <span className="flex-1">All Accounts</span>
+                        {!filterAccount && <span className="text-brand-blue">✓</span>}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      {availableAccounts.map((a) => (
+                        <DropdownMenuItem
+                          key={a}
+                          onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(filterAccount === a ? "" : a); }}
+                          className={cn("flex items-center gap-2", filterAccount === a && "font-bold text-brand-blue")}
+                        >
+                          <span className="flex-1 truncate">{a}</span>
+                          {filterAccount === a && <span className="text-brand-blue">✓</span>}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                )}
 
                 {/* Reset */}
                 {hasNonDefaultControls && (
@@ -647,23 +679,36 @@ export function CampaignListView({
               {listSearch && <p className="text-xs text-muted-foreground/70 mt-1">Try a different search</p>}
             </div>
           ) : (
-            paginatedItems.map((item, idx) => {
-              if (item.kind === "header") {
-                return <GroupHeader key={`h-${item.label}`} label={item.label} count={item.count} />;
-              }
-              const cid = getCampaignId(item.campaign);
-              const isSelected = selectedCampaign
-                ? getCampaignId(selectedCampaign) === cid
-                : false;
-              return (
-                <CampaignListCard
-                  key={cid || idx}
-                  campaign={item.campaign}
-                  isActive={isSelected}
-                  onClick={() => onSelectCampaign(item.campaign)}
-                />
-              );
-            })
+            <motion.div
+              key={`page-${currentPage}`}
+              variants={staggerContainerVariants}
+              initial="hidden"
+              animate="visible"
+              custom={paginatedItems.length}
+            >
+              {paginatedItems.map((item, idx) => {
+                if (item.kind === "header") {
+                  return (
+                    <motion.div key={`h-${item.label}`} variants={staggerItemVariants}>
+                      <GroupHeader label={item.label} count={item.count} />
+                    </motion.div>
+                  );
+                }
+                const cid = getCampaignId(item.campaign);
+                const isSelected = selectedCampaign
+                  ? getCampaignId(selectedCampaign) === cid
+                  : false;
+                return (
+                  <motion.div key={cid || idx} variants={staggerItemVariants}>
+                    <CampaignListCard
+                      campaign={item.campaign}
+                      isActive={isSelected}
+                      onClick={() => onSelectCampaign(item.campaign)}
+                    />
+                  </motion.div>
+                );
+              })}
+            </motion.div>
           )}
         </div>
 
@@ -692,13 +737,15 @@ export function CampaignListView({
       </div>
 
       {/* ── RIGHT PANEL: detail view ──────────────────────────────────── */}
-      <div className="flex-1 flex flex-col overflow-hidden rounded-lg">
+      <div ref={rightPanelRef} className="flex-1 flex flex-col overflow-hidden rounded-lg">
         {selectedCampaign ? (
           <CampaignDetailView
             campaign={selectedCampaign}
             metrics={metrics}
-            onEdit={onEditCampaign}
+            allCampaigns={campaigns}
             onToggleStatus={onToggleStatus}
+            onSave={onSave}
+            compact={isDetailCompact}
           />
         ) : (
           <CampaignDetailViewEmpty />

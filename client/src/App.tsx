@@ -15,6 +15,7 @@ import About from "@/pages/about";
 import Services from "@/pages/services";
 import BookDemo from "@/pages/book-demo";
 import Login from "@/pages/login";
+import AcceptInvite from "@/pages/AcceptInvite";
 import AppArea from "@/pages/app";
 import Canvas from "@/pages/canvas";
 import PrivacyPolicy from "@/pages/privacy-policy";
@@ -85,6 +86,7 @@ function AppRoutes() {
       <Route path="/services" component={Services} />
       <Route path="/book-demo" component={BookDemo} />
       <Route path="/login" component={Login} />
+      <Route path="/accept-invite" component={AcceptInvite} />
       <Route path="/agency" component={AppArea} />
       <Route path="/agency/:rest*" component={AppArea} />
       <Route path="/subaccount" component={AppArea} />
@@ -113,6 +115,7 @@ function LanguageRouter({ lang }: { lang: Lang }) {
       <Route path={`/${lang}/services`} component={Services} />
       <Route path={`/${lang}/book-demo`} component={BookDemo} />
       <Route path={`/${lang}/login`} component={Login} />
+      <Route path={`/${lang}/accept-invite`} component={AcceptInvite} />
       <Route path={`/${lang}/canvas`} component={Canvas} />
       <Route path={`/${lang}/privacy-policy`} component={PrivacyPolicy} />
       <Route path={`/${lang}/terms-of-service`} component={TermsOfService} />

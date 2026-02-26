@@ -1,6 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { type Server } from "http";
 import { storage, paginatedQuery } from "./storage";
+import { sendInviteEmail, verifySmtp } from "./email";
 import {
   requireAuth,
   requireAgency,
@@ -19,6 +20,8 @@ import {
   promptLibrary,
   leadScoreHistory,
   campaignMetricsHistory,
+  invoices,
+  contracts,
   insertAccountsSchema,
   insertCampaignsSchema,
   insertLeadsSchema,
@@ -27,12 +30,42 @@ import {
   insertPrompt_LibrarySchema,
   insertCampaignMetricsHistorySchema,
   insertUsersSchema,
+  insertInvoicesSchema,
+  insertContractsSchema,
+  insertExpensesSchema,
 } from "@shared/schema";
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "./dbKeys";
+import { saveInvoiceArtifacts } from "./invoiceArtifacts";
 import { db, pool } from "./db";
 import { eq, count, type SQL } from "drizzle-orm";
 import { ZodError } from "zod";
+
+/** Module-level flag to emit the FRONTEND_URL warning only once per process. */
+let frontendUrlWarned = false;
+
+/**
+ * Build the frontend base URL for invite links.
+ * Prefers the origin sent by the browser (window.location.origin) — this is
+ * the only reliable source when the API sits behind a Vite proxy that rewrites
+ * the Host header. Falls back to FRONTEND_URL or the request host.
+ */
+function frontendBaseUrl(req: Request): string {
+  // Browser-supplied origin is the most reliable source
+  if (req.body?.frontendOrigin && typeof req.body.frontendOrigin === "string") {
+    return req.body.frontendOrigin.replace(/\/$/, "");
+  }
+  if (process.env.STANDALONE_API) {
+    let port = "5000";
+    if (process.env.FRONTEND_URL) {
+      try { port = new URL(process.env.FRONTEND_URL).port || "80"; } catch { /* ignore */ }
+    }
+    return `${req.protocol}://${req.hostname}:${port}`;
+  }
+  return process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
+}
 
 /** Return a 422 with Zod validation errors in a readable format. */
 function handleZodError(res: Response, err: ZodError) {
@@ -85,6 +118,25 @@ export async function registerRoutes(
 ): Promise<Server> {
   // ─── Auth Routes (public) ──────────────────────────────────────────
   registerAuthRoutes(app);
+
+  // ─── Email Test (agency only) ──────────────────────────────────────
+  app.post("/api/admin/test-email", requireAgency, async (req, res) => {
+    const { to } = req.body;
+    if (!to) return res.status(400).json({ message: "to is required" });
+    try {
+      const ok = await verifySmtp().then(() => true).catch(() => false);
+      if (!ok) return res.status(500).json({ message: "SMTP connection failed — check server logs for details" });
+      await sendInviteEmail({
+        to,
+        inviteLink: "https://example.com/accept-invite?token=test&email=test%40example.com",
+        role: "Test",
+        invitedBy: req.user?.email || "admin",
+      });
+      res.json({ message: `Test email sent to ${to}` });
+    } catch (err: any) {
+      res.status(500).json({ message: `Email failed: ${err.message}` });
+    }
+  });
 
   // ─── Health Check (public for monitoring) ─────────────────────────
   app.get("/api/health", async (_req, res) => {
@@ -521,6 +573,14 @@ export async function registerRoutes(
     res.json(data);
   }));
 
+  // ─── Notifications ─────────────────────────────────────────
+
+  app.get("/api/notifications", requireAuth, scopeToAccount, wrapAsync(async (req, res) => {
+    const forcedId = (req as any).forcedAccountId as number | undefined;
+    const data = await storage.getRecentNotifications(forcedId);
+    res.json(data);
+  }));
+
   // ─── Users ────────────────────────────────────────────────────────
 
   app.get("/api/users", requireAgency, wrapAsync(async (_req, res) => {
@@ -568,7 +628,7 @@ export async function registerRoutes(
   // POST /api/users/invite — generate invite token and create pending user record
   app.post("/api/users/invite", requireAgency, async (req, res) => {
     try {
-      const { email, role, accountsId } = req.body;
+      const { email, role, accountsId, lang = "en" } = req.body;
       if (!email || typeof email !== "string") {
         return res.status(400).json({ message: "email is required" });
       }
@@ -576,10 +636,54 @@ export async function registerRoutes(
         return res.status(400).json({ message: "role is required" });
       }
 
+      // Warn once if STANDALONE_API is set but FRONTEND_URL is missing
+      if (process.env.STANDALONE_API && !process.env.FRONTEND_URL && !frontendUrlWarned) {
+        frontendUrlWarned = true;
+        console.warn("[invite] ⚠️  STANDALONE_API is set but FRONTEND_URL is not — invite links will use localhost:5000. Set FRONTEND_URL in .env to fix.");
+      }
+
       // Check if user with this email already exists
       const existing = await storage.getAppUserByEmail(email);
       if (existing) {
-        return res.status(409).json({ message: "A user with this email already exists" });
+        if (existing.status === "Active") {
+          return res.status(409).json({ message: "A user with this email is already active" });
+        }
+        if (existing.status === "Invited") {
+          return res.status(409).json({ message: "A pending invite already exists for this email — use Resend instead" });
+        }
+        // status === "Inactive" — allow re-invite: update the existing record
+        const inviteToken = crypto.randomBytes(32).toString("hex");
+        const newPreferences = JSON.stringify({
+          invite_token: inviteToken,
+          invite_sent_at: new Date().toISOString(),
+          invited_by: req.user?.email || "admin",
+          lang,
+        });
+        const updated = await storage.updateAppUser(existing.id, {
+          status: "Invited",
+          preferences: newPreferences,
+        });
+        if (!updated) return res.status(500).json({ message: "Failed to re-invite user" });
+
+        const { passwordHash: _, ...safeUser } = updated;
+
+        const baseUrl = frontendBaseUrl(req);
+        const inviteLink = `${baseUrl}/accept-invite?token=${inviteToken}&email=${encodeURIComponent(email)}`;
+        console.log(`\n📧 RE-INVITE EMAIL (dev mode)\nTo: ${email}\nRole: ${role}\nInvite link: ${inviteLink}\nToken: ${inviteToken}\n`);
+
+        sendInviteEmail({
+          to: email,
+          inviteLink,
+          role,
+          invitedBy: req.user?.email || "admin",
+          lang,
+        }).catch((err) => console.error("[email] Failed to send re-invite email:", err));
+
+        return res.status(200).json({
+          user: safeUser,
+          invite_token: inviteToken,
+          message: `Invite resent to ${email}`,
+        });
       }
 
       // Generate a secure random invite token
@@ -590,6 +694,7 @@ export async function registerRoutes(
         invite_token: inviteToken,
         invite_sent_at: new Date().toISOString(),
         invited_by: req.user?.email || "admin",
+        lang,
       });
 
       // Create the user record with Invited status
@@ -605,10 +710,19 @@ export async function registerRoutes(
 
       const { passwordHash: _, ...safeUser } = newUser;
 
-      // Build invite URL from env or request host (never hardcode localhost)
-      const baseUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
+      // Build invite URL from request host (so link works on any LAN machine)
+      const baseUrl = frontendBaseUrl(req);
       const inviteLink = `${baseUrl}/accept-invite?token=${inviteToken}&email=${encodeURIComponent(email)}`;
       console.log(`\n📧 INVITE EMAIL (dev mode)\nTo: ${email}\nRole: ${role}\nInvite link: ${inviteLink}\nToken: ${inviteToken}\n`);
+
+      // Send invite email (fire-and-forget — invite creation succeeds even if email fails)
+      sendInviteEmail({
+        to: email,
+        inviteLink,
+        role,
+        invitedBy: req.user?.email || "admin",
+        lang,
+      }).catch((err) => console.error("[email] Failed to send invite email:", err));
 
       res.status(201).json({
         user: safeUser,
@@ -646,11 +760,14 @@ export async function registerRoutes(
         } catch {}
       }
 
+      const lang: string = existingPrefs.lang || "en";
+
       const newPreferences = JSON.stringify({
         ...existingPrefs,
         invite_token: inviteToken,
         invite_sent_at: new Date().toISOString(),
         invited_by: req.user?.email || "admin",
+        lang,
       });
 
       const updated = await storage.updateAppUser(targetId, { preferences: newPreferences });
@@ -658,10 +775,19 @@ export async function registerRoutes(
 
       const { passwordHash: _, ...safeUser } = updated;
 
-      // Build invite URL from env or request host (never hardcode localhost)
-      const baseUrl = process.env.FRONTEND_URL || `${req.protocol}://${req.get("host")}`;
+      // Build invite URL from request host (so link works on any LAN machine)
+      const baseUrl = frontendBaseUrl(req);
       const inviteLink = `${baseUrl}/accept-invite?token=${inviteToken}&email=${encodeURIComponent(user.email || "")}`;
       console.log(`\n📧 RESENT INVITE (dev mode)\nTo: ${user.email}\nInvite link: ${inviteLink}\nToken: ${inviteToken}\n`);
+
+      // Resend invite email (fire-and-forget)
+      sendInviteEmail({
+        to: user.email || "",
+        inviteLink,
+        role: user.role || "Viewer",
+        invitedBy: req.user?.email || "admin",
+        lang,
+      }).catch((err) => console.error("[email] Failed to resend invite email:", err));
 
       res.json({
         user: safeUser,
@@ -848,6 +974,389 @@ export async function registerRoutes(
       res.status(500).json({ message: "Failed to fetch dashboard trends", error: err.message });
     }
   });
+
+  // ─── Invoices ────────────────────────────────────────────────────────
+
+  app.get("/api/invoices", requireAuth, scopeToAccount, wrapAsync(async (req, res) => {
+    const forcedId = (req as any).forcedAccountId as number | undefined;
+    const accountId = forcedId ?? (req.query.accountId ? Number(req.query.accountId) : undefined);
+    const data = accountId
+      ? await storage.getInvoicesByAccountId(accountId)
+      : await storage.getInvoices();
+    res.json(toDbKeysArray(data as any, invoices));
+  }));
+
+  app.get("/api/invoices/view/:token", wrapAsync(async (req, res) => {
+    const invoice = await storage.getInvoiceByViewToken(req.params.token);
+    if (!invoice) return res.status(404).json({ message: "Invoice not found" });
+    // Increment view count, set viewed_at on first view, auto-update status
+    const update: any = {
+      viewedCount: (invoice.viewedCount ?? 0) + 1,
+    };
+    if (!invoice.viewedAt) update.viewedAt = new Date();
+    if (invoice.status === "Sent") update.status = "Viewed";
+    await storage.updateInvoice(invoice.id!, update);
+    res.json(toDbKeys({ ...invoice, ...update } as any, invoices));
+  }));
+
+  app.get("/api/invoices/:id", requireAuth, wrapAsync(async (req, res) => {
+    const invoice = await storage.getInvoiceById(Number(req.params.id));
+    if (!invoice) return res.status(404).json({ message: "Invoice not found" });
+    if (req.user!.accountsId !== 1 && invoice.accountsId !== req.user!.accountsId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    res.json(toDbKeys(invoice as any, invoices));
+  }));
+
+  app.post("/api/invoices", requireAgency, wrapAsync(async (req, res) => {
+    const body = fromDbKeys(req.body, invoices) as Record<string, unknown>;
+    const INVOICE_DATE_FIELDS = ["sentAt", "paidAt", "viewedAt"];
+    const coerced = coerceDates(body, INVOICE_DATE_FIELDS);
+    const parsed = insertInvoicesSchema.safeParse(coerced);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+
+    // Auto-generate invoice number: INV-{SLUG}-{SEQ}
+    let invoiceNumber = parsed.data.invoiceNumber;
+    if (!invoiceNumber && parsed.data.accountsId) {
+      const account = await storage.getAccountById(parsed.data.accountsId);
+      const slug = (account?.slug || account?.name || "GEN").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+      const invoiceCount = await storage.getInvoiceCountByAccountId(parsed.data.accountsId);
+      invoiceNumber = `INV-${slug}-${String(invoiceCount + 1).padStart(3, "0")}`;
+    }
+
+    const data = {
+      ...parsed.data,
+      invoiceNumber: invoiceNumber || `INV-${Date.now()}`,
+      viewToken: crypto.randomUUID(),
+      status: parsed.data.status || "Draft",
+    };
+    const invoice = await storage.createInvoice(data);
+    res.status(201).json(toDbKeys(invoice as any, invoices));
+  }));
+
+  app.patch("/api/invoices/:id", requireAgency, wrapAsync(async (req, res) => {
+    const existing = await storage.getInvoiceById(Number(req.params.id));
+    if (!existing) return res.status(404).json({ message: "Invoice not found" });
+    const body = fromDbKeys(req.body, invoices) as Record<string, unknown>;
+    const INVOICE_DATE_FIELDS = ["sentAt", "paidAt", "viewedAt"];
+    const coerced = coerceDates(body, INVOICE_DATE_FIELDS);
+    const parsed = insertInvoicesSchema.partial().safeParse(coerced);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const invoice = await storage.updateInvoice(Number(req.params.id), parsed.data);
+    if (!invoice) return res.status(404).json({ message: "Invoice not found" });
+    res.json(toDbKeys(invoice as any, invoices));
+  }));
+
+  app.patch("/api/invoices/:id/mark-sent", requireAgency, wrapAsync(async (req, res) => {
+    const invoice = await storage.updateInvoice(Number(req.params.id), {
+      status: "Sent",
+      sentAt: new Date(),
+    } as any);
+    if (!invoice) return res.status(404).json({ message: "Invoice not found" });
+    res.json(toDbKeys(invoice as any, invoices));
+  }));
+
+  app.patch("/api/invoices/:id/mark-paid", requireAgency, wrapAsync(async (req, res) => {
+    const invoice = await storage.updateInvoice(Number(req.params.id), {
+      status: "Paid",
+      paidAt: new Date(),
+    } as any);
+    if (!invoice) return res.status(404).json({ message: "Invoice not found" });
+
+    // Fire-and-forget: save PDF + append revenue.csv row
+    saveInvoiceArtifacts(invoice).catch(err =>
+      console.error("[invoice-artifacts] Failed:", err)
+    );
+
+    res.json(toDbKeys(invoice as any, invoices));
+  }));
+
+  app.delete("/api/invoices/:id", requireAgency, wrapAsync(async (req, res) => {
+    const ok = await storage.deleteInvoice(Number(req.params.id));
+    if (!ok) return res.status(404).json({ message: "Invoice not found" });
+    res.status(204).end();
+  }));
+
+  // ─── Contracts ──────────────────────────────────────────────────────
+
+  app.get("/api/contracts", requireAuth, scopeToAccount, wrapAsync(async (req, res) => {
+    const forcedId = (req as any).forcedAccountId as number | undefined;
+    const accountId = forcedId ?? (req.query.accountId ? Number(req.query.accountId) : undefined);
+    const data = accountId
+      ? await storage.getContractsByAccountId(accountId)
+      : await storage.getContracts();
+    res.json(toDbKeysArray(data as any, contracts));
+  }));
+
+  app.get("/api/contracts/view/:token", wrapAsync(async (req, res) => {
+    const contract = await storage.getContractByViewToken(req.params.token);
+    if (!contract) return res.status(404).json({ message: "Contract not found" });
+    const update: any = {
+      viewedCount: (contract.viewedCount ?? 0) + 1,
+    };
+    if (!contract.viewedAt) update.viewedAt = new Date();
+    if (contract.status === "Sent") update.status = "Viewed";
+    await storage.updateContract(contract.id!, update);
+    res.json(toDbKeys({ ...contract, ...update } as any, contracts));
+  }));
+
+  app.get("/api/contracts/:id", requireAuth, wrapAsync(async (req, res) => {
+    const contract = await storage.getContractById(Number(req.params.id));
+    if (!contract) return res.status(404).json({ message: "Contract not found" });
+    if (req.user!.accountsId !== 1 && contract.accountsId !== req.user!.accountsId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    res.json(toDbKeys(contract as any, contracts));
+  }));
+
+  app.post("/api/contracts", requireAgency, wrapAsync(async (req, res) => {
+    const body = fromDbKeys(req.body, contracts) as Record<string, unknown>;
+    const CONTRACT_DATE_FIELDS = ["signedAt", "sentAt", "viewedAt"];
+    const coerced = coerceDates(body, CONTRACT_DATE_FIELDS);
+    const parsed = insertContractsSchema.safeParse(coerced);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const data = {
+      ...parsed.data,
+      viewToken: crypto.randomUUID(),
+      status: parsed.data.status || "Draft",
+    };
+    const contract = await storage.createContract(data);
+    res.status(201).json(toDbKeys(contract as any, contracts));
+  }));
+
+  app.patch("/api/contracts/:id", requireAgency, wrapAsync(async (req, res) => {
+    const existing = await storage.getContractById(Number(req.params.id));
+    if (!existing) return res.status(404).json({ message: "Contract not found" });
+    const body = fromDbKeys(req.body, contracts) as Record<string, unknown>;
+    const CONTRACT_DATE_FIELDS = ["signedAt", "sentAt", "viewedAt"];
+    const coerced = coerceDates(body, CONTRACT_DATE_FIELDS);
+    const parsed = insertContractsSchema.partial().safeParse(coerced);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const contract = await storage.updateContract(Number(req.params.id), parsed.data);
+    if (!contract) return res.status(404).json({ message: "Contract not found" });
+    res.json(toDbKeys(contract as any, contracts));
+  }));
+
+  app.patch("/api/contracts/:id/mark-signed", requireAgency, wrapAsync(async (req, res) => {
+    const contract = await storage.updateContract(Number(req.params.id), {
+      status: "Signed",
+      signedAt: new Date(),
+    } as any);
+    if (!contract) return res.status(404).json({ message: "Contract not found" });
+    res.json(toDbKeys(contract as any, contracts));
+  }));
+
+  app.delete("/api/contracts/:id", requireAgency, wrapAsync(async (req, res) => {
+    const ok = await storage.deleteContract(Number(req.params.id));
+    if (!ok) return res.status(404).json({ message: "Contract not found" });
+    res.status(204).end();
+  }));
+
+  // ── Expenses ──────────────────────────────────────────────────────────────────
+
+  app.get("/api/expenses", requireAuth, wrapAsync(async (req, res) => {
+    const userRole = (req.user as any)?.role?.toLowerCase();
+    if (userRole !== "admin" && userRole !== "operator") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    const year = req.query.year ? parseInt(req.query.year as string) : undefined;
+    const quarter = req.query.quarter as string | undefined;
+    const rows = await storage.getExpenses(year, quarter);
+    res.json(rows);
+  }));
+
+  app.post("/api/expenses/parse-pdf", requireAuth, wrapAsync(async (req, res) => {
+    const userRole = (req.user as any)?.role?.toLowerCase();
+    if (userRole !== "admin" && userRole !== "operator") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    const apiKey = process.env.OPEN_AI_API_KEY;
+    if (!apiKey) {
+      return res.status(200).json({ error: "NO_API_KEY" });
+    }
+    const { pdf_data } = req.body;
+    if (!pdf_data) return res.status(400).json({ error: "pdf_data required" });
+
+    // Ensure we have a proper data URL for the OpenAI Responses API
+    const fileData = (pdf_data as string).startsWith("data:")
+      ? pdf_data as string
+      : `data:application/pdf;base64,${pdf_data}`;
+
+    const prompt = `You are a Dutch business expense parser for Lead Awaker (owner: Gabriel Barbosa Fronza, NL VAT NL002488258B44, BTW registration start: 17 December 2025).
+
+Extract these fields from the invoice PDF and return ONLY valid JSON (no markdown, no explanation):
+{
+  "date": "YYYY-MM-DD",
+  "supplier": "supplier name",
+  "country": "XX",
+  "invoice_number": "...",
+  "description": "brief item/service description (max 100 chars)",
+  "currency": "EUR",
+  "amount_excl_vat": 0.00,
+  "vat_rate_pct": 0,
+  "vat_amount": 0.00,
+  "total_amount": 0.00,
+  "nl_btw_deductible": false,
+  "notes": "..."
+}
+
+Rules:
+- country: 2-letter ISO code (NL, US, LU, DE, etc.)
+- currency: EUR or USD (or actual currency on invoice)
+- vat_rate_pct: 0, 9, or 21 (Dutch rates) or actual rate shown
+- nl_btw_deductible: true ONLY if the invoice charges Dutch/EU VAT (BTW) that can be reclaimed as voorbelasting on the NL BTW return. US companies and non-EU companies not charging EU VAT = false.
+- notes: helpful tax notes, e.g. "US company — no EU VAT charged" or "Pre-start expense — claim in Q1 2026 BTW return" or "NL supplier, 21% BTW reclaimable"
+- If a field cannot be determined, use null`;
+
+    try {
+      const response = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          input: [{
+            role: "user",
+            content: [
+              {
+                type: "input_file",
+                filename: "invoice.pdf",
+                file_data: fileData,
+              },
+              {
+                type: "input_text",
+                text: prompt,
+              },
+            ],
+          }],
+        }),
+      });
+      if (!response.ok) {
+        const errBody = await response.text();
+        console.error("[parse-pdf] OpenAI error:", errBody);
+        return res.status(500).json({ error: "OpenAI API error", detail: errBody });
+      }
+      const result = await response.json() as any;
+      const text = result?.output?.[0]?.content?.[0]?.text || "";
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) return res.status(500).json({ error: "Could not parse AI response", raw: text });
+      const extracted = JSON.parse(jsonMatch[0]);
+      res.json(extracted);
+    } catch (e: any) {
+      console.error("[parse-pdf] error:", e);
+      res.status(500).json({ error: e.message });
+    }
+  }));
+
+  app.post("/api/expenses", requireAuth, wrapAsync(async (req, res) => {
+    const userRole = (req.user as any)?.role?.toLowerCase();
+    if (userRole !== "admin" && userRole !== "operator") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    const body = req.body;
+    let pdfPath: string | undefined;
+    if (body.pdf_data && body.date) {
+      try {
+        const dateStr = body.date as string;
+        const d = new Date(dateStr);
+        const yr = d.getFullYear();
+        const mo = d.getMonth();
+        const q = mo <= 2 ? "Q1" : mo <= 5 ? "Q2" : mo <= 8 ? "Q3" : "Q4";
+        const dir = `/home/gabriel/Images/Expenses/${yr}/${q}`;
+        fs.mkdirSync(dir, { recursive: true });
+        const supplier = (body.supplier || "Unknown").replace(/[^a-zA-Z0-9]/g, "_").slice(0, 30);
+        const invNum = (body.invoice_number || "").replace(/[^a-zA-Z0-9\-]/g, "_").slice(0, 30);
+        const cur = (body.currency || "EUR").toUpperCase();
+        const amt = parseFloat(body.total_amount || "0").toFixed(2);
+        const filename = `${dateStr}_${supplier}_${invNum}_${cur}${amt}.pdf`;
+        const fullPath = `${dir}/${filename}`;
+        const base64 = (body.pdf_data as string).replace(/^data:[^;]+;base64,/, "");
+        fs.writeFileSync(fullPath, Buffer.from(base64, "base64"));
+        pdfPath = fullPath;
+      } catch (e) {
+        console.error("[expenses] PDF save error:", e);
+      }
+    }
+    const { pdf_data: _pdf, ...rest } = body;
+    const expense = await storage.createExpense({
+      date: rest.date || null,
+      year: rest.year ? parseInt(rest.year) : (rest.date ? new Date(rest.date).getFullYear() : null),
+      quarter: rest.quarter || null,
+      supplier: rest.supplier || null,
+      country: rest.country || null,
+      invoiceNumber: rest.invoice_number || null,
+      description: rest.description || null,
+      currency: rest.currency || null,
+      amountExclVat: rest.amount_excl_vat?.toString() || null,
+      vatRatePct: rest.vat_rate_pct?.toString() || null,
+      vatAmount: rest.vat_amount?.toString() || null,
+      totalAmount: rest.total_amount?.toString() || null,
+      nlBtwDeductible: rest.nl_btw_deductible === true || rest.nl_btw_deductible === "true" || false,
+      notes: rest.notes || null,
+      pdfPath: pdfPath || null,
+    });
+    res.status(201).json(expense);
+  }));
+
+  app.patch("/api/expenses/:id", requireAuth, wrapAsync(async (req, res) => {
+    const userRole = (req.user as any)?.role?.toLowerCase();
+    if (userRole !== "admin" && userRole !== "operator") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    const id = parseInt(req.params.id);
+    const body = req.body;
+    const updated = await storage.updateExpense(id, {
+      date: body.date,
+      year: body.year ? parseInt(body.year) : undefined,
+      quarter: body.quarter,
+      supplier: body.supplier,
+      country: body.country,
+      invoiceNumber: body.invoice_number,
+      description: body.description,
+      currency: body.currency,
+      amountExclVat: body.amount_excl_vat?.toString(),
+      vatRatePct: body.vat_rate_pct?.toString(),
+      vatAmount: body.vat_amount?.toString(),
+      totalAmount: body.total_amount?.toString(),
+      nlBtwDeductible: body.nl_btw_deductible,
+      notes: body.notes,
+    });
+    if (!updated) return res.status(404).json({ error: "Not found" });
+    res.json(updated);
+  }));
+
+  app.delete("/api/expenses/:id", requireAuth, wrapAsync(async (req, res) => {
+    const userRole = (req.user as any)?.role?.toLowerCase();
+    if (userRole !== "admin" && userRole !== "operator") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    const id = parseInt(req.params.id);
+    const ok = await storage.deleteExpense(id);
+    if (!ok) return res.status(404).json({ error: "Not found" });
+    res.status(204).end();
+  }));
+
+  app.get("/api/expenses/:id/pdf", requireAuth, wrapAsync(async (req, res) => {
+    const userRole = (req.user as any)?.role?.toLowerCase();
+    if (userRole !== "admin" && userRole !== "operator") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    const id = parseInt(req.params.id);
+    const rows = await storage.getExpenses();
+    const expense = rows.find((r) => r.id === id);
+    if (!expense || !expense.pdfPath) {
+      return res.status(404).json({ error: "No PDF attached to this expense" });
+    }
+    if (!fs.existsSync(expense.pdfPath)) {
+      return res.status(404).json({ error: "PDF file not found on disk" });
+    }
+    const filename = path.basename(expense.pdfPath);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+    fs.createReadStream(expense.pdfPath).pipe(res);
+  }));
 
   return httpServer;
 }

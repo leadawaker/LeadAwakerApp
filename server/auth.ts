@@ -136,6 +136,19 @@ export function scopeToAccount(req: Request, res: Response, next: NextFunction) 
   next();
 }
 
+// ─── In-memory rate limiter for accept-invite (no extra dependencies needed) ─
+
+const acceptInviteAttempts = new Map<string, number[]>();
+function checkAcceptInviteRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const window = 15 * 60 * 1000;
+  const attempts = (acceptInviteAttempts.get(ip) || []).filter(t => now - t < window);
+  if (attempts.length >= 10) return false;
+  attempts.push(now);
+  acceptInviteAttempts.set(ip, attempts);
+  return true;
+}
+
 // ─── Auth Route Handlers (mounted by registerRoutes) ────────────────────────
 
 export function registerAuthRoutes(app: Express) {
@@ -219,6 +232,109 @@ export function registerAuthRoutes(app: Express) {
     } catch (err: any) {
       console.error("Error changing password:", err);
       res.status(500).json({ message: "Failed to change password", error: err.message });
+    }
+  });
+
+  /** POST /api/auth/accept-invite — validate invite token and activate a new user account */
+  app.post("/api/auth/accept-invite", async (req, res) => {
+    try {
+      const { token, email, password, confirmPassword, fullName } = req.body;
+
+      // 1. Validate all fields are present
+      if (!token || !email || !password || !confirmPassword || !fullName) {
+        return res.status(400).json({ message: "All fields are required." });
+      }
+
+      // 2. Password length check
+      if (password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters." });
+      }
+
+      // 3. Password confirmation check
+      if (password !== confirmPassword) {
+        return res.status(400).json({ message: "Passwords do not match." });
+      }
+
+      // 4. Rate limit: 10 attempts per IP per 15 minutes
+      const ip = req.ip || req.socket.remoteAddress || "unknown";
+      if (!checkAcceptInviteRateLimit(ip)) {
+        return res.status(429).json({ message: "Too many attempts. Please try again later." });
+      }
+
+      // 5. Look up user by email
+      const user = await storage.getAppUserByEmail(email);
+      if (!user) {
+        return res.status(400).json({ message: "Invalid or expired invite link." });
+      }
+
+      // 6. Ensure the invite has not already been accepted or revoked
+      if (user.status !== "Invited") {
+        return res.status(400).json({ message: "This invite has already been accepted or revoked." });
+      }
+
+      // 7. Parse preferences to extract invite_token and invite_sent_at
+      let prefs: Record<string, any> = {};
+      try {
+        prefs = typeof user.preferences === "string"
+          ? JSON.parse(user.preferences)
+          : (user.preferences ?? {});
+      } catch {
+        return res.status(400).json({ message: "Invalid or expired invite link." });
+      }
+
+      const storedToken: string | undefined = prefs.invite_token;
+      const inviteSentAt: string | undefined = prefs.invite_sent_at;
+
+      if (!storedToken || !inviteSentAt) {
+        return res.status(400).json({ message: "Invalid or expired invite link." });
+      }
+
+      // 8. Constant-time token comparison
+      try {
+        const providedBuf = Buffer.from(token, "hex");
+        const storedBuf = Buffer.from(storedToken, "hex");
+        // Both must be exactly 32 bytes (64 hex chars)
+        if (providedBuf.length !== 32 || storedBuf.length !== 32) {
+          return res.status(400).json({ message: "Invalid or expired invite link." });
+        }
+        if (!crypto.timingSafeEqual(providedBuf, storedBuf)) {
+          return res.status(400).json({ message: "Invalid or expired invite link." });
+        }
+      } catch {
+        return res.status(400).json({ message: "Invalid or expired invite link." });
+      }
+
+      // 9. Expiration check: token valid for 72 hours
+      if (Date.now() - new Date(inviteSentAt).getTime() > 72 * 60 * 60 * 1000) {
+        return res.status(400).json({
+          message: "This invite link has expired. Please ask your administrator to resend the invite.",
+        });
+      }
+
+      // 10. Hash the new password
+      const newHash = await hashPassword(password);
+
+      // 11. Strip invite_token from preferences, record acceptance timestamp
+      const { invite_token: _removed, ...restPrefs } = prefs;
+      const newPrefs = { ...restPrefs, invite_accepted_at: new Date().toISOString() };
+      const newPrefsJson = JSON.stringify(newPrefs);
+
+      // 12. Persist updates
+      if (user.id === null) {
+        return res.status(500).json({ message: "Failed to activate account." });
+      }
+      await storage.updateAppUser(user.id, {
+        passwordHash: newHash,
+        status: "Active",
+        fullName1: fullName,
+        preferences: newPrefsJson,
+      } as any);
+
+      // 13. Success
+      return res.status(200).json({ message: "Account activated successfully. You can now sign in." });
+    } catch (err: any) {
+      console.error("Error accepting invite:", err);
+      return res.status(500).json({ message: "Failed to activate account." });
     }
   });
 }

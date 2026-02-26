@@ -114,7 +114,7 @@ export function ApiErrorFallback({
         data-testid="api-error-fallback"
         data-error-type={errorType}
       >
-        <Icon className={cn("h-5 w-5 shrink-0", config.iconColor)} />
+        <Icon className={cn("h-4 w-4 shrink-0", config.iconColor)} />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground">{title}</p>
           <p className="text-xs text-muted-foreground truncate">{description}</p>

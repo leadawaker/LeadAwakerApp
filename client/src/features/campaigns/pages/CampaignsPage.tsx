@@ -1,10 +1,13 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
-  List, Table2, Search, X, ArrowUpDown, Filter, Layers, Eye, Check,
+  List, Table2, Plus, Trash2, Copy, ArrowUpDown, Filter, Layers, Eye, Check,
+  PanelRightClose, PanelRightOpen,
 } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
+import { usePersistedSelection } from "@/hooks/usePersistedSelection";
 import { CampaignListView } from "../components/CampaignListView";
 import { CampaignDetailPanel } from "../components/CampaignDetailPanel";
+import { CampaignDetailView, CampaignDetailViewEmpty } from "../components/CampaignDetailView";
 import { CampaignsInlineTable } from "../components/CampaignsInlineTable";
 import type { CampaignTableItem } from "../components/CampaignsInlineTable";
 import { useCampaignsData } from "../hooks/useCampaignsData";
@@ -21,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { createCampaign, deleteCampaign, updateCampaign } from "../api/campaignsApi";
 
 export type CampaignViewMode = "list" | "table";
 export type CampaignGroupBy = "status" | "account" | "type" | "none";
@@ -91,6 +95,47 @@ function getCampaignName(c: Campaign): string {
   return String(c.name || "Unnamed");
 }
 
+// ── Inline confirmation button ────────────────────────────────────────────────
+function ConfirmToolbarButton({
+  icon: Icon, label, onConfirm, variant = "default",
+}: {
+  icon: React.ElementType; label: string;
+  onConfirm: () => Promise<void> | void;
+  variant?: "default" | "danger";
+}) {
+  const [confirming, setConfirming] = useState(false);
+  const [loading, setLoading] = useState(false);
+  if (confirming) {
+    return (
+      <div className="h-10 flex items-center gap-1 rounded-full border border-border/30 bg-card px-2.5 text-[12px] shrink-0">
+        <span className="text-foreground/60 mr-0.5 whitespace-nowrap">{label}?</span>
+        <button
+          className="px-2 py-0.5 rounded-full bg-brand-blue text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
+          onClick={async () => { setLoading(true); try { await onConfirm(); } finally { setLoading(false); setConfirming(false); } }}
+          disabled={loading}
+        >
+          {loading ? "…" : "Yes"}
+        </button>
+        <button className="px-2 py-0.5 rounded-full text-muted-foreground text-[11px] hover:text-foreground" onClick={() => setConfirming(false)}>No</button>
+      </div>
+    );
+  }
+  return (
+    <button
+      className={cn(
+        "h-10 inline-flex items-center gap-1.5 rounded-full border px-3 text-[12px] font-medium shrink-0",
+        variant === "danger"
+          ? "border-red-300/50 text-red-600 hover:bg-red-50/60"
+          : "border-border/30 text-foreground/70 hover:bg-card hover:text-foreground",
+      )}
+      onClick={() => setConfirming(true)}
+    >
+      <Icon className="h-4 w-4" />
+      {label}
+    </button>
+  );
+}
+
 function CampaignsContent() {
   // ── View mode (persisted) ──────────────────────────────────────────────────
   const [viewMode, setViewMode] = useState<CampaignViewMode>(() => {
@@ -109,14 +154,22 @@ function CampaignsContent() {
   const { clearTopbarActions } = useTopbarActions();
   useEffect(() => { clearTopbarActions(); }, [clearTopbarActions]);
 
-  // ── Lifted list-view controls ──────────────────────────────────────────────
-  const [listSearch, setListSearch]     = useState("");
-  const [searchOpen, setSearchOpen]     = useState(false);
-  const [groupBy, setGroupBy]           = useState<CampaignGroupBy>("status");
-  const [sortBy, setSortBy]             = useState<CampaignSortBy>("recent");
-  const [filterStatus, setFilterStatus] = useState<string[]>([]);
+  // ── Right panel open/close (table view) ───────────────────────────────────
+  const [rightPanelOpen, setRightPanelOpen] = useState(() => {
+    try { return localStorage.getItem("campaigns-right-panel-open") !== "false"; } catch { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("campaigns-right-panel-open", String(rightPanelOpen)); } catch {}
+  }, [rightPanelOpen]);
 
-  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  // ── Lifted list-view controls ──────────────────────────────────────────────
+  const [listSearch, setListSearch]           = useState("");
+  const [searchOpen, setSearchOpen]           = useState(false);
+  const [groupBy, setGroupBy]                 = useState<CampaignGroupBy>("status");
+  const [sortBy, setSortBy]                   = useState<CampaignSortBy>("recent");
+  const [filterStatus, setFilterStatus]       = useState<string[]>([]);
+  const [listFilterAccount, setListFilterAccount] = useState("");
+
   const [editPanelOpen, setEditPanelOpen] = useState(false);
   const [editCampaign, setEditCampaign] = useState<Campaign | null>(null);
 
@@ -159,6 +212,13 @@ function CampaignsContent() {
   const { metrics, loading: metricsLoading } = useCampaignMetrics();
 
   const loading = campaignsLoading || metricsLoading;
+
+  // ── Persisted selection (after data hook) ─────────────────────────────────
+  const [selectedCampaign, setSelectedCampaign] = usePersistedSelection<Campaign>(
+    "selected-campaign-id",
+    (c) => (c as any).Id ?? (c as any).id ?? 0,
+    campaigns,
+  );
 
   // Auto-select first campaign when data arrives
   useEffect(() => {
@@ -206,10 +266,15 @@ function CampaignsContent() {
     );
   }, [updateCampaignRow]);
 
+  const handleSaveCampaign = useCallback(async (id: number, patch: Record<string, unknown>) => {
+    await updateCampaign(id, patch);
+    handleRefresh();
+  }, [handleRefresh]);
+
   // ── List-view control helpers ──────────────────────────────────────────────
   const isGroupNonDefault     = groupBy !== "status";
   const isSortNonDefault      = sortBy !== "recent";
-  const isFilterActive        = filterStatus.length > 0;
+  const isFilterActive        = filterStatus.length > 0 || !!listFilterAccount;
   const hasNonDefaultControls = isGroupNonDefault || isSortNonDefault || isFilterActive;
 
   const toggleFilterStatus = useCallback((s: string) =>
@@ -219,6 +284,7 @@ function CampaignsContent() {
     setFilterStatus([]);
     setGroupBy("status");
     setSortBy("recent");
+    setListFilterAccount("");
   }, []);
 
   // ── Table toolbar helpers ──────────────────────────────────────────────────
@@ -231,6 +297,46 @@ function CampaignsContent() {
   }, []);
   const isTableFilterActive    = tableFilterStatus.length > 0 || !!tableFilterAccount;
   const tableActiveFilterCount = tableFilterStatus.length + (tableFilterAccount ? 1 : 0);
+
+  // ── Lifted multi-select state ──────────────────────────────────────────────
+  const [tableSelectedIds, setTableSelectedIds] = useState<Set<number>>(new Set());
+
+  const handleAddCampaign = useCallback(async () => {
+    try {
+      const newCampaign = await createCampaign({ name: "New Campaign", status: "Draft" });
+      await handleRefresh();
+      if (newCampaign?.id || newCampaign?.Id) {
+        setSelectedCampaign(newCampaign);
+        setTableSelectedIds(new Set([newCampaign.id ?? newCampaign.Id]));
+      }
+    } catch (err) { console.error("Create campaign failed", err); }
+  }, [handleRefresh, setSelectedCampaign]);
+
+  const handleBulkDeleteCampaigns = useCallback(async () => {
+    if (tableSelectedIds.size === 0) return;
+    try {
+      await Promise.all(Array.from(tableSelectedIds).map((id) => deleteCampaign(id)));
+      setTableSelectedIds(new Set());
+      setSelectedCampaign(null);
+      handleRefresh();
+    } catch (err) { console.error("Bulk delete campaigns failed", err); }
+  }, [tableSelectedIds, handleRefresh, setSelectedCampaign]);
+
+  const handleDuplicateCampaigns = useCallback(async () => {
+    if (tableSelectedIds.size === 0) return;
+    try {
+      const toClone = campaigns.filter((c) => tableSelectedIds.has((c.id || (c as any).Id) ?? 0));
+      for (const c of toClone) {
+        await createCampaign({
+          name: `${c.name || "Campaign"} (Copy)`,
+          status: "Draft",
+          description: c.description || "",
+        });
+      }
+      setTableSelectedIds(new Set());
+      handleRefresh();
+    } catch (err) { console.error("Duplicate campaigns failed", err); }
+  }, [tableSelectedIds, campaigns, handleRefresh]);
 
   // ── Available accounts (for table filter dropdown) ─────────────────────────
   const availableAccounts = useMemo(() => {
@@ -307,44 +413,33 @@ function CampaignsContent() {
     <>
       <div className="w-px h-4 bg-border/25 mx-0.5 shrink-0" />
 
-      {/* Search */}
-      {tableSearchOpen ? (
-        <div className="flex items-center gap-1.5 rounded-full border border-border/30 bg-card/60 px-2.5 py-1 shrink-0">
-          <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-          <input
-            autoFocus
-            value={tableSearch}
-            onChange={(e) => setTableSearch(e.target.value)}
-            placeholder="Search..."
-            onBlur={() => { if (!tableSearch) setTableSearchOpen(false); }}
-            className="text-[12px] bg-transparent outline-none w-24 min-w-0 text-foreground placeholder:text-muted-foreground/60"
-          />
-          <button onClick={() => { setTableSearch(""); setTableSearchOpen(false); }}>
-            <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+      {/* Search — always expanded, before Add */}
+      <div className="flex items-center gap-1.5 h-10 rounded-full border border-border/30 bg-card/60 px-2.5 shrink-0">
+        <svg className="h-3.5 w-3.5 text-muted-foreground shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input
+          value={tableSearch}
+          onChange={(e) => setTableSearch(e.target.value)}
+          placeholder="Search campaigns..."
+          className="text-[12px] bg-transparent outline-none w-28 min-w-0 text-foreground placeholder:text-muted-foreground/60"
+        />
+        {tableSearch && (
+          <button type="button" onClick={() => setTableSearch("")}>
+            <svg className="h-3 w-3 text-muted-foreground hover:text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
           </button>
-        </div>
-      ) : (
-        <button
-          onClick={() => setTableSearchOpen(true)}
-          className={cn(
-            "h-7 w-7 rounded-full border flex items-center justify-center shrink-0 transition-colors",
-            tableSearch
-              ? "border-brand-blue/40 text-brand-blue"
-              : "border-border/30 text-muted-foreground hover:text-foreground hover:bg-card"
-          )}
-        >
-          <Search className="h-3.5 w-3.5" />
-        </button>
-      )}
+        )}
+      </div>
+
+      {/* +Add with confirmation */}
+      <ConfirmToolbarButton icon={Plus} label="Add" onConfirm={handleAddCampaign} />
 
       {/* Sort */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className={cn(
-            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium border bg-transparent hover:bg-card hover:text-foreground shrink-0 transition-colors",
-            tableSortBy !== "recent" ? "border-brand-blue/40 text-brand-blue" : "border-border/30 text-muted-foreground"
+            "toolbar-pill-base shrink-0",
+            tableSortBy !== "recent" && "toolbar-pill-active"
           )}>
-            <ArrowUpDown className="h-3.5 w-3.5" />
+            <ArrowUpDown className="h-4 w-4" />
             Sort{tableSortBy !== "recent" ? ` · ${TABLE_SORT_LABELS[tableSortBy].split(" ")[0]}` : ""}
           </button>
         </DropdownMenuTrigger>
@@ -364,10 +459,10 @@ function CampaignsContent() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className={cn(
-            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium border bg-transparent hover:bg-card hover:text-foreground shrink-0 transition-colors",
-            isTableFilterActive ? "border-brand-blue/40 text-brand-blue" : "border-border/30 text-muted-foreground"
+            "toolbar-pill-base shrink-0",
+            isTableFilterActive && "toolbar-pill-active"
           )}>
-            <Filter className="h-3.5 w-3.5" />
+            <Filter className="h-4 w-4" />
             Filter{isTableFilterActive ? ` · ${tableActiveFilterCount}` : ""}
           </button>
         </DropdownMenuTrigger>
@@ -411,10 +506,10 @@ function CampaignsContent() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className={cn(
-            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium border bg-transparent hover:bg-card hover:text-foreground shrink-0 transition-colors",
-            tableGroupBy !== "status" ? "border-brand-blue/40 text-brand-blue" : "border-border/30 text-muted-foreground"
+            "toolbar-pill-base shrink-0",
+            tableGroupBy !== "status" && "toolbar-pill-active"
           )}>
-            <Layers className="h-3.5 w-3.5" />
+            <Layers className="h-4 w-4" />
             Group{tableGroupBy !== "status" ? ` · ${TABLE_GROUP_LABELS[tableGroupBy]}` : ""}
           </button>
         </DropdownMenuTrigger>
@@ -432,10 +527,10 @@ function CampaignsContent() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className={cn(
-            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium border bg-transparent hover:bg-card hover:text-foreground shrink-0 transition-colors",
-            visibleCols.size !== DEFAULT_VISIBLE.length ? "border-brand-blue/40 text-brand-blue" : "border-border/30 text-muted-foreground"
+            "toolbar-pill-base shrink-0",
+            visibleCols.size !== DEFAULT_VISIBLE.length && "toolbar-pill-active"
           )}>
-            <Eye className="h-3.5 w-3.5" />
+            <Eye className="h-4 w-4" />
             Fields
           </button>
         </DropdownMenuTrigger>
@@ -477,6 +572,17 @@ function CampaignsContent() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* ── Selection actions — far right, visible when rows selected ── */}
+      {tableSelectedIds.size > 0 && (
+        <>
+          <div className="flex-1 min-w-0" />
+          <div className="flex items-center gap-1 shrink-0">
+            <ConfirmToolbarButton icon={Copy} label="Duplicate" onConfirm={handleDuplicateCampaigns} />
+            <ConfirmToolbarButton icon={Trash2} label="Delete" onConfirm={handleBulkDeleteCampaigns} variant="danger" />
+          </div>
+        </>
+      )}
     </>
   );
 
@@ -493,6 +599,8 @@ function CampaignsContent() {
               onSelectCampaign={handleSelectCampaign}
               onEditCampaign={handleEditCampaign}
               onToggleStatus={handleToggleStatus}
+              onSave={handleSaveCampaign}
+              onCreateCampaign={handleAddCampaign}
               // Lifted controls
               viewMode={viewMode}
               onViewModeChange={handleViewSwitch}
@@ -506,20 +614,35 @@ function CampaignsContent() {
               onSortByChange={setSortBy}
               filterStatus={filterStatus}
               onToggleFilterStatus={toggleFilterStatus}
+              filterAccount={listFilterAccount}
+              onFilterAccountChange={setListFilterAccount}
+              availableAccounts={availableAccounts}
               hasNonDefaultControls={hasNonDefaultControls}
               isGroupNonDefault={isGroupNonDefault}
               isSortNonDefault={isSortNonDefault}
               onResetControls={handleResetControls}
             />
           ) : (
-            <div className="flex-1 min-h-0 flex gap-[3px] overflow-hidden">
+            <div className="h-full flex gap-[3px] overflow-hidden min-h-0">
               <div className="flex flex-col bg-muted rounded-lg overflow-hidden flex-1 min-w-0">
                 {/* Title */}
-                <div className="px-3.5 pt-7 pb-1 shrink-0">
-                  <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">My Campaigns</h2>
+                <div className="px-3.5 pt-5 pb-1 shrink-0 flex items-center justify-between">
+                  <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Campaigns</h2>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[12px] font-medium text-muted-foreground tabular-nums">{campaigns.length}</span>
+                    <button
+                      onClick={() => setRightPanelOpen((p) => !p)}
+                      title={rightPanelOpen ? "Hide detail panel" : "Show detail panel"}
+                      className="icon-circle-lg icon-circle-base"
+                    >
+                      {rightPanelOpen
+                        ? <PanelRightClose className="h-4 w-4" />
+                        : <PanelRightOpen className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 {/* Controls row: tabs + inline toolbar */}
-                <div className="px-3 pt-1.5 pb-2.5 shrink-0 flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
+                <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
                   {VIEW_TABS.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = viewMode === tab.id;
@@ -527,9 +650,9 @@ function CampaignsContent() {
                       <button
                         key={tab.id}
                         onClick={() => handleViewSwitch(tab.id)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFF375] text-foreground text-[12px] font-semibold shrink-0"
+                        className="h-10 inline-flex items-center gap-1.5 px-3 rounded-full bg-[#FFE35B] text-foreground text-[12px] font-semibold shrink-0"
                       >
-                        <Icon className="h-3.5 w-3.5" />
+                        <Icon className="h-4 w-4" />
                         {tab.label}
                       </button>
                     ) : (
@@ -537,9 +660,9 @@ function CampaignsContent() {
                         key={tab.id}
                         onClick={() => handleViewSwitch(tab.id)}
                         title={tab.label}
-                        className="h-6 w-6 rounded-full border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors shrink-0"
+                        className="icon-circle-lg icon-circle-base shrink-0"
                       >
-                        <Icon className="h-3 w-3" />
+                        <Icon className="h-4 w-4" />
                       </button>
                     );
                   })}
@@ -557,9 +680,29 @@ function CampaignsContent() {
                     onRefresh={handleRefresh}
                     visibleCols={visibleCols}
                     tableSearch={tableSearch}
+                    selectedIds={tableSelectedIds}
+                    onSelectionChange={setTableSelectedIds}
                   />
                 </div>
               </div>
+
+              {/* Right panel: campaign detail view (single-column layout) */}
+              {rightPanelOpen && (
+                <div className="w-[480px] shrink-0 overflow-hidden rounded-lg">
+                  {selectedCampaign ? (
+                    <CampaignDetailView
+                      campaign={selectedCampaign}
+                      metrics={metrics}
+                      allCampaigns={campaigns}
+                      onToggleStatus={handleToggleStatus}
+                      onSave={handleSaveCampaign}
+                      compact
+                    />
+                  ) : (
+                    <CampaignDetailViewEmpty />
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

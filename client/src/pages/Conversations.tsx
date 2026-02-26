@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useCampaigns } from "@/hooks/useApiData";
 import { cn } from "@/lib/utils";
 import { ChevronLeft } from "lucide-react";
-import { useConversationsData, type AiStateFilter, type SortOrder } from "@/features/conversations/hooks/useConversationsData";
+import { useConversationsData } from "@/features/conversations/hooks/useConversationsData";
 import { InboxPanel } from "@/features/conversations/components/InboxPanel";
 import { ChatPanel } from "@/features/conversations/components/ChatPanel";
 import { ContactSidebar } from "@/features/conversations/components/ContactSidebar";
@@ -16,16 +16,56 @@ export default function ConversationsPage() {
   // Conversation list filter state
   const [filterAccountId, setFilterAccountId] = useState<number | "all">("all");
   const [campaignId, setCampaignId] = useState<number | "all">("all");
-  const [aiStateFilter, setAiStateFilter] = useState<AiStateFilter>("all");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
 
-  // Chat state
-  const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
+  // Chat state — persisted across navigation
+  const [selectedLeadId, setSelectedLeadIdRaw] = useState<number | null>(() => {
+    try {
+      const stored = localStorage.getItem("selected-conversation-lead-id");
+      return stored ? Number(stored) : null;
+    } catch { return null; }
+  });
+  const setSelectedLeadId = (id: number | null) => {
+    setSelectedLeadIdRaw(id);
+    try {
+      if (id) localStorage.setItem("selected-conversation-lead-id", String(id));
+      else localStorage.removeItem("selected-conversation-lead-id");
+    } catch {}
+  };
   const [mobileView, setMobileView] = useState<"inbox" | "chat">("inbox");
   const [tab, setTab] = useState<"all" | "unread">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  // Track which lead IDs have been "read" (opened) in this session
-  const [readLeadIds, setReadLeadIds] = useState<Set<number>>(new Set());
+  // Track when each lead was last read — persisted across refreshes
+  const [lastReadAt, setLastReadAt] = useState<Map<number, string>>(() => {
+    try {
+      const stored = localStorage.getItem("conversations-last-read-at");
+      if (stored) {
+        const entries: [number, string][] = JSON.parse(stored);
+        return new Map(entries);
+      }
+    } catch {}
+    return new Map();
+  });
+
+  // Persist lastReadAt to localStorage on every change
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "conversations-last-read-at",
+        JSON.stringify(Array.from(lastReadAt.entries())),
+      );
+    } catch {}
+  }, [lastReadAt]);
+
+  const markAsRead = useCallback((leadId: number) => {
+    setLastReadAt((prev) => {
+      const next = new Map(prev);
+      next.set(leadId, new Date().toISOString());
+      return next;
+    });
+  }, []);
+
+  // Contact sidebar visibility
+  const [showContactPanel, setShowContactPanel] = useState(true);
 
   // Resolve which account ID to scope data to
   // Agency users can pick "all" to see all accounts, or a specific one
@@ -36,13 +76,14 @@ export default function ConversationsPage() {
     return filterAccountId as number;
   }, [isAgencyUser, filterAccountId, currentAccountId]);
 
-  const { threads, loading, error, sending, handleSend, handleToggleTakeover, refresh } = useConversationsData(
+  const { threads, loading, error, sending, handleSend, handleToggleTakeover, handleUpdateLead, handleRetry, refresh } = useConversationsData(
     effectiveAccountId,
     campaignId,
     tab,
     searchQuery,
-    aiStateFilter,
-    sortOrder,
+    "all",
+    "newest",
+    lastReadAt,
   );
 
   // Load campaigns for the filter dropdown
@@ -58,7 +99,6 @@ export default function ConversationsPage() {
   const handleClearFilters = () => {
     setFilterAccountId("all");
     setCampaignId("all");
-    setAiStateFilter("all");
     setSearchQuery("");
     setTab("all");
   };
@@ -76,23 +116,15 @@ export default function ConversationsPage() {
     const currentId = selected?.lead.id ?? null;
     if (currentId !== null && currentId !== prevSelectedRef.current) {
       prevSelectedRef.current = currentId;
-      setReadLeadIds((prev) => {
-        const next = new Set(prev);
-        next.add(currentId);
-        return next;
-      });
+      markAsRead(currentId);
     }
-  }, [selected]);
+  }, [selected, markAsRead]);
 
   const handleSelectLead = (id: number) => {
     setSelectedLeadId(id);
     setMobileView("chat");
     // Mark this conversation as read (clears unread badge)
-    setReadLeadIds((prev) => {
-      const next = new Set(prev);
-      next.add(id);
-      return next;
-    });
+    markAsRead(id);
   };
 
   // Filter accounts to exclude the agency account (id=1) for the account filter dropdown
@@ -104,7 +136,7 @@ export default function ConversationsPage() {
   return (
     <CrmShell>
       <div
-        className="h-[calc(100vh-100px)] flex flex-col overflow-hidden pb-3"
+        className="h-[calc(100vh-100px)] flex flex-col overflow-hidden"
         data-testid="page-conversations"
       >
         {/* Mobile header */}
@@ -114,7 +146,7 @@ export default function ConversationsPage() {
               onClick={() => setMobileView("inbox")}
               className="h-9 w-9 rounded-full border border-border bg-background grid place-items-center"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-4 w-4" />
             </button>
           )}
           <h1 className="text-2xl font-extrabold tracking-tight">
@@ -133,7 +165,10 @@ export default function ConversationsPage() {
           />
         ) : (
           <div
-            className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[400px_1fr_340px] gap-4"
+            className={cn(
+              "flex-1 min-h-0 flex gap-[3px]",
+              mobileView === "chat" ? "flex-col md:flex-row" : "flex-col md:flex-row"
+            )}
             data-testid="layout-conversations"
           >
             <InboxPanel
@@ -147,18 +182,16 @@ export default function ConversationsPage() {
               onSearchChange={setSearchQuery}
               selectedCampaignId={campaignId}
               onCampaignChange={setCampaignId}
-              aiStateFilter={aiStateFilter}
-              onAiStateFilterChange={setAiStateFilter}
               campaigns={campaigns}
               accounts={clientAccounts}
               selectedAccountId={filterAccountId}
               onAccountChange={handleAccountChange}
               isAgencyUser={isAgencyUser}
-              readLeadIds={readLeadIds}
-              sortOrder={sortOrder}
-              onSortOrderChange={setSortOrder}
               onClearFilters={handleClearFilters}
-              className={cn(mobileView === "chat" ? "hidden md:flex" : "flex")}
+              className={cn(
+                "w-full md:w-[340px] flex-shrink-0",
+                mobileView === "chat" ? "hidden md:flex" : "flex"
+              )}
             />
 
             <ChatPanel
@@ -167,10 +200,24 @@ export default function ConversationsPage() {
               sending={sending}
               onSend={handleSend}
               onToggleTakeover={handleToggleTakeover}
-              className={cn(mobileView === "inbox" ? "hidden md:flex" : "flex")}
+              onRetry={handleRetry}
+              showContactPanel={showContactPanel}
+              onShowContactPanel={() => setShowContactPanel(true)}
+              className={cn(
+                "flex-1 min-w-0",
+                mobileView === "inbox" ? "hidden md:flex" : "flex"
+              )}
             />
 
-            <ContactSidebar selected={selected} loading={loading} />
+            {showContactPanel && (
+              <ContactSidebar
+                selected={selected}
+                loading={loading}
+                onClose={() => setShowContactPanel(false)}
+                onUpdateLead={handleUpdateLead}
+                className="hidden xl:flex w-[340px] flex-shrink-0"
+              />
+            )}
           </div>
         )}
       </div>

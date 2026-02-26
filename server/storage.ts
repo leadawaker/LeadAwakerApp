@@ -1,4 +1,4 @@
-import { eq, desc, asc, count, SQL, inArray, and } from "drizzle-orm";
+import { eq, desc, asc, count, SQL, inArray, and, gte, isNotNull } from "drizzle-orm";
 import { PgTableWithColumns } from "drizzle-orm/pg-core";
 import { db } from "./db";
 import {
@@ -13,6 +13,9 @@ import {
   promptLibrary,
   leadScoreHistory,
   campaignMetricsHistory,
+  invoices,
+  contracts,
+  expenses,
   type Accounts,
   type InsertAccounts,
   type Campaigns,
@@ -32,7 +35,23 @@ import {
   type InsertPrompt_Library,
   type Lead_Score_History,
   type Campaign_Metrics_History,
+  type Invoices,
+  type InsertInvoices,
+  type Contracts,
+  type InsertContracts,
+  type Expenses,
+  type InsertExpenses,
 } from "@shared/schema";
+
+
+export interface NotificationItem {
+  id: string;
+  type: 'inbound' | 'booking' | 'error';
+  title: string;
+  description: string;
+  at: string; // ISO date string
+  leadId?: number;
+}
 
 export interface IStorage {
   // Accounts
@@ -85,6 +104,7 @@ export interface IStorage {
   // Automation Logs
   getAutomationLogs(): Promise<Automation_Logs[]>;
   getAutomationLogsByAccountId(accountId: number): Promise<Automation_Logs[]>;
+  getRecentNotifications(accountId?: number, limit?: number): Promise<NotificationItem[]>;
 
   // Users
   getAppUsers(): Promise<Users[]>;
@@ -107,6 +127,31 @@ export interface IStorage {
   // Campaign Metrics History
   getCampaignMetricsHistory(): Promise<Campaign_Metrics_History[]>;
   getCampaignMetricsHistoryByCampaignId(campaignId: number): Promise<Campaign_Metrics_History[]>;
+
+  // Invoices
+  getInvoices(): Promise<Invoices[]>;
+  getInvoiceById(id: number): Promise<Invoices | undefined>;
+  getInvoicesByAccountId(accountId: number): Promise<Invoices[]>;
+  getInvoiceByViewToken(token: string): Promise<Invoices | undefined>;
+  getInvoiceCountByAccountId(accountId: number): Promise<number>;
+  createInvoice(data: InsertInvoices): Promise<Invoices>;
+  updateInvoice(id: number, data: Partial<InsertInvoices>): Promise<Invoices | undefined>;
+  deleteInvoice(id: number): Promise<boolean>;
+
+  // Contracts
+  getContracts(): Promise<Contracts[]>;
+  getContractById(id: number): Promise<Contracts | undefined>;
+  getContractsByAccountId(accountId: number): Promise<Contracts[]>;
+  getContractByViewToken(token: string): Promise<Contracts | undefined>;
+  createContract(data: InsertContracts): Promise<Contracts>;
+  updateContract(id: number, data: Partial<InsertContracts>): Promise<Contracts | undefined>;
+  deleteContract(id: number): Promise<boolean>;
+
+  // Expenses
+  getExpenses(year?: number, quarter?: string): Promise<Expenses[]>;
+  createExpense(data: InsertExpenses): Promise<Expenses>;
+  updateExpense(id: number, data: Partial<InsertExpenses>): Promise<Expenses | undefined>;
+  deleteExpense(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -305,6 +350,74 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(automationLogs.createdAt));
   }
 
+  // ─── Notifications ──────────────────────────────────────────────────
+
+  async getRecentNotifications(accountId?: number, limit = 20): Promise<NotificationItem[]> {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    // 1. Inbound interactions (last 7 days)
+    const interactionRows = accountId
+      ? await db.select().from(interactions)
+          .where(and(eq(interactions.accountsId, accountId), eq(interactions.direction, 'inbound'), gte(interactions.createdAt, sevenDaysAgo)))
+          .orderBy(desc(interactions.createdAt))
+          .limit(20)
+      : await db.select().from(interactions)
+          .where(and(eq(interactions.direction, 'inbound'), gte(interactions.createdAt, sevenDaysAgo)))
+          .orderBy(desc(interactions.createdAt))
+          .limit(20);
+    const inboundNotifs: NotificationItem[] = interactionRows.map(r => ({
+      id: `i-${r.id}`,
+      type: 'inbound',
+      title: 'New inbound reply',
+      description: r.content ? r.content.substring(0, 80) : 'Lead sent a message',
+      at: r.createdAt?.toISOString() ?? new Date().toISOString(),
+      leadId: r.leadsId ?? undefined,
+    }));
+
+    // 2. Booked calls (last 7 days)
+    const bookedLeads = accountId
+      ? await db.select().from(leads)
+          .where(and(eq(leads.accountsId, accountId), isNotNull(leads.bookedCallDate), gte(leads.bookedCallDate, sevenDaysAgo)))
+          .orderBy(desc(leads.bookedCallDate))
+          .limit(10)
+      : await db.select().from(leads)
+          .where(and(isNotNull(leads.bookedCallDate), gte(leads.bookedCallDate, sevenDaysAgo)))
+          .orderBy(desc(leads.bookedCallDate))
+          .limit(10);
+    const bookingNotifs: NotificationItem[] = bookedLeads.map(l => ({
+      id: `b-${l.id}`,
+      type: 'booking',
+      title: 'Call booked',
+      description: `${[l.firstName, l.lastName].filter(Boolean).join(' ') || 'A lead'} booked a call`,
+      at: l.bookedCallDate?.toISOString() ?? new Date().toISOString(),
+      leadId: l.id ?? undefined,
+    }));
+
+    // 3. Automation errors (last 7 days)
+    const errorLogs = accountId
+      ? await db.select().from(automationLogs)
+          .where(and(eq(automationLogs.accountsId, accountId), eq(automationLogs.status, 'error'), gte(automationLogs.createdAt, sevenDaysAgo)))
+          .orderBy(desc(automationLogs.createdAt))
+          .limit(10)
+      : await db.select().from(automationLogs)
+          .where(and(eq(automationLogs.status, 'error'), gte(automationLogs.createdAt, sevenDaysAgo)))
+          .orderBy(desc(automationLogs.createdAt))
+          .limit(10);
+    const errorNotifs: NotificationItem[] = errorLogs.map(l => ({
+      id: `a-${l.id}`,
+      type: 'error',
+      title: 'Automation error',
+      description: `${l.workflowName || 'Workflow'} failed${l.leadName ? ` for ${l.leadName}` : ''}`,
+      at: l.createdAt?.toISOString() ?? new Date().toISOString(),
+    }));
+
+    // merge + sort + limit
+    return [...inboundNotifs, ...bookingNotifs, ...errorNotifs]
+      .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+      .slice(0, limit);
+  }
+
   // ─── Users ──────────────────────────────────────────────────────────
 
   async getAppUsers(): Promise<Users[]> {
@@ -386,6 +499,108 @@ export class DatabaseStorage implements IStorage {
   async createCampaignMetricsHistory(data: any): Promise<Campaign_Metrics_History> {
     const [row] = await db.insert(campaignMetricsHistory).values(data as any).returning();
     return row;
+  }
+
+  // ─── Invoices ──────────────────────────────────────────────────────────
+
+  async getInvoices(): Promise<Invoices[]> {
+    return db.select().from(invoices).orderBy(desc(invoices.createdAt));
+  }
+
+  async getInvoiceById(id: number): Promise<Invoices | undefined> {
+    const [row] = await db.select().from(invoices).where(eq(invoices.id, id));
+    return row;
+  }
+
+  async getInvoicesByAccountId(accountId: number): Promise<Invoices[]> {
+    return db.select().from(invoices).where(eq(invoices.accountsId, accountId)).orderBy(desc(invoices.createdAt));
+  }
+
+  async getInvoiceByViewToken(token: string): Promise<Invoices | undefined> {
+    const [row] = await db.select().from(invoices).where(eq(invoices.viewToken, token));
+    return row;
+  }
+
+  async getInvoiceCountByAccountId(accountId: number): Promise<number> {
+    const [result] = await db.select({ total: count() }).from(invoices).where(eq(invoices.accountsId, accountId));
+    return result?.total ?? 0;
+  }
+
+  async createInvoice(data: InsertInvoices): Promise<Invoices> {
+    const [row] = await db.insert(invoices).values(data as any).returning();
+    return row;
+  }
+
+  async updateInvoice(id: number, data: Partial<InsertInvoices>): Promise<Invoices | undefined> {
+    const [row] = await db.update(invoices).set(data).where(eq(invoices.id, id)).returning();
+    return row;
+  }
+
+  async deleteInvoice(id: number): Promise<boolean> {
+    const result = await db.delete(invoices).where(eq(invoices.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // ─── Contracts ─────────────────────────────────────────────────────────
+
+  async getContracts(): Promise<Contracts[]> {
+    return db.select().from(contracts).orderBy(desc(contracts.createdAt));
+  }
+
+  async getContractById(id: number): Promise<Contracts | undefined> {
+    const [row] = await db.select().from(contracts).where(eq(contracts.id, id));
+    return row;
+  }
+
+  async getContractsByAccountId(accountId: number): Promise<Contracts[]> {
+    return db.select().from(contracts).where(eq(contracts.accountsId, accountId)).orderBy(desc(contracts.createdAt));
+  }
+
+  async getContractByViewToken(token: string): Promise<Contracts | undefined> {
+    const [row] = await db.select().from(contracts).where(eq(contracts.viewToken, token));
+    return row;
+  }
+
+  async createContract(data: InsertContracts): Promise<Contracts> {
+    const [row] = await db.insert(contracts).values(data as any).returning();
+    return row;
+  }
+
+  async updateContract(id: number, data: Partial<InsertContracts>): Promise<Contracts | undefined> {
+    const [row] = await db.update(contracts).set(data).where(eq(contracts.id, id)).returning();
+    return row;
+  }
+
+  async deleteContract(id: number): Promise<boolean> {
+    const result = await db.delete(contracts).where(eq(contracts.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // ─── Expenses ──────────────────────────────────────────────────────────
+
+  async getExpenses(year?: number, quarter?: string): Promise<Expenses[]> {
+    const conditions = [];
+    if (year) conditions.push(eq(expenses.year, year));
+    if (quarter) conditions.push(eq(expenses.quarter, quarter));
+    if (conditions.length > 0) {
+      return await db.select().from(expenses).where(and(...conditions)).orderBy(desc(expenses.date));
+    }
+    return await db.select().from(expenses).orderBy(desc(expenses.date));
+  }
+
+  async createExpense(data: InsertExpenses): Promise<Expenses> {
+    const [row] = await db.insert(expenses).values(data as any).returning();
+    return row;
+  }
+
+  async updateExpense(id: number, data: Partial<InsertExpenses>): Promise<Expenses | undefined> {
+    const [row] = await db.update(expenses).set({ ...data, updatedAt: new Date() }).where(eq(expenses.id, id)).returning();
+    return row;
+  }
+
+  async deleteExpense(id: number): Promise<boolean> {
+    const result = await db.delete(expenses).where(eq(expenses.id, id)).returning({ id: expenses.id });
+    return result.length > 0;
   }
 }
 

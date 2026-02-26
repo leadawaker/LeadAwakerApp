@@ -2,7 +2,11 @@ import { apiFetch } from "@/lib/apiUtils";
 
 export const fetchAccounts = async () => {
   const res = await apiFetch("/api/accounts");
-  if (!res.ok) throw new Error("Failed to fetch accounts");
+  if (!res.ok) {
+    if (res.status === 401) throw new Error("Session expired — please log in again.");
+    if (res.status === 403) throw new Error("Access denied — agency account required.");
+    throw new Error(`Failed to fetch accounts (${res.status})`);
+  }
   const data = await res.json();
   return Array.isArray(data) ? data : data?.list || [];
 };

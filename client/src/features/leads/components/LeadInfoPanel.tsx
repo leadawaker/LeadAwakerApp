@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { IconBtn } from "@/components/ui/icon-btn";
-import { getStatusAvatarColor } from "./LeadsCardView";
+import { getStatusAvatarColor, PIPELINE_HEX } from "./LeadsCardView";
 import {
   Phone,
   Mail,
@@ -119,9 +119,10 @@ function SentimentBadge({ value }: { value: string }) {
 
 function StatusBadge({ label }: { label: string }) {
   const colors = STATUS_COLORS[label] ?? { bg: "bg-muted", text: "text-muted-foreground", dot: "bg-muted-foreground" };
+  const hex = PIPELINE_HEX[label];
   return (
     <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold", colors.bg, colors.text)}>
-      <span className={cn("w-1.5 h-1.5 rounded-full", colors.dot)} />
+      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={hex ? { backgroundColor: hex } : {}} />
       {label}
     </span>
   );
@@ -144,7 +145,6 @@ export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPane
     return (
       <div className="flex-shrink-0 w-9 flex flex-col items-center pt-2 border-l border-border bg-card rounded-xl">
         <IconBtn
-          size="md"
           onClick={() => setCollapsed(false)}
           title="Expand panel"
         >
@@ -178,19 +178,17 @@ export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPane
         <div className="flex items-center gap-1">
           {lead && (
             <IconBtn
-              size="sm"
               onClick={onClose}
               title="Deselect lead"
             >
-              <X className="h-3 w-3" />
+              <X className="h-4 w-4" />
             </IconBtn>
           )}
           <IconBtn
-            size="sm"
             onClick={() => setCollapsed(true)}
             title="Collapse panel"
           >
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="h-4 w-4" />
           </IconBtn>
         </div>
       </div>
@@ -226,7 +224,7 @@ export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPane
                 const avatarColor = getStatusAvatarColor(status);
                 return (
                   <div
-                    className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+                    className="w-[72px] h-[72px] rounded-full flex items-center justify-center text-xl font-bold shrink-0"
                     style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
                   >
                     {initials}

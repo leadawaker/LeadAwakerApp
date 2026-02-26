@@ -364,7 +364,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
       <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
           <DialogTitle className="flex items-center gap-2 text-lg">
-            <FileText className="h-5 w-5 text-brand-blue" />
+            <FileText className="h-4 w-4 text-brand-blue" />
             Import Leads from CSV
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">

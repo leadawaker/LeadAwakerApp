@@ -14,7 +14,8 @@ import AutomationLogsPage from "@/pages/AutomationLogs";
 import UsersPage from "@/pages/Users";
 import TagsPage from "@/pages/Tags";
 import PromptLibraryPage from "@/pages/PromptLibrary";
-import SettingsPage from "@/pages/Settings";
+import BillingPage from "@/pages/Billing";
+import OpportunitiesPage from "@/pages/Opportunities";
 
 function isAuthed() {
   return Boolean(localStorage.getItem("leadawaker_auth"));
@@ -46,7 +47,7 @@ function Protected({ children }: { children: ReactElement }) {
  */
 function AgencyOnly({ children, prefix }: { children: ReactElement; prefix: string }) {
   if (!isAgencyUser()) {
-    return <Redirect to={`${prefix}/dashboard`} />;
+    return <Redirect to={`${prefix}/campaigns`} />;
   }
   return children;
 }
@@ -68,7 +69,7 @@ export default function AppArea() {
       <Suspense fallback={<PageLoader />}>
         <Switch>
           {/* Agency routes */}
-          <Route path="/agency" component={() => <Redirect to="/agency/dashboard" />} />
+          <Route path="/agency" component={() => <Redirect to="/agency/campaigns" />} />
           <Route path="/agency/dashboard" component={AppDashboard} />
           <Route path="/agency/contacts" component={AppLeads} />
           <Route path="/agency/leads" component={AppLeads} />
@@ -76,17 +77,13 @@ export default function AppArea() {
           <Route path="/agency/contacts/:id" component={LeadDetailPage} />
           <Route path="/agency/campaigns" component={AppCampaigns} />
           <Route path="/agency/calendar" component={CalendarPage} />
-          <Route path="/agency/settings">
-            <AgencyOnly prefix="/agency"><SettingsPage /></AgencyOnly>
-          </Route>
+          <Route path="/agency/settings" component={() => <Redirect to="/agency/campaigns" />} />
 
           {/* Agency-only routes (admin pages) */}
           <Route path="/agency/accounts">
             <AgencyOnly prefix="/agency"><AppAccounts /></AgencyOnly>
           </Route>
-          <Route path="/agency/users">
-            <AgencyOnly prefix="/agency"><UsersPage /></AgencyOnly>
-          </Route>
+          <Route path="/agency/users" component={UsersPage} />
           <Route path="/agency/tags">
             <AgencyOnly prefix="/agency"><TagsPage /></AgencyOnly>
           </Route>
@@ -96,9 +93,18 @@ export default function AppArea() {
           <Route path="/agency/prompt-library">
             <AgencyOnly prefix="/agency"><PromptLibraryPage /></AgencyOnly>
           </Route>
+          <Route path="/agency/invoices" component={BillingPage} />
+          <Route path="/agency/expenses">
+            <AgencyOnly prefix="/agency"><BillingPage /></AgencyOnly>
+          </Route>
+          <Route path="/agency/contracts" component={BillingPage} />
+          <Route path="/agency/billing">
+            <Redirect to="/agency/invoices" />
+          </Route>
+          <Route path="/agency/opportunities" component={OpportunitiesPage} />
 
           {/* Subaccount routes */}
-          <Route path="/subaccount" component={() => <Redirect to="/subaccount/dashboard" />} />
+          <Route path="/subaccount" component={() => <Redirect to="/subaccount/campaigns" />} />
           <Route path="/subaccount/dashboard" component={AppDashboard} />
           <Route path="/subaccount/contacts" component={AppLeads} />
           <Route path="/subaccount/leads" component={AppLeads} />
@@ -106,17 +112,13 @@ export default function AppArea() {
           <Route path="/subaccount/contacts/:id" component={LeadDetailPage} />
           <Route path="/subaccount/campaigns" component={AppCampaigns} />
           <Route path="/subaccount/calendar" component={CalendarPage} />
-          <Route path="/subaccount/settings">
-            <AgencyOnly prefix="/subaccount"><SettingsPage /></AgencyOnly>
-          </Route>
+          <Route path="/subaccount/settings" component={() => <Redirect to="/subaccount/campaigns" />} />
 
           {/* Subaccount agency-only routes (admin pages) */}
           <Route path="/subaccount/accounts">
             <AgencyOnly prefix="/subaccount"><AppAccounts /></AgencyOnly>
           </Route>
-          <Route path="/subaccount/users">
-            <AgencyOnly prefix="/subaccount"><UsersPage /></AgencyOnly>
-          </Route>
+          <Route path="/subaccount/users" component={UsersPage} />
           <Route path="/subaccount/tags">
             <AgencyOnly prefix="/subaccount"><TagsPage /></AgencyOnly>
           </Route>
@@ -126,6 +128,15 @@ export default function AppArea() {
           <Route path="/subaccount/prompt-library">
             <AgencyOnly prefix="/subaccount"><PromptLibraryPage /></AgencyOnly>
           </Route>
+          <Route path="/subaccount/invoices" component={BillingPage} />
+          <Route path="/subaccount/expenses">
+            <AgencyOnly prefix="/subaccount"><BillingPage /></AgencyOnly>
+          </Route>
+          <Route path="/subaccount/contracts" component={BillingPage} />
+          <Route path="/subaccount/billing">
+            <Redirect to="/subaccount/invoices" />
+          </Route>
+          <Route path="/subaccount/opportunities" component={OpportunitiesPage} />
 
           <Route component={() => (
             <CrmShell>

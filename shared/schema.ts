@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   pgSchema,
+  serial,
   integer,
   text,
   varchar,
@@ -57,6 +58,7 @@ export const accounts = nocodb.table("Accounts", {
   serviceCategories: text("service_categories"),
   businessDescription: text("business_description"),
   businessNiche: text("business_niche"),
+  logoUrl: text("logo_url"),
 });
 
 export const insertAccountsSchema = createInsertSchema(accounts).omit({
@@ -141,6 +143,7 @@ export const campaigns = nocodb.table("Campaigns", {
   messageIntervalMinutes: bigint("message_interval_minutes", { mode: "number" }),
   activeHoursStart: time("active_hours_start"),
   activeHoursEnd: time("active_hours_end"),
+  defaultCallDurationMinutes: integer("default_call_duration_minutes"),
   calendarLink: text("calendar_link"),
   dailyLeadLimit: bigint("daily_lead_limit", { mode: "number" }),
   webhookUrl: text("webhook_url"),
@@ -172,6 +175,8 @@ export const campaigns = nocodb.table("Campaigns", {
   costPerLead: numeric("cost_per_lead"),
   costPerBooking: numeric("cost_per_booking"),
   roiPercent: numeric("roi_percent"),
+  contractId:         integer("contract_id"),
+  valuePerBooking:    numeric("value_per_booking"),
   lastMetricsCalculatedAt: timestamp("last_metrics_calculated_at"),
 }, (t) => [
   index("campaigns_accounts_id_idx").on(t.accountsId),
@@ -292,6 +297,8 @@ export const leads = nocodb.table("Leads", {
   currentBumpStage: bigint("current_bump_stage", { mode: "number" }),
   optedOut: boolean("opted_out"),
   aiSentiment: text("ai_sentiment"),
+  aiSummary: text("ai_summary"),
+  teamMembers: text("team_members"),
   manualTakeover: boolean("manual_takeover"),
   dncReason: text("dnc_reason"),
   priority: text("priority"),
@@ -302,6 +309,7 @@ export const leads = nocodb.table("Leads", {
   bookingConfirmationSent: boolean("booking_confirmation_sent"),
   noShow: boolean("no_show"),
   reScheduledCount: bigint("re_scheduled_count", { mode: "number" }),
+  callDurationMinutes: integer("call_duration_minutes"),
   whatHasTheLeadDone: text("what_has_the_lead_done"),
   when: text("when"),
   accountId: bigint("account_id", { mode: "number" }),
@@ -376,6 +384,7 @@ export const promptLibrary = nocodb.table("Prompt_Library", {
   ncOrder: numeric("nc_order"),
   name: text("name"),
   accountsId: integer("Accounts_id"),
+  campaignsId: integer("Campaigns_id"),
   version: text("version"),
   promptText: text("prompt_text"),
   useCase: text("use_case"),
@@ -420,6 +429,8 @@ export const tags = nocodb.table("Tags", {
   accountId: bigint("account_id", { mode: "number" }),
   accountsId: integer("Accounts_id"),
   accountName: text("account_name"),
+  campaignId: integer("campaign_id"),
+  campaignName: text("campaign_name"),
 }, (t) => [
   index("tags_accounts_id_idx").on(t.accountsId),
 ]);
@@ -526,3 +537,140 @@ export const insertCampaignMetricsHistorySchema = createInsertSchema(campaignMet
 });
 export type Campaign_Metrics_History = typeof campaignMetricsHistory.$inferSelect;
 export type InsertCampaign_Metrics_History = z.infer<typeof insertCampaignMetricsHistorySchema>;
+
+
+// ─── Invoices ───────────────────────────────────────────────────────────────
+
+export const invoices = nocodb.table("Invoices", {
+  id: integer("id"),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
+  createdBy: varchar("created_by"),
+  updatedBy: varchar("updated_by"),
+  ncOrder: numeric("nc_order"),
+  accountsId: integer("Accounts_id"),
+  invoiceNumber: varchar("invoice_number"),
+  title: text("title"),
+  status: text("status"),
+  currency: varchar("currency"),
+  subtotal: numeric("subtotal"),
+  taxPercent: numeric("tax_percent"),
+  taxAmount: numeric("tax_amount"),
+  discountAmount: numeric("discount_amount"),
+  total: numeric("total"),
+  lineItems: json("line_items"),
+  notes: text("notes"),
+  paymentInfo: text("payment_info"),
+  issuedDate: date("issued_date"),
+  dueDate: date("due_date"),
+  sentAt: timestamp("sent_at"),
+  paidAt: timestamp("paid_at"),
+  viewedAt: timestamp("viewed_at"),
+  viewedCount: integer("viewed_count"),
+  viewToken: varchar("view_token"),
+  accountName: text("account_name"),
+}, (t) => [
+  index("invoices_accounts_id_idx").on(t.accountsId),
+  index("invoices_status_idx").on(t.status),
+  index("invoices_view_token_idx").on(t.viewToken),
+]);
+
+export const insertInvoicesSchema = createInsertSchema(invoices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  createdBy: true,
+  updatedBy: true,
+  ncOrder: true,
+});
+export type Invoices = typeof invoices.$inferSelect;
+export type InsertInvoices = z.infer<typeof insertInvoicesSchema>;
+
+
+// ─── Contracts ───────────────────────────────────────────────────────────────
+
+export const contracts = nocodb.table("Contracts", {
+  id: integer("id"),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
+  createdBy: varchar("created_by"),
+  updatedBy: varchar("updated_by"),
+  ncOrder: numeric("nc_order"),
+  accountsId: integer("Accounts_id"),
+  title: text("title"),
+  status: text("status"),
+  description: text("description"),
+  fileData: text("file_data"),
+  fileName: varchar("file_name"),
+  fileSize: integer("file_size"),
+  fileType: varchar("file_type"),
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  signedAt: timestamp("signed_at"),
+  sentAt: timestamp("sent_at"),
+  viewedAt: timestamp("viewed_at"),
+  viewedCount: integer("viewed_count"),
+  viewToken: varchar("view_token"),
+  accountName: text("account_name"),
+  dealType:            text("deal_type"),
+  paymentTrigger:      text("payment_trigger"),
+  valuePerBooking:     numeric("value_per_booking"),
+  fixedFeeAmount:      numeric("fixed_fee_amount"),
+  depositAmount:       numeric("deposit_amount"),
+  monthlyFee:          numeric("monthly_fee"),
+  costPassthroughRate: numeric("cost_passthrough_rate"),
+  campaignsId:         integer("campaigns_id"),
+  currency:            text("currency"),
+  language:            text("language"),
+  timezone:            text("timezone"),
+  invoiceCadence:      text("invoice_cadence"),
+  paymentPreset:       text("payment_preset"),
+  contractText:        text("contract_text"),
+  signerName:          text("signer_name"),
+}, (t) => [
+  index("contracts_accounts_id_idx").on(t.accountsId),
+  index("contracts_view_token_idx").on(t.viewToken),
+]);
+
+export const insertContractsSchema = createInsertSchema(contracts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  createdBy: true,
+  updatedBy: true,
+  ncOrder: true,
+});
+export type Contracts = typeof contracts.$inferSelect;
+export type InsertContracts = z.infer<typeof insertContractsSchema>;
+
+
+// ── Expenses ──────────────────────────────────────────────────────────────────
+
+export const expenses = nocodb.table("Expenses", {
+  id: serial("id").primaryKey(),
+  date: date("date"),
+  year: integer("year"),
+  quarter: varchar("quarter", { length: 2 }),
+  supplier: varchar("supplier", { length: 200 }),
+  country: varchar("country", { length: 2 }),
+  invoiceNumber: varchar("invoice_number", { length: 100 }),
+  description: text("description"),
+  currency: varchar("currency", { length: 3 }),
+  amountExclVat: numeric("amount_excl_vat"),
+  vatRatePct: numeric("vat_rate_pct"),
+  vatAmount: numeric("vat_amount"),
+  totalAmount: numeric("total_amount"),
+  nlBtwDeductible: boolean("nl_btw_deductible").default(false),
+  notes: text("notes"),
+  pdfPath: varchar("pdf_path", { length: 500 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertExpensesSchema = createInsertSchema(expenses).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type Expenses = typeof expenses.$inferSelect;
+export type InsertExpenses = z.infer<typeof insertExpensesSchema>;
