@@ -1,22 +1,30 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { fetchCampaigns, updateCampaign } from "../api/campaignsApi";
+import type { Campaign } from "@/types/models";
 import { fetchAccounts } from "../../accounts/api/accountsApi";
 import { useToast } from "@/hooks/use-toast";
 
 export function useCampaignsData(accountId?: number) {
-  const [campaigns, setCampaigns] = useState<any[]>([]);
-  const [accounts, setAccounts] = useState<any[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [accounts, setAccounts] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const { toast } = useToast();
   const pendingSaves = useRef<Record<string, number>>({});
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const accountsList = await fetchAccounts();
-      setAccounts(accountsList);
+      // Fetch accounts for name resolution — failure here must NOT block campaigns loading.
+      // Non-agency users get 403 on /api/accounts, but can still view campaigns.
+      let accountsList: Array<Record<string, unknown>> = [];
+      try {
+        accountsList = await fetchAccounts();
+        setAccounts(accountsList);
+      } catch {
+        // Silently ignore — campaigns will show with "Unknown Account" for account names
+      }
 
       const campaignsList = await fetchCampaigns(accountId);
       
@@ -47,7 +55,7 @@ export function useCampaignsData(accountId?: number) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [accountId, toast]);
 
   const updateCampaignRow = async (rowId: string | number, col: string, value: any) => {
     const cleanValue = value === null || value === undefined ? "" : value;

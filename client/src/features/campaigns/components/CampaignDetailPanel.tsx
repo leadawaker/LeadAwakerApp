@@ -30,6 +30,7 @@ import {
 } from "recharts";
 import type { Campaign, CampaignMetricsHistory } from "@/types/models";
 import { cn } from "@/lib/utils";
+import { IconBtn } from "@/components/ui/icon-btn";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -74,7 +75,7 @@ function formatDate(s: string | null | undefined): string {
 function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
     <div className="flex items-center gap-2 mb-3">
-      <div className="text-muted-foreground">{icon}</div>
+      <div className="icon-circle-lg border-2 border-border/25 text-muted-foreground flex items-center justify-center shrink-0">{icon}</div>
       <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{title}</h3>
     </div>
   );
@@ -538,14 +539,13 @@ export function CampaignDetailPanel({
           </div>
 
           {/* Close button */}
-          <button
+          <IconBtn
             onClick={onClose}
-            className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors shrink-0"
             data-testid="campaign-detail-close"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
-          </button>
+          </IconBtn>
         </div>
 
         {/* ── SCROLLABLE BODY ─────────────────────────────────── */}
