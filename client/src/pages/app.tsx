@@ -3,7 +3,6 @@ import { Switch, Route, Redirect, useLocation } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { Loader2 } from "lucide-react";
 
-import AppDashboard from "@/pages/AppDashboard";
 import { LeadsPage as AppLeads } from "@/features/leads/pages/LeadsPage";
 import ConversationsPage from "@/pages/Conversations";
 import LeadDetailPage from "@/pages/LeadDetail";
@@ -42,7 +41,7 @@ function Protected({ children }: { children: ReactElement }) {
 
 /**
  * Route guard for agency-only pages (Accounts, Users, Tags, Prompts, Automation Logs).
- * Redirects non-agency users to their dashboard.
+ * Redirects non-agency users to campaigns.
  * Client users (Manager, Viewer) are blocked from these routes.
  */
 function AgencyOnly({ children, prefix }: { children: ReactElement; prefix: string }) {
@@ -57,7 +56,7 @@ function PageLoader() {
     <div className="flex h-screen w-full items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-4">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-sm font-medium text-muted-foreground animate-pulse">Loading dashboard...</p>
+        <p className="text-sm font-medium text-muted-foreground animate-pulse">Loading...</p>
       </div>
     </div>
   );
@@ -70,7 +69,7 @@ export default function AppArea() {
         <Switch>
           {/* Agency routes */}
           <Route path="/agency" component={() => <Redirect to="/agency/campaigns" />} />
-          <Route path="/agency/dashboard" component={AppDashboard} />
+          <Route path="/agency/dashboard" component={() => <Redirect to="/agency/campaigns" />} />
           <Route path="/agency/contacts" component={AppLeads} />
           <Route path="/agency/leads" component={AppLeads} />
           <Route path="/agency/conversations" component={ConversationsPage} />
@@ -105,7 +104,7 @@ export default function AppArea() {
 
           {/* Subaccount routes */}
           <Route path="/subaccount" component={() => <Redirect to="/subaccount/campaigns" />} />
-          <Route path="/subaccount/dashboard" component={AppDashboard} />
+          <Route path="/subaccount/dashboard" component={() => <Redirect to="/subaccount/campaigns" />} />
           <Route path="/subaccount/contacts" component={AppLeads} />
           <Route path="/subaccount/leads" component={AppLeads} />
           <Route path="/subaccount/conversations" component={ConversationsPage} />

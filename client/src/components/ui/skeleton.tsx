@@ -111,46 +111,7 @@ function SkeletonTable({
   )
 }
 
-/**
- * Dashboard metric card skeleton.
- * Matches the KPI stat card shape with icon + value + label.
- */
-function SkeletonMetricCard({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div className={cn("rounded-2xl border border-border bg-card p-4 shadow-sm flex items-center gap-3", className)} {...props}>
-      <Skeleton className="h-10 w-10 rounded-xl shrink-0" />
-      <div className="min-w-0 flex-1 space-y-2">
-        <SkeletonText className="h-4 w-2/3" />
-        <SkeletonText className="h-3 w-1/3" />
-      </div>
-    </div>
-  )
-}
 
-/**
- * Full-page loading skeleton for dashboard.
- * Renders quick-jump cards + metric cards + chart area.
- */
-function SkeletonDashboard({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div className={cn("space-y-6", className)} {...props}>
-      {/* Quick Jump Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <SkeletonMetricCard key={i} />
-        ))}
-      </div>
-      {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-        {Array.from({ length: 7 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-2xl" />
-        ))}
-      </div>
-      {/* Chart area */}
-      <Skeleton className="h-64 rounded-2xl" />
-    </div>
-  )
-}
 
 /**
  * Grid of card skeletons (for Prompt Library, etc.)
@@ -351,8 +312,6 @@ export {
   SkeletonCard,
   SkeletonTableRow,
   SkeletonTable,
-  SkeletonMetricCard,
-  SkeletonDashboard,
   SkeletonCardGrid,
   SkeletonList,
   SkeletonChatThread,

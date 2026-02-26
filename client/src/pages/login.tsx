@@ -22,7 +22,7 @@ export default function Login() {
     const remembered = localStorage.getItem("leadawaker_remember_me") === "true";
     if (isAuthed && remembered) {
       const accountId = localStorage.getItem("leadawaker_current_account_id");
-      setLocation(accountId === "1" ? "/agency/dashboard" : "/subaccount/dashboard");
+      setLocation(accountId === "1" ? "/agency/campaigns" : "/subaccount/campaigns");
     }
   }, []);
 
@@ -69,7 +69,7 @@ export default function Login() {
 
       // Route to appropriate area based on account
       const isAgency = user.accountsId === 1;
-      setLocation(isAgency ? "/agency/dashboard" : "/subaccount/dashboard");
+      setLocation(isAgency ? "/agency/campaigns" : "/subaccount/campaigns");
     } catch {
       setError("Network error — please try again");
     } finally {
