@@ -19,7 +19,6 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { apiFetch } from "@/lib/apiUtils";
 import {
-  LayoutDashboard,
   Megaphone,
   BookUser,
   MessageSquare,
@@ -63,7 +62,6 @@ export function CommandPalette() {
 
   // Navigation items
   const allNavItems: NavItem[] = useMemo(() => [
-    { href: `${prefix}/dashboard`, label: "Dashboard", icon: LayoutDashboard, keywords: "home overview stats" },
     { href: `${prefix}/accounts`, label: "Accounts", icon: Building2, keywords: "clients organizations", agencyOnly: true },
     { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, keywords: "messages outreach drip" },
     { href: `${prefix}/contacts`, label: "Contacts", icon: BookUser, keywords: "leads people prospects" },

@@ -33,8 +33,6 @@ export function Topbar({
   const { isDark, toggleTheme } = useTheme();
 
   const titles: Record<string, string> = {
-    "/agency/dashboard": "Dashboard",
-    "/subaccount/dashboard": "Dashboard",
     "/agency/leads": "Leads",
     "/subaccount/leads": "Leads",
     "/agency/contacts": "Leads",

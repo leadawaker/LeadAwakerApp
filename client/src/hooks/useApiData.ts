@@ -14,7 +14,6 @@ import type {
   TagItem,
   PromptItem,
   CampaignMetricsHistory,
-  DashboardTrend,
 } from "@/types/models";
 
 /* ─── Generic fetch helper ────────────────────────────────────── */
@@ -359,30 +358,3 @@ export function useCampaignMetrics(campaignId?: number) {
   return { metrics, loading, refresh };
 }
 
-/* ─── Dashboard KPI Trends ────────────────────────────────────── */
-
-export function useDashboardTrends(days: number = 30, accountId?: number) {
-  const [trends, setTrends] = useState<DashboardTrend[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      params.set("days", String(days));
-      if (accountId) params.set("accountId", String(accountId));
-      const res = await apiFetch(`/api/dashboard-trends?${params.toString()}`);
-      if (!res.ok) throw new Error(`Failed to fetch trends: ${res.status}`);
-      const data = await res.json();
-      setTrends(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Failed to fetch dashboard trends", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [days, accountId]);
-
-  useEffect(() => { refresh(); }, [refresh]);
-
-  return { trends, loading, refresh };
-}

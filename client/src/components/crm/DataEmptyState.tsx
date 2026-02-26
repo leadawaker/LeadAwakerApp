@@ -8,7 +8,6 @@ import {
   Activity,
   MessageSquare,
   CalendarDays,
-  LayoutDashboard,
   Inbox,
   Search,
   type LucideIcon,
@@ -26,7 +25,6 @@ export type EmptyStateVariant =
   | "automation"
   | "conversations"
   | "calendar"
-  | "dashboard"
   | "search"
   | "generic";
 
@@ -81,11 +79,6 @@ const emptyStateConfigs: Record<EmptyStateVariant, EmptyStateConfig> = {
     icon: CalendarDays,
     title: "No appointments scheduled",
     description: "Booked calls and appointments will show up here as leads convert.",
-  },
-  dashboard: {
-    icon: LayoutDashboard,
-    title: "No data to display",
-    description: "Start by adding leads and creating campaigns to see your dashboard metrics.",
   },
   search: {
     icon: Search,

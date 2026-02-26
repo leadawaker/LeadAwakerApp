@@ -33,10 +33,10 @@ export type WorkspaceState = {
 };
 
 /** Pages visible to client users (Manager/Viewer) */
-const CLIENT_PAGES = ["dashboard", "contacts", "leads", "campaigns", "conversations", "calendar"];
+const CLIENT_PAGES = ["contacts", "leads", "campaigns", "conversations", "calendar"];
 /** All pages (for agency users: Admin/Operator) */
 const ALL_PAGES = [
-  "dashboard", "contacts", "leads", "campaigns", "conversations",
+  "contacts", "leads", "campaigns", "conversations",
   "calendar", "accounts", "tags", "prompt-library", "users",
   "automation-logs", "settings",
 ];
