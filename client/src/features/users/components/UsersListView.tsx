@@ -439,7 +439,7 @@ function UserCard({
     <div
       className={cn(
         "relative mx-[3px] my-0.5 rounded-xl cursor-pointer",
-        "transition-all duration-150 ease-out",
+        "transition-colors duration-150 ease-out",
         isSelected
           ? "bg-[#FFF1C8]"
           : "bg-[#F1F1F1] hover:bg-[#FAFAFA] hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"

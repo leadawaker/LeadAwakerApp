@@ -38,6 +38,11 @@ export async function hashPassword(password: string): Promise<string> {
 }
 
 export function setupAuth(app: Express) {
+  // Enforce SESSION_SECRET in production — never fall back to the dev default
+  if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+    throw new Error('SESSION_SECRET environment variable is required in production');
+  }
+
   const PgSession = connectPgSimple(session);
 
   app.use(
@@ -136,6 +141,24 @@ export function scopeToAccount(req: Request, res: Response, next: NextFunction) 
   next();
 }
 
+// ─── In-memory rate limiter for login (no extra dependencies needed) ─────────
+
+const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW = 60_000; // 1 minute
+const RATE_LIMIT_MAX = 5; // 5 attempts per window
+
+function checkLoginRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = loginAttempts.get(ip);
+  if (!record || now > record.resetAt) {
+    loginAttempts.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+  if (record.count >= RATE_LIMIT_MAX) return false;
+  record.count++;
+  return true;
+}
+
 // ─── In-memory rate limiter for accept-invite (no extra dependencies needed) ─
 
 const acceptInviteAttempts = new Map<string, number[]>();
@@ -154,6 +177,10 @@ function checkAcceptInviteRateLimit(ip: string): boolean {
 export function registerAuthRoutes(app: Express) {
   /** POST /api/auth/login — email + password */
   app.post("/api/auth/login", (req, res, next) => {
+    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+    if (!checkLoginRateLimit(clientIp)) {
+      return res.status(429).json({ message: "Too many login attempts. Try again in 1 minute." });
+    }
     passport.authenticate(
       "local",
       (err: Error | null, user: Users | false, info: { message: string } | undefined) => {

@@ -1937,7 +1937,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                             key={col}
                             style={{ width: colWidths[col] }}
                             className={cn(
-                              "px-4 font-medium text-foreground/80 transition-all overflow-visible",
+                              "px-4 font-medium text-foreground/80 transition-colors overflow-visible",
                               rowPadding,
                               showVerticalLines && idx < visibleCols.length - 1 && "border-r border-border/30",
                               idx === 0 && cn(
@@ -2213,7 +2213,7 @@ export default function DataTable<TRow extends DataTableRow = DataTableRow>(
                             key={col}
                             style={{ width: colWidths[col] }}
                             className={cn(
-                              "px-4 font-medium text-foreground/80 transition-all overflow-visible",
+                              "px-4 font-medium text-foreground/80 transition-colors overflow-visible",
                               rowPadding,
                               showVerticalLines &&
                                 idx < visibleCols.length - 1 &&

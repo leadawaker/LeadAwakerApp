@@ -19,9 +19,10 @@ import { CsvImportWizard } from "./CsvImportWizard";
 import { createLead, bulkDeleteLeads } from "../api/leadsApi";
 import { apiFetch } from "@/lib/apiUtils";
 import {
-  Table2, List,
+  Table2, List, Kanban,
   Plus, Trash2, Copy, ArrowUpDown, Filter, Layers,
   FileSpreadsheet, Eye, Check, Upload, Download,
+  Search, X, SlidersHorizontal, Flame, Phone, Mail, Columns3, Tag,
 } from "lucide-react";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import { ToolbarPill } from "@/components/ui/toolbar-pill";
@@ -38,7 +39,7 @@ import { cn } from "@/lib/utils";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
 import type { VirtualListItem } from "./LeadsCardView";
 
-type ViewMode = "list" | "table";
+type ViewMode = "list" | "table" | "pipeline";
 type TableSortByOption  = "recent" | "name_asc" | "name_desc" | "score_desc" | "score_asc";
 type TableGroupByOption = "status" | "campaign" | "account" | "none";
 
@@ -70,8 +71,9 @@ const DEFAULT_VISIBLE_COLS = TABLE_COL_META
 
 /* ── Tab definitions ── */
 const VIEW_TABS: TabDef[] = [
-  { id: "list",   label: "List",   icon: List       },
-  { id: "table",  label: "Table",  icon: Table2     },
+  { id: "list",     label: "List",     icon: List   },
+  { id: "table",    label: "Table",    icon: Table2 },
+  { id: "pipeline", label: "Pipeline", icon: Kanban },
 ];
 
 /* ── Status group ordering ── */
@@ -164,7 +166,7 @@ export function LeadsTable() {
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     try {
       const stored = localStorage.getItem(VIEW_MODE_KEY);
-      if (stored && ["list", "table"].includes(stored)) return stored as ViewMode;
+      if (stored && ["list", "table", "pipeline"].includes(stored)) return stored as ViewMode;
     } catch {}
     return "list";
   });

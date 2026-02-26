@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   List, Table2, Plus, Trash2, Copy, Filter, Layers, Eye, Check, Search, X,
-  PanelRightClose, PanelRightOpen,
+  PanelRightClose, PanelRightOpen, Activity, ChevronDown, ChevronUp,
 } from "lucide-react";
 import {
   Popover,

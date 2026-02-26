@@ -260,7 +260,7 @@ function ViewPanel({
             <div className="space-y-2">
               <div className="w-full h-1.5 rounded-full bg-border/50 overflow-hidden">
                 <div
-                  className={cn("h-full rounded-full transition-all", scoreBarColor)}
+                  className={cn("h-full rounded-full transition-colors", scoreBarColor)}
                   style={{ width: `${Math.min(100, Math.max(0, score))}%` }}
                 />
               </div>
@@ -621,7 +621,7 @@ function PromptListCard({
     <div
       className={cn(
         "group mx-[3px] my-0.5 rounded-xl cursor-pointer",
-        "transition-all duration-150 ease-out",
+        "transition-colors duration-150 ease-out",
         "hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]",
         isActive ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] hover:bg-[#FAFAFA]",
       )}

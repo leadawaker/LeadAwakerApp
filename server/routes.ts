@@ -33,6 +33,8 @@ import {
   insertInvoicesSchema,
   insertContractsSchema,
   insertExpensesSchema,
+  notifications,
+  insertNotificationsSchema,
 } from "@shared/schema";
 import crypto from "crypto";
 import fs from "fs";
@@ -116,6 +118,14 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express,
 ): Promise<Server> {
+  // ─── Security Headers ────────────────────────────────────────────────
+  app.use((req, res, next) => {
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+  });
+
   // ─── Auth Routes (public) ──────────────────────────────────────────
   registerAuthRoutes(app);
 
@@ -502,14 +512,14 @@ export async function registerRoutes(
     res.json(toDbKeysArray(data as any, tags));
   }));
 
-  app.post("/api/tags", requireAuth, wrapAsync(async (req, res) => {
+  app.post("/api/tags", requireAgency, wrapAsync(async (req, res) => {
     const parsed = insertTagsSchema.safeParse(fromDbKeys(req.body, tags));
     if (!parsed.success) return handleZodError(res, parsed.error);
     const tag = await storage.createTag(parsed.data);
     res.status(201).json(toDbKeys(tag as any, tags));
   }));
 
-  app.patch("/api/tags/:id", requireAuth, wrapAsync(async (req, res) => {
+  app.patch("/api/tags/:id", requireAgency, wrapAsync(async (req, res) => {
     const parsed = insertTagsSchema.partial().safeParse(fromDbKeys(req.body, tags));
     if (!parsed.success) return handleZodError(res, parsed.error);
     const tag = await storage.updateTag(Number(req.params.id), parsed.data);
@@ -517,7 +527,7 @@ export async function registerRoutes(
     res.json(toDbKeys(tag as any, tags));
   }));
 
-  app.delete("/api/tags/:id", requireAuth, wrapAsync(async (req, res) => {
+  app.delete("/api/tags/:id", requireAgency, wrapAsync(async (req, res) => {
     const deleted = await storage.deleteTag(Number(req.params.id));
     if (!deleted) return res.status(404).json({ message: "Tag not found" });
     res.json({ success: true });
@@ -575,10 +585,63 @@ export async function registerRoutes(
 
   // ─── Notifications ─────────────────────────────────────────
 
-  app.get("/api/notifications", requireAuth, scopeToAccount, wrapAsync(async (req, res) => {
+  // Legacy endpoint kept for backwards compat (old Topbar uses it)
+  app.get("/api/notifications/legacy", requireAuth, scopeToAccount, wrapAsync(async (req, res) => {
     const forcedId = (req as any).forcedAccountId as number | undefined;
     const data = await storage.getRecentNotifications(forcedId);
     res.json(data);
+  }));
+
+  // GET /api/notifications — list notifications for the current user
+  app.get("/api/notifications", requireAuth, wrapAsync(async (req, res) => {
+    const user = req.user!;
+    const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
+    const offset = parseInt(req.query.offset as string) || 0;
+    const unreadOnly = req.query.unread === "true";
+    const items = await storage.getNotificationsByUserId(user.id!, { limit, offset, unreadOnly });
+    const unreadCount = await storage.getUnreadNotificationCount(user.id!);
+    const totalCount = await storage.getTotalNotificationCount(user.id!);
+    res.json({ items, unreadCount, totalCount });
+  }));
+
+  // GET /api/notifications/count — lightweight badge poll
+  app.get("/api/notifications/count", requireAuth, wrapAsync(async (req, res) => {
+    const user = req.user!;
+    const unreadCount = await storage.getUnreadNotificationCount(user.id!);
+    res.json({ unreadCount });
+  }));
+
+  // PATCH /api/notifications/:id — mark single notification as read
+  app.patch("/api/notifications/:id", requireAuth, wrapAsync(async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid notification ID" });
+    const notif = await storage.getNotificationById(id);
+    if (!notif) return res.status(404).json({ message: "Notification not found" });
+    // Ensure the notification belongs to the current user
+    if (notif.userId !== req.user!.id!) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    await storage.updateNotification(id, { read: true });
+    res.json({ success: true });
+  }));
+
+  // POST /api/notifications/mark-all-read — mark all as read for current user
+  app.post("/api/notifications/mark-all-read", requireAuth, wrapAsync(async (req, res) => {
+    const user = req.user!;
+    const count = await storage.markAllNotificationsRead(user.id!);
+    res.json({ success: true, updated: count });
+  }));
+
+  // POST /api/notifications — create a notification (admin only, for testing/integrations)
+  app.post("/api/notifications", requireAuth, wrapAsync(async (req, res) => {
+    const user = req.user!;
+    // Only agency (admin) users can create notifications via API
+    if (user.accountsId !== 1) {
+      return res.status(403).json({ message: "Agency access required" });
+    }
+    const parsed = insertNotificationsSchema.parse(req.body);
+    const created = await storage.createNotification(parsed);
+    res.status(201).json(created);
   }));
 
   // ─── Activity Feed ───────────────────────────────────────────────
@@ -1410,22 +1473,14 @@ export async function registerRoutes(
 
   // ── Expenses ──────────────────────────────────────────────────────────────────
 
-  app.get("/api/expenses", requireAuth, wrapAsync(async (req, res) => {
-    const userRole = (req.user as any)?.role?.toLowerCase();
-    if (userRole !== "admin" && userRole !== "operator") {
-      return res.status(403).json({ error: "Forbidden" });
-    }
+  app.get("/api/expenses", requireAgency, wrapAsync(async (req, res) => {
     const year = req.query.year ? parseInt(req.query.year as string) : undefined;
     const quarter = req.query.quarter as string | undefined;
     const rows = await storage.getExpenses(year, quarter);
     res.json(rows);
   }));
 
-  app.post("/api/expenses/parse-pdf", requireAuth, wrapAsync(async (req, res) => {
-    const userRole = (req.user as any)?.role?.toLowerCase();
-    if (userRole !== "admin" && userRole !== "operator") {
-      return res.status(403).json({ error: "Forbidden" });
-    }
+  app.post("/api/expenses/parse-pdf", requireAgency, wrapAsync(async (req, res) => {
     const apiKey = process.env.OPEN_AI_API_KEY;
     if (!apiKey) {
       return res.status(200).json({ error: "NO_API_KEY" });
@@ -1506,11 +1561,7 @@ Rules:
     }
   }));
 
-  app.post("/api/expenses", requireAuth, wrapAsync(async (req, res) => {
-    const userRole = (req.user as any)?.role?.toLowerCase();
-    if (userRole !== "admin" && userRole !== "operator") {
-      return res.status(403).json({ error: "Forbidden" });
-    }
+  app.post("/api/expenses", requireAgency, wrapAsync(async (req, res) => {
     const body = req.body;
     let pdfPath: string | undefined;
     if (body.pdf_data && body.date) {
@@ -1556,11 +1607,7 @@ Rules:
     res.status(201).json(expense);
   }));
 
-  app.patch("/api/expenses/:id", requireAuth, wrapAsync(async (req, res) => {
-    const userRole = (req.user as any)?.role?.toLowerCase();
-    if (userRole !== "admin" && userRole !== "operator") {
-      return res.status(403).json({ error: "Forbidden" });
-    }
+  app.patch("/api/expenses/:id", requireAgency, wrapAsync(async (req, res) => {
     const id = parseInt(req.params.id);
     const body = req.body;
     const updated = await storage.updateExpense(id, {
@@ -1583,22 +1630,14 @@ Rules:
     res.json(updated);
   }));
 
-  app.delete("/api/expenses/:id", requireAuth, wrapAsync(async (req, res) => {
-    const userRole = (req.user as any)?.role?.toLowerCase();
-    if (userRole !== "admin" && userRole !== "operator") {
-      return res.status(403).json({ error: "Forbidden" });
-    }
+  app.delete("/api/expenses/:id", requireAgency, wrapAsync(async (req, res) => {
     const id = parseInt(req.params.id);
     const ok = await storage.deleteExpense(id);
     if (!ok) return res.status(404).json({ error: "Not found" });
     res.status(204).end();
   }));
 
-  app.get("/api/expenses/:id/pdf", requireAuth, wrapAsync(async (req, res) => {
-    const userRole = (req.user as any)?.role?.toLowerCase();
-    if (userRole !== "admin" && userRole !== "operator") {
-      return res.status(403).json({ error: "Forbidden" });
-    }
+  app.get("/api/expenses/:id/pdf", requireAgency, wrapAsync(async (req, res) => {
     const id = parseInt(req.params.id);
     const rows = await storage.getExpenses();
     const expense = rows.find((r) => r.id === id);

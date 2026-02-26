@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { Bell, Search, Settings, Moon, Sun, Menu, X, LogOut, Check, BookOpen, Share2, Sparkles, User } from "lucide-react";
 import { IconBtn } from "@/components/ui/icon-btn";
@@ -18,16 +18,8 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/comp
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
 import { apiFetch } from "@/lib/apiUtils";
 import { BookedCallsKpi } from "@/components/crm/BookedCallsKpi";
+import { NotificationCenter } from "@/components/crm/NotificationCenter";
 import { useQuery } from "@tanstack/react-query";
-
-type NotifItem = { id: string; type: 'inbound' | 'booking' | 'error'; title: string; description: string; at: string; leadId?: number };
-
-const getDismissedIds = (): Set<string> => {
-  try {
-    const stored = localStorage.getItem("leadawaker_dismissed_notif_ids");
-    return new Set(stored ? JSON.parse(stored) : []);
-  } catch { return new Set(); }
-};
 
 export function Topbar({
   onOpenPanel,
@@ -46,21 +38,29 @@ export function Topbar({
   const { isAgencyView, isAgencyUser, currentAccountId, accounts, setCurrentAccountId, currentAccount } = useWorkspace();
   const { isDark, toggleTheme } = useTheme();
 
-  // ── Notifications (real API) ─────────────────────────────────────────────────
-  const { data: notificationData = [] } = useQuery<NotifItem[]>({
-    queryKey: ['/api/notifications'],
+  // ── Notification Center ─────────────────────────────────────────────────────
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Lightweight poll for the badge count (every 60s)
+  const { data: countData } = useQuery<{ unreadCount: number }>({
+    queryKey: ["/api/notifications/count"],
     queryFn: async () => {
-      const res = await apiFetch('/api/notifications');
-      if (!res.ok) return [];
-      return res.json() as Promise<NotifItem[]>;
+      const res = await apiFetch("/api/notifications/count");
+      if (!res.ok) return { unreadCount: 0 };
+      return res.json() as Promise<{ unreadCount: number }>;
     },
     refetchInterval: 60_000,
     staleTime: 30_000,
   });
 
-  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => getDismissedIds());
-  const notifications = notificationData.filter(n => !dismissedIds.has(n.id));
-  const unreadCount = notifications.length;
+  useEffect(() => {
+    if (countData) setUnreadCount(countData.unreadCount);
+  }, [countData]);
+
+  const handleUnreadCountChange = useCallback((count: number) => {
+    setUnreadCount(count);
+  }, []);
 
   // ── Search state ─────────────────────────────────────────────────────────────
   const [searchOpen, setSearchOpen] = useState(false);
@@ -362,76 +362,36 @@ export function Topbar({
             </TooltipContent>
           </Tooltip>
 
-          {/* ── Notifications Popover ── */}
-          <Popover>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <PopoverTrigger asChild>
-                  <IconBtn
-                    className="relative"
-                    data-testid="button-notifications"
-                    aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
+          {/* ── Notifications ── */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <IconBtn
+                className="relative"
+                onClick={() => setNotifOpen(true)}
+                data-testid="button-notifications"
+                aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
+              >
+                <Bell className="h-4 w-4" />
+                {unreadCount > 0 && (
+                  <div
+                    className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-brand-indigo rounded-full flex items-center justify-center border-2 border-background"
+                    data-testid="badge-notifications-count"
+                    aria-hidden="true"
                   >
-                    <Bell className="h-4 w-4" />
-                    {unreadCount > 0 && (
-                      <div
-                        className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-brand-indigo rounded-full flex items-center justify-center border-2 border-background"
-                        data-testid="badge-notifications-count"
-                        aria-hidden="true"
-                      >
-                        <span className="text-[9px] font-bold text-white">{unreadCount > 9 ? "9+" : unreadCount}</span>
-                      </div>
-                    )}
-                  </IconBtn>
-                </PopoverTrigger>
-              </TooltipTrigger>
-              <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
-                Notifications
-              </TooltipContent>
-            </Tooltip>
-            <PopoverContent
-              align="end"
-              sideOffset={8}
-              className="w-80 p-0 rounded-2xl shadow-xl border-border/60 bg-popover overflow-hidden"
-            >
-              <div className="px-4 py-3 border-b border-border/20 flex items-center justify-between">
-                <span className="font-semibold text-sm" data-testid="text-notifications-title">Notifications</span>
-                {notifications.length > 0 && (
-                  <button
-                    onClick={() => {
-                      const allIds = new Set(Array.from(dismissedIds).concat(notificationData.map(n => n.id)));
-                      setDismissedIds(allIds);
-                      localStorage.setItem("leadawaker_dismissed_notif_ids", JSON.stringify(Array.from(allIds)));
-                    }}
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                    data-testid="button-mark-all-read"
-                  >
-                    Mark all as read
-                  </button>
+                    <span className="text-[9px] font-bold text-white">{unreadCount > 9 ? "9+" : unreadCount}</span>
+                  </div>
                 )}
-              </div>
-              {notifications.length === 0 ? (
-                <div className="px-4 py-6 text-sm text-muted-foreground text-center">All caught up!</div>
-              ) : (
-                <div className="max-h-72 overflow-y-auto divide-y divide-border/10" data-testid="list-notifications">
-                  {notifications.map((n) => (
-                    <div
-                      key={n.id}
-                      className={cn("px-4 py-3", (n.type === 'inbound' || n.type === 'booking') && n.leadId ? "cursor-pointer hover:bg-muted/30" : "")}
-                      onClick={() => { if ((n.type === 'inbound' || n.type === 'booking') && n.leadId) handleLeadClick(n.leadId); }}
-                      data-testid={`card-notification-${n.id}`}
-                    >
-                      <div className="text-sm font-medium" data-testid={`text-notification-title-${n.id}`}>{n.title}</div>
-                      <div className="text-xs text-muted-foreground mt-0.5" data-testid={`text-notification-desc-${n.id}`}>{n.description}</div>
-                      <div className="text-[11px] text-muted-foreground/60 mt-1" data-testid={`text-notification-at-${n.id}`}>
-                        {new Date(n.at).toLocaleString()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </PopoverContent>
-          </Popover>
+              </IconBtn>
+            </TooltipTrigger>
+            <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
+              Notifications
+            </TooltipContent>
+          </Tooltip>
+          <NotificationCenter
+            open={notifOpen}
+            onClose={() => setNotifOpen(false)}
+            onUnreadCountChange={handleUnreadCountChange}
+          />
 
           {/* User avatar dropdown */}
           <DropdownMenu>

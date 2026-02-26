@@ -130,7 +130,7 @@ export function ConnectionBanner() {
         onClick={handleRetry}
         disabled={state === "reconnecting"}
         className={cn(
-          "shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
+          "shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-opacity",
           "bg-orange-600 text-white hover:bg-orange-700 disabled:opacity-50",
           "dark:bg-orange-500 dark:hover:bg-orange-600"
         )}

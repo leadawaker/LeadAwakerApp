@@ -348,7 +348,7 @@ export function PromptsCardView({
               key={promptId}
               onClick={() => setSelectedId(promptId)}
               className={cn(
-                "shrink-0 rounded-2xl px-4 py-3 text-left transition-all duration-150 min-w-[200px] max-w-[280px]",
+                "shrink-0 rounded-2xl px-4 py-3 text-left transition-colors duration-150 min-w-[200px] max-w-[280px]",
                 isSelected
                   ? "bg-[#FFF1C8] ring-2 ring-[#FFE35B]"
                   : "bg-card hover:bg-popover",

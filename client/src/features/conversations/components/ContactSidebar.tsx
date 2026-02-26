@@ -519,7 +519,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                   <div className="flex items-center justify-between">
                     <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden mr-3">
                       <div
-                        className={`h-full rounded-full transition-all duration-300 ${scoreBarColor(score)}`}
+                        className={`h-full rounded-full transition-opacity duration-300 ${scoreBarColor(score)}`}
                         style={{ width: `${score}%` }}
                       />
                     </div>
