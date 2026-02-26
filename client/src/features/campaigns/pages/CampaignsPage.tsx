@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   List, Table2, Plus, Trash2, Copy, Filter, Layers, Eye, Check, Search, X,
-  PanelRightClose, PanelRightOpen, ChevronDown, ChevronUp, Activity,
+  PanelRightClose, PanelRightOpen,
 } from "lucide-react";
 import {
   Popover,
@@ -29,8 +29,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ActivityFeed } from "@/components/crm/ActivityFeed";
 import { createCampaign, deleteCampaign, updateCampaign } from "../api/campaignsApi";
 
 export type CampaignViewMode = "list" | "table";
@@ -108,7 +106,7 @@ function ConfirmToolbarButton({
       <div className="h-10 flex items-center gap-1 rounded-full border border-border/30 bg-card px-2.5 text-[12px] shrink-0">
         <span className="text-foreground/60 mr-0.5 whitespace-nowrap">{label}?</span>
         <button
-          className="px-2 py-0.5 rounded-full bg-brand-blue text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
+          className="px-2 py-0.5 rounded-full bg-brand-indigo text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
           onClick={async () => { setLoading(true); try { await onConfirm(); } finally { setLoading(false); setConfirming(false); } }}
           disabled={loading}
         >
@@ -170,14 +168,6 @@ function CampaignsContent() {
 
   const [editPanelOpen, setEditPanelOpen] = useState(false);
   const [editCampaign, setEditCampaign] = useState<Campaign | null>(null);
-
-  // ── Activity feed (collapsible bottom panel) ──────────────────────
-  const [activityOpen, setActivityOpen] = useState(() => {
-    try { return localStorage.getItem("campaigns-activity-open") !== "false"; } catch { return true; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem("campaigns-activity-open", String(activityOpen)); } catch {}
-  }, [activityOpen]);
 
   const [filterAccountId] = useState<number | "all">("all");
 
@@ -333,9 +323,17 @@ function CampaignsContent() {
   // ── Lifted multi-select state ──────────────────────────────────────────────
   const [tableSelectedIds, setTableSelectedIds] = useState<Set<number>>(new Set());
 
+  const handleDeleteCampaign = useCallback(async (id: number) => {
+    try {
+      await deleteCampaign(id);
+      setSelectedCampaign(null);
+      handleRefresh();
+    } catch (err) { console.error("Delete campaign failed", err); }
+  }, [handleRefresh, setSelectedCampaign]);
+
   const handleAddCampaign = useCallback(async () => {
     try {
-      const newCampaign = await createCampaign({ name: "New Campaign", status: "Draft" });
+      const newCampaign = await createCampaign({ name: "New Campaign", status: "Draft", type: "Re-engagement", description: "", start_date: new Date().toISOString().slice(0, 10) });
       await handleRefresh();
       if (newCampaign?.id || newCampaign?.Id) {
         setSelectedCampaign(newCampaign);
@@ -551,7 +549,7 @@ function CampaignsContent() {
             <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleTableFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
               <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", STATUS_DOT[s] ?? "bg-zinc-400")} />
               <span className="flex-1">{s}</span>
-              {tableFilterStatus.includes(s) && <Check className="h-3 w-3 text-brand-blue shrink-0" />}
+              {tableFilterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
             </DropdownMenuItem>
           ))}
 
@@ -559,11 +557,11 @@ function CampaignsContent() {
             <>
               <DropdownMenuSeparator />
               <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Account</DropdownMenuLabel>
-              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterAccount(""); }} className={cn("text-[12px]", !tableFilterAccount && "font-semibold text-brand-blue")}>
+              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterAccount(""); }} className={cn("text-[12px]", !tableFilterAccount && "font-semibold text-brand-indigo")}>
                 All Accounts {!tableFilterAccount && <Check className="h-3 w-3 ml-auto" />}
               </DropdownMenuItem>
               {availableAccounts.map((a) => (
-                <DropdownMenuItem key={a} onClick={(e) => { e.preventDefault(); setTableFilterAccount((p) => p === a ? "" : a); }} className={cn("text-[12px]", tableFilterAccount === a && "font-semibold text-brand-blue")}>
+                <DropdownMenuItem key={a} onClick={(e) => { e.preventDefault(); setTableFilterAccount((p) => p === a ? "" : a); }} className={cn("text-[12px]", tableFilterAccount === a && "font-semibold text-brand-indigo")}>
                   <span className="flex-1 truncate">{a}</span>
                   {tableFilterAccount === a && <Check className="h-3 w-3 ml-1 shrink-0" />}
                 </DropdownMenuItem>
@@ -590,7 +588,7 @@ function CampaignsContent() {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           {(Object.keys(TABLE_GROUP_LABELS) as TableGroupByOption[]).map((opt) => (
-            <DropdownMenuItem key={opt} onClick={() => setTableGroupBy(opt)} className={cn("text-[12px]", tableGroupBy === opt && "font-semibold text-brand-blue")}>
+            <DropdownMenuItem key={opt} onClick={() => setTableGroupBy(opt)} className={cn("text-[12px]", tableGroupBy === opt && "font-semibold text-brand-indigo")}>
               {TABLE_GROUP_LABELS[opt]}
               {tableGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
             </DropdownMenuItem>
@@ -627,7 +625,7 @@ function CampaignsContent() {
               >
                 <div className={cn(
                   "h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0",
-                  isVisible ? "bg-brand-blue border-brand-blue" : "border-border/50"
+                  isVisible ? "bg-brand-indigo border-brand-indigo" : "border-border/50"
                 )}>
                   {isVisible && <Check className="h-2 w-2 text-white" />}
                 </div>
@@ -661,7 +659,7 @@ function CampaignsContent() {
   return (
     <>
       <div className="flex flex-col h-full">
-        <div className={cn("overflow-hidden", activityOpen ? "flex-1 min-h-0" : "flex-1")}>
+        <div className="flex-1 overflow-hidden">
           {viewMode === "list" ? (
             <CampaignListView
               campaigns={campaigns}
@@ -673,6 +671,8 @@ function CampaignsContent() {
               onToggleStatus={handleToggleStatus}
               onSave={handleSaveCampaign}
               onCreateCampaign={handleAddCampaign}
+              onRefresh={handleRefresh}
+              onDelete={handleDeleteCampaign}
               // Lifted controls
               viewMode={viewMode}
               onViewModeChange={handleViewSwitch}
@@ -714,7 +714,7 @@ function CampaignsContent() {
                   </div>
                 </div>
                 {/* Controls row: tabs + inline toolbar */}
-                <div ref={toolbarRef} className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
+                <div ref={toolbarRef} className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
                   {VIEW_TABS.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = viewMode === tab.id;
@@ -757,6 +757,7 @@ function CampaignsContent() {
                     sortCol={tableSortCol}
                     sortDir={tableSortDir}
                     onSortChange={handleTableSortChange}
+                    allCampaigns={campaigns}
                   />
                 </div>
               </div>
@@ -771,6 +772,8 @@ function CampaignsContent() {
                       allCampaigns={campaigns}
                       onToggleStatus={handleToggleStatus}
                       onSave={handleSaveCampaign}
+                      onRefresh={handleRefresh}
+                      onDelete={handleDeleteCampaign}
                       compact
                     />
                   ) : (
@@ -781,37 +784,6 @@ function CampaignsContent() {
             </div>
           )}
         </div>
-
-        {/* ── Recent Activity — collapsible bottom panel ──────────── */}
-        <Collapsible open={activityOpen} onOpenChange={setActivityOpen}>
-          <CollapsibleTrigger asChild>
-            <button
-              type="button"
-              className="w-full shrink-0 flex items-center gap-2 px-4 py-2 bg-card/80 border-t border-border/30 hover:bg-card transition-colors select-none"
-            >
-              <Activity className="h-4 w-4 text-muted-foreground" />
-              <span className="text-[13px] font-semibold text-foreground">
-                Recent Activity
-              </span>
-              <span className="flex-1" />
-              {activityOpen ? (
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              ) : (
-                <ChevronUp className="h-4 w-4 text-muted-foreground" />
-              )}
-            </button>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="max-h-[260px] overflow-y-auto border-t border-border/20 bg-popover">
-              <ActivityFeed
-                accountId={effectiveAccountId}
-                limit={20}
-                compact
-                className="px-1 py-1"
-              />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
       </div>
 
       {/* Edit slide-over */}

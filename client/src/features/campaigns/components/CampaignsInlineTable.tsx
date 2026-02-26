@@ -42,28 +42,22 @@ const ALL_TABLE_COLUMNS: ColumnDef[] = [
   { key: "responseRate", label: "Response %",    width: 100, editable: false, type: "text"   },
   { key: "bookingRate",  label: "Booking %",     width: 100, editable: false, type: "text"   },
   { key: "cost",         label: "Cost",          width: 90,  editable: false, type: "text"   },
-  { key: "roi",          label: "ROI",           width: 80,  editable: false, type: "text"   },
+  { key: "roi",          label: "ROI %",         width: 80,  editable: false, type: "text"   },
   { key: "description",  label: "Description",   width: 200, editable: true,  type: "text"   },
-  { key: "startDate",    label: "Start",         width: 100, editable: false, type: "text"   },
-  { key: "endDate",      label: "End",           width: 100, editable: false, type: "text"   },
-  { key: "lastModified", label: "Modified",      width: 100, editable: false, type: "text"   },
+  { key: "startDate",    label: "Start",         width: 110, editable: false, type: "text"   },
+  { key: "endDate",      label: "End",           width: 110, editable: false, type: "text"   },
+  { key: "lastModified", label: "Last Modified", width: 110, editable: false, type: "text"   },
 ];
 
-const STATUS_OPTIONS = ["Active", "Paused", "Completed", "Inactive", "Archived", "Draft"];
+export const DEFAULT_CAMPAIGN_COLS = [
+  "name", "status", "account", "type", "leads", "responseRate", "bookingRate", "description",
+];
+
+const STATUS_OPTIONS = ["Active", "Paused", "Completed", "Inactive", "Draft"];
 
 const DB_FIELD_MAP: Partial<Record<ColKey, string>> = {
   status:      "status",
   description: "description",
-};
-
-const STATUS_DOT: Record<string, string> = {
-  Active:    "bg-emerald-500",
-  Paused:    "bg-amber-400",
-  Completed: "bg-blue-500",
-  Finished:  "bg-blue-500",
-  Inactive:  "bg-zinc-400",
-  Archived:  "bg-zinc-400",
-  Draft:     "bg-gray-400",
 };
 
 const CAMPAIGN_STATUS_HEX: Record<string, string> = {
@@ -71,9 +65,19 @@ const CAMPAIGN_STATUS_HEX: Record<string, string> = {
   Paused:    "#F59E0B",
   Completed: "#3B82F6",
   Finished:  "#3B82F6",
-  Inactive:  "#71717A",
-  Archived:  "#71717A",
-  Draft:     "#9CA3AF",
+  Inactive:  "#94A3B8",
+  Archived:  "#94A3B8",
+  Draft:     "#6B7280",
+};
+
+const STATUS_DOT: Record<string, string> = {
+  Active:    "bg-green-500",
+  Paused:    "bg-amber-500",
+  Completed: "bg-blue-500",
+  Finished:  "bg-blue-500",
+  Inactive:  "bg-slate-400",
+  Archived:  "bg-slate-400",
+  Draft:     "bg-gray-400",
 };
 
 const CAMPAIGN_STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -139,15 +143,28 @@ function SortIcon({ col, sortCol, sortDir }: { col: string; sortCol: string; sor
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 function TableSkeleton() {
   return (
-    <div className="p-3 space-y-1.5">
-      <div className="h-8 bg-[#D1D1D1] rounded animate-pulse mb-2" />
-      {Array.from({ length: 12 }).map((_, i) => (
-        <div
-          key={i}
-          className="h-[52px] bg-[#F1F1F1]/70 rounded-xl animate-pulse"
-          style={{ animationDelay: `${i * 35}ms` }}
-        />
-      ))}
+    <div className="flex flex-col h-full">
+      {/* Stats bar skeleton */}
+      <div className="shrink-0 h-[52px] bg-card rounded-t-lg px-5 flex items-center gap-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="flex flex-col gap-1">
+            <div className="h-2.5 w-12 bg-border/40 rounded animate-pulse" />
+            <div className="h-4 w-8 bg-border/50 rounded animate-pulse" />
+          </div>
+        ))}
+      </div>
+      {/* Header skeleton */}
+      <div className="h-8 bg-muted flex items-center px-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-3 w-16 bg-border/30 rounded animate-pulse mx-2" style={{ animationDelay: `${i * 50}ms` }} />
+        ))}
+      </div>
+      {/* Row skeletons */}
+      <div className="flex-1 bg-[#F1F1F1] px-1 py-1 space-y-[3px]">
+        {Array.from({ length: 10 }).map((_, i) => (
+          <div key={i} className="h-[52px] bg-card/60 rounded-lg animate-pulse" style={{ animationDelay: `${i * 35}ms` }} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -243,6 +260,8 @@ interface CampaignsInlineTableProps {
   sortCol: string;
   sortDir: "asc" | "desc";
   onSortChange: (col: string) => void;
+  /** ALL campaigns (unfiltered), used for computing aggregate stats */
+  allCampaigns: Campaign[];
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
@@ -259,6 +278,7 @@ export function CampaignsInlineTable({
   sortCol,
   sortDir,
   onSortChange,
+  allCampaigns,
 }: CampaignsInlineTableProps) {
 
   // ── Editing state ─────────────────────────────────────────────────────────
@@ -287,7 +307,7 @@ export function CampaignsInlineTable({
     () => ALL_TABLE_COLUMNS.filter((c) => visibleCols.has(c.key)),
     [visibleCols]
   );
-  const colSpan = visibleColumns.length + 1; // +1 for select-all checkbox column
+  const colSpan = visibleColumns.length;
 
   // ── Filter by text search ─────────────────────────────────────────────────
   const displayItems = useMemo(() => {
@@ -319,46 +339,45 @@ export function CampaignsInlineTable({
 
   const campaignCount = campaignOnlyItems.length;
 
-  // ── Select-all toggle ───────────────────────────────────────────────────
-  const allCampaignIds = useMemo(() => campaignOnlyItems.map((i) => getCampaignId(i.campaign)), [campaignOnlyItems]);
-  const allSelected = campaignCount > 0 && allCampaignIds.every((id) => selectedIds.has(id));
-  const someSelected = !allSelected && allCampaignIds.some((id) => selectedIds.has(id));
+  // ── Selection helpers ────────────────────────────────────────────────────────
+  const allSelected = campaignCount > 0 && selectedIds.size === campaignCount;
+  const someSelected = selectedIds.size > 0 && !allSelected;
 
-  const handleSelectAll = useCallback(() => {
-    if (allSelected) {
-      onSelectionChange(new Set());
-    } else {
-      onSelectionChange(new Set(allCampaignIds));
-    }
-  }, [allSelected, allCampaignIds, onSelectionChange]);
-
-  // ── Group selection helpers (leads-style) ─────────────────────────────────
-  const getGroupCampaignIds = useCallback((groupLabel: string): number[] => {
-    const ids: number[] = [];
-    let inGroup = false;
-    for (const item of displayItems) {
-      if (item.kind === "header") {
-        inGroup = item.label === groupLabel;
-        continue;
-      }
-      if (inGroup && item.kind === "campaign") {
-        ids.push(getCampaignId(item.campaign));
-      }
-    }
-    return ids;
-  }, [displayItems]);
-
-  const handleGroupCheckbox = useCallback((groupLabel: string) => {
-    const groupIds = getGroupCampaignIds(groupLabel);
-    const allInGroupSelected = groupIds.every((id) => selectedIds.has(id));
+  const toggleRow = useCallback((cid: number) => {
     const next = new Set(selectedIds);
-    if (allInGroupSelected) {
-      groupIds.forEach((id) => next.delete(id));
-    } else {
-      groupIds.forEach((id) => next.add(id));
-    }
+    if (next.has(cid)) next.delete(cid); else next.add(cid);
     onSelectionChange(next);
-  }, [getGroupCampaignIds, selectedIds, onSelectionChange]);
+    if (next.size === 1) {
+      const only = campaignOnlyItems.find((i) => getCampaignId(i.campaign) === Array.from(next)[0]);
+      if (only) onSelectCampaign(only.campaign);
+    }
+  }, [selectedIds, onSelectionChange, campaignOnlyItems, onSelectCampaign]);
+
+  // ── Summary stats (computed from allCampaigns) ─────────────────────────────
+  const stats = useMemo(() => {
+    const total = allCampaigns.length;
+    const active = allCampaigns.filter((c) => c.status === "Active").length;
+    const totalLeads = allCampaigns.reduce((s, c) => s + Number(c.total_leads_targeted ?? 0), 0);
+
+    const nonZeroResponse = allCampaigns.filter((c) => Number(c.response_rate_percent ?? 0) > 0);
+    const avgResponse = nonZeroResponse.length > 0
+      ? nonZeroResponse.reduce((s, c) => s + Number(c.response_rate_percent ?? 0), 0) / nonZeroResponse.length
+      : 0;
+
+    const nonZeroBooking = allCampaigns.filter((c) => Number(c.booking_rate_percent ?? 0) > 0);
+    const avgBooking = nonZeroBooking.length > 0
+      ? nonZeroBooking.reduce((s, c) => s + Number(c.booking_rate_percent ?? 0), 0) / nonZeroBooking.length
+      : 0;
+
+    return { total, active, totalLeads, avgResponse, avgBooking };
+  }, [allCampaigns]);
+
+  const totalLeadsSelected = useMemo(() => {
+    if (selectedIds.size === 0) return 0;
+    return allCampaigns
+      .filter((c) => selectedIds.has(getCampaignId(c)))
+      .reduce((s, c) => s + Number(c.total_leads_targeted ?? 0), 0);
+  }, [allCampaigns, selectedIds]);
 
   // ── getCellValue ──────────────────────────────────────────────────────────
   function getCellValue(campaign: Campaign, field: ColKey): string {
@@ -474,6 +493,149 @@ export function CampaignsInlineTable({
     } catch (err) { console.error("Bulk stage change failed", err); }
   }, [selectedIds, onRefresh, onSelectionChange]);
 
+  // ── Group subtotal renderer ────────────────────────────────────────────────
+  function renderGroupSubtotal(campaigns: Campaign[], groupKey: string) {
+    const totalLeads = campaigns.reduce((s, c) => s + Number(c.total_leads_targeted ?? 0), 0);
+    const avgResponse = campaigns.reduce((s, c) => s + Number(c.response_rate_percent ?? 0), 0) / (campaigns.length || 1);
+    const avgBooking = campaigns.reduce((s, c) => s + Number(c.booking_rate_percent ?? 0), 0) / (campaigns.length || 1);
+
+    return (
+      <tr key={`subtotal-${groupKey}`} className="h-[36px] bg-muted/50 border-b border-border/10">
+        <td className="w-[40px]" /> {/* checkbox col spacer */}
+        {visibleColumns.map((col) => {
+          if (col.key === "name") {
+            return (
+              <td key="name" className="px-2.5 sticky left-[40px] z-10 bg-muted/50">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Subtotal</span>
+              </td>
+            );
+          }
+          if (col.key === "leads") {
+            return (
+              <td key="leads" className="px-2.5 tabular-nums">
+                <span className="text-[11px] font-semibold text-foreground">{totalLeads}</span>
+              </td>
+            );
+          }
+          if (col.key === "responseRate") {
+            return (
+              <td key="responseRate" className="px-2.5 tabular-nums">
+                <span className="text-[11px] font-semibold text-foreground">{avgResponse.toFixed(1)}%</span>
+              </td>
+            );
+          }
+          if (col.key === "bookingRate") {
+            return (
+              <td key="bookingRate" className="px-2.5 tabular-nums">
+                <span className="text-[11px] font-semibold text-foreground">{avgBooking.toFixed(1)}%</span>
+              </td>
+            );
+          }
+          return <td key={col.key} />;
+        })}
+      </tr>
+    );
+  }
+
+  // ── Build group-aware rows for subtotals ──────────────────────────────────
+  const groupedRows = useMemo(() => {
+    const rows: Array<{
+      type: "header";
+      item: Extract<CampaignTableItem, { kind: "header" }>;
+      index: number;
+    } | {
+      type: "campaign";
+      item: Extract<CampaignTableItem, { kind: "campaign" }>;
+      index: number;
+      groupLabel: string | null;
+    } | {
+      type: "subtotal";
+      campaigns: Campaign[];
+      groupLabel: string;
+    }> = [];
+
+    let currentGroup: string | null = null;
+    let currentGroupCampaigns: Campaign[] = [];
+
+    displayItems.forEach((item, index) => {
+      if (item.kind === "header") {
+        // Close previous group with subtotal
+        if (currentGroup !== null && currentGroupCampaigns.length > 0 && !collapsedGroups.has(currentGroup)) {
+          rows.push({ type: "subtotal", campaigns: [...currentGroupCampaigns], groupLabel: currentGroup });
+        }
+        currentGroup = item.label;
+        currentGroupCampaigns = [];
+        rows.push({ type: "header", item, index });
+      } else {
+        if (currentGroup && collapsedGroups.has(currentGroup)) return;
+        currentGroupCampaigns.push(item.campaign);
+        rows.push({ type: "campaign", item, index, groupLabel: currentGroup });
+      }
+    });
+
+    // Close final group with subtotal
+    if (currentGroup !== null && currentGroupCampaigns.length > 0 && !collapsedGroups.has(currentGroup)) {
+      rows.push({ type: "subtotal", campaigns: [...currentGroupCampaigns], groupLabel: currentGroup });
+    }
+
+    return rows;
+  }, [displayItems, collapsedGroups]);
+
+  // ── Helper: toggle all campaigns in a group ──────────────────────────────
+  const toggleGroupSelection = useCallback((groupLabel: string) => {
+    const groupCampaignIds: number[] = [];
+    let inGroup = false;
+    for (const item of displayItems) {
+      if (item.kind === "header") {
+        if (item.label === groupLabel) inGroup = true;
+        else if (inGroup) break;
+      } else if (inGroup) {
+        groupCampaignIds.push(getCampaignId(item.campaign));
+      }
+    }
+
+    const allGroupSelected = groupCampaignIds.length > 0 && groupCampaignIds.every((id) => selectedIds.has(id));
+    const next = new Set(selectedIds);
+    if (allGroupSelected) {
+      groupCampaignIds.forEach((id) => next.delete(id));
+    } else {
+      groupCampaignIds.forEach((id) => next.add(id));
+    }
+    onSelectionChange(next);
+  }, [displayItems, selectedIds, onSelectionChange]);
+
+  const isGroupAllSelected = useCallback((groupLabel: string): boolean => {
+    const groupCampaignIds: number[] = [];
+    let inGroup = false;
+    for (const item of displayItems) {
+      if (item.kind === "header") {
+        if (item.label === groupLabel) inGroup = true;
+        else if (inGroup) break;
+      } else if (inGroup) {
+        groupCampaignIds.push(getCampaignId(item.campaign));
+      }
+    }
+    return groupCampaignIds.length > 0 && groupCampaignIds.every((id) => selectedIds.has(id));
+  }, [displayItems, selectedIds]);
+
+  const isGroupSomeSelected = useCallback((groupLabel: string): boolean => {
+    let inGroup = false;
+    let anySelected = false;
+    let allSelected = true;
+    let count = 0;
+    for (const item of displayItems) {
+      if (item.kind === "header") {
+        if (item.label === groupLabel) inGroup = true;
+        else if (inGroup) break;
+      } else if (inGroup) {
+        count++;
+        if (selectedIds.has(getCampaignId(item.campaign))) anySelected = true;
+        else allSelected = false;
+      }
+    }
+    return count > 0 && anySelected && !allSelected;
+  }, [displayItems, selectedIds]);
+
   return (
     <div className="h-full flex flex-col overflow-hidden bg-transparent">
 
@@ -513,43 +675,87 @@ export function CampaignsInlineTable({
         </div>
       )}
 
+      {/* ── Summary Stats Bar ── */}
+      <div className="shrink-0 flex items-center px-5 h-[52px] border-b border-border/30 bg-card rounded-t-lg">
+        {/* Campaigns */}
+        <div className="flex flex-col">
+          <span className="text-[10px] text-muted-foreground leading-tight">Campaigns</span>
+          <span className="text-[13px] font-semibold text-foreground tabular-nums">{stats.total}</span>
+        </div>
+        <div className="w-px h-5 bg-border/20 mx-3" />
+        {/* Active */}
+        <div className="flex flex-col">
+          <span className="text-[10px] text-muted-foreground leading-tight">Active</span>
+          <span className="text-[13px] font-semibold text-emerald-700 tabular-nums">{stats.active}</span>
+        </div>
+        <div className="w-px h-5 bg-border/20 mx-3" />
+        {/* Total Leads */}
+        <div className="flex flex-col">
+          <span className="text-[10px] text-muted-foreground leading-tight">Total Leads</span>
+          <span className="text-[13px] font-semibold text-foreground tabular-nums">{stats.totalLeads}</span>
+        </div>
+        <div className="w-px h-5 bg-border/20 mx-3" />
+        {/* Avg Response */}
+        <div className="flex flex-col">
+          <span className="text-[10px] text-muted-foreground leading-tight">Avg Response</span>
+          <span className="text-[13px] font-semibold text-foreground tabular-nums">{stats.avgResponse.toFixed(1)}%</span>
+        </div>
+        <div className="w-px h-5 bg-border/20 mx-3" />
+        {/* Avg Booking */}
+        <div className="flex flex-col">
+          <span className="text-[10px] text-muted-foreground leading-tight">Avg Booking</span>
+          <span className="text-[13px] font-semibold text-foreground tabular-nums">{stats.avgBooking.toFixed(1)}%</span>
+        </div>
+
+        {/* Selection stat (far right) */}
+        {selectedIds.size > 0 && (
+          <>
+            <span className="ml-auto text-[11px] font-semibold text-foreground tabular-nums">
+              {selectedIds.size} selected
+              <span className="text-muted-foreground font-normal ml-1">
+                · {totalLeadsSelected} leads
+              </span>
+            </span>
+          </>
+        )}
+      </div>
+
       {/* ── Table ── */}
       {loading ? (
         <TableSkeleton />
       ) : (
-        <div className="flex-1 min-h-0 overflow-auto">
+        <div className="flex-1 min-h-0 overflow-auto bg-[#F1F1F1]">
           <table className="w-full" style={{ borderCollapse: "collapse", minWidth: 600 }}>
 
-            {/* Sticky header with select-all checkbox */}
+            {/* Sticky header */}
             <thead className="sticky top-0 z-20">
               <tr>
-                {/* Select-all checkbox */}
-                <th
-                  className="px-2 py-2 bg-muted border-b border-border/20 sticky left-0 z-30"
-                  style={{ width: 36, minWidth: 36 }}
-                >
-                  <button
-                    onClick={handleSelectAll}
-                    className={cn(
-                      "h-4 w-4 rounded border flex items-center justify-center transition-colors",
-                      allSelected
-                        ? "bg-brand-indigo border-brand-indigo text-white"
-                        : someSelected
-                          ? "bg-brand-indigo/30 border-brand-indigo/50"
-                          : "border-border/50 hover:border-foreground/30"
-                    )}
-                    title={allSelected ? "Deselect all" : "Select all"}
-                  >
-                    {allSelected && <Check className="h-2.5 w-2.5" />}
-                    {someSelected && !allSelected && <div className="h-1.5 w-1.5 bg-brand-indigo rounded-sm" />}
-                  </button>
+                {/* Checkbox column header */}
+                <th className="w-[40px] px-0 sticky left-0 z-30 bg-muted border-b border-border/20">
+                  <div className="flex items-center justify-center">
+                    <div
+                      className={cn(
+                        "h-4 w-4 rounded border flex items-center justify-center cursor-pointer",
+                        allSelected ? "bg-[#FCB803] border-[#FCB803]" : someSelected ? "bg-[#FCB803]/40 border-[#FCB803]" : "border-border/40"
+                      )}
+                      onClick={() => {
+                        if (allSelected) onSelectionChange(new Set());
+                        else onSelectionChange(new Set(campaignOnlyItems.map(i => getCampaignId(i.campaign))));
+                      }}
+                    >
+                      {allSelected && <Check className="h-2.5 w-2.5 text-[#131B49]" />}
+                      {someSelected && !allSelected && <div className="h-0.5 w-2 bg-[#131B49] rounded" />}
+                    </div>
+                  </div>
                 </th>
-                {visibleColumns.map((col) => (
+
+                {visibleColumns.map((col, ci) => (
                   <th
                     key={col.key}
                     className={cn(
                       "px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider whitespace-nowrap select-none bg-muted border-b border-border/20 cursor-pointer hover:text-foreground/70",
                       sortCol === col.key ? "text-foreground/70" : "text-foreground/50",
+                      ci === 0 && "sticky left-[40px] z-30",
                     )}
                     style={{
                       width: col.key === "description" ? undefined : col.width,
@@ -570,215 +776,216 @@ export function CampaignsInlineTable({
               {/* Empty state */}
               {campaignCount === 0 && (
                 <tr>
-                  <td colSpan={colSpan} className="py-12 text-center text-xs text-muted-foreground">
+                  <td colSpan={colSpan + 1} className="py-12 text-center text-xs text-muted-foreground">
                     {tableSearch ? "No campaigns match your search" : "No campaigns found"}
                   </td>
                 </tr>
               )}
 
-              {(() => {
-                let currentGroup: string | null = null;
-                return displayItems.map((item, index) => {
-                  if (item.kind === "header") {
-                    currentGroup = item.label;
-                    const isCollapsed = collapsedGroups.has(item.label);
-                    const hexColor = CAMPAIGN_STATUS_HEX[item.label] || "#6B7280";
-                    const groupIds = getGroupCampaignIds(item.label);
-                    const isGroupFullySelected = groupIds.length > 0 && groupIds.every((id) => selectedIds.has(id));
-                    return (
-                      <tr
-                        key={`h-${item.label}-${index}`}
-                        className="cursor-pointer select-none"
-                        onClick={() => toggleGroupCollapse(item.label)}
-                      >
-                        <td
-                          colSpan={colSpan}
-                          className="px-4 pt-4 pb-1.5 sticky left-0 z-30"
-                          style={{ backgroundColor: `${hexColor}12` }}
-                        >
-                          <div className="flex items-center gap-2">
-                            <div
-                              className={cn(
-                                "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
-                                isGroupFullySelected ? "border-brand-indigo bg-brand-indigo" : "border-border/40"
-                              )}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleGroupCheckbox(item.label);
-                              }}
-                            >
-                              {isGroupFullySelected && <Check className="h-2.5 w-2.5 text-white" />}
-                            </div>
-                            <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: hexColor }} />
-                            <span className="text-[11px] font-bold uppercase tracking-widest text-foreground/55">{item.label}</span>
-                            <span className="text-[10px] text-muted-foreground/40 font-medium tabular-nums">{item.count}</span>
-                            <div className="ml-auto text-muted-foreground/40">
-                              {isCollapsed
-                                ? <ChevronRight className="h-3.5 w-3.5" />
-                                : <ChevronDown className="h-3.5 w-3.5" />}
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  }
-
-                  if (currentGroup && collapsedGroups.has(currentGroup)) return null;
-
-                  const { campaign } = item;
-                  const cid = getCampaignId(campaign);
-                  const isDetailSelected = selectedCampaignId === cid;
-                  const isMultiSelected = selectedIds.has(cid);
-                  const isHighlighted = isMultiSelected || isDetailSelected;
-                  const name = String(campaign.name || "Unnamed");
-                  const status = String(campaign.status || "");
-                  const avatarColor = getCampaignAvatarColor(status);
+              {groupedRows.map((row, rowIdx) => {
+                // ── Group header ──
+                if (row.type === "header") {
+                  const { item } = row;
+                  const isCollapsed = collapsedGroups.has(item.label);
+                  const hexColor = CAMPAIGN_STATUS_HEX[item.label] || "#6B7280";
+                  const groupAllSel = isGroupAllSelected(item.label);
+                  const groupSomeSel = isGroupSomeSelected(item.label);
 
                   return (
                     <tr
-                      key={cid}
-                      className={cn(
-                        "group/row cursor-pointer h-[52px] border-b border-border/15",
-                        isHighlighted ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] hover:bg-[#F8F8F8]",
-                      )}
-                      onClick={(e) => handleRowClick(campaign, e)}
+                      key={`h-${item.label}-${row.index}`}
+                      className="cursor-pointer select-none hover:bg-black/[0.02]"
+                      onClick={() => toggleGroupCollapse(item.label)}
                     >
-                      {visibleColumns.map((col, ci) => {
-                        const isFirst = ci === 0;
-                        const tdClass = cn(
-                          isFirst && "sticky left-0 z-10",
-                          isFirst && (isHighlighted ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] group-hover/row:bg-[#F8F8F8]"),
+                      {/* Group checkbox */}
+                      <td className="w-[40px] px-0 sticky left-0 z-30 bg-muted">
+                        <div className="flex items-center justify-center">
+                          <div
+                            className={cn(
+                              "h-4 w-4 rounded border flex items-center justify-center cursor-pointer",
+                              groupAllSel ? "bg-[#FCB803] border-[#FCB803]" : groupSomeSel ? "bg-[#FCB803]/40 border-[#FCB803]" : "border-border/40"
+                            )}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleGroupSelection(item.label);
+                            }}
+                          >
+                            {groupAllSel && <Check className="h-2.5 w-2.5 text-[#131B49]" />}
+                            {groupSomeSel && !groupAllSel && <div className="h-0.5 w-2 bg-[#131B49] rounded" />}
+                          </div>
+                        </div>
+                      </td>
+                      <td colSpan={colSpan} className="px-4 pt-4 pb-1.5 sticky left-[40px] z-30 bg-muted">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: hexColor }} />
+                          <span className="text-[11px] font-bold uppercase tracking-widest text-foreground/55">{item.label}</span>
+                          <span className="text-[10px] text-muted-foreground/40 font-medium tabular-nums">{item.count}</span>
+                          <div className="ml-auto text-muted-foreground/40">
+                            {isCollapsed
+                              ? <ChevronRight className="h-3.5 w-3.5" />
+                              : <ChevronDown className="h-3.5 w-3.5" />}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                }
+
+                // ── Group subtotal ──
+                if (row.type === "subtotal") {
+                  return renderGroupSubtotal(row.campaigns, row.groupLabel);
+                }
+
+                // ── Campaign row ──
+                const { campaign } = row.item;
+                const cid = getCampaignId(campaign);
+                const isDetailSelected = selectedCampaignId === cid;
+                const isMultiSelected = selectedIds.has(cid);
+                const isHighlighted = isMultiSelected || isDetailSelected;
+                const name = String(campaign.name || "Unnamed");
+                const status = String(campaign.status || "");
+                const avatarColor = getCampaignAvatarColor(status);
+
+                return (
+                  <tr
+                    key={cid}
+                    className={cn(
+                      "group/row cursor-pointer h-[52px] border-b border-border/15",
+                      isHighlighted ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] hover:bg-[#F8F8F8]",
+                    )}
+                    onClick={(e) => handleRowClick(campaign, e)}
+                  >
+                    {/* Dedicated checkbox column */}
+                    <td className={cn("w-[40px] px-0 sticky left-0 z-10", isHighlighted ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] group-hover/row:bg-[#F8F8F8]")}>
+                      <div className="flex items-center justify-center">
+                        <div
+                          className={cn(
+                            "h-4 w-4 rounded border flex items-center justify-center cursor-pointer",
+                            isMultiSelected ? "bg-[#FCB803] border-[#FCB803]" : "border-border/40"
+                          )}
+                          onClick={(e) => { e.stopPropagation(); toggleRow(cid); }}
+                        >
+                          {isMultiSelected && <Check className="h-2.5 w-2.5 text-[#131B49]" />}
+                        </div>
+                      </div>
+                    </td>
+
+                    {visibleColumns.map((col, ci) => {
+                      const isFirst = ci === 0;
+                      const tdClass = cn(
+                        isFirst && "sticky left-[40px] z-10",
+                        isFirst && (isHighlighted ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] group-hover/row:bg-[#F8F8F8]"),
+                      );
+
+                      // ── Name (no checkbox — moved to dedicated column) ──
+                      if (col.key === "name") {
+                        return (
+                          <td key="name" className={cn("px-2.5", tdClass)} style={{ width: 200, minWidth: 200 }}>
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div
+                                className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0"
+                                style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
+                              >
+                                {getCampaignInitials(name)}
+                              </div>
+                              <span className="text-[12px] font-medium truncate text-foreground">{name}</span>
+                            </div>
+                          </td>
                         );
+                      }
 
-                        // ── Name (with checkbox inside, like leads table) ──
-                        if (col.key === "name") {
-                          return (
-                            <td key="name" className={cn("px-2.5", tdClass)} style={{ width: 200, minWidth: 200 }}>
-                              <div className="flex items-center gap-2 min-w-0">
-                                {/* Checkbox */}
-                                <div
-                                  className={cn(
-                                    "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
-                                    isMultiSelected ? "border-brand-indigo bg-brand-indigo" : "border-border/40"
-                                  )}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const next = new Set(selectedIds);
-                                    if (next.has(cid)) next.delete(cid); else next.add(cid);
-                                    onSelectionChange(next);
-                                    if (next.size === 1) {
-                                      const only = campaignOnlyItems.find((i) => getCampaignId(i.campaign) === Array.from(next)[0]);
-                                      if (only) onSelectCampaign(only.campaign);
-                                    }
-                                  }}
-                                >
-                                  {isMultiSelected && <Check className="h-2.5 w-2.5 text-white" />}
-                                </div>
-                                <div
-                                  className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0"
-                                  style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
-                                >
-                                  {getCampaignInitials(name)}
-                                </div>
-                                <span className="text-[12px] font-medium truncate text-foreground">{name}</span>
-                              </div>
-                            </td>
-                          );
-                        }
-
-                        // ── Status (editable select) ──
-                        if (col.key === "status") {
-                          const cellVal = getCellValue(campaign, "status");
-                          const isEdit = editingCell?.cid === cid && editingCell?.field === "status";
-                          return (
-                            <td key="status" className={cn("px-1", tdClass)} style={{ width: 130, minWidth: 130 }}>
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                {!isEdit && (
-                                  <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", STATUS_DOT[cellVal] ?? "bg-zinc-400")} />
-                                )}
-                                <EditableCell
-                                  value={cellVal}
-                                  type="select"
-                                  isEditing={isEdit}
-                                  editValue={isEdit ? editValue : ""}
-                                  isSaving={savingCell?.cid === cid && savingCell?.field === "status"}
-                                  hasError={saveError?.cid === cid && saveError?.field === "status"}
-                                  onStartEdit={() => startEdit(cid, "status", cellVal)}
-                                  onEditChange={setEditValue}
-                                  onSave={(v) => handleSave(cid, "status", v, cellVal)}
-                                  onCancel={cancelEdit}
-                                />
-                              </div>
-                            </td>
-                          );
-                        }
-
-                        // ── Leads (read-only, numeric) ──
-                        if (col.key === "leads") {
-                          const val = getCellValue(campaign, "leads");
-                          return (
-                            <td key="leads" className={cn("px-2.5 tabular-nums", tdClass)} style={{ width: 80, minWidth: 80 }}>
-                              <span className="text-[11px] font-medium text-foreground">
-                                {val && val !== "0" ? val : <span className="text-muted-foreground/30">—</span>}
-                              </span>
-                            </td>
-                          );
-                        }
-
-                        // ── ROI (color-coded) ──
-                        if (col.key === "roi") {
-                          const val = getCellValue(campaign, "roi");
-                          const numVal = Number(campaign.roi_percent ?? 0);
-                          const color = numVal >= 100 ? "text-emerald-600" : numVal >= 0 ? "text-blue-600" : "text-rose-600";
-                          return (
-                            <td key="roi" className={cn("px-2.5 tabular-nums", tdClass)} style={{ width: 80, minWidth: 80 }}>
-                              <span className={cn("text-[11px] font-medium", val ? color : "text-muted-foreground/30")}>
-                                {val || "—"}
-                              </span>
-                            </td>
-                          );
-                        }
-
-                        // ── Editable text columns ──
-                        const colDef = ALL_TABLE_COLUMNS.find((c) => c.key === col.key)!;
-                        if (colDef?.editable && colDef.type === "text") {
-                          const cellVal = getCellValue(campaign, col.key);
-                          const isEdit = editingCell?.cid === cid && editingCell?.field === col.key;
-                          return (
-                            <td
-                              key={col.key}
-                              className={cn("px-1", tdClass)}
-                              style={col.key === "description" ? { minWidth: col.width } : { width: col.width, minWidth: col.width }}
-                            >
+                      // ── Status (editable select) ──
+                      if (col.key === "status") {
+                        const cellVal = getCellValue(campaign, "status");
+                        const isEdit = editingCell?.cid === cid && editingCell?.field === "status";
+                        return (
+                          <td key="status" className={cn("px-1", tdClass)} style={{ width: 130, minWidth: 130 }}>
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              {!isEdit && (
+                                <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", STATUS_DOT[cellVal] ?? "bg-zinc-400")} />
+                              )}
                               <EditableCell
                                 value={cellVal}
-                                type="text"
+                                type="select"
                                 isEditing={isEdit}
                                 editValue={isEdit ? editValue : ""}
-                                isSaving={savingCell?.cid === cid && savingCell?.field === col.key}
-                                hasError={saveError?.cid === cid && saveError?.field === col.key}
-                                onStartEdit={() => startEdit(cid, col.key, cellVal)}
+                                isSaving={savingCell?.cid === cid && savingCell?.field === "status"}
+                                hasError={saveError?.cid === cid && saveError?.field === "status"}
+                                onStartEdit={() => startEdit(cid, "status", cellVal)}
                                 onEditChange={setEditValue}
-                                onSave={(v) => handleSave(cid, col.key, v, cellVal)}
+                                onSave={(v) => handleSave(cid, "status", v, cellVal)}
                                 onCancel={cancelEdit}
                               />
-                            </td>
-                          );
-                        }
+                            </div>
+                          </td>
+                        );
+                      }
 
-                        // ── Read-only text fallback ──
+                      // ── Leads (read-only, numeric) ──
+                      if (col.key === "leads") {
+                        const val = getCellValue(campaign, "leads");
                         return (
-                          <td key={col.key} className={cn("px-2.5", tdClass)} style={{ width: col.width, minWidth: col.width }}>
-                            <span className="text-[11px] text-muted-foreground truncate block">
-                              {getCellValue(campaign, col.key) || <span className="text-muted-foreground/30">—</span>}
+                          <td key="leads" className={cn("px-2.5 tabular-nums", tdClass)} style={{ width: 80, minWidth: 80 }}>
+                            <span className="text-[11px] font-medium text-foreground">
+                              {val && val !== "0" ? val : <span className="text-muted-foreground/30">—</span>}
                             </span>
                           </td>
                         );
-                      })}
-                    </tr>
-                  );
-                });
-              })()}
+                      }
+
+                      // ── ROI (color-coded) ──
+                      if (col.key === "roi") {
+                        const val = getCellValue(campaign, "roi");
+                        const numVal = Number(campaign.roi_percent ?? 0);
+                        const color = numVal >= 100 ? "text-emerald-600" : numVal >= 0 ? "text-blue-600" : "text-rose-600";
+                        return (
+                          <td key="roi" className={cn("px-2.5 tabular-nums", tdClass)} style={{ width: 80, minWidth: 80 }}>
+                            <span className={cn("text-[11px] font-medium", val ? color : "text-muted-foreground/30")}>
+                              {val || "—"}
+                            </span>
+                          </td>
+                        );
+                      }
+
+                      // ── Editable text columns ──
+                      const colDef = ALL_TABLE_COLUMNS.find((c) => c.key === col.key)!;
+                      if (colDef?.editable && colDef.type === "text") {
+                        const cellVal = getCellValue(campaign, col.key);
+                        const isEdit = editingCell?.cid === cid && editingCell?.field === col.key;
+                        return (
+                          <td
+                            key={col.key}
+                            className={cn("px-1", tdClass)}
+                            style={col.key === "description" ? { minWidth: col.width } : { width: col.width, minWidth: col.width }}
+                          >
+                            <EditableCell
+                              value={cellVal}
+                              type="text"
+                              isEditing={isEdit}
+                              editValue={isEdit ? editValue : ""}
+                              isSaving={savingCell?.cid === cid && savingCell?.field === col.key}
+                              hasError={saveError?.cid === cid && saveError?.field === col.key}
+                              onStartEdit={() => startEdit(cid, col.key, cellVal)}
+                              onEditChange={setEditValue}
+                              onSave={(v) => handleSave(cid, col.key, v, cellVal)}
+                              onCancel={cancelEdit}
+                            />
+                          </td>
+                        );
+                      }
+
+                      // ── Read-only text fallback ──
+                      return (
+                        <td key={col.key} className={cn("px-2.5", tdClass)} style={{ width: col.width, minWidth: col.width }}>
+                          <span className="text-[11px] text-muted-foreground truncate block">
+                            {getCellValue(campaign, col.key) || <span className="text-muted-foreground/30">—</span>}
+                          </span>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

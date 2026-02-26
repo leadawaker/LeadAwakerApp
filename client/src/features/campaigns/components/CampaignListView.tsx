@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { motion } from "framer-motion";
 import {
   Search,
   Zap,
@@ -40,23 +39,6 @@ import type {
   CampaignSortBy,
 } from "../pages/CampaignsPage";
 
-/* ── Card stagger animation variants ── */
-const staggerContainerVariants = {
-  hidden: {},
-  visible: (count: number) => ({
-    transition: {
-      staggerChildren: Math.min(1 / Math.max(count, 1), 0.08),
-    },
-  }),
-};
-const staggerItemVariants = {
-  hidden: { opacity: 0, y: 8 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as const },
-  },
-};
 
 // ── Campaign status → avatar pastel colors ────────────────────────────────────
 const CAMPAIGN_STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -172,8 +154,8 @@ function CampaignListCard({
   return (
     <div
       className={cn(
-        "relative mx-[3px] my-0.5 rounded-xl cursor-pointer transition-colors",
-        isActive ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] hover:bg-[#FAFAFA]"
+        "relative mx-[3px] my-0.5 rounded-xl cursor-pointer transition-shadow",
+        isActive ? "bg-[#FFF1C8]" : "bg-white hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
       )}
       onClick={onClick}
       role="button"
@@ -224,7 +206,7 @@ function CampaignListCard({
               key={stat.label}
               className={cn(
                 "flex flex-col items-center py-1.5",
-                isActive ? "bg-[#FFF1C8]" : "bg-[#F1F1F1]"
+                isActive ? "bg-[#FFF1C8]" : "bg-white"
               )}
             >
               <span className="text-[13px] font-bold tabular-nums text-foreground leading-tight">{stat.value}</span>
@@ -309,6 +291,8 @@ interface CampaignListViewProps {
   isGroupNonDefault: boolean;
   isSortNonDefault: boolean;
   onResetControls: () => void;
+  onRefresh?: () => void;
+  onDelete?: (id: number) => Promise<void>;
 }
 
 // ── Main component ──────────────────────────────────────────────────────────
@@ -341,6 +325,8 @@ export function CampaignListView({
   isGroupNonDefault,
   isSortNonDefault,
   onResetControls,
+  onRefresh,
+  onDelete,
 }: CampaignListViewProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const PAGE_SIZE = 20;
@@ -533,7 +519,7 @@ export function CampaignListView({
                     placeholder="Search campaigns..."
                     value={listSearch}
                     onChange={(e) => onListSearchChange(e.target.value)}
-                    className="w-full pl-7 pr-7 py-1.5 text-[12px] rounded-md border border-border bg-popover placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-brand-blue/50"
+                    className="w-full pl-7 pr-7 py-1.5 text-[12px] rounded-md border border-border bg-popover placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-brand-indigo/50"
                   />
                   {listSearch && (
                     <button
@@ -560,14 +546,14 @@ export function CampaignListView({
                   <DropdownMenuSubTrigger>
                     <Layers className="h-3.5 w-3.5 mr-2" />
                     <span>Group</span>
-                    {isGroupNonDefault && <span className="ml-auto text-[10px] text-brand-blue font-semibold">{GROUP_LABELS[groupBy]}</span>}
+                    {isGroupNonDefault && <span className="ml-auto text-[10px] text-brand-indigo font-semibold">{GROUP_LABELS[groupBy]}</span>}
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
                     {(Object.keys(GROUP_LABELS) as CampaignGroupBy[]).map((g) => (
                       <DropdownMenuItem
                         key={g}
                         onClick={() => onGroupByChange(g)}
-                        className={cn(groupBy === g && "font-bold text-brand-blue")}
+                        className={cn(groupBy === g && "font-bold text-brand-indigo")}
                       >
                         {GROUP_LABELS[g]}
                       </DropdownMenuItem>
@@ -580,14 +566,14 @@ export function CampaignListView({
                   <DropdownMenuSubTrigger>
                     <ArrowUpDown className="h-3.5 w-3.5 mr-2" />
                     <span>Sort</span>
-                    {isSortNonDefault && <span className="ml-auto text-[10px] text-brand-blue font-semibold">{SORT_LABELS[sortBy].split(" ")[0]}</span>}
+                    {isSortNonDefault && <span className="ml-auto text-[10px] text-brand-indigo font-semibold">{SORT_LABELS[sortBy].split(" ")[0]}</span>}
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
                     {(Object.keys(SORT_LABELS) as CampaignSortBy[]).map((s) => (
                       <DropdownMenuItem
                         key={s}
                         onClick={() => onSortByChange(s)}
-                        className={cn(sortBy === s && "font-bold text-brand-blue")}
+                        className={cn(sortBy === s && "font-bold text-brand-indigo")}
                       >
                         {SORT_LABELS[s]}
                       </DropdownMenuItem>
@@ -600,7 +586,7 @@ export function CampaignListView({
                   <DropdownMenuSubTrigger>
                     <Filter className="h-3.5 w-3.5 mr-2" />
                     <span>Filter Status</span>
-                    {filterStatus.length > 0 && <span className="ml-auto text-[10px] text-brand-blue font-semibold">{filterStatus.length}</span>}
+                    {filterStatus.length > 0 && <span className="ml-auto text-[10px] text-brand-indigo font-semibold">{filterStatus.length}</span>}
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
                     {STATUS_FILTER_OPTIONS.map((s) => (
@@ -616,8 +602,8 @@ export function CampaignListView({
                           className="h-2 w-2 rounded-full shrink-0"
                           style={{ backgroundColor: CAMPAIGN_STATUS_HEX[s] || "#6B7280" }}
                         />
-                        <span className={cn(filterStatus.includes(s) && "font-bold text-brand-blue")}>{s}</span>
-                        {filterStatus.includes(s) && <span className="ml-auto text-brand-blue">✓</span>}
+                        <span className={cn(filterStatus.includes(s) && "font-bold text-brand-indigo")}>{s}</span>
+                        {filterStatus.includes(s) && <span className="ml-auto text-brand-indigo">✓</span>}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuSubContent>
@@ -629,25 +615,25 @@ export function CampaignListView({
                     <DropdownMenuSubTrigger>
                       <Building2 className="h-3.5 w-3.5 mr-2" />
                       <span>Filter Account</span>
-                      {filterAccount && <span className="ml-auto text-[10px] text-brand-blue font-semibold truncate max-w-[60px]">{filterAccount}</span>}
+                      {filterAccount && <span className="ml-auto text-[10px] text-brand-indigo font-semibold truncate max-w-[60px]">{filterAccount}</span>}
                     </DropdownMenuSubTrigger>
                     <DropdownMenuSubContent className="max-h-60 overflow-y-auto">
                       <DropdownMenuItem
                         onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(""); }}
-                        className={cn("flex items-center gap-2", !filterAccount && "font-bold text-brand-blue")}
+                        className={cn("flex items-center gap-2", !filterAccount && "font-bold text-brand-indigo")}
                       >
                         <span className="flex-1">All Accounts</span>
-                        {!filterAccount && <span className="text-brand-blue">✓</span>}
+                        {!filterAccount && <span className="text-brand-indigo">✓</span>}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       {availableAccounts.map((a) => (
                         <DropdownMenuItem
                           key={a}
                           onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(filterAccount === a ? "" : a); }}
-                          className={cn("flex items-center gap-2", filterAccount === a && "font-bold text-brand-blue")}
+                          className={cn("flex items-center gap-2", filterAccount === a && "font-bold text-brand-indigo")}
                         >
                           <span className="flex-1 truncate">{a}</span>
-                          {filterAccount === a && <span className="text-brand-blue">✓</span>}
+                          {filterAccount === a && <span className="text-brand-indigo">✓</span>}
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuSubContent>
@@ -679,19 +665,15 @@ export function CampaignListView({
               {listSearch && <p className="text-xs text-muted-foreground/70 mt-1">Try a different search</p>}
             </div>
           ) : (
-            <motion.div
+            <div
               key={`page-${currentPage}`}
-              variants={staggerContainerVariants}
-              initial="hidden"
-              animate="visible"
-              custom={paginatedItems.length}
             >
               {paginatedItems.map((item, idx) => {
                 if (item.kind === "header") {
                   return (
-                    <motion.div key={`h-${item.label}`} variants={staggerItemVariants}>
+                    <div key={`h-${item.label}`}>
                       <GroupHeader label={item.label} count={item.count} />
-                    </motion.div>
+                    </div>
                   );
                 }
                 const cid = getCampaignId(item.campaign);
@@ -699,16 +681,16 @@ export function CampaignListView({
                   ? getCampaignId(selectedCampaign) === cid
                   : false;
                 return (
-                  <motion.div key={cid || idx} variants={staggerItemVariants}>
+                  <div key={cid || idx}>
                     <CampaignListCard
                       campaign={item.campaign}
                       isActive={isSelected}
                       onClick={() => onSelectCampaign(item.campaign)}
                     />
-                  </motion.div>
+                  </div>
                 );
               })}
-            </motion.div>
+            </div>
           )}
         </div>
 
@@ -745,6 +727,8 @@ export function CampaignListView({
             allCampaigns={campaigns}
             onToggleStatus={onToggleStatus}
             onSave={onSave}
+            onRefresh={onRefresh}
+            onDelete={onDelete}
             compact={isDetailCompact}
           />
         ) : (

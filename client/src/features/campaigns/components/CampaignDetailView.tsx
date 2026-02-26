@@ -238,7 +238,7 @@ function EditText({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         rows={3}
-        className="w-full text-[12px] bg-white/60 border border-brand-blue/30 rounded-lg px-2.5 py-1.5 resize-none outline-none focus:ring-1 focus:ring-brand-blue/40 placeholder:text-foreground/30"
+        className="w-full text-[12px] bg-white/60 border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 resize-none outline-none focus:ring-1 focus:ring-brand-indigo/40 placeholder:text-foreground/30"
       />
     );
   }
@@ -248,7 +248,7 @@ function EditText({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full text-[12px] bg-white/60 border border-brand-blue/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-blue/40 placeholder:text-foreground/30"
+      className="w-full text-[12px] bg-white/60 border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40 placeholder:text-foreground/30"
     />
   );
 }
@@ -264,7 +264,7 @@ function EditNumber({
       value={String(value)}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full text-[12px] bg-white/60 border border-brand-blue/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-blue/40 placeholder:text-foreground/30"
+      className="w-full text-[12px] bg-white/60 border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40 placeholder:text-foreground/30"
     />
   );
 }
@@ -279,7 +279,7 @@ function EditDate({
       type="date"
       value={value ? value.slice(0, 10) : ""}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full text-[12px] bg-white/60 border border-brand-blue/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-blue/40"
+      className="w-full text-[12px] bg-white/60 border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40"
     />
   );
 }
@@ -293,7 +293,7 @@ function EditSelect({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full text-[12px] bg-white/60 border border-brand-blue/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-blue/40"
+      className="w-full text-[12px] bg-white/60 border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40"
     >
       {options.map((o) => <option key={o} value={o}>{o}</option>)}
     </select>
@@ -311,7 +311,7 @@ function EditToggle({
       onClick={() => onChange(!value)}
       className={cn(
         "h-5 w-9 rounded-full transition-colors relative shrink-0",
-        value ? "bg-brand-blue" : "bg-foreground/20"
+        value ? "bg-brand-indigo" : "bg-foreground/20"
       )}
     >
       <span className={cn(
@@ -354,7 +354,7 @@ function ContractSelect({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       disabled={loading}
-      className="w-full text-[12px] bg-white/60 border border-brand-blue/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-blue/40"
+      className="w-full text-[12px] bg-white/60 border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40"
     >
       <option value="">— None linked</option>
       {contracts.map((c) => (
@@ -624,7 +624,7 @@ function FinancialsWidget({
   if (contractLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-5 h-5 rounded-full border-2 border-brand-blue/30 border-t-brand-blue animate-spin" />
+        <div className="w-5 h-5 rounded-full border-2 border-brand-indigo/30 border-t-brand-indigo animate-spin" />
       </div>
     );
   }
@@ -698,7 +698,7 @@ function FinancialsWidget({
       {!hasContractOrValue && (
         <button
           onClick={onGoToConfig}
-          className="flex items-center gap-1.5 text-[11px] text-brand-blue font-medium hover:underline mt-1"
+          className="flex items-center gap-1.5 text-[11px] text-brand-indigo font-medium hover:underline mt-1"
         >
           <ArrowRight className="w-3 h-3" />
           Link a contract in Config →
@@ -757,10 +757,12 @@ interface CampaignDetailViewProps {
   allCampaigns: Campaign[];
   onToggleStatus: (campaign: Campaign) => void;
   onSave: (id: number, patch: Record<string, unknown>) => Promise<void>;
+  onRefresh?: () => void;
+  onDelete?: (id: number) => Promise<void>;
   compact?: boolean;
 }
 
-export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleStatus, onSave, compact = false }: CampaignDetailViewProps) {
+export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleStatus, onSave, onRefresh, onDelete, compact = false }: CampaignDetailViewProps) {
   const { isAgencyUser } = useWorkspace();
 
   const campaignMetrics = useMemo(() => {
@@ -819,6 +821,8 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
 
   // ── Inline editing state ────────────────────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [draft, setDraft] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
 
@@ -918,7 +922,7 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium bg-brand-blue text-white hover:opacity-90 transition-opacity disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium bg-brand-indigo text-white hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
                   {saving ? "Saving…" : "Save"}
@@ -954,14 +958,28 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
                     }
                   </button>
                 )}
-                <button className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors">
+                <button onClick={onRefresh} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors">
                   <RefreshCw className="h-3 w-3" />
                   Refresh
                 </button>
-                <button className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors">
-                  <Trash2 className="h-3 w-3" />
-                  Delete
-                </button>
+                onDelete && (deleteConfirm ? (
+                  <div className="inline-flex items-center gap-1 rounded-lg border border-red-300/50 bg-card px-2.5 py-1.5 text-[12px]">
+                    <span className="text-foreground/60 mr-0.5">Delete?</span>
+                    <button
+                      className="px-2 py-0.5 rounded-full bg-red-600 text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
+                      disabled={deleting}
+                      onClick={async () => { setDeleting(true); try { await onDelete(campaign.id || campaign.Id); } finally { setDeleting(false); setDeleteConfirm(false); } }}
+                    >
+                      {deleting ? "..." : "Yes"}
+                    </button>
+                    <button className="px-2 py-0.5 rounded-full text-muted-foreground text-[11px] hover:text-foreground" onClick={() => setDeleteConfirm(false)}>No</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setDeleteConfirm(true)} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 hover:text-red-600 transition-colors">
+                    <Trash2 className="h-3 w-3" />
+                    Delete
+                  </button>
+                ))
               </>
             )}
           </div>
@@ -1384,7 +1402,7 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
                           type="number"
                           value={String(draft.bump_1_delay_hours ?? "")}
                           onChange={(e) => setDraft(d => ({...d, bump_1_delay_hours: e.target.value}))}
-                          className="w-14 text-[11px] bg-white/60 border border-brand-blue/30 rounded px-1.5 py-0.5 outline-none"
+                          className="w-14 text-[11px] bg-white/60 border border-brand-indigo/30 rounded px-1.5 py-0.5 outline-none"
                           placeholder="24"
                         />
                       </div>
@@ -1426,7 +1444,7 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
                           type="number"
                           value={String(draft.bump_2_delay_hours ?? "")}
                           onChange={(e) => setDraft(d => ({...d, bump_2_delay_hours: e.target.value}))}
-                          className="w-14 text-[11px] bg-white/60 border border-brand-blue/30 rounded px-1.5 py-0.5 outline-none"
+                          className="w-14 text-[11px] bg-white/60 border border-brand-indigo/30 rounded px-1.5 py-0.5 outline-none"
                           placeholder="48"
                         />
                       </div>
@@ -1468,7 +1486,7 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
                           type="number"
                           value={String(draft.bump_3_delay_hours ?? "")}
                           onChange={(e) => setDraft(d => ({...d, bump_3_delay_hours: e.target.value}))}
-                          className="w-14 text-[11px] bg-white/60 border border-brand-blue/30 rounded px-1.5 py-0.5 outline-none"
+                          className="w-14 text-[11px] bg-white/60 border border-brand-indigo/30 rounded px-1.5 py-0.5 outline-none"
                           placeholder="72"
                         />
                       </div>
