@@ -344,6 +344,13 @@ export async function registerRoutes(
   // CSV Import — bulk create leads from a mapped array
   app.post("/api/leads/import-csv", requireAuth, async (req, res) => {
     try {
+      // For subaccount users, enforce account scoping
+      if (req.user!.accountsId !== 1) {
+        if (!req.user!.accountsId) {
+          return res.status(403).json({ message: "Account scoping required" });
+        }
+      }
+
       const { leads: leadRows } = req.body;
       if (!Array.isArray(leadRows) || leadRows.length === 0) {
         return res.status(400).json({ message: "leads must be a non-empty array" });
@@ -361,6 +368,9 @@ export async function registerRoutes(
       const created: any[] = [];
       const errors: { row: number; message: string }[] = [];
 
+      // For subaccount users, force all imported leads to their account
+      const forcedAccountId = req.user!.accountsId !== 1 ? req.user!.accountsId : undefined;
+
       for (let i = 0; i < leadRows.length; i++) {
         try {
           const rawRow = leadRows[i];
@@ -369,6 +379,10 @@ export async function registerRoutes(
             fromDbKeys(rawRow, leads) as Record<string, unknown>,
             LEAD_DATE_FIELDS,
           );
+          // Enforce account scoping for subaccount users
+          if (forcedAccountId) {
+            mapped.accountsId = forcedAccountId;
+          }
           const parsed = insertLeadsSchema.safeParse(mapped);
           if (!parsed.success) {
             errors.push({
@@ -399,6 +413,13 @@ export async function registerRoutes(
   // Bulk update leads (move stage, assign campaign)
   app.post("/api/leads/bulk-update", requireAuth, async (req, res) => {
     try {
+      // For subaccount users, enforce account scoping
+      if (req.user!.accountsId !== 1) {
+        if (!req.user!.accountsId) {
+          return res.status(403).json({ message: "Account scoping required" });
+        }
+      }
+
       const { ids, data } = req.body;
       if (!Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({ message: "ids must be a non-empty array" });
@@ -411,8 +432,26 @@ export async function registerRoutes(
       const parsed = insertLeadsSchema.partial().safeParse(fromDbKeys(data, leads));
       if (!parsed.success) return handleZodError(res, parsed.error);
 
+      // For subaccount users, verify all leads belong to their account
+      let leadIds = ids.map(Number);
+      if (req.user!.accountsId !== 1) {
+        const userAccountId = req.user!.accountsId;
+        // Filter to only leads belonging to the user's account
+        const ownedLeads: number[] = [];
+        for (const lid of leadIds) {
+          const lead = await storage.getLead(lid);
+          if (lead && lead.accountsId === userAccountId) {
+            ownedLeads.push(lid);
+          }
+        }
+        leadIds = ownedLeads;
+        if (leadIds.length === 0) {
+          return res.status(403).json({ message: "None of the specified leads belong to your account" });
+        }
+      }
+
       const updated = await storage.bulkUpdateLeads(
-        ids.map(Number),
+        leadIds,
         parsed.data,
       );
 
