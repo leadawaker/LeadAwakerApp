@@ -129,7 +129,7 @@ export function TagsCardView({
               className={cn(
                 "rounded-2xl p-3.5 cursor-pointer transition-colors",
                 isSelected
-                  ? "bg-[#FFF1C8]"
+                  ? "bg-highlight-selected"
                   : "bg-card hover:bg-popover",
               )}
               onClick={(e) => handleCardClick(tag.id, e)}

@@ -2,6 +2,13 @@
 # Post-edit TypeScript check hook
 # Runs tsc --noEmit after any edit to client/src .ts/.tsx files
 # Outputs errors to stderr so Claude sees them and must fix before finishing
+#
+# To temporarily disable (e.g. during bulk agent runs):
+#   touch /tmp/skip-tsc-check
+# To re-enable:
+#   rm /tmp/skip-tsc-check
+
+if [ -f /tmp/skip-tsc-check ]; then exit 0; fi
 
 input=$(cat)
 

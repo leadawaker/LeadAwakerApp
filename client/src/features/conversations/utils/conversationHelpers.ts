@@ -1,38 +1,7 @@
 import type { Lead } from "../hooks/useConversationsData";
 
-// ── Status avatar colors — shared across InboxPanel + ContactSidebar ─────────
-export function getStatusAvatarColor(status: string): { bg: string; text: string } {
-  const solids: Record<string, { bg: string; text: string }> = {
-    New:                  { bg: "#E5E7EB", text: "#374151" },
-    Contacted:            { bg: "#DBEAFE", text: "#1D4ED8" },
-    Responded:            { bg: "#CCFBF1", text: "#0F766E" },
-    "Multiple Responses": { bg: "#DCFCE7", text: "#15803D" },
-    Qualified:            { bg: "#ECFCCB", text: "#3F6212" },
-    Booked:               { bg: "#FEF9C3", text: "#854D0E" },
-    Closed:               { bg: "#D1FAE5", text: "#065F46" },
-    Lost:                 { bg: "#FEE2E2", text: "#991B1B" },
-    DND:                  { bg: "#F4F4F5", text: "#52525B" },
-  };
-  return solids[status] ?? { bg: "#E5E7EB", text: "#374151" };
-}
-
-// ── Pipeline constants ───────────────────────────────────────────────────────
-export const PIPELINE_STATUSES = [
-  "New", "Contacted", "Responded", "Multiple Responses",
-  "Qualified", "Booked", "Closed", "Lost", "DND",
-];
-
-export const PIPELINE_HEX: Record<string, string> = {
-  New:                  "#6B7280",
-  Contacted:            "#4F46E5",
-  Responded:            "#14B8A6",
-  "Multiple Responses": "#22C55E",
-  Qualified:            "#84CC16",
-  Booked:               "#FCB803",
-  Closed:               "#10B981",
-  Lost:                 "#EF4444",
-  DND:                  "#71717A",
-};
+// ── Re-export shared avatar utilities (aliased so existing imports keep working) ──
+export { getLeadStatusAvatarColor as getStatusAvatarColor, PIPELINE_HEX, PIPELINE_STATUSES } from "@/lib/avatarUtils";
 
 // ── Lead helpers ─────────────────────────────────────────────────────────────
 export function initialsFor(lead: Lead): string {

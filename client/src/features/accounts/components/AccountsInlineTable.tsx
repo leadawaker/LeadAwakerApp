@@ -17,6 +17,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { updateAccount } from "../api/accountsApi";
+import { getAccountAvatarColor } from "@/lib/avatarUtils";
+import { EntityAvatar } from "@/components/ui/entity-avatar";
 import type { AccountRow } from "./AccountDetailsDialog";
 
 // ── Column definitions ────────────────────────────────────────────────────────
@@ -62,13 +64,6 @@ const ACCOUNT_STATUS_HEX: Record<string, string> = {
   Suspended: "#F43F5E",
 };
 
-const ACCOUNT_STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  Active:    { bg: "#D1FAE5", text: "#065F46" },
-  Trial:     { bg: "#FEF3C7", text: "#92400E" },
-  Inactive:  { bg: "#F4F4F5", text: "#52525B" },
-  Suspended: { bg: "#FFE4E6", text: "#9F1239" },
-};
-
 const DB_FIELD_MAP: Partial<Record<ColKey, string>> = {
   status:         "status",
   owner_email:    "owner_email",
@@ -90,14 +85,6 @@ function getAccountId(a: AccountRow): number {
   return a.Id ?? a.id ?? 0;
 }
 
-function getAccountInitials(name: string): string {
-  return name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "?";
-}
-
-function getAccountAvatarColor(status: string): { bg: string; text: string } {
-  return ACCOUNT_STATUS_COLORS[status] ?? { bg: "#E5E7EB", text: "#374151" };
-}
-
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
 function TableSkeleton() {
@@ -107,7 +94,7 @@ function TableSkeleton() {
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}
-          className="h-9 bg-[#F1F1F1]/70 rounded-xl animate-pulse"
+          className="h-9 bg-card/70 rounded-xl animate-pulse"
           style={{ animationDelay: `${i * 35}ms` }}
         />
       ))}
@@ -430,7 +417,7 @@ export function AccountsInlineTable({
         <TableSkeleton />
       ) : (
         <div className="flex-1 min-h-0 overflow-auto">
-          <table className="w-full" style={{ borderCollapse: "collapse", minWidth: 700 }}>
+          <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: "0 3px", minWidth: 700 }}>
 
             {/* Sticky header */}
             <thead className="sticky top-0 z-20">
@@ -513,8 +500,8 @@ export function AccountsInlineTable({
                     <tr
                       key={aid}
                       className={cn(
-                        "group/row cursor-pointer h-[52px] border-b border-border/15",
-                        isHighlighted ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] hover:bg-[#F8F8F8]",
+                        "group/row cursor-pointer h-[52px]",
+                        isHighlighted ? "bg-highlight-selected" : "bg-card hover:bg-card-hover",
                       )}
                       onClick={(e) => handleRowClick(account, e)}
                     >
@@ -522,7 +509,7 @@ export function AccountsInlineTable({
                         const isFirst = ci === 0;
                         const tdClass = cn(
                           isFirst && "sticky left-0 z-10",
-                          isFirst && (isHighlighted ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] group-hover/row:bg-[#F8F8F8]"),
+                          isFirst && (isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover"),
                         );
 
                         // ── Name (sticky, with avatar) ──
@@ -549,12 +536,12 @@ export function AccountsInlineTable({
                                 >
                                   {isMultiSelected && <Check className="h-2.5 w-2.5 text-white" />}
                                 </div>
-                                <div
-                                  className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0"
-                                  style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
-                                >
-                                  {getAccountInitials(name)}
-                                </div>
+                                <EntityAvatar
+                                  name={name}
+                                  photoUrl={account.logo_url}
+                                  bgColor={avatarColor.bg}
+                                  textColor={avatarColor.text}
+                                />
                                 <span className="text-[12px] font-medium truncate text-foreground">{name}</span>
                               </div>
                             </td>

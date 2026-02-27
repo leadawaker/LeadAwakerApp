@@ -136,7 +136,7 @@ export default function ConversationsPage() {
   return (
     <CrmShell>
       <div
-        className="h-[calc(100vh-100px)] flex flex-col overflow-hidden"
+        className="h-full flex flex-col overflow-hidden"
         data-testid="page-conversations"
       >
         {/* Mobile header */}

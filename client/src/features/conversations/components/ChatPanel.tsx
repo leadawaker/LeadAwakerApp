@@ -171,11 +171,14 @@ export function ChatPanel({
         )}
         data-testid="panel-chat"
       >
-        {/* ── Gradient background ── */}
-        <div className="absolute inset-0 bg-[#F5F1EA]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_70%_at_10%_5%,rgba(255,242,134,0.35)_0%,transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_20%,rgba(255,255,255,0.5)_0%,transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_100%_80%_at_90%_95%,rgba(79,70,229,0.30)_0%,rgba(105,170,255,0.15)_35%,transparent_65%)]" />
+        {/* ── Warm gradient bloom background (matching Invoices/Expenses) ── */}
+        <div className="absolute inset-0 bg-[#F8F3EB]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.9)_0%,transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,242,134,0.35)_0%,transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(241,218,162,0.2)_0%,transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(210,188,130,0.15)_0%,transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(105,170,255,0.18)_0%,transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_center,rgba(165,205,255,0.12)_0%,transparent_60%)]" />
 
         {/* ── Content above gradient ── */}
         <div className="relative flex flex-col h-full overflow-hidden">
@@ -191,7 +194,7 @@ export function ChatPanel({
                 </div>
               ) : (
                 <>
-                  <div className="text-[15px] font-semibold font-heading truncate">
+                  <div className="text-xl font-semibold font-heading truncate">
                     {selected
                       ? selected.lead.full_name ||
                         `${selected.lead.first_name ?? ""} ${selected.lead.last_name ?? ""}`.trim()
@@ -270,7 +273,12 @@ export function ChatPanel({
                 <div key={group.threadId} data-testid={`thread-group-${gi}`}>
                   <ThreadDivider group={group} total={threadGroups.length} />
                   {group.msgs.map((m) => (
-                    <ChatBubble key={m.id} item={m} onRetry={onRetry} />
+                    <ChatBubble
+                      key={m.id}
+                      item={m}
+                      onRetry={onRetry}
+                      leadName={selected.lead.full_name || `${selected.lead.first_name ?? ""} ${selected.lead.last_name ?? ""}`.trim()}
+                    />
                   ))}
                 </div>
               ));
@@ -542,7 +550,7 @@ function ThreadDivider({ group, total }: { group: ThreadGroup; total: number }) 
       data-thread-id={group.threadId}
     >
       <div className="flex-1 h-px bg-border/40" />
-      <div className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl bg-muted/80 border border-border/30">
+      <div className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl bg-white border border-border/20">
         <div className="flex items-center gap-1.5 text-[11px] font-semibold text-foreground/80 select-none whitespace-nowrap">
           {isBump
             ? <ArrowUpCircle className="w-3 h-3 shrink-0 text-amber-500" />
@@ -646,7 +654,25 @@ function AttachmentPreview({ url, outbound }: { url: string; outbound: boolean }
   );
 }
 
-function ChatBubble({ item, onRetry }: { item: Interaction; onRetry?: (failedMsg: Interaction) => Promise<void> }) {
+/** Derive a readable sender label for the message */
+function getSenderLabel(item: Interaction, inbound: boolean, aiMsg: boolean, leadName: string): string {
+  if (inbound) return leadName || "Lead";
+  if (aiMsg) {
+    // Try to get an agent name from the Who field (e.g. "Sophie", "Maria")
+    const who = (item.Who ?? item.who ?? "").trim();
+    const genericWho = /^(ai|bot|automation|start|bump\s*\d*)$/i;
+    if (who && !genericWho.test(who)) return `AI ${who}`;
+    // Fall back to ai_model field
+    if (item.ai_model) return `AI ${item.ai_model}`;
+    return "AI";
+  }
+  // Human agent — use Who field if it's a name, otherwise "You"
+  const who = (item.Who ?? item.who ?? "").trim();
+  if (who && who.toLowerCase() !== "human" && who.toLowerCase() !== "agent") return who;
+  return "You";
+}
+
+function ChatBubble({ item, onRetry, leadName }: { item: Interaction; onRetry?: (failedMsg: Interaction) => Promise<void>; leadName: string }) {
   const outbound = item.direction === "Outbound";
   const inbound = !outbound;
   const statusNorm = (item.status ?? "").toLowerCase();
@@ -663,12 +689,12 @@ function ChatBubble({ item, onRetry }: { item: Interaction; onRetry?: (failedMsg
       <div
         className={cn(
           "max-w-[78%] rounded-2xl px-3 py-2 text-sm border",
-          // Inbound (lead message) — clean white
-          inbound && "bg-white text-foreground border-border dark:bg-muted/80 dark:text-foreground dark:border-border",
+          // Inbound (lead message) — clean white, no visible border
+          inbound && "bg-white text-foreground border-transparent dark:bg-muted/80 dark:text-foreground dark:border-transparent",
           // AI-generated outbound — brand blue
           aiMsg && "bg-primary text-white border-primary/20",
-          // Human outbound — dark navy blue with white text
-          humanAgentMsg && "bg-brand-indigo/85 text-white border-brand-indigo/40",
+          // Human outbound — light blue with dark text (distinguishes from AI)
+          humanAgentMsg && "bg-sky-100 text-foreground border-sky-200/50",
           isFailed && "border-destructive/50 opacity-80",
         )}
         data-message-type={inbound ? "lead" : aiMsg ? "ai" : "agent"}
@@ -684,8 +710,8 @@ function ChatBubble({ item, onRetry }: { item: Interaction; onRetry?: (failedMsg
           className={cn(
             "mt-1 text-[11px] flex items-center gap-1 flex-wrap",
             outbound ? "opacity-70" : "text-muted-foreground opacity-70 dark:opacity-90",
-            // Adjust timestamp color for navy bubble
-            humanAgentMsg && "text-white/60",
+            // Adjust timestamp color for human messages on light bg
+            humanAgentMsg && "text-foreground/50",
           )}
         >
           {item.created_at || item.createdAt
@@ -722,7 +748,7 @@ function ChatBubble({ item, onRetry }: { item: Interaction; onRetry?: (failedMsg
         outbound ? "text-right" : "text-left",
         "text-muted-foreground/50"
       )}>
-        {inbound ? "Lead" : aiMsg ? (item.ai_model ? `AI (${item.ai_model})` : "AI") : "You"}
+        {getSenderLabel(item, inbound, aiMsg, leadName)}
       </div>
     </div>
   );

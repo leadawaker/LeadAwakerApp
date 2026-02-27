@@ -1,6 +1,8 @@
 import { useState, useMemo, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronRight, Check, Eye, Users } from "lucide-react";
+import { ROLE_AVATAR } from "@/lib/avatarUtils";
+import { EntityAvatar } from "@/components/ui/entity-avatar";
 import type { AppUser, AccountMap } from "../pages/UsersPage";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -38,18 +40,6 @@ const ROLE_BADGE: Record<string, string> = {
   Agent:    "bg-purple-100 text-purple-700",
   Viewer:   "bg-muted text-muted-foreground",
 };
-
-const ROLE_AVATAR: Record<string, { bg: string; text: string }> = {
-  Admin:    { bg: "#FEF9C3", text: "#854D0E" },
-  Operator: { bg: "#FFEDD5", text: "#9A3412" },
-  Manager:  { bg: "#DBEAFE", text: "#1E40AF" },
-  Agent:    { bg: "#EDE9FE", text: "#5B21B6" },
-  Viewer:   { bg: "#E5E7EB", text: "#374151" },
-};
-
-function getInitials(name: string): string {
-  return name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "?";
-}
 
 function isActiveStatus(status: string | null | undefined): boolean {
   return (status || "").toLowerCase() === "active";
@@ -90,7 +80,7 @@ function TableSkeleton() {
       {Array.from({ length: 9 }).map((_, i) => (
         <div
           key={i}
-          className="h-[52px] bg-[#F1F1F1]/70 rounded-xl animate-pulse"
+          className="h-[52px] bg-card/70 rounded-xl animate-pulse"
           style={{ animationDelay: `${i * 35}ms` }}
         />
       ))}
@@ -269,7 +259,7 @@ export function UsersInlineTable({
 
       {/* ── Table ── */}
       <div className="flex-1 min-h-0 overflow-auto">
-        <table className="w-full" style={{ borderCollapse: "collapse", minWidth: 700 }}>
+        <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: "0 3px", minWidth: 700 }}>
 
           {/* Sticky column header */}
           <thead className="sticky top-0 z-20">
@@ -343,22 +333,21 @@ export function UsersInlineTable({
               const name = user.fullName1 || user.email || `User #${uid}`;
               const role = user.role || "Viewer";
               const avatarColor = ROLE_AVATAR[role] ?? ROLE_AVATAR.Viewer;
-              const initials = getInitials(name);
               const userIdx = userIndexMap.get(uid) ?? -1;
 
               return (
                 <tr
                   key={uid}
                   className={cn(
-                    "group/row cursor-pointer h-[52px] border-b border-border/15",
-                    isHighlighted ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] hover:bg-[#F8F8F8]",
+                    "group/row cursor-pointer h-[52px]",
+                    isHighlighted ? "bg-highlight-selected" : "bg-card hover:bg-card-hover",
                   )}
                   onClick={(e) => handleRowClick(user, e)}
                 >
                   {/* Checkbox cell — sticky left */}
                   <td className={cn(
                     "px-2.5 w-10 min-w-[40px] sticky left-0 z-10",
-                    isHighlighted ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] group-hover/row:bg-[#F8F8F8]",
+                    isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover",
                   )}>
                     <div
                       className={cn(
@@ -384,7 +373,7 @@ export function UsersInlineTable({
                     const isFirst = ci === 0;
                     const tdClass = cn(
                       isFirst && "sticky left-10 z-10",
-                      isFirst && (isHighlighted ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] group-hover/row:bg-[#F8F8F8]"),
+                      isFirst && (isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover"),
                     );
 
                     // ── Name cell (sticky, with avatar) ──
@@ -392,12 +381,12 @@ export function UsersInlineTable({
                       return (
                         <td key="name" className={cn("px-2.5", tdClass)} style={{ width: 220, minWidth: 220 }}>
                           <div className="flex items-center gap-2 min-w-0">
-                            <div
-                              className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0"
-                              style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
-                            >
-                              {initials}
-                            </div>
+                            <EntityAvatar
+                              name={user.fullName1 || "?"}
+                              photoUrl={user.avatarUrl}
+                              bgColor={avatarColor.bg}
+                              textColor={avatarColor.text}
+                            />
                             <div className="flex flex-col min-w-0">
                               <span className="text-[12px] font-medium truncate text-foreground leading-tight">
                                 {user.fullName1 || <span className="italic text-muted-foreground">No name</span>}

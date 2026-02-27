@@ -439,7 +439,8 @@ export async function registerRoutes(
         // Filter to only leads belonging to the user's account
         const ownedLeads: number[] = [];
         for (const lid of leadIds) {
-          const lead = await storage.getLead(lid);
+          const allLeads = await storage.getLeads();
+          const lead = allLeads.find((l: any) => l.id === lid || l.Id === lid);
           if (lead && lead.accountsId === userAccountId) {
             ownedLeads.push(lid);
           }
@@ -923,7 +924,7 @@ export async function registerRoutes(
           invited_by: req.user?.email || "admin",
           lang,
         });
-        const updated = await storage.updateAppUser(existing.id, {
+        const updated = await storage.updateAppUser(existing.id!, {
           status: "Invited",
           preferences: newPreferences,
         });
@@ -1024,7 +1025,7 @@ export async function registerRoutes(
         } catch {}
       }
 
-      const lang: string = existingPrefs.lang || "en";
+      const lang = (existingPrefs.lang || "en") as any;
 
       const newPreferences = JSON.stringify({
         ...existingPrefs,

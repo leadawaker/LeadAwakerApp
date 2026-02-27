@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   Download, Link, FileSignature, Trash2,
   Eye, Calendar, FileText, Copy, Check, Plus, Upload,
@@ -281,6 +281,34 @@ export function ContractDetailView({
     a.click();
     document.body.removeChild(a);
   }, [contract.file_data, contract.file_name]);
+
+  // ── PDF blob URL (avoids Chromium auto-download on base64 data URLs) ──────
+  const pdfBlobUrl = useMemo(() => {
+    if (!contract.file_data) return null;
+    try {
+      const match = contract.file_data.match(/^data:([^;]+);base64,(.+)$/);
+      if (!match) return contract.file_data;
+      const mimeType = match[1];
+      const base64 = match[2];
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: mimeType });
+      return URL.createObjectURL(blob);
+    } catch {
+      return contract.file_data;
+    }
+  }, [contract.file_data]);
+
+  useEffect(() => {
+    return () => {
+      if (pdfBlobUrl && pdfBlobUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(pdfBlobUrl);
+      }
+    };
+  }, [pdfBlobUrl]);
 
   // ── Edit handlers ─────────────────────────────────────────────────────────
   const handleStartEdit = useCallback(() => {
@@ -939,13 +967,23 @@ export function ContractDetailView({
                   </span>
                 </div>
               </>
-            ) : contract.file_data ? (
+            ) : pdfBlobUrl ? (
               /* PDF embed */
-              <iframe
-                src={contract.file_data}
+              <object
+                data={pdfBlobUrl}
+                type="application/pdf"
                 className="w-full flex-1 min-h-0 border-0 rounded-b-xl"
-                title={contract.file_name || "Contract PDF"}
-              />
+              >
+                <div className="flex flex-col items-center justify-center h-full gap-3 p-4">
+                  <p className="text-sm text-muted-foreground">PDF preview not available in this browser.</p>
+                  <button
+                    onClick={handleDownloadPdf}
+                    className="text-sm text-brand-indigo hover:underline font-medium"
+                  >
+                    Download PDF
+                  </button>
+                </div>
+              </object>
             ) : contract.contract_text ? (
               /* Read-only contract text */
               <>

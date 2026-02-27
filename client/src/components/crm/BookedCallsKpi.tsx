@@ -13,7 +13,7 @@ import {
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
 type BookedCallsKpiProps = {
-  variant: "hero" | "compact";
+  variant: "hero" | "compact" | "inline";
   accountId?: number;
   className?: string;
 };
@@ -188,6 +188,51 @@ export function BookedCallsKpi({ variant, accountId, className }: BookedCallsKpi
           </span>
         </div>
       </div>
+    );
+  }
+
+  /* ── Inline variant (sits next to page title) ─────────────── */
+  if (variant === "inline") {
+    return (
+      <TooltipProvider delayDuration={300}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className={cn(
+                "inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full bg-[#FCB803]/15 cursor-default select-none shrink-0",
+                className
+              )}
+              data-testid="kpi-booked-calls-inline"
+            >
+              <CalendarCheck className="h-4 w-4 text-[#131B49]" />
+              <span className="text-[15px] font-bold tabular-nums text-[#131B49] leading-none">
+                {isLoading ? "-" : thisMonth}
+              </span>
+              {!isLoading && (
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-0.5 text-[10px] font-semibold tabular-nums leading-none",
+                    trend.dir === "up" && "text-emerald-600",
+                    trend.dir === "down" && "text-red-600",
+                    trend.dir === "flat" && "text-zinc-400"
+                  )}
+                >
+                  {trend.dir === "up" && <TrendingUp className="h-3 w-3" />}
+                  {trend.dir === "down" && <TrendingDown className="h-3 w-3" />}
+                  {trend.dir === "flat" && <Minus className="h-3 w-3" />}
+                  {trend.pct}%
+                </span>
+              )}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
+            <div className="flex flex-col gap-0.5">
+              <span>Calls Booked This Month: {isLoading ? "..." : thisMonth}</span>
+              <span className="text-muted-foreground">This Week: {isLoading ? "..." : thisWeek} | Last Month: {isLoading ? "..." : lastMonth}</span>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
 

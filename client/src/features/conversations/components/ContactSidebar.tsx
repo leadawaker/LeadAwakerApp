@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
-import { X, Phone, Mail, Tag, TrendingUp, Calendar, User, ClipboardList, FileText, Plus, Loader2, Check, ChevronDown, PanelRightClose, CircleDot } from "lucide-react";
+import {
+  X, Phone, Mail, Tag, TrendingUp, Calendar, User, ClipboardList, FileText,
+  Plus, Loader2, Check, ChevronDown, PanelRightClose, ExternalLink,
+  // Kanban stage icons
+  Zap, MessageSquare, ArrowUpRight, CheckCircle2, ShieldCheck, HeartCrack, Target,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
 import { SkeletonContactPanel } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
-import type { Thread, Lead } from "../hooks/useConversationsData";
+import type { Thread, Lead, Interaction } from "../hooks/useConversationsData";
 import { addLeadTag, removeLeadTag } from "../api/conversationsApi";
 import {
   initialsFor,
@@ -94,6 +99,70 @@ function getPipelineStage(lead: Lead): { label: string; description: string; col
 }
 
 
+// ── Kanban stage icon map ────────────────────────────────────────────────────
+const STAGE_ICONS: Record<string, React.ElementType> = {
+  New: Zap,
+  Contacted: MessageSquare,
+  Responded: TrendingUp,
+  "Multiple Responses": ArrowUpRight,
+  Qualified: CheckCircle2,
+  Booked: Calendar,
+  Closed: ShieldCheck,
+  Lost: HeartCrack,
+  DND: Target,
+};
+
+function getStageIcon(status: string): React.ElementType {
+  return STAGE_ICONS[status] ?? Zap;
+}
+
+// ── Score grade helper ──────────────────────────────────────────────────────
+function getGrade(score: number): string {
+  if (score >= 90) return "A";
+  if (score >= 75) return "B";
+  if (score >= 60) return "C";
+  if (score >= 45) return "D";
+  return "F";
+}
+
+// ── Score Arc — half-circle gauge (9 o'clock → top → 3 o'clock) ─────────────
+function ScoreArc({ score, status }: { score: number; status?: string }) {
+  const cx = 100, cy = 95, r = 72, sw = 18;
+  const fillColor = (status && PIPELINE_HEX[status]) || "#4F46E5";
+  const grade = getGrade(score);
+
+  // Arc drawn at center of stroke width
+  const half = r - sw / 2;
+  const pct = Math.max(0, Math.min(100, score)) / 100;
+  const bgPath = `M ${cx - half} ${cy} A ${half} ${half} 0 1 1 ${cx + half} ${cy}`;
+  const endX = cx - half * Math.cos(Math.PI * pct);
+  const endY = cy - half * Math.sin(Math.PI * pct);
+  const fillPath = pct > 0
+    ? `M ${cx - half} ${cy} A ${half} ${half} 0 ${pct > 0.5 ? 1 : 0} 1 ${endX} ${endY}`
+    : "";
+
+  return (
+    <svg viewBox="0 0 200 110" className="w-full max-w-[140px] mx-auto">
+      {/* Track */}
+      <path d={bgPath} fill="none" stroke="#E5E7EB" strokeWidth={sw} strokeLinecap="round" />
+      {/* Fill */}
+      {fillPath && (
+        <path d={fillPath} fill="none" stroke={fillColor} strokeWidth={sw} strokeLinecap="round" />
+      )}
+      {/* Score number */}
+      <text x={cx} y={cy - 18} textAnchor="middle" dominantBaseline="central"
+        style={{ fontSize: 38, fontWeight: 900, fill: "#111827", letterSpacing: -2 }}>
+        {score}
+      </text>
+      {/* Grade label */}
+      <text x={cx} y={cy + 8} textAnchor="middle" dominantBaseline="central"
+        style={{ fontSize: 10, fontWeight: 700, fill: "#9CA3AF", letterSpacing: 2 }}>
+        GRADE {grade}
+      </text>
+    </svg>
+  );
+}
+
 function useLeadTags(leadId: number | null) {
   const [tags, setTags] = useState<TagData[]>([]);
   const [allTags, setAllTags] = useState<TagData[]>([]);
@@ -137,7 +206,7 @@ function useLeadTags(leadId: number | null) {
 }
 
 // ── Collapsible section IDs ──────────────────────────────────────────────────
-type SectionId = "contact" | "score" | "activity" | "notes";
+type SectionId = "contact" | "score" | "activity" | "notes" | "messages";
 
 function SectionHeader({
   id,
@@ -162,7 +231,7 @@ function SectionHeader({
     >
       <div className="flex items-center gap-2">
         <Icon className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
-        <span className="text-[13px] font-semibold font-heading text-foreground">{label}</span>
+        <span className="text-[16px] font-semibold font-heading text-foreground">{label}</span>
       </div>
       <div className="flex items-center gap-1.5">
         {trailing}
@@ -183,9 +252,14 @@ interface ContactSidebarProps {
   onClose?: () => void;
   onUpdateLead?: (leadId: number, patch: Record<string, unknown>) => Promise<void>;
   className?: string;
+  /** Optional: recent messages to display in a chat widget (used on Calendar page) */
+  recentMessages?: Interaction[];
+  recentMessagesLoading?: boolean;
+  /** Callback when user clicks "View full conversation" in the messages widget */
+  onViewConversation?: () => void;
 }
 
-export function ContactSidebar({ selected, loading = false, onClose, onUpdateLead, className }: ContactSidebarProps) {
+export function ContactSidebar({ selected, loading = false, onClose, onUpdateLead, className, recentMessages, recentMessagesLoading, onViewConversation }: ContactSidebarProps) {
   const [collapsedSections, setCollapsedSections] = useState<Set<SectionId>>(new Set());
   const toggleSection = (id: SectionId) => {
     setCollapsedSections((prev) => {
@@ -292,7 +366,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-[15px] font-semibold font-heading text-foreground leading-tight truncate max-w-[180px]">
+              <p className="text-[16px] font-semibold font-heading text-foreground leading-tight truncate max-w-[180px]">
                 {lead
                   ? lead.full_name || `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() || "Unknown"
                   : "Lead Context"}
@@ -344,7 +418,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             {/* ── Contact ── */}
             <SectionHeader id="contact" label="Contact" icon={User} collapsed={collapsedSections.has("contact")} onToggle={toggleSection} />
             {!collapsedSections.has("contact") && (
-              <div className="px-4 pb-3">
+              <div className="px-4 pb-5">
                 <div className="bg-white/60 rounded-xl p-3.5 flex flex-col gap-2.5">
                   {[
                     selected.lead.phone && { icon: <Phone className="h-4 w-4" />, label: "Phone", value: selected.lead.phone, mono: true },
@@ -380,26 +454,23 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                       }}
                     >
                       <SelectTrigger className="h-9 text-[12px] rounded-lg bg-white/60 border-border/30">
-                        <div className="flex items-center gap-2">
-                          <CircleDot
-                            className="h-4 w-4 shrink-0"
-                            style={{ color: PIPELINE_HEX[localStatus] ?? "#6B7280" }}
-                          />
-                          <SelectValue />
-                        </div>
+                        <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {PIPELINE_STATUSES.map((s) => (
-                          <SelectItem key={s} value={s} className="text-[12px]">
-                            <div className="flex items-center gap-2">
-                              <CircleDot
-                                className="h-4 w-4 shrink-0"
-                                style={{ color: PIPELINE_HEX[s] ?? "#6B7280" }}
-                              />
-                              {s}
-                            </div>
-                          </SelectItem>
-                        ))}
+                        {PIPELINE_STATUSES.map((s) => {
+                          const ItemIcon = getStageIcon(s);
+                          return (
+                            <SelectItem key={s} value={s} className="text-[12px]">
+                              <div className="flex items-center gap-2">
+                                <ItemIcon
+                                  className="h-4 w-4 shrink-0"
+                                  style={{ color: PIPELINE_HEX[s] ?? "#6B7280" }}
+                                />
+                                {s}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   </div>
@@ -500,7 +571,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             )}
 
             {/* ── Score & Pipeline ── */}
-            <div className="border-t border-border/15" />
+            <div className="border-t border-border/20 mt-1" />
             <SectionHeader
               id="score"
               label="Score & Pipeline"
@@ -514,20 +585,9 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
               }
             />
             {!collapsedSections.has("score") && (
-              <div className="px-4 pb-3 space-y-2">
-                <div className="bg-white/60 rounded-xl p-3.5 flex flex-col gap-2" data-testid="lead-score">
-                  <div className="flex items-center justify-between">
-                    <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden mr-3">
-                      <div
-                        className={`h-full rounded-full transition-opacity duration-300 ${scoreBarColor(score)}`}
-                        style={{ width: `${score}%` }}
-                      />
-                    </div>
-                    <span className={`text-lg font-extrabold tabular-nums ${scoreTextColor(score)}`}>
-                      {score}
-                      <span className="text-xs font-normal text-muted-foreground">/100</span>
-                    </span>
-                  </div>
+              <div className="px-4 pb-5 space-y-3">
+                <div className="bg-white/60 rounded-xl p-3.5 flex flex-col items-center" data-testid="lead-score">
+                  <ScoreArc score={score} status={status} />
                 </div>
 
                 {/* Pipeline stage */}
@@ -559,10 +619,10 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             )}
 
             {/* ── Activity ── */}
-            <div className="border-t border-border/15" />
+            <div className="border-t border-border/20 mt-1" />
             <SectionHeader id="activity" label="Activity" icon={ClipboardList} collapsed={collapsedSections.has("activity")} onToggle={toggleSection} />
             {!collapsedSections.has("activity") && (
-              <div className="px-4 pb-3">
+              <div className="px-4 pb-5">
                 <div className="bg-white/60 rounded-xl p-3.5 flex flex-col gap-2">
                   {[
                     { label: "Messages sent",      value: String(selected.lead.message_count_sent ?? selected.lead.messageCountSent ?? "\u2014") },
@@ -580,7 +640,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             )}
 
             {/* ── Notes ── */}
-            <div className="border-t border-border/15" />
+            <div className="border-t border-border/20 mt-1" />
             <SectionHeader
               id="notes"
               label="Notes"
@@ -595,7 +655,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
               }
             />
             {!collapsedSections.has("notes") && (
-              <div className="px-4 pb-3">
+              <div className="px-4 pb-5">
                 <div className="bg-white/60 rounded-xl p-3.5">
                   {onUpdateLead ? (
                     <textarea
@@ -617,6 +677,65 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                   )}
                 </div>
               </div>
+            )}
+
+            {/* ── Recent Messages (optional — used on Calendar page) ── */}
+            {recentMessages !== undefined && (
+              <>
+                <div className="border-t border-border/20 mt-1" />
+                <SectionHeader id="messages" label="Recent Messages" icon={MessageSquare} collapsed={collapsedSections.has("messages")} onToggle={toggleSection} />
+                {!collapsedSections.has("messages") && (
+                  <div className="px-4 pb-5">
+                    <div className="bg-white/60 rounded-xl overflow-hidden">
+                      <div className="h-[300px] overflow-y-auto p-3 space-y-2">
+                        {recentMessagesLoading ? (
+                          <div className="space-y-2">
+                            {[1, 2, 3].map((i) => <div key={i} className="h-10 rounded-lg bg-muted animate-pulse" />)}
+                          </div>
+                        ) : recentMessages.length === 0 ? (
+                          <div className="flex items-center justify-center h-full text-[11px] text-muted-foreground/60 italic">
+                            No messages yet
+                          </div>
+                        ) : (
+                          recentMessages.map((msg) => {
+                            const outbound = msg.direction === "Outbound";
+                            const content = msg.content ?? msg.Content ?? "";
+                            const ts = msg.created_at ?? msg.createdAt;
+                            return (
+                              <div key={msg.id} className={cn("flex flex-col", outbound ? "items-end" : "items-start")}>
+                                <div className={cn(
+                                  "max-w-[85%] rounded-2xl px-3 py-2 text-[11px] leading-relaxed",
+                                  outbound
+                                    ? "bg-brand-indigo text-white"
+                                    : "bg-white text-foreground border border-border/30"
+                                )}>
+                                  <div className="whitespace-pre-wrap">{content}</div>
+                                  {ts && (
+                                    <div className={cn("mt-1 text-[9px]", outbound ? "text-white/60" : "text-muted-foreground/60")}>
+                                      {new Date(ts).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                      {onViewConversation && (
+                        <div className="border-t border-border/20 px-3 py-2.5">
+                          <button
+                            onClick={onViewConversation}
+                            className="w-full h-9 rounded-full bg-brand-indigo text-white text-[11px] font-semibold hover:opacity-90 flex items-center justify-center gap-1.5"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            View full conversation
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

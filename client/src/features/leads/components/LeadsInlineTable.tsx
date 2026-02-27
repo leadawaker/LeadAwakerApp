@@ -19,7 +19,9 @@ import {
 import { updateLead, bulkUpdateLeads } from "../api/leadsApi";
 import { resolveColor } from "@/features/tags/types";
 import type { VirtualListItem } from "./LeadsCardView";
-import { getStatusAvatarColor, PIPELINE_HEX, ListScoreRing } from "./LeadsCardView";
+import { PIPELINE_HEX, ListScoreRing } from "./LeadsCardView";
+import { getLeadStatusAvatarColor, getInitials } from "@/lib/avatarUtils";
+import { EntityAvatar } from "@/components/ui/entity-avatar";
 
 // ── Column definitions ─────────────────────────────────────────────────────────
 type ColKey =
@@ -85,9 +87,7 @@ function getLeadId(lead: Record<string, any>): number {
 function getFullName(lead: Record<string, any>): string {
   return lead.full_name || [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "Unknown";
 }
-function getInitials(name: string): string {
-  return name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "?";
-}
+// getInitials moved to @/lib/avatarUtils
 function getScore(lead: Record<string, any>): number {
   return Number(lead.lead_score ?? lead.leadScore ?? lead.Lead_Score ?? 0);
 }
@@ -120,7 +120,7 @@ function TableSkeleton() {
       {Array.from({ length: 12 }).map((_, i) => (
         <div
           key={i}
-          className="h-[52px] bg-[#F1F1F1]/70 rounded-xl animate-pulse"
+          className="h-[52px] bg-card/70 rounded-xl animate-pulse"
           style={{ animationDelay: `${i * 35}ms` }}
         />
       ))}
@@ -524,7 +524,7 @@ export function LeadsInlineTable({
         <TableSkeleton />
       ) : (
         <div className="flex-1 min-h-0 overflow-auto">
-          <table className="w-full" style={{ borderCollapse: "collapse", minWidth: 600 }}>
+          <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: "0 3px", minWidth: 600 }}>
 
             {/* Sticky header with select-all checkbox */}
             <thead className="sticky top-0 z-20">
@@ -632,14 +632,14 @@ export function LeadsInlineTable({
                   const name             = getFullName(lead);
                   const score            = getScore(lead);
                   const leadStatus       = getStatus(lead);
-                  const avatarColor      = getStatusAvatarColor(leadStatus);
+                  const avatarColor      = getLeadStatusAvatarColor(leadStatus);
 
                   return (
                     <tr
                       key={leadId}
                       className={cn(
-                        "group/row cursor-pointer h-[52px] border-b border-border/15",
-                        isHighlighted ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] hover:bg-[#F8F8F8]",
+                        "group/row cursor-pointer h-[52px]",
+                        isHighlighted ? "bg-highlight-selected" : "bg-card hover:bg-card-hover",
                       )}
                       onClick={(e) => handleRowClick(lead, e)}
                     >
@@ -647,7 +647,7 @@ export function LeadsInlineTable({
                         const isFirst = ci === 0;
                         const tdClass = cn(
                           isFirst && "sticky left-0 z-10",
-                          isFirst && (isHighlighted ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] group-hover/row:bg-[#F8F8F8]"),
+                          isFirst && (isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover"),
                         );
 
                         // ── Name ──
@@ -679,12 +679,11 @@ export function LeadsInlineTable({
                                 >
                                   {isMultiSelected && <Check className="h-2.5 w-2.5 text-white" />}
                                 </div>
-                                <div
-                                  className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0"
-                                  style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
-                                >
-                                  {getInitials(name)}
-                                </div>
+                                <EntityAvatar
+                                  name={name}
+                                  bgColor={avatarColor.bg}
+                                  textColor={avatarColor.text}
+                                />
                                 <span className="text-[12px] font-medium truncate text-foreground">{name}</span>
                               </div>
                             </td>

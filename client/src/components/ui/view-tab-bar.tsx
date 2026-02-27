@@ -25,33 +25,40 @@ export function ViewTabBar({ tabs, activeId, onTabChange, className, activeClass
         const Icon = tab.icon;
         const isActive = activeId === tab.id;
 
-        if (isActive) {
-          return (
-            <button
-              key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className={cn(
-                "inline-flex items-center gap-1.5 h-10 px-3 rounded-full text-[12px] font-semibold shrink-0",
-                activeClassName ?? "bg-[#FFE35B] text-foreground"
-              )}
-            >
-              {Icon && <Icon className="h-4 w-4" />}
-              {tab.label}
-              {tab.badge}
-            </button>
-          );
-        }
-
-        // Inactive with icon: collapse to circle unless showLabels is set
+        // Icon-based tabs: 36px circle, expand to pill on hover
         if (Icon && !showLabels) {
           return (
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               title={tab.label}
-              className="icon-circle-lg icon-circle-base"
+              className={cn(
+                "group h-[38px] w-[38px] hover:w-auto hover:px-3 rounded-full border border-border/60 bg-transparent hover:bg-white inline-flex items-center justify-center gap-1.5 text-[12px] font-medium shrink-0 transition-[width,padding,background-color,color] duration-150",
+                isActive
+                  ? (activeClassName ?? "text-foreground")
+                  : "text-muted-foreground hover:text-foreground"
+              )}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className={cn("h-4 w-4 shrink-0", isActive && "stroke-[2.5]")} />
+              <span className="hidden group-hover:inline whitespace-nowrap">{tab.label}</span>
+            </button>
+          );
+        }
+
+        // Active pill (no icon or showLabels)
+        if (isActive) {
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={cn(
+                "inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-[12px] font-semibold shrink-0",
+                activeClassName ?? "bg-highlight-active text-foreground"
+              )}
+            >
+              {Icon && <Icon className="h-4 w-4 stroke-[2.5]" />}
+              {tab.label}
+              {tab.badge}
             </button>
           );
         }
@@ -61,7 +68,7 @@ export function ViewTabBar({ tabs, activeId, onTabChange, className, activeClass
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className="inline-flex items-center gap-1.5 h-10 px-3 rounded-full icon-circle-base text-muted-foreground hover:text-foreground text-[12px] font-semibold shrink-0"
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full icon-circle-base text-muted-foreground hover:text-foreground text-[12px] font-semibold shrink-0"
           >
             {Icon && showLabels && <Icon className="h-4 w-4" />}
             {tab.label}

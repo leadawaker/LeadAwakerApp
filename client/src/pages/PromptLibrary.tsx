@@ -3,9 +3,9 @@ import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { apiFetch } from "@/lib/apiUtils";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
-import { SkeletonCardGrid } from "@/components/ui/skeleton";
-import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { Button } from "@/components/ui/button";
+import { IconBtn } from "@/components/ui/icon-btn";
+import { SearchPill } from "@/components/ui/search-pill";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
@@ -15,20 +15,36 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, AlertTriangle, Star, ToggleLeft, ToggleRight } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  AlertTriangle,
+  Star,
+  ToggleLeft,
+  ToggleRight,
+  BookOpen,
+  Bot,
+  Clock,
+  FileText,
+  Thermometer,
+  Hash,
+  Settings,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTopbarActions } from "@/contexts/TopbarActionsContext";
+import { cn } from "@/lib/utils";
 
 /** Returns Tailwind classes for the status badge based on status value */
 function getStatusBadgeClasses(status: string | null | undefined): string {
   const normalized = (status || "").toLowerCase().trim();
   if (normalized === "active") {
-    return "bg-green-100 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800/50";
+    return "bg-emerald-500/15 text-emerald-600";
   }
   if (normalized === "archived") {
-    return "bg-gray-100 text-gray-500 border border-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:border-gray-700/50";
+    return "bg-zinc-500/15 text-zinc-500";
   }
-  // Unknown / null status — show as gray
-  return "bg-gray-100 text-gray-400 border border-gray-200 dark:bg-gray-800/30 dark:text-gray-500 dark:border-gray-700/30";
+  return "bg-zinc-500/15 text-zinc-400";
 }
 
 function getStatusLabel(status: string | null | undefined): string {
@@ -40,9 +56,9 @@ function getStatusLabel(status: string | null | undefined): string {
 function getScoreColorClasses(score: string | null | undefined): string {
   const num = parseFloat(score || "");
   if (isNaN(num)) return "text-muted-foreground";
-  if (num >= 8) return "text-emerald-600 dark:text-emerald-400";
-  if (num >= 6) return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
+  if (num >= 8) return "text-emerald-600";
+  if (num >= 6) return "text-amber-600";
+  return "text-red-600";
 }
 
 // ─── Prompt Form Dialog ──────────────────────────────────────────────────
@@ -127,7 +143,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
     if (!form.name.trim()) newErrors.name = "Name is required";
     if (!form.promptText.trim()) newErrors.promptText = "Prompt text is required";
     const temp = parseFloat(form.temperature);
-    if (isNaN(temp) || temp < 0 || temp > 2) newErrors.temperature = "Must be 0–2";
+    if (isNaN(temp) || temp < 0 || temp > 2) newErrors.temperature = "Must be 0\u20132";
     const tokens = parseInt(form.maxTokens, 10);
     if (isNaN(tokens) || tokens < 1) newErrors.maxTokens = "Must be a positive integer";
     setErrors(newErrors);
@@ -245,7 +261,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
             <textarea
               id="prompt-text"
               className={`w-full min-h-[120px] rounded-lg border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30 resize-y ${errors.promptText ? "border-red-400" : "border-border"}`}
-              placeholder="Enter the main prompt text…"
+              placeholder="Enter the main prompt text\u2026"
               value={form.promptText}
               onChange={(e) => setField("promptText", e.target.value)}
               data-testid="textarea-prompt-text"
@@ -261,7 +277,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
             <textarea
               id="prompt-system-message"
               className="w-full min-h-[80px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30 resize-y"
-              placeholder="System instructions for the AI model (optional)…"
+              placeholder="System instructions for the AI model (optional)\u2026"
               value={form.systemMessage}
               onChange={(e) => setField("systemMessage", e.target.value)}
               data-testid="textarea-system-message"
@@ -276,7 +292,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
             <textarea
               id="prompt-notes"
               className="w-full min-h-[80px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30 resize-y"
-              placeholder="Additional notes or context about this prompt (optional)…"
+              placeholder="Additional notes or context about this prompt (optional)\u2026"
               value={form.notes}
               onChange={(e) => setField("notes", e.target.value)}
               data-testid="textarea-prompt-notes"
@@ -330,7 +346,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
             {/* Temperature */}
             <div className="space-y-1">
               <label className="text-sm font-medium text-foreground" htmlFor="prompt-temperature">
-                Temperature <span className="text-muted-foreground text-xs">(0–2)</span>
+                Temperature <span className="text-muted-foreground text-xs">(0\u20132)</span>
               </label>
               <input
                 id="prompt-temperature"
@@ -379,7 +395,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
             disabled={saving}
             data-testid="button-save-prompt"
           >
-            {saving ? (isEdit ? "Saving…" : "Creating…") : (isEdit ? "Save Changes" : "Create Prompt")}
+            {saving ? (isEdit ? "Saving\u2026" : "Creating\u2026") : (isEdit ? "Save Changes" : "Create Prompt")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -428,7 +444,7 @@ function DeletePromptDialog({ open, onClose, prompt, onDeleted }: DeletePromptDi
     <Dialog open={open} onOpenChange={(v) => { if (!v && !deleting) onClose(); }}>
       <DialogContent className="max-w-md" data-testid="dialog-delete-prompt">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
+          <DialogTitle className="flex items-center gap-2 text-red-600">
             <AlertTriangle className="h-5 w-5" />
             Delete Prompt
           </DialogTitle>
@@ -453,11 +469,354 @@ function DeletePromptDialog({ open, onClose, prompt, onDeleted }: DeletePromptDi
             disabled={deleting}
             data-testid="button-confirm-delete-prompt"
           >
-            {deleting ? "Deleting…" : "Delete Prompt"}
+            {deleting ? "Deleting\u2026" : "Delete Prompt"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// ─── Settings Dropdown ───────────────────────────────────────────────────
+
+function SettingsDropdown({
+  statusFilter,
+  onStatusFilterChange,
+  modelFilter,
+  onModelFilterChange,
+  availableModels,
+}: {
+  statusFilter: string;
+  onStatusFilterChange: (v: string) => void;
+  modelFilter: string;
+  onModelFilterChange: (v: string) => void;
+  availableModels: string[];
+}) {
+  const [open, setOpen] = useState(false);
+  const isActive = statusFilter !== "all" || modelFilter !== "all";
+  const filterCount = (statusFilter !== "all" ? 1 : 0) + (modelFilter !== "all" ? 1 : 0);
+
+  return (
+    <div className="relative">
+      <IconBtn
+        onClick={() => setOpen((o) => !o)}
+        active={isActive}
+        title="Filter settings"
+      >
+        <Settings className="h-4 w-4" />
+      </IconBtn>
+      {isActive && (
+        <span className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-brand-indigo text-[8px] font-bold text-white flex items-center justify-center pointer-events-none">
+          {filterCount}
+        </span>
+      )}
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full mt-1.5 z-50 w-[220px] bg-white rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] ring-1 ring-black/[0.06] border border-border/30 overflow-hidden">
+            <div className="p-2.5 space-y-3">
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</span>
+                <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+                  <SelectTrigger className="w-full h-8 rounded-lg bg-card text-[12px]">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Model</span>
+                <Select value={modelFilter} onValueChange={onModelFilterChange}>
+                  <SelectTrigger className="w-full h-8 rounded-lg bg-card text-[12px]">
+                    <SelectValue placeholder="All Models" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Models</SelectItem>
+                    {availableModels.map((m) => (
+                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {isActive && (
+                <button
+                  onClick={() => {
+                    onStatusFilterChange("all");
+                    onModelFilterChange("all");
+                  }}
+                  className="w-full text-center text-[11px] text-primary font-medium hover:underline"
+                >
+                  Clear all filters
+                </button>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ─── Prompt Card for left panel ──────────────────────────────────────────
+
+function PromptCard({
+  prompt,
+  selected,
+  onClick,
+}: {
+  prompt: any;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  const statusNorm = ((prompt.status || "") as string).toLowerCase().trim();
+
+  return (
+    <div
+      onClick={onClick}
+      className={cn(
+        "rounded-xl px-3 py-2.5 cursor-pointer transition-colors",
+        selected
+          ? "bg-highlight-selected"
+          : "bg-card hover:bg-card-hover"
+      )}
+      data-testid={`card-prompt-${prompt.id || prompt.Id}`}
+    >
+      {/* Row 1: name + status */}
+      <div className="flex items-start justify-between gap-2">
+        <span className="text-[13px] font-semibold text-foreground leading-snug truncate flex-1">
+          {prompt.name || "Untitled"}
+        </span>
+        <span className={cn(
+          "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold shrink-0",
+          getStatusBadgeClasses(prompt.status)
+        )}>
+          <span className={cn(
+            "w-1.5 h-1.5 rounded-full",
+            statusNorm === "active" ? "bg-emerald-500" : "bg-zinc-400"
+          )} />
+          {getStatusLabel(prompt.status)}
+        </span>
+      </div>
+
+      {/* Row 2: model + use case */}
+      <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
+        {prompt.model && (
+          <span className="font-mono truncate">{prompt.model}</span>
+        )}
+        {prompt.model && (prompt.useCase || prompt.use_case) && (
+          <span className="text-border">&middot;</span>
+        )}
+        {(prompt.useCase || prompt.use_case) && (
+          <span className="truncate">{prompt.useCase || prompt.use_case}</span>
+        )}
+      </div>
+
+      {/* Row 3: score */}
+      {prompt.performanceScore != null && (
+        <div className="mt-1 flex items-center gap-1">
+          <Star className={cn("h-3 w-3 fill-current", getScoreColorClasses(prompt.performanceScore))} />
+          <span className={cn("text-[11px] font-medium tabular-nums", getScoreColorClasses(prompt.performanceScore))}>
+            {prompt.performanceScore}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Right Panel Detail View ─────────────────────────────────────────────
+
+function PromptDetailPanel({
+  prompt,
+  onEdit,
+  onDelete,
+  onToggleStatus,
+  isToggling,
+}: {
+  prompt: any;
+  onEdit: () => void;
+  onDelete: () => void;
+  onToggleStatus: () => void;
+  isToggling: boolean;
+}) {
+  const statusNorm = ((prompt.status || "") as string).toLowerCase().trim();
+  const promptText = prompt.promptText || prompt.prompt_text || "";
+  const systemMessage = prompt.systemMessage || prompt.system_message || "";
+  const useCase = prompt.useCase || prompt.use_case || "";
+
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Header */}
+      <div className="shrink-0 px-4 py-2.5 border-b border-border/60 flex items-center justify-between">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          Prompt Detail
+        </span>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={onEdit}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-foreground/5 hover:bg-foreground/10 text-foreground border border-border/50 text-xs font-semibold transition-colors"
+            data-testid="button-edit-selected-prompt"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+            Edit
+          </button>
+          <button
+            onClick={onDelete}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-foreground/5 hover:bg-red-50 text-foreground hover:text-red-600 border border-border/50 text-xs font-semibold transition-colors"
+            data-testid="button-delete-selected-prompt"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Delete
+          </button>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+        {/* Name + status */}
+        <div>
+          <h2 className="text-lg font-bold text-foreground leading-tight">
+            {prompt.name || "Untitled"}
+          </h2>
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            <button
+              onClick={onToggleStatus}
+              disabled={isToggling}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold cursor-pointer hover:opacity-80 transition-opacity",
+                getStatusBadgeClasses(prompt.status),
+                isToggling && "opacity-50 cursor-not-allowed"
+              )}
+              title={`Click to ${statusNorm === "active" ? "archive" : "activate"}`}
+            >
+              {isToggling ? (
+                <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+              ) : statusNorm === "active" ? (
+                <ToggleRight className="h-3 w-3" />
+              ) : (
+                <ToggleLeft className="h-3 w-3" />
+              )}
+              {getStatusLabel(prompt.status)}
+            </button>
+            {prompt.version && (
+              <span className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-mono font-medium text-foreground">
+                v{prompt.version}
+              </span>
+            )}
+            {prompt.performanceScore != null && (
+              <span className={cn("inline-flex items-center gap-1 font-medium text-[12px]", getScoreColorClasses(prompt.performanceScore))}>
+                <Star className="h-3.5 w-3.5 fill-current" />
+                {prompt.performanceScore}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Key fields */}
+        <div className="rounded-lg border border-border/40 bg-muted/20 px-2.5 py-2 space-y-1.5 text-[12px]">
+          {prompt.model && (
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Bot className="h-3 w-3" /> Model
+              </span>
+              <span className="font-mono font-medium">{prompt.model}</span>
+            </div>
+          )}
+          {prompt.temperature != null && (
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Thermometer className="h-3 w-3" /> Temperature
+              </span>
+              <span className="font-mono font-medium">{prompt.temperature}</span>
+            </div>
+          )}
+          {prompt.maxTokens != null && (
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Hash className="h-3 w-3" /> Max Tokens
+              </span>
+              <span className="font-mono font-medium">{prompt.maxTokens}</span>
+            </div>
+          )}
+          {useCase && (
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground flex items-center gap-1">
+                <FileText className="h-3 w-3" /> Use Case
+              </span>
+              <span className="font-medium truncate max-w-[200px]">{useCase}</span>
+            </div>
+          )}
+          {(prompt.createdAt || prompt.created_at) && (
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Clock className="h-3 w-3" /> Created
+              </span>
+              <span className="font-mono text-[11px]">
+                {new Date(prompt.createdAt || prompt.created_at).toLocaleDateString()}
+              </span>
+            </div>
+          )}
+          {(prompt.updatedAt || prompt.updated_at) && (
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Clock className="h-3 w-3" /> Updated
+              </span>
+              <span className="font-mono text-[11px]">
+                {new Date(prompt.updatedAt || prompt.updated_at).toLocaleDateString()}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Prompt Text */}
+        {promptText && (
+          <div className="rounded-lg border border-border/40 bg-muted/20 px-2.5 py-2">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
+              Prompt Text
+            </div>
+            <p className="text-[12px] text-foreground/80 leading-relaxed whitespace-pre-wrap">{promptText}</p>
+          </div>
+        )}
+
+        {/* System Message */}
+        {systemMessage && (
+          <div className="rounded-lg border border-border/40 bg-muted/20 px-2.5 py-2">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
+              System Message
+            </div>
+            <p className="text-[12px] text-foreground/80 leading-relaxed whitespace-pre-wrap">{systemMessage}</p>
+          </div>
+        )}
+
+        {/* Notes */}
+        {prompt.notes && (
+          <div className="rounded-lg border border-border/40 bg-muted/20 px-2.5 py-2">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
+              Notes
+            </div>
+            <p className="text-[12px] text-foreground/80 leading-relaxed whitespace-pre-wrap">{prompt.notes}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PromptDetailEmpty() {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-8">
+      <div className="w-14 h-14 rounded-2xl bg-muted/60 flex items-center justify-center">
+        <BookOpen className="w-7 h-7 text-muted-foreground/40" />
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-foreground/70">Select a prompt</p>
+        <p className="text-xs text-muted-foreground mt-1">Click any prompt on the left to view its details</p>
+      </div>
+    </div>
   );
 }
 
@@ -466,12 +825,16 @@ function DeletePromptDialog({ open, onClose, prompt, onDeleted }: DeletePromptDi
 export default function PromptLibraryPage() {
   const { isAgencyView } = useWorkspace();
   const { toast } = useToast();
+  const { clearTopbarActions } = useTopbarActions();
+
   const [q, setQ] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [modelFilter, setModelFilter] = useState<string>("all");
   const [promptLibraryData, setPromptLibraryData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [selectedPromptId, setSelectedPromptId] = useState<number | null>(null);
 
   // Create/Edit dialog
   const [formOpen, setFormOpen] = useState(false);
@@ -483,6 +846,11 @@ export default function PromptLibraryPage() {
 
   // Status toggle loading state (keyed by prompt id)
   const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
+
+  // Clear topbar actions (tabs are inline)
+  useEffect(() => {
+    clearTopbarActions();
+  }, [clearTopbarActions]);
 
   const fetchPrompts = useCallback(async () => {
     setLoading(true);
@@ -532,26 +900,30 @@ export default function PromptLibraryPage() {
     });
   }, [promptLibraryData, q, statusFilter, modelFilter]);
 
+  // Selected prompt object
+  const selectedPrompt = useMemo(() => {
+    if (selectedPromptId == null) return null;
+    return promptLibraryData.find((p) => (p.id || p.Id) === selectedPromptId) ?? null;
+  }, [promptLibraryData, selectedPromptId]);
+
   function openCreate() {
     setEditingPrompt(null);
     setFormOpen(true);
   }
 
-  function openEdit(prompt: any, e: React.MouseEvent) {
-    e.stopPropagation();
+  function openEdit(prompt: any) {
     setEditingPrompt(prompt);
     setFormOpen(true);
   }
 
-  function openDelete(prompt: any, e: React.MouseEvent) {
-    e.stopPropagation();
+  function openDelete(prompt: any) {
     setDeletingPrompt(prompt);
     setDeleteOpen(true);
   }
 
   function handleSaved(saved: any) {
+    const id = saved.id || saved.Id;
     setPromptLibraryData((prev) => {
-      const id = saved.id || saved.Id;
       const idx = prev.findIndex((p) => (p.id || p.Id) === id);
       if (idx >= 0) {
         // Update existing
@@ -562,14 +934,16 @@ export default function PromptLibraryPage() {
       // New prompt
       return [saved, ...prev];
     });
+    // Auto-select the saved prompt
+    setSelectedPromptId(id);
   }
 
   function handleDeleted(id: number) {
     setPromptLibraryData((prev) => prev.filter((p) => (p.id || p.Id) !== id));
+    if (selectedPromptId === id) setSelectedPromptId(null);
   }
 
-  async function handleToggleStatus(prompt: any, e: React.MouseEvent) {
-    e.stopPropagation();
+  async function handleToggleStatus(prompt: any) {
     const id = prompt.id || prompt.Id;
     const currentStatus = (prompt.status || "").toLowerCase().trim();
     const newStatus = currentStatus === "active" ? "archived" : "active";
@@ -623,196 +997,119 @@ export default function PromptLibraryPage() {
 
   return (
     <CrmShell>
-      <div className="py-4 h-full flex flex-col" data-testid="page-prompt-library">
-        {/* Toolbar */}
-        <div className="flex flex-wrap items-center gap-2 mb-6" data-testid="bar-prompts">
-          <input
-            className="h-10 w-[240px] max-w-full rounded-xl border border-border bg-card px-4 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-            placeholder="Search prompts…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            data-testid="input-prompt-search"
-          />
-          {/* Status filter */}
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger
-              className="h-10 w-[160px] rounded-xl bg-card"
-              data-testid="select-prompt-status-filter"
-            >
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="archived">Archived</SelectItem>
-            </SelectContent>
-          </Select>
-          {/* Model filter */}
-          <Select value={modelFilter} onValueChange={setModelFilter}>
-            <SelectTrigger
-              className="h-10 w-[180px] rounded-xl bg-card"
-              data-testid="select-prompt-model-filter"
-            >
-              <SelectValue placeholder="All Models" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Models</SelectItem>
-              {availableModels.map((m) => (
-                <SelectItem key={m} value={m}>{m}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <div className="ml-auto">
-            <Button
-              size="sm"
-              onClick={openCreate}
-              data-testid="button-create-prompt"
-              className="gap-1.5"
-            >
-              <Plus className="h-4 w-4" />
-              Create Prompt
-            </Button>
-          </div>
-        </div>
+      <div className="flex flex-col h-full" data-testid="page-prompt-library">
+        <div className="flex-1 min-h-0 flex gap-0 overflow-hidden">
 
-        {error && promptLibraryData.length === 0 && !loading ? (
-          <ApiErrorFallback
-            error={error}
-            onRetry={fetchPrompts}
-            isRetrying={loading}
-          />
-        ) : loading ? (
-          <SkeletonCardGrid count={6} columns="grid-cols-1 md:grid-cols-2 xl:grid-cols-3" className="flex-1" />
-        ) : (
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-2 content-start" data-testid="grid-prompts">
-            {rows.length === 0 && (
-              <div className="col-span-full">
-                <DataEmptyState variant={q || statusFilter !== "all" || modelFilter !== "all" ? "search" : "prompts"} />
-              </div>
-            )}
-            {rows.map((p: any) => {
-              const promptId = p.id || p.Id;
-              return (
-                <div
-                  key={promptId}
-                  className="group rounded-2xl border border-border bg-card p-4 h-fit shadow-sm hover:shadow-md transition-shadow"
-                  data-testid={`card-prompt-${promptId}`}
-                >
-                  {/* Header row: name + status badge + action buttons */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="font-semibold text-foreground leading-snug" data-testid={`text-prompt-name-${promptId}`}>
-                      {p.name || <span className="text-muted-foreground italic">Untitled</span>}
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      {/* Edit button */}
-                      <button
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted"
-                        onClick={(e) => openEdit(p, e)}
-                        title="Edit prompt"
-                        data-testid={`button-edit-prompt-${promptId}`}
-                      >
-                        <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
-                      </button>
-                      {/* Delete button */}
-                      <button
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
-                        onClick={(e) => openDelete(p, e)}
-                        title="Delete prompt"
-                        data-testid={`button-delete-prompt-${promptId}`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-red-600 dark:hover:text-red-400" />
-                      </button>
-                      {/* Status toggle button */}
-                      <button
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium transition-opacity cursor-pointer hover:opacity-80 ${getStatusBadgeClasses(p.status)} ${togglingIds.has(promptId) ? "opacity-50 cursor-not-allowed" : ""}`}
-                        onClick={(e) => handleToggleStatus(p, e)}
-                        disabled={togglingIds.has(promptId)}
-                        title={`Click to ${(p.status || "").toLowerCase() === "active" ? "archive" : "activate"} this prompt`}
-                        data-testid={`button-toggle-status-${promptId}`}
-                        aria-label={`Toggle prompt status (currently ${getStatusLabel(p.status)})`}
-                      >
-                        {togglingIds.has(promptId) ? (
-                          <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                        ) : (p.status || "").toLowerCase() === "active" ? (
-                          <ToggleRight className="h-3 w-3" />
-                        ) : (
-                          <ToggleLeft className="h-3 w-3" />
-                        )}
-                        {getStatusLabel(p.status)}
-                      </button>
-                    </div>
-                  </div>
+          {/* ── LEFT PANEL ── list of prompts ────────────────────────── */}
+          <div className="w-[340px] shrink-0 flex flex-col bg-muted rounded-lg overflow-hidden">
 
-                  {/* Use case */}
-                  {(p.useCase || p.use_case) && (
-                    <div className="mt-1 text-xs text-muted-foreground" data-testid={`text-prompt-usecase-${promptId}`}>
-                      {p.useCase || p.use_case}
-                    </div>
-                  )}
+            {/* Title row — per section 16 */}
+            <div className="px-3.5 pt-5 pb-1 flex items-center justify-between shrink-0">
+              <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
+                Library
+              </h2>
+              <span className="text-[12px] font-medium text-muted-foreground tabular-nums">
+                {rows.length}
+              </span>
+            </div>
 
-                  {/* Notes */}
-                  {p.notes && (
-                    <div
-                      className="mt-1 text-xs text-muted-foreground/80 italic line-clamp-2"
-                      title={p.notes}
-                      data-testid={`text-prompt-notes-${promptId}`}
+            {/* Controls row */}
+            <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
+              <div className="flex-1" />
+              <IconBtn onClick={openCreate} title="Create prompt">
+                <Plus className="h-4 w-4" />
+              </IconBtn>
+              <SearchPill
+                value={q}
+                onChange={setQ}
+                open={searchOpen}
+                onOpenChange={setSearchOpen}
+                placeholder="Search prompts\u2026"
+              />
+              <SettingsDropdown
+                statusFilter={statusFilter}
+                onStatusFilterChange={setStatusFilter}
+                modelFilter={modelFilter}
+                onModelFilterChange={setModelFilter}
+                availableModels={availableModels}
+              />
+            </div>
+
+            {/* Prompt list */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-[3px] space-y-[3px]">
+              {error && promptLibraryData.length === 0 && !loading ? (
+                <div className="px-2">
+                  <ApiErrorFallback
+                    error={error}
+                    onRetry={fetchPrompts}
+                    isRetrying={loading}
+                  />
+                </div>
+              ) : loading ? (
+                <div className="space-y-[3px]">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="h-16 bg-card rounded-xl animate-pulse" />
+                  ))}
+                </div>
+              ) : rows.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center px-6">
+                  <BookOpen className="h-8 w-8 text-muted-foreground/30 mb-2" />
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {q || statusFilter !== "all" || modelFilter !== "all"
+                      ? "No prompts match your filters"
+                      : "No prompts yet"}
+                  </p>
+                  {!q && statusFilter === "all" && modelFilter === "all" && (
+                    <button
+                      onClick={openCreate}
+                      className="mt-2 text-[12px] text-primary font-medium hover:underline"
                     >
-                      {p.notes}
-                    </div>
-                  )}
-
-                  {/* Version + model + score row */}
-                  <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      {/* Version number */}
-                      {p.version && (
-                        <span
-                          className="inline-flex items-center rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-mono font-medium text-foreground"
-                          data-testid={`text-prompt-version-${promptId}`}
-                        >
-                          v{p.version}
-                        </span>
-                      )}
-                      {/* Model */}
-                      {p.model && (
-                        <span className="font-medium" data-testid={`text-prompt-model-${promptId}`}>
-                          {p.model}
-                        </span>
-                      )}
-                    </div>
-                    {/* Performance score */}
-                    {p.performanceScore != null ? (
-                      <span
-                        className={`inline-flex items-center gap-1 font-medium ${getScoreColorClasses(p.performanceScore)}`}
-                        title="Performance score"
-                        data-testid={`text-prompt-score-${promptId}`}
-                      >
-                        <Star className="h-3 w-3 fill-current" />
-                        {p.performanceScore}
-                      </span>
-                    ) : (
-                      <span
-                        className="inline-flex items-center gap-1 text-muted-foreground/50"
-                        title="No performance score yet"
-                        data-testid={`text-prompt-score-empty-${promptId}`}
-                      >
-                        <Star className="h-3 w-3" />
-                        <span className="text-[10px]">—</span>
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Prompt text preview */}
-                  {(p.promptText || p.prompt_text) && (
-                    <div className="mt-2 text-xs text-muted-foreground line-clamp-2 border-t border-border/50 pt-2" data-testid={`text-prompt-preview-${promptId}`}>
-                      {p.promptText || p.prompt_text}
-                    </div>
+                      Create your first prompt
+                    </button>
                   )}
                 </div>
-              );
-            })}
+              ) : (
+                rows.map((p: any) => {
+                  const pid = p.id || p.Id;
+                  return (
+                    <PromptCard
+                      key={pid}
+                      prompt={p}
+                      selected={selectedPromptId === pid}
+                      onClick={() => setSelectedPromptId(pid)}
+                    />
+                  );
+                })
+              )}
+            </div>
           </div>
-        )}
+
+          {/* ── RIGHT PANEL ── prompt details ────────────────────────── */}
+          <div className="flex-1 min-w-0 flex flex-col rounded-lg ml-1.5 overflow-hidden relative">
+            {/* ── Warm gradient bloom background (matching Invoices/Expenses) ── */}
+            <div className="absolute inset-0 bg-[#F8F3EB]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.9)_0%,transparent_60%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,242,134,0.35)_0%,transparent_50%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(241,218,162,0.2)_0%,transparent_70%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(210,188,130,0.15)_0%,transparent_50%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(105,170,255,0.18)_0%,transparent_55%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_center,rgba(165,205,255,0.12)_0%,transparent_60%)]" />
+            <div className="relative z-10 flex flex-col flex-1 min-h-0">
+              {selectedPrompt ? (
+                <PromptDetailPanel
+                  prompt={selectedPrompt}
+                  onEdit={() => openEdit(selectedPrompt)}
+                  onDelete={() => openDelete(selectedPrompt)}
+                  onToggleStatus={() => handleToggleStatus(selectedPrompt)}
+                  isToggling={togglingIds.has(selectedPromptId!)}
+                />
+              ) : (
+                <PromptDetailEmpty />
+              )}
+            </div>
+          </div>
+
+        </div>
       </div>
 
       {/* Create / Edit Dialog */}
@@ -833,5 +1130,3 @@ export default function PromptLibraryPage() {
     </CrmShell>
   );
 }
-
-

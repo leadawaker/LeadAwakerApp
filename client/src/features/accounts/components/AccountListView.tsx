@@ -30,9 +30,12 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { IconBtn } from "@/components/ui/icon-btn";
+import { ViewTabBar } from "@/components/ui/view-tab-bar";
 import { AccountDetailsDialog, type AccountRow } from "./AccountDetailsDialog";
 import { AccountDetailView, AccountDetailViewEmpty } from "./AccountDetailView";
 import { AccountCreatePanel } from "./AccountCreatePanel";
+import { getInitials, getAccountAvatarColor } from "@/lib/avatarUtils";
+import { EntityAvatar } from "@/components/ui/entity-avatar";
 import type { NewAccountForm } from "./AccountCreateDialog";
 import type { AccountViewMode, AccountGroupBy, AccountSortBy } from "../pages/AccountsPage";
 import { apiFetch } from "@/lib/apiUtils";
@@ -46,25 +49,10 @@ const ACCOUNT_STATUS_HEX: Record<string, string> = {
   Suspended: "#F43F5E",
 };
 
-const ACCOUNT_STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  Active:    { bg: "#D1FAE5", text: "#065F46" },
-  Trial:     { bg: "#FEF3C7", text: "#92400E" },
-  Inactive:  { bg: "#F4F4F5", text: "#52525B" },
-  Suspended: { bg: "#FFE4E6", text: "#9F1239" },
-};
-
-function getAccountAvatarColor(status: string): { bg: string; text: string } {
-  return ACCOUNT_STATUS_COLORS[status] ?? { bg: "#E5E7EB", text: "#374151" };
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function getAccountId(a: AccountRow): number {
   return a.Id ?? a.id ?? 0;
-}
-
-function getAccountInitials(name: string): string {
-  return name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "?";
 }
 
 function formatRelativeTime(dateStr: string | null | undefined): string {
@@ -129,7 +117,7 @@ function AccountListCard({
   campaignNames: string[];
 }) {
   const name = String(account.name || "Unnamed Account");
-  const initials = getAccountInitials(name);
+  const initials = getInitials(name);
   const status = String(account.status || "");
   const avatarColor = getAccountAvatarColor(status);
   const statusHex = ACCOUNT_STATUS_HEX[status] || "#94A3B8";
@@ -140,7 +128,7 @@ function AccountListCard({
   const timezone = String(account.timezone || "");
   const type = String(account.type || "");
 
-  const hasHoverContent = !!(email || phone || campaignNames.length > 0);
+  const hasHoverContent = !!(email || phone || niche || timezone || campaignNames.length > 0);
 
   // Campaign pills: max 3 visible, then "+N more"
   const visibleCampaigns = campaignNames.slice(0, 3);
@@ -149,10 +137,10 @@ function AccountListCard({
   return (
     <div
       className={cn(
-        "group mx-[3px] my-0.5 rounded-xl cursor-pointer",
+        "group rounded-xl cursor-pointer",
         "transition-[background-color,box-shadow] duration-150 ease-out",
         "hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]",
-        isActive ? "bg-[#FFF1C8]" : "bg-white hover:bg-[#FAFAFA]"
+        isActive ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
       )}
       onClick={onClick}
       role="button"
@@ -163,19 +151,15 @@ function AccountListCard({
 
         {/* Top row: Avatar + Name + Type badge */}
         <div className="flex items-start gap-2.5">
-          <div
-            className="h-10 w-10 rounded-full flex items-center justify-center text-[12px] font-bold shrink-0 overflow-hidden"
-            style={account.logo_url ? {} : { backgroundColor: avatarColor.bg, color: avatarColor.text }}
-          >
-            {account.logo_url ? (
-              <img src={account.logo_url} alt={name} className="h-full w-full object-cover" />
-            ) : (
-              initials || <Building2 className="w-3.5 h-3.5" />
-            )}
-          </div>
+          <EntityAvatar
+            name={name}
+            photoUrl={account.logo_url}
+            bgColor={avatarColor.bg}
+            textColor={avatarColor.text}
+          />
           <div className="flex-1 min-w-0 pt-0.5">
             <div className="flex items-start justify-between gap-1.5">
-              <p className="text-[13px] font-semibold font-heading leading-tight truncate text-foreground">
+              <p className="text-[16px] font-semibold font-heading leading-tight truncate text-foreground">
                 {name}
               </p>
               {type && (
@@ -202,25 +186,24 @@ function AccountListCard({
           </div>
         </div>
 
-        {/* Always-visible: niche + timezone */}
-        {(niche || timezone) && (
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {niche && (
-              <span className="text-[10px] text-foreground/40 truncate">{niche}</span>
-            )}
-            {niche && timezone && (
-              <span className="text-[10px] text-foreground/25 shrink-0">&middot;</span>
-            )}
-            {timezone && (
-              <span className="text-[10px] text-foreground/40 truncate">{timezone}</span>
-            )}
-          </div>
-        )}
-
-        {/* Hover-reveal: email + phone + campaign pills */}
+        {/* Hover-reveal: niche + timezone + email + phone + campaign pills */}
         {hasHoverContent && (
-          <div className="overflow-hidden max-h-0 opacity-0 group-hover:max-h-[60px] group-hover:opacity-100 transition-[max-height,opacity] duration-200 ease-out">
+          <div className="overflow-hidden max-h-0 opacity-0 group-hover:max-h-[80px] group-hover:opacity-100 transition-[max-height,opacity] duration-200 ease-out">
             <div className="flex flex-col gap-1.5 pt-1.5 border-t border-black/[0.06]">
+              {/* Niche + timezone */}
+              {(niche || timezone) && (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {niche && (
+                    <span className="text-[10px] text-foreground/40 truncate">{niche}</span>
+                  )}
+                  {niche && timezone && (
+                    <span className="text-[10px] text-foreground/25 shrink-0">&middot;</span>
+                  )}
+                  {timezone && (
+                    <span className="text-[10px] text-foreground/40 truncate">{timezone}</span>
+                  )}
+                </div>
+              )}
               {/* Email + phone row */}
               {(email || phone) && (
                 <div className="flex items-center gap-3 min-w-0">
@@ -269,12 +252,13 @@ function AccountListCard({
 
 function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div className="sticky top-0 z-20 bg-muted px-3 pt-1.5 pb-1.5">
-      <div className="flex items-center gap-0">
-        <div className="flex-1 h-px bg-foreground/15 mx-[8px]" />
-        <span className="text-[10px] font-bold text-foreground/55 uppercase tracking-widest shrink-0">{label}</span>
-        <span className="ml-1 text-[9px] text-muted-foreground/45 font-semibold shrink-0">{count}</span>
-        <div className="flex-1 h-px bg-foreground/15 mx-[8px]" />
+    <div className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
+      <div className="flex items-center gap-[10px]">
+        <div className="flex-1 h-px bg-foreground/15" />
+        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
+        <span className="text-foreground/20 shrink-0">–</span>
+        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
+        <div className="flex-1 h-px bg-foreground/15" />
       </div>
     </div>
   );
@@ -364,7 +348,7 @@ export function AccountListView({
 }: AccountListViewProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const [panelMode, setPanelMode] = useState<"view" | "create">("view");
-  const [editDialogAccount, setEditDialogAccount] = useState<AccountRow | null>(null);
+  const [_editDialogAccount, _setEditDialogAccount] = useState<AccountRow | null>(null);
   const PAGE_SIZE = 25;
 
   // Campaign names per account — fetched once, used for card hover pills
@@ -510,33 +494,12 @@ export function AccountListView({
         </div>
 
         {/* Controls row: tabs (left) + search & settings (right) */}
-        <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center justify-between gap-2">
-          {/* Tab buttons */}
-          <div className="flex items-center gap-1.5">
-            {VIEW_TABS.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = viewMode === tab.id;
-              return isActive ? (
-                <button
-                  key={tab.id}
-                  onClick={() => onViewModeChange(tab.id)}
-                  className="inline-flex items-center gap-1.5 h-10 px-3 rounded-full bg-[#FFE35B] text-foreground text-[12px] font-semibold shrink-0"
-                >
-                  <Icon className="h-4 w-4" />
-                  {tab.label}
-                </button>
-              ) : (
-                <button
-                  key={tab.id}
-                  onClick={() => onViewModeChange(tab.id)}
-                  title={tab.label}
-                  className="h-10 w-10 rounded-full border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors shrink-0"
-                >
-                  <Icon className="h-4 w-4" />
-                </button>
-              );
-            })}
-          </div>
+        <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
+          <ViewTabBar
+            tabs={VIEW_TABS}
+            activeId={viewMode}
+            onTabChange={(id) => onViewModeChange(id as AccountViewMode)}
+          />
 
           {/* Right controls: + / search / settings */}
           <div className="flex items-center gap-1.5 shrink-0">
@@ -668,7 +631,7 @@ export function AccountListView({
         </div>
 
         {/* Account list */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-[3px]">
           {loading ? (
             <ListSkeleton />
           ) : paginatedItems.length === 0 ? (
@@ -678,7 +641,7 @@ export function AccountListView({
               {listSearch && <p className="text-xs text-muted-foreground/70 mt-1">Try a different search</p>}
             </div>
           ) : (
-            <div>
+            <div className="flex flex-col gap-[3px]">
               {paginatedItems.map((item, idx) => {
                 if (item.kind === "header") {
                   return (
@@ -690,7 +653,7 @@ export function AccountListView({
                 const aid = getAccountId(item.account);
                 const isSelected = selectedAccount ? getAccountId(selectedAccount) === aid : false;
                 return (
-                  <div key={aid || idx}>
+                  <div key={aid || idx} className="animate-card-enter" style={{ animationDelay: `${Math.min(idx, 15) * 30}ms` }}>
                     <AccountListCard
                       account={item.account}
                       isActive={isSelected}
@@ -738,25 +701,13 @@ export function AccountListView({
         ) : selectedAccount ? (
           <AccountDetailView
             account={selectedAccount}
-            onEdit={(acc) => setEditDialogAccount(acc)}
+            onSave={onSave}
+            onAddAccount={onAddAccount}
+            onDelete={onDelete}
             onToggleStatus={onToggleStatus}
           />
         ) : (
           <AccountDetailViewEmpty />
-        )}
-        {/* Edit dialog — opened when Edit button is clicked in AccountDetailView */}
-        {editDialogAccount && (
-          <AccountDetailsDialog
-            open={true}
-            account={editDialogAccount}
-            onClose={() => setEditDialogAccount(null)}
-            onSave={async (accountId, patch) => {
-              for (const [field, value] of Object.entries(patch)) {
-                if (value !== undefined) await onSave(field, String(value));
-              }
-              setEditDialogAccount(null);
-            }}
-          />
         )}
       </div>
     </div>

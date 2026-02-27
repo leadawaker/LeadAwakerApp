@@ -483,7 +483,7 @@ export default function TagsPage() {
             <div className="px-3.5 pt-5 pb-1 shrink-0">
               <div className="h-7 w-16 bg-card/70 rounded animate-pulse" />
             </div>
-            <div className="px-3 pt-1.5 pb-2 shrink-0 flex items-center gap-2">
+            <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="h-7 w-16 bg-card/70 rounded-full animate-pulse" />
               ))}
@@ -518,7 +518,7 @@ export default function TagsPage() {
           </div>
 
           {/* ── Toolbar row ────────────────────────────────────────────────── */}
-          <div className="px-3 pt-1.5 pb-2 shrink-0 flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
+          <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
             <ViewTabBar
               tabs={VIEW_TABS}
               activeId={viewMode}

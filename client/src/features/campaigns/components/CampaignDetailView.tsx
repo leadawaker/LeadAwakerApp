@@ -1,15 +1,10 @@
-import { useMemo, useState, useCallback, useEffect, Fragment } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import {
   Clock,
-  MessageSquare,
-  Bot,
-  DollarSign,
   Zap,
   CheckCircle2,
   XCircle,
   ChevronRight,
-  BarChart2,
-  Settings,
   Pencil,
   PauseCircle,
   PlayCircle,
@@ -17,14 +12,10 @@ import {
   Check,
   Trash2,
   RefreshCw,
-  BarChart3,
   Megaphone,
-  Target,
   X,
-  TrendingUp,
   FileText,
   ArrowRight,
-  ChevronDown,
 } from "lucide-react";
 import {
   LineChart,
@@ -45,6 +36,9 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { apiFetch } from "@/lib/apiUtils";
 import { DateRangeFilter, getDefaultDateRange, isWithinDateRange, type DateRangeValue } from "@/components/crm/DateRangeFilter";
 import { useLeads } from "@/hooks/useApiData";
+import { AgendaWidget } from "@/components/crm/AgendaWidget";
+import { ActivityFeed } from "@/components/crm/ActivityFeed";
+import { PIPELINE_HEX } from "@/lib/avatarUtils";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -369,12 +363,15 @@ function ContractSelect({
 // ── Funnel Widget (6 real pipeline stages) ───────────────────────────────────
 
 const FUNNEL_STAGES = [
-  { key: "new",       label: "New",                dbValue: "New",                color: "#6B7280" },
-  { key: "contacted", label: "Contacted",          dbValue: "Contacted",          color: "#4F46E5" },
-  { key: "responded", label: "Responded",          dbValue: "Responded",          color: "#14B8A6" },
-  { key: "multi",     label: "Multiple Responses", dbValue: "Multiple Responses", color: "#22C55E" },
-  { key: "qualified", label: "Qualified",          dbValue: "Qualified",          color: "#84CC16" },
-  { key: "booked",    label: "Call Booked",        dbValue: "Booked",             color: "#FCB803" },
+  { key: "new",       label: "New",                dbValue: "New" },
+  { key: "contacted", label: "Contacted",          dbValue: "Contacted" },
+  { key: "responded", label: "Responded",          dbValue: "Responded" },
+  { key: "multi",     label: "Multiple Responses", dbValue: "Multiple Responses" },
+  { key: "qualified", label: "Qualified",          dbValue: "Qualified" },
+  { key: "booked",    label: "Call Booked",        dbValue: "Booked" },
+  { key: "closed",    label: "Closed",             dbValue: "Closed" },
+  { key: "lost",      label: "Lost",               dbValue: "Lost" },
+  { key: "dnd",       label: "DND",                dbValue: "DND" },
 ] as const;
 
 function CampaignFunnelWidget({ campaignId }: { campaignId: number }) {
@@ -383,97 +380,61 @@ function CampaignFunnelWidget({ campaignId }: { campaignId: number }) {
   const stages = useMemo(() => {
     return FUNNEL_STAGES.map((s) => ({
       ...s,
+      color: PIPELINE_HEX[s.dbValue] || "#6B7280",
       count: leads.filter((l: any) => l.conversion_status === s.dbValue).length,
     }));
   }, [leads]);
 
   const maxCount = Math.max(...stages.map((s) => s.count), 1);
   const allZero = stages.every((s) => s.count === 0);
+  const total = stages.reduce((s, st) => s + st.count, 0);
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center gap-2 w-full py-1">
-        {FUNNEL_STAGES.map((s, i) => (
-          <div
-            key={s.key}
-            className="h-9 rounded-full bg-foreground/[0.06] animate-pulse"
-            style={{ width: `${100 - i * 13}%` }}
-          />
+      <div className="flex flex-col gap-1.5 w-full py-1">
+        {FUNNEL_STAGES.slice(0, 6).map((s) => (
+          <div key={s.key} className="h-7 rounded-r-full bg-foreground/[0.06] animate-pulse w-3/4" />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center w-full gap-0">
-      {stages.map((stage, i) => {
-        const widthPct = allZero ? 100 - i * 13 : Math.max((stage.count / maxCount) * 100, 20);
-        const isNarrow = widthPct < 35;
+    <div className="flex flex-col w-full gap-1">
+      {stages.map((stage) => {
+        const widthPct = allZero ? 30 : Math.max((stage.count / maxCount) * 100, 12);
         const isYellow = stage.key === "booked";
         const textColor = isYellow ? "#131B49" : "#fff";
-
-        const convNext =
-          i < stages.length - 1 && stage.count > 0
-            ? ((stages[i + 1].count / stage.count) * 100).toFixed(1)
-            : null;
+        const pct = total > 0 ? ((stage.count / total) * 100).toFixed(0) : "0";
 
         return (
-          <Fragment key={stage.key}>
-            {/* Stage bar */}
-            <div className="w-full flex flex-col items-center">
-              {isNarrow && !allZero && (
-                <div className="flex items-center justify-between w-full px-1 mb-0.5">
-                  <span className="text-[12px] font-medium text-foreground/60">{stage.label}</span>
-                  <span className="text-[12px] font-semibold text-foreground tabular-nums">
-                    {stage.count.toLocaleString()}
-                  </span>
-                </div>
+          <div key={stage.key} className="flex items-center gap-2">
+            <div
+              className={cn(
+                "h-7 rounded-r-full flex items-center px-2.5 shrink-0",
+                allZero && "border border-dashed border-foreground/15",
               )}
-              <div
-                className={cn(
-                  "h-9 rounded-full flex items-center justify-between px-3.5",
-                  "transition-[width] duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)]",
-                  allZero && "border border-dashed border-foreground/15",
-                )}
-                style={{
-                  width: `${widthPct}%`,
-                  backgroundColor: allZero ? "transparent" : stage.color,
-                  opacity: stage.count === 0 && !allZero ? 0.35 : 1,
-                }}
+              style={{
+                width: `${widthPct}%`,
+                minWidth: "40px",
+                backgroundColor: allZero ? "transparent" : stage.color,
+                opacity: stage.count === 0 && !allZero ? 0.35 : 1,
+              }}
+            >
+              <span
+                className="text-[11px] font-semibold tabular-nums shrink-0"
+                style={{ color: allZero ? "var(--foreground)" : textColor, opacity: allZero ? 0.35 : 1 }}
               >
-                {!isNarrow && (
-                  <>
-                    <span
-                      className="text-[13px] font-medium truncate"
-                      style={{ color: allZero ? "var(--foreground)" : textColor, opacity: allZero ? 0.35 : 1 }}
-                    >
-                      {stage.label}
-                    </span>
-                    <span
-                      className="text-[13px] font-semibold tabular-nums ml-2 shrink-0"
-                      style={{ color: allZero ? "var(--foreground)" : textColor, opacity: allZero ? 0.35 : 1 }}
-                    >
-                      {allZero ? "0" : stage.count.toLocaleString()}
-                    </span>
-                  </>
-                )}
-              </div>
+                {allZero ? "0" : stage.count.toLocaleString()}
+              </span>
             </div>
-
-            {/* Conversion arrow between stages */}
-            {i < stages.length - 1 && (
-              <div className="flex items-center justify-center gap-1 py-[3px]">
-                <ChevronDown className="h-3 w-3 text-foreground/20" />
-                {convNext !== null ? (
-                  <span className="text-[11px] tabular-nums font-medium text-foreground/40">
-                    {convNext}%
-                  </span>
-                ) : (
-                  <span className="text-[11px] text-foreground/20">—</span>
-                )}
-              </div>
-            )}
-          </Fragment>
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <span className="text-[11px] font-medium text-foreground/60 truncate">{stage.label}</span>
+              {!allZero && stage.count > 0 && (
+                <span className="text-[10px] tabular-nums text-foreground/35 shrink-0">{pct}%</span>
+              )}
+            </div>
+          </div>
         );
       })}
     </div>
@@ -482,23 +443,29 @@ function CampaignFunnelWidget({ campaignId }: { campaignId: number }) {
 
 // ── Conversion Pie Chart ──────────────────────────────────────────────────────
 
-function ConversionPieChart({ agg }: { agg: ReturnType<typeof getCampaignMetrics> }) {
-  const leads     = agg.totalLeadsTargeted;
-  const contacted = agg.totalMessagesSent;
-  const responded = leads > 0 ? Math.round(leads * (agg.responseRate ?? 0) / 100) : 0;
-  const booked    = leads > 0 ? Math.round(leads * (agg.bookingRate  ?? 0) / 100) : 0;
-  const respondedNotBooked = Math.max(0, responded - booked);
-  const contactedNotResponded = Math.max(0, contacted - responded);
-  const notContacted = Math.max(0, leads - contacted);
+function ConversionDoughnutWidget({ campaignId }: { campaignId: number }) {
+  const { leads, loading } = useLeads(undefined, campaignId);
 
-  const data = [
-    { name: "Call Booked",    value: booked,                  color: "#F59E0B" },
-    { name: "Responded",      value: respondedNotBooked,      color: "#818CF8" },
-    { name: "No Response",    value: contactedNotResponded,   color: "#4F46E5" },
-    { name: "Not Contacted",  value: notContacted,            color: "#CBD5E1" },
-  ].filter(d => d.value > 0);
+  const data = useMemo(() => {
+    return FUNNEL_STAGES.map((s) => ({
+      name: s.label,
+      value: leads.filter((l: any) => l.conversion_status === s.dbValue).length,
+      color: PIPELINE_HEX[s.dbValue] || "#6B7280",
+    }));
+  }, [leads]);
 
-  if (leads === 0 || data.length === 0) {
+  const total = data.reduce((s, d) => s + d.value, 0);
+  const hasData = data.some((d) => d.value > 0);
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-5 h-5 rounded-full border-2 border-brand-indigo/30 border-t-brand-indigo animate-spin" />
+      </div>
+    );
+  }
+
+  if (total === 0 || !hasData) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center">
         <p className="text-[11px] text-foreground/40">No conversion data</p>
@@ -506,37 +473,52 @@ function ConversionPieChart({ agg }: { agg: ReturnType<typeof getCampaignMetrics
     );
   }
 
+  const visibleData = data.filter((d) => d.value > 0);
+
   return (
     <div className="flex flex-col gap-3 flex-1 min-h-0">
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0" style={{ minHeight: "140px" }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={data}
+              data={visibleData}
               cx="50%"
               cy="50%"
-              innerRadius="28%"
-              outerRadius="52%"
+              innerRadius="30%"
+              outerRadius="55%"
               dataKey="value"
-              strokeWidth={0}
+              strokeWidth={1}
+              stroke="rgba(255,255,255,0.6)"
             >
-              {data.map((entry, i) => (
+              {visibleData.map((entry, i) => (
                 <Cell key={i} fill={entry.color} />
               ))}
             </Pie>
             <Tooltip
               contentStyle={{ borderRadius: "8px", border: "1px solid rgba(0,0,0,0.08)", fontSize: "11px", padding: "4px 8px" }}
-              formatter={(v: number) => [v.toLocaleString(), ""]}
+              formatter={(v: number, name: string) => [v.toLocaleString(), name]}
             />
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <div className="flex flex-col gap-2 shrink-0">
+      <div className="flex flex-col gap-1.5 shrink-0">
         {data.map((d) => (
           <div key={d.name} className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-            <span className="text-[11px] text-foreground/60 flex-1 truncate">{d.name}</span>
-            <span className="text-[11px] font-semibold tabular-nums text-foreground">{d.value.toLocaleString()}</span>
+            <span
+              className="w-2.5 h-2.5 rounded-full shrink-0"
+              style={{ backgroundColor: d.color, opacity: d.value === 0 ? 0.3 : 1 }}
+            />
+            <span className={cn("text-[11px] flex-1 truncate", d.value === 0 ? "text-foreground/30" : "text-foreground/60")}>
+              {d.name}
+            </span>
+            <span className={cn("text-[11px] font-semibold tabular-nums", d.value === 0 ? "text-foreground/30" : "text-foreground")}>
+              {d.value.toLocaleString()}
+            </span>
+            {total > 0 && d.value > 0 && (
+              <span className="text-[10px] tabular-nums text-foreground/35 w-7 text-right shrink-0">
+                {((d.value / total) * 100).toFixed(0)}%
+              </span>
+            )}
           </div>
         ))}
       </div>
@@ -653,12 +635,12 @@ function FinancialsWidget({
 
       {/* 2-up: Total Spend + Cost / Booking — agency only */}
       {isAgencyUser && (
-        <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-xl bg-white/40 px-3 py-3">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="rounded-xl bg-white/80 px-3 py-3">
             <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Total Spend</div>
             <div className="text-[18px] font-bold tabular-nums text-foreground">{fmtCurrency(totalCost)}</div>
           </div>
-          <div className="rounded-xl bg-white/40 px-3 py-3">
+          <div className="rounded-xl bg-white/80 px-3 py-3">
             <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Cost / Booking</div>
             <div className="text-[18px] font-bold tabular-nums text-foreground">{fmtCurrencyDecimals(costPerBooking)}</div>
           </div>
@@ -666,14 +648,14 @@ function FinancialsWidget({
       )}
 
       {/* 2-up: Value / Booking + Payment Trigger */}
-      <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-xl bg-white/40 px-3 py-3">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="rounded-xl bg-white/80 px-3 py-3">
           <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Value / Booking</div>
           <div className="text-[18px] font-bold tabular-nums text-foreground">
             {valuePB > 0 ? fmtCurrency(valuePB) : "—"}
           </div>
         </div>
-        <div className="rounded-xl bg-white/40 px-3 py-3">
+        <div className="rounded-xl bg-white/80 px-3 py-3">
           <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Payment Trigger</div>
           <div className="text-[13px] font-semibold text-foreground leading-snug">
             {paymentTrigger ? (paymentTriggerLabel[paymentTrigger] ?? paymentTrigger) : "—"}
@@ -683,7 +665,7 @@ function FinancialsWidget({
 
       {/* Projected Revenue — agency only */}
       {isAgencyUser && hasContractOrValue && (
-        <div className="rounded-xl bg-white/40 px-3 py-3">
+        <div className="rounded-xl bg-white/80 px-3 py-3">
           <div className="flex items-center gap-2 mb-0.5">
             <div className="text-[10px] text-foreground/40 uppercase tracking-wider">Projected Revenue</div>
             {paymentTrigger === "sale_closed" && (
@@ -706,7 +688,7 @@ function FinancialsWidget({
       )}
 
       {/* ROI — large display */}
-      <div className="rounded-xl bg-white/40 px-3 py-3">
+      <div className="rounded-xl bg-white/80 px-3 py-3">
         <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Return on Investment</div>
         <div className={cn("text-[28px] font-black tabular-nums leading-none", getRoiColor(roiValue))}>
           {roiValue != null ? `${roiValue >= 0 ? "+" : ""}${roiValue.toFixed(0)}%` : "—"}
@@ -916,23 +898,23 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
         <div className="relative px-4 pt-6 pb-5 space-y-3">
 
           {/* Row 1: CRM action toolbar */}
-          <div className="flex items-center gap-1 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {isEditing ? (
               <>
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium bg-brand-indigo text-white hover:opacity-90 transition-opacity disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full text-[12px] font-medium bg-brand-indigo text-white hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
-                  {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                  {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                   {saving ? "Saving…" : "Save"}
                 </button>
                 <button
                   onClick={cancelEdit}
                   disabled={saving}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors"
+                  className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-4 w-4" />
                   Cancel
                 </button>
               </>
@@ -941,45 +923,45 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
                 {activeTab === "configurations" && (
                   <button
                     onClick={startEdit}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors"
+                    className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors"
                   >
-                    <Pencil className="h-3 w-3" />
+                    <Pencil className="h-4 w-4" />
                     Edit
                   </button>
                 )}
                 {canToggle && (
                   <button
                     onClick={() => onToggleStatus(campaign)}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors"
+                    className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors"
                   >
                     {isActive
-                      ? <><PauseCircle className="h-3 w-3" />Pause</>
-                      : <><PlayCircle className="h-3 w-3" />Activate</>
+                      ? <><PauseCircle className="h-4 w-4" />Pause</>
+                      : <><PlayCircle className="h-4 w-4" />Activate</>
                     }
                   </button>
                 )}
-                <button onClick={onRefresh} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors">
-                  <RefreshCw className="h-3 w-3" />
+                <button onClick={onRefresh} className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors">
+                  <RefreshCw className="h-4 w-4" />
                   Refresh
                 </button>
-                onDelete && (deleteConfirm ? (
-                  <div className="inline-flex items-center gap-1 rounded-lg border border-red-300/50 bg-card px-2.5 py-1.5 text-[12px]">
-                    <span className="text-foreground/60 mr-0.5">Delete?</span>
+                {onDelete && (deleteConfirm ? (
+                  <div className="inline-flex items-center gap-1.5 h-10 rounded-full border border-red-300/50 bg-card px-4 text-[12px]">
+                    <span className="text-foreground/60">Delete?</span>
                     <button
-                      className="px-2 py-0.5 rounded-full bg-red-600 text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
+                      className="h-7 px-3 rounded-full bg-red-600 text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50 transition-opacity"
                       disabled={deleting}
-                      onClick={async () => { setDeleting(true); try { await onDelete(campaign.id || campaign.Id); } finally { setDeleting(false); setDeleteConfirm(false); } }}
+                      onClick={async () => { setDeleting(true); try { await onDelete?.(campaign.id || campaign.Id); } finally { setDeleting(false); setDeleteConfirm(false); } }}
                     >
                       {deleting ? "..." : "Yes"}
                     </button>
-                    <button className="px-2 py-0.5 rounded-full text-muted-foreground text-[11px] hover:text-foreground" onClick={() => setDeleteConfirm(false)}>No</button>
+                    <button className="h-7 px-3 rounded-full text-muted-foreground text-[11px] hover:text-foreground transition-colors" onClick={() => setDeleteConfirm(false)}>No</button>
                   </div>
                 ) : (
-                  <button onClick={() => setDeleteConfirm(true)} className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 hover:text-red-600 transition-colors">
-                    <Trash2 className="h-3 w-3" />
+                  <button onClick={() => setDeleteConfirm(true)} className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 hover:text-red-600 transition-colors">
+                    <Trash2 className="h-4 w-4" />
                     Delete
                   </button>
-                ))
+                ))}
               </>
             )}
           </div>
@@ -1034,32 +1016,19 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
         </div>
       </div>
 
-      {/* Tab row: Summary / Configurations + Date range */}
-      <div className="relative shrink-0 px-4 pt-2 pb-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setActiveTab("summary")}
-            className={cn(
-              "h-10 px-5 rounded-full text-[12px] font-semibold transition-colors",
-              activeTab === "summary"
-                ? "bg-foreground text-background"
-                : "border border-border/50 text-foreground/60 hover:text-foreground hover:border-border"
-            )}
-          >
-            Summary
-          </button>
-          <button
-            onClick={() => setActiveTab("configurations")}
-            className={cn(
-              "h-10 px-5 rounded-full text-[12px] font-semibold transition-colors",
-              activeTab === "configurations"
-                ? "bg-foreground text-background"
-                : "border border-border/50 text-foreground/60 hover:text-foreground hover:border-border"
-            )}
-          >
-            Configurations
-          </button>
-        </div>
+      {/* Tab row: Summary / DateRange / Configurations */}
+      <div className="relative shrink-0 px-4 pt-6 pb-[3px] flex items-center gap-2">
+        <button
+          onClick={() => setActiveTab("summary")}
+          className={cn(
+            "h-10 px-5 rounded-full text-[12px] font-semibold transition-colors",
+            activeTab === "summary"
+              ? "bg-foreground text-background"
+              : "border border-border/50 text-foreground/60 hover:text-foreground hover:border-border"
+          )}
+        >
+          Summary
+        </button>
         {activeTab === "summary" && (
           <DateRangeFilter
             value={dateRange}
@@ -1067,46 +1036,47 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
             allFrom={campaign.start_date ? new Date(campaign.start_date) : undefined}
           />
         )}
+        <button
+          onClick={() => setActiveTab("configurations")}
+          className={cn(
+            "h-10 px-5 rounded-full text-[12px] font-semibold transition-colors",
+            activeTab === "configurations"
+              ? "bg-foreground text-background"
+              : "border border-border/50 text-foreground/60 hover:text-foreground hover:border-border"
+          )}
+        >
+          Configurations
+        </button>
       </div>
 
       {/* ── Body ── */}
-      <div className={cn("relative flex-1 p-[3px]", compact ? "overflow-y-auto" : "overflow-hidden")}>
+      <div className={cn("relative flex-1 p-[3px] overflow-y-auto")}>
 
-        {/* ── Summary tab — 3 tall columns to bottom ── */}
+        {/* ── Summary tab — 3-col grid, rows auto-match heights ── */}
         {activeTab === "summary" && (
-          <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-3 gap-[3px] h-full")}>
+          <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-3 grid-rows-[auto_auto] gap-[3px]")}>
 
-            {/* ── Col 1: Key Metrics (4 squares) + Performance Trends ── */}
-            <div className={cn(compact ? "flex flex-col gap-3" : "flex flex-col gap-[3px] min-h-0")}>
-
-              {/* Key Metrics: 4 stat squares */}
-              <div className={cn("bg-white/60 rounded-xl p-5 flex flex-col gap-4 overflow-y-auto", compact ? "shrink-0" : "flex-1 min-h-0")} data-testid="campaign-detail-view-metrics">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-foreground/40" />
-                  <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading">Key Metrics</span>
-                </div>
-                <div className="grid grid-cols-2 gap-3 flex-1">
-                  {[
-                    { v: agg.totalLeadsTargeted.toLocaleString(), l: "Leads Targeted" },
-                    { v: agg.totalMessagesSent.toLocaleString(),  l: "Messages Sent"  },
-                    { v: agg.responseRate != null ? `${agg.responseRate}%` : "—", l: "Response %" },
-                    { v: agg.bookingRate  != null ? `${agg.bookingRate}%`  : "—", l: "Booking %"  },
-                  ].map((s) => (
-                    <div key={s.l} className="rounded-xl bg-white/40 p-4 flex flex-col items-center justify-center text-center">
-                      <div className="text-[28px] font-black text-foreground tabular-nums leading-none">{s.v}</div>
-                      <div className="text-[10px] text-foreground/40 uppercase tracking-wider mt-1.5">{s.l}</div>
-                    </div>
-                  ))}
-                </div>
+            {/* ── Row 1, Col 1: Key Metrics + Performance Trends ── */}
+            <div className="bg-card/50 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-metrics">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Key Metrics</span>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { v: agg.totalLeadsTargeted.toLocaleString(), l: "Leads Targeted" },
+                  { v: agg.totalMessagesSent.toLocaleString(),  l: "Messages Sent"  },
+                  { v: agg.responseRate != null ? `${agg.responseRate}%` : "—", l: "Response %" },
+                  { v: agg.bookingRate  != null ? `${agg.bookingRate}%`  : "—", l: "Booking %"  },
+                ].map((s) => (
+                  <div key={s.l} className="rounded-xl bg-white/80 p-8 flex flex-col items-center justify-center text-center">
+                    <div className="text-[28px] font-black text-foreground tabular-nums leading-none">{s.v}</div>
+                    <div className="text-[10px] text-foreground/40 uppercase tracking-wider mt-1.5">{s.l}</div>
+                  </div>
+                ))}
               </div>
 
-              {/* Performance Trends chart — fills remaining height */}
-              <div className={cn("bg-white/60 rounded-xl p-5 flex flex-col gap-4", compact ? "min-h-[200px]" : "flex-1 min-h-0")} data-testid="campaign-detail-view-trends">
-                <div className="flex items-center gap-2">
-                  <BarChart2 className="w-4 h-4 text-foreground/40" />
-                  <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading">Performance Trends</span>
-                </div>
-                <div className="flex-1 min-h-0">
+              {/* Performance Trends chart — pushed to bottom */}
+              <div className="mt-auto border-t border-border/20 pt-3">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 block">Performance Trends</span>
+                <div className="h-[180px]" data-testid="campaign-detail-view-trends">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                       data={(() => {
@@ -1133,58 +1103,36 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
                   </ResponsiveContainer>
                 </div>
               </div>
-
             </div>
 
-            {/* ── Col 2 (middle): Pipeline Funnel + Conversion Pie ── */}
-            <div className={cn(compact ? "flex flex-col gap-3" : "flex flex-col gap-[3px] min-h-0")}>
-
-              {/* Pipeline Funnel — 6 real stages */}
-              <div className={cn("bg-white/60 rounded-xl p-5 flex flex-col gap-4 overflow-y-auto", compact ? "shrink-0" : "flex-1 min-h-0")} data-testid="campaign-detail-view-funnel">
-                <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-foreground/40" />
-                  <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading">Pipeline Funnel</span>
-                </div>
-                <CampaignFunnelWidget campaignId={campaign.id || (campaign as any).Id} />
-              </div>
-
-              {/* Conversion breakdown pie chart */}
-              <div className={cn("bg-white/60 rounded-xl p-5 flex flex-col gap-4 overflow-y-auto", compact ? "min-h-[200px]" : "flex-1 min-h-0")} data-testid="campaign-detail-view-conversions">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-foreground/40" />
-                  <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading">Conversions</span>
-                </div>
-                <ConversionPieChart agg={agg} />
-              </div>
-
+            {/* ── Row 1, Col 2: Up Next ── */}
+            <div className="bg-card/50 rounded-xl p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-agenda">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Up Next</span>
+              <AgendaWidget accountId={undefined} className="flex-1 min-h-0 bg-transparent" hideHeader />
             </div>
 
-            {/* ── Col 3: Financials + ROI Trend ── */}
-            <div className={cn(compact ? "flex flex-col gap-3" : "flex flex-col gap-[3px] min-h-0")}>
+            {/* ── Row 1, Col 3: Pipeline Funnel ── */}
+            <div className="bg-card/50 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-funnel">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Pipeline</span>
+              <CampaignFunnelWidget campaignId={campaign.id || (campaign as any).Id} />
+            </div>
 
-              {/* Financials — redesigned */}
-              <div className={cn("bg-white/60 rounded-xl p-5 flex flex-col gap-4 overflow-y-auto", compact ? "shrink-0" : "flex-1 min-h-0")} data-testid="campaign-detail-view-financials">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-foreground/40" />
-                  <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading">Financials</span>
-                </div>
-                <FinancialsWidget
-                  agg={agg}
-                  campaign={campaign}
-                  contract={linkedContract}
-                  contractLoading={contractLoading}
-                  isAgencyUser={isAgencyUser}
-                  onGoToConfig={goToConfig}
-                />
-              </div>
+            {/* ── Row 2, Col 1: Financials + ROI Trend ── */}
+            <div className="bg-card/50 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-financials">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Financials</span>
+              <FinancialsWidget
+                agg={agg}
+                campaign={campaign}
+                contract={linkedContract}
+                contractLoading={contractLoading}
+                isAgencyUser={isAgencyUser}
+                onGoToConfig={goToConfig}
+              />
 
-              {/* ROI Trend — fills remaining height */}
-              <div className={cn("bg-white/60 rounded-xl p-5 flex flex-col gap-4", compact ? "min-h-[200px]" : "flex-1 min-h-0")} data-testid="campaign-detail-view-roi">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-foreground/40" />
-                  <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading">ROI Trend</span>
-                </div>
-                <div className="flex-1 min-h-0">
+              {/* ROI Trend — inside Financials card, pushed to bottom */}
+              <div className="mt-auto border-t border-border/20 pt-3">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 block">ROI Trend</span>
+                <div className="h-[180px]" data-testid="campaign-detail-view-roi">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                       data={(() => {
@@ -1208,7 +1156,18 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
                   </ResponsiveContainer>
                 </div>
               </div>
+            </div>
 
+            {/* ── Row 2, Col 2: Activity Feed ── */}
+            <div className="bg-card/50 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-activity">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Activity</span>
+              <ActivityFeed accountId={undefined} limit={20} compact className="" />
+            </div>
+
+            {/* ── Row 2, Col 3: Conversions Doughnut ── */}
+            <div className="bg-card/50 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-conversions">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Conversions</span>
+              <ConversionDoughnutWidget campaignId={campaign.id || (campaign as any).Id} />
             </div>
 
           </div>
@@ -1219,11 +1178,8 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
           <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-3 gap-[3px] h-full")}>
 
             {/* Column 1: Configuration / Settings */}
-            <div className="bg-white/60 rounded-xl p-5 space-y-3 overflow-y-auto" data-testid="campaign-detail-view-settings">
-              <div className="flex items-center gap-2 mb-1">
-                <Settings className="w-4 h-4 text-foreground/40" />
-                <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading">Configuration</span>
-              </div>
+            <div className="bg-card rounded-xl p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-settings">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Configuration</span>
 
               {/* Type + Description */}
               <div className="space-y-0">
@@ -1316,11 +1272,8 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
             </div>
 
             {/* Column 2: AI Settings */}
-            <div className="bg-white/60 rounded-xl p-5 space-y-3 overflow-y-auto" data-testid="campaign-detail-view-ai">
-              <div className="flex items-center gap-2 mb-1">
-                <Bot className="w-4 h-4 text-foreground/40" />
-                <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading">AI Settings</span>
-              </div>
+            <div className="bg-card rounded-xl p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-ai">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">AI Settings</span>
               <div className="space-y-0">
                 <InfoRow label="Model" value={campaign.ai_model || "Default"}
                   editChild={isEditing ? <EditText value={String(draft.ai_model ?? "")} onChange={(v) => setDraft(d => ({...d, ai_model: v}))} placeholder="Model name" /> : undefined}
@@ -1357,14 +1310,11 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
             </div>
 
             {/* Column 3: Message Templates */}
-            <div className="bg-white/60 rounded-xl p-5 space-y-3 overflow-y-auto" data-testid="campaign-detail-view-templates">
-              <div className="flex items-center gap-2 mb-1">
-                <MessageSquare className="w-4 h-4 text-foreground/40" />
-                <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading">Message Templates</span>
-              </div>
+            <div className="bg-card rounded-xl p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-templates">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Message Templates</span>
 
               {/* First message */}
-              <div className="rounded-xl bg-white/40 p-3 space-y-1.5">
+              <div className="rounded-xl bg-white/80 p-6 space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">First Message</span>
                   {!isEditing && (campaign.first_message_template || campaign.First_Message) && (
@@ -1388,7 +1338,7 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
               </div>
 
               {/* Bump 1 */}
-              <div className="rounded-xl bg-white/40 p-3 space-y-2">
+              <div className="rounded-xl bg-white/80 p-6 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Bump 1</span>
@@ -1430,7 +1380,7 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
               </div>
 
               {/* Bump 2 */}
-              <div className="rounded-xl bg-white/40 p-3 space-y-2">
+              <div className="rounded-xl bg-white/80 p-6 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Bump 2</span>
@@ -1472,7 +1422,7 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
               </div>
 
               {/* Bump 3 */}
-              <div className="rounded-xl bg-white/40 p-3 space-y-2">
+              <div className="rounded-xl bg-white/80 p-6 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Bump 3</span>

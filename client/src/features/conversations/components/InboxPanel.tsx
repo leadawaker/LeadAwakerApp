@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { IconBtn } from "@/components/ui/icon-btn";
+import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { Search, SlidersHorizontal, Layers, ArrowUpDown, Filter, Check, Plus } from "lucide-react";
 import {
   Popover,
@@ -292,6 +293,7 @@ export function InboxPanel({
     count: virtualItems.length,
     getScrollElement: () => listContainerRef.current,
     estimateSize: (i) => (virtualItems[i]?.type === "header" ? 32 : 88),
+    gap: 3,
     overscan: 5,
   });
 
@@ -488,7 +490,7 @@ export function InboxPanel({
       </div>
 
       {/* ── Thread list ── */}
-      <div ref={listContainerRef} className="flex-1 overflow-y-auto pt-0 pb-2" data-testid="list-inbox">
+      <div ref={listContainerRef} className="flex-1 overflow-y-auto p-[3px]" data-testid="list-inbox">
         {loading ? (
           <SkeletonList count={6} />
         ) : sorted.length === 0 ? (
@@ -542,16 +544,17 @@ export function InboxPanel({
                       transform: `translateY(${virtualRow.start}px)`,
                     }}
                   >
-                    <div className="sticky top-0 z-20 bg-muted px-3 pt-1.5 pb-1.5">
-                      <div className="flex items-center gap-0">
-                        <div className="flex-1 h-px bg-foreground/15 mx-[8px]" />
-                        <span className="text-[10px] font-bold text-foreground/55 uppercase tracking-widest shrink-0">
+                    <div className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
+                      <div className="flex items-center gap-[10px]">
+                        <div className="flex-1 h-px bg-foreground/15" />
+                        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">
                           {item.label}
                         </span>
-                        <span className="ml-1 text-[9px] text-muted-foreground/45 font-semibold shrink-0">
+                        <span className="text-foreground/20 shrink-0">–</span>
+                        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">
                           {item.count}
                         </span>
-                        <div className="flex-1 h-px bg-foreground/15 mx-[8px]" />
+                        <div className="flex-1 h-px bg-foreground/15" />
                       </div>
                     </div>
                   </div>
@@ -587,8 +590,8 @@ export function InboxPanel({
                     onClick={() => onSelectLead(lead.id)}
                     onKeyDown={(e) => e.key === "Enter" && onSelectLead(lead.id)}
                     className={cn(
-                      "relative mx-[3px] my-0.5 rounded-xl cursor-pointer transition-colors",
-                      active ? "bg-[#FFF1C8]" : "bg-white hover:bg-[#FAFAFA]"
+                      "relative mx-[3px] rounded-xl cursor-pointer transition-colors",
+                      active ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
                     )}
                     data-testid={`button-thread-${lead.id}`}
                   >
@@ -598,12 +601,11 @@ export function InboxPanel({
                       <div className="flex items-start gap-2">
                         {/* Avatar with unread badge overlay */}
                         <div className="relative shrink-0">
-                          <div
-                            className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold"
-                            style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
-                          >
-                            {initialsFor(lead)}
-                          </div>
+                          <EntityAvatar
+                            name={`${lead.first_name || ""} ${lead.last_name || ""}`.trim() || "?"}
+                            bgColor={avatarColor.bg}
+                            textColor={avatarColor.text}
+                          />
                           {showUnreadBadge && (
                             <span
                               className={cn(
@@ -619,7 +621,7 @@ export function InboxPanel({
                         {/* Name + conversion status */}
                         <div className="flex-1 min-w-0 pt-0.5">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="text-[13px] font-semibold font-heading leading-tight truncate text-foreground">
+                            <p className="text-[16px] font-semibold font-heading leading-tight truncate text-foreground">
                               {lead.full_name ||
                                 `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() ||
                                 "Unknown"}

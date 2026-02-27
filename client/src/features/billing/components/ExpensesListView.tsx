@@ -64,7 +64,7 @@ function ExpenseListRow({
       onClick={onClick}
       className={cn(
         "w-full text-left rounded-xl px-2.5 pt-2.5 pb-2 transition-colors cursor-pointer",
-        isSelected ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] hover:bg-[#FAFAFA]"
+        isSelected ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
       )}
     >
       <div className="flex items-start gap-2.5">
@@ -76,7 +76,7 @@ function ExpenseListRow({
         <div className="flex-1 min-w-0">
           {/* Row 1: Supplier name + Total amount */}
           <div className="flex items-center justify-between gap-1">
-            <span className="text-[13px] font-semibold font-heading text-foreground truncate">
+            <span className="text-[16px] font-semibold font-heading text-foreground truncate">
               {row.supplier || "Unknown"}
             </span>
             <span className="text-[12px] font-bold text-foreground shrink-0 tabular-nums">

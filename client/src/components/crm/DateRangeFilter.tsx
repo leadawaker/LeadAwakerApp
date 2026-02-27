@@ -156,12 +156,12 @@ export function DateRangeFilter({ value, onChange, allFrom }: DateRangeFilterPro
     return null;
   }, [value]);
 
-  const btnBase = "h-8 px-2.5 text-[11px] font-semibold transition-colors whitespace-nowrap rounded-full";
-  const btnActive = "bg-brand-indigo/15 text-brand-indigo";
-  const btnInactive = "text-foreground/40 hover:text-foreground/70";
+  const btnBase = "h-10 px-3 text-[11px] font-semibold transition-colors whitespace-nowrap rounded-full";
+  const btnActive = "bg-foreground text-[#FCB803]";
+  const btnInactive = "border border-border/50 text-foreground/50 hover:text-foreground hover:border-foreground/30";
 
   return (
-    <div className="inline-flex items-center gap-0.5 rounded-full border border-border/40 bg-card/70 px-1 py-0.5" data-testid="date-range-filter">
+    <div className="inline-flex items-center gap-1.5" data-testid="date-range-filter">
       {PRESET_LABELS.map((p) => (
         <button
           key={p.value}

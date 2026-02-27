@@ -338,7 +338,7 @@ export function PromptsCardView({
         ref={stripRef}
         className="shrink-0 flex gap-2 px-4 pt-3 pb-2 overflow-x-auto [scrollbar-width:thin]"
       >
-        {prompts.map((p: any) => {
+        {prompts.map((p: any, idx: number) => {
           const promptId = getPromptId(p);
           const isSelected = selectedId === promptId;
           const isToggling = togglingIds.has(promptId);
@@ -346,11 +346,12 @@ export function PromptsCardView({
           return (
             <button
               key={promptId}
+              style={{ animationDelay: `${Math.min(idx, 15) * 30}ms` }}
               onClick={() => setSelectedId(promptId)}
               className={cn(
-                "shrink-0 rounded-2xl px-4 py-3 text-left transition-colors duration-150 min-w-[200px] max-w-[280px]",
+                "shrink-0 rounded-2xl px-4 py-3 text-left transition-colors duration-150 min-w-[200px] max-w-[280px] animate-card-enter",
                 isSelected
-                  ? "bg-[#FFF1C8] ring-2 ring-[#FFE35B]"
+                  ? "bg-highlight-selected ring-2 ring-highlight-active"
                   : "bg-card hover:bg-popover",
               )}
             >

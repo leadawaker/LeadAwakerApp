@@ -1,14 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useToast } from "@/hooks/use-toast";
 import { useDashboardRefreshInterval, REFRESH_INTERVAL_OPTIONS } from "@/hooks/useDashboardRefreshInterval";
 import { useSession } from "@/hooks/useSession";
 import { apiFetch } from "@/lib/apiUtils";
 import { Switch } from "@/components/ui/switch";
-import { Mail, MessageSquare, Globe, Moon, Sun, Lock, Eye, EyeOff } from "lucide-react";
-import { useTheme } from "@/hooks/useTheme";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
+import {
+  Mail, MessageSquare, Globe, Lock, Eye, EyeOff,
+  User, Shield, Bell, Clock, Receipt, FileText, CheckCircle, PenLine,
+  Phone, CalendarCheck, MessageSquareWarning, Bot, AlertTriangle,
+  Megaphone, TrendingDown, Camera, X,
+} from "lucide-react";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
-// Build list of IANA timezone identifiers from browser API with common fallback
+// ── Timezone list ────────────────────────────────────────────────────
 const TIMEZONE_LIST: string[] = (() => {
   try {
     if (typeof Intl !== "undefined" && "supportedValuesOf" in Intl) {
@@ -17,7 +24,6 @@ const TIMEZONE_LIST: string[] = (() => {
   } catch {
     // fall through to fallback
   }
-  // Curated fallback list of commonly used IANA timezones
   return [
     "Africa/Abidjan", "Africa/Accra", "Africa/Cairo", "Africa/Johannesburg", "Africa/Lagos", "Africa/Nairobi",
     "America/Anchorage", "America/Argentina/Buenos_Aires", "America/Bogota", "America/Chicago",
@@ -36,7 +42,7 @@ const TIMEZONE_LIST: string[] = (() => {
   ];
 })();
 
-// Full user profile shape returned by GET /api/users/:id
+// ── User profile type ────────────────────────────────────────────────
 type UserProfile = {
   id: number;
   fullName1: string | null;
@@ -49,34 +55,205 @@ type UserProfile = {
   accountsId: number | null;
 };
 
-export default function SettingsPage() {
+// ── Notification types ───────────────────────────────────────────────
+type NotificationChannel = { in_app: boolean; email: boolean; sms: boolean };
+
+type NotificationPreferences = {
+  master_enabled: boolean;
+  events: Record<string, NotificationChannel>;
+  quiet_hours: { enabled: boolean; start: string; end: string };
+  digest: { daily_summary: boolean; weekly_report: boolean };
+};
+
+type NotifEventDef = {
+  key: string;
+  label: string;
+  icon: React.ElementType;
+  defaults: NotificationChannel;
+  roles?: string[];
+};
+
+type NotifCategory = { label: string; events: NotifEventDef[] };
+
+const NOTIF_CATEGORIES: NotifCategory[] = [
+  {
+    label: "Lead Activity",
+    events: [
+      { key: "call_booked", label: "Call Booked", icon: CalendarCheck, defaults: { in_app: true, email: true, sms: true } },
+      { key: "lead_responded", label: "Lead Responded", icon: MessageSquareWarning, defaults: { in_app: true, email: true, sms: false } },
+      { key: "lead_qualified", label: "Lead Qualified", icon: TrendingDown, defaults: { in_app: true, email: false, sms: false }, roles: ["Admin", "Operator", "Manager"] },
+      { key: "lead_opted_out", label: "Lead Opted Out / DND", icon: Phone, defaults: { in_app: true, email: false, sms: false }, roles: ["Admin", "Operator", "Manager"] },
+    ],
+  },
+  {
+    label: "AI & Automation",
+    events: [
+      { key: "ai_needs_takeover", label: "AI Needs Takeover", icon: Bot, defaults: { in_app: true, email: true, sms: true }, roles: ["Admin", "Operator", "Manager"] },
+      { key: "automation_error", label: "Automation Error", icon: AlertTriangle, defaults: { in_app: true, email: true, sms: false }, roles: ["Admin", "Operator"] },
+    ],
+  },
+  {
+    label: "Campaigns",
+    events: [
+      { key: "campaign_completed", label: "Campaign Completed", icon: Megaphone, defaults: { in_app: true, email: false, sms: false } },
+      { key: "performance_alert", label: "Performance Alert", icon: TrendingDown, defaults: { in_app: true, email: true, sms: false }, roles: ["Admin", "Operator", "Manager"] },
+    ],
+  },
+  {
+    label: "Billing",
+    events: [
+      { key: "invoice_received", label: "New Invoice Received", icon: Receipt, defaults: { in_app: true, email: true, sms: false }, roles: ["Manager", "Viewer"] },
+      { key: "contract_received", label: "New Contract Received", icon: FileText, defaults: { in_app: true, email: true, sms: false }, roles: ["Manager", "Viewer"] },
+      { key: "invoice_paid", label: "Invoice Marked Paid", icon: CheckCircle, defaults: { in_app: true, email: true, sms: false }, roles: ["Admin", "Operator"] },
+      { key: "contract_signed", label: "Contract Signed", icon: PenLine, defaults: { in_app: true, email: true, sms: false }, roles: ["Admin", "Operator"] },
+    ],
+  },
+];
+
+function getDefaultNotifPrefs(): NotificationPreferences {
+  const events: Record<string, NotificationChannel> = {};
+  for (const cat of NOTIF_CATEGORIES)
+    for (const ev of cat.events)
+      events[ev.key] = { ...ev.defaults };
+  return {
+    master_enabled: true,
+    events,
+    quiet_hours: { enabled: false, start: "22:00", end: "08:00" },
+    digest: { daily_summary: false, weekly_report: false },
+  };
+}
+
+// ── Settings sections ────────────────────────────────────────────────
+type SettingsSection = "profile" | "security" | "notifications" | "dashboard";
+
+const BASE_SECTIONS: { id: SettingsSection; label: string; icon: React.ElementType; agencyOnly?: boolean }[] = [
+  { id: "profile", label: "My Profile", icon: User },
+  { id: "security", label: "Security", icon: Shield },
+  { id: "notifications", label: "Notifications", icon: Bell },
+  { id: "dashboard", label: "Dashboard", icon: Clock },
+];
+
+// ── Reusable field component ─────────────────────────────────────────
+function Field({
+  label,
+  value,
+  onChange,
+  testId,
+  placeholder,
+  type = "text",
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  testId: string;
+  placeholder?: string;
+  type?: string;
+  icon?: React.ElementType;
+}) {
+  return (
+    <div data-testid={`${testId}-wrap`}>
+      <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5" data-testid={`${testId}-label`}>
+        {Icon && <Icon className="h-3 w-3" />}
+        {label}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1.5 h-10 w-full rounded-xl border border-border/40 bg-input-bg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 focus:border-brand-indigo/40"
+        data-testid={testId}
+        placeholder={placeholder}
+      />
+    </div>
+  );
+}
+
+// ── Password field component ─────────────────────────────────────────
+function PasswordField({
+  label,
+  value,
+  onChange,
+  show,
+  onToggleShow,
+  testId,
+  placeholder,
+  autoComplete,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  show: boolean;
+  onToggleShow: () => void;
+  testId: string;
+  placeholder: string;
+  autoComplete: string;
+}) {
+  return (
+    <div>
+      <label className="text-xs font-medium text-muted-foreground">{label}</label>
+      <div className="relative mt-1.5">
+        <input
+          type={show ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-10 w-full rounded-xl border border-border/40 bg-input-bg px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 focus:border-brand-indigo/40"
+          data-testid={testId}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+        />
+        <button
+          type="button"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          onClick={onToggleShow}
+          aria-label={show ? "Hide password" : "Show password"}
+        >
+          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Settings Page ───────────────────────────────────────────────
+function SettingsContent() {
   const { toast } = useToast();
   const { intervalSeconds, setIntervalSeconds, labelForInterval } = useDashboardRefreshInterval();
   const session = useSession();
+  const { isAgencyUser } = useWorkspace();
 
-  // Profile form state
+  const SECTIONS = BASE_SECTIONS.filter((s) => !s.agencyOnly || isAgencyUser);
+
+  const [activeSection, setActiveSection] = useState<SettingsSection>("profile");
+
+  // ── Profile state ──────────────────────────────────────────────────
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Form field values (local editable state)
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [timezone, setTimezone] = useState("");
 
-  // Theme state
-  const { isDark, toggleTheme } = useTheme();
-  const [isSavingTheme, setIsSavingTheme] = useState(false);
+  // ── Avatar upload ───────────────────────────────────────────────────
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setAvatarUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+    if (avatarInputRef.current) avatarInputRef.current.value = "";
+  };
 
-  // Notification preference state
-  const [notifEmail, setNotifEmail] = useState<boolean>(true);
-  const [notifSms, setNotifSms] = useState<boolean>(false);
-  const [isSavingNotifications, setIsSavingNotifications] = useState(false);
-
-  // Password change state
+  // ── Security state ─────────────────────────────────────────────────
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -85,16 +262,17 @@ export default function SettingsPage() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
-  // Initialize notification toggles from session user data when session loads
-  useEffect(() => {
-    if (session.status === "authenticated") {
-      setNotifEmail(session.user.notificationEmail ?? true);
-      setNotifSms(session.user.notificationSms ?? false);
-    }
-  }, [session.status]);
+  // ── Notification state ─────────────────────────────────────────────
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPreferences>(getDefaultNotifPrefs);
+  const [isSavingNotifs, setIsSavingNotifs] = useState(false);
 
-  // Fetch user profile once session is loaded
+  // ── Theme state ────────────────────────────────────────────────────
+
+  const userRole = session.status === "authenticated" ? (session.user.role ?? "Viewer") : "Viewer";
+
+  // ── Fetch profile ──────────────────────────────────────────────────
   useEffect(() => {
     if (session.status === "loading") return;
     if (session.status === "unauthenticated") {
@@ -117,6 +295,24 @@ export default function SettingsPage() {
         setPhone(data.phone ?? "");
         setAvatarUrl(data.avatarUrl ?? "");
         setTimezone(data.timezone ?? "");
+
+        // Also load notification preferences
+        if ((data as any).preferences) {
+          try {
+            const parsed = typeof (data as any).preferences === "string"
+              ? JSON.parse((data as any).preferences)
+              : (data as any).preferences;
+            if (parsed.notifications) {
+              setNotifPrefs((prev) => ({
+                ...prev,
+                ...parsed.notifications,
+                events: { ...prev.events, ...parsed.notifications.events },
+                quiet_hours: { ...prev.quiet_hours, ...parsed.notifications.quiet_hours },
+                digest: { ...prev.digest, ...parsed.notifications.digest },
+              }));
+            }
+          } catch { /* ignore */ }
+        }
       })
       .catch((err) => {
         setProfileError(err.message || "Failed to load profile");
@@ -126,6 +322,7 @@ export default function SettingsPage() {
       });
   }, [session.status]);
 
+  // ── Save profile ───────────────────────────────────────────────────
   const handleSaveProfile = async () => {
     if (!profile) return;
     setIsSaving(true);
@@ -152,6 +349,15 @@ export default function SettingsPage() {
       setPhone(updated.phone ?? "");
       setAvatarUrl(updated.avatarUrl ?? "");
       setTimezone(updated.timezone ?? "");
+
+      // Update localStorage so topbar reflects changes immediately
+      if (updated.fullName1) localStorage.setItem("leadawaker_user_name", updated.fullName1);
+      if (updated.email) localStorage.setItem("leadawaker_user_email", updated.email);
+      if (updated.avatarUrl) {
+        localStorage.setItem("leadawaker_user_avatar", updated.avatarUrl);
+        window.dispatchEvent(new Event("leadawaker-avatar-changed"));
+      }
+
       toast({ variant: "success", title: "Profile saved", description: "Your changes have been saved." });
     } catch (err: any) {
       toast({ variant: "destructive", title: "Save failed", description: err.message || "Could not save profile." });
@@ -160,88 +366,9 @@ export default function SettingsPage() {
     }
   };
 
-  const handleToggleDarkMode = async (checked: boolean) => {
-    // Apply immediately: toggleTheme updates localStorage + adds/removes html.dark class
-    toggleTheme();
-
-    // Also persist to user profile preferences JSON for cross-device sync
-    if (session.status !== "authenticated") return;
-    const userId = session.user.id;
-    setIsSavingTheme(true);
-    try {
-      const existingPrefsStr = localStorage.getItem("leadawaker_user_preferences") ?? "{}";
-      let existingPrefs: Record<string, unknown> = {};
-      try { existingPrefs = JSON.parse(existingPrefsStr); } catch { existingPrefs = {}; }
-      const merged = { ...existingPrefs, theme: checked ? "dark" : "light" };
-      localStorage.setItem("leadawaker_user_preferences", JSON.stringify(merged));
-      await apiFetch(`/api/users/${userId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ preferences: JSON.stringify(merged) }),
-      });
-    } catch {
-      // Silently ignore — localStorage is already the primary persistence mechanism
-    } finally {
-      setIsSavingTheme(false);
-    }
-  };
-
-  const handleToggleEmailNotification = async (checked: boolean) => {
-    if (session.status !== "authenticated") return;
-    const userId = session.user.id;
-    const prev = notifEmail;
-    setNotifEmail(checked);
-    setIsSavingNotifications(true);
-    try {
-      const res = await apiFetch(`/api/users/${userId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notificationEmail: checked }),
-      });
-      if (!res.ok) throw new Error(`Save failed (${res.status})`);
-      toast({
-        variant: "success",
-        title: "Preferences saved",
-        description: `Email notifications ${checked ? "enabled" : "disabled"}.`,
-      });
-    } catch (err: any) {
-      setNotifEmail(prev);
-      toast({ variant: "destructive", title: "Error", description: err.message || "Failed to save email notification preference." });
-    } finally {
-      setIsSavingNotifications(false);
-    }
-  };
-
-  const handleToggleSmsNotification = async (checked: boolean) => {
-    if (session.status !== "authenticated") return;
-    const userId = session.user.id;
-    const prev = notifSms;
-    setNotifSms(checked);
-    setIsSavingNotifications(true);
-    try {
-      const res = await apiFetch(`/api/users/${userId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notificationSms: checked }),
-      });
-      if (!res.ok) throw new Error(`Save failed (${res.status})`);
-      toast({
-        variant: "success",
-        title: "Preferences saved",
-        description: `SMS notifications ${checked ? "enabled" : "disabled"}.`,
-      });
-    } catch (err: any) {
-      setNotifSms(prev);
-      toast({ variant: "destructive", title: "Error", description: err.message || "Failed to save SMS notification preference." });
-    } finally {
-      setIsSavingNotifications(false);
-    }
-  };
-
+  // ── Change password ────────────────────────────────────────────────
   const handleChangePassword = async () => {
     setPasswordError(null);
-
-    // Client-side validation
     if (!currentPassword || !newPassword || !confirmPassword) {
       setPasswordError("All fields are required.");
       return;
@@ -254,7 +381,6 @@ export default function SettingsPage() {
       setPasswordError("New password and confirmation do not match.");
       return;
     }
-
     setIsChangingPassword(true);
     try {
       const res = await apiFetch("/api/auth/change-password", {
@@ -266,7 +392,6 @@ export default function SettingsPage() {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.message || `Failed (${res.status})`);
       }
-      // Clear fields on success
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -282,475 +407,562 @@ export default function SettingsPage() {
     }
   };
 
-  return (
-    <CrmShell>
-      <div className="py-4" data-testid="page-settings">
-        <div className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6" data-testid="grid-settings">
-          <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-edit-profile">
-            <div className="p-4 border-b border-border" data-testid="card-edit-profile-head">
-              <div className="font-semibold" data-testid="text-profile-title">Edit profile</div>
-              <div className="text-xs text-muted-foreground" data-testid="text-profile-sub">
-                Update your display name, email, phone, and avatar.
-              </div>
-            </div>
-            <div className="p-4 space-y-4" data-testid="card-edit-profile-body">
-              {profileLoading ? (
-                <div className="text-sm text-muted-foreground" data-testid="profile-loading">
-                  Loading profile…
-                </div>
-              ) : profileError ? (
-                <div className="text-sm text-red-500" data-testid="profile-error">
-                  {profileError}
-                </div>
-              ) : (
-                <>
-                  <Field
-                    label="Name"
-                    value={name}
-                    onChange={setName}
-                    testId="input-profile-name"
-                    placeholder="Your full name"
+  // ── Reset password email ───────────────────────────────────────────
+  const handleResetEmail = async () => {
+    setIsResetting(true);
+    try {
+      const res = await apiFetch("/api/auth/request-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error();
+      toast({ variant: "success", title: "Reset email sent", description: "Check your inbox for a password reset link." });
+    } catch {
+      toast({ variant: "info", title: "Not available", description: "Password reset via email is not yet available." });
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  // ── Notification prefs ─────────────────────────────────────────────
+  const saveNotifPrefs = useCallback(async (updated: NotificationPreferences) => {
+    if (session.status !== "authenticated") return;
+    setIsSavingNotifs(true);
+    try {
+      const existingPrefsStr = localStorage.getItem("leadawaker_user_preferences") ?? "{}";
+      let existingPrefs: Record<string, unknown> = {};
+      try { existingPrefs = JSON.parse(existingPrefsStr); } catch { existingPrefs = {}; }
+      const merged = { ...existingPrefs, notifications: updated };
+      localStorage.setItem("leadawaker_user_preferences", JSON.stringify(merged));
+      await apiFetch(`/api/users/${session.user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ preferences: JSON.stringify(merged) }),
+      });
+    } catch {
+      toast({ variant: "destructive", title: "Error", description: "Failed to save notification preferences." });
+    } finally {
+      setIsSavingNotifs(false);
+    }
+  }, [session, toast]);
+
+  const updateNotifPrefs = useCallback((updater: (prev: NotificationPreferences) => NotificationPreferences) => {
+    setNotifPrefs((prev) => {
+      const next = updater(prev);
+      saveNotifPrefs(next);
+      return next;
+    });
+  }, [saveNotifPrefs]);
+
+
+  // ── User initials for avatar ───────────────────────────────────────
+  const userInitials = (() => {
+    const n = name || email || "U";
+    const parts = n.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    return (parts[0]?.[0] || "U").toUpperCase();
+  })();
+
+  // ── Render sections ────────────────────────────────────────────────
+  const renderProfile = () => (
+    <div className="space-y-6" data-testid="section-profile">
+      <p className="text-sm text-muted-foreground">
+        Update your personal information and preferences.
+      </p>
+
+      {profileLoading ? (
+        <div className="text-sm text-muted-foreground py-8 text-center">Loading profile...</div>
+      ) : profileError ? (
+        <div className="text-sm text-red-500 py-4">{profileError}</div>
+      ) : (
+        <>
+          {/* Avatar display — clickable with upload */}
+          <div className="flex items-center gap-4">
+            <div className="relative shrink-0 group/avatar">
+              {/* Avatar circle — click to upload */}
+              <div
+                className={cn(
+                  "h-[72px] w-[72px] rounded-full overflow-hidden cursor-pointer",
+                  !avatarUrl && "flex items-center justify-center text-xl font-bold"
+                )}
+                onClick={() => avatarInputRef.current?.click()}
+                title="Click to upload photo"
+              >
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="Avatar"
+                    className="h-full w-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                   />
-                  <Field
-                    label="Email"
-                    value={email}
-                    onChange={setEmail}
-                    testId="input-profile-email"
-                    placeholder="your@email.com"
-                    type="email"
-                  />
-                  <Field
-                    label="Phone"
-                    value={phone}
-                    onChange={setPhone}
-                    testId="input-profile-phone"
-                    placeholder="+1 (555) 000-0000"
-                    type="tel"
-                  />
-                  <Field
-                    label="Avatar URL"
-                    value={avatarUrl}
-                    onChange={setAvatarUrl}
-                    testId="input-profile-avatar-url"
-                    placeholder="https://example.com/avatar.png"
-                  />
-
-                  {/* Timezone selector */}
-                  <div data-testid="input-profile-timezone-wrap">
-                    <label
-                      htmlFor="profile-timezone-select"
-                      className="text-xs text-muted-foreground flex items-center gap-1"
-                      data-testid="input-profile-timezone-label"
-                    >
-                      <Globe className="h-3 w-3" />
-                      Timezone
-                    </label>
-                    <select
-                      id="profile-timezone-select"
-                      value={timezone}
-                      onChange={(e) => setTimezone(e.target.value)}
-                      className="mt-1 h-10 w-full rounded-xl border border-border bg-muted/20 px-3 text-sm dark:bg-muted/10 dark:text-foreground"
-                      data-testid="select-profile-timezone"
-                      aria-label="Select timezone"
-                    >
-                      <option value="">— Select timezone —</option>
-                      {TIMEZONE_LIST.map((tz) => (
-                        <option key={tz} value={tz}>
-                          {tz.replace(/_/g, " ")}
-                        </option>
-                      ))}
-                    </select>
-                    {timezone && (
-                      <p className="mt-1 text-xs text-muted-foreground" data-testid="text-current-timezone">
-                        Current: <span className="font-medium text-foreground">{timezone.replace(/_/g, " ")}</span>
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Avatar preview */}
-                  {avatarUrl && (
-                    <div className="flex items-center gap-3" data-testid="avatar-preview">
-                      <img
-                        src={avatarUrl}
-                        alt="Avatar preview"
-                        className="h-12 w-12 rounded-full object-cover border border-border"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = "none";
-                        }}
-                      />
-                      <span className="text-xs text-muted-foreground">Avatar preview</span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-end" data-testid="row-profile-actions">
-                    <button
-                      type="button"
-                      className="h-10 px-4 rounded-xl border border-border bg-primary text-primary-foreground hover:opacity-90 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                      data-testid="button-save-profile"
-                      onClick={handleSaveProfile}
-                      disabled={isSaving}
-                    >
-                      {isSaving ? "Saving…" : "Save changes"}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </section>
-
-          <div className="space-y-6" data-testid="col-settings-right">
-            {/* Appearance — Dark Mode Toggle */}
-            <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-appearance">
-              <div className="p-4 border-b border-border" data-testid="card-appearance-head">
-                <div className="font-semibold" data-testid="text-appearance-title">Appearance</div>
-                <div className="text-xs text-muted-foreground" data-testid="text-appearance-sub">
-                  Customize the look and feel of the application.
-                </div>
-              </div>
-              <div className="p-4" data-testid="card-appearance-body">
-                <div className="flex items-center justify-between gap-4" data-testid="row-dark-mode">
-                  <div className="flex items-center gap-2 min-w-0">
-                    {isDark
-                      ? <Moon className="h-4 w-4 text-muted-foreground shrink-0" />
-                      : <Sun className="h-4 w-4 text-muted-foreground shrink-0" />
-                    }
-                    <div>
-                      <div className="text-sm font-medium leading-none" data-testid="label-dark-mode">
-                        Dark mode
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        Switch between dark and light theme.
-                        {isSavingTheme && <span className="ml-1 italic">Saving…</span>}
-                      </div>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={isDark}
-                    onCheckedChange={handleToggleDarkMode}
-                    data-testid="toggle-dark-mode"
-                    aria-label="Toggle dark mode"
-                  />
-                </div>
-              </div>
-            </section>
-
-            {/* Notification Preferences */}
-            <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-notification-preferences">
-              <div className="p-4 border-b border-border" data-testid="card-notification-preferences-head">
-                <div className="font-semibold" data-testid="text-notification-title">Notification Preferences</div>
-                <div className="text-xs text-muted-foreground" data-testid="text-notification-sub">
-                  Choose how you receive notifications.
-                </div>
-              </div>
-              <div className="p-4 space-y-4" data-testid="card-notification-preferences-body">
-                {/* Email Notifications Toggle */}
-                <div
-                  className="flex items-center justify-between gap-4"
-                  data-testid="row-notification-email"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <div>
-                      <div className="text-sm font-medium leading-none" data-testid="label-notification-email">
-                        Email notifications
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        Receive updates and alerts by email.
-                      </div>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={notifEmail}
-                    onCheckedChange={handleToggleEmailNotification}
-                    disabled={isSavingNotifications || session.status !== "authenticated"}
-                    data-testid="toggle-notification-email"
-                    aria-label="Toggle email notifications"
-                  />
-                </div>
-
-                {/* SMS Notifications Toggle */}
-                <div
-                  className="flex items-center justify-between gap-4"
-                  data-testid="row-notification-sms"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <MessageSquare className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <div>
-                      <div className="text-sm font-medium leading-none" data-testid="label-notification-sms">
-                        SMS notifications
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        Receive text message alerts on your phone.
-                      </div>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={notifSms}
-                    onCheckedChange={handleToggleSmsNotification}
-                    disabled={isSavingNotifications || session.status !== "authenticated"}
-                    data-testid="toggle-notification-sms"
-                    aria-label="Toggle SMS notifications"
-                  />
-                </div>
-              </div>
-            </section>
-
-            {/* Dashboard auto-refresh interval setting */}
-            <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-refresh-interval">
-              <div className="p-4 border-b border-border" data-testid="card-refresh-interval-head">
-                <div className="font-semibold" data-testid="text-refresh-title">Dashboard Auto-Refresh</div>
-                <div className="text-xs text-muted-foreground" data-testid="text-refresh-sub">
-                  How often the dashboard automatically refreshes live data. Default: 1 minute.
-                </div>
-              </div>
-              <div className="p-4 space-y-3" data-testid="card-refresh-interval-body">
-                <div className="text-xs text-muted-foreground mb-1">
-                  Current interval: <span className="font-bold text-foreground" data-testid="text-current-interval">{labelForInterval}</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2" data-testid="refresh-interval-options">
-                  {REFRESH_INTERVAL_OPTIONS.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => {
-                        setIntervalSeconds(option.value);
-                        toast({
-                          variant: "success",
-                          title: "Refresh interval updated",
-                          description: option.value === 0
-                            ? "Auto-refresh is now disabled."
-                            : `Dashboard will refresh every ${option.label}.`,
-                        });
-                      }}
-                      className={
-                        intervalSeconds === option.value
-                          ? "h-9 rounded-xl border-2 border-brand-yellow bg-brand-yellow/10 text-sm font-bold text-foreground transition-colors"
-                          : "h-9 rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold transition-colors"
-                      }
-                      data-testid={`refresh-interval-option-${option.value}`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-toast-test">
-              <div className="p-4 border-b border-border" data-testid="card-toast-test-head">
-                <div className="font-semibold" data-testid="text-toast-title">Toast Notifications</div>
-                <div className="text-xs text-muted-foreground" data-testid="text-toast-sub">
-                  Preview notification styles.
-                </div>
-              </div>
-              <div className="p-4 space-y-3" data-testid="card-toast-test-body">
-                <button
-                  type="button"
-                  className="h-10 w-full rounded-xl border border-green-500/30 bg-green-500/10 hover:bg-green-500/20 text-sm font-semibold text-green-700 dark:text-green-400"
-                  data-testid="button-toast-success"
-                  onClick={() => toast({ variant: "success", title: "Success", description: "Operation completed successfully." })}
-                >
-                  Show Success Toast
-                </button>
-                <button
-                  type="button"
-                  className="h-10 w-full rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-sm font-semibold text-red-700 dark:text-red-400"
-                  data-testid="button-toast-error"
-                  onClick={() => toast({ variant: "destructive", title: "Error", description: "Something went wrong. Please try again." })}
-                >
-                  Show Error Toast
-                </button>
-                <button
-                  type="button"
-                  className="h-10 w-full rounded-xl border border-brand-indigo/30 bg-brand-indigo/10 hover:bg-brand-indigo/20 text-sm font-semibold text-brand-indigo"
-                  data-testid="button-toast-info"
-                  onClick={() => toast({ variant: "info", title: "Info", description: "New campaign data is being synced." })}
-                >
-                  Show Info Toast
-                </button>
-              </div>
-            </section>
-
-            {/* Change Password */}
-            <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-change-password">
-              <div className="p-4 border-b border-border" data-testid="card-change-password-head">
-                <div className="font-semibold flex items-center gap-2" data-testid="text-password-title">
-                  <Lock className="h-4 w-4 text-muted-foreground" />
-                  Change Password
-                </div>
-                <div className="text-xs text-muted-foreground" data-testid="text-password-sub">
-                  Update your account password.
-                </div>
-              </div>
-              <div className="p-4 space-y-3" data-testid="card-change-password-body">
-                {passwordError && (
-                  <div className="text-xs text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2" data-testid="text-password-error">
-                    {passwordError}
+                ) : (
+                  <div className="h-full w-full rounded-full bg-brand-indigo text-white flex items-center justify-center text-xl font-bold">
+                    {userInitials}
                   </div>
                 )}
-                {/* Current Password */}
-                <div>
-                  <label className="text-xs text-muted-foreground">Current password</label>
-                  <div className="relative mt-1">
-                    <input
-                      type={showCurrentPassword ? "text" : "password"}
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="h-10 w-full rounded-xl border border-border bg-muted/20 px-3 pr-10 text-sm"
-                      data-testid="input-current-password"
-                      placeholder="Current password"
-                      autoComplete="current-password"
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      onClick={() => setShowCurrentPassword((p) => !p)}
-                      aria-label={showCurrentPassword ? "Hide password" : "Show password"}
-                      data-testid="btn-toggle-current-password"
-                    >
-                      {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-                {/* New Password */}
-                <div>
-                  <label className="text-xs text-muted-foreground">New password</label>
-                  <div className="relative mt-1">
-                    <input
-                      type={showNewPassword ? "text" : "password"}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="h-10 w-full rounded-xl border border-border bg-muted/20 px-3 pr-10 text-sm"
-                      data-testid="input-new-password"
-                      placeholder="New password (min 6 chars)"
-                      autoComplete="new-password"
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      onClick={() => setShowNewPassword((p) => !p)}
-                      aria-label={showNewPassword ? "Hide password" : "Show password"}
-                      data-testid="btn-toggle-new-password"
-                    >
-                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-                {/* Confirm Password */}
-                <div>
-                  <label className="text-xs text-muted-foreground">Confirm new password</label>
-                  <div className="relative mt-1">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="h-10 w-full rounded-xl border border-border bg-muted/20 px-3 pr-10 text-sm"
-                      data-testid="input-confirm-password"
-                      placeholder="Confirm new password"
-                      autoComplete="new-password"
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      onClick={() => setShowConfirmPassword((p) => !p)}
-                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                      data-testid="btn-toggle-confirm-password"
-                    >
-                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={handleChangePassword}
-                    disabled={isChangingPassword}
-                    className="h-10 px-4 rounded-xl border border-border bg-primary text-primary-foreground hover:opacity-90 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                    data-testid="button-change-password"
-                  >
-                    {isChangingPassword ? "Changing…" : "Change password"}
-                  </button>
-                </div>
               </div>
-            </section>
+              {/* Camera overlay on hover */}
+              <div
+                className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity cursor-pointer pointer-events-none"
+              >
+                <Camera className="w-6 h-6 text-white" />
+              </div>
+              {/* Remove button — hover-only, top-right */}
+              {avatarUrl && (
+                <button
+                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-white border border-border/50 flex items-center justify-center text-foreground/50 hover:text-red-500 hover:border-red-300 transition-colors z-10 opacity-0 group-hover/avatar:opacity-100"
+                  onClick={(e) => { e.stopPropagation(); setAvatarUrl(""); }}
+                  title="Remove photo"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarFileChange}
+            />
+            <div>
+              <div className="text-sm font-semibold text-foreground">{name || "No name set"}</div>
+              <div className="text-xs text-muted-foreground">{profile?.role || "User"}</div>
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                className="mt-1 text-xs font-semibold text-brand-indigo hover:opacity-80 transition-opacity"
+              >
+                Upload photo
+              </button>
+            </div>
+          </div>
 
-            <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-reset-password">
-              <div className="p-4 border-b border-border" data-testid="card-reset-password-head">
-                <div className="font-semibold" data-testid="text-password-title">Reset password</div>
-                <div className="text-xs text-muted-foreground" data-testid="text-password-sub">
-                  Generate a password reset flow (mock).
-                </div>
-              </div>
-              <div className="p-4" data-testid="card-reset-password-body">
-                <button
-                  type="button"
-                  className="h-10 w-full rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold"
-                  data-testid="button-reset-password"
-                >
-                  Send reset email
-                </button>
-              </div>
-            </section>
+          {/* Form fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Field
+              label="Full Name"
+              value={name}
+              onChange={setName}
+              testId="input-profile-name"
+              placeholder="Your full name"
+              icon={User}
+            />
+            <Field
+              label="Email"
+              value={email}
+              onChange={setEmail}
+              testId="input-profile-email"
+              placeholder="your@email.com"
+              type="email"
+              icon={Mail}
+            />
+            <Field
+              label="Phone"
+              value={phone}
+              onChange={setPhone}
+              testId="input-profile-phone"
+              placeholder="+1 (555) 000-0000"
+              type="tel"
+              icon={Phone}
+            />
+            <div data-testid="input-profile-timezone-wrap">
+              <label
+                htmlFor="profile-timezone-select"
+                className="text-xs font-medium text-muted-foreground flex items-center gap-1.5"
+                data-testid="input-profile-timezone-label"
+              >
+                <Globe className="h-3 w-3" />
+                Timezone
+              </label>
+              <select
+                id="profile-timezone-select"
+                value={timezone}
+                onChange={(e) => setTimezone(e.target.value)}
+                className="mt-1.5 h-10 w-full rounded-xl border border-border/40 bg-input-bg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-indigo/20 focus:border-brand-indigo/40"
+                data-testid="select-profile-timezone"
+                aria-label="Select timezone"
+              >
+                <option value="">-- Select timezone --</option>
+                {TIMEZONE_LIST.map((tz) => (
+                  <option key={tz} value={tz}>
+                    {tz.replace(/_/g, " ")}
+                  </option>
+                ))}
+              </select>
+              {timezone && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Current: <span className="font-medium text-foreground">{timezone.replace(/_/g, " ")}</span>
+                </p>
+              )}
+            </div>
+          </div>
 
-            <section className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden" data-testid="card-user-management">
-              <div className="p-4 border-b border-border" data-testid="card-user-management-head">
-                <div className="font-semibold" data-testid="text-users-title">User management</div>
-                <div className="text-xs text-muted-foreground" data-testid="text-users-sub">
-                  Invite users + set roles (mock).
-                </div>
+          {/* Avatar URL */}
+          <Field
+            label="Avatar URL"
+            value={avatarUrl}
+            onChange={setAvatarUrl}
+            testId="input-profile-avatar-url"
+            placeholder="https://example.com/avatar.png"
+          />
+
+          {/* Save button */}
+          <div className="flex justify-end pt-2">
+            <button
+              type="button"
+              className="h-10 px-6 rounded-full bg-brand-indigo text-white text-sm font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-150"
+              data-testid="button-save-profile"
+              onClick={handleSaveProfile}
+              disabled={isSaving}
+            >
+              {isSaving ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  const renderSecurity = () => (
+    <div className="space-y-6" data-testid="section-security">
+      <p className="text-sm text-muted-foreground">
+        Manage your password and account security.
+      </p>
+
+      {/* Change Password */}
+      <div className="rounded-xl bg-muted/60 p-5 space-y-4">
+        <div className="flex items-center gap-2.5">
+          <div className="h-9 w-9 rounded-full bg-background flex items-center justify-center shrink-0">
+            <Lock className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold">Change Password</div>
+            <div className="text-xs text-muted-foreground">Update your account password.</div>
+          </div>
+        </div>
+
+        {passwordError && (
+          <div className="text-xs text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2" data-testid="text-password-error">
+            {passwordError}
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <PasswordField
+            label="Current password"
+            value={currentPassword}
+            onChange={setCurrentPassword}
+            show={showCurrentPassword}
+            onToggleShow={() => setShowCurrentPassword((p) => !p)}
+            testId="input-current-password"
+            placeholder="Current password"
+            autoComplete="current-password"
+          />
+          <PasswordField
+            label="New password"
+            value={newPassword}
+            onChange={setNewPassword}
+            show={showNewPassword}
+            onToggleShow={() => setShowNewPassword((p) => !p)}
+            testId="input-new-password"
+            placeholder="New password (min 6 chars)"
+            autoComplete="new-password"
+          />
+          <PasswordField
+            label="Confirm new password"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            show={showConfirmPassword}
+            onToggleShow={() => setShowConfirmPassword((p) => !p)}
+            testId="input-confirm-password"
+            placeholder="Confirm new password"
+            autoComplete="new-password"
+          />
+        </div>
+
+        <div className="flex items-center justify-between pt-1">
+          <button
+            type="button"
+            onClick={handleResetEmail}
+            disabled={isResetting}
+            className="text-xs font-semibold text-brand-indigo hover:opacity-80 disabled:opacity-50 transition-opacity duration-150"
+            data-testid="button-reset-password"
+          >
+            {isResetting ? "Sending..." : "Forgot? Send reset email"}
+          </button>
+          <button
+            type="button"
+            onClick={handleChangePassword}
+            disabled={isChangingPassword}
+            className="h-10 px-6 rounded-full bg-brand-indigo text-white text-sm font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-150"
+            data-testid="button-change-password"
+          >
+            {isChangingPassword ? "Changing..." : "Update Password"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderNotifications = () => (
+    <div className="space-y-6" data-testid="section-notifications">
+      <p className="text-sm text-muted-foreground">
+        Choose how and when you receive notifications.
+      </p>
+
+      {/* Master toggle */}
+      <div className="flex items-center justify-between gap-4 rounded-xl bg-muted/60 px-4 py-3">
+        <div>
+          <div className="text-sm font-semibold">All Notifications</div>
+          <div className="text-xs text-muted-foreground h-4">
+            {isSavingNotifs && <span className="italic">Saving...</span>}
+          </div>
+        </div>
+        <Switch
+          checked={notifPrefs.master_enabled}
+          onCheckedChange={(checked) => updateNotifPrefs((p) => ({ ...p, master_enabled: checked }))}
+          data-testid="toggle-notification-master"
+          aria-label="Toggle all notifications"
+        />
+      </div>
+
+      {/* Event matrix */}
+      <div className={notifPrefs.master_enabled ? "" : "opacity-50 pointer-events-none"}>
+        <div className="grid grid-cols-[1fr_3.5rem_3.5rem_3.5rem] gap-1 mb-2 px-1">
+          <div />
+          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-center">App</div>
+          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-center">Email</div>
+          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-center">SMS</div>
+        </div>
+
+        {NOTIF_CATEGORIES.map((cat) => {
+          const visibleEvents = cat.events.filter((ev) => !ev.roles || ev.roles.includes(userRole));
+          if (visibleEvents.length === 0) return null;
+          return (
+            <div key={cat.label} className="mb-5">
+              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 px-1">
+                {cat.label}
               </div>
-              <div className="p-4 space-y-3" data-testid="card-user-management-body">
-                <button
-                  type="button"
-                  className="h-10 w-full rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold"
-                  data-testid="button-invite-user"
-                >
-                  Invite user
-                </button>
-                <button
-                  type="button"
-                  className="h-10 w-full rounded-xl border border-border bg-muted/20 hover:bg-muted/30 text-sm font-semibold"
-                  data-testid="button-manage-roles"
-                >
-                  Manage roles
-                </button>
+              <div className="space-y-0.5">
+                {visibleEvents.map((ev) => {
+                  const channel = notifPrefs.events[ev.key] ?? ev.defaults;
+                  const Icon = ev.icon;
+                  return (
+                    <div
+                      key={ev.key}
+                      className="grid grid-cols-[1fr_3.5rem_3.5rem_3.5rem] gap-1 items-center rounded-lg px-1 py-1.5 hover:bg-muted/40 transition-colors duration-150"
+                      data-testid={`row-notif-${ev.key}`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <span className="text-[13px] truncate">{ev.label}</span>
+                      </div>
+                      {(["in_app", "email", "sms"] as const).map((ch) => (
+                        <div key={ch} className="flex justify-center">
+                          <Checkbox
+                            checked={channel[ch]}
+                            onCheckedChange={(checked) =>
+                              updateNotifPrefs((p) => ({
+                                ...p,
+                                events: { ...p.events, [ev.key]: { ...channel, [ch]: !!checked } },
+                              }))
+                            }
+                            aria-label={`${ev.label} ${ch}`}
+                            data-testid={`check-${ev.key}-${ch}`}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
               </div>
-            </section>
+            </div>
+          );
+        })}
+
+        {/* Quiet Hours */}
+        <div className="pt-4 mt-2 space-y-3 border-t border-border/20">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <div>
+                <div className="text-[13px] font-semibold">Quiet Hours</div>
+                <div className="text-xs text-muted-foreground mt-0.5">Email and SMS held. In-app still appears.</div>
+              </div>
+            </div>
+            <Switch
+              checked={notifPrefs.quiet_hours.enabled}
+              onCheckedChange={(checked) =>
+                updateNotifPrefs((p) => ({ ...p, quiet_hours: { ...p.quiet_hours, enabled: checked } }))
+              }
+              data-testid="toggle-quiet-hours"
+              aria-label="Toggle quiet hours"
+            />
+          </div>
+          {notifPrefs.quiet_hours.enabled && (
+            <div className="flex items-center gap-3 pl-6">
+              <label className="text-xs text-muted-foreground">Start</label>
+              <input
+                type="time"
+                value={notifPrefs.quiet_hours.start}
+                onChange={(e) =>
+                  updateNotifPrefs((p) => ({ ...p, quiet_hours: { ...p.quiet_hours, start: e.target.value } }))
+                }
+                className="h-10 rounded-xl border border-border/40 bg-input-bg px-3 text-sm"
+                data-testid="input-quiet-start"
+              />
+              <label className="text-xs text-muted-foreground">End</label>
+              <input
+                type="time"
+                value={notifPrefs.quiet_hours.end}
+                onChange={(e) =>
+                  updateNotifPrefs((p) => ({ ...p, quiet_hours: { ...p.quiet_hours, end: e.target.value } }))
+                }
+                className="h-10 rounded-xl border border-border/40 bg-input-bg px-3 text-sm"
+                data-testid="input-quiet-end"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Digest */}
+        <div className="pt-4 mt-4 space-y-3 border-t border-border/20">
+          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Digest</div>
+          <div className="flex items-center justify-between gap-4">
+            <div className="text-[13px]">Daily Summary Email</div>
+            <Switch
+              checked={notifPrefs.digest.daily_summary}
+              onCheckedChange={(checked) =>
+                updateNotifPrefs((p) => ({ ...p, digest: { ...p.digest, daily_summary: checked } }))
+              }
+              data-testid="toggle-digest-daily"
+              aria-label="Toggle daily summary email"
+            />
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <div className="text-[13px]">Weekly Report Email</div>
+            <Switch
+              checked={notifPrefs.digest.weekly_report}
+              onCheckedChange={(checked) =>
+                updateNotifPrefs((p) => ({ ...p, digest: { ...p.digest, weekly_report: checked } }))
+              }
+              data-testid="toggle-digest-weekly"
+              aria-label="Toggle weekly report email"
+            />
           </div>
         </div>
       </div>
-    </CrmShell>
+    </div>
+  );
+
+  const renderDashboard = () => (
+    <div className="space-y-6" data-testid="section-dashboard">
+      <p className="text-sm text-muted-foreground">
+        Configure dashboard behavior and auto-refresh intervals.
+      </p>
+
+      <div className="rounded-xl bg-muted/60 p-5 space-y-4">
+        <div>
+          <div className="text-sm font-semibold">Auto-Refresh Interval</div>
+          <div className="text-xs text-muted-foreground mt-0.5">
+            Current: <span className="font-semibold text-foreground" data-testid="text-current-interval">{labelForInterval}</span>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2" data-testid="refresh-interval-options">
+          {REFRESH_INTERVAL_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => {
+                setIntervalSeconds(option.value);
+                toast({
+                  variant: "success",
+                  title: "Refresh interval updated",
+                  description: option.value === 0 ? "Auto-refresh disabled." : `Refreshes every ${option.label}.`,
+                });
+              }}
+              className={cn(
+                "h-10 rounded-full text-[13px] font-semibold transition-colors duration-150",
+                intervalSeconds === option.value
+                  ? "border-2 border-[#FCB803] bg-[#FCB803]/15 text-foreground"
+                  : "bg-background border border-border/40 hover:bg-card text-muted-foreground"
+              )}
+              data-testid={`refresh-interval-option-${option.value}`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderActiveSection = () => {
+    switch (activeSection) {
+      case "profile": return renderProfile();
+      case "security": return renderSecurity();
+      case "notifications": return renderNotifications();
+      case "dashboard": return renderDashboard();
+    }
+  };
+
+  return (
+    <div className="h-full flex flex-col" data-testid="page-settings">
+      {/* Layout: sidebar + content */}
+      <div className="flex-1 flex gap-0 min-h-0 overflow-hidden">
+        {/* Left sidebar navigation */}
+        <nav className="w-[340px] shrink-0 bg-muted rounded-lg overflow-y-auto" data-testid="settings-nav">
+          <div className="px-3.5 pt-5 pb-1">
+            <h1 className="text-2xl font-semibold font-heading text-foreground leading-tight">Settings</h1>
+          </div>
+          <div className="flex flex-col gap-[3px] py-2 px-[3px]">
+            {SECTIONS.map((section) => {
+              const Icon = section.icon;
+              const isActive = activeSection === section.id;
+              return (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() => setActiveSection(section.id)}
+                  className={cn(
+                    "w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-150",
+                    isActive
+                      ? "bg-highlight-selected text-foreground font-semibold"
+                      : "bg-card hover:bg-card-hover text-muted-foreground hover:text-foreground"
+                  )}
+                  data-testid={`settings-nav-${section.id}`}
+                  data-active={isActive || undefined}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span>{section.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+
+        {/* Right content area */}
+        <div className="flex-1 overflow-y-auto ml-1.5 bg-card rounded-lg pb-8" data-testid="settings-content">
+          <div className="px-3.5 pt-5 pb-3">
+            <h1 className="text-2xl font-semibold font-heading text-foreground leading-tight">
+              {SECTIONS.find(s => s.id === activeSection)?.label}
+            </h1>
+          </div>
+          <div className="max-w-2xl px-6">
+            {renderActiveSection()}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
-function Field({
-  label,
-  value,
-  onChange,
-  testId,
-  placeholder,
-  type = "text",
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  testId: string;
-  placeholder?: string;
-  type?: string;
-}) {
+export default function SettingsPage() {
   return (
-    <div data-testid={`${testId}-wrap`}>
-      <label className="text-xs text-muted-foreground" data-testid={`${testId}-label`}>
-        {label}
-      </label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="mt-1 h-10 w-full rounded-xl border border-border bg-muted/20 px-3 text-sm"
-        data-testid={testId}
-        placeholder={placeholder}
-      />
-    </div>
+    <CrmShell>
+      <SettingsContent />
+    </CrmShell>
   );
 }

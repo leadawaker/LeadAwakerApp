@@ -107,7 +107,7 @@ function PasswordField({
           type={show ? "text" : "password"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="h-10 w-full rounded-xl border border-border/30 bg-background px-3 pr-10 text-sm"
+          className="h-10 w-full rounded-xl border border-border/30 bg-input-bg px-3 pr-10 text-sm"
           data-testid={testId}
           placeholder={placeholder}
           autoComplete={autoComplete}
@@ -362,7 +362,7 @@ export function SettingsPanel() {
                       onChange={(e) =>
                         updateNotifPrefs((p) => ({ ...p, quiet_hours: { ...p.quiet_hours, start: e.target.value } }))
                       }
-                      className="h-10 rounded-xl border border-border/30 bg-background px-3 text-sm"
+                      className="h-10 rounded-xl border border-border/30 bg-input-bg px-3 text-sm"
                       data-testid="input-quiet-start"
                     />
                     <label className="text-xs text-muted-foreground">End</label>
@@ -372,7 +372,7 @@ export function SettingsPanel() {
                       onChange={(e) =>
                         updateNotifPrefs((p) => ({ ...p, quiet_hours: { ...p.quiet_hours, end: e.target.value } }))
                       }
-                      className="h-10 rounded-xl border border-border/30 bg-background px-3 text-sm"
+                      className="h-10 rounded-xl border border-border/30 bg-input-bg px-3 text-sm"
                       data-testid="input-quiet-end"
                     />
                   </div>

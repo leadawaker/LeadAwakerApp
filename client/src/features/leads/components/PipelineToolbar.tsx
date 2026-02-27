@@ -283,7 +283,7 @@ export default function PipelineToolbar({
                 onKeyDown={(e) => {
                   if (e.key === "Enter") applyFold();
                 }}
-                className="h-9 w-20 rounded-xl border border-border bg-background px-3 text-sm text-center font-semibold focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
+                className="h-9 w-20 rounded-xl border border-border bg-input-bg px-3 text-sm text-center font-semibold focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
               />
               <span className="text-sm text-muted-foreground flex-1">leads</span>
               <button

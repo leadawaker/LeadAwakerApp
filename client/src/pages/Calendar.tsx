@@ -4,7 +4,10 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLeads, useCampaigns } from "@/hooks/useApiData";
 import { FiltersBar } from "@/components/crm/FiltersBar";
 import { ChevronLeft, ChevronRight, ChevronDown, AlertCircle, RefreshCw, X, User, ExternalLink, Filter, Building2, CalendarDays, Grid3X3, Columns3, CalendarRange, ArrowUpDown, Layers, Check, SlidersHorizontal, Plus, Search, Phone, Mail, Clock } from "lucide-react";
-import { getStatusAvatarColor, KanbanDetailPanel } from "@/features/leads/components/LeadsCardView";
+import { getLeadStatusAvatarColor } from "@/lib/avatarUtils";
+import { EntityAvatar } from "@/components/ui/entity-avatar";
+import { ContactSidebar } from "@/features/conversations/components/ContactSidebar";
+import type { Lead as ConversationLead, Interaction } from "@/features/conversations/hooks/useConversationsData";
 import { LeadDetailPanel } from "@/features/leads/components/LeadDetailPanel";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -23,7 +26,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { apiFetch } from "@/lib/apiUtils";
 import { BookedCallsKpi } from "@/components/crm/BookedCallsKpi";
-import { GitHubCalendar, type ContributionDay } from "@/components/ui/git-hub-calendar";
 import {
   DndContext,
   DragOverlay,
@@ -35,6 +37,7 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { useLocation } from "wouter";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const FULL_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -122,13 +125,6 @@ const APPT_FILTER_LABELS: Record<ApptFilterStatus, string> = {
   confirmed: "Confirmed",
 };
 
-// ── Avatar helpers ────────────────────────────────────────────────────────────
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0][0]?.toUpperCase() || "?";
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
 
 // ── Draggable Booking Card ────────────────────────────────────────────────────
 function DraggableBookingCard({
@@ -231,16 +227,18 @@ function DroppableTimeSlot({
 // ── Group header for appointment list ─────────────────────────────────────────
 function ApptGroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div className="sticky top-0 z-20 bg-muted px-3 pt-1.5 pb-1.5">
-      <div className="flex items-center gap-0">
-        <div className="flex-1 h-px bg-foreground/15 mx-[8px]" />
-        <span className="text-[10px] font-bold text-foreground/55 uppercase tracking-widest shrink-0">{label}</span>
-        <span className="ml-1 text-[9px] text-muted-foreground/45 font-semibold shrink-0">{count}</span>
-        <div className="flex-1 h-px bg-foreground/15 mx-[8px]" />
+    <div className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
+      <div className="flex items-center gap-[10px]">
+        <div className="flex-1 h-px bg-foreground/15" />
+        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
+        <span className="text-foreground/20 shrink-0">–</span>
+        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
+        <div className="flex-1 h-px bg-foreground/15" />
       </div>
     </div>
   );
 }
+
 
 // ── Appointment card (hover-expand, leads-style) ─────────────────────────────
 function AppointmentCard({
@@ -255,9 +253,8 @@ function AppointmentCard({
   onSelectLead?: (lead: Record<string, any>) => void;
 }) {
   const [editingDuration, setEditingDuration] = useState(false);
-  const initials = getInitials(appt.lead_name);
   const statusKey = appt.no_show ? "Lost" : (appt.status || "Contacted");
-  const { bg: avatarBg, text: avatarText } = getStatusAvatarColor(statusKey);
+  const { bg: avatarBg, text: avatarText } = getLeadStatusAvatarColor(statusKey);
 
   const handleDurationChange = async (minutes: number) => {
     setEditingDuration(false);
@@ -273,8 +270,8 @@ function AppointmentCard({
   return (
     <div
       className={cn(
-        "group/card relative mx-[3px] my-0.5 rounded-xl cursor-pointer",
-        isActive ? "bg-[var(--highlight-selected)]" : "bg-card hover:bg-popover"
+        "group/card relative rounded-xl cursor-pointer",
+        isActive ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
       )}
       onClick={onSelect}
       role="button"
@@ -283,32 +280,24 @@ function AppointmentCard({
       data-testid={`row-appt-${appt.id}`}
     >
       <div className="px-2.5 pt-2.5 pb-2 flex items-start gap-2">
-        {/* Avatar column */}
-        <div className="shrink-0 flex flex-col items-center gap-1">
-          <div
-            className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold cursor-pointer hover:opacity-80"
-            style={{ backgroundColor: avatarBg, color: avatarText }}
-            onClick={(e) => { e.stopPropagation(); onSelectLead?.(appt.rawLead); }}
-            data-testid={`appt-avatar-${appt.id}`}
-          >
-            {initials}
-          </div>
-          {/* Reschedule + no-show icons below avatar */}
-          <div className="flex items-center gap-0.5">
-            {appt.re_scheduled_count > 0 && (
-              <RefreshCw className="h-3 w-3 text-amber-500" data-testid={`reschedule-icon-${appt.id}`} />
-            )}
-            {appt.no_show && (
-              <AlertCircle className="h-3 w-3 text-red-500" data-testid={`no-show-icon-${appt.id}`} />
-            )}
-          </div>
+        {/* Avatar */}
+        <div
+          className="shrink-0 cursor-pointer hover:opacity-80"
+          onClick={(e) => { e.stopPropagation(); onSelectLead?.(appt.rawLead); }}
+          data-testid={`appt-avatar-${appt.id}`}
+        >
+          <EntityAvatar
+            name={appt.lead_name}
+            bgColor={avatarBg}
+            textColor={avatarText}
+          />
         </div>
 
         {/* Name + campaign */}
         <div className="flex-1 min-w-0 pt-0.5">
           <p
             className={cn(
-              "text-[14px] font-semibold font-heading leading-tight truncate cursor-pointer hover:underline",
+              "text-[16px] font-semibold font-heading leading-tight truncate cursor-pointer hover:underline",
               appt.no_show ? "text-red-600 dark:text-red-400" : "text-foreground"
             )}
             onClick={(e) => { e.stopPropagation(); onSelectLead?.(appt.rawLead); }}
@@ -323,15 +312,14 @@ function AppointmentCard({
           )}
         </div>
 
-        {/* Right column: time + date */}
-        <div className="shrink-0 flex flex-col items-end gap-0.5 min-w-[68px]">
-          <span className={cn("text-[15px] font-bold tabular-nums leading-tight", appt.no_show ? "text-red-500" : "text-brand-indigo")} data-testid={`time-${appt.id}`}>
-            {appt.time}
-          </span>
-          <span className="text-[10px] text-muted-foreground tabular-nums leading-tight" data-testid={`date-${appt.id}`}>
+        {/* Right column: date / time / duration stacked */}
+        <div className="shrink-0 flex flex-col items-end gap-0.5">
+          <span className="text-[11px] text-muted-foreground tabular-nums leading-tight" data-testid={`date-${appt.id}`}>
             {appt.formattedDate}
           </span>
-          {/* Duration */}
+          <span className="text-[11px] font-bold tabular-nums leading-tight text-foreground" data-testid={`time-${appt.id}`}>
+            {appt.time}
+          </span>
           {editingDuration ? (
             <select
               autoFocus
@@ -358,18 +346,42 @@ function AppointmentCard({
         </div>
       </div>
 
-      {/* Hover-expand: phone + email */}
+      {/* Hover-expand: contact info + rescheduled/no-show labels */}
       <div className="grid grid-rows-[0fr] group-hover/card:grid-rows-[1fr] transition-[grid-template-rows] duration-200 ease-out">
         <div className="overflow-hidden">
-          <div className="px-2.5 pb-2.5 pt-1 space-y-1 border-t border-border/20">
-            <div className="flex items-center gap-2">
-              <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              <span className="text-[11px] text-muted-foreground truncate">{appt.phone || "—"}</span>
+          <div className="px-2.5 pb-2.5 pt-1 flex flex-col gap-1.5 border-t border-border/20">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <span className="text-[11px] text-muted-foreground truncate">{appt.phone || "\u2014"}</span>
+              </div>
+              <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <span className="text-[11px] text-muted-foreground truncate">{appt.email || "\u2014"}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              <span className="text-[11px] text-muted-foreground truncate">{appt.email || "—"}</span>
-            </div>
+            {(appt.re_scheduled_count > 0 || appt.no_show) && (
+              <div className="flex items-center gap-2.5">
+                {appt.re_scheduled_count > 0 && (
+                  <span
+                    className="inline-flex items-center gap-1 text-amber-600"
+                    data-testid={`reschedule-icon-${appt.id}`}
+                  >
+                    <RefreshCw className="h-3 w-3 shrink-0" />
+                    <span className="text-[10px] font-semibold">Rescheduled x{appt.re_scheduled_count}</span>
+                  </span>
+                )}
+                {appt.no_show && (
+                  <span
+                    className="inline-flex items-center gap-1 text-red-500"
+                    data-testid={`no-show-icon-${appt.id}`}
+                  >
+                    <AlertCircle className="h-3 w-3 shrink-0" />
+                    <span className="text-[10px] font-semibold">No Show</span>
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -401,6 +413,11 @@ export default function CalendarPage() {
   const [selectedLead, setSelectedLead] = useState<Record<string, any> | null>(null);
   const [fullProfileLead, setFullProfileLead] = useState<Record<string, any> | null>(null);
   const [selectedLeadTags, setSelectedLeadTags] = useState<{ name: string; color: string }[]>([]);
+
+  // Recent messages for the ContactSidebar
+  const [recentMessages, setRecentMessages] = useState<Interaction[]>([]);
+  const [recentMessagesLoading, setRecentMessagesLoading] = useState(false);
+  const [, goTo] = useLocation();
 
   // Book popover state
   const [bookPopoverOpen, setBookPopoverOpen] = useState(false);
@@ -752,6 +769,40 @@ export default function CalendarPage() {
     }
   }, []);
 
+  // Fetch recent messages when a lead is selected (for right panel)
+  const activePanelLeadId = selectedBooking?.rawLead?.id ?? selectedBooking?.rawLead?.Id ?? selectedLead?.id ?? selectedLead?.Id ?? null;
+  useEffect(() => {
+    if (!activePanelLeadId) { setRecentMessages([]); return; }
+    let cancelled = false;
+    setRecentMessagesLoading(true);
+    (async () => {
+      try {
+        const res = await apiFetch(`/api/interactions?leadId=${activePanelLeadId}`);
+        if (!res.ok) { if (!cancelled) setRecentMessages([]); return; }
+        const data = await res.json();
+        const list: Interaction[] = Array.isArray(data) ? data : data?.list || [];
+        const sorted = list.sort((a, b) =>
+          (a.created_at ?? a.createdAt ?? "").localeCompare(b.created_at ?? b.createdAt ?? "")
+        );
+        if (!cancelled) setRecentMessages(sorted.slice(-20));
+      } catch {
+        if (!cancelled) setRecentMessages([]);
+      } finally {
+        if (!cancelled) setRecentMessagesLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [activePanelLeadId]);
+
+  // Update lead handler for ContactSidebar
+  const handleCalendarUpdateLead = useCallback(async (leadId: number, patch: Record<string, unknown>) => {
+    await apiFetch(`/api/leads/${leadId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+  }, []);
+
   const handleBookLead = useCallback(async () => {
     if (!bookSelectedLead || !bookDate || !bookTime) return;
     setBookSubmitting(true);
@@ -889,7 +940,7 @@ export default function CalendarPage() {
         onDragCancel={handleDragCancel}
       >
         <div className={cn(
-          "flex flex-col px-0 py-0 bg-transparent pb-4",
+          "flex flex-col px-0 py-0 bg-transparent",
           isMobile || isTablet ? "h-auto overflow-y-auto" : "h-full overflow-hidden"
         )} data-testid="page-calendar">
           {/* Hidden legacy header */}
@@ -902,8 +953,8 @@ export default function CalendarPage() {
             "flex-1 min-h-0 gap-[3px]",
             isMobile || isTablet
               ? "flex flex-col overflow-y-auto"
-              : selectedLead
-                ? "grid grid-cols-[340px_1fr_380px]"
+              : (selectedBooking || selectedLead)
+                ? "grid grid-cols-[340px_1fr_340px]"
                 : "grid grid-cols-1 lg:grid-cols-[340px_1fr]"
           )} data-testid="layout-calendar">
 
@@ -922,7 +973,7 @@ export default function CalendarPage() {
                   <IconBtn title="Previous" onClick={() => navigate(-1)} data-testid="button-prev">
                     <ChevronLeft className="h-4 w-4" />
                   </IconBtn>
-                  <div className="text-[12px] font-semibold font-heading text-center leading-tight" data-testid="text-view-label">
+                  <div className="text-2xl font-semibold font-heading text-foreground text-center leading-tight" data-testid="text-view-label">
                     {viewLabel}
                   </div>
                   <IconBtn title="Next" onClick={() => navigate(1)} data-testid="button-next">
@@ -939,12 +990,13 @@ export default function CalendarPage() {
                 >
                   Today
                 </button>
-              </div>
 
-              {/* ── Booked Calls KPI Banner ── */}
-              <div className="px-3.5 pb-2 shrink-0">
+                {/* Spacer */}
+                <div className="flex-1 min-w-0" />
+
+                {/* Inline Booked Calls KPI */}
                 <BookedCallsKpi
-                  variant="hero"
+                  variant="inline"
                   accountId={isAgencyUser ? (effectiveAccountFilter === "all" ? undefined : effectiveAccountFilter) : currentAccountId}
                 />
               </div>
@@ -977,8 +1029,8 @@ export default function CalendarPage() {
                           className={cn(
                             "min-h-[100px] border-b border-r border-border/30 last:border-r-0 p-2 cursor-pointer hover:bg-muted/30 relative",
                             !inMonth && "bg-muted/5 opacity-40",
-                            isWeekend && inMonth && "bg-muted/[0.12]",
-                            isSelected && "bg-[var(--highlight-selected)] z-10",
+                            isWeekend && inMonth && "bg-stone-200/30",
+                            isSelected && "bg-brand-indigo/[0.08] z-10",
                             isToday && !isSelected && "bg-brand-indigo/5"
                           )}
                           data-testid={`day-${idx}`}
@@ -1010,18 +1062,13 @@ export default function CalendarPage() {
                                         isPast
                                           ? "bg-muted/70 text-muted-foreground"
                                           : a.no_show
-                                            ? "bg-red-600/15 border-l-2 border-red-600"
-                                            : "bg-brand-indigo/15 border-l-2 border-brand-indigo"
+                                            ? "bg-red-600 text-white"
+                                            : "bg-[#4F46E5] text-white"
                                       )}>
-                                        <div className={cn("w-1.5 h-1.5 rounded-full shrink-0",
-                                          isPast ? "bg-muted-foreground/50" : a.no_show ? "bg-red-600" : "bg-brand-indigo"
-                                        )} />
                                         <span className={cn("text-[9px] font-bold truncate flex-1 leading-none",
-                                          isPast ? "text-muted-foreground" : a.no_show ? "text-red-700 dark:text-red-400" : "text-brand-deep-blue dark:text-brand-indigo"
+                                          isPast ? "text-muted-foreground" : "text-white"
                                         )} data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</span>
-                                        <span className={cn("text-[8px] font-medium shrink-0 tabular-nums leading-none",
-                                          isPast ? "text-muted-foreground" : a.no_show ? "text-red-500" : "text-brand-indigo"
-                                        )} data-testid={`booking-time-${a.id}`}>{a.time}</span>
+                                        <span className="text-[8px] font-medium shrink-0 tabular-nums leading-none opacity-80" data-testid={`booking-time-${a.id}`}>{a.time}</span>
                                       </div>
                                     );
                                   })()}
@@ -1106,7 +1153,7 @@ export default function CalendarPage() {
                           return (
                             <div key={i} className={cn(
                               "flex-1 relative border-r border-border/20 last:border-r-0",
-                              isWeekend && "bg-muted/[0.03]",
+                              isWeekend && "bg-stone-200/20",
                               isToday && "bg-brand-indigo/[0.03]"
                             )}>
                               {/* Gridlines */}
@@ -1148,8 +1195,8 @@ export default function CalendarPage() {
                                     className={cn(
                                       "absolute left-1 right-1 px-2 py-1.5 rounded-xl shadow-sm z-10 hover:ring-2 overflow-hidden",
                                       a.no_show
-                                        ? "bg-red-500/10 border-l-4 border-red-500 hover:ring-red-400"
-                                        : "bg-brand-indigo/10 border-l-4 border-brand-indigo hover:ring-brand-indigo"
+                                        ? "bg-red-600 text-white hover:ring-red-400"
+                                        : "bg-[#4F46E5] text-white hover:ring-brand-indigo"
                                     )}
                                     style={{
                                       top: `${(a.hour * 60 + a.minutes) * (HOUR_H / 60)}px`,
@@ -1157,9 +1204,9 @@ export default function CalendarPage() {
                                     }}
                                   >
                                     <div className="flex items-center gap-1 min-w-0">
-                                      <div className={cn("text-[10px] font-bold truncate flex-1", a.no_show ? "text-red-600 dark:text-red-400" : "text-brand-deep-blue dark:text-brand-indigo")} data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</div>
+                                      <div className="text-[10px] font-bold truncate flex-1 text-white" data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</div>
                                     </div>
-                                    <div className={cn("text-[9px] font-medium", a.no_show ? "text-red-500" : "text-brand-indigo")} data-testid={`booking-time-${a.id}`}>
+                                    <div className="text-[9px] font-medium text-white/80" data-testid={`booking-time-${a.id}`}>
                                       {a.time} — {endStr}
                                     </div>
                                   </DraggableBookingCard>
@@ -1176,17 +1223,31 @@ export default function CalendarPage() {
               })()}
             </div>
 
-            {/* Lead detail panel — 3rd column */}
-            {selectedLead && (
-              <div className="bg-card rounded-lg overflow-hidden flex flex-col lg:order-3 h-full">
-                <KanbanDetailPanel
-                  lead={selectedLead}
-                  onClose={() => setSelectedLead(null)}
-                  leadTags={selectedLeadTags}
-                  onOpenFullProfile={() => setFullProfileLead(selectedLead)}
-                />
-              </div>
-            )}
+            {/* Right detail panel — 3rd column (reuses ContactSidebar from Chats) */}
+            {(selectedBooking || selectedLead) && (() => {
+              const panelLead = (selectedBooking?.rawLead ?? selectedLead) as ConversationLead;
+              const panelLeadId = panelLead?.id ?? panelLead?.Id;
+              const fakeThread = panelLead ? {
+                lead: panelLead,
+                msgs: [] as Interaction[],
+                last: undefined as Interaction | undefined,
+                unread: false,
+                unreadCount: 0,
+              } : null;
+              return (
+                <div className="overflow-hidden flex flex-col lg:order-3 h-full">
+                  <ContactSidebar
+                    selected={fakeThread}
+                    onClose={() => { setSelectedBooking(null); setSelectedLead(null); }}
+                    onUpdateLead={handleCalendarUpdateLead}
+                    className="flex"
+                    recentMessages={recentMessages}
+                    recentMessagesLoading={recentMessagesLoading}
+                    onViewConversation={() => goTo(`/conversations?leadId=${panelLeadId}`)}
+                  />
+                </div>
+              );
+            })()}
 
             {/* ══════════════════════════════════════════════════════════════════
                 LEFT PANEL — My Calendar (appointment list)
@@ -1198,7 +1259,7 @@ export default function CalendarPage() {
 
               {/* ── Panel header ── */}
               <div className="px-3.5 pt-5 pb-1 shrink-0 flex items-center justify-between">
-                <h2 className="text-[12px] font-semibold font-heading text-foreground leading-tight" data-testid="text-list-title">
+                <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight" data-testid="text-list-title">
                   My Calendar
                 </h2>
                 <span className="w-10 text-center text-[12px] font-medium text-muted-foreground tabular-nums">{totalApptCount}</span>
@@ -1231,7 +1292,7 @@ export default function CalendarPage() {
                       <button
                         key={tab.id}
                         onClick={() => setViewMode(tab.id)}
-                        className="inline-flex items-center gap-1.5 h-10 px-3 rounded-full bg-brand-indigo text-white text-[12px] font-semibold"
+                        className="inline-flex items-center gap-1.5 h-10 px-3 rounded-full bg-highlight-active text-foreground text-[12px] font-semibold"
                         data-testid={`button-view-${tab.id}`}
                       >
                         <Icon className="h-4 w-4" />
@@ -1496,28 +1557,30 @@ export default function CalendarPage() {
               )}
 
               {/* ── Appointment list ── */}
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto p-[3px]">
                 {totalApptCount === 0 ? (
                   <div data-testid="empty-appts">
                     <DataEmptyState variant="calendar" compact />
                   </div>
                 ) : (
-                  groupedAppts.map((group, gi) => (
-                    <div key={gi}>
-                      {group.label && (
-                        <ApptGroupHeader label={group.label} count={group.items.length} />
-                      )}
-                      {group.items.map((a) => (
-                        <AppointmentCard
-                          key={a.id}
-                          appt={a}
-                          isActive={selectedBooking?.id === a.id}
-                          onSelect={() => setSelectedBooking(a)}
-                          onSelectLead={handleSelectLead}
-                        />
-                      ))}
-                    </div>
-                  ))
+                  <div className="flex flex-col gap-[3px]">
+                    {groupedAppts.map((group, gi) => (
+                      <div key={gi} className="flex flex-col gap-[3px]">
+                        {group.label && (
+                          <ApptGroupHeader label={group.label} count={group.items.length} />
+                        )}
+                        {group.items.map((a) => (
+                          <AppointmentCard
+                            key={a.id}
+                            appt={a}
+                            isActive={selectedBooking?.id === a.id}
+                            onSelect={() => setSelectedBooking(a)}
+                            onSelectLead={handleSelectLead}
+                          />
+                        ))}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
@@ -1537,17 +1600,17 @@ export default function CalendarPage() {
             {activeAppt ? (
               <div
                 className={cn(
-                  "px-2 py-1.5 rounded-xl shadow-xl border-l-4 opacity-90 min-w-[120px] max-w-[200px]",
+                  "px-2 py-1.5 rounded-xl shadow-xl opacity-90 min-w-[120px] max-w-[200px]",
                   activeAppt.no_show
-                    ? "bg-red-500/30 border-red-500"
-                    : "bg-brand-indigo/30 border-brand-indigo"
+                    ? "bg-red-600 text-white"
+                    : "bg-[#4F46E5] text-white"
                 )}
                 data-testid="drag-overlay"
               >
-                <div className={cn("text-[10px] font-bold truncate", activeAppt.no_show ? "text-red-700 dark:text-red-300" : "text-brand-deep-blue dark:text-brand-indigo")}>
+                <div className="text-[10px] font-bold truncate text-white">
                   {activeAppt.lead_name}
                 </div>
-                <div className={cn("text-[9px] font-medium", activeAppt.no_show ? "text-red-500" : "text-brand-indigo")}>
+                <div className="text-[9px] font-medium text-white/80">
                   {activeAppt.time}
                 </div>
               </div>

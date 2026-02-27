@@ -32,7 +32,8 @@ const snapCenterToCursor: Modifier = ({ activatorEvent, draggingNodeRect, transf
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
-import { getStatusAvatarColor } from "./LeadsCardView";
+import { getLeadStatusAvatarColor, getInitials as getInitialsUtil, PIPELINE_HEX as PIPELINE_HEX_UTIL } from "@/lib/avatarUtils";
+import { EntityAvatar } from "@/components/ui/entity-avatar";
 import {
   Phone,
   Mail,
@@ -100,18 +101,8 @@ const STAGE_LABELS: Record<string, string> = {
   DND: "DND",
 };
 
-/** Hex color for each pipeline stage — matches dashboard subdued palette */
-const PIPELINE_HEX: Record<string, string> = {
-  New:                  "#6B7280",
-  Contacted:            "#4F46E5",
-  Responded:            "#14B8A6",
-  "Multiple Responses": "#22C55E",
-  Qualified:            "#84CC16",
-  Booked:               "#FCB803",
-  Closed:               "#10b981",
-  Lost:                 "#ef4444",
-  DND:                  "#71717A",
-};
+// PIPELINE_HEX moved to @/lib/avatarUtils
+const PIPELINE_HEX = PIPELINE_HEX_UTIL;
 
 /** Icon for each pipeline stage — matches dashboard sales pipeline */
 const STAGE_ICONS: Record<string, LucideIcon> = {
@@ -231,9 +222,8 @@ function getFullName(lead: any): string {
   return lead.full_name || [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "Unknown";
 }
 
-function getInitials(name: string): string {
-  return name.split(" ").map((w: string) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "?";
-}
+// getInitials moved to @/lib/avatarUtils
+const getInitials = getInitialsUtil;
 
 function getScore(lead: any): number {
   return Number(lead.lead_score ?? lead.leadScore ?? lead.Lead_Score ?? 0);
@@ -309,7 +299,7 @@ function KanbanCardContent({
   const phone       = getPhone(lead);
   const email       = getEmail(lead);
   const lastMessage = getLastMessage(lead);
-  const avatarColor = getStatusAvatarColor(status);
+  const avatarColor = getLeadStatusAvatarColor(status);
   const statusHex   = PIPELINE_HEX[status] || "#6B7280";
   const lastActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
   const visibleTags  = (cardTags || []).slice(0, 3);
@@ -319,7 +309,7 @@ function KanbanCardContent({
       className={cn(
         "group/card relative mx-0.5 my-0.5 rounded-xl transition-shadow duration-150",
         isSelected
-          ? "bg-[#FFF1C8]"
+          ? "bg-highlight-selected"
           : "bg-white hover:bg-white hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]",
         isDragging && "scale-[1.02] rotate-1 opacity-95"
       )}
@@ -329,17 +319,17 @@ function KanbanCardContent({
         {/* Row 1: Avatar | Name + status | Right: ScoreRing + lastActivity */}
         <div className="flex items-start gap-2">
           {/* Avatar */}
-          <div
-            className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0 mt-0.5"
-            style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
-          >
-            {initials}
-          </div>
+          <EntityAvatar
+            name={name}
+            bgColor={avatarColor.bg}
+            textColor={avatarColor.text}
+            className="mt-0.5"
+          />
 
           {/* Name + conversion status dot */}
           <div className="flex-1 min-w-0 pt-0.5">
             <p
-              className="text-[13px] font-semibold font-heading leading-tight truncate text-foreground"
+              className="text-[16px] font-semibold font-heading leading-tight truncate text-foreground"
               data-testid="kanban-card-name"
             >
               {name}

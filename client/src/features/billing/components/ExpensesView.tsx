@@ -109,7 +109,7 @@ function ExpenseDataRow({
       className={cn(
         "h-[52px] transition-colors",
         hasSelection && "cursor-pointer",
-        !sel && "hover:bg-[#F8F8F8]"
+        !sel && "hover:bg-card-hover"
       )}
       style={{ backgroundColor: sel ? "#FFF1C8" : "#F1F1F1" }}
     >

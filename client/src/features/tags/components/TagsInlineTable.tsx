@@ -304,7 +304,7 @@ export function TagsInlineTable({
       <div className="flex-1 min-h-0 overflow-auto">
         <table
           className="w-full"
-          style={{ borderCollapse: "collapse", minWidth: 600 }}
+          style={{ borderCollapse: "separate", borderSpacing: "0 3px", minWidth: 600 }}
         >
           {/* ── Sticky header ─────────────────────────────────────────────── */}
           <thead className="sticky top-0 z-20">
@@ -387,10 +387,10 @@ export function TagsInlineTable({
                 <tr
                   key={tag.id}
                   className={cn(
-                    "group/row cursor-pointer h-10 border-b border-border/15",
+                    "group/row cursor-pointer h-10",
                     isSelected
-                      ? "bg-[#FFF1C8]"
-                      : "bg-[#F1F1F1] hover:bg-[#F8F8F8]",
+                      ? "bg-highlight-selected"
+                      : "bg-card hover:bg-card-hover",
                   )}
                   onClick={(e) => handleRowClick(tag, e)}
                 >

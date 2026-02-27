@@ -70,6 +70,11 @@ import { useInteractions } from "@/hooks/useApiData";
 import { sendMessage } from "@/features/conversations/api/conversationsApi";
 import type { Interaction } from "@/types/models";
 import { resolveColor } from "@/features/tags/types";
+import { getLeadStatusAvatarColor, PIPELINE_HEX as PIPELINE_HEX_UTIL, getInitials as getInitialsUtil } from "@/lib/avatarUtils";
+import { EntityAvatar } from "@/components/ui/entity-avatar";
+
+// ── Re-exports for backward compat — other files importing from LeadsCardView still work ──
+export { getLeadStatusAvatarColor as getStatusAvatarColor, PIPELINE_HEX } from "@/lib/avatarUtils";
 
 export type ViewMode = "list" | "table" | "pipeline";
 
@@ -132,35 +137,11 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; dot: string; bad
   DND:                  { bg: "bg-zinc-500/10",    text: "text-zinc-600 dark:text-zinc-400",    dot: "bg-zinc-500",    badge: "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800/60 dark:text-zinc-400 dark:border-zinc-700" },
 };
 
-// ── Pipeline stage hex colors — exact match to LeadsKanban.tsx ────────────────
-export const PIPELINE_HEX: Record<string, string> = {
-  New:                  "#6B7280",
-  Contacted:            "#4F46E5",
-  Responded:            "#14B8A6",
-  "Multiple Responses": "#22C55E",
-  Qualified:            "#84CC16",
-  Booked:               "#FCB803",
-  Closed:               "#10B981",
-  Lost:                 "#EF4444",
-  DND:                  "#71717A",
-};
+// PIPELINE_HEX moved to @/lib/avatarUtils — re-exported above for backward compat
+const PIPELINE_HEX = PIPELINE_HEX_UTIL;
 
-// ── Status-based avatar colors — tinted to match PIPELINE_HEX palette ────────
-export function getStatusAvatarColor(status: string): { bg: string; text: string } {
-  // Colors derived from the Kanban PIPELINE_HEX palette for visual consistency
-  const solids: Record<string, { bg: string; text: string }> = {
-    New:                  { bg: "#d1d5db", text: "#374151" },   // gray tint
-    Contacted:            { bg: "#c7d2fe", text: "#3730a3" },   // indigo tint
-    Responded:            { bg: "#99f6e4", text: "#0f766e" },   // teal tint
-    "Multiple Responses": { bg: "#bbf7d0", text: "#166534" },   // green tint
-    Qualified:            { bg: "#d9f99d", text: "#3f6212" },   // lime tint
-    Booked:               { bg: "#fde68a", text: "#78350f" },   // amber/brand-yellow tint
-    Closed:               { bg: "#a7f3d0", text: "#065f46" },   // emerald tint
-    Lost:                 { bg: "#fecaca", text: "#991b1b" },   // red tint
-    DND:                  { bg: "#e4e4e7", text: "#52525b" },   // zinc tint
-  };
-  return solids[status] ?? { bg: "#d1d5db", text: "#374151" };
-}
+// getStatusAvatarColor moved to @/lib/avatarUtils as getLeadStatusAvatarColor — re-exported above
+const getStatusAvatarColor = getLeadStatusAvatarColor;
 
 // ── Score color — blue (#4F46E5) at 0 → yellow (#FCB803) at 100 ───────────────
 function getScoreColor(score: number): string {
@@ -215,7 +196,7 @@ export function getFullName(lead: Record<string, any>): string {
   return lead.full_name || [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "Unknown";
 }
 export function getInitials(name: string): string {
-  return name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "?";
+  return getInitialsUtil(name);
 }
 export function getScore(lead: Record<string, any>): number {
   return Number(lead.lead_score ?? lead.leadScore ?? lead.Lead_Score ?? 0);
@@ -308,24 +289,24 @@ function ScoreArc({ score, status }: { score: number; status?: string }) {
   const fillColor = (status && PIPELINE_HEX[status]) || "#4F46E5";
   const grade = getGrade(score);
 
-  // Background track: semicircle from left to right, going counterclockwise through the top
-  const bgPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 0 ${cx + r} ${cy}`;
+  // Background track: semicircle from left to right, arcing upward through the top
+  const bgPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
 
-  // Score fill: arc from left to score position
+  // Score fill: arc from left to score position (sweep-flag=1 → clockwise = upward)
   let fillPath = "";
   if (score > 0) {
     if (score >= 100) {
       fillPath = bgPath;
     } else {
-      const angleDeg = 180 - (score / 100) * 180;
-      const endX = (cx + r * Math.cos((angleDeg * Math.PI) / 180)).toFixed(2);
-      const endY = (cy - r * Math.sin((angleDeg * Math.PI) / 180)).toFixed(2);
-      fillPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 0 ${endX} ${endY}`;
+      const angleRad = ((score / 100) * 180 * Math.PI) / 180;
+      const endX = (cx - r * Math.cos(angleRad)).toFixed(2);
+      const endY = (cy - r * Math.sin(angleRad)).toFixed(2);
+      fillPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${endX} ${endY}`;
     }
   }
 
   return (
-    <svg viewBox="0 10 200 100" className="w-full max-w-[180px] mx-auto">
+    <svg viewBox="0 0 200 115" className="w-full max-w-[200px] mx-auto">
       {/* Track */}
       <path d={bgPath} fill="none" stroke="#E5E7EB" strokeWidth={sw} strokeLinecap="round" />
       {/* Fill */}
@@ -333,12 +314,12 @@ function ScoreArc({ score, status }: { score: number; status?: string }) {
         <path d={fillPath} fill="none" stroke={fillColor} strokeWidth={sw} strokeLinecap="round" />
       )}
       {/* Score number */}
-      <text x={cx} y={cy - 24} textAnchor="middle"
+      <text x={cx} y={cy - 16} textAnchor="middle"
         fontSize="38" fontWeight="900" fontFamily="inherit" fill="#111827" letterSpacing="-2">
         {score}
       </text>
       {/* Grade label */}
-      <text x={cx} y={cy - 6} textAnchor="middle"
+      <text x={cx} y={cy + 1} textAnchor="middle"
         fontSize="10" fontWeight="700" fontFamily="inherit" fill="#9CA3AF" letterSpacing="1">
         {grade} GRADE
       </text>
@@ -397,14 +378,14 @@ function PipelineProgress({ status }: { status: string }) {
   const currentIndex = PIPELINE_STAGES.findIndex((s) => s.key === status);
   const isLost = LOST_STAGES.includes(status);
   const effectiveIndex = isLost ? -1 : currentIndex;
-  const tubeHeight = 26;
+  const tubeHeight = 46;
   const stageCount = PIPELINE_STAGES.length;
 
   // Sizes — current stage is slightly bigger
-  const iconSizeBase = 28;
-  const iconSizeCurrent = 34;
-  const innerIconBase = 14;
-  const innerIconCurrent = 18;
+  const iconSizeBase = 30;
+  const iconSizeCurrent = 36;
+  const innerIconBase = 16;
+  const innerIconCurrent = 20;
 
   // Monochrome: ALL filled segments use the current stage's color
   const activeHex = PIPELINE_HEX[status] || "#6B7280";
@@ -412,12 +393,12 @@ function PipelineProgress({ status }: { status: string }) {
   const barHex = `${activeHex}B0`;
 
   return (
-    <div className="w-full" style={{ padding: `0 ${iconSizeCurrent / 2 + 2}px` }}>
+    <div className="w-full">
       <div className="relative" style={{ height: tubeHeight + 14 }}>
-        {/* Gray track underneath (full width) */}
+        {/* Gray track underneath (full width) — multiply blend, 6px slimmer than color bar */}
         <div
           className="absolute rounded-full"
-          style={{ left: 0, right: 0, top: "50%", transform: "translateY(-50%)", height: tubeHeight, backgroundColor: "rgba(55,55,55,0.18)" }}
+          style={{ left: 0, right: 0, top: "50%", transform: "translateY(-50%)", height: tubeHeight - 6, backgroundColor: "rgba(55,55,55,0.160)", mixBlendMode: "multiply" }}
         />
 
         {/* Colored segments on top — paler activeHex */}
@@ -434,7 +415,7 @@ function PipelineProgress({ status }: { status: string }) {
               if (isPast) {
                 bg = barHex;
               } else if (isCurrent) {
-                bg = `linear-gradient(to right, ${barHex} 0%, ${barHex} 30%, transparent 100%)`;
+                bg = `linear-gradient(to right, ${barHex} 0%, ${barHex} 45%, transparent 100%)`;
               } else {
                 bg = "transparent";
               }
@@ -471,22 +452,20 @@ function PipelineProgress({ status }: { status: string }) {
               style={{
                 left: `${pct}%`,
                 top: "50%",
-                transform: `translate(-${sz / 2}px, -50%)`,
+                transform: i === 0 ? "translate(15px, -50%)" : `translate(calc(15px - ${sz / 2}px), -50%)`,
               }}
             >
-              {/* Icon circle */}
+              {/* Icon circle — white fill, black icon, bright border */}
               <div
                 className="flex items-center justify-center rounded-full shrink-0"
                 style={{
                   width: sz,
                   height: sz,
-                  backgroundColor: isFuture
-                    ? "rgba(210,210,210,0.95)"
-                    : activeHex,
+                  backgroundColor: "#fff",
                   border: isFuture
-                    ? "1.5px solid rgba(0,0,0,0.08)"
-                    : `2px solid ${activeHex}`,
-                  boxShadow: isCurrent ? `0 0 0 3px ${activeHex}25` : "none",
+                    ? "1.5px solid rgba(0,0,0,0.12)"
+                    : `2.5px solid ${activeHex}`,
+                  boxShadow: isCurrent ? `0 0 0 3px ${activeHex}40` : "none",
                 }}
               >
                 <IconComponent
@@ -494,15 +473,15 @@ function PipelineProgress({ status }: { status: string }) {
                   style={{
                     width: innerSz,
                     height: innerSz,
-                    color: (isPast || isCurrent) ? "#fff" : "rgba(0,0,0,0.25)",
+                    color: (isPast || isCurrent) ? "#1F1F1F" : "rgba(0,0,0,0.20)",
                   }}
                 />
               </div>
-              {/* Label next to icon */}
+              {/* Label next to icon — black, capitalize only */}
               <span
-                className="ml-1 font-bold uppercase tracking-wide leading-none whitespace-nowrap select-none"
+                className="ml-2 font-bold tracking-wide leading-none whitespace-nowrap select-none capitalize"
                 style={{
-                  color: (isPast || isCurrent) ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.40)",
+                  color: isCurrent ? "#FFFFFF" : isFuture ? "#000000" : "#1F1F1F",
                   fontSize: isCurrent ? "11px" : "8px",
                 }}
               >
@@ -627,8 +606,8 @@ function ContactWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefre
   ];
 
   return (
-    <div className="bg-white/60 rounded-xl p-4 flex flex-col h-full overflow-y-auto">
-      <p className="text-[17px] font-semibold font-heading text-foreground mb-3">Contact</p>
+    <div className="bg-white/60 rounded-xl p-[21px] flex flex-col h-full overflow-y-auto">
+      <p className="text-[16px] font-semibold font-heading text-foreground mb-3">Contact</p>
       <div className="flex flex-col">
         {editableRows.map((row) => (
           <div key={row.label} className="py-2.5 border-b border-border/20 last:border-0 last:pb-0">
@@ -718,8 +697,8 @@ function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<str
 
   if (score === 0) {
     return (
-      <div className="bg-white/60 rounded-xl p-4 flex flex-col gap-3 h-full overflow-y-auto">
-        <p className="text-[17px] font-semibold font-heading text-foreground">Lead Score</p>
+      <div className="bg-white/60 rounded-xl p-[21px] flex flex-col gap-3 h-full overflow-y-auto">
+        <p className="text-[16px] font-semibold font-heading text-foreground">Lead Score</p>
         <div className="flex-1 flex flex-col items-center justify-center gap-[3px]">
           <p className="text-2xl font-black text-muted-foreground/25">—</p>
           <p className="text-[10px] text-muted-foreground/50">Not scored</p>
@@ -735,8 +714,8 @@ function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<str
   }
 
   return (
-    <div className="bg-white/50 rounded-xl p-4 flex flex-col gap-2 h-full overflow-y-auto">
-      <p className="text-[17px] font-semibold font-heading text-foreground shrink-0">Lead Score</p>
+    <div className="bg-white/50 rounded-xl p-[21px] flex flex-col gap-2 h-full overflow-y-auto">
+      <p className="text-[16px] font-semibold font-heading text-foreground shrink-0">Lead Score</p>
 
       {/* Arc gauge */}
       <div className="flex flex-col items-center shrink-0">
@@ -880,8 +859,8 @@ function ConversationWidget({ lead, showHeader = false }: { lead: Record<string,
     <div className="flex flex-col h-full min-h-0">
       {/* Header with refresh */}
       {showHeader && (
-        <div className="px-4 pt-4 pb-2 flex items-center justify-between shrink-0">
-          <p className="text-[17px] font-semibold font-heading text-foreground">Chat</p>
+        <div className="px-[21px] pt-[21px] pb-2 flex items-center justify-between shrink-0">
+          <p className="text-[16px] font-semibold font-heading text-foreground">Chat</p>
           <button
             onClick={handleRefreshChat}
             className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
@@ -1055,9 +1034,9 @@ function TeamWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefresh?
   };
 
   return (
-    <div className="bg-white/60 rounded-xl p-4 flex flex-col h-full overflow-y-auto">
+    <div className="bg-white/60 rounded-xl p-[21px] flex flex-col h-full overflow-y-auto">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[17px] font-semibold font-heading text-foreground">Team</p>
+        <p className="text-[16px] font-semibold font-heading text-foreground">Team</p>
         <Popover open={addOpen} onOpenChange={setAddOpen}>
           <PopoverTrigger asChild>
             <button className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
@@ -1177,8 +1156,8 @@ function NotesWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefresh
   }, [draft, currentNotes, leadId, onRefresh]);
 
   return (
-    <div className="bg-white/60 rounded-xl p-4 flex flex-col gap-3 min-h-full">
-      <p className="text-[17px] font-semibold font-heading text-foreground">Notes</p>
+    <div className="bg-white/60 rounded-xl p-[21px] flex flex-col gap-3 min-h-full">
+      <p className="text-[16px] font-semibold font-heading text-foreground">Notes</p>
       {editing ? (
         <textarea
           ref={textareaRef}
@@ -1305,8 +1284,8 @@ function ActivityTimeline({ lead, tagEvents }: {
   }, [interactions, tagEvents, status, lead]);
 
   return (
-    <div className="bg-white/60 rounded-xl p-4 flex flex-col h-full overflow-y-auto">
-      <p className="text-[17px] font-semibold font-heading text-foreground mb-3">Activity</p>
+    <div className="bg-white/60 rounded-xl p-[21px] flex flex-col h-full overflow-y-auto">
+      <p className="text-[16px] font-semibold font-heading text-foreground mb-3">Activity</p>
       {loading ? (
         <div className="flex flex-col gap-3 py-2">
           {[1, 2, 3].map((i) => (
@@ -1387,11 +1366,13 @@ export function LeadDetailView({
   lead,
   onClose,
   onRefresh,
+  toolbarPrefix,
 }: {
   lead: Record<string, any>;
   onClose: () => void;
   leadTags?: { name: string; color: string }[];
   onRefresh?: () => void;
+  toolbarPrefix?: (opts: { isNarrow: boolean }) => React.ReactNode;
 }) {
   const name        = getFullName(lead);
   const initials    = getInitials(name);
@@ -1525,7 +1506,7 @@ export function LeadDetailView({
   }, [navigate]);
 
   // ── Toolbar button styles ─────────────────────────────────────────────────
-  const toolBtn = "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border transition-colors";
+  const toolBtn = "inline-flex items-center gap-1.5 px-3 h-9 rounded-full text-[12px] font-medium border transition-colors";
   const toolBtnDefault = "border-border/60 bg-transparent text-foreground hover:bg-muted/50";
   const toolBtnActive  = "border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo";
   const toolBtnDanger  = "border-red-300 bg-red-50 text-red-600 hover:bg-red-100";
@@ -1547,60 +1528,58 @@ export function LeadDetailView({
       <div className="relative flex-1 overflow-y-auto">
 
         {/* ── Header ── */}
-        <div className="shrink-0 px-4 pt-5 pb-3 space-y-3">
+        <div className="shrink-0 px-4 pt-5 pb-3 space-y-6">
 
           {/* Toolbar */}
           <div className="flex items-center gap-1 flex-wrap">
-            {isEditing ? (
-              <>
-                <button onClick={handleSaveEdit} disabled={saving} className={cn(toolBtn, toolBtnActive)}>
-                  <Check className="h-3 w-3" />{saving ? "Saving…" : "Save"}
-                </button>
-                <button onClick={() => setIsEditing(false)} className={cn(toolBtn, toolBtnDefault)}>
-                  <X className="h-3 w-3" />Cancel
-                </button>
-              </>
+            {toolbarPrefix?.({ isNarrow })}
+            {deleteConfirm ? (
+              <div className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full border border-red-200 bg-red-50">
+                <span className="text-[11px] text-red-600 font-medium">Delete lead?</span>
+                <button onClick={handleDelete} disabled={deleting} className="text-[11px] font-bold text-red-600 hover:text-red-700 px-1">{deleting ? "…" : "Yes"}</button>
+                <button onClick={() => setDeleteConfirm(false)} className="text-[11px] text-muted-foreground hover:text-foreground px-1">No</button>
+              </div>
             ) : (
-              <>
-                <button onClick={startEdit} className={cn(toolBtn, toolBtnDefault)}>
-                  <FileText className="h-3 w-3" />Edit
-                </button>
-                {deleteConfirm ? (
-                  <div className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg border border-red-200 bg-red-50">
-                    <span className="text-[11px] text-red-600 font-medium">Delete lead?</span>
-                    <button onClick={handleDelete} disabled={deleting} className="text-[11px] font-bold text-red-600 hover:text-red-700 px-1">{deleting ? "…" : "Yes"}</button>
-                    <button onClick={() => setDeleteConfirm(false)} className="text-[11px] text-muted-foreground hover:text-foreground px-1">No</button>
-                  </div>
-                ) : (
-                  <button onClick={() => setDeleteConfirm(true)} className={cn(toolBtn, toolBtnDefault)}>
-                    <Trash2 className="h-3 w-3" />Delete
-                  </button>
-                )}
-                <button onClick={handlePdf} className={cn(toolBtn, toolBtnDefault)}>
-                  <FileText className="h-3 w-3" />To PDF
-                </button>
-              </>
+              <button onClick={() => setDeleteConfirm(true)} className={cn(toolBtn, toolBtnDefault)}>
+                <Trash2 className="h-3 w-3" />Delete
+              </button>
             )}
+            <button onClick={handlePdf} className={cn(toolBtn, toolBtnDefault)}>
+              <FileText className="h-3 w-3" />To PDF
+            </button>
           </div>
 
           {/* Avatar + Name + Tags + Info row (merged onto one line) */}
           <div className="flex items-start gap-3">
-            <div
-              className="h-[65px] w-[65px] rounded-full flex items-center justify-center text-[22px] font-bold shrink-0 overflow-hidden"
-              style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
-            >
-              {initials}
-            </div>
+            <EntityAvatar
+              name={name}
+              bgColor={avatarColor.bg}
+              textColor={avatarColor.text}
+              size={65}
+              className="overflow-hidden"
+            />
 
             <div className="flex-1 min-w-0 py-1">
               {isEditing ? (
                 <input
                   value={editFields.full_name ?? ""}
                   onChange={(e) => setEditFields((f) => ({ ...f, full_name: e.target.value }))}
+                  onBlur={handleSaveEdit}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(); if (e.key === "Escape") setIsEditing(false); }}
+                  autoFocus
                   className="text-[24px] font-semibold font-heading bg-white/70 border border-brand-indigo/30 rounded-lg px-2 py-0.5 w-full focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
                 />
               ) : (
-                <h2 className="text-[27px] font-semibold font-heading text-foreground leading-tight truncate">{name}</h2>
+                <div className="group/name flex items-center gap-2 cursor-text" onClick={startEdit}>
+                  <h2 className="text-[27px] font-semibold font-heading text-foreground leading-tight truncate">{name}</h2>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); startEdit(); }}
+                    className="opacity-0 group-hover/name:opacity-100 p-1 rounded hover:bg-muted/50 transition-opacity text-muted-foreground hover:text-foreground shrink-0"
+                    title="Edit name"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </button>
+                </div>
               )}
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                 <span className="inline-flex items-center px-2 py-0.5 rounded border border-border/50 text-[10px] font-medium text-muted-foreground">Lead</span>
@@ -1625,47 +1604,8 @@ export function LeadDetailView({
               </div>
             </div>
 
-            {/* Info items — centered, double gap */}
-            <div className="flex items-start gap-10 shrink-0 pt-2 pl-6 flex-wrap">
-              <div>
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Source</div>
-                {isEditing ? (
-                  <input
-                    value={editFields.source ?? ""}
-                    onChange={(e) => setEditFields((f) => ({ ...f, source: e.target.value }))}
-                    className="text-[12px] font-bold bg-white/70 border border-brand-indigo/30 rounded px-1.5 py-0.5 w-20 focus:outline-none"
-                  />
-                ) : (
-                  <div className="text-[12px] font-bold text-foreground">{lead.source || lead.Source || "API"}</div>
-                )}
-              </div>
-              <div>
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Rating</div>
-                <div className="flex items-center gap-1">
-                  <Star className="h-3 w-3" style={{ color: ratingLabel === "Hot" ? "#EF4444" : ratingLabel === "Warm" ? "#F59E0B" : "#6B7280" }} />
-                  <span className="text-[12px] font-bold text-foreground">{ratingLabel}</span>
-                </div>
-              </div>
-              <div>
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Campaign</div>
-                <div className="text-[12px] font-bold text-foreground truncate max-w-[100px]">
-                  {lead.Campaign || lead.campaign || lead.campaign_name || "—"}
-                </div>
-              </div>
-              <div>
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Owner</div>
-                <div className="flex items-center gap-1.5">
-                  <div
-                    className="h-5 w-5 rounded-full flex items-center justify-center shrink-0 overflow-hidden"
-                    style={accountLogo ? {} : { backgroundColor: "rgba(0,0,0,0.08)", color: "#374151" }}
-                  >
-                    {accountLogo
-                      ? <img src={accountLogo} alt="account" className="h-full w-full object-cover" />
-                      : <Building2 className="h-2.5 w-2.5" />}
-                  </div>
-                  <span className="text-[12px] font-bold text-foreground truncate max-w-[90px]">{lead.Account || lead.account_name || "—"}</span>
-                </div>
-              </div>
+            {/* Info items — centered, double gap, pr-[19px] matches pipeline tube inset */}
+            <div className="flex items-start gap-6 pt-2 pr-[19px] flex-wrap">
               {bookedDate && (
                 <div>
                   <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Booked</div>
@@ -1677,11 +1617,50 @@ export function LeadDetailView({
                   </button>
                 </div>
               )}
+              <div>
+                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Source</div>
+                {isEditing ? (
+                  <input
+                    value={editFields.source ?? ""}
+                    onChange={(e) => setEditFields((f) => ({ ...f, source: e.target.value }))}
+                    className="text-[11px] font-bold bg-white/70 border border-brand-indigo/30 rounded px-1.5 py-0.5 w-20 focus:outline-none"
+                  />
+                ) : (
+                  <div className="text-[11px] font-bold text-foreground">{lead.source || lead.Source || "API"}</div>
+                )}
+              </div>
+              <div>
+                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Rating</div>
+                <div className="flex items-center gap-1">
+                  <Star className="h-3 w-3" style={{ color: ratingLabel === "Hot" ? "#EF4444" : ratingLabel === "Warm" ? "#F59E0B" : "#6B7280" }} />
+                  <span className="text-[11px] font-bold text-foreground">{ratingLabel}</span>
+                </div>
+              </div>
+              <div>
+                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Campaign</div>
+                <div className="text-[11px] font-bold text-foreground truncate max-w-[100px]">
+                  {lead.Campaign || lead.campaign || lead.campaign_name || "—"}
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div
+                  className="h-[34px] w-[34px] rounded-full flex items-center justify-center shrink-0 overflow-hidden"
+                  style={accountLogo ? {} : { backgroundColor: "rgba(0,0,0,0.08)", color: "#374151" }}
+                >
+                  {accountLogo
+                    ? <img src={accountLogo} alt="account" className="h-full w-full object-cover" />
+                    : <Building2 className="h-4 w-4" />}
+                </div>
+                <div>
+                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Owner</div>
+                  <span className="text-[11px] font-bold text-foreground truncate max-w-[90px]">{lead.Account || lead.account_name || "—"}</span>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Pipeline tube */}
-          {status && <PipelineProgress status={status} />}
+          {status && <div className="pt-2 pb-10"><PipelineProgress status={status} /></div>}
         </div>
 
         {/* ── Body — 3x2 widget grid matching Accounts page (each 48vh) ── */}
@@ -1690,15 +1669,15 @@ export function LeadDetailView({
           {/* Row 1 */}
           <div className="grid gap-[3px]" style={{ gridTemplateColumns: isNarrow ? "1fr" : "1fr 1fr 1fr" }}>
             {/* Contact */}
-            <div className="overflow-y-auto rounded-xl" style={{ height: "48vh" }}>
+            <div className="overflow-y-auto rounded-xl" style={{ height: "42vh" }}>
               <ContactWidget lead={lead} onRefresh={onRefresh} />
             </div>
             {/* Chat (top of middle column) */}
-            <div className="overflow-hidden rounded-xl bg-white/60 flex flex-col" style={{ height: "48vh" }}>
+            <div className="overflow-hidden rounded-xl bg-white/60 flex flex-col" style={{ height: "42vh" }}>
               <ConversationWidget lead={lead} showHeader />
             </div>
             {/* Lead Score */}
-            <div className="overflow-y-auto rounded-xl" style={{ height: "48vh" }}>
+            <div className="overflow-y-auto rounded-xl" style={{ height: "42vh" }}>
               <ScoreWidget score={score} lead={lead} status={status} />
             </div>
           </div>
@@ -1706,15 +1685,15 @@ export function LeadDetailView({
           {/* Row 2 */}
           <div className="grid gap-[3px]" style={{ gridTemplateColumns: isNarrow ? "1fr" : "1fr 1fr 1fr" }}>
             {/* Activity Timeline */}
-            <div className="overflow-y-auto rounded-xl" style={{ height: "48vh" }}>
+            <div className="overflow-y-auto rounded-xl" style={{ height: "42vh" }}>
               <ActivityTimeline lead={lead} tagEvents={tagEvents} />
             </div>
             {/* Team */}
-            <div className="overflow-y-auto rounded-xl" style={{ height: "48vh" }}>
+            <div className="overflow-y-auto rounded-xl" style={{ height: "42vh" }}>
               <TeamWidget lead={lead} onRefresh={onRefresh} />
             </div>
             {/* Notes (click-to-edit) */}
-            <div className="overflow-y-auto rounded-xl" style={{ height: "48vh" }}>
+            <div className="overflow-y-auto rounded-xl" style={{ height: "42vh" }}>
               <NotesWidget lead={lead} onRefresh={onRefresh} />
             </div>
           </div>
@@ -1731,7 +1710,6 @@ const LIST_RING_RADIUS = (LIST_RING_SIZE - LIST_RING_STROKE * 2) / 2;
 const LIST_RING_CIRC   = 2 * Math.PI * LIST_RING_RADIUS;
 
 export function ListScoreRing({ score, status }: { score: number; status: string }) {
-  const color  = PIPELINE_HEX[status] || "#6B7280";
   const offset = LIST_RING_CIRC * (1 - Math.max(0, Math.min(1, score / 100)));
   return (
     <div className="relative shrink-0" style={{ width: LIST_RING_SIZE, height: LIST_RING_SIZE }}>
@@ -1742,16 +1720,16 @@ export function ListScoreRing({ score, status }: { score: number; status: string
       >
         <circle
           cx={LIST_RING_SIZE / 2} cy={LIST_RING_SIZE / 2} r={LIST_RING_RADIUS}
-          fill="none" stroke={color} strokeOpacity={0.15} strokeWidth={LIST_RING_STROKE}
+          fill="none" stroke="#D1D1D1" strokeOpacity={0.3} strokeWidth={LIST_RING_STROKE}
         />
         <circle
           cx={LIST_RING_SIZE / 2} cy={LIST_RING_SIZE / 2} r={LIST_RING_RADIUS}
-          fill="none" stroke={color} strokeWidth={LIST_RING_STROKE}
+          fill="none" stroke="#D1D1D1" strokeWidth={LIST_RING_STROKE}
           strokeDasharray={LIST_RING_CIRC} strokeDashoffset={offset} strokeLinecap="round"
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-[10px] font-bold tabular-nums" style={{ color }}>{score}</span>
+        <span className="text-[10px] font-bold tabular-nums text-foreground/70">{score}</span>
       </div>
     </div>
   );
@@ -1763,16 +1741,17 @@ function LeadListCard({
   isActive,
   onClick,
   leadTags,
-  showTagsAlways = false,
+  showContactAlways = false,
+  tagsColorful = false,
 }: {
   lead: Record<string, any>;
   isActive: boolean;
   onClick: () => void;
   leadTags: { name: string; color: string }[];
-  showTagsAlways?: boolean;
+  showContactAlways?: boolean;
+  tagsColorful?: boolean;
 }) {
   const name        = getFullName(lead);
-  const initials    = getInitials(name);
   const status      = getStatus(lead);
   const score       = getScore(lead);
   const phone       = getPhone(lead);
@@ -1786,8 +1765,8 @@ function LeadListCard({
   return (
     <div
       className={cn(
-        "relative group/card mx-[3px] my-0.5 rounded-xl cursor-pointer transition-colors",
-        isActive ? "bg-[#FFF1C8]" : "bg-white hover:bg-white hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+        "relative group/card rounded-xl cursor-pointer transition-colors",
+        isActive ? "bg-highlight-selected" : "bg-card hover:bg-card-hover hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
       )}
       onClick={onClick}
       role="button"
@@ -1796,57 +1775,49 @@ function LeadListCard({
     >
       <div className="px-2.5 pt-2 pb-1.5 flex flex-col gap-0.5">
 
-        {/* Row 1: Avatar | Name + status dot | ScoreRing + lastActivity */}
+        {/* Row 1: Avatar | Name + status dot + lastActivity */}
         <div className="flex items-start gap-2">
-          <div
-            className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0 mt-0.5"
-            style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
-          >
-            {initials}
-          </div>
+          <EntityAvatar
+            name={name}
+            bgColor={avatarColor.bg}
+            textColor={avatarColor.text}
+            className="mt-0.5"
+          />
 
           <div className="flex-1 min-w-0 pt-0.5">
-            <p className="text-[13px] font-semibold font-heading leading-tight truncate text-foreground">
-              {name}
-            </p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-[16px] font-semibold font-heading leading-tight truncate text-foreground flex-1 min-w-0">
+                {name}
+              </p>
+              {lastActivity && (
+                <span className="text-[10px] tabular-nums leading-none text-muted-foreground/60 shrink-0">
+                  {formatRelativeTime(lastActivity)}
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-1 mt-0.5">
               <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: statusHex }} />
               <span className="text-[10px] text-muted-foreground/65 truncate">{status}</span>
             </div>
           </div>
-
-          <div className="flex flex-col items-end gap-0.5 shrink-0">
-            {score > 0 && <ListScoreRing score={score} status={status} />}
-            {lastActivity && (
-              <span className="text-[10px] tabular-nums leading-none text-muted-foreground/60">
-                {formatRelativeTime(lastActivity)}
-              </span>
-            )}
-          </div>
         </div>
 
-        {/* Hover-expanded (or always-on when showTagsAlways): lastMessage → tags → phone/email */}
-        <div className={cn(
-          "overflow-hidden transition-[max-height,opacity] duration-200 ease-out",
-          showTagsAlways
-            ? "max-h-36 opacity-100"
-            : "max-h-0 opacity-0 group-hover/card:max-h-36 group-hover/card:opacity-100"
-        )}>
-          <div className="pt-1.5 pb-0.5 flex flex-col gap-1.5">
-            {lastMsg && (
-              <p className="text-[11px] text-muted-foreground/65 truncate leading-snug">
-                {lastMsg}
-              </p>
-            )}
+        {/* Tags + contact + score ring in a flex row, score bottom-aligned */}
+        <div className="flex items-end gap-2">
+          <div className="flex-1 min-w-0">
+            {/* Tags — always visible by default */}
             {visibleTags.length > 0 && (
-              <div className="flex items-center gap-1 flex-wrap">
+              <div className="flex items-center gap-1 flex-wrap mt-1">
                 {visibleTags.map((t) => {
                   const hex = resolveColor(t.color);
                   return (
                     <span
                       key={t.name}
                       className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
-                      style={{ backgroundColor: `${hex}20`, color: hex }}
+                      style={tagsColorful
+                        ? { backgroundColor: `${hex}20`, color: hex }
+                        : { backgroundColor: "rgba(0,0,0,0.06)", color: "rgba(0,0,0,0.50)" }
+                      }
                     >
                       <TagIcon className="h-2.5 w-2.5" />{t.name}
                     </span>
@@ -1854,23 +1825,41 @@ function LeadListCard({
                 })}
               </div>
             )}
-            {(phone || email) && (
-              <div className="flex items-center gap-2.5 text-[10px] text-muted-foreground/70">
-                {phone && (
-                  <span className="inline-flex items-center gap-1 truncate">
-                    <Phone className="h-3 w-3 shrink-0" />
-                    {phone}
-                  </span>
-                )}
-                {email && (
-                  <span className="inline-flex items-center gap-1 truncate">
-                    <Mail className="h-3 w-3 shrink-0" />
-                    {email}
-                  </span>
+
+            {/* Hover-expanded (or always-on): phone/email */}
+            <div className={cn(
+              "overflow-hidden transition-[max-height,opacity] duration-200 ease-out",
+              showContactAlways
+                ? "max-h-36 opacity-100"
+                : "max-h-0 opacity-0 group-hover/card:max-h-36 group-hover/card:opacity-100"
+            )}>
+              <div className="pt-1 pb-0.5 flex flex-col gap-1.5">
+                {(phone || email) && (
+                  <div className="flex items-center gap-2.5 text-[10px] text-muted-foreground/70">
+                    {phone && (
+                      <span className="inline-flex items-center gap-1 truncate">
+                        <Phone className="h-3 w-3 shrink-0" />
+                        {phone}
+                      </span>
+                    )}
+                    {email && (
+                      <span className="inline-flex items-center gap-1 truncate">
+                        <Mail className="h-3 w-3 shrink-0" />
+                        {email}
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
+            </div>
           </div>
+
+          {/* Score ring on the right, bottom-aligned */}
+          {score > 0 && (
+            <div className="shrink-0 mb-0.5">
+              <ListScoreRing score={score} status={status} />
+            </div>
+          )}
         </div>
 
       </div>
@@ -1881,15 +1870,13 @@ function LeadListCard({
 // ── Group header ───────────────────────────────────────────────────────────────
 function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div className="sticky top-0 z-20 bg-muted px-3 pt-1.5 pb-1.5">
-      <div className="flex items-center gap-0">
-        {/* Left line */}
-        <div className="flex-1 h-px bg-foreground/15 mx-[8px]" />
-        {/* Label */}
-        <span className="text-[10px] font-bold text-foreground/55 uppercase tracking-widest shrink-0">{label}</span>
-        <span className="ml-1 text-[9px] text-muted-foreground/45 font-semibold shrink-0">{count}</span>
-        {/* Right line */}
-        <div className="flex-1 h-px bg-foreground/15 mx-[8px]" />
+    <div className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
+      <div className="flex items-center gap-[10px]">
+        <div className="flex-1 h-px bg-foreground/15" />
+        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
+        <span className="text-foreground/20 shrink-0">–</span>
+        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
+        <div className="flex-1 h-px bg-foreground/15" />
       </div>
     </div>
   );
@@ -1975,14 +1962,14 @@ export function KanbanDetailPanel({
       <div className="shrink-0 px-4 pt-4 pb-3 border-b border-border/20">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex items-center gap-2.5">
-            <div
-              className="h-[72px] w-[72px] rounded-full flex items-center justify-center text-xl font-bold shrink-0"
-              style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
-            >
-              {initials}
-            </div>
+            <EntityAvatar
+              name={name}
+              bgColor={avatarColor.bg}
+              textColor={avatarColor.text}
+              size={72}
+            />
             <div>
-              <p className="text-[15px] font-semibold font-heading text-foreground leading-tight truncate max-w-[180px]">{name}</p>
+              <p className="text-[16px] font-semibold font-heading text-foreground leading-tight truncate max-w-[180px]">{name}</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">{status || "—"}</p>
             </div>
           </div>
@@ -2068,7 +2055,7 @@ export function KanbanDetailPanel({
         )}
         {activeTab === "activity" && (
           <div className="h-full overflow-y-auto p-4">
-            <p className="text-[15px] font-semibold font-heading text-foreground mb-3">Activity</p>
+            <p className="text-[16px] font-semibold font-heading text-foreground mb-3">Activity</p>
             <div className="flex flex-col gap-2">
               {[
                 { label: "Messages sent",      value: String(lead.message_count_sent ?? lead.messageCountSent ?? "—") },
@@ -2086,7 +2073,7 @@ export function KanbanDetailPanel({
         )}
         {activeTab === "notes" && (
           <div className="h-full overflow-y-auto p-4">
-            <p className="text-[15px] font-semibold font-heading text-foreground mb-3">Notes</p>
+            <p className="text-[16px] font-semibold font-heading text-foreground mb-3">Notes</p>
             {lead.notes || lead.Notes ? (
               <p className="text-[12px] text-foreground/80 leading-relaxed">
                 {lead.notes || lead.Notes}
@@ -2140,12 +2127,19 @@ export function LeadsCardView({
   const [currentPage, setCurrentPage]   = useState(0);
   const PAGE_SIZE = 50;
 
-  const [showTagsAlways, setShowTagsAlways] = useState<boolean>(() => {
-    try { return localStorage.getItem("list_tags_always_show") === "true"; } catch {} return false;
+  const [showContactAlways, setShowContactAlways] = useState<boolean>(() => {
+    try { return localStorage.getItem("list_contact_always_show") === "true"; } catch {} return false;
   });
   useEffect(() => {
-    try { localStorage.setItem("list_tags_always_show", String(showTagsAlways)); } catch {}
-  }, [showTagsAlways]);
+    try { localStorage.setItem("list_contact_always_show", String(showContactAlways)); } catch {}
+  }, [showContactAlways]);
+
+  const [tagsColorful, setTagsColorful] = useState<boolean>(() => {
+    try { return localStorage.getItem("list_tags_colorful") === "true"; } catch {} return false;
+  });
+  useEffect(() => {
+    try { localStorage.setItem("list_tags_colorful", String(tagsColorful)); } catch {}
+  }, [tagsColorful]);
 
   const flatItems = useMemo((): VirtualListItem[] => {
     // 1. Text search
@@ -2245,145 +2239,16 @@ export function LeadsCardView({
       <div className="flex flex-col bg-muted rounded-lg overflow-hidden w-[340px] flex-shrink-0">
 
         {/* ── Panel header: title + count ── */}
-        <div className="px-3.5 pt-5 pb-1 shrink-0 flex items-center justify-between">
-          <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">My Leads</h2>
-          <span className="w-10 text-center text-[12px] font-medium text-muted-foreground tabular-nums">{leads.length}</span>
-        </div>
-
-        {/* ── Controls row: tabs (left) + search/settings (right) — all on one line ── */}
-        <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center justify-between gap-2">
-
-          {/* Tab switchers */}
-          <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as ViewMode)} />
-
-          {/* Search + Settings — flat row, all buttons same height */}
-          <div className="flex items-center gap-1.5 shrink-0">
-
-            {/* + New Lead */}
-            <IconBtn title="New lead" onClick={onCreateLead}>
-              <Plus className="h-4 w-4" />
-            </IconBtn>
-
-            {/* Search popup */}
-            <Popover open={searchOpen} onOpenChange={(open) => { onSearchOpenChange(open); if (!open) onListSearchChange(""); }}>
-              <PopoverTrigger asChild>
-                <IconBtn active={searchOpen || !!listSearch} title="Search leads">
-                  <Search className="h-4 w-4" />
-                </IconBtn>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-56 p-2" sideOffset={4}>
-                <input
-                  value={listSearch}
-                  onChange={(e) => onListSearchChange(e.target.value)}
-                  placeholder="Search leads..."
-                  autoFocus
-                  className="w-full h-8 px-3 rounded-lg bg-muted/60 text-[12px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-indigo/30 placeholder:text-muted-foreground/60"
-                />
-              </PopoverContent>
-            </Popover>
-
-            {/* Settings dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <IconBtn active={hasNonDefaultControls || showTagsAlways} title="Group, Sort & Filter">
-                  <SlidersHorizontal className="h-4 w-4" />
-                </IconBtn>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger className="text-[12px]">
-                    <Layers className="h-3.5 w-3.5 mr-2" />
-                    Group
-                    {isGroupNonDefault && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{GROUP_LABELS[groupBy]}</span>}
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="w-40">
-                    {(["date", "status", "campaign", "tag", "none"] as GroupByOption[]).map((opt) => (
-                      <DropdownMenuItem key={opt} onClick={() => onGroupByChange(opt)} className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}>
-                        {GROUP_LABELS[opt]}
-                        {groupBy === opt && <Check className="h-3 w-3 ml-auto" />}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger className="text-[12px]">
-                    <ArrowUpDown className="h-3.5 w-3.5 mr-2" />
-                    Sort
-                    {isSortNonDefault && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{SORT_LABELS[sortBy]}</span>}
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="w-44">
-                    {(["recent", "name_asc", "name_desc", "score_desc", "score_asc"] as SortByOption[]).map((opt) => (
-                      <DropdownMenuItem key={opt} onClick={() => onSortByChange(opt)} className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}>
-                        {SORT_LABELS[opt]}
-                        {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-
-                <DropdownMenuSeparator />
-
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger className="text-[12px]">
-                    <Filter className="h-3.5 w-3.5 mr-2" />
-                    Filter Status
-                    {filterStatus.length > 0 && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{filterStatus.length}</span>}
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="w-48 max-h-60 overflow-y-auto">
-                    {STATUS_GROUP_ORDER.map((s) => (
-                      <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
-                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PIPELINE_HEX[s] ?? "#6B7280" }} />
-                        <span className="flex-1">{s}</span>
-                        {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-
-                {allTags.length > 0 && (
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="text-[12px]">
-                      <Filter className="h-3.5 w-3.5 mr-2" />
-                      Filter Tags
-                      {filterTags.length > 0 && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{filterTags.length}</span>}
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="w-44 max-h-60 overflow-y-auto">
-                      {allTags.map((t) => (
-                        <DropdownMenuItem key={t.name} onClick={(e) => { e.preventDefault(); onToggleFilterTag(t.name); }} className="flex items-center gap-2 text-[12px]">
-                          <span className="flex-1">{t.name}</span>
-                          {filterTags.includes(t.name) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
-                )}
-
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => setShowTagsAlways((v) => !v)}
-                  className="flex items-center gap-2 text-[12px]"
-                >
-                  <TagIcon className="h-3.5 w-3.5 mr-0.5 shrink-0" />
-                  <span className="flex-1">Show Tags Always</span>
-                  {showTagsAlways && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                </DropdownMenuItem>
-
-                {hasNonDefaultControls && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={onResetControls} className="text-[12px] text-destructive">
-                      Reset all settings
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+        <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center">
+          <div className="flex items-center justify-between w-[309px] shrink-0">
+            <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">My Leads</h2>
+            <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as ViewMode)} />
           </div>
         </div>
 
+
         {/* Lead list — card list (pagination inside scroll area, below last card) */}
-        <div className="flex-1 overflow-y-auto pt-0 pb-2">
+        <div className="flex-1 overflow-y-auto px-[3px] pt-0 pb-[3px]">
           {loading ? (
             <ListSkeleton />
           ) : flatItems.length === 0 ? (
@@ -2395,23 +2260,22 @@ export function LeadsCardView({
             </div>
           ) : (
             <>
-              <div key={`page-${currentPage}`}>
+              <div key={`page-${currentPage}`} className="flex flex-col gap-[3px]">
                 {flatItems
                   .slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
                   .map((item, i) => {
                     const selectedId = selectedLead ? getLeadId(selectedLead) : null;
                     return item.kind === "header" ? (
-                      <div key={`h-${item.label}-${i}`}>
-                        <GroupHeader label={item.label} count={item.count} />
-                      </div>
+                      <GroupHeader key={`h-${item.label}-${i}`} label={item.label} count={item.count} />
                     ) : (
-                      <div key={getLeadId(item.lead)}>
+                      <div key={getLeadId(item.lead)} className="animate-card-enter" style={{ animationDelay: `${Math.min(i, 15) * 30}ms` }}>
                         <LeadListCard
                           lead={item.lead}
                           isActive={selectedId === getLeadId(item.lead)}
                           onClick={() => onSelectLead(item.lead)}
                           leadTags={item.tags}
-                          showTagsAlways={showTagsAlways}
+                          showContactAlways={showContactAlways}
+                          tagsColorful={tagsColorful}
                         />
                       </div>
                     );
@@ -2456,6 +2320,127 @@ export function LeadsCardView({
             onClose={onClose}
             leadTags={leadTagsInfo.get(getLeadId(selectedLead)) || []}
             onRefresh={onRefresh}
+            toolbarPrefix={({ isNarrow: narrow }) => {
+              const pill = narrow
+                ? "h-9 w-9 rounded-full border border-border/60 bg-transparent inline-flex items-center justify-center transition-colors"
+                : "h-9 px-3 rounded-full border border-border/60 bg-transparent text-foreground hover:bg-muted/50 inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors";
+              const pillActive = narrow
+                ? "h-9 w-9 rounded-full border border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo inline-flex items-center justify-center transition-colors"
+                : "h-9 px-3 rounded-full border border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors";
+              return (
+                <>
+                  {/* +Add */}
+                  <button onClick={onCreateLead} className={pill} title="New lead">
+                    <Plus className="h-3.5 w-3.5" />{!narrow && "Add"}
+                  </button>
+
+                  {/* Search — inline expanding input */}
+                  {searchOpen ? (
+                    <div className="h-9 flex items-center gap-1.5 px-3 rounded-full border border-brand-indigo/50 bg-brand-indigo/5">
+                      <Search className="h-3.5 w-3.5 text-brand-indigo shrink-0" />
+                      <input
+                        value={listSearch}
+                        onChange={(e) => onListSearchChange(e.target.value)}
+                        placeholder="Search…"
+                        autoFocus
+                        onBlur={() => { if (!listSearch) onSearchOpenChange(false); }}
+                        onKeyDown={(e) => { if (e.key === "Escape") { onListSearchChange(""); onSearchOpenChange(false); } }}
+                        className="bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/60 w-[120px]"
+                      />
+                      <button onClick={() => { onListSearchChange(""); onSearchOpenChange(false); }} className="text-muted-foreground/60 hover:text-foreground">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button onClick={() => onSearchOpenChange(true)} className={listSearch ? pillActive : pill} title="Search leads">
+                      <Search className="h-3.5 w-3.5" />{!narrow && "Search"}
+                    </button>
+                  )}
+
+                  {/* Group */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className={isGroupNonDefault ? pillActive : pill} title="Group">
+                        <Layers className="h-3.5 w-3.5" />{!narrow && "Group"}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-40">
+                      {(["date", "status", "campaign", "tag", "none"] as GroupByOption[]).map((opt) => (
+                        <DropdownMenuItem key={opt} onClick={() => onGroupByChange(opt)} className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}>
+                          {GROUP_LABELS[opt]}
+                          {groupBy === opt && <Check className="h-3 w-3 ml-auto" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Sort */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className={isSortNonDefault ? pillActive : pill} title="Sort">
+                        <ArrowUpDown className="h-3.5 w-3.5" />{!narrow && "Sort"}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      {(["recent", "name_asc", "name_desc", "score_desc", "score_asc"] as SortByOption[]).map((opt) => (
+                        <DropdownMenuItem key={opt} onClick={() => onSortByChange(opt)} className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}>
+                          {SORT_LABELS[opt]}
+                          {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Filter */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className={(filterStatus.length > 0 || filterTags.length > 0) ? pillActive : pill} title="Filter">
+                        <Filter className="h-3.5 w-3.5" />{!narrow && "Filter"}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Status</div>
+                      {STATUS_GROUP_ORDER.map((s) => (
+                        <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
+                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PIPELINE_HEX[s] ?? "#6B7280" }} />
+                          <span className="flex-1">{s}</span>
+                          {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                        </DropdownMenuItem>
+                      ))}
+                      {allTags.length > 0 && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Tags</div>
+                          {allTags.map((t) => (
+                            <DropdownMenuItem key={t.name} onClick={(e) => { e.preventDefault(); onToggleFilterTag(t.name); }} className="flex items-center gap-2 text-[12px]">
+                              <span className="flex-1">{t.name}</span>
+                              {filterTags.includes(t.name) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                            </DropdownMenuItem>
+                          ))}
+                        </>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setTagsColorful((v) => !v)} className="flex items-center gap-2 text-[12px]">
+                        <TagIcon className="h-3.5 w-3.5 mr-0.5 shrink-0" /><span className="flex-1">Colorful Tags</span>
+                        {tagsColorful && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setShowContactAlways((v) => !v)} className="flex items-center gap-2 text-[12px]">
+                        <Phone className="h-3.5 w-3.5 mr-0.5 shrink-0" /><span className="flex-1">Show Phone & Email</span>
+                        {showContactAlways && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                      </DropdownMenuItem>
+                      {hasNonDefaultControls && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={onResetControls} className="text-[12px] text-destructive">Reset all</DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
+                </>
+              );
+            }}
           />
         ) : (
           <EmptyDetailState leadsCount={leads.length} />

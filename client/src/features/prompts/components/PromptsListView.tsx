@@ -623,7 +623,7 @@ function PromptListCard({
         "group mx-[3px] my-0.5 rounded-xl cursor-pointer",
         "transition-colors duration-150 ease-out",
         "hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]",
-        isActive ? "bg-[#FFF1C8]" : "bg-[#F1F1F1] hover:bg-[#FAFAFA]",
+        isActive ? "bg-highlight-selected" : "bg-card hover:bg-card-hover",
       )}
       onClick={onClick}
       role="button"
@@ -641,7 +641,7 @@ function PromptListCard({
           </div>
           <div className="flex-1 min-w-0 pt-0.5">
             <div className="flex items-start justify-between gap-1.5">
-              <p className="text-[14px] font-semibold font-heading leading-tight truncate text-foreground">
+              <p className="text-[16px] font-semibold font-heading leading-tight truncate text-foreground">
                 {name}
               </p>
               <span
@@ -700,16 +700,13 @@ function PromptListCard({
 
 function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div className="sticky top-0 z-20 bg-muted px-3 pt-1.5 pb-1.5">
-      <div className="flex items-center">
-        <div className="flex-1 h-px bg-foreground/15 mx-[8px]" />
-        <span className="text-[10px] font-bold text-foreground/55 uppercase tracking-widest shrink-0">
-          {label}
-        </span>
-        <span className="ml-1 text-[9px] text-muted-foreground/45 font-semibold shrink-0">
-          {count}
-        </span>
-        <div className="flex-1 h-px bg-foreground/15 mx-[8px]" />
+    <div className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
+      <div className="flex items-center gap-[10px]">
+        <div className="flex-1 h-px bg-foreground/15" />
+        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
+        <span className="text-foreground/20 shrink-0">–</span>
+        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
+        <div className="flex-1 h-px bg-foreground/15" />
       </div>
     </div>
   );
@@ -1171,7 +1168,7 @@ export function PromptsListView({
                 {getPromptInitials(selectedPrompt.name || "")}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-[15px] font-semibold font-heading leading-tight truncate text-foreground">
+                <h3 className="text-[16px] font-semibold font-heading leading-tight truncate text-foreground">
                   {selectedPrompt.name || "Untitled Prompt"}
                 </h3>
                 <div className="flex items-center gap-2 mt-0.5">

@@ -33,27 +33,12 @@ import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import { IconBtn } from "@/components/ui/icon-btn";
 import { cn } from "@/lib/utils";
 import { CampaignDetailView, CampaignDetailViewEmpty } from "./CampaignDetailView";
+import { getInitials, getCampaignAvatarColor } from "@/lib/avatarUtils";
 import type {
   CampaignViewMode,
   CampaignGroupBy,
   CampaignSortBy,
 } from "../pages/CampaignsPage";
-
-
-// ── Campaign status → avatar pastel colors ────────────────────────────────────
-const CAMPAIGN_STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  Active:    { bg: "#DCFCE7", text: "#15803D" },
-  Paused:    { bg: "#FEF3C7", text: "#92400E" },
-  Completed: { bg: "#DBEAFE", text: "#1D4ED8" },
-  Finished:  { bg: "#DBEAFE", text: "#1D4ED8" },
-  Inactive:  { bg: "#F4F4F5", text: "#52525B" },
-  Archived:  { bg: "#F4F4F5", text: "#52525B" },
-  Draft:     { bg: "#E5E7EB", text: "#374151" },
-};
-
-function getCampaignAvatarColor(status: string): { bg: string; text: string } {
-  return CAMPAIGN_STATUS_COLORS[status] ?? { bg: "#E5E7EB", text: "#374151" };
-}
 
 // ── Status dot hex colors ────────────────────────────────────────────────────
 const CAMPAIGN_STATUS_HEX: Record<string, string> = {
@@ -69,10 +54,6 @@ const CAMPAIGN_STATUS_HEX: Record<string, string> = {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function getCampaignId(c: Campaign): number {
   return c.id || (c as any).Id || 0;
-}
-
-function getCampaignInitials(name: string): string {
-  return name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "?";
 }
 
 function getLeadCount(c: Campaign): number {
@@ -141,39 +122,49 @@ function CampaignListCard({
   onClick: () => void;
 }) {
   const name = String(campaign.name || "Unnamed Campaign");
-  const initials = getCampaignInitials(name);
+  const initials = getInitials(name);
   const status = String(campaign.status || "");
   const avatarColor = getCampaignAvatarColor(status);
   const leads = getLeadCount(campaign);
   const responseRate = getResponseRate(campaign);
-  const bookingRate = Number(campaign.booking_rate_percent ?? 0);
-  const lastUpdated = (campaign as any).updated_at || (campaign as any).nc_updated_at || (campaign as any).created_at;
+  const bookings = Number(campaign.bookings_generated ?? 0);
   const accountName = campaign.account_name || "";
+  const accountLogo = (campaign as any).account_logo_url || "";
   const statusHex = CAMPAIGN_STATUS_HEX[status] || "#6B7280";
 
   return (
     <div
       className={cn(
-        "relative mx-[3px] my-0.5 rounded-xl cursor-pointer transition-shadow",
-        isActive ? "bg-[#FFF1C8]" : "bg-white hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+        "group relative rounded-xl cursor-pointer transition-shadow",
+        isActive ? "bg-highlight-selected" : "bg-card hover:bg-card-hover hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
       )}
       onClick={onClick}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onClick()}
     >
-      <div className="px-2.5 pt-3.5 pb-2.5 flex flex-col gap-2.5">
+      <div className="px-2.5 pt-3.5 pb-2.5 flex flex-col gap-2">
 
-        {/* Top row: Avatar + Name + Status badge */}
+        {/* Top row: Avatar + Name + Booked circle */}
         <div className="flex items-center gap-2.5">
+          {/* Avatar: account logo with indigo overlay, or initials fallback */}
           <div
-            className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0"
-            style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
+            className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0 overflow-hidden relative"
+            style={accountLogo ? {} : { backgroundColor: avatarColor.bg, color: avatarColor.text }}
           >
-            {initials}
+            {accountLogo ? (
+              <>
+                <img src={accountLogo} alt="" className="h-full w-full object-cover" />
+                {/* Indigo overlay */}
+                <div className="absolute inset-0 rounded-full bg-brand-indigo/40 mix-blend-multiply" />
+              </>
+            ) : (
+              initials
+            )}
           </div>
+
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-semibold font-heading leading-tight truncate text-foreground">
+            <p className="text-[16px] font-semibold font-heading leading-tight truncate text-foreground">
               {name}
             </p>
             <div className="flex items-center gap-1.5 mt-0.5">
@@ -190,23 +181,38 @@ function CampaignListCard({
               </div>
             )}
           </div>
+
+          {/* Booked count circle — always visible */}
+          <div
+            className={cn(
+              "h-9 w-9 rounded-full flex items-center justify-center shrink-0",
+              bookings > 0
+                ? "bg-[#FCB803]/20 text-[#131B49]"
+                : "bg-foreground/5 text-muted-foreground/40"
+            )}
+            title={`${bookings} booked`}
+          >
+            <span className="text-[13px] font-bold tabular-nums leading-none">{bookings}</span>
+          </div>
         </div>
 
-        {/* Metrics strip: 3 stats side by side */}
+        {/* Hover-only metrics strip: Leads + Response */}
         <div className={cn(
-          "grid grid-cols-3 gap-px rounded-lg overflow-hidden",
+          "grid grid-cols-2 gap-px rounded-lg overflow-hidden transition-opacity",
+          "opacity-0 max-h-0 group-hover:opacity-100 group-hover:max-h-[40px]",
+          "transition-[opacity,max-height] duration-200",
+          isActive && "opacity-100 max-h-[40px]",
           isActive ? "bg-[#EFE4A0]/60" : "bg-foreground/8"
         )}>
           {[
             { label: "Leads", value: leads > 0 ? leads.toLocaleString() : "—" },
             { label: "Response", value: responseRate > 0 ? `${responseRate}%` : "—" },
-            { label: "Booked", value: bookingRate > 0 ? `${bookingRate}%` : "—" },
           ].map((stat) => (
             <div
               key={stat.label}
               className={cn(
                 "flex flex-col items-center py-1.5",
-                isActive ? "bg-[#FFF1C8]" : "bg-white"
+                isActive ? "bg-highlight-selected" : "bg-card group-hover:bg-card-hover"
               )}
             >
               <span className="text-[13px] font-bold tabular-nums text-foreground leading-tight">{stat.value}</span>
@@ -214,15 +220,6 @@ function CampaignListCard({
             </div>
           ))}
         </div>
-
-        {/* Bottom row: timestamp */}
-        {lastUpdated && (
-          <div className="flex items-center justify-end">
-            <span className="text-[10px] text-muted-foreground/50 tabular-nums">
-              {formatRelativeTime(lastUpdated)}
-            </span>
-          </div>
-        )}
 
       </div>
     </div>
@@ -232,9 +229,14 @@ function CampaignListCard({
 // ── Group header ─────────────────────────────────────────────────────────────
 function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div className="sticky top-0 z-20 bg-muted px-4 pt-3 pb-1.5 flex items-center gap-2">
-      <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">{label}</span>
-      <span className="text-[9px] font-semibold text-muted-foreground/40 tabular-nums bg-foreground/8 px-1.5 py-px rounded-full">{count}</span>
+    <div className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
+      <div className="flex items-center gap-[10px]">
+        <div className="flex-1 h-px bg-foreground/15" />
+        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
+        <span className="text-foreground/20 shrink-0">–</span>
+        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
+        <div className="flex-1 h-px bg-foreground/15" />
+      </div>
     </div>
   );
 }
@@ -483,13 +485,15 @@ export function CampaignListView({
         {/* Header: title + count */}
         <div className="px-3.5 pt-5 pb-1 shrink-0 flex items-center justify-between">
           <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Campaigns</h2>
-          <span className="w-10 text-center text-[12px] font-medium text-muted-foreground tabular-nums">{totalCampaigns}</span>
+          <span className="text-[12px] font-medium text-muted-foreground tabular-nums">{totalCampaigns}</span>
         </div>
 
         {/* Controls row: tabs (left) + search & settings (right) */}
-        <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center justify-between gap-2">
+        <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5">
           {/* Tab buttons */}
           <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as CampaignViewMode)} />
+
+          <div className="flex-1 min-w-0" />
 
           {/* Right controls: + / search / settings */}
           <div className="flex items-center gap-1.5 shrink-0">
@@ -655,7 +659,7 @@ export function CampaignListView({
         </div>
 
         {/* Campaign list */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-[3px]">
           {loading ? (
             <ListSkeleton />
           ) : paginatedItems.length === 0 ? (
@@ -667,6 +671,7 @@ export function CampaignListView({
           ) : (
             <div
               key={`page-${currentPage}`}
+              className="flex flex-col gap-[3px]"
             >
               {paginatedItems.map((item, idx) => {
                 if (item.kind === "header") {
@@ -681,7 +686,7 @@ export function CampaignListView({
                   ? getCampaignId(selectedCampaign) === cid
                   : false;
                 return (
-                  <div key={cid || idx}>
+                  <div key={cid || idx} className="animate-card-enter" style={{ animationDelay: `${Math.min(idx, 15) * 30}ms` }}>
                     <CampaignListCard
                       campaign={item.campaign}
                       isActive={isSelected}

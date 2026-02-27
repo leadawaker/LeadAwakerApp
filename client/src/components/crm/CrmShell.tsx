@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { RightSidebar } from "./RightSidebar";
 import { Topbar } from "@/components/crm/Topbar";
@@ -49,7 +49,8 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
     queryFn: async () => {
       const res = await apiFetch('/api/notifications');
       if (!res.ok) return [];
-      return res.json();
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
     },
     refetchInterval: 60_000,
     staleTime: 30_000,
@@ -65,8 +66,24 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   const unreadChatCount = useMemo(() => {
     const lastVisit = localStorage.getItem("leadawaker_lastChatVisitedAt");
     const cutoff = lastVisit ? new Date(lastVisit) : null;
-    return notifData.filter(n => n.type === 'inbound' && (!cutoff || new Date(n.at) > cutoff)).length;
+    const items = Array.isArray(notifData) ? notifData : [];
+    return items.filter(n => n.type === 'inbound' && (!cutoff || new Date(n.at) > cutoff)).length;
   }, [notifData]);
+
+  // ── Color Tester: force re-render when JS-based colors change (debounced) ──
+  const [, setColorTick] = useState(0);
+  const rafRef = useRef(0);
+  const bumpColors = useCallback(() => {
+    cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => setColorTick((n) => n + 1));
+  }, []);
+  useEffect(() => {
+    window.addEventListener("color-tester-update", bumpColors);
+    return () => {
+      window.removeEventListener("color-tester-update", bumpColors);
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [bumpColors]);
 
   return (
     <TopbarActionsProvider>
@@ -110,7 +127,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
             "absolute right-0 top-0 bottom-0 w-full sm:right-4 sm:top-8 sm:bottom-4 border border-border/60 bg-background shadow-sm sm:rounded-2xl pointer-events-auto flex flex-col overflow-hidden",
             activePanel === 'settings' ? "sm:w-[540px]" : "sm:w-[400px]"
           )}>
-            <div className="h-14 px-4 flex items-center justify-between border-b border-border/30 bg-background sticky top-0 z-10 shrink-0">
+            <div className="h-[62px] px-4 flex items-center justify-between border-b border-border/30 bg-background sticky top-0 z-10 shrink-0">
               <div className="font-bold text-base capitalize pl-1">
                 {activePanel === 'settings' ? 'Settings' : activePanel.replace('-', ' ')}
               </div>
@@ -146,13 +163,13 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         id="main-content"
         className={cn(
           "h-screen flex flex-col bg-background transition-[padding-left] duration-200 overflow-hidden",
-          collapsed ? "md:pl-[86px]" : "md:pl-[259px]",
-          "pb-[64px] md:pb-0 pt-14"
+          collapsed ? "md:pl-[78px]" : "md:pl-[225px]",
+          "pb-[64px] md:pb-0 pt-[62px]"
         )}
         data-testid="main-crm"
       >
         <ConnectionBanner />
-        <div className="h-full w-full px-3 md:pl-[10px] md:pr-5 pt-2 pb-0 overflow-y-auto">
+        <div className="h-full w-full px-3 md:pl-0 md:pr-5 pt-2 pb-0 overflow-y-auto">
           <ErrorBoundary>
             <PageTransition>
               {children}

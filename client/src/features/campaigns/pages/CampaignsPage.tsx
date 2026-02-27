@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   List, Table2, Plus, Trash2, Copy, Filter, Layers, Eye, Check, Search, X,
-  PanelRightClose, PanelRightOpen, Activity, ChevronDown, ChevronUp,
+  PanelRightClose, PanelRightOpen, Loader2,
 } from "lucide-react";
 import {
   Popover,
@@ -30,7 +30,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { createCampaign, deleteCampaign, updateCampaign } from "../api/campaignsApi";
-
 export type CampaignViewMode = "list" | "table";
 export type CampaignGroupBy = "status" | "account" | "type" | "none";
 export type CampaignSortBy = "recent" | "name_asc" | "name_desc" | "leads_desc" | "response_desc";
@@ -531,8 +530,10 @@ function CampaignsContent() {
         </div>
       )}
 
-      {/* +Add with confirmation */}
-      <ConfirmToolbarButton icon={Plus} label="Add" onConfirm={handleAddCampaign} />
+      {/* +Add with confirmation (agency only) */}
+      {isAgencyUser && (
+        <ConfirmToolbarButton icon={Plus} label="Add" onConfirm={handleAddCampaign} />
+      )}
 
       {/* Filter */}
       <DropdownMenu>
@@ -643,8 +644,8 @@ function CampaignsContent() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* ── Selection actions -- far right, visible when rows selected ── */}
-      {tableSelectedIds.size > 0 && (
+      {/* ── Selection actions -- far right, visible when rows selected (agency only) ── */}
+      {isAgencyUser && tableSelectedIds.size > 0 && (
         <>
           <div className="flex-1 min-w-0" />
           <div className="flex items-center gap-1 shrink-0">
@@ -667,12 +668,12 @@ function CampaignsContent() {
               loading={loading}
               selectedCampaign={selectedCampaign}
               onSelectCampaign={handleSelectCampaign}
-              onEditCampaign={handleEditCampaign}
-              onToggleStatus={handleToggleStatus}
-              onSave={handleSaveCampaign}
-              onCreateCampaign={handleAddCampaign}
+              onEditCampaign={isAgencyUser ? handleEditCampaign : () => {}}
+              onToggleStatus={isAgencyUser ? handleToggleStatus : () => {}}
+              onSave={isAgencyUser ? handleSaveCampaign : async () => {}}
+              onCreateCampaign={isAgencyUser ? handleAddCampaign : () => {}}
               onRefresh={handleRefresh}
-              onDelete={handleDeleteCampaign}
+              onDelete={isAgencyUser ? handleDeleteCampaign : undefined}
               // Lifted controls
               viewMode={viewMode}
               onViewModeChange={handleViewSwitch}
@@ -770,10 +771,10 @@ function CampaignsContent() {
                       campaign={selectedCampaign}
                       metrics={metrics}
                       allCampaigns={campaigns}
-                      onToggleStatus={handleToggleStatus}
-                      onSave={handleSaveCampaign}
+                      onToggleStatus={isAgencyUser ? handleToggleStatus : () => {}}
+                      onSave={isAgencyUser ? handleSaveCampaign : async () => {}}
                       onRefresh={handleRefresh}
-                      onDelete={handleDeleteCampaign}
+                      onDelete={isAgencyUser ? handleDeleteCampaign : undefined}
                       compact
                     />
                   ) : (

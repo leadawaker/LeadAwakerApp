@@ -70,6 +70,10 @@
   --color-highlight-active: hsl(var(--highlight-active));
   --color-highlight-selected: hsl(var(--highlight-selected));
   --color-highlight-hover: hsl(var(--highlight-hover));
+  /* Input field background — almost white in light, elevated in dark */
+  --color-input-bg: hsl(var(--input-bg));
+  /* Card hover — subtle tint when hovering non-selected cards */
+  --color-card-hover: hsl(var(--card-hover));
 
   /* Sidebar-specific semantic tokens */
   --color-sidebar-bg: hsl(var(--sidebar-bg));
@@ -81,12 +85,13 @@
 /* LIGHT MODE - Brand Colors derived from Lead Awaker */
 :root {
   /* Stone Gray Design System — floating cards aesthetic */
-  --background: 0 0% 82%; /* #D1D1D1 — page bg, sidebar, topbar (seamless base) */
+  --background: 0 0% 87%; /* #DEDEDE — page bg, sidebar, topbar (seamless base) */
   --foreground: 0 0% 12%; /* Near black — high contrast on stone gray */
-  --bg-main: 0 0% 82%; /* Match background */
+  --bg-main: 0 0% 87%; /* Match background */
 
-  --card: 0 0% 94.5%; /* #F1F1F1 — floating cards, selectable elements */
+  --card: 0 0% 97%; /* #F8F8F8 — floating cards, selectable elements */
   --card-foreground: 0 0% 12%;
+  --card-hover: 0 0% 100%; /* #FFFFFF — pure white hover on cards */
 
   --popover: 0 0% 100%; /* White — popovers/dropdowns elevated above cards */
   --popover-foreground: 0 0% 12%;
@@ -96,28 +101,28 @@
   --primary-foreground: 0 0% 100%;
 
   /* Secondary: Medium gray */
-  --secondary: 0 0% 89%;
+  --secondary: 0 0% 93%;
   --secondary-foreground: 0 0% 15%;
 
-  /* Muted — secondary panels (#E3E3E3) */
-  --muted: 0 0% 89%;
+  /* Muted — secondary panels (#EDEDED) */
+  --muted: 0 0% 93%;
   --muted-foreground: 0 0% 38%;
 
-  /* Accent: Orange/Gold from the "rays" in the logo */
-  --accent: 35 95% 55%;
+  /* Accent: Warm yellow (#FFEA80) */
+  --accent: 50 100% 75%;
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
 
   /* Toast semantic colors */
-  --success: 142 71% 45%;
+  --success: 228 100% 68%;
   --success-foreground: 0 0% 100%;
   --info: 243 75% 59%;
   --info-foreground: 0 0% 100%;
 
   --border: 0 0% 75%; /* Slightly darker than bg — kept for system use, not visually rendered */
-  --input: 0 0% 89%; /* Same as muted for inputs */
+  --input: 0 0% 93%; /* Same as muted for inputs */
   --ring: 243 75% 59%;
 
   --radius: 1.5rem; /* 24px — rounder curvature for all bordered elements */
@@ -136,8 +141,8 @@
   /* Deep Blue: #131B49 — sidebar, headers, strong emphasis */
   --brand-deep-blue: 231 59% 18%;
   --brand-deep-blue-foreground: 0 0% 100%;
-  /* Brand Yellow: #FCB803 — Call Booked highlights, success accents */
-  --brand-yellow: 44 98% 50%;
+  /* Brand Yellow: #FFDF3D — Call Booked highlights, success accents */
+  --brand-yellow: 50 100% 62%;
   --brand-yellow-foreground: 231 59% 18%;
   /* Soft Yellow: #FCCA47 — secondary highlights, hover states */
   --brand-soft-yellow: 43 97% 63%;
@@ -145,16 +150,18 @@
   /* Brand Indigo: #4f46e5 (indigo-600) — now also the primary, merged with brand-blue */
   --brand-indigo: 243 75% 59%;
   --brand-indigo-foreground: 0 0% 100%;
-  /* Indian Yellow: #E3A857 — source for UI highlight tints */
-  --brand-indian-yellow: 35 71% 62%;
+  /* Indian Yellow: #FFFFFF — source for UI highlight tints */
+  --brand-indian-yellow: 0 0% 100%;
   --brand-indian-yellow-foreground: 231 59% 18%;
   /* Highlight tokens — active/selected UI state colors */
-  --highlight-active: 50 100% 68%;   /* #FFE35B — active pill, nav, tab, bloom */
-  --highlight-selected: 45 100% 89%; /* #FFF1C8 — selected card, table row */
-  --highlight-hover: 50 100% 60%;    /* #FFD938 — hover on already-highlighted element */
+  --highlight-active: 46 100% 76%;   /* #FFE387 — active pill, nav, tab, bloom */
+  --highlight-selected: 47 100% 91%; /* #FFF5D2 — selected card, table row */
+  --highlight-hover: 236 100% 79%;   /* #949BFF — hover on already-highlighted element */
+  /* Input field background — almost white */
+  --input-bg: 0 0% 95%;             /* #F3F2F2 — form inputs, textareas, selects */
 
   /* Sidebar tokens (light mode) — sidebar now blends with page background */
-  --sidebar-bg: 0 0% 82%; /* Same as --background (#D1D1D1) */
+  --sidebar-bg: 0 0% 87%; /* Same as --background (#DEDEDE) */
   --sidebar-foreground: 0 0% 25%; /* Dark text readable on light sidebar */
   --sidebar-active: 243 75% 59%;
   --sidebar-active-foreground: 0 0% 100%;
@@ -170,6 +177,7 @@
   /* Cards: slightly lighter than background for elevation */
   --card: 226 32% 14%;             /* Elevated card surface */
   --card-foreground: 220 20% 93%;
+  --card-hover: 226 30% 17%;      /* Subtle hover tint on cards (dark) */
 
   /* Popovers: same as cards */
   --popover: 226 32% 14%;
@@ -232,6 +240,8 @@
   --highlight-active: 40 40% 30%;
   --highlight-selected: 40 30% 18%;
   --highlight-hover: 40 50% 36%;
+  /* Input field background (dark mode — slightly elevated) */
+  --input-bg: 226 30% 16%;
 
   /* Sidebar tokens (dark mode) */
   --sidebar-bg: 228 40% 8%;
@@ -244,6 +254,15 @@
 .agency-mode {
   --brand-blue: 44 98% 50%;
   --brand-blue-foreground: 231 59% 18%;
+}
+
+/* ── Card entrance stagger — lightweight fade+slide for left-panel lists ────── */
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-card-enter {
+  animation: card-enter 0.22s ease-out both;
 }
 
 @keyframes twinkle-fast {
@@ -1077,8 +1096,8 @@
    ============================ */
 
 @utility icon-circle-lg {
-  height: 2.5rem;
-  width: 2.5rem;
+  height: 2.25rem;
+  width: 2.25rem;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -1129,30 +1148,30 @@
 
 /* ============================
    Toolbar Pill — Text button variant
-   Same 40px height as icon-circle-lg.
+   Same 36px height as icon-circle-lg.
    ============================ */
 
 @utility toolbar-pill-base {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  height: 2.5rem;
+  gap: 0.375rem;
+  height: 2.25rem;
   border-radius: 9999px;
-  padding-left: 0.625rem;
-  padding-right: 0.625rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
   font-size: 0.75rem;
   line-height: 1rem;
   font-weight: 500;
   border-width: 1px;
   border-style: solid;
-  border-color: hsl(var(--border) / 0.3);
+  border-color: hsl(var(--border) / 0.6);
   background-color: transparent;
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--foreground));
   flex-shrink: 0;
   cursor: pointer;
   transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
   &:hover:not(:disabled) {
-    background-color: hsl(var(--card));
+    background-color: hsl(var(--muted) / 0.5);
     color: hsl(var(--foreground));
   }
   &:disabled {
@@ -1166,7 +1185,8 @@
 }
 
 @utility toolbar-pill-active {
-  border-color: hsl(var(--brand-indigo) / 0.4);
+  border-color: hsl(var(--brand-indigo) / 0.5);
+  background-color: hsl(var(--brand-indigo) / 0.1);
   color: hsl(var(--brand-indigo));
 }
 

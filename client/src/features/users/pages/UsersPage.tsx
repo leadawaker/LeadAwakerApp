@@ -813,7 +813,7 @@ function UsersContent() {
                   <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">My Users</h2>
                 </div>
                 {/* Controls row: tabs + toolbar */}
-                <div className="px-3 pt-1.5 pb-2.5 shrink-0 flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
+                <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
                   <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as ViewMode)} />
                   {tableToolbar}
                 </div>

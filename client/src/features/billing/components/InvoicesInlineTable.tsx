@@ -82,7 +82,7 @@ function TableSkeleton() {
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}
-          className="h-[52px] bg-[#F1F1F1]/70 rounded-xl animate-pulse"
+          className="h-[52px] bg-card/70 rounded-xl animate-pulse"
           style={{ animationDelay: `${i * 35}ms` }}
         />
       ))}
@@ -415,7 +415,7 @@ export function InvoicesInlineTable({
     };
 
     const rowBg = isHighlighted ? "#FFF1C8" : "#F1F1F1";
-    const rowHoverClass = isHighlighted ? "" : "hover:bg-[#F8F8F8]";
+    const rowHoverClass = isHighlighted ? "" : "hover:bg-card-hover";
 
     return (
       <tr

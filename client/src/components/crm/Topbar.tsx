@@ -168,7 +168,7 @@ export function Topbar({
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 h-14 bg-background z-50 flex items-center px-4 md:px-6"
+      className="fixed top-0 left-0 right-0 h-[62px] bg-background z-50 flex items-end pb-[7px] px-4 md:px-6"
       data-testid="header-crm-topbar"
     >
       {/* ── Branding ── */}
@@ -350,7 +350,7 @@ export function Topbar({
           <Tooltip>
             <TooltipTrigger asChild>
               <IconBtn
-                onClick={() => onOpenPanel('settings')}
+                onClick={() => setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/settings`)}
                 data-testid="button-settings-top"
                 aria-label="Settings"
               >
@@ -401,7 +401,7 @@ export function Topbar({
                 data-testid="button-user-avatar"
                 title={currentUserName}
               >
-                <Avatar className="h-10 w-10 border-2 border-primary/20">
+                <Avatar className="h-10 w-10">
                   <AvatarImage src={currentUserAvatar} alt={currentUserName} />
                   <AvatarFallback className={cn(
                     "text-xs font-bold",
@@ -453,19 +453,14 @@ export function Topbar({
                 </>
               )}
 
-              {isAgencyUser && (
-                <DropdownMenuItem
-                  onClick={() => {
-                    sessionStorage.setItem("pendingUserEmail", currentUserEmail);
-                    setLocation("/agency/users");
-                  }}
-                  className="flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1 mt-1"
-                  data-testid="button-view-my-profile"
-                >
-                  <User className="h-4 w-4" />
-                  View My Profile
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem
+                onClick={() => setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/settings`)}
+                className="flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1 mt-1"
+                data-testid="button-view-my-profile"
+              >
+                <User className="h-4 w-4" />
+                My Profile & Settings
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={onLogout}
                 className="flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1 mb-1 text-red-600 focus:text-red-600"

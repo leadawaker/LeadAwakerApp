@@ -9,14 +9,17 @@ import {
 } from "./LeadFilters";
 import {
   LeadsCardView,
+  KanbanDetailPanel,
   getLeadId as getLeadIdHelper,
   getFullName as getFullNameHelper,
   type GroupByOption,
   type SortByOption,
 } from "./LeadsCardView";
 import { LeadsInlineTable } from "./LeadsInlineTable";
+import { LeadsKanban } from "./LeadsKanban";
+import { LeadDetailPanel } from "./LeadDetailPanel";
 import { CsvImportWizard } from "./CsvImportWizard";
-import { createLead, bulkDeleteLeads } from "../api/leadsApi";
+import { createLead, bulkDeleteLeads, updateLead } from "../api/leadsApi";
 import { apiFetch } from "@/lib/apiUtils";
 import {
   Table2, List, Kanban,
@@ -37,6 +40,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import type { VirtualListItem } from "./LeadsCardView";
 
 type ViewMode = "list" | "table" | "pipeline";
@@ -123,7 +131,7 @@ function ConfirmToolbarButton({
   const [loading, setLoading] = useState(false);
   if (confirming) {
     return (
-      <div className="h-10 flex items-center gap-1 rounded-full border border-border/30 bg-card px-2.5 text-[12px] shrink-0">
+      <div className="h-9 flex items-center gap-1 rounded-full border border-border/30 bg-card px-2.5 text-[12px] shrink-0">
         <span className="text-foreground/60 mr-0.5 whitespace-nowrap">{label}?</span>
         <button
           className="px-2 py-0.5 rounded-full bg-brand-indigo text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
@@ -144,7 +152,7 @@ function ConfirmToolbarButton({
   return (
     <button
       className={cn(
-        "h-10 inline-flex items-center gap-1.5 rounded-full border px-3 text-[12px] font-medium shrink-0",
+        "h-9 inline-flex items-center gap-1.5 rounded-full border px-3 text-[12px] font-medium shrink-0",
         variant === "danger"
           ? "border-red-300/50 text-red-600 hover:bg-red-50/60"
           : "border-border/30 text-foreground/70 hover:bg-card hover:text-foreground",
@@ -186,6 +194,23 @@ export function LeadsTable() {
   const [leadTagsInfo, setLeadTagsInfo] = useState<Map<number, { name: string; color: string }[]>>(new Map());
   const [allTagsById,  setAllTagsById]  = useState<Map<number, { name: string; color: string }>>(new Map());
 
+  /* ── Pipeline-specific state ────────────────────────────────────────────── */
+  const [showTagsAlways, setShowTagsAlways] = useState<boolean>(() => {
+    try { return localStorage.getItem("kanban_tags_always_show") === "true"; } catch { /* noop */ } return false;
+  });
+  const [kanbanSearchQuery, setKanbanSearchQuery] = useState("");
+  const [kanbanSearchOpen, setKanbanSearchOpen] = useState(false);
+  const [showHighScore, setShowHighScore] = useState(false);
+  const [filterHasPhone, setFilterHasPhone] = useState(false);
+  const [filterHasEmail, setFilterHasEmail] = useState(false);
+  const [pipelineSortBy, setPipelineSortBy] = useState<"score-desc" | "recency" | "alpha" | null>(null);
+  const [foldAction, setFoldAction] = useState<{ type: "expand-all" | "fold-threshold"; threshold?: number; seq: number }>({ type: "expand-all", seq: 0 });
+  const [hasAnyCollapsed, setHasAnyCollapsed] = useState(false);
+  const [foldThresholdInput, setFoldThresholdInput] = useState("0");
+  const [foldPopoverOpen, setFoldPopoverOpen] = useState(false);
+  const [selectedKanbanLead, setSelectedKanbanLead] = useState<Record<string, any> | null>(null);
+  const [fullProfileLead, setFullProfileLead] = useState<Record<string, any> | null>(null);
+
   /* ── Lifted list-view controls ───────────────────────────────────────────── */
   const [listSearch,   setListSearch]   = useState("");
   const [searchOpen,   setSearchOpen]   = useState(false);
@@ -196,7 +221,7 @@ export function LeadsTable() {
 
   /* ── Table toolbar state ─────────────────────────────────────────────────── */
   const [tableSearch,         setTableSearch]         = useState("");
-  const [tableSearchOpen,     setTableSearchOpen]     = useState(true); // always expanded
+  const [tableSearchOpen,     setTableSearchOpen]     = useState(false);
   const [tableSortBy,         setTableSortBy]         = useState<TableSortByOption>("recent");
   const [tableFilterStatus,   setTableFilterStatus]   = useState<string[]>([]);
   const [tableFilterCampaign, setTableFilterCampaign] = useState<string>("");
@@ -274,43 +299,41 @@ export function LeadsTable() {
 
   /* ── Fetch lead-tag mappings ────────────────────────────────────────────── */
   useEffect(() => {
+    let cancelled = false;
     const fetchLeadTags = async () => {
       if (leads.length === 0) return;
       try {
         const batchSize = 10;
-        const batches: Promise<{ leadId: number; tagIds: number[] }[]>[] = [];
-        for (let i = 0; i < leads.length; i += batchSize) {
-          const batch = leads.slice(i, i + batchSize);
-          batches.push(
-            Promise.allSettled(
-              batch.map(async (lead) => {
-                const leadId = lead.Id || lead.id;
-                const res = await apiFetch(`/api/leads/${leadId}/tags`);
-                if (res.ok) {
-                  const data = await res.json();
-                  const tagIds = Array.isArray(data)
-                    ? data.map((t: any) => t.Tags_id || t.tags_id || t.id)
-                    : [];
-                  return { leadId, tagIds };
-                }
-                return { leadId, tagIds: [] as number[] };
-              })
-            ).then((results) =>
-              results
-                .filter((r): r is PromiseFulfilledResult<{ leadId: number; tagIds: number[] }> => r.status === "fulfilled")
-                .map((r) => r.value)
-            )
-          );
-        }
-        const allBatchResults = await Promise.all(batches);
         const tagMap = new Map<number, number[]>();
-        allBatchResults.flat().forEach(({ leadId, tagIds }) => {
-          tagMap.set(leadId, tagIds);
-        });
-        setLeadTagMap(tagMap);
+        // Process batches sequentially to avoid flooding the browser with
+        // hundreds of concurrent requests (which triggers Chrome's
+        // "multiple file download" permission prompt).
+        for (let i = 0; i < leads.length; i += batchSize) {
+          if (cancelled) return;
+          const batch = leads.slice(i, i + batchSize);
+          const results = await Promise.allSettled(
+            batch.map(async (lead) => {
+              const leadId = lead.Id || lead.id;
+              const res = await apiFetch(`/api/leads/${leadId}/tags`);
+              if (res.ok) {
+                const data = await res.json();
+                const tagIds = Array.isArray(data)
+                  ? data.map((t: any) => t.Tags_id || t.tags_id || t.id)
+                  : [];
+                return { leadId, tagIds };
+              }
+              return { leadId, tagIds: [] as number[] };
+            })
+          );
+          results
+            .filter((r): r is PromiseFulfilledResult<{ leadId: number; tagIds: number[] }> => r.status === "fulfilled")
+            .forEach((r) => tagMap.set(r.value.leadId, r.value.tagIds));
+        }
+        if (!cancelled) setLeadTagMap(tagMap);
       } catch (err) { console.error("Failed to fetch lead tags for filtering", err); }
     };
     fetchLeadTags();
+    return () => { cancelled = true; };
   }, [leads]);
 
   /* ── Build leadTagsInfo ─────────────────────────────────────────────────── */
@@ -336,6 +359,69 @@ export function LeadsTable() {
     });
     return result;
   }, [leads, leadFilters, leadTagMap, leadTagsInfo]);
+
+  /* ── Pipeline-filtered leads (applies kanban-specific filters) ────────── */
+  const filteredPipelineLeads = useMemo(() => {
+    let filtered = filteredLeads;
+    if (showHighScore) filtered = filtered.filter((l: any) => Number(l.lead_score ?? l.leadScore ?? l.Lead_Score ?? 0) >= 70);
+    if (filterHasPhone) filtered = filtered.filter((l: any) => Boolean(l.phone || l.Phone));
+    if (filterHasEmail) filtered = filtered.filter((l: any) => Boolean(l.email || l.Email));
+    if (kanbanSearchQuery.trim()) {
+      const q = kanbanSearchQuery.toLowerCase();
+      filtered = filtered.filter((l: any) => {
+        const name = (l.full_name || [l.first_name, l.last_name].filter(Boolean).join(" ") || "").toLowerCase();
+        return name.includes(q) || (l.phone || "").includes(q) || (l.email || "").includes(q);
+      });
+    }
+    if (pipelineSortBy === "score-desc") {
+      filtered = [...filtered].sort((a, b) => Number(b.lead_score ?? b.leadScore ?? b.Lead_Score ?? 0) - Number(a.lead_score ?? a.leadScore ?? a.Lead_Score ?? 0));
+    } else if (pipelineSortBy === "recency") {
+      filtered = [...filtered].sort((a, b) => {
+        const aDate = new Date(a.last_interaction_at || a.last_message_received_at || a.created_at || 0).getTime();
+        const bDate = new Date(b.last_interaction_at || b.last_message_received_at || b.created_at || 0).getTime();
+        return bDate - aDate;
+      });
+    } else if (pipelineSortBy === "alpha") {
+      filtered = [...filtered].sort((a, b) => {
+        const na = (a.full_name || [a.first_name, a.last_name].filter(Boolean).join(" ") || "").toLowerCase();
+        const nb = (b.full_name || [b.first_name, b.last_name].filter(Boolean).join(" ") || "").toLowerCase();
+        return na.localeCompare(nb);
+      });
+    }
+    return filtered;
+  }, [filteredLeads, showHighScore, filterHasPhone, filterHasEmail, kanbanSearchQuery, pipelineSortBy]);
+
+  /* ── Pipeline helpers ──────────────────────────────────────────────────── */
+  const applyFold = useCallback(() => {
+    const threshold = parseInt(foldThresholdInput, 10);
+    if (isNaN(threshold) || threshold < 0) return;
+    setFoldAction((prev) => ({ type: "fold-threshold", threshold, seq: prev.seq + 1 }));
+    setFoldPopoverOpen(false);
+  }, [foldThresholdInput]);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { try { localStorage.setItem("kanban_tags_always_show", String(showTagsAlways)); } catch { /* noop */ } }, [showTagsAlways]);
+
+  const pipelineActiveFilterCount = (showHighScore ? 1 : 0) + (filterHasPhone ? 1 : 0) + (filterHasEmail ? 1 : 0);
+  const isPipelineFilterActive = pipelineActiveFilterCount > 0;
+  const isPipelineSortActive = pipelineSortBy !== null;
+  const clearPipelineFilters = useCallback(() => { setShowHighScore(false); setFilterHasPhone(false); setFilterHasEmail(false); }, []);
+
+  const handleKanbanLeadMove = useCallback(
+    async (leadId: number | string, newStage: string) => {
+      try {
+        await updateLead(leadId, { Conversion_Status: newStage });
+        handleRefresh();
+      } catch (err) {
+        console.error("Failed to move lead to new stage", err);
+        handleRefresh();
+        throw err;
+      }
+    },
+    [handleRefresh]
+  );
+
+  const handleCloseKanbanPanel = useCallback(() => { setSelectedKanbanLead(null); }, []);
 
   /* ── Derived data for table filter dropdowns ─────────────────────────────── */
   const availableCampaigns = useMemo(() => {
@@ -578,29 +664,47 @@ export function LeadsTable() {
     return <ApiErrorFallback error={error} onRetry={handleRefresh} isRetrying={loading} />;
   }
 
-  /* ── Table toolbar (rendered inline with tabs) ──────────────────────────── */
+  /* ── Table toolbar (rendered inline below title) ────────────────────────── */
   const tableToolbar = (
     <>
-      <div className="w-px h-4 bg-border/25 mx-0.5 shrink-0" />
+      {/* +Add */}
+      <ToolbarPill icon={Plus} label="Add" onClick={handleAddLead} />
 
-      {/* Search — always expanded, before Add */}
-      <div className="flex items-center gap-1.5 h-10 rounded-full border border-border/30 bg-card/60 px-2.5 shrink-0">
-        <svg className="h-3.5 w-3.5 text-muted-foreground shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input
-          value={tableSearch}
-          onChange={(e) => setTableSearch(e.target.value)}
-          placeholder="Search leads..."
-          className="text-[12px] bg-transparent outline-none w-28 min-w-0 text-foreground placeholder:text-muted-foreground/60"
-        />
-        {tableSearch && (
-          <button type="button" onClick={() => setTableSearch("")}>
-            <svg className="h-3 w-3 text-muted-foreground hover:text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      {/* Search — toggle pill */}
+      {tableSearchOpen ? (
+        <div className="h-9 flex items-center gap-1.5 px-3 rounded-full border border-brand-indigo/50 bg-brand-indigo/5">
+          <Search className="h-3.5 w-3.5 text-brand-indigo shrink-0" />
+          <input
+            value={tableSearch}
+            onChange={(e) => setTableSearch(e.target.value)}
+            placeholder="Search…"
+            autoFocus
+            onBlur={() => { if (!tableSearch) setTableSearchOpen(false); }}
+            onKeyDown={(e) => { if (e.key === "Escape") { setTableSearch(""); setTableSearchOpen(false); } }}
+            className="bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/60 w-[120px]"
+          />
+          <button onClick={() => { setTableSearch(""); setTableSearchOpen(false); }} className="text-muted-foreground/60 hover:text-foreground">
+            <X className="h-3 w-3" />
           </button>
-        )}
-      </div>
+        </div>
+      ) : (
+        <ToolbarPill icon={Search} label="Search" active={!!tableSearch} onClick={() => setTableSearchOpen(true)} />
+      )}
 
-      {/* +Add with confirmation */}
-      <ConfirmToolbarButton icon={Plus} label="Add" onConfirm={handleAddLead} />
+      {/* Group */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <ToolbarPill icon={Layers} label="Group" active={tableGroupBy !== "status"} activeValue={tableGroupBy !== "status" ? TABLE_GROUP_LABELS[tableGroupBy] : undefined} />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-44">
+          {(["status", "campaign", "account", "none"] as TableGroupByOption[]).map((opt) => (
+            <DropdownMenuItem key={opt} onClick={() => setTableGroupBy(opt)} className={cn("text-[12px]", tableGroupBy === opt && "font-semibold text-brand-indigo")}>
+              {TABLE_GROUP_LABELS[opt]}
+              {tableGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {/* Sort */}
       <DropdownMenu>
@@ -676,20 +780,7 @@ export function LeadsTable() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Group */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <ToolbarPill icon={Layers} label="Group" active={tableGroupBy !== "status"} activeValue={tableGroupBy !== "status" ? TABLE_GROUP_LABELS[tableGroupBy] : undefined} />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44">
-          {(["status", "campaign", "account", "none"] as TableGroupByOption[]).map((opt) => (
-            <DropdownMenuItem key={opt} onClick={() => setTableGroupBy(opt)} className={cn("text-[12px]", tableGroupBy === opt && "font-semibold text-brand-indigo")}>
-              {TABLE_GROUP_LABELS[opt]}
-              {tableGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="w-px h-4 bg-border/25 mx-1.5 shrink-0" />
 
       {/* Fields (Visibility) */}
       <DropdownMenu>
@@ -817,17 +908,14 @@ export function LeadsTable() {
           {/* Left panel */}
           <div className="flex flex-col bg-muted rounded-lg overflow-hidden flex-1 min-w-0">
 
-            {/* Title */}
-            <div className="px-3.5 pt-5 pb-1 shrink-0 flex items-center justify-between">
-              <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">My Leads</h2>
-            </div>
-
-            {/* Controls row: tabs + table toolbar (inline, no count badge) */}
-            <div className="px-3 pt-1.5 pb-2.5 shrink-0 flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
-              <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as ViewMode)} />
-
-              {/* Inline toolbar — table view only */}
-              {viewMode === "table" && tableToolbar}
+            {/* Title + controls row */}
+            <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
+              <div className="flex items-center justify-between w-[309px] shrink-0">
+                <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">My Leads</h2>
+                <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as ViewMode)} />
+              </div>
+              <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
+              {tableToolbar}
             </div>
 
             {/* Table content */}
@@ -850,6 +938,164 @@ export function LeadsTable() {
           </div>
         </div>
       )}
+
+      {/* ── Pipeline view (Kanban) ── */}
+      {viewMode === "pipeline" && (
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden bg-muted rounded-lg">
+
+          {/* Pipeline title + controls row */}
+          <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
+            <div className="flex items-center justify-between w-[309px] shrink-0">
+              <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">My Leads</h2>
+              <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as ViewMode)} />
+            </div>
+            <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
+
+            {/* Search — toggle pill */}
+            {kanbanSearchOpen ? (
+              <div className="h-9 flex items-center gap-1.5 px-3 rounded-full border border-brand-indigo/50 bg-brand-indigo/5">
+                <Search className="h-3.5 w-3.5 text-brand-indigo shrink-0" />
+                <input
+                  type="text"
+                  value={kanbanSearchQuery}
+                  onChange={(e) => setKanbanSearchQuery(e.target.value)}
+                  placeholder="Search…"
+                  autoFocus
+                  onBlur={() => { if (!kanbanSearchQuery) setKanbanSearchOpen(false); }}
+                  onKeyDown={(e) => { if (e.key === "Escape") { setKanbanSearchQuery(""); setKanbanSearchOpen(false); } }}
+                  className="bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/60 w-[120px]"
+                />
+                <button onClick={() => { setKanbanSearchQuery(""); setKanbanSearchOpen(false); }} className="text-muted-foreground/60 hover:text-foreground">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <ToolbarPill icon={Search} label="Search" active={!!kanbanSearchQuery} onClick={() => setKanbanSearchOpen(true)} />
+            )}
+
+            {/* Filter button */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <ToolbarPill icon={Filter} label="Filter" active={isPipelineFilterActive} activeValue={isPipelineFilterActive ? pipelineActiveFilterCount : undefined} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-60 rounded-2xl">
+                <DropdownMenuItem onClick={() => setShowHighScore((v) => !v)} className="flex items-center gap-2 cursor-pointer rounded-xl">
+                  <Flame className={cn("h-4 w-4 shrink-0", showHighScore ? "text-[#FCB803]" : "text-muted-foreground")} />
+                  <span className={cn("text-sm flex-1", showHighScore && "font-semibold")}>High Score (70+)</span>
+                  {showHighScore && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterHasPhone((v) => !v)} className="flex items-center gap-2 cursor-pointer rounded-xl">
+                  <Phone className={cn("h-4 w-4 shrink-0", filterHasPhone ? "text-brand-indigo" : "text-muted-foreground")} />
+                  <span className={cn("text-sm flex-1", filterHasPhone && "font-semibold")}>Has Phone</span>
+                  {filterHasPhone && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterHasEmail((v) => !v)} className="flex items-center gap-2 cursor-pointer rounded-xl">
+                  <Mail className={cn("h-4 w-4 shrink-0", filterHasEmail ? "text-brand-indigo" : "text-muted-foreground")} />
+                  <span className={cn("text-sm flex-1", filterHasEmail && "font-semibold")}>Has Email</span>
+                  {filterHasEmail && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
+                </DropdownMenuItem>
+                {isPipelineFilterActive && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={clearPipelineFilters} className="flex items-center gap-2 cursor-pointer rounded-xl text-muted-foreground">
+                      <X className="h-4 w-4 shrink-0" /><span className="text-sm">Clear all</span>
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Sort button */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <ToolbarPill icon={ArrowUpDown} label="Sort" active={isPipelineSortActive} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56 rounded-2xl">
+                <DropdownMenuItem onClick={() => setPipelineSortBy(null)} className="flex items-center gap-2 cursor-pointer rounded-xl">
+                  <span className={cn("text-sm flex-1", pipelineSortBy === null && "font-semibold")}>Default</span>
+                  {pipelineSortBy === null && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPipelineSortBy("score-desc")} className="flex items-center gap-2 cursor-pointer rounded-xl">
+                  <span className={cn("text-sm flex-1", pipelineSortBy === "score-desc" && "font-semibold")}>Score (High to Low)</span>
+                  {pipelineSortBy === "score-desc" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPipelineSortBy("recency")} className="flex items-center gap-2 cursor-pointer rounded-xl">
+                  <span className={cn("text-sm flex-1", pipelineSortBy === "recency" && "font-semibold")}>Recency (Newest first)</span>
+                  {pipelineSortBy === "recency" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPipelineSortBy("alpha")} className="flex items-center gap-2 cursor-pointer rounded-xl">
+                  <span className={cn("text-sm flex-1", pipelineSortBy === "alpha" && "font-semibold")}>Alphabetical (A to Z)</span>
+                  {pipelineSortBy === "alpha" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Fold / Unfold button */}
+            {hasAnyCollapsed ? (
+              <button onClick={() => setFoldAction((prev) => ({ type: "expand-all", seq: prev.seq + 1 }))} className="h-9 px-3 rounded-full flex items-center gap-1.5 text-[12px] font-medium bg-white text-foreground border border-border/60 hover:bg-muted/50 transition-colors">
+                <Columns3 className="h-4 w-4 shrink-0" /><span>Unfold</span>
+              </button>
+            ) : (
+              <Popover open={foldPopoverOpen} onOpenChange={setFoldPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <button className={cn("h-9 px-3 rounded-full flex items-center gap-1.5 text-[12px] font-medium transition-colors", foldPopoverOpen ? "bg-white text-foreground border border-border/60" : "border border-border/60 text-muted-foreground hover:bg-card hover:text-foreground")}>
+                    <Columns3 className="h-4 w-4 shrink-0" /><span>Fold</span>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-72 rounded-2xl p-4">
+                  <p className="text-sm font-semibold mb-1">Fold columns</p>
+                  <p className="text-xs text-muted-foreground mb-3">Fold columns with this many leads or fewer.</p>
+                  <div className="flex items-center gap-2">
+                    <input type="number" value={foldThresholdInput} onChange={(e) => setFoldThresholdInput(e.target.value)} min="0" autoFocus onKeyDown={(e) => { if (e.key === "Enter") applyFold(); }} className="h-9 w-20 rounded-xl border border-border bg-input-bg px-3 text-sm text-center font-semibold focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
+                    <span className="text-sm text-muted-foreground flex-1">leads</span>
+                    <button onClick={applyFold} className="h-9 px-4 rounded-xl bg-brand-indigo text-white text-sm font-semibold hover:bg-brand-indigo/90 transition-colors">Apply</button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+
+            {/* Tags always-show toggle */}
+            <button onClick={() => setShowTagsAlways((v) => !v)} title={showTagsAlways ? "Tags always visible -- click to hover-only" : "Show tags on hover only -- click to always show"} className={cn("h-9 w-9 rounded-full flex items-center justify-center shrink-0 transition-colors", showTagsAlways ? "bg-white text-foreground border border-border/60 hover:bg-muted/50" : "border border-border/60 text-muted-foreground hover:bg-card hover:text-foreground")}>
+              <Tag className="h-4 w-4" />
+            </button>
+
+          </div>
+
+          {/* Kanban board + detail panel */}
+          <div className="flex-1 min-h-0 flex gap-[3px] overflow-hidden">
+            <div className="flex-1 min-w-0 overflow-hidden p-[6px] pt-0">
+              <LeadsKanban
+                leads={filteredPipelineLeads}
+                loading={loading}
+                leadTagsMap={leadTagsInfo}
+                onLeadMove={handleKanbanLeadMove}
+                onCardClick={setSelectedKanbanLead}
+                selectedLeadId={selectedKanbanLead?.Id ?? selectedKanbanLead?.id}
+                foldAction={foldAction}
+                onCollapsedChange={setHasAnyCollapsed}
+                showTagsAlways={showTagsAlways}
+              />
+            </div>
+            {selectedKanbanLead && (
+              <div className="w-[380px] flex-shrink-0 flex flex-col min-w-0 overflow-hidden bg-card rounded-lg">
+                <KanbanDetailPanel
+                  lead={selectedKanbanLead}
+                  onClose={handleCloseKanbanPanel}
+                  leadTags={leadTagsInfo.get(getLeadIdHelper(selectedKanbanLead)) || []}
+                  onOpenFullProfile={() => setFullProfileLead(selectedKanbanLead)}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Full lead profile sheet (for pipeline view) */}
+      <LeadDetailPanel
+        lead={fullProfileLead ?? {}}
+        open={!!fullProfileLead}
+        onClose={() => setFullProfileLead(null)}
+      />
 
       {/* CSV Import Wizard */}
       <CsvImportWizard

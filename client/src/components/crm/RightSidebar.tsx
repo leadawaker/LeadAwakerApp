@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
   HelpCircle,
@@ -19,11 +19,13 @@ import {
   X,
   Building2,
   LogOut,
-  Lightbulb,
   Receipt,
   ReceiptText,
   FileText,
+  Settings,
+  Palette,
 } from "lucide-react";
+import { ColorPickerWidget } from "@/components/ui/color-picker-widget";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import {
@@ -69,6 +71,7 @@ export function RightSidebar({
   unreadChatCount?: number;
 }) {
   const [location, setLocation] = useLocation();
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const {
     currentAccount,
     currentAccountId,
@@ -104,7 +107,7 @@ export function RightSidebar({
       : location.replace(/^\/(agency|subaccount)/, "");
 
     // Agency-only pages don't exist in subaccount view — always go to campaigns
-    const agencyOnlyPaths = ["/accounts", "/tags", "/prompt-library", "/automation-logs", "/expenses"];
+    const agencyOnlyPaths = ["/accounts", "/tags", "/prompt-library", "/automation-logs", "/expenses", "/contracts"];
     const isAgencyOnlyPage = agencyOnlyPaths.some((p) => tail.startsWith(p));
     const safeTail = (!nextIsAgency && isAgencyOnlyPage) ? "/campaigns" : tail;
 
@@ -137,7 +140,6 @@ export function RightSidebar({
       agencyViewOnly: true,
     },
     { href: `${prefix}/contacts`, label: "Leads", icon: BookUser, testId: "nav-contacts" },
-    { href: `${prefix}/opportunities`, label: "Opportunities", icon: Lightbulb, testId: "nav-opportunities" },
     { href: `${prefix}/conversations`, label: "Chats", icon: MessageSquare, testId: "nav-chats" },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "nav-calendar" },
     { href: `${prefix}/tags`, label: "Tags", icon: Tag, testId: "nav-tags", agencyOnly: true },
@@ -148,7 +150,7 @@ export function RightSidebar({
       testId: "nav-library",
       agencyOnly: true,
     },
-    { href: `${prefix}/users`, label: "Users", icon: Users, testId: "nav-users" },
+    { href: `${prefix}/users`, label: "Users", icon: Users, testId: "nav-users", agencyOnly: true },
     {
       href: `${prefix}/invoices`,
       label: "Invoices",
@@ -167,6 +169,7 @@ export function RightSidebar({
       label: "Contracts",
       icon: FileText,
       testId: "nav-contracts",
+      agencyOnly: true,
     },
     {
       href: `${prefix}/automation-logs`,
@@ -209,21 +212,19 @@ export function RightSidebar({
               "relative flex items-center rounded-full transition-colors mb-0.5",
               collapsed
                 ? "h-10 w-10 mx-auto justify-center"
-                : "h-[43px] pl-[1.5px] pr-2 gap-2.5",
+                : "h-[44px] pl-[1.5px] pr-2 gap-2.5",
               active
                 ? collapsed
                   ? "text-foreground font-semibold"
-                  : "bg-[var(--highlight-active)] text-foreground font-semibold"
-                : "text-muted-foreground hover:bg-card hover:text-foreground"
+                  : "bg-highlight-active text-foreground font-semibold"
+                : "text-foreground/70 hover:bg-card hover:text-foreground"
             )}
             data-testid={`link-${it.testId}`}
             data-active={active || undefined}
           >
             <div className={cn(
-              "relative h-10 w-10 rounded-full flex items-center justify-center shrink-0",
-              active && collapsed
-                ? "bg-[var(--highlight-active)]"
-                : !active ? "border border-border/65" : ""
+              "relative h-10 w-10 rounded-full flex items-center justify-center shrink-0 border border-border/65",
+              active && "bg-highlight-active"
             )}>
               <Icon className="h-4 w-4" />
               {showUnreadDot && (
@@ -245,7 +246,7 @@ export function RightSidebar({
             side="right"
             className={cn(
               "rounded-lg px-3 h-10 flex items-center text-sm font-semibold shadow-md border-0 ml-1",
-              isActive(it.href) ? "bg-[var(--highlight-active)] text-foreground" : "bg-card text-foreground"
+              isActive(it.href) ? "bg-highlight-active text-foreground" : "bg-card text-foreground"
             )}
           >
             {it.label}
@@ -371,7 +372,7 @@ export function RightSidebar({
                     className={cn(
                       "flex items-center gap-3 px-3 py-3 rounded-xl transition-colors",
                       active
-                        ? "bg-[var(--highlight-active)] text-foreground font-bold shadow-sm"
+                        ? "bg-highlight-active text-foreground font-bold shadow-sm"
                         : "text-muted-foreground hover:bg-muted"
                     )}
                     data-testid={`mobile-${it.testId}`}
@@ -386,6 +387,19 @@ export function RightSidebar({
 
             {/* BOTTOM ACTIONS */}
             <div className="px-3 pb-3 pt-2 space-y-2 border-t border-border/40">
+              <Link
+                href={`${prefix}/settings`}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors",
+                  isActive(`${prefix}/settings`)
+                    ? "bg-highlight-active text-foreground font-bold shadow-sm"
+                    : "text-muted-foreground hover:bg-muted"
+                )}
+                data-testid="mobile-nav-settings"
+              >
+                <Settings className="h-4 w-4" />
+                <span className="text-sm font-semibold">Settings</span>
+              </Link>
               <button
                 onClick={() => { onOpenSupport(); onCloseMobileMenu?.(); }}
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-muted transition-colors"
@@ -486,8 +500,8 @@ export function RightSidebar({
       {/* DESKTOP SIDEBAR */}
       <aside
         className={cn(
-          "fixed left-0 top-14 bottom-0 bg-background hidden md:flex flex-col overflow-hidden transition-[width] duration-200",
-          collapsed ? "w-[86px]" : "w-[259px]"
+          "fixed left-0 top-[62px] bottom-0 bg-background hidden md:flex flex-col overflow-hidden transition-[width] duration-200",
+          collapsed ? "w-[78px]" : "w-[225px]"
         )}
         data-sidebar-focus
       >
@@ -495,7 +509,7 @@ export function RightSidebar({
           {/* HEADER — "Menu" label + collapse button */}
           <div
             className={cn(
-              "flex items-center shrink-0 px-2 mt-7 mb-2 h-10",
+              "flex items-center shrink-0 px-2.5 mt-[45px] mb-2 h-10",
               collapsed ? "justify-center" : "justify-between"
             )}
           >
@@ -517,14 +531,14 @@ export function RightSidebar({
 
           {/* NAV — categorized sections */}
           <TooltipProvider delayDuration={300}>
-            <nav className="px-2 flex-1 overflow-y-auto min-h-0 pb-2">
+            <nav className="px-2.5 flex-1 overflow-y-auto min-h-0 pb-2">
               {/* Section: (top — Campaigns) */}
               {visibleNavItems.filter(it => it.label === "Campaigns").map((it) => renderDesktopNavLink(it))}
 
               {/* Section: Engage */}
               {(() => {
                 const engageItems = visibleNavItems.filter(it =>
-                  ["Leads", "Opportunities", "Chats", "Calendar"].includes(it.label)
+                  ["Leads", "Chats", "Calendar"].includes(it.label)
                 );
                 if (engageItems.length === 0) return null;
                 return (
@@ -532,8 +546,8 @@ export function RightSidebar({
                     {collapsed ? (
                       <div className="mx-auto w-5 border-t border-border/30 my-3" />
                     ) : (
-                      <div className="px-1 pt-1.5 pb-0.5">
-                        <span className="text-[11px] font-bold tracking-wide text-muted-foreground/60">
+                      <div className="px-1 pt-1.5 pb-1.5">
+                        <span className="text-[11px] font-bold tracking-wide text-foreground/50">
                           Engage
                         </span>
                       </div>
@@ -554,8 +568,8 @@ export function RightSidebar({
                     {collapsed ? (
                       <div className="mx-auto w-5 border-t border-border/30 my-3" />
                     ) : (
-                      <div className="px-1 pt-1.5 pb-0.5">
-                        <span className="text-[11px] font-bold tracking-wide text-muted-foreground/60">
+                      <div className="px-1 pt-1.5 pb-1.5">
+                        <span className="text-[11px] font-bold tracking-wide text-foreground/50">
                           Admin
                         </span>
                       </div>
@@ -576,8 +590,8 @@ export function RightSidebar({
                     {collapsed ? (
                       <div className="mx-auto w-5 border-t border-border/30 my-3" />
                     ) : (
-                      <div className="px-1 pt-1.5 pb-0.5">
-                        <span className="text-[11px] font-bold tracking-wide text-muted-foreground/60">
+                      <div className="px-1 pt-1.5 pb-1.5">
+                        <span className="text-[11px] font-bold tracking-wide text-foreground/50">
                           Billing
                         </span>
                       </div>
@@ -598,8 +612,8 @@ export function RightSidebar({
                     {collapsed ? (
                       <div className="mx-auto w-5 border-t border-border/30 my-3" />
                     ) : (
-                      <div className="px-1 pt-1.5 pb-0.5">
-                        <span className="text-[11px] font-bold tracking-wide text-muted-foreground/60">
+                      <div className="px-1 pt-1.5 pb-1.5">
+                        <span className="text-[11px] font-bold tracking-wide text-foreground/50">
                           Backend
                         </span>
                       </div>
@@ -608,10 +622,56 @@ export function RightSidebar({
                   </div>
                 );
               })()}
+
             </nav>
           </TooltipProvider>
 
+          {/* Color Picker — dev tool, above Settings */}
+          <div className="shrink-0 px-2.5 pb-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setColorPickerOpen((p) => !p)}
+                  className={cn(
+                    "flex items-center justify-center rounded-xl transition-colors",
+                    collapsed ? "h-10 w-10" : "h-10 w-full gap-2 px-3",
+                    colorPickerOpen
+                      ? "bg-brand-indigo text-white"
+                      : "text-foreground/50 hover:text-foreground hover:bg-card",
+                  )}
+                  title="Color Tester"
+                >
+                  <Palette className="h-4 w-4 shrink-0" />
+                  {!collapsed && (
+                    <span className="text-[13px] font-medium truncate">Colors</span>
+                  )}
+                </button>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right" sideOffset={8}>
+                  Color Tester
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </div>
 
+          {/* Settings — pinned to bottom */}
+          <TooltipProvider delayDuration={300}>
+            <div className="shrink-0 px-2.5 pb-4 pt-2 border-t border-border/30">
+              {renderDesktopNavLink({
+                href: `${prefix}/settings`,
+                label: "Settings",
+                icon: Settings,
+                testId: "nav-settings",
+              })}
+            </div>
+          </TooltipProvider>
+
+          {/* Color Picker Widget */}
+          <ColorPickerWidget
+            open={colorPickerOpen}
+            onClose={() => setColorPickerOpen(false)}
+          />
         </div>
       </aside>
     </>

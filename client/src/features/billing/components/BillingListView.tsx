@@ -117,12 +117,13 @@ type BillingListItem =
 
 function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div className="sticky top-0 z-20 bg-muted px-3 pt-1.5 pb-1.5">
-      <div className="flex items-center gap-0">
-        <div className="flex-1 h-px bg-foreground/15 mx-[8px]" />
-        <span className="text-[10px] font-bold text-foreground/55 uppercase tracking-widest shrink-0">{label}</span>
-        <span className="ml-1 text-[9px] text-muted-foreground/45 font-semibold shrink-0">{count}</span>
-        <div className="flex-1 h-px bg-foreground/15 mx-[8px]" />
+    <div className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
+      <div className="flex items-center gap-[10px]">
+        <div className="flex-1 h-px bg-foreground/15" />
+        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
+        <span className="text-foreground/20 shrink-0">–</span>
+        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
+        <div className="flex-1 h-px bg-foreground/15" />
       </div>
     </div>
   );
@@ -695,7 +696,7 @@ export function BillingListView({
   const leftPanelHeader = (
     <>
       {/* Header row 1: title + printer (expenses only) */}
-      <div className="px-3 pt-5 pb-1 shrink-0">
+      <div className="px-3.5 pt-5 pb-1 shrink-0">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight shrink-0">
             {isExpensesTab ? "Expenses" : isInvoicesTab ? "Invoices" : "Contracts"}
@@ -712,7 +713,7 @@ export function BillingListView({
       </div>
 
       {/* Header row 2: view mode toggle + search + settings */}
-      <div className="px-3 pt-1 pb-2 shrink-0 flex items-center gap-1">
+      <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
         <div className="flex-1 min-w-0">
           <ViewTabBar
             tabs={VIEW_MODE_TABS}
@@ -992,7 +993,7 @@ export function BillingListView({
   const cardList = (
     <>
       {/* Card list */}
-      <div className="flex-1 overflow-y-auto px-[3px]">
+      <div className="flex-1 overflow-y-auto p-[3px]">
         {isLoading ? (
           <ListSkeleton />
         ) : flatItems.length === 0 ? (
@@ -1010,7 +1011,7 @@ export function BillingListView({
             )}
           </div>
         ) : (
-          <div key={`billing-page-${currentPage}-${activeTab}`}>
+          <div key={`billing-page-${currentPage}-${activeTab}`} className="flex flex-col gap-[3px] pb-2">
             {flatItems.map((item, idx) => {
               if (item.kind === "header") {
                 return (
@@ -1022,7 +1023,7 @@ export function BillingListView({
               if (item.kind === "invoice") {
                 const isSelected = effectiveSelectedInvoice?.id === item.invoice.id && rightPanelMode === "view";
                 return (
-                  <div key={item.invoice.id || idx}>
+                  <div key={item.invoice.id || idx} className="animate-card-enter" style={{ animationDelay: `${Math.min(idx, 15) * 30}ms` }}>
                     <InvoiceCard
                       invoice={item.invoice}
                       isSelected={isSelected}
@@ -1033,7 +1034,7 @@ export function BillingListView({
               }
               const isSelected = selectedContract?.id === item.contract.id;
               return (
-                <div key={item.contract.id || idx}>
+                <div key={item.contract.id || idx} className="animate-card-enter" style={{ animationDelay: `${Math.min(idx, 15) * 30}ms` }}>
                   <ContractCard
                     contract={item.contract}
                     isSelected={isSelected}
@@ -1076,7 +1077,7 @@ export function BillingListView({
   // ── Table mode toolbar ─────────────────────────────────────────────────────
 
   const tableToolbar = (
-    <div ref={toolbarRef} className="px-3 pt-1 pb-2 shrink-0 flex items-center gap-1.5 flex-wrap">
+    <div ref={toolbarRef} className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
 
       {/* View mode toggle */}
       <ViewTabBar
@@ -1872,7 +1873,7 @@ export function BillingListView({
           <div className="flex-1 min-w-0 flex flex-col overflow-hidden rounded-lg bg-muted">
 
             {/* Header row 1: title */}
-            <div className="px-3 pt-5 pb-1 shrink-0">
+            <div className="px-3.5 pt-5 pb-1 shrink-0">
               <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight shrink-0">
                 {isExpensesTab ? "Expenses" : isInvoicesTab ? "Invoices" : "Contracts"}
               </h2>

@@ -21,7 +21,7 @@ export function useCampaignsData(accountId?: number) {
       let accountsList: Array<Record<string, unknown>> = [];
       try {
         accountsList = await fetchAccounts();
-        setAccounts(accountsList);
+        setAccounts(accountsList as any);
       } catch {
         // Silently ignore — campaigns will show with "Unknown Account" for account names
       }
@@ -43,6 +43,7 @@ export function useCampaignsData(accountId?: number) {
           id: rowId,
           account_id: rawAccountId,
           account_name: account?.name || account?.Name || rawAccountId || "Unknown Account",
+          account_logo_url: (account as any)?.logo_url || (account as any)?.Logo_url || "",
           Leads: Array.isArray(c.Leads) ? c.Leads.length : (typeof c.Leads === 'number' ? c.Leads : 0),
           Interactions: Array.isArray(c.Interactions) ? c.Interactions.length : (typeof c.Interactions === 'number' ? c.Interactions : 0),
           "Automation Logs": Array.isArray(c["Automation Logs"]) ? c["Automation Logs"].length : 0,

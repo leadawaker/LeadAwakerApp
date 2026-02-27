@@ -174,16 +174,16 @@ Dark mode uses **brand-tinted navy surfaces**, never pure black.
 
 ### 4.1 The ONE Size Rule
 
-There is ONE standard size for interactive circle elements. No sm/md/lg variants.
+There is ONE standard size for interactive circle/pill elements: **36px** (`h-9`). No sm/md/lg variants.
 
 | Element | Size | Tailwind | Notes |
 |---------|------|----------|-------|
-| Icon button circle | 40px | `h-10 w-10` | `icon-circle-lg icon-circle-base` |
+| Icon button circle | 36px | `h-9 w-9` | Outline circle, `rounded-full border border-border/60` |
 | Icon inside circle | 16px | `h-4 w-4` | Always. No exceptions. |
-| Toolbar pill height | 40px | `toolbar-pill-base` | Text pills, dropdowns. |
-| Nav active pill | 43px | `h-[43px]` | 40px + 3px halo. |
-| Lead avatar circle | 40px | `h-10 w-10` | Uses `getStatusAvatarColor(status)`. |
-| Lead score circle | 40px | `h-10 w-10` | — |
+| Toolbar pill height | 36px | `h-9 px-3 rounded-full` | Text pills, dropdowns. |
+| Nav active pill | 44px | `h-[44px]` | Sidebar selected page highlight. |
+| Lead avatar circle | 36px | `h-9 w-9` | Uses `getStatusAvatarColor(status)`. |
+| Lead score circle | 36px | `h-9 w-9` | — |
 
 ### 4.2 Table Row Heights
 
@@ -346,7 +346,7 @@ Every clickable element MUST have all four states:
 7. **NEVER** modify landing/marketing pages (pre-login).
 8. **NEVER** use raw `fetch()` — always go through `apiFetch` or `apiRequest`.
 9. **NEVER** use icons larger than `h-4 w-4` (16px) inside circle buttons or smaller than `h-4 w-4`.
-10. **NEVER** create button size variants (sm, md, lg). Everything is 40px.
+10. **NEVER** create button size variants (sm, md, lg). Everything is 36px (`h-9`).
 11. **NEVER** use `Dialog` / backdrop-modal components for create/edit forms, add-item flows, or option menus. These darken and blur the surrounding UI and are banned. Use instead:
     - **Right-panel** (inline, no overlay — same layout as `ContractCreatePanel` / `InvoiceCreatePanel` / `ExpenseCreatePanel`) for create/edit forms.
     - **`Popover`** for lightweight option menus (sort, filter, quick actions).
@@ -371,10 +371,10 @@ These custom utilities are defined in `index.css` and available globally:
 
 | Utility | Purpose |
 |---------|---------|
-| `icon-circle-lg` | 40px circle container (h-10 w-10, flex, centered). |
+| `icon-circle-lg` | 36px circle container (h-9 w-9, flex, centered). |
 | `icon-circle-base` | Border + hover/active/focus states for icon circles. |
 | `icon-circle-selected` | Brand-indigo filled circle (selected state). |
-| `toolbar-pill-base` | 40px-tall text pill with border + states. |
+| `toolbar-pill-base` | 36px-tall text pill with border + states. |
 | `toolbar-pill-active` | Active state modifier for toolbar pills. |
 | `hover-elevate` | Brightness lift + shadow on hover. |
 | `active-elevate-2` | Press-down scale on active. |
@@ -481,16 +481,33 @@ Reference these when building new panels:
 
 Applies to **both** `LeadsCardView.tsx` (list view) and `LeadsKanban.tsx` / `KanbanCardContent` (kanban cards). Both views must share the same base card style.
 
-### 15.1 Card States
+### 15.1 Card States (Left Panel Default)
 
 | State | Background | Shadow |
 |-------|-----------|--------|
-| Default | `bg-white` | none |
-| Hover | `bg-white` | `shadow-[0_2px_8px_rgba(0,0,0,0.08)]` |
+| Default | `bg-[#F1F1F1]` | none |
+| Hover | `hover:bg-[#FAFAFA]` | `shadow-[0_2px_8px_rgba(0,0,0,0.08)]` (optional) |
 | Selected / Active | `bg-[#FFF1C8]` | none |
 | Dragging (kanban only) | `bg-white scale-[1.02] rotate-1 opacity-95` | — |
 
-> **NOTE:** `LeadsCardView` list cards previously used `bg-[#F1F1F1]` (stone gray). They must be updated to `bg-white` to match the Kanban / Opportunities card style.
+> **DEFAULT:** All left panel cards (Leads, Campaigns, Accounts, Inbox, Calendar, Users, Billing) use `bg-[#F1F1F1]` as the unselected background. This matches the invoices/billing card standard. Kanban cards may still use `bg-white`.
+
+### 15.1.1 Card Gaps
+
+All left panel card lists must use **3px gaps**:
+- **Vertical gap:** `gap-[3px]` on the card list container (`flex flex-col gap-[3px]`)
+- **Scroll container padding:** `p-[3px]` on the scroll container — 3px in **all** directions (top, right, bottom, left)
+
+#### Virtualized Lists
+
+For lists using `@tanstack/react-virtual`, CSS `gap-[3px]` does not work (items are absolutely positioned). Instead, use the virtualizer's `gap` option:
+
+```typescript
+useVirtualizer({
+  // ...
+  gap: 3,
+})
+```
 
 ### 15.2 Card Anatomy
 
@@ -498,7 +515,7 @@ Applies to **both** `LeadsCardView.tsx` (list view) and `LeadsKanban.tsx` / `Kan
 - **Content padding:** `px-2.5 pt-2 pb-1.5 flex flex-col gap-0.5`
 - **Row 1:** Avatar → Name + status dot + status label → Score ring + last activity (right-aligned)
   - Avatar: `h-10 w-10 rounded-full`, colors from `getStatusAvatarColor(status)` — must match `PIPELINE_HEX` palette (same in list and kanban)
-  - Name: `text-[13px] font-semibold font-heading truncate text-foreground`
+  - Name: `text-[16px] font-semibold font-heading truncate text-foreground` (see §25)
   - Status: `h-1.5 w-1.5 rounded-full` dot (color from `PIPELINE_HEX`) + `text-[10px] text-muted-foreground/65`
   - Score ring: 34px SVG (`LIST_RING_SIZE = 34`, `LIST_RING_STROKE = 2.5`), stroke color from `PIPELINE_HEX[status]`
   - Last activity: `text-[10px] tabular-nums text-muted-foreground/60`
@@ -635,11 +652,13 @@ The separator `[│]` is `<div className="w-px h-5 bg-border/40 mx-1 shrink-0" /
 
 Inherits the §16 structure. Specific values:
 
-- **Title:** "My Calendar"
+- **Title:** "My Calendar" — `text-2xl font-semibold font-heading text-foreground leading-tight` (must match all other page titles)
 - **ViewTabBar tabs:** Monthly | Weekly | Daily (3 tabs — **Yearly is removed**)
+- **Tab active color:** `bg-[var(--highlight-active)] text-foreground` (warm yellow, **NOT** `bg-brand-indigo`)
 - **Count:** plain appointment count above Settings `IconBtn` (§16.3 pattern)
 - **Settings dropdown** contains: Group by, Sort by, Filter by status, Account filter (agency), Campaign filter
 - **Account/Campaign filter pills** (previously below the header): **removed** — moved into Settings
+- **Card backgrounds:** `bg-[#F1F1F1]` (matches §15.1 standard), with `gap-[3px]` between cards
 
 ### 18.2 Main Calendar Toolbar (right panel top)
 
@@ -659,7 +678,11 @@ Only two elements — view tabs are **not** here (moved to left panel):
 
 ## §19 — Modal & Overlay Policy
 
-**BANNED: Dark blurry overlay modals** — Never use `Dialog`/`Modal` components with backdrop-blur or dark overlays for in-context pickers, dropdowns, or selection UIs. The only exception is full-screen edit dialogs (logo crop, confirmation dialogs).
+**BANNED: Glass/blur overlays** — Never use `glass-overlay`, `backdrop-blur`, `glass-surface`, or any glassmorphism CSS class on dialog overlays or modal backgrounds. The `DialogOverlay` component must use a plain `bg-black/50` backdrop only — no blur, no glass effects.
+
+**BANNED: Dark blurry overlay modals for editing** — Never use `Dialog`/`Modal` components with dark overlays for in-context pickers, dropdowns, or selection UIs. The only exception is confirmation dialogs (delete, destructive actions).
+
+**Prefer inline/slide-over editing** — For editing items (prompts, tags, user profiles), prefer inline editing or slide-over panels over modal dialogs with dark overlays.
 
 **USE INSTEAD: Tooltip-style floating panels**
 - Appearance: `bg-white rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] ring-1 ring-black/[0.06] border border-border/30`
@@ -672,8 +695,241 @@ Only two elements — view tabs are **not** here (moved to left panel):
 
 ---
 
+## §20 — Settings Page Layout
+
+Settings uses the standard left-panel layout with section-based navigation:
+
+- **Left nav:** `w-[200px] md:w-[240px]` with `border-r border-border/30`
+- **Title:** Inside the left nav area, `px-3.5 pt-5 pb-3`, styled `text-2xl font-semibold font-heading text-foreground leading-tight` — aligned with menu titles
+- **Sections:** Profile, Security, Notifications, Dashboard
+- **Active section:** `bg-[var(--highlight-active)] text-foreground font-semibold` with `h-10 px-3 rounded-xl`
+
+## §21 — Campaign Detail View Widget Layout
+
+The Campaign detail "Overview" tab has a 3-column grid:
+
+| Col 1 | Col 2 | Col 3 |
+|-------|-------|-------|
+| Campaign Info/KPIs | Pipeline Funnel ↔ Conversions (toggle) | Financials |
+| Performance Trends | Recent Activity Feed | ROI Trend |
+
+- **Pipeline Funnel / Conversions toggle:** A single widget with a toggle button in the top-right corner to switch between Funnel view and Conversions pie chart
+- **Recent Activity Feed:** Uses `ActivityFeed` component, replaces the old standalone Conversions widget spot
+- **Activity Feed in left panel:** REMOVED — activity feed is now in the detail view only
+
+---
+
+## §22 — Popups, Overlays & Field Styling
+
+### Popup / Dialog Overlays
+- **NEVER** darken or blur the background behind dialogs and popups
+- Dialog overlay: use a very light shade of gray (e.g., `bg-black/8` or `bg-gray-200/40`), NOT `bg-black/50` or any heavy dark overlay
+- No `backdrop-blur`, no `glass-overlay` on dialog backdrops
+- The goal: clean, airy, non-intrusive overlays that don't obscure the page
+
+### Form Field Styling
+- All fillable fields (inputs, textareas, selects) must use `bg-input-bg` (CSS variable: `--input-bg`, light mode: `#F7F7F7`, dark mode: elevated surface)
+- **No visible outlines** on form fields — use `border-border/40` for subtle definition, or `border-transparent`
+- Focus state: use a subtle ring (`ring-brand-indigo/20`) — no heavy outlines
+- Clean, minimal aesthetic — fields should blend into the surface, not stand out with heavy borders
+
+### General Clean Aesthetic Rules
+- No heavy borders or outlines on interactive elements
+- Prefer subtle color stepping and shadows over visible borders
+- Depth through background color differences, not border lines
+- All UI should feel light, clean, and uncluttered
+
+---
+
+## §23 — Avatar / Entity Circle Standard
+
+All entity avatar circles must use `EntityAvatar` from `@/components/ui/entity-avatar.tsx` and color functions from `@/lib/avatarUtils.ts`.
+
+### Display Priority
+
+1. **Photo** — If `photoUrl` exists (`logo_url`, `avatar_url`, etc.), show the photo
+2. **Initials** — Fall back to `getInitials(name)` with entity-appropriate status/role colors
+
+### Color Sources (from `@/lib/avatarUtils.ts`)
+
+- **Leads**: `getLeadStatusAvatarColor(status)` — used across Leads page, Calendar, and Conversations
+- **Accounts**: `getAccountAvatarColor(status)` — Active/Trial/Inactive/Suspended
+- **Campaigns**: `getCampaignAvatarColor(status)` — Active/Paused/Draft/etc.
+- **Users**: `getUserRoleAvatarColor(role)` — Admin/Operator/Manager/Agent/Viewer
+- **Prompts**: `getPromptAvatarColor(status)` — Active/Archived
+
+### Sizes
+
+- **Standard**: 36px (`size={36}`, default) — list cards, table cells
+- **Detail panel**: 34px (`size={34}`) — right-side detail panel header
+- **Large**: 72px (`size={72}`) — profile headers (Settings, Users)
+- **Compact**: 28px (`size={28}`) — inline mentions, compact lists
+
+### Rules
+
+- Never define local `getInitials()` or status color functions — always import from `@/lib/avatarUtils.ts`
+- Lead status colors MUST be identical across Leads, Calendar, and Conversations pages
+- Photo always takes priority over initials when the field exists and is non-empty
+
+---
+
+## §24 — Group Headers in Left Panel Lists
+
+All left panel card lists (Leads, Campaigns, Accounts, Billing, Prompts, Users, Conversations, Calendar) that support grouping must use this standard for group header rendering.
+
+### 24.1 Layout — Centered with Decorative Lines
+
+```
+——— Last 3 Months – 17 ———
+[line]  [label]  [dash]  [count]  [line]
+```
+
+The label and count are centered, separated by a gray en-dash, with decorative `h-px` lines extending to each edge.
+
+### 24.2 Exact Markup
+
+```tsx
+function GroupHeader({ label, count }: { label: string; count: number }) {
+  return (
+    <div className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
+      <div className="flex items-center gap-[10px]">
+        <div className="flex-1 h-px bg-foreground/15" />
+        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
+        <span className="text-foreground/20 shrink-0">–</span>
+        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
+        <div className="flex-1 h-px bg-foreground/15" />
+      </div>
+    </div>
+  );
+}
+```
+
+### 24.3 Token Reference
+
+| Element | Classes |
+|---|---|
+| Outer wrapper | `sticky top-0 z-20 bg-muted px-3 pt-3 pb-3` |
+| Inner flex | `flex items-center gap-[10px]` |
+| Decorative lines | `flex-1 h-px bg-foreground/15` |
+| Label | `text-[12px] font-bold text-foreground tracking-wide shrink-0` |
+| En-dash separator | `text-foreground/20 shrink-0` (literal `–` character) |
+| Count | `text-[12px] font-medium text-muted-foreground tabular-nums shrink-0` |
+
+### 24.4 Rules
+
+- **Text format:** Title case label, en-dash, plain number — `"Last 3 Months – 17"` (not `"LAST 3 MONTHS 2"`, not `"17 leads"`)
+- **No uppercase transform** — `uppercase` / `text-transform` is banned on group headers
+- **Padding:** `pt-3 pb-3 px-3` — generous vertical padding for visual separation from cards
+- **Background:** `bg-muted` — opaque, matches left panel background, covers cards scrolling underneath
+- **Decorative lines:** `flex-1 h-px bg-foreground/15` on both sides — no `mx-[8px]` margin, lines extend edge to edge within `px-3`
+
+### 24.5 Sticky Scroll Behavior
+
+- `sticky top-0 z-20` — header stays pinned while its group's cards are visible
+- Next group's header pushes the previous one away naturally
+- `bg-muted` **must** be opaque — no transparency or blur
+- Group headers must be **direct flex children** of the scroll container (no extra wrapper `<div>`s) for `position: sticky` to work
+
+### 24.6 Implementation Notes
+
+- Group headers are rendered as part of the `VirtualListItem` union type with `kind: "header"`
+- The scroll container must have `overflow-y-auto` with the header as a direct flex child
+- This pattern applies to **all** left panel card lists across the app — copy the exact markup above
+
+---
+
+## §25 — Entity Name & Widget Title Typography (16px Standard)
+
+**One size for all entity names and widget titles: `text-[16px] font-semibold font-heading`.**
+
+### 25.1 Left Panel Card Names
+
+Every entity name displayed in a left panel card (list view) uses:
+
+```
+text-[16px] font-semibold font-heading leading-tight truncate text-foreground
+```
+
+Applies to: Leads, Accounts, Campaigns, Users, Prompts, Calendar appointments, Conversations/Inbox, and Kanban cards (pipeline view).
+
+### 25.2 Widget Titles (Right Panel / Detail View)
+
+Every widget heading in a detail/right panel uses:
+
+```
+text-[16px] font-semibold font-heading text-foreground
+```
+
+Applies to: Contact, Lead Score, Chat, Team, Notes, Activity, Overview, Campaigns & Contracts, Users, AI & Schedule, Twilio — all detail view widgets across Leads, Accounts, and other pages.
+
+### 25.3 Rule
+
+Never use `text-sm`, `text-[13px]`, `text-[14px]`, `text-[15px]`, `text-[17px]`, or `text-[19px]` for card names or widget titles. Always use `text-[16px]`.
+
+---
+
+## §26 — ViewTabBar Rigid Positioning Standard
+
+The ViewTabBar (view-switcher circles) must sit at the **right edge** of the left panel, and that exact pixel position must be maintained when switching between views (List → Table → Kanban, etc.).
+
+### 26.1 The Fixed-Width Wrapper Pattern
+
+Wrap the page title + `ViewTabBar` in a fixed-width container with `justify-between`:
+
+```tsx
+<div className="flex items-center justify-between w-[309px] shrink-0">
+  <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
+    My Leads
+  </h2>
+  <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={...} />
+</div>
+```
+
+### 26.2 Width Derivation
+
+The `309px` value comes from the left panel inner content width:
+
+```
+340px (panel width)  −  17px (pl-[17px])  −  14px (pr-3.5)  =  309px
+```
+
+This ensures the rightmost circle aligns flush with the panel's right content edge.
+
+### 26.3 Across Views
+
+Every view within a page (List, Table, Kanban) must use the **same** 309px wrapper. In full-width views (Table, Pipeline), the wrapper is followed by a separator + toolbar buttons:
+
+```
+[Title ··· ◉ ◉ ◉]  |  [+Add] [Search] [Sort] [Filter] …
+ ←── 309px ──→     sep    toolbar pills
+```
+
+### 26.4 Pages With Fewer Tabs
+
+Most pages have only 2 view tabs (List | Table). The same `w-[309px] justify-between` wrapper is used — the gap between the title and the first circle is simply wider, which is the intended behavior.
+
+| Tab Count | Visual Result |
+|-----------|--------------|
+| 3 tabs (Leads) | Title + compact gap + 3 circles |
+| 2 tabs (most pages) | Title + wider gap + 2 circles |
+
+### 26.5 Rules
+
+1. **Always** use `w-[309px] shrink-0` with `justify-between` — never `gap-*` or `ml-auto` for ViewTabBar positioning.
+2. The wrapper must appear in the **same row** as toolbar buttons (Table/Pipeline views) or in a dedicated header row (List view).
+3. The rightmost ViewTabBar circle must visually align with the right content edge of the 340px left panel.
+4. When adding ViewTabBar to a new page, copy this pattern exactly — do not invent new positioning approaches.
+
+---
+
 ## Changelog
 
 - **2026-02-25:** Initial creation. Consolidated from CLAUDE.md, frontend.md, DESIGN_TOKENS.md, BUTTONS.md. Color system overhauled: primary shifted from `#5170FF` (periwinkle) → `#4F46E5` (indigo-600). Highlight system shifted from `#FFF375` (lime) → Indian Yellow `#E3A857` derived tints. `#FCB803` reserved for KPI/data emphasis only.
 - **2026-02-26:** §9.2 rule #11 added: backdrop/overlay dialogs are banned. §14 Interaction Patterns added: panel-first rule, panel anatomy, existing panel reference table.
 - **2026-02-26:** §15–§18 added: Lead Card Standard (white bg, shared kanban+list style), Left Panel Standard (count above Settings, `IconBtn` everywhere, no pills), Table Toolbar Standard (BillingListView pattern, 920px collapse), Calendar Layout Standard (3-tab left panel, date-nav-only main toolbar).
+- **2026-02-27:** §15.1 updated: card default bg changed from `bg-white` to `bg-[#F1F1F1]` (stone gray) with 3px gaps. §18.1 updated: Calendar tab colors changed from indigo to yellow. §19 updated: glass overlays explicitly banned. §20 added: Settings page layout with Expenses/Contracts as sub-sections. §21 added: Campaign detail widget layout with Activity Feed and Funnel/Conversions toggle.
+- **2026-02-27:** §20 updated: removed Expenses, Contracts, and Appearance from Settings sections. §22 added: Popups, Overlays & Field Styling — light overlays, no outlines on form fields, clean aesthetic rules.
+- **2026-02-27:** §15.1.1 updated: added Virtualized Lists note for `@tanstack/react-virtual` gap handling. §23 added: Avatar / Entity Circle Standard — `EntityAvatar` component, `avatarUtils.ts` color functions, sizes, and rules.
+- **2026-02-27:** §24 added: Group Headers in Left Panel Lists — centered layout with decorative lines, `text-[12px]` label + gray en-dash + count, `bg-muted` sticky headers. Applied to all 8 list views (Leads, Campaigns, Accounts, Billing, Prompts, Users, Calendar, Conversations).
+- **2026-02-27:** §25 added: Entity Name & Widget Title Typography — unified `text-[16px] font-semibold font-heading` for all left panel card names and right panel widget titles. Updated §15.2. Applied to 11 files across Leads, Accounts, Campaigns, Users, Prompts, Calendar, Conversations, Kanban.
+- **2026-02-27:** §26 added: ViewTabBar Rigid Positioning Standard — fixed `w-[309px] justify-between` wrapper for title + ViewTabBar circles, ensuring the rightmost circle sits flush with the panel's right content edge. Same position maintained across all views (List, Table, Kanban). Pages with 2 tabs get a naturally wider gap.

@@ -10,11 +10,12 @@ import AppCampaigns from "@/pages/AppCampaigns";
 import AppAccounts from "@/pages/AppAccounts";
 import CalendarPage from "@/pages/Calendar";
 import AutomationLogsPage from "@/pages/AutomationLogs";
-import UsersPage from "@/pages/Users";
-import TagsPage from "@/pages/Tags";
+import { UsersPage } from "@/features/users/pages/UsersPage";
+import TagsPage from "@/features/tags/pages/TagsPage";
 import PromptLibraryPage from "@/pages/PromptLibrary";
 import BillingPage from "@/pages/Billing";
-import OpportunitiesPage from "@/pages/Opportunities";
+import SettingsPage from "@/pages/Settings";
+// OpportunitiesPage merged into Leads as "Pipeline" tab — route redirects below
 
 function isAuthed() {
   return Boolean(localStorage.getItem("leadawaker_auth"));
@@ -76,7 +77,7 @@ export default function AppArea() {
           <Route path="/agency/contacts/:id" component={LeadDetailPage} />
           <Route path="/agency/campaigns" component={AppCampaigns} />
           <Route path="/agency/calendar" component={CalendarPage} />
-          <Route path="/agency/settings" component={() => <Redirect to="/agency/campaigns" />} />
+          <Route path="/agency/settings" component={SettingsPage} />
 
           {/* Agency-only routes (admin pages) */}
           <Route path="/agency/accounts">
@@ -100,7 +101,9 @@ export default function AppArea() {
           <Route path="/agency/billing">
             <Redirect to="/agency/invoices" />
           </Route>
-          <Route path="/agency/opportunities" component={OpportunitiesPage} />
+          <Route path="/agency/opportunities">
+            <Redirect to="/agency/leads" />
+          </Route>
 
           {/* Subaccount routes */}
           <Route path="/subaccount" component={() => <Redirect to="/subaccount/campaigns" />} />
@@ -111,7 +114,7 @@ export default function AppArea() {
           <Route path="/subaccount/contacts/:id" component={LeadDetailPage} />
           <Route path="/subaccount/campaigns" component={AppCampaigns} />
           <Route path="/subaccount/calendar" component={CalendarPage} />
-          <Route path="/subaccount/settings" component={() => <Redirect to="/subaccount/campaigns" />} />
+          <Route path="/subaccount/settings" component={SettingsPage} />
 
           {/* Subaccount agency-only routes (admin pages) */}
           <Route path="/subaccount/accounts">
@@ -135,7 +138,9 @@ export default function AppArea() {
           <Route path="/subaccount/billing">
             <Redirect to="/subaccount/invoices" />
           </Route>
-          <Route path="/subaccount/opportunities" component={OpportunitiesPage} />
+          <Route path="/subaccount/opportunities">
+            <Redirect to="/subaccount/leads" />
+          </Route>
 
           <Route component={() => (
             <CrmShell>

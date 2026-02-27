@@ -113,6 +113,22 @@ See `FILE_MAP.md` in project root for a quick-lookup index of every key componen
 
 ---
 
+## Hooks & Performance
+
+A **PostToolUse hook** runs `npx tsc --noEmit` after every Edit/Write to a `client/src/**/*.{ts,tsx}` file. This catches type errors immediately but is expensive (~500MB RAM per run).
+
+**For bulk/parallel agent runs** (3+ agents), disable it first to avoid OOM on the Pi:
+```bash
+touch /tmp/skip-tsc-check      # disable
+# ... run agents ...
+rm /tmp/skip-tsc-check          # re-enable
+npx tsc --noEmit                # one final check
+```
+
+**Max parallel agents on this Pi: 2-3.** More than that risks OOM from concurrent tsc processes.
+
+---
+
 ## Feature-Specific Guides
 
 - **[`EXPENSES.md`](EXPENSES.md)** — Expenses tab (Billing section): PostgreSQL table, Dutch BTW/VAT logic, OpenAI PDF parsing, disk storage, frontend architecture. **Read this before touching anything expenses-related.**

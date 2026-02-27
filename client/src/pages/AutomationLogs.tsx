@@ -102,7 +102,7 @@ function LogsTableSkeleton() {
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}
-          className="h-[52px] bg-[#F1F1F1]/70 rounded-xl animate-pulse"
+          className="h-[52px] bg-card/70 rounded-xl animate-pulse"
           style={{ animationDelay: `${i * 35}ms` }}
         />
       ))}
@@ -488,7 +488,7 @@ export default function AutomationLogsPage() {
                                 "h-[52px] border-b border-border/15",
                                 isCritical
                                   ? "bg-red-500/5 hover:bg-red-500/10 dark:bg-red-950/20 dark:hover:bg-red-950/30"
-                                  : "bg-[#F1F1F1] hover:bg-[#F8F8F8]",
+                                  : "bg-card hover:bg-card-hover",
                               )}
                             >
                               {/* Expand toggle */}

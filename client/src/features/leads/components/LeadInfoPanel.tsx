@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { IconBtn } from "@/components/ui/icon-btn";
-import { getStatusAvatarColor, PIPELINE_HEX } from "./LeadsCardView";
+import { getLeadStatusAvatarColor, PIPELINE_HEX } from "@/lib/avatarUtils";
+import { EntityAvatar } from "@/components/ui/entity-avatar";
 import {
   Phone,
   Mail,
@@ -162,9 +163,6 @@ export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPane
   const lastActivity = lead
     ? (lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at)
     : null;
-  const initials = fullName
-    ? fullName.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()
-    : "?";
 
   return (
     <div
@@ -222,14 +220,14 @@ export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPane
             {/* Avatar + name + status */}
             <div className="flex items-start gap-2.5">
               {(() => {
-                const avatarColor = getStatusAvatarColor(status);
+                const avatarColor = getLeadStatusAvatarColor(status);
                 return (
-                  <div
-                    className="w-[72px] h-[72px] rounded-full flex items-center justify-center text-xl font-bold shrink-0"
-                    style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
-                  >
-                    {initials}
-                  </div>
+                  <EntityAvatar
+                    name={fullName || "?"}
+                    bgColor={avatarColor.bg}
+                    textColor={avatarColor.text}
+                    size={72}
+                  />
                 );
               })()}
               <div className="min-w-0 flex-1">

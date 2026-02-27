@@ -26,6 +26,8 @@ import { ToolbarPill } from "@/components/ui/toolbar-pill";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { getInitials, ROLE_AVATAR } from "@/lib/avatarUtils";
+import { EntityAvatar } from "@/components/ui/entity-avatar";
 import type { AppUser, AccountMap } from "../pages/UsersPage";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -69,14 +71,6 @@ const staggerItemVariants = {
 };
 
 // ── Color maps ────────────────────────────────────────────────────────────────
-const ROLE_AVATAR: Record<string, { bg: string; text: string }> = {
-  Admin:    { bg: "#FEF9C3", text: "#854D0E" },
-  Operator: { bg: "#FFEDD5", text: "#9A3412" },
-  Manager:  { bg: "#DBEAFE", text: "#1E40AF" },
-  Agent:    { bg: "#EDE9FE", text: "#5B21B6" },
-  Viewer:   { bg: "#E5E7EB", text: "#374151" },
-};
-
 const ROLE_BADGE: Record<string, string> = {
   Admin:    "bg-brand-yellow/20 text-brand-deep-blue dark:bg-amber-900/30 dark:text-amber-400",
   Operator: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
@@ -86,9 +80,6 @@ const ROLE_BADGE: Record<string, string> = {
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function getInitials(name: string): string {
-  return name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "?";
-}
 function getUserName(u: AppUser): string { return u.fullName1 || u.email || `User #${u.id}`; }
 function isActive(s: string | null | undefined): boolean { return (s || "").toLowerCase() === "active"; }
 function isInvited(s: string | null | undefined): boolean { return (s || "").toLowerCase() === "invited"; }
@@ -340,12 +331,13 @@ type VirtualItem =
 // ── Group header ──────────────────────────────────────────────────────────────
 function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div className="sticky top-0 z-20 bg-muted px-3 pt-1.5 pb-1.5">
-      <div className="flex items-center gap-0">
-        <div className="flex-1 h-px bg-foreground/15 mx-[8px]" />
-        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest shrink-0">{label}</span>
-        <span className="ml-1 text-[9px] text-muted-foreground/45 font-semibold shrink-0">{count}</span>
-        <div className="flex-1 h-px bg-foreground/15 mx-[8px]" />
+    <div className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
+      <div className="flex items-center gap-[10px]">
+        <div className="flex-1 h-px bg-foreground/15" />
+        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
+        <span className="text-foreground/20 shrink-0">–</span>
+        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
+        <div className="flex-1 h-px bg-foreground/15" />
       </div>
     </div>
   );
@@ -441,8 +433,8 @@ function UserCard({
         "relative mx-[3px] my-0.5 rounded-xl cursor-pointer",
         "transition-colors duration-150 ease-out",
         isSelected
-          ? "bg-[#FFF1C8]"
-          : "bg-[#F1F1F1] hover:bg-[#FAFAFA] hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+          ? "bg-highlight-selected"
+          : "bg-card hover:bg-card-hover hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
       )}
       onClick={onClick}
       role="button"
@@ -458,22 +450,12 @@ function UserCard({
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="h-10 w-10">
-                    {user.avatarUrl ? (
-                      <img
-                        src={user.avatarUrl}
-                        alt={initials}
-                        className="h-10 w-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div
-                        className="h-10 w-10 rounded-full flex items-center justify-center text-[11px] font-bold"
-                        style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
-                      >
-                        {initials}
-                      </div>
-                    )}
-                  </div>
+                  <EntityAvatar
+                    name={name}
+                    photoUrl={user.avatarUrl}
+                    bgColor={avatarColor.bg}
+                    textColor={avatarColor.text}
+                  />
                 </TooltipTrigger>
                 {(user.email || user.phone) && (
                   <TooltipContent side="right" className="text-[11px]">
@@ -497,7 +479,7 @@ function UserCard({
           <div className="flex-1 min-w-0">
             {/* Name + status on same row */}
             <div className="flex items-start justify-between gap-2">
-              <p className="text-[15px] font-semibold font-heading leading-tight truncate text-foreground">
+              <p className="text-[16px] font-semibold font-heading leading-tight truncate text-foreground">
                 {name}
               </p>
               {user.status && (
@@ -1395,7 +1377,7 @@ export function UsersListView({
         </div>
 
         {/* Controls row */}
-        <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center justify-between gap-2">
+        <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
 
           {/* View tabs */}
           <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as UsersViewMode)} />
