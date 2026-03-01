@@ -14,6 +14,7 @@ import {
   Info,
   Check,
   BellOff,
+  Headphones,
 } from "lucide-react";
 import {
   Sheet,
@@ -54,7 +55,8 @@ const TYPE_CONFIG: Record<string, { icon: typeof Bell; color: string; bgColor: s
   booking:  { icon: Phone,          color: "text-[#FCB803]",          bgColor: "bg-[#FCB803]/10" },
   campaign: { icon: Flag,           color: "text-emerald-500",        bgColor: "bg-emerald-500/10" },
   task:     { icon: CheckSquare,    color: "text-brand-indigo",       bgColor: "bg-brand-indigo/10" },
-  system:   { icon: Info,           color: "text-muted-foreground",   bgColor: "bg-muted/30" },
+  system:     { icon: Info,           color: "text-muted-foreground",   bgColor: "bg-muted/30" },
+  escalation: { icon: Headphones,    color: "text-orange-600",         bgColor: "bg-orange-100/60" },
 };
 
 // ─── Time helpers ──────────────────────────────────────────────────────────

@@ -436,7 +436,7 @@ export function SettingsPanel() {
                   className={cn(
                     "h-10 rounded-full text-[13px] font-semibold transition-colors duration-150",
                     intervalSeconds === option.value
-                      ? "border-2 border-[#FCB803] bg-[#FFE35B]/30 text-foreground"
+                      ? "border-2 border-highlight-active bg-highlight-active/30 text-foreground"
                       : "bg-background hover:bg-muted text-muted-foreground"
                   )}
                   data-testid={`refresh-interval-option-${option.value}`}
@@ -481,7 +481,7 @@ export function SettingsPanel() {
                   <button
                     type="button"
                     onClick={() => setPwOpen(true)}
-                    className="h-9 px-4 rounded-full bg-background border border-border/40 text-[12px] font-semibold text-foreground/80 hover:text-foreground hover:border-border/80 transition-colors duration-150 shrink-0"
+                    className="h-9 px-4 rounded-full bg-background border border-black/[0.125] text-[12px] font-semibold text-foreground/80 hover:text-foreground hover:border-border/80 transition-colors duration-150 shrink-0"
                     data-testid="button-change-password"
                   >
                     Change password

@@ -59,6 +59,7 @@ export const accounts = nocodb.table("Accounts", {
   businessDescription: text("business_description"),
   businessNiche: text("business_niche"),
   logoUrl: text("logo_url"),
+  supportBotConfig: text("support_bot_config"),
 });
 
 export const insertAccountsSchema = createInsertSchema(accounts).omit({
@@ -702,3 +703,47 @@ export const insertNotificationsSchema = createInsertSchema(notifications).omit(
 });
 export type Notifications = typeof notifications.$inferSelect;
 export type InsertNotifications = z.infer<typeof insertNotificationsSchema>;
+
+
+// ─── Support Chat ───────────────────────────────────────────────────────────
+
+export const supportSessions = nocodb.table("Support_Sessions", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").notNull().unique(),
+  userId: integer("user_id").notNull(),
+  accountId: integer("account_id"),
+  status: text("status").notNull().default("active"), // "active" | "escalated" | "closed"
+  createdAt: timestamp("created_at").defaultNow(),
+  escalatedAt: timestamp("escalated_at"),
+  closedAt: timestamp("closed_at"),
+}, (t) => [
+  index("support_sessions_user_id_idx").on(t.userId),
+  index("support_sessions_session_id_idx").on(t.sessionId),
+]);
+
+export const insertSupportSessionSchema = createInsertSchema(supportSessions).omit({
+  id: true,
+  createdAt: true,
+});
+export type SupportSession = typeof supportSessions.$inferSelect;
+export type InsertSupportSession = z.infer<typeof insertSupportSessionSchema>;
+
+export const supportMessages = nocodb.table("Support_Messages", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").notNull(),
+  userId: integer("user_id").notNull(),
+  accountId: integer("account_id"),
+  role: text("role").notNull(), // "user" | "assistant" | "system"
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (t) => [
+  index("support_messages_session_id_idx").on(t.sessionId),
+  index("support_messages_created_at_idx").on(t.createdAt),
+]);
+
+export const insertSupportMessageSchema = createInsertSchema(supportMessages).omit({
+  id: true,
+  createdAt: true,
+});
+export type SupportMessage = typeof supportMessages.$inferSelect;
+export type InsertSupportMessage = z.infer<typeof insertSupportMessageSchema>;

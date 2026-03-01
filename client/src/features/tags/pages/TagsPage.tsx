@@ -480,13 +480,13 @@ export default function TagsPage() {
       <CrmShell>
         <div className="flex flex-col h-full" data-testid="tags-page">
           <div className="flex-1 min-h-0 flex flex-col bg-muted rounded-lg overflow-hidden">
-            <div className="px-3.5 pt-5 pb-1 shrink-0">
+            <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3">
               <div className="h-7 w-16 bg-card/70 rounded animate-pulse" />
-            </div>
-            <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-7 w-16 bg-card/70 rounded-full animate-pulse" />
-              ))}
+              <div className="flex-1 flex items-center gap-1.5">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-7 w-16 bg-card/70 rounded-full animate-pulse" />
+                ))}
+              </div>
             </div>
             <div className="flex-1 px-3 pb-3 space-y-1.5">
               {Array.from({ length: 12 }).map((_, i) => (
@@ -510,21 +510,19 @@ export default function TagsPage() {
     <CrmShell>
       <div className="flex flex-col h-full" data-testid="tags-page">
         <div className="flex-1 min-h-0 flex flex-col bg-muted rounded-lg overflow-hidden">
-          {/* ── Title ──────────────────────────────────────────────────────── */}
-          <div className="px-3.5 pt-5 pb-1 shrink-0">
-            <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
-              Tags
-            </h2>
-          </div>
-
-          {/* ── Toolbar row ────────────────────────────────────────────────── */}
-          <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
-            <ViewTabBar
-              tabs={VIEW_TABS}
-              activeId={viewMode}
-              onTabChange={handleViewSwitch}
-            />
-
+          {/* ── Title + Toolbar (single row) ─────────────────────────────── */}
+          <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
+            <div className="flex items-center justify-between w-[309px] shrink-0">
+              <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
+                Tags
+              </h2>
+              <ViewTabBar
+                tabs={VIEW_TABS}
+                activeId={viewMode}
+                onTabChange={handleViewSwitch}
+              />
+            </div>
+            <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
             <TagsToolbar
               searchQuery={searchQuery}
               onSearchQueryChange={setSearchQuery}

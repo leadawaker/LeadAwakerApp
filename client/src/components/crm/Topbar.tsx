@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
-import { Bell, Search, Settings, Moon, Sun, Menu, X, LogOut, Check, BookOpen, Share2, Sparkles, User } from "lucide-react";
+import { Bell, Search, Settings, Moon, Sun, Menu, X, LogOut, Check, BookOpen, Share2, Sparkles, User, Headphones } from "lucide-react";
 import { IconBtn } from "@/components/ui/icon-btn";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -19,6 +19,7 @@ import { useTopbarActions } from "@/contexts/TopbarActionsContext";
 import { apiFetch } from "@/lib/apiUtils";
 import { BookedCallsKpi } from "@/components/crm/BookedCallsKpi";
 import { NotificationCenter } from "@/components/crm/NotificationCenter";
+import { SupportChatWidget } from "@/components/crm/SupportChatWidget";
 import { useQuery } from "@tanstack/react-query";
 
 export function Topbar({
@@ -40,6 +41,7 @@ export function Topbar({
 
   // ── Notification Center ─────────────────────────────────────────────────────
   const [notifOpen, setNotifOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Lightweight poll for the badge count (every 60s)
@@ -126,7 +128,12 @@ export function Topbar({
   };
 
   const handleAccountClick = () => { setSearchOpen(false); setLocation(`/agency/accounts`); };
-  const handleUserClick = () => { setSearchOpen(false); setLocation(`/agency/users`); };
+  const handleUserClick = () => {
+    setSearchOpen(false);
+    sessionStorage.setItem("pendingSettingsSection", "team");
+    const base = isAgencyView ? "/agency" : "/subaccount";
+    setLocation(`${base}/settings`);
+  };
 
   // ── Account switch ───────────────────────────────────────────────────────────
   const handleAccountSelect = (id: number) => {
@@ -138,7 +145,7 @@ export function Topbar({
     const tail = location.startsWith(prevBase)
       ? location.slice(prevBase.length)
       : location.replace(/^\/(agency|subaccount)/, "");
-    const agencyOnlyPaths = ["/accounts", "/tags", "/prompt-library", "/automation-logs", "/invoices"];
+    const agencyOnlyPaths = ["/accounts", "/prompt-library", "/automation-logs", "/invoices"];
     const isAgencyOnlyPage = agencyOnlyPaths.some((p) => tail.startsWith(p));
     const safeTail = (!nextIsAgency && isAgencyOnlyPage) ? "/dashboard" : tail;
     setLocation(`${nextBase}${safeTail || "/dashboard"}`);
@@ -316,6 +323,29 @@ export function Topbar({
             </TooltipContent>
           </Tooltip>
 
+          {/* Customer Support Chat */}
+          <Popover open={supportOpen} onOpenChange={setSupportOpen}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
+                  <IconBtn data-testid="button-support-chat" aria-label="Customer Support">
+                    <Headphones className="h-4 w-4" />
+                  </IconBtn>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
+                Customer Support
+              </TooltipContent>
+            </Tooltip>
+            <PopoverContent
+              align="end"
+              sideOffset={8}
+              className="p-0 border-0 bg-transparent shadow-none rounded-2xl w-auto"
+            >
+              <SupportChatWidget onClose={() => setSupportOpen(false)} />
+            </PopoverContent>
+          </Popover>
+
           {/* Help */}
           <DropdownMenu>
             <Tooltip>
@@ -331,7 +361,10 @@ export function Topbar({
               </TooltipContent>
             </Tooltip>
             <DropdownMenuContent align="end" className="w-44 rounded-2xl shadow-xl border-border bg-background mt-2">
-              <DropdownMenuItem className="flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1">
+              <DropdownMenuItem
+                className="flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1"
+                onClick={() => setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/docs`)}
+              >
                 <BookOpen className="h-4 w-4" />
                 Documentation
               </DropdownMenuItem>

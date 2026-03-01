@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, type MouseEvent as ReactMouseEvent } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useToast } from "@/hooks/use-toast";
 import { useDashboardRefreshInterval, REFRESH_INTERVAL_OPTIONS } from "@/hooks/useDashboardRefreshInterval";
@@ -11,9 +11,14 @@ import {
   Mail, MessageSquare, Globe, Lock, Eye, EyeOff,
   User, Shield, Bell, Clock, Receipt, FileText, CheckCircle, PenLine,
   Phone, CalendarCheck, MessageSquareWarning, Bot, AlertTriangle,
-  Megaphone, TrendingDown, Camera, X,
+  Megaphone, TrendingDown, Camera, X, Headphones, Users,
 } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { SettingsTeamSection } from "@/features/users/components/SettingsTeamSection";
 
 // ── Timezone list ────────────────────────────────────────────────────
 const TIMEZONE_LIST: string[] = (() => {
@@ -124,13 +129,15 @@ function getDefaultNotifPrefs(): NotificationPreferences {
 }
 
 // ── Settings sections ────────────────────────────────────────────────
-type SettingsSection = "profile" | "security" | "notifications" | "dashboard";
+type SettingsSection = "profile" | "security" | "notifications" | "dashboard" | "team" | "support_bot";
 
 const BASE_SECTIONS: { id: SettingsSection; label: string; icon: React.ElementType; agencyOnly?: boolean }[] = [
   { id: "profile", label: "My Profile", icon: User },
   { id: "security", label: "Security", icon: Shield },
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "dashboard", label: "Dashboard", icon: Clock },
+  { id: "team", label: "Team", icon: Users, agencyOnly: true },
+  { id: "support_bot", label: "Support Bot", icon: Headphones, agencyOnly: true },
 ];
 
 // ── Reusable field component ─────────────────────────────────────────
@@ -215,16 +222,128 @@ function PasswordField({
   );
 }
 
+// ── Bot Photo Crop Modal ─────────────────────────────────────────────
+function BotPhotoCropModal({ srcUrl, onSave, onCancel }: {
+  srcUrl: string;
+  onSave: (dataUrl: string) => void;
+  onCancel: () => void;
+}) {
+  const PREVIEW = 240;
+  const OUTPUT = 128;
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const dragging = useRef(false);
+  const dragStart = useRef({ x: 0, y: 0, ox: 0, oy: 0 });
+
+  useEffect(() => {
+    const img = new globalThis.Image();
+    img.onload = () => {
+      imgRef.current = img;
+      setZoom(Math.min(PREVIEW / img.width, PREVIEW / img.height));
+      setOffset({ x: 0, y: 0 });
+    };
+    img.src = srcUrl;
+  }, [srcUrl]);
+
+  useEffect(() => {
+    const img = imgRef.current;
+    const canvas = canvasRef.current;
+    if (!img || !canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, PREVIEW, PREVIEW);
+    const w = img.width * zoom;
+    const h = img.height * zoom;
+    ctx.drawImage(img, (PREVIEW - w) / 2 + offset.x, (PREVIEW - h) / 2 + offset.y, w, h);
+  }, [zoom, offset]);
+
+  const handleSave = () => {
+    const img = imgRef.current;
+    if (!img) return;
+    const out = document.createElement("canvas");
+    out.width = OUTPUT; out.height = OUTPUT;
+    const ctx = out.getContext("2d");
+    if (!ctx) return;
+    const f = OUTPUT / PREVIEW;
+    const w = img.width * zoom * f;
+    const h = img.height * zoom * f;
+    ctx.drawImage(img, (OUTPUT - w) / 2 + offset.x * f, (OUTPUT - h) / 2 + offset.y * f, w, h);
+    onSave(out.toDataURL("image/jpeg", 0.85));
+  };
+
+  const onMouseDown = (e: ReactMouseEvent) => {
+    dragging.current = true;
+    dragStart.current = { x: e.clientX, y: e.clientY, ox: offset.x, oy: offset.y };
+  };
+  const onMouseMove = (e: ReactMouseEvent) => {
+    if (!dragging.current) return;
+    setOffset({
+      x: dragStart.current.ox + e.clientX - dragStart.current.x,
+      y: dragStart.current.oy + e.clientY - dragStart.current.y,
+    });
+  };
+  const onMouseUp = () => { dragging.current = false; };
+
+  return (
+    <Dialog open onOpenChange={() => onCancel()}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Crop Photo</DialogTitle>
+          <DialogDescription>Drag to reposition · use slider to zoom</DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col items-center gap-4 py-2">
+          <div className="rounded-full overflow-hidden ring-2 ring-brand-indigo/20" style={{ width: PREVIEW, height: PREVIEW }}>
+            <canvas
+              ref={canvasRef}
+              width={PREVIEW}
+              height={PREVIEW}
+              className="cursor-grab active:cursor-grabbing"
+              onMouseDown={onMouseDown}
+              onMouseMove={onMouseMove}
+              onMouseUp={onMouseUp}
+              onMouseLeave={onMouseUp}
+            />
+          </div>
+          <div className="flex items-center gap-3 w-full px-2">
+            <button type="button" onClick={() => setZoom((z) => Math.max(0.05, parseFloat((z - 0.1).toFixed(2))))}
+              className="h-6 w-6 rounded-full flex items-center justify-center text-[14px] font-bold text-muted-foreground hover:bg-muted transition-colors select-none shrink-0">−</button>
+            <input type="range" min="0.05" max="8" step="0.05" value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))} className="flex-1 accent-brand-indigo" />
+            <button type="button" onClick={() => setZoom((z) => Math.min(8, parseFloat((z + 0.1).toFixed(2))))}
+              className="h-6 w-6 rounded-full flex items-center justify-center text-[14px] font-bold text-muted-foreground hover:bg-muted transition-colors select-none shrink-0">+</button>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button onClick={handleSave}>Save Photo</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ── Main Settings Page ───────────────────────────────────────────────
 function SettingsContent() {
   const { toast } = useToast();
   const { intervalSeconds, setIntervalSeconds, labelForInterval } = useDashboardRefreshInterval();
   const session = useSession();
   const { isAgencyUser } = useWorkspace();
-
   const SECTIONS = BASE_SECTIONS.filter((s) => !s.agencyOnly || isAgencyUser);
 
   const [activeSection, setActiveSection] = useState<SettingsSection>("profile");
+
+  // Deep-link: other pages can set sessionStorage to open a specific section
+  useEffect(() => {
+    const pending = sessionStorage.getItem("pendingSettingsSection");
+    if (pending) {
+      sessionStorage.removeItem("pendingSettingsSection");
+      if (SECTIONS.some(s => s.id === pending)) {
+        setActiveSection(pending as SettingsSection);
+      }
+    }
+  }, []);
 
   // ── Profile state ──────────────────────────────────────────────────
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -267,6 +386,14 @@ function SettingsContent() {
   // ── Notification state ─────────────────────────────────────────────
   const [notifPrefs, setNotifPrefs] = useState<NotificationPreferences>(getDefaultNotifPrefs);
   const [isSavingNotifs, setIsSavingNotifs] = useState(false);
+
+  // ── Support Bot state ─────────────────────────────────────────────
+  const [botName, setBotName] = useState("Sophie");
+  const [botPhotoUrl, setBotPhotoUrl] = useState("");
+  const [botEnabled, setBotEnabled] = useState(true);
+  const [isSavingBot, setIsSavingBot] = useState(false);
+  const [botLoaded, setBotLoaded] = useState(false);
+  const botPhotoInputRef = useRef<HTMLInputElement>(null);
 
   // ── Theme state ────────────────────────────────────────────────────
 
@@ -511,7 +638,7 @@ function SettingsContent() {
               {/* Remove button — hover-only, top-right */}
               {avatarUrl && (
                 <button
-                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-white border border-border/50 flex items-center justify-center text-foreground/50 hover:text-red-500 hover:border-red-300 transition-colors z-10 opacity-0 group-hover/avatar:opacity-100"
+                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-white border border-black/[0.125] flex items-center justify-center text-foreground/50 hover:text-red-500 hover:border-red-300 transition-colors z-10 opacity-0 group-hover/avatar:opacity-100"
                   onClick={(e) => { e.stopPropagation(); setAvatarUrl(""); }}
                   title="Remove photo"
                 >
@@ -887,7 +1014,7 @@ function SettingsContent() {
                 "h-10 rounded-full text-[13px] font-semibold transition-colors duration-150",
                 intervalSeconds === option.value
                   ? "border-2 border-[#FCB803] bg-[#FCB803]/15 text-foreground"
-                  : "bg-background border border-border/40 hover:bg-card text-muted-foreground"
+                  : "bg-background border border-black/[0.125] hover:bg-card text-muted-foreground"
               )}
               data-testid={`refresh-interval-option-${option.value}`}
             >
@@ -899,12 +1026,147 @@ function SettingsContent() {
     </div>
   );
 
+  // ── Chat Wallpaper Section ──────────────────────────────────────────
+  // ── Support Bot: load config ───────────────────────────────────────
+  useEffect(() => {
+    if (activeSection !== "support_bot" || botLoaded) return;
+    (async () => {
+      try {
+        const res = await apiFetch("/api/support-chat/config");
+        if (res.ok) {
+          const cfg = await res.json();
+          setBotName(cfg.name || "Sophie");
+          setBotPhotoUrl(cfg.photoUrl || "");
+          setBotEnabled(cfg.enabled !== false);
+        }
+      } catch { /* use defaults */ }
+      setBotLoaded(true);
+    })();
+  }, [activeSection, botLoaded]);
+
+  const [botCropSrc, setBotCropSrc] = useState<string | null>(null);
+
+  const handleBotPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") setBotCropSrc(reader.result);
+    };
+    reader.readAsDataURL(file);
+    if (botPhotoInputRef.current) botPhotoInputRef.current.value = "";
+  };
+
+  const handleSaveBotConfig = async () => {
+    setIsSavingBot(true);
+    try {
+      const res = await apiFetch("/api/support-chat/config", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: botName.trim() || "Sophie", photoUrl: botPhotoUrl || null, enabled: botEnabled }),
+      });
+      if (res.ok) {
+        toast({ title: "Support bot settings saved", variant: "success" as any });
+      } else {
+        toast({ title: "Failed to save", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Failed to save", variant: "destructive" });
+    } finally {
+      setIsSavingBot(false);
+    }
+  };
+
+  const renderSupportBot = () => (
+    <div className="space-y-6 py-2" data-testid="settings-support-bot">
+      {/* Bot photo crop modal */}
+      {botCropSrc && (
+        <BotPhotoCropModal
+          srcUrl={botCropSrc}
+          onSave={(dataUrl) => { setBotPhotoUrl(dataUrl); setBotCropSrc(null); }}
+          onCancel={() => setBotCropSrc(null)}
+        />
+      )}
+
+      {/* Bot avatar */}
+      <div className="flex items-start gap-6">
+        <div className="relative group cursor-pointer" onClick={() => botPhotoInputRef.current?.click()}>
+          <div className={cn(
+            "h-20 w-20 rounded-full overflow-hidden border-2 border-border/40",
+            !botPhotoUrl && "flex items-center justify-center bg-brand-indigo/10"
+          )}>
+            {botPhotoUrl ? (
+              <img src={botPhotoUrl} alt={botName} className="h-full w-full object-cover" />
+            ) : (
+              <Headphones className="h-8 w-8 text-brand-indigo" />
+            )}
+          </div>
+          <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <Camera className="w-6 h-6 text-white" />
+          </div>
+          {botPhotoUrl && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setBotPhotoUrl(""); }}
+              className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+          <input ref={botPhotoInputRef} type="file" accept="image/*" className="hidden" onChange={handleBotPhotoChange} />
+        </div>
+        <div className="flex-1 pt-1">
+          <p className="text-sm font-medium text-foreground">Bot Photo</p>
+          <p className="text-xs text-muted-foreground mt-1">Click to upload a photo for your support assistant. Shown in the chat widget header and next to messages.</p>
+        </div>
+      </div>
+
+      {/* Bot name */}
+      <Field
+        label="Bot Name"
+        value={botName}
+        onChange={setBotName}
+        testId="bot-name"
+        placeholder="Sophie"
+        icon={Headphones}
+      />
+
+      {/* Enable/disable */}
+      <div className="flex items-center justify-between py-2">
+        <div>
+          <p className="text-sm font-medium text-foreground">Enable Support Bot</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Show the support chat button in the top bar for all users.</p>
+        </div>
+        <Switch checked={botEnabled} onCheckedChange={setBotEnabled} />
+      </div>
+
+      {/* Prompt link */}
+      <div className="rounded-xl bg-muted/50 p-4">
+        <p className="text-sm font-medium text-foreground">System Prompt</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          The bot's behavior is controlled by the <strong>"Lead Awaker Support Bot"</strong> entry in your Prompt Library.
+          Edit it there to change how the bot responds, what it knows, and when it escalates to a human.
+        </p>
+      </div>
+
+      {/* Save */}
+      <button
+        onClick={handleSaveBotConfig}
+        disabled={isSavingBot}
+        className="h-10 px-6 rounded-xl bg-brand-indigo text-white text-sm font-medium hover:bg-brand-indigo/90 transition-colors disabled:opacity-50"
+      >
+        {isSavingBot ? "Saving..." : "Save Changes"}
+      </button>
+    </div>
+  );
+
   const renderActiveSection = () => {
     switch (activeSection) {
       case "profile": return renderProfile();
       case "security": return renderSecurity();
       case "notifications": return renderNotifications();
       case "dashboard": return renderDashboard();
+      case "team": return <SettingsTeamSection />;
+      case "support_bot": return renderSupportBot();
     }
   };
 
@@ -944,13 +1206,22 @@ function SettingsContent() {
         </nav>
 
         {/* Right content area */}
-        <div className="flex-1 overflow-y-auto ml-1.5 bg-card rounded-lg pb-8" data-testid="settings-content">
-          <div className="px-3.5 pt-5 pb-3">
-            <h1 className="text-2xl font-semibold font-heading text-foreground leading-tight">
-              {SECTIONS.find(s => s.id === activeSection)?.label}
-            </h1>
-          </div>
-          <div className="max-w-2xl px-6">
+        <div className={cn(
+          "flex-1 ml-1.5 bg-card rounded-lg",
+          activeSection === "team" ? "overflow-hidden flex flex-col" : "overflow-y-auto pb-8",
+        )} data-testid="settings-content">
+          {activeSection !== "team" && (
+            <div className="px-3.5 pt-5 pb-3">
+              <h1 className="text-2xl font-semibold font-heading text-foreground leading-tight">
+                {SECTIONS.find(s => s.id === activeSection)?.label}
+              </h1>
+            </div>
+          )}
+          <div className={cn(
+            activeSection === "team"
+              ? "flex-1 flex flex-col min-h-0"
+              : "px-6 max-w-2xl",
+          )}>
             {renderActiveSection()}
           </div>
         </div>

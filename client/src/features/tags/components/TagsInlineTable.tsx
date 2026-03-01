@@ -343,7 +343,9 @@ export function TagsInlineTable({
           </thead>
 
           <tbody>
-            {flatItems.map((item, index) => {
+            {(() => {
+              let rowIdx = 0;
+              return flatItems.map((item, index) => {
               /* ── Group header row ────────────────────────────────────────── */
               if (item.kind === "header") {
                 const isCollapsed = collapsedGroups.has(item.label);
@@ -382,16 +384,18 @@ export function TagsInlineTable({
               const isSelected = selectedTagIds.has(tag.id);
               const acctName = getAccountName(tag, accountNameMap);
               const campName = getCampaignName(tag, campaignNameMap);
+              const currentRowIdx = rowIdx++;
 
               return (
                 <tr
                   key={tag.id}
                   className={cn(
-                    "group/row cursor-pointer h-10",
+                    "group/row cursor-pointer h-10 animate-card-enter",
                     isSelected
                       ? "bg-highlight-selected"
                       : "bg-card hover:bg-card-hover",
                   )}
+                  style={{ animationDelay: `${Math.min(currentRowIdx, 15) * 30}ms` }}
                   onClick={(e) => handleRowClick(tag, e)}
                 >
                   {visCols.map((col) => {
@@ -742,7 +746,8 @@ export function TagsInlineTable({
                   })}
                 </tr>
               );
-            })}
+            });
+            })()}
           </tbody>
         </table>
       </div>

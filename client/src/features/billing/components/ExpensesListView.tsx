@@ -14,6 +14,7 @@ interface ExpensesListViewProps {
   sortBy?: "recent" | "amount_desc" | "amount_asc" | "name_asc";
   selectedId: number | null;
   onSelect: (expense: ExpenseRow) => void;
+  groupBy?: "none" | "year_quarter";
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -40,6 +41,33 @@ function fmtDateShort(val: string | null | undefined): string {
   } catch {
     return val;
   }
+}
+
+// ── Grouping helpers ─────────────────────────────────────────────────────────
+
+function getExpenseYearQuarter(row: ExpenseRow): string {
+  const year = row.year ?? (row.date ? new Date(row.date).getFullYear() : null);
+  const quarter = row.quarter || (() => {
+    if (!row.date) return null;
+    const m = new Date(row.date).getMonth();
+    return m <= 2 ? "Q1" : m <= 5 ? "Q2" : m <= 8 ? "Q3" : "Q4";
+  })();
+  if (!year && !quarter) return "Undated";
+  return `${year ?? "?"} · ${quarter ?? "?"}`;
+}
+
+function ExpenseGroupHeader({ label, count }: { label: string; count: number }) {
+  return (
+    <div className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
+      <div className="flex items-center gap-[10px]">
+        <div className="flex-1 h-px bg-foreground/15" />
+        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
+        <span className="text-foreground/20 shrink-0">–</span>
+        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{count}</span>
+        <div className="flex-1 h-px bg-foreground/15" />
+      </div>
+    </div>
+  );
 }
 
 // ── Expense row card ──────────────────────────────────────────────────────────
@@ -69,7 +97,7 @@ function ExpenseListRow({
     >
       <div className="flex items-start gap-2.5">
         {/* Avatar */}
-        <div className="h-[34px] w-[34px] rounded-full shrink-0 flex items-center justify-center bg-foreground/[0.08] border border-border/50">
+        <div className="h-[34px] w-[34px] rounded-full shrink-0 flex items-center justify-center bg-foreground/[0.08] border border-black/[0.125]">
           <ReceiptText className="h-4 w-4 text-foreground/40" />
         </div>
 
@@ -124,6 +152,7 @@ export function ExpensesListView({
   sortBy = "recent",
   selectedId,
   onSelect,
+  groupBy = "none",
 }: ExpensesListViewProps) {
   const { data, isLoading, isError, error } = useQuery<ExpenseRow[]>({
     queryKey: ["expenses"],
@@ -178,6 +207,36 @@ export function ExpensesListView({
     });
   }, [expenses, quarterFilter, yearFilter, searchQuery, sortBy]);
 
+  // ── Grouped items (year·quarter) ────────────────────────────────────────────
+
+  type ListItem =
+    | { kind: "header"; label: string; count: number }
+    | { kind: "expense"; expense: ExpenseRow };
+
+  const groupedItems = useMemo((): ListItem[] => {
+    if (groupBy !== "year_quarter" || filteredExpenses.length === 0) return [];
+
+    const buckets = new Map<string, ExpenseRow[]>();
+    for (const row of filteredExpenses) {
+      const key = getExpenseYearQuarter(row);
+      if (!buckets.has(key)) buckets.set(key, []);
+      buckets.get(key)!.push(row);
+    }
+
+    // Sort groups descending by year·quarter (e.g. "2026 · Q1" > "2025 · Q4")
+    const sortedKeys = Array.from(buckets.keys()).sort((a, b) => b.localeCompare(a));
+
+    const result: ListItem[] = [];
+    for (const key of sortedKeys) {
+      const group = buckets.get(key)!;
+      result.push({ kind: "header", label: key, count: group.length });
+      for (const row of group) {
+        result.push({ kind: "expense", expense: row });
+      }
+    }
+    return result;
+  }, [filteredExpenses, groupBy]);
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   if (isLoading) {
@@ -210,8 +269,27 @@ export function ExpensesListView({
     );
   }
 
+  if (groupBy === "year_quarter" && groupedItems.length > 0) {
+    return (
+      <div className="flex-1 overflow-y-auto p-[3px] flex flex-col gap-[3px]">
+        {groupedItems.map((item, idx) =>
+          item.kind === "header" ? (
+            <ExpenseGroupHeader key={`h-${item.label}`} label={item.label} count={item.count} />
+          ) : (
+            <ExpenseListRow
+              key={item.expense.id}
+              row={item.expense}
+              isSelected={item.expense.id === selectedId}
+              onClick={() => onSelect(item.expense)}
+            />
+          )
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 overflow-y-auto space-y-1.5 px-2 py-2">
+    <div className="flex-1 overflow-y-auto p-[3px] flex flex-col gap-[3px]">
       {filteredExpenses.map((row) => (
         <ExpenseListRow
           key={row.id}

@@ -35,11 +35,19 @@ function parseNum(val: string | null | undefined): number {
 
 export function ExpenseDetailViewEmpty({
   onNew,
+  toolbarSlot,
 }: {
   onNew?: () => void;
+  toolbarSlot?: React.ReactNode;
 }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8 text-center">
+    <div className="flex-1 flex flex-col h-full overflow-hidden">
+      {toolbarSlot && (
+        <div className="relative z-10 px-4 pt-3 pb-1.5 flex items-center gap-1.5">
+          {toolbarSlot}
+        </div>
+      )}
+      <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8 text-center">
       <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-stone-50 to-gray-100 flex items-center justify-center ring-1 ring-stone-200/50">
         <FileText className="h-10 w-10 text-stone-400" />
       </div>
@@ -58,6 +66,7 @@ export function ExpenseDetailViewEmpty({
           New Expense
         </button>
       )}
+      </div>
     </div>
   );
 }
@@ -69,6 +78,7 @@ interface ExpenseDetailViewProps {
   onEdit: (expense: ExpenseRow) => void;
   onDeleted: () => void;
   onNew?: () => void;
+  toolbarSlot?: React.ReactNode;
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
@@ -78,6 +88,7 @@ export function ExpenseDetailView({
   onEdit,
   onDeleted,
   onNew,
+  toolbarSlot,
 }: ExpenseDetailViewProps) {
   const queryClient = useQueryClient();
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -144,57 +155,57 @@ export function ExpenseDetailView({
       <div className="relative z-10 shrink-0 px-[3px] pt-[3px] pb-[3px] space-y-[3px]">
 
         {/* Action toolbar */}
-        <div className="px-3 py-2 flex items-center gap-1 flex-wrap">
-
-          {/* New */}
-          {onNew && (
-            <button
-              onClick={onNew}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
-            >
-              <Plus className="h-3 w-3" />
-              New
-            </button>
-          )}
-
-          {/* PDF */}
-          {expense.pdfPath && (
-            <a
-              href={`/api/expenses/${expense.id}/pdf`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
-            >
-              <ExternalLink className="h-3 w-3" />
-              PDF
-            </a>
-          )}
-
-          <div className="h-4 w-px bg-border/40 shrink-0" />
-
-          {/* Edit */}
-          <button
-            onClick={() => onEdit(expense)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
-          >
-            <Pencil className="h-3 w-3" />
-            Edit
-          </button>
-
-          {/* Delete */}
-          <button
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className={cn(
-              "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border transition-colors",
-              deleteConfirm
-                ? "border-red-400/60 text-red-600 bg-red-50/50 hover:bg-red-50/70"
-                : "border-border/60 bg-transparent text-foreground hover:bg-card"
+        <div className="px-4 pt-3 pb-1.5 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
+          {toolbarSlot}
+          <div className="ml-auto flex items-center gap-1 shrink-0">
+            {/* New */}
+            {onNew && (
+              <button
+                onClick={onNew}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
+              >
+                <Plus className="h-3 w-3" />
+                New
+              </button>
             )}
-          >
-            <Trash2 className="h-3 w-3" />
-            {deleteConfirm ? "Confirm?" : (isDeleting ? "Deleting…" : "Delete")}
-          </button>
+
+            {/* PDF */}
+            {expense.pdfPath && (
+              <a
+                href={`/api/expenses/${expense.id}/pdf`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
+              >
+                <ExternalLink className="h-3 w-3" />
+                PDF
+              </a>
+            )}
+
+            {/* Edit */}
+            <button
+              onClick={() => onEdit(expense)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
+            >
+              <Pencil className="h-3 w-3" />
+              Edit
+            </button>
+
+            {/* Delete */}
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border transition-colors",
+                deleteConfirm
+                  ? "border-red-400/60 text-red-600 bg-red-50/50 hover:bg-red-50/70"
+                  : "border-border/60 bg-transparent text-foreground hover:bg-card"
+              )}
+            >
+              <Trash2 className="h-3 w-3" />
+              {deleteConfirm ? "Confirm?" : (isDeleting ? "Deleting…" : "Delete")}
+            </button>
+          </div>
         </div>
 
         {/* Supplier + invoice number */}

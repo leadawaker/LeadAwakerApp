@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import {
   Clock,
   Zap,
@@ -16,7 +16,24 @@ import {
   X,
   FileText,
   ArrowRight,
+  Camera,
+  Tag,
+  Plus,
+  Search,
+  ArrowUpDown,
+  Filter,
+  Layers,
 } from "lucide-react";
+import { Paintbrush } from "lucide-react";
+import { GradientTester, GradientControlPoints, DEFAULT_LAYERS, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
+import { CampaignTagsSection } from "./CampaignTagsSection";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   LineChart,
   Line,
@@ -38,25 +55,29 @@ import { DateRangeFilter, getDefaultDateRange, isWithinDateRange, type DateRange
 import { useLeads } from "@/hooks/useApiData";
 import { AgendaWidget } from "@/components/crm/AgendaWidget";
 import { ActivityFeed } from "@/components/crm/ActivityFeed";
-import { PIPELINE_HEX } from "@/lib/avatarUtils";
+import { PIPELINE_HEX, getCampaignAvatarColor, CAMPAIGN_STATUS_HEX } from "@/lib/avatarUtils";
+import type { CampaignSortBy, CampaignGroupBy } from "../pages/CampaignsPage";
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
+// ── Toolbar pill styles ──────────────────────────────────────────────────────
+const cdvPill = "h-9 px-3 rounded-full border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors";
+const cdvPillActive = "h-9 px-3 rounded-full border border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors";
 
-const CAMPAIGN_STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  Active:    { bg: "#DCFCE7", text: "#15803D" },
-  Paused:    { bg: "#FEF3C7", text: "#92400E" },
-  Completed: { bg: "#DBEAFE", text: "#1D4ED8" },
-  Finished:  { bg: "#DBEAFE", text: "#1D4ED8" },
-  Inactive:  { bg: "#F4F4F5", text: "#52525B" },
-  Archived:  { bg: "#F4F4F5", text: "#52525B" },
-  Draft:     { bg: "#E5E7EB", text: "#374151" },
+// ── Sort / Group / Filter labels ────────────────────────────────────────────
+const DETAIL_SORT_LABELS: Record<CampaignSortBy, string> = {
+  recent:        "Most Recent",
+  name_asc:      "Name A \u2192 Z",
+  name_desc:     "Name Z \u2192 A",
+  leads_desc:    "Most Leads",
+  response_desc: "Best Response",
 };
-
-function getCampaignAvatarColor(status: string): { bg: string; text: string } {
-  return CAMPAIGN_STATUS_COLORS[status] ?? { bg: "#E5E7EB", text: "#374151" };
-}
-
-const CAMPAIGN_STATUS_HEX: Record<string, string> = {
+const DETAIL_GROUP_LABELS: Record<CampaignGroupBy, string> = {
+  none:    "None",
+  status:  "Status",
+  account: "Account",
+  type:    "Type",
+};
+const DETAIL_STATUS_FILTER_OPTIONS = ["Active", "Paused", "Completed", "Inactive", "Draft"];
+const DETAIL_STATUS_HEX: Record<string, string> = {
   Active:    "#22C55E",
   Paused:    "#F59E0B",
   Completed: "#3B82F6",
@@ -65,6 +86,8 @@ const CAMPAIGN_STATUS_HEX: Record<string, string> = {
   Archived:  "#94A3B8",
   Draft:     "#6B7280",
 };
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatHours(h: number | null | undefined): string {
   if (!h && h !== 0) return "—";
@@ -702,16 +725,43 @@ function FinancialsWidget({
 // ── Empty state ──────────────────────────────────────────────────────────────
 
 export function CampaignDetailViewEmpty() {
+  const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
+  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
+  const [gradientDragMode, setGradientDragMode] = useState(false);
+
+  const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
+    if (id === -1) { setGradientLayers(prev => [...prev, patch as GradientLayer]); return; }
+    if ((patch as any).id === -999) { setGradientLayers(prev => prev.filter(l => l.id !== id)); return; }
+    setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
+  }, []);
+
+  const resetGradientLayers = useCallback(() => {
+    setGradientLayers(DEFAULT_LAYERS);
+    setGradientDragMode(false);
+  }, []);
+
   return (
     <div className="relative flex-1 flex flex-col items-center justify-center gap-5 p-8 text-center overflow-hidden">
-      {/* ── Full-height gradient: same warm bloom as CampaignDetailView ── */}
-      <div className="absolute inset-0 bg-[#F8F3EB]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_72%_56%_at_100%_0%,#FFFFFF_0%,rgba(255,255,255,0.80)_30%,transparent_60%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_95%_80%_at_0%_0%,#FFF286_0%,rgba(255,242,134,0.60)_40%,rgba(255,242,134,0.25)_64%,transparent_80%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_62%_72%_at_100%_36%,rgba(241,218,162,0.62)_0%,transparent_64%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_92%_36%_at_48%_53%,rgba(210,188,130,0.22)_0%,transparent_72%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_98%_74%_at_50%_88%,rgba(105,170,255,0.60)_0%,transparent_74%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_54%_at_54%_60%,rgba(165,205,255,0.38)_0%,transparent_66%)]" />
+      {/* ── Full-height gradient ── */}
+      {gradientTesterOpen ? (
+        <>
+          {gradientLayers.map(layer => {
+            const style = layerToStyle(layer);
+            if (!style) return null;
+            return <div key={layer.id} className="absolute inset-0" style={style} />;
+          })}
+          {gradientDragMode && (
+            <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
+          )}
+        </>
+      ) : (
+        <>
+          <div className="absolute inset-0 bg-[#ffffff]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_79%_101%_at_42%_91%,rgba(255,0,57,0.4)_0%,transparent_69%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_1%_2%,#ffeb84_0%,transparent_30%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_65%_78%_at_74%_38%,rgba(254,201,175,0.5)_0%,transparent_66%)]" />
+        </>
+      )}
 
       <div className="relative z-10">
         <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center ring-1 ring-amber-200/50">
@@ -727,6 +777,26 @@ export function CampaignDetailViewEmpty() {
       <div className="relative z-10 flex items-center gap-1.5 text-[11px] text-amber-500 font-medium">
         <span>&larr; Choose from the list</span>
       </div>
+
+      {/* Paintbrush button — bottom-right corner */}
+      <button
+        type="button"
+        onClick={() => setGradientTesterOpen(prev => !prev)}
+        className={`absolute bottom-4 right-4 z-20 inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border transition-colors ${gradientTesterOpen ? "bg-indigo-100 text-indigo-600 border-indigo-200" : "border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50"}`}
+        title="Gradient Tester"
+      >
+        <Paintbrush className="h-4 w-4" />
+      </button>
+
+      <GradientTester
+        open={gradientTesterOpen}
+        onClose={() => setGradientTesterOpen(false)}
+        layers={gradientLayers}
+        onUpdateLayer={updateGradientLayer}
+        onResetLayers={resetGradientLayers}
+        dragMode={gradientDragMode}
+        onToggleDragMode={() => setGradientDragMode(prev => !prev)}
+      />
     </div>
   );
 }
@@ -742,9 +812,33 @@ interface CampaignDetailViewProps {
   onRefresh?: () => void;
   onDelete?: (id: number) => Promise<void>;
   compact?: boolean;
+  onCreateCampaign?: () => void;
+  listSearch?: string;
+  onListSearchChange?: (v: string) => void;
+  searchOpen?: boolean;
+  onSearchOpenChange?: (v: boolean) => void;
+  sortBy?: CampaignSortBy;
+  onSortByChange?: (v: CampaignSortBy) => void;
+  isSortNonDefault?: boolean;
+  filterStatus?: string[];
+  onToggleFilterStatus?: (s: string) => void;
+  filterAccount?: string;
+  onFilterAccountChange?: (a: string) => void;
+  isFilterActive?: boolean;
+  groupBy?: CampaignGroupBy;
+  onGroupByChange?: (v: CampaignGroupBy) => void;
+  isGroupNonDefault?: boolean;
+  availableAccounts?: string[];
+  onResetControls?: () => void;
 }
 
-export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleStatus, onSave, onRefresh, onDelete, compact = false }: CampaignDetailViewProps) {
+export function CampaignDetailView({
+  campaign, metrics, allCampaigns, onToggleStatus, onSave, onRefresh, onDelete, compact = false,
+  onCreateCampaign, listSearch, onListSearchChange, searchOpen, onSearchOpenChange,
+  sortBy, onSortByChange, isSortNonDefault, filterStatus, onToggleFilterStatus,
+  filterAccount, onFilterAccountChange, isFilterActive, groupBy, onGroupByChange,
+  isGroupNonDefault, availableAccounts, onResetControls,
+}: CampaignDetailViewProps) {
   const { isAgencyUser } = useWorkspace();
 
   const campaignMetrics = useMemo(() => {
@@ -756,8 +850,13 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
   }, [campaign, metrics]);
 
   // ── Tab + date range state ─────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState<"summary" | "configurations">("summary");
+  const [activeTab, setActiveTab] = useState<"summary" | "configurations" | "tags">("summary");
   const [dateRange, setDateRange] = useState<DateRangeValue>(getDefaultDateRange());
+
+  // ── Reset tab when campaign changes ─────────────────────────────────────────
+  useEffect(() => {
+    setActiveTab("summary");
+  }, [campaign.id, campaign.Id]);
 
   // ── Filter metrics by date range ───────────────────────────────────────────
   const filteredMetrics = useMemo(() => {
@@ -801,12 +900,49 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
     return `${prefix} ${days} day${days !== 1 ? "s" : ""}`;
   }, [campaign.start_date, campaign.end_date, status]);
 
+  // ── Gradient tester state ───────────────────────────────────────────────────
+  const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
+  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
+  const [gradientDragMode, setGradientDragMode] = useState(false);
+
+  const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
+    if (id === -1) { setGradientLayers(prev => [...prev, patch as GradientLayer]); return; }
+    if ((patch as any).id === -999) { setGradientLayers(prev => prev.filter(l => l.id !== id)); return; }
+    setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
+  }, []);
+
+  const resetGradientLayers = useCallback(() => {
+    setGradientLayers(DEFAULT_LAYERS);
+    setGradientDragMode(false);
+  }, []);
+
   // ── Inline editing state ────────────────────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [draft, setDraft] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
+
+  // ── Logo upload ────────────────────────────────────────────────────────────
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (logoInputRef.current) logoInputRef.current.value = "";
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const dataUrl = reader.result as string;
+      const id = campaign.id || campaign.Id;
+      if (id) await onSave(id, { logo_url: dataUrl });
+    };
+    reader.readAsDataURL(file);
+  }, [campaign, onSave]);
+
+  const handleRemoveLogo = useCallback(async () => {
+    const id = campaign.id || campaign.Id;
+    if (id) await onSave(id, { logo_url: "" });
+  }, [campaign, onSave]);
 
   // ── Linked contract fetch ───────────────────────────────────────────────────
   const [linkedContract, setLinkedContract] = useState<ContractFinancials | null>(null);
@@ -884,14 +1020,26 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
   return (
     <div className="relative flex flex-col h-full overflow-hidden" data-testid="campaign-detail-view">
 
-      {/* ── Full-height gradient: vivid yellow top-left → beige mid → blue lower ── */}
-      <div className="absolute inset-0 bg-[#F8F3EB]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_72%_56%_at_100%_0%,#FFFFFF_0%,rgba(255,255,255,0.80)_30%,transparent_60%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_95%_80%_at_0%_0%,#FFF286_0%,rgba(255,242,134,0.60)_40%,rgba(255,242,134,0.25)_64%,transparent_80%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_62%_72%_at_100%_36%,rgba(241,218,162,0.62)_0%,transparent_64%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_92%_36%_at_48%_53%,rgba(210,188,130,0.22)_0%,transparent_72%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_98%_74%_at_50%_88%,rgba(105,170,255,0.60)_0%,transparent_74%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_54%_at_54%_60%,rgba(165,205,255,0.38)_0%,transparent_66%)]" />
+      {/* ── Full-height gradient ── */}
+      {gradientTesterOpen ? (
+        <>
+          {gradientLayers.map(layer => {
+            const style = layerToStyle(layer);
+            if (!style) return null;
+            return <div key={layer.id} className="absolute inset-0" style={style} />;
+          })}
+          {gradientDragMode && (
+            <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
+          )}
+        </>
+      ) : (
+        <>
+          <div className="absolute inset-0 bg-[#ffffff]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_79%_101%_at_42%_91%,rgba(255,0,57,0.4)_0%,transparent_69%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_1%_2%,#ffeb84_0%,transparent_30%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_65%_78%_at_74%_38%,rgba(254,201,175,0.5)_0%,transparent_66%)]" />
+        </>
+      )}
 
       {/* ── Header content ── */}
       <div className="shrink-0">
@@ -904,15 +1052,15 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full text-[12px] font-medium bg-brand-indigo text-white hover:opacity-90 transition-opacity disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-[12px] font-medium bg-brand-indigo text-white hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                  {saving ? "Saving…" : "Save"}
+                  {saving ? "Saving\u2026" : "Save"}
                 </button>
                 <button
                   onClick={cancelEdit}
                   disabled={saving}
-                  className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors"
+                  className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 transition-colors"
                 >
                   <X className="h-4 w-4" />
                   Cancel
@@ -923,16 +1071,147 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
                 {activeTab === "configurations" && (
                   <button
                     onClick={startEdit}
-                    className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors"
+                    className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 transition-colors"
                   >
                     <Pencil className="h-4 w-4" />
                     Edit
                   </button>
                 )}
+
+                {onCreateCampaign && (
+                  <>
+                    <button onClick={onCreateCampaign} className={cdvPill} title="New campaign">
+                      <Plus className="h-3.5 w-3.5" />Add
+                    </button>
+
+                    {searchOpen && onListSearchChange ? (
+                      <div className="h-9 flex items-center gap-1.5 px-3 rounded-full border border-brand-indigo/50 bg-brand-indigo/5">
+                        <Search className="h-3.5 w-3.5 text-brand-indigo shrink-0" />
+                        <input
+                          value={listSearch ?? ""}
+                          onChange={(e) => onListSearchChange(e.target.value)}
+                          placeholder="Search..."
+                          autoFocus
+                          onBlur={() => { if (!listSearch) onSearchOpenChange?.(false); }}
+                          onKeyDown={(e) => { if (e.key === "Escape") { onListSearchChange(""); onSearchOpenChange?.(false); } }}
+                          className="bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/60 w-[120px]"
+                        />
+                        <button onClick={() => { onListSearchChange(""); onSearchOpenChange?.(false); }} className="text-muted-foreground/60 hover:text-foreground">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button onClick={() => onSearchOpenChange?.(true)} className={listSearch ? cdvPillActive : cdvPill} title="Search campaigns">
+                        <Search className="h-3.5 w-3.5" />Search
+                      </button>
+                    )}
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className={isSortNonDefault ? cdvPillActive : cdvPill} title="Sort">
+                          <ArrowUpDown className="h-3.5 w-3.5" />Sort
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-44">
+                        {(Object.keys(DETAIL_SORT_LABELS) as CampaignSortBy[]).map((s) => (
+                          <DropdownMenuItem
+                            key={s}
+                            onClick={() => onSortByChange?.(s)}
+                            className={cn("text-[12px]", sortBy === s && "font-semibold text-brand-indigo")}
+                          >
+                            {DETAIL_SORT_LABELS[s]}
+                            {sortBy === s && <Check className="h-3 w-3 ml-auto" />}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className={isFilterActive ? cdvPillActive : cdvPill} title="Filter">
+                          <Filter className="h-3.5 w-3.5" />Filter
+                          {isFilterActive && ` \u00b7 ${(filterStatus?.length ?? 0) + (filterAccount ? 1 : 0)}`}
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
+                        <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Status</div>
+                        <DropdownMenuSeparator />
+                        {DETAIL_STATUS_FILTER_OPTIONS.map((s) => (
+                          <DropdownMenuItem
+                            key={s}
+                            onClick={(e) => { e.preventDefault(); onToggleFilterStatus?.(s); }}
+                            className="flex items-center gap-2 text-[12px]"
+                          >
+                            <span
+                              className="h-1.5 w-1.5 rounded-full shrink-0"
+                              style={{ backgroundColor: DETAIL_STATUS_HEX[s] || "#6B7280" }}
+                            />
+                            <span className={cn("flex-1", filterStatus?.includes(s) && "font-bold text-brand-indigo")}>{s}</span>
+                            {filterStatus?.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                          </DropdownMenuItem>
+                        ))}
+                        {(availableAccounts?.length ?? 0) > 0 && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Account</div>
+                            <DropdownMenuItem
+                              onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(""); }}
+                              className={cn("flex items-center gap-2 text-[12px]", !filterAccount && "font-bold text-brand-indigo")}
+                            >
+                              <span className="flex-1">All Accounts</span>
+                              {!filterAccount && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {availableAccounts?.map((a) => (
+                              <DropdownMenuItem
+                                key={a}
+                                onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(filterAccount === a ? "" : a); }}
+                                className={cn("flex items-center gap-2 text-[12px]", filterAccount === a && "font-bold text-brand-indigo")}
+                              >
+                                <span className="flex-1 truncate">{a}</span>
+                                {filterAccount === a && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                              </DropdownMenuItem>
+                            ))}
+                          </>
+                        )}
+                        {isFilterActive && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={onResetControls} className="text-[12px] text-destructive">
+                              Clear all filters
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className={isGroupNonDefault ? cdvPillActive : cdvPill} title="Group">
+                          <Layers className="h-3.5 w-3.5" />Group
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-40">
+                        {(Object.keys(DETAIL_GROUP_LABELS) as CampaignGroupBy[]).map((g) => (
+                          <DropdownMenuItem
+                            key={g}
+                            onClick={() => onGroupByChange?.(g)}
+                            className={cn("text-[12px]", groupBy === g && "font-semibold text-brand-indigo")}
+                          >
+                            {DETAIL_GROUP_LABELS[g]}
+                            {groupBy === g && <Check className="h-3 w-3 ml-auto" />}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </>
+                )}
+
+                <div className="ml-auto" />
                 {canToggle && (
                   <button
                     onClick={() => onToggleStatus(campaign)}
-                    className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors"
+                    className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 transition-colors"
                   >
                     {isActive
                       ? <><PauseCircle className="h-4 w-4" />Pause</>
@@ -940,12 +1219,12 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
                     }
                   </button>
                 )}
-                <button onClick={onRefresh} className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors">
+                <button onClick={onRefresh} className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 transition-colors">
                   <RefreshCw className="h-4 w-4" />
                   Refresh
                 </button>
                 {onDelete && (deleteConfirm ? (
-                  <div className="inline-flex items-center gap-1.5 h-10 rounded-full border border-red-300/50 bg-card px-4 text-[12px]">
+                  <div className="inline-flex items-center gap-1.5 h-9 rounded-full border border-red-300/50 bg-card px-4 text-[12px]">
                     <span className="text-foreground/60">Delete?</span>
                     <button
                       className="h-7 px-3 rounded-full bg-red-600 text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50 transition-opacity"
@@ -957,23 +1236,63 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
                     <button className="h-7 px-3 rounded-full text-muted-foreground text-[11px] hover:text-foreground transition-colors" onClick={() => setDeleteConfirm(false)}>No</button>
                   </div>
                 ) : (
-                  <button onClick={() => setDeleteConfirm(true)} className="inline-flex items-center gap-1.5 h-10 px-4 rounded-full text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 hover:text-red-600 transition-colors">
+                  <button onClick={() => setDeleteConfirm(true)} className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 hover:text-red-600 transition-colors">
                     <Trash2 className="h-4 w-4" />
                     Delete
                   </button>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => setGradientTesterOpen(prev => !prev)}
+                  className={`inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border transition-colors ${gradientTesterOpen ? "bg-indigo-100 text-indigo-600 border-indigo-200" : "border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50"}`}
+                  title="Gradient Tester"
+                >
+                  <Paintbrush className="h-4 w-4" />
+                </button>
               </>
             )}
           </div>
 
           {/* Row 2: Avatar + Name */}
           <div className="flex items-start gap-3">
-            <div
-              className="h-[72px] w-[72px] rounded-full flex items-center justify-center text-xl font-bold shrink-0"
-              style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
-            >
-              {initials || <Zap className="w-6 h-6" />}
+            {/* Logo circle — click to upload */}
+            <div className="relative group shrink-0">
+              <div
+                className="h-[72px] w-[72px] rounded-full flex items-center justify-center text-xl font-bold overflow-hidden cursor-pointer"
+                style={campaign.logo_url ? {} : { backgroundColor: avatarColor.bg, color: avatarColor.text }}
+                onClick={() => logoInputRef.current?.click()}
+                title="Click to upload logo"
+              >
+                {campaign.logo_url ? (
+                  <img src={campaign.logo_url} alt="logo" className="h-full w-full object-cover" />
+                ) : (
+                  initials || <Zap className="w-6 h-6" />
+                )}
+              </div>
+              {/* Hover overlay */}
+              <div
+                className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer pointer-events-none"
+              >
+                <Camera className="w-5 h-5 text-white" />
+              </div>
+              {/* Remove button — hover-only, top-right */}
+              {campaign.logo_url && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleRemoveLogo(); }}
+                  title="Remove logo"
+                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-white border border-black/[0.125] flex items-center justify-center text-foreground/50 hover:text-red-500 hover:border-red-300 transition-colors z-10 opacity-0 group-hover:opacity-100"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
             </div>
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleLogoFile}
+            />
 
             <div className="flex-1 min-w-0 py-1">
               <h2 className="text-[27px] font-semibold font-heading text-foreground leading-tight truncate" data-testid="campaign-detail-view-name">
@@ -983,7 +1302,7 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
               <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                 {/* Badges */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded border border-border/50 text-[10px] font-medium text-muted-foreground">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded border border-black/[0.125] text-[10px] font-medium text-muted-foreground">
                     Campaign #{campaignNumber}
                   </span>
                   {status && (
@@ -1021,10 +1340,10 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
         <button
           onClick={() => setActiveTab("summary")}
           className={cn(
-            "h-10 px-5 rounded-full text-[12px] font-semibold transition-colors",
+            "h-9 px-5 rounded-full text-[12px] font-semibold transition-colors",
             activeTab === "summary"
               ? "bg-foreground text-background"
-              : "border border-border/50 text-foreground/60 hover:text-foreground hover:border-border"
+              : "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:border-black/[0.175]"
           )}
         >
           Summary
@@ -1039,14 +1358,27 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
         <button
           onClick={() => setActiveTab("configurations")}
           className={cn(
-            "h-10 px-5 rounded-full text-[12px] font-semibold transition-colors",
+            "h-9 px-5 rounded-full text-[12px] font-semibold transition-colors",
             activeTab === "configurations"
               ? "bg-foreground text-background"
-              : "border border-border/50 text-foreground/60 hover:text-foreground hover:border-border"
+              : "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:border-black/[0.175]"
           )}
         >
           Configurations
         </button>
+        {isAgencyUser && (
+          <button
+            onClick={() => setActiveTab("tags")}
+            className={cn(
+              "h-9 px-5 rounded-full text-[12px] font-semibold transition-colors",
+              activeTab === "tags"
+                ? "bg-foreground text-background"
+                : "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:border-black/[0.175]"
+            )}
+          >
+            Tags
+          </button>
+        )}
       </div>
 
       {/* ── Body ── */}
@@ -1057,7 +1389,7 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
           <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-3 grid-rows-[auto_auto] gap-[3px]")}>
 
             {/* ── Row 1, Col 1: Key Metrics + Performance Trends ── */}
-            <div className="bg-card/50 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-metrics">
+            <div className="bg-card/75 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-metrics">
               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Key Metrics</span>
               <div className="grid grid-cols-2 gap-4">
                 {[
@@ -1106,19 +1438,19 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
             </div>
 
             {/* ── Row 1, Col 2: Up Next ── */}
-            <div className="bg-card/50 rounded-xl p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-agenda">
+            <div className="bg-card/75 rounded-xl p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-agenda">
               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Up Next</span>
               <AgendaWidget accountId={undefined} className="flex-1 min-h-0 bg-transparent" hideHeader />
             </div>
 
             {/* ── Row 1, Col 3: Pipeline Funnel ── */}
-            <div className="bg-card/50 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-funnel">
+            <div className="bg-card/75 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-funnel">
               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Pipeline</span>
               <CampaignFunnelWidget campaignId={campaign.id || (campaign as any).Id} />
             </div>
 
             {/* ── Row 2, Col 1: Financials + ROI Trend ── */}
-            <div className="bg-card/50 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-financials">
+            <div className="bg-card/75 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-financials">
               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Financials</span>
               <FinancialsWidget
                 agg={agg}
@@ -1159,13 +1491,13 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
             </div>
 
             {/* ── Row 2, Col 2: Activity Feed ── */}
-            <div className="bg-card/50 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-activity">
+            <div className="bg-card/75 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-activity">
               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Activity</span>
               <ActivityFeed accountId={undefined} limit={20} compact className="" />
             </div>
 
             {/* ── Row 2, Col 3: Conversions Doughnut ── */}
-            <div className="bg-card/50 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-conversions">
+            <div className="bg-card/75 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-conversions">
               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Conversions</span>
               <ConversionDoughnutWidget campaignId={campaign.id || (campaign as any).Id} />
             </div>
@@ -1468,8 +1800,27 @@ export function CampaignDetailView({ campaign, metrics, allCampaigns, onToggleSt
           </div>
         )}
 
+        {/* ── Tags tab ── */}
+        {activeTab === "tags" && (
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <CampaignTagsSection
+              campaignId={campaign.id || campaign.Id}
+              campaignName={campaign.name || ""}
+            />
+          </div>
+        )}
+
       </div>
 
+      <GradientTester
+        open={gradientTesterOpen}
+        onClose={() => setGradientTesterOpen(false)}
+        layers={gradientLayers}
+        onUpdateLayer={updateGradientLayer}
+        onResetLayers={resetGradientLayers}
+        dragMode={gradientDragMode}
+        onToggleDragMode={() => setGradientDragMode(prev => !prev)}
+      />
     </div>
   );
 }

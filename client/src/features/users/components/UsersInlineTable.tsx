@@ -1,9 +1,9 @@
-import { useState, useMemo, useCallback, useRef } from "react";
+import React, { useState, useMemo, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronRight, Check, Eye, Users } from "lucide-react";
+import { ChevronDown, ChevronRight, Check, Eye, Users, Megaphone, HandMetal, Calendar, Clock } from "lucide-react";
 import { ROLE_AVATAR } from "@/lib/avatarUtils";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
-import type { AppUser, AccountMap } from "../pages/UsersPage";
+import type { AppUser, AccountMap } from "../types";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export type UserTableItem =
@@ -22,10 +22,10 @@ interface ColumnDef {
 
 const ALL_TABLE_COLUMNS: ColumnDef[] = [
   { key: "name",        label: "Name",         width: 220 },
+  { key: "role",        label: "Role",         width: 115 },
   { key: "account",     label: "Account",      width: 160 },
   { key: "email",       label: "Email",        width: 210 },
   { key: "phone",       label: "Phone",        width: 140 },
-  { key: "role",        label: "Role",         width: 115 },
   { key: "status",      label: "Status",       width: 115 },
   { key: "lastLogin",   label: "Last Login",   width: 130 },
   { key: "memberSince", label: "Member Since", width: 125 },
@@ -40,6 +40,23 @@ const ROLE_BADGE: Record<string, string> = {
   Agent:    "bg-purple-100 text-purple-700",
   Viewer:   "bg-muted text-muted-foreground",
 };
+
+// ── Group header solid background colors ─────────────────────────────────────
+// Light pastel tints — fully opaque so they don't darken over the #D8D8D8 bg
+const GROUP_HEADER_BG: Record<string, string> = {
+  Admin:    "#FEF3C7", // warm yellow tint
+  Operator: "#FFEDD5", // soft orange tint
+  Manager:  "#DBEAFE", // light blue tint
+  Agent:    "#F3E8FF", // soft purple tint
+  Viewer:   "#E8E8E8", // neutral gray tint
+  Active:   "#D1FAE5", // light emerald tint
+  Invited:  "#FEF3C7", // warm amber tint
+  Inactive: "#E8E8E8", // neutral gray tint
+};
+
+function getGroupHeaderBg(label: string): string {
+  return GROUP_HEADER_BG[label] || "#E8E8E8";
+}
 
 function isActiveStatus(status: string | null | undefined): boolean {
   return (status || "").toLowerCase() === "active";
@@ -100,6 +117,8 @@ interface UsersInlineTableProps {
   /** Multi-select state — lifted to parent */
   selectedIds: Set<number>;
   onSelectionChange: (ids: Set<number>) => void;
+  /** Campaigns grouped by account ID — for hover tooltip */
+  campaignsByAccount?: Record<number, { id: number; name: string }[]>;
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
@@ -113,6 +132,7 @@ export function UsersInlineTable({
   tableSearch,
   selectedIds,
   onSelectionChange,
+  campaignsByAccount = {},
 }: UsersInlineTableProps) {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const lastClickedIndexRef = useRef<number>(-1);
@@ -124,6 +144,33 @@ export function UsersInlineTable({
       return next;
     });
   }, []);
+
+  // ── Group checkbox helpers (§27) ─────────────────────────────────────────
+  const getGroupUserIds = useCallback((label: string): number[] => {
+    const ids: number[] = [];
+    let inGroup = false;
+    for (const item of flatItems) {
+      if (item.kind === "header") {
+        inGroup = item.label === label;
+        continue;
+      }
+      if (inGroup) ids.push(item.user.id);
+    }
+    return ids;
+  }, [flatItems]);
+
+  const handleGroupCheckbox = useCallback((label: string) => {
+    const groupIds = getGroupUserIds(label);
+    if (groupIds.length === 0) return;
+    const allSelected = groupIds.every((id) => selectedIds.has(id));
+    const next = new Set(selectedIds);
+    if (allSelected) {
+      groupIds.forEach((id) => next.delete(id));
+    } else {
+      groupIds.forEach((id) => next.add(id));
+    }
+    onSelectionChange(next);
+  }, [getGroupUserIds, selectedIds, onSelectionChange]);
 
   const visibleColumns = useMemo(
     () => ALL_TABLE_COLUMNS.filter((c) => visibleCols.has(c.key)),
@@ -165,6 +212,39 @@ export function UsersInlineTable({
   }, [userOnlyItems]);
 
   const userCount = userOnlyItems.length;
+
+  // ── Hover tooltip state (must be above early return to respect rules of hooks) ──
+  const [hoveredUserId, setHoveredUserId] = useState<number | null>(null);
+  const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleRowMouseEnter = useCallback((user: AppUser, e: React.MouseEvent<HTMLTableRowElement>) => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    const row = e.currentTarget; // capture before async
+    hoverTimeoutRef.current = setTimeout(() => {
+      const container = tableContainerRef.current;
+      if (!row || !container) return;
+      const rowRect = row.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      setTooltipPos({
+        top: rowRect.top - containerRect.top + rowRect.height + 4,
+        left: Math.min(rowRect.left - containerRect.left + 40, containerRect.width - 280),
+      });
+      setHoveredUserId(user.id);
+    }, 400);
+  }, []);
+
+  const handleRowMouseLeave = useCallback(() => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setHoveredUserId(null);
+    setTooltipPos(null);
+  }, []);
+
+  const hoveredUser = useMemo(() => {
+    if (!hoveredUserId) return null;
+    return userOnlyItems.find(i => i.user.id === hoveredUserId)?.user ?? null;
+  }, [hoveredUserId, userOnlyItems]);
 
   // ── Row click ────────────────────────────────────────────────────────────
   const handleRowClick = useCallback((user: AppUser, e: React.MouseEvent) => {
@@ -253,9 +333,10 @@ export function UsersInlineTable({
 
   // Track current group for collapse logic
   let currentGroup: string | null = null;
+  let rowIdx = 0;
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-transparent">
+    <div ref={tableContainerRef} className="h-full flex flex-col overflow-hidden bg-[#D8D8D8] relative">
 
       {/* ── Table ── */}
       <div className="flex-1 min-h-0 overflow-auto">
@@ -265,14 +346,14 @@ export function UsersInlineTable({
           <thead className="sticky top-0 z-20">
             <tr>
               {/* Checkbox column header */}
-              <th className="px-2.5 py-2 w-10 min-w-[40px] bg-muted border-b border-border/20 sticky left-0 z-30" />
+              <th className="py-2 w-[36px] px-0 bg-[#D8D8D8] border-b border-black/[0.06] sticky left-0 z-30" />
 
               {visibleColumns.map((col, ci) => (
                 <th
                   key={col.key}
                   className={cn(
-                    "px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/50 whitespace-nowrap select-none bg-muted border-b border-border/20",
-                    ci === 0 && col.key !== "name" && "sticky left-10 z-30",
+                    "px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/50 whitespace-nowrap select-none bg-[#D8D8D8] border-b border-black/[0.06]",
+                    ci === 0 && "sticky left-[36px] z-30",
                   )}
                   style={{ width: col.width, minWidth: col.width }}
                 >
@@ -301,24 +382,41 @@ export function UsersInlineTable({
               if (item.kind === "header") {
                 currentGroup = item.label;
                 const isCollapsed = collapsedGroups.has(item.label);
+                const headerBg = getGroupHeaderBg(item.label);
+                const groupIds = getGroupUserIds(item.label);
+                const isGroupFullySelected = groupIds.length > 0 && groupIds.every((id) => selectedIds.has(id));
                 return (
                   <tr
                     key={`h-${item.label}-${index}`}
-                    className="cursor-pointer select-none hover:bg-black/[0.02]"
+                    className="cursor-pointer select-none h-[44px]"
                     onClick={() => toggleGroup(item.label)}
                   >
-                    {/* Sticky group title — stays fixed during horizontal scroll */}
-                    <td colSpan={colSpan + 1} className="px-4 pt-4 pb-1.5 sticky left-0 z-30 bg-muted">
-                      <div className="flex items-center gap-2">
-                        <div className="text-muted-foreground/40">
-                          {isCollapsed
-                            ? <ChevronRight className="h-3.5 w-3.5" />
-                            : <ChevronDown className="h-3.5 w-3.5" />}
+                    {/* Cell 1: Checkbox */}
+                    <td className="sticky left-0 z-30 w-[36px] px-0" style={{ backgroundColor: headerBg }}>
+                      <div className="flex items-center justify-center h-full">
+                        <div
+                          className={cn(
+                            "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
+                            isGroupFullySelected ? "border-brand-indigo bg-brand-indigo" : "border-border/40"
+                          )}
+                          onClick={(e) => { e.stopPropagation(); handleGroupCheckbox(item.label); }}
+                        >
+                          {isGroupFullySelected && <Check className="h-2.5 w-2.5 text-white" />}
                         </div>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{item.label}</span>
-                        <span className="text-[10px] text-muted-foreground/40 font-medium tabular-nums">{item.count}</span>
                       </div>
                     </td>
+
+                    {/* Cell 2: Label */}
+                    <td className="sticky left-[36px] z-30 pl-1 pr-3" style={{ backgroundColor: headerBg }}>
+                      <div className="flex items-center gap-2">
+                        {isCollapsed ? <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/50" />}
+                        <span className="text-[11px] font-bold text-foreground/70">{item.label}</span>
+                        <span className="text-[10px] text-muted-foreground/50 font-medium tabular-nums">{item.count}</span>
+                      </div>
+                    </td>
+
+                    {/* Cell 3: Spacer */}
+                    <td colSpan={Math.max(1, visibleColumns.length - 1)} style={{ backgroundColor: headerBg }} />
                   </tr>
                 );
               }
@@ -335,45 +433,51 @@ export function UsersInlineTable({
               const avatarColor = ROLE_AVATAR[role] ?? ROLE_AVATAR.Viewer;
               const userIdx = userIndexMap.get(uid) ?? -1;
 
+              const currentRowIdx = rowIdx++;
               return (
                 <tr
                   key={uid}
                   className={cn(
-                    "group/row cursor-pointer h-[52px]",
-                    isHighlighted ? "bg-highlight-selected" : "bg-card hover:bg-card-hover",
+                    "group/row cursor-pointer h-[52px] animate-card-enter",
+                    isHighlighted ? "bg-highlight-selected" : "bg-[#F1F1F1] hover:bg-[#FAFAFA]",
                   )}
+                  style={{ animationDelay: `${Math.min(currentRowIdx, 15) * 30}ms` }}
                   onClick={(e) => handleRowClick(user, e)}
+                  onMouseEnter={(e) => handleRowMouseEnter(user, e)}
+                  onMouseLeave={handleRowMouseLeave}
                 >
                   {/* Checkbox cell — sticky left */}
                   <td className={cn(
-                    "px-2.5 w-10 min-w-[40px] sticky left-0 z-10",
-                    isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover",
+                    "w-[36px] px-0 sticky left-0 z-10",
+                    isHighlighted ? "bg-highlight-selected" : "bg-[#F1F1F1] group-hover/row:bg-[#FAFAFA]",
                   )}>
-                    <div
-                      className={cn(
-                        "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
-                        isMultiSelected ? "border-brand-indigo bg-brand-indigo" : "border-border/40"
-                      )}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const next = new Set(selectedIds);
-                        if (next.has(uid)) next.delete(uid); else next.add(uid);
-                        onSelectionChange(next);
-                        if (next.size === 1) {
-                          const only = userOnlyItems.find((i) => i.user.id === Array.from(next)[0]);
-                          if (only) onSelectUser(only.user);
-                        }
-                      }}
-                    >
-                      {isMultiSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                    <div className="flex items-center justify-center h-full">
+                      <div
+                        className={cn(
+                          "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
+                          isMultiSelected ? "border-brand-indigo bg-brand-indigo" : "border-border/40"
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const next = new Set(selectedIds);
+                          if (next.has(uid)) next.delete(uid); else next.add(uid);
+                          onSelectionChange(next);
+                          if (next.size === 1) {
+                            const only = userOnlyItems.find((i) => i.user.id === Array.from(next)[0]);
+                            if (only) onSelectUser(only.user);
+                          }
+                        }}
+                      >
+                        {isMultiSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                      </div>
                     </div>
                   </td>
 
                   {visibleColumns.map((col, ci) => {
                     const isFirst = ci === 0;
                     const tdClass = cn(
-                      isFirst && "sticky left-10 z-10",
-                      isFirst && (isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover"),
+                      isFirst && "sticky left-[36px] z-10",
+                      isFirst && (isHighlighted ? "bg-highlight-selected" : "bg-[#F1F1F1] group-hover/row:bg-[#FAFAFA]"),
                     );
 
                     // ── Name cell (sticky, with avatar) ──
@@ -387,14 +491,9 @@ export function UsersInlineTable({
                               bgColor={avatarColor.bg}
                               textColor={avatarColor.text}
                             />
-                            <div className="flex flex-col min-w-0">
-                              <span className="text-[12px] font-medium truncate text-foreground leading-tight">
-                                {user.fullName1 || <span className="italic text-muted-foreground">No name</span>}
-                              </span>
-                              {user.email && (
-                                <span className="text-[10px] text-muted-foreground/60 truncate leading-tight">{user.email}</span>
-                              )}
-                            </div>
+                            <span className="text-[12px] font-medium truncate text-foreground">
+                              {user.fullName1 || <span className="italic text-muted-foreground">No name</span>}
+                            </span>
                           </div>
                         </td>
                       );
@@ -417,6 +516,66 @@ export function UsersInlineTable({
           </tbody>
         </table>
       </div>
+
+      {/* ── Hover tooltip ── */}
+      {hoveredUser && tooltipPos && (
+        <div
+          className="absolute z-50 w-64 bg-popover border border-border/40 rounded-xl shadow-lg p-3 pointer-events-none"
+          style={{ top: tooltipPos.top, left: tooltipPos.left }}
+        >
+          {/* Campaigns under this account */}
+          {hoveredUser.accountsId ? (() => {
+            const campaigns = campaignsByAccount[hoveredUser.accountsId] ?? [];
+            return (
+              <>
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <Megaphone className="w-3 h-3 text-muted-foreground shrink-0" />
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Campaigns</span>
+                  <span className="text-[9px] text-muted-foreground/50 tabular-nums">({campaigns.length})</span>
+                </div>
+                {campaigns.length === 0 ? (
+                  <p className="text-[10px] text-muted-foreground italic pl-4">No campaigns</p>
+                ) : (
+                  <div className="space-y-0.5 pl-4 max-h-20 overflow-y-auto">
+                    {campaigns.slice(0, 6).map(c => (
+                      <p key={c.id} className="text-[11px] text-foreground truncate">{c.name}</p>
+                    ))}
+                    {campaigns.length > 6 && <p className="text-[10px] text-muted-foreground italic">+{campaigns.length - 6} more</p>}
+                  </div>
+                )}
+              </>
+            );
+          })() : (
+            <p className="text-[10px] text-muted-foreground italic">No account assigned</p>
+          )}
+
+          {/* Member since */}
+          {hoveredUser.createdAt && (
+            <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border/20">
+              <Calendar className="w-3 h-3 text-muted-foreground shrink-0" />
+              <span className="text-[10px] text-muted-foreground">Member since</span>
+              <span className="text-[10px] font-medium text-foreground ml-auto">{formatShortDate(hoveredUser.createdAt)}</span>
+            </div>
+          )}
+
+          {/* Last login */}
+          {hoveredUser.lastLoginAt && (
+            <div className="flex items-center gap-1.5 mt-1">
+              <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
+              <span className="text-[10px] text-muted-foreground">Last seen</span>
+              <span className="text-[10px] font-medium text-foreground ml-auto">{formatRelativeDate(hoveredUser.lastLoginAt)}</span>
+            </div>
+          )}
+
+          {/* Timezone */}
+          {hoveredUser.timezone && (
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="w-3 h-3 text-center text-[8px] text-muted-foreground shrink-0">TZ</span>
+              <span className="text-[10px] text-muted-foreground truncate">{hoveredUser.timezone}</span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

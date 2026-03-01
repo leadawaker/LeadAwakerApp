@@ -60,23 +60,31 @@ interface ContractDetailViewProps {
   onRefresh: () => void;
   onNew?: () => void;
   onUpdate?: (id: number, patch: Record<string, any>) => Promise<any>;
+  toolbarSlot?: React.ReactNode;
 }
 
 // ── Empty state ───────────────────────────────────────────────────────────────
 
-export function ContractDetailViewEmpty() {
+export function ContractDetailViewEmpty({ toolbarSlot }: { toolbarSlot?: React.ReactNode }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8 text-center">
-      <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-stone-50 to-gray-100 flex items-center justify-center ring-1 ring-stone-200/50">
-        <FileText className="h-10 w-10 text-stone-400" />
+    <div className="flex-1 flex flex-col h-full">
+      {toolbarSlot && (
+        <div className="px-4 pt-3 pb-1.5 flex items-center gap-1.5 shrink-0">
+          {toolbarSlot}
+        </div>
+      )}
+      <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8 text-center">
+        <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-stone-50 to-gray-100 flex items-center justify-center ring-1 ring-stone-200/50">
+          <FileText className="h-10 w-10 text-stone-400" />
+        </div>
+        <div className="space-y-1.5">
+          <p className="text-sm font-semibold text-foreground/70">Select a contract</p>
+          <p className="text-xs text-muted-foreground max-w-[180px] leading-relaxed">
+            Click any contract on the left to see its details and document.
+          </p>
+        </div>
+        <div className="text-[11px] text-stone-400 font-medium">&larr; Choose from the list</div>
       </div>
-      <div className="space-y-1.5">
-        <p className="text-sm font-semibold text-foreground/70">Select a contract</p>
-        <p className="text-xs text-muted-foreground max-w-[180px] leading-relaxed">
-          Click any contract on the left to see its details and document.
-        </p>
-      </div>
-      <div className="text-[11px] text-stone-400 font-medium">&larr; Choose from the list</div>
     </div>
   );
 }
@@ -121,6 +129,7 @@ export function ContractDetailView({
   onRefresh,
   onNew,
   onUpdate,
+  toolbarSlot,
 }: ContractDetailViewProps) {
   const displayStatus = isExpired(contract) ? "Expired" : (contract.status || "Draft");
   const statusColors  = CONTRACT_STATUS_COLORS[displayStatus] || CONTRACT_STATUS_COLORS.Draft;
@@ -419,75 +428,73 @@ export function ContractDetailView({
       {/* ── Header ── */}
       <div className="relative z-10 shrink-0 px-[3px] pt-[3px] pb-[3px] space-y-[3px]">
 
-        {/* Action toolbar (agency only) */}
-        {isAgencyUser && (
-          <div className="px-3 py-2 flex items-center gap-1 flex-wrap">
+        {/* Action toolbar */}
+        <div className="px-4 pt-3 pb-1.5 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
+          {toolbarSlot}
+          {isAgencyUser && (
+            <div className="ml-auto flex items-center gap-1 shrink-0">
 
-            {/* Group 1: New + PDF + Copy Link */}
-            {onNew && (
-              <button onClick={onNew} className={actionBtn}>
-                <Plus className="h-3 w-3" />
-                New
-              </button>
-            )}
-
-            {contract.file_data && (
-              <button onClick={handleDownloadPdf} className={actionBtn}>
-                <Download className="h-3 w-3" />
-                PDF
-              </button>
-            )}
-
-            <button onClick={handleCopyLink} className={actionBtn}>
-              {linkCopied
-                ? <Check className="h-3 w-3 text-emerald-500" />
-                : <Link  className="h-3 w-3" />}
-              {linkCopied ? "Copied!" : "Copy Link"}
-            </button>
-
-            {/* Group 2: Edit + Send (Draft only) */}
-            {contract.status === "Draft" && (
-              <>
-                <div className="h-4 w-px bg-border/40 shrink-0" />
-
-                {canEdit && !isEditing && (
-                  <button onClick={handleStartEdit} className={actionBtn}>
-                    <Pencil className="h-3 w-3" />
-                    Edit
-                  </button>
-                )}
-
-                {/* Mark sent (simple status update + copy link) */}
-                <button
-                  onClick={handleSend}
-                  disabled={sending}
-                  className={cn(actionBtn, "disabled:opacity-50")}
-                >
-                  <Link className="h-3 w-3" />
-                  {sending ? "Sending..." : "Mark Sent"}
+              {/* New + PDF + Copy Link */}
+              {onNew && (
+                <button onClick={onNew} className={actionBtn}>
+                  <Plus className="h-3 w-3" />
+                  New
                 </button>
+              )}
 
-                {/* Sign via SignWell */}
-                {contract.contract_text && (
+              {contract.file_data && (
+                <button onClick={handleDownloadPdf} className={actionBtn}>
+                  <Download className="h-3 w-3" />
+                  PDF
+                </button>
+              )}
+
+              <button onClick={handleCopyLink} className={actionBtn}>
+                {linkCopied
+                  ? <Check className="h-3 w-3 text-emerald-500" />
+                  : <Link  className="h-3 w-3" />}
+                {linkCopied ? "Copied!" : "Copy Link"}
+              </button>
+
+              {/* Edit + Send (Draft only) */}
+              {contract.status === "Draft" && (
+                <>
+                  {canEdit && !isEditing && (
+                    <button onClick={handleStartEdit} className={actionBtn}>
+                      <Pencil className="h-3 w-3" />
+                      Edit
+                    </button>
+                  )}
+
+                  {/* Mark sent (simple status update + copy link) */}
                   <button
-                    onClick={() => setSwDialogOpen(v => !v)}
-                    className={cn(
-                      actionBtn,
-                      "bg-brand-indigo/10 border-brand-indigo/30 text-brand-indigo hover:bg-brand-indigo/20",
-                      swDialogOpen && "bg-brand-indigo/20"
-                    )}
+                    onClick={handleSend}
+                    disabled={sending}
+                    className={cn(actionBtn, "disabled:opacity-50")}
                   >
-                    <Send className="h-3 w-3" />
-                    Sign via SignWell
+                    <Link className="h-3 w-3" />
+                    {sending ? "Sending..." : "Mark Sent"}
                   </button>
-                )}
-              </>
-            )}
 
-            {/* Group 3: Mark Signed (Sent / Viewed) */}
-            {(contract.status === "Sent" || contract.status === "Viewed") && (
-              <>
-                <div className="h-4 w-px bg-border/40 shrink-0" />
+                  {/* Sign via SignWell */}
+                  {contract.contract_text && (
+                    <button
+                      onClick={() => setSwDialogOpen(v => !v)}
+                      className={cn(
+                        actionBtn,
+                        "bg-brand-indigo/10 border-brand-indigo/30 text-brand-indigo hover:bg-brand-indigo/20",
+                        swDialogOpen && "bg-brand-indigo/20"
+                      )}
+                    >
+                      <Send className="h-3 w-3" />
+                      Sign via SignWell
+                    </button>
+                  )}
+                </>
+              )}
+
+              {/* Mark Signed (Sent / Viewed) */}
+              {(contract.status === "Sent" || contract.status === "Viewed") && (
                 <button
                   onClick={handleMarkSigned}
                   disabled={markingSigned}
@@ -496,25 +503,24 @@ export function ContractDetailView({
                   <FileSignature className="h-3 w-3" />
                   {markingSigned ? "Updating..." : "Mark Signed"}
                 </button>
-              </>
-            )}
-
-            {/* Group 4: Delete */}
-            <div className="h-4 w-px bg-border/40 shrink-0" />
-            <button
-              onClick={handleDelete}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border transition-colors",
-                deleteConfirm
-                  ? "border-red-400/60 text-red-600 bg-red-50/50 hover:bg-red-50/70"
-                  : "border-border/60 bg-transparent text-foreground hover:bg-card"
               )}
-            >
-              <Trash2 className="h-3 w-3" />
-              {deleteConfirm ? "Confirm?" : "Delete"}
-            </button>
-          </div>
-        )}
+
+              {/* Delete */}
+              <button
+                onClick={handleDelete}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border transition-colors",
+                  deleteConfirm
+                    ? "border-red-400/60 text-red-600 bg-red-50/50 hover:bg-red-50/70"
+                    : "border-border/60 bg-transparent text-foreground hover:bg-card"
+                )}
+              >
+                <Trash2 className="h-3 w-3" />
+                {deleteConfirm ? "Confirm?" : "Delete"}
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* ── SignWell inline dialog ── */}
         {swDialogOpen && (
@@ -627,260 +633,14 @@ export function ContractDetailView({
             )}
           </div>
 
-          {/* Status + Tracking inline */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold"
-              style={{ backgroundColor: statusColors.bg, color: statusColors.text }}
-            >
-              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors.dot }} />
-              {displayStatus}
-            </span>
-
-            {/* Tracking pill */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/50">
-              <Eye className="h-3.5 w-3.5 text-foreground/40" />
-              <span className="text-[12px] font-semibold tabular-nums text-foreground">
-                {contract.viewed_count ?? 0}
-              </span>
-              <span className="text-[11px] text-foreground/40">
-                {(contract.viewed_count ?? 0) === 1 ? "view" : "views"}
-              </span>
-            </div>
-
-            {contract.signer_name && (
-              <span className="text-[12px] text-foreground/50 italic">
-                Signer: {contract.signer_name}
-              </span>
-            )}
-          </div>
         </div>
       </div>
 
       {/* ── Two-column content area ── */}
       <div className="relative z-10 flex-1 min-h-0 px-[3px] pb-[3px] overflow-hidden">
-        <div className="grid grid-cols-[1fr_1.6fr] gap-[3px] h-full">
+        <div className="grid grid-cols-[1.6fr_1fr] gap-[3px] h-full">
 
-          {/* ── LEFT column: stacked info widgets ── */}
-          <div className="flex flex-col gap-[3px] overflow-y-auto min-h-0">
-
-            {/* Status widget */}
-            <div className="bg-white/60 rounded-xl p-4 shrink-0">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 block mb-2">
-                Status
-              </span>
-              <span
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold"
-                style={{ backgroundColor: statusColors.bg, color: statusColors.text }}
-              >
-                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: statusColors.dot }} />
-                {displayStatus}
-              </span>
-              {contract.signed_at && (
-                <span className="text-[10px] text-emerald-600 mt-2 block">
-                  Signed {fmtDate(contract.signed_at)}
-                </span>
-              )}
-              {contract.sent_at && contract.status !== "Draft" && (
-                <span className="text-[10px] text-foreground/40 mt-1 block">
-                  Sent {fmtDate(contract.sent_at)}
-                </span>
-              )}
-            </div>
-
-            {/* Dates widget */}
-            <div className="bg-white/60 rounded-xl p-4 shrink-0">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 block mb-2">
-                Dates
-              </span>
-
-              {/* Start date */}
-              <div className="pb-3">
-                <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">
-                  Start
-                </span>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <Calendar className="h-3 w-3 text-foreground/30 shrink-0" />
-                  <span className="text-[12px] font-semibold text-foreground tabular-nums">
-                    {fmtDate(contract.start_date)}
-                  </span>
-                </div>
-              </div>
-
-              {/* End date */}
-              <div className="pt-3 border-t border-border/20">
-                <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">
-                  End
-                </span>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <Calendar className="h-3 w-3 text-foreground/30 shrink-0" />
-                  <span className="text-[12px] font-semibold text-foreground tabular-nums">
-                    {fmtDate(contract.end_date)}
-                  </span>
-                </div>
-                {expiry && displayStatus !== "Signed" && displayStatus !== "Cancelled" && (
-                  <span className={cn("text-[10px] font-medium mt-1 block", expiry.color)}>
-                    {expiry.label}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Deal Structure widget */}
-            {hasDealStructure && (
-              <div className="bg-white/60 rounded-xl p-4 shrink-0">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 block mb-3">
-                  Deal Structure
-                </span>
-
-                {dealTypeLabel && dealTypeColor && (
-                  <div className="mb-3">
-                    <span
-                      className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold"
-                      style={{ backgroundColor: dealTypeColor.bg, color: dealTypeColor.text }}
-                    >
-                      {dealTypeLabel}
-                    </span>
-                  </div>
-                )}
-
-                <div className="space-y-0">
-                  {contract.value_per_booking != null && (
-                    <div className="pb-3">
-                      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">Value per Booking</span>
-                      <span className="text-[12px] font-semibold text-foreground block mt-0.5 tabular-nums">
-                        {fmtMoney(contract.value_per_booking, contractCurrency)}
-                      </span>
-                    </div>
-                  )}
-                  {paymentTriggerLabel && (
-                    <div className={cn("pb-3", contract.value_per_booking != null && "pt-3 border-t border-border/20")}>
-                      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">Payment Trigger</span>
-                      <span className="text-[12px] font-semibold text-foreground block mt-0.5">{paymentTriggerLabel}</span>
-                    </div>
-                  )}
-                  {showCostPassthrough && contract.cost_passthrough_rate != null && (
-                    <div className="pt-3 border-t border-border/20 pb-3">
-                      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">Cost Passthrough</span>
-                      <span className="text-[12px] font-semibold text-foreground block mt-0.5 tabular-nums">{fmtRate(contract.cost_passthrough_rate)}</span>
-                    </div>
-                  )}
-                  {showFixedFee && contract.fixed_fee_amount != null && (
-                    <div className="pt-3 border-t border-border/20 pb-3">
-                      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">Fixed Fee</span>
-                      <span className="text-[12px] font-semibold text-foreground block mt-0.5 tabular-nums">{fmtMoney(contract.fixed_fee_amount, contractCurrency)}</span>
-                    </div>
-                  )}
-                  {showDeposit && contract.deposit_amount != null && (
-                    <div className="pt-3 border-t border-border/20 pb-3">
-                      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">Deposit</span>
-                      <span className="text-[12px] font-semibold text-foreground block mt-0.5 tabular-nums">{fmtMoney(contract.deposit_amount, contractCurrency)}</span>
-                    </div>
-                  )}
-                  {showMonthlyFee && contract.monthly_fee != null && (
-                    <div className="pt-3 border-t border-border/20 pb-3">
-                      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">Monthly Fee</span>
-                      <span className="text-[12px] font-semibold text-foreground block mt-0.5 tabular-nums">{fmtMoney(contract.monthly_fee, contractCurrency)} / mo</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Invoice cadence */}
-                {contract.invoice_cadence && (
-                  <div className="pt-3 border-t border-border/20">
-                    <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">Invoice Cadence</span>
-                    <span className="text-[12px] font-semibold text-foreground block mt-0.5 capitalize">{contract.invoice_cadence}</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Tracking widget */}
-            <div className="bg-white/60 rounded-xl p-4 shrink-0">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 block mb-2">
-                Tracking
-              </span>
-              <div className="flex items-center gap-1.5">
-                <Eye className="h-3.5 w-3.5 text-foreground/40" />
-                <span className="text-[18px] font-bold tabular-nums text-foreground leading-none">
-                  {contract.viewed_count ?? 0}
-                </span>
-                <span className="text-[11px] text-foreground/40">
-                  {(contract.viewed_count ?? 0) === 1 ? "view" : "views"}
-                </span>
-              </div>
-              {contract.viewed_at && (
-                <span className="text-[10px] text-foreground/40 mt-1.5 block">
-                  First viewed {fmtDate(contract.viewed_at)}
-                </span>
-              )}
-            </div>
-
-            {/* Description */}
-            {contract.description && (
-              <div className="bg-white/60 rounded-xl p-4 shrink-0">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 block mb-2">
-                  Description
-                </span>
-                <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap">
-                  {contract.description}
-                </p>
-              </div>
-            )}
-
-            {/* Attach / Replace PDF (agency only) */}
-            {isAgencyUser && (
-              <div className="shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setUploadOpen(v => !v)}
-                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/60 border border-border/30 text-[12px] font-medium text-foreground/70 hover:text-foreground hover:bg-white/80 transition-colors"
-                >
-                  <span className="flex items-center gap-2">
-                    <Upload className="h-3.5 w-3.5" />
-                    {contract.file_data ? "Replace PDF" : "Attach signed PDF"}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">{uploadOpen ? "▲" : "▼"}</span>
-                </button>
-
-                {uploadOpen && (
-                  <div
-                    className="mt-[3px] border-2 border-dashed border-border/50 rounded-xl p-5 text-center cursor-pointer hover:border-brand-indigo/40 transition-colors bg-white/40"
-                    onClick={() => fileInputRef.current?.click()}
-                    onDrop={handleDrop}
-                    onDragOver={e => e.preventDefault()}
-                  >
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center">
-                        {uploading
-                          ? <div className="h-4 w-4 rounded-full border-2 border-brand-indigo border-t-transparent animate-spin" />
-                          : <FileText className="h-4 w-4 text-muted-foreground" />}
-                      </div>
-                      <p className="text-[12px] font-medium text-foreground/70">
-                        {uploading ? "Uploading..." : "Drop PDF here or click to browse"}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">PDF only, max 5 MB</p>
-                    </div>
-                    <input
-                      type="file"
-                      accept=".pdf"
-                      hidden
-                      ref={fileInputRef}
-                      onChange={e => {
-                        const file = e.target.files?.[0];
-                        if (file) handleFileUpload(file);
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Bottom spacer so last widget isn't flush with edge */}
-            <div className="shrink-0 h-1" />
-          </div>
-
-          {/* ── RIGHT column: full-height contract widget ── */}
+          {/* ── LEFT column: full-height contract widget ── */}
           <div className="bg-white/60 rounded-xl flex flex-col min-h-0 overflow-hidden">
 
             {/* Contract widget header */}
@@ -955,13 +715,13 @@ export function ContractDetailView({
               /* Edit mode — editable textarea */
               <>
                 <textarea
-                  className="flex-1 min-h-0 w-full resize-none bg-transparent font-mono text-[11px] leading-relaxed text-foreground/80 p-4 outline-none"
+                  className="flex-1 min-h-0 w-full resize-none bg-transparent font-sans text-[12px] leading-relaxed text-foreground/80 p-6 outline-none"
                   value={editText}
                   onChange={e => setEditText(e.target.value)}
                   spellCheck={false}
                   autoFocus
                 />
-                <div className="px-4 py-1.5 border-t border-border/20 shrink-0">
+                <div className="px-6 py-1.5 border-t border-border/20 shrink-0">
                   <span className="text-[10px] text-muted-foreground/50 tabular-nums">
                     {editText.length.toLocaleString()} characters
                   </span>
@@ -985,12 +745,21 @@ export function ContractDetailView({
                 </div>
               </object>
             ) : contract.contract_text ? (
-              /* Read-only contract text */
+              /* Read-only contract text with bold section headings */
               <>
-                <pre className="flex-1 min-h-0 overflow-y-auto font-mono text-[11px] leading-relaxed text-foreground/75 whitespace-pre-wrap p-4">
-                  {contract.contract_text}
-                </pre>
-                <div className="px-4 py-1.5 border-t border-border/20 shrink-0">
+                <div className="flex-1 min-h-0 overflow-y-auto font-sans text-[12px] leading-relaxed text-foreground/75 whitespace-pre-wrap p-6">
+                  {contract.contract_text.split("\n").map((line, i) => {
+                    const trimmed = line.trim();
+                    const isHeading = /^\d+[\.\)]/.test(trimmed) || (trimmed.length > 0 && trimmed === trimmed.toUpperCase() && /[A-Z]/.test(trimmed));
+                    return (
+                      <span key={i}>
+                        {isHeading ? <strong className="text-foreground font-semibold">{line}</strong> : line}
+                        {"\n"}
+                      </span>
+                    );
+                  })}
+                </div>
+                <div className="px-6 py-1.5 border-t border-border/20 shrink-0">
                   <span className="text-[10px] text-muted-foreground/50 tabular-nums">
                     {contract.contract_text.length.toLocaleString()} characters
                   </span>
@@ -1012,6 +781,223 @@ export function ContractDetailView({
                 </div>
               </div>
             )}
+          </div>
+
+          {/* ── RIGHT column: stacked info widgets ── */}
+          <div className="flex flex-col gap-[3px] overflow-y-auto min-h-0">
+
+            {/* Status widget (consolidated with tracking) */}
+            <div className="bg-white/60 rounded-xl p-4 shrink-0">
+              <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
+                Status
+              </span>
+              <span
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-semibold"
+                style={{ backgroundColor: statusColors.bg, color: statusColors.text }}
+              >
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: statusColors.dot }} />
+                {displayStatus}
+              </span>
+              <div className="flex items-center gap-1.5 mt-3">
+                <Eye className="h-3.5 w-3.5 text-foreground/40" />
+                <span className="text-[14px] font-bold tabular-nums text-foreground leading-none">
+                  {contract.viewed_count ?? 0}
+                </span>
+                <span className="text-[11px] text-foreground/40">
+                  {(contract.viewed_count ?? 0) === 1 ? "view" : "views"}
+                </span>
+              </div>
+              {contract.viewed_at && (
+                <span className="text-[10px] text-foreground/40 mt-1.5 block">
+                  First viewed {fmtDate(contract.viewed_at)}
+                </span>
+              )}
+              {contract.signed_at && (
+                <span className="text-[10px] text-emerald-600 mt-2 block">
+                  Signed {fmtDate(contract.signed_at)}
+                </span>
+              )}
+              {contract.sent_at && contract.status !== "Draft" && (
+                <span className="text-[10px] text-foreground/40 mt-1 block">
+                  Sent {fmtDate(contract.sent_at)}
+                </span>
+              )}
+              {(contract.status === "Sent" || contract.status === "Viewed") && isAgencyUser && (
+                <button
+                  onClick={handleMarkSigned}
+                  disabled={markingSigned}
+                  className={cn(actionBtn, "mt-3 disabled:opacity-50")}
+                >
+                  <FileSignature className="h-3 w-3" />
+                  {markingSigned ? "Updating..." : "Mark Signed"}
+                </button>
+              )}
+            </div>
+
+            {/* Dates widget */}
+            <div className="bg-white/60 rounded-xl p-4 shrink-0">
+              <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
+                Dates
+              </span>
+
+              {/* Start date */}
+              <div className="pb-3">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">
+                  Start
+                </span>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Calendar className="h-3 w-3 text-foreground/30 shrink-0" />
+                  <span className="text-[12px] font-semibold text-foreground tabular-nums">
+                    {fmtDate(contract.start_date)}
+                  </span>
+                </div>
+              </div>
+
+              {/* End date */}
+              <div className="pt-3 border-t border-border/20">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">
+                  End
+                </span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <Calendar className="h-3 w-3 text-foreground/30 shrink-0" />
+                  <span className="text-[12px] font-semibold text-foreground tabular-nums">
+                    {fmtDate(contract.end_date)}
+                  </span>
+                </div>
+                {expiry && displayStatus !== "Signed" && displayStatus !== "Cancelled" && (
+                  <span className={cn("text-[10px] font-medium mt-1 block", expiry.color)}>
+                    {expiry.label}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Deal Structure widget */}
+            {hasDealStructure && (
+              <div className="bg-white/60 rounded-xl p-4 shrink-0">
+                <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
+                  Deal Structure
+                </span>
+
+                {contract.signer_name && (
+                  <div className="pb-3">
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">Signer</span>
+                    <span className="text-[12px] font-semibold text-foreground block mt-0.5">{contract.signer_name}</span>
+                  </div>
+                )}
+
+                {dealTypeLabel && dealTypeColor && (
+                  <div className={cn("mb-3", contract.signer_name && "pt-3 border-t border-border/20")}>
+                    <span
+                      className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold"
+                      style={{ backgroundColor: dealTypeColor.bg, color: dealTypeColor.text }}
+                    >
+                      {dealTypeLabel}
+                    </span>
+                  </div>
+                )}
+
+                <div className="space-y-0">
+                  {contract.value_per_booking != null && (
+                    <div className="pb-3">
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">Value per Booking</span>
+                      <span className="text-[12px] font-semibold text-foreground block mt-0.5 tabular-nums">
+                        {fmtMoney(contract.value_per_booking, contractCurrency)}
+                      </span>
+                    </div>
+                  )}
+                  {paymentTriggerLabel && (
+                    <div className={cn("pb-3", contract.value_per_booking != null && "pt-3 border-t border-border/20")}>
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">Payment Trigger</span>
+                      <span className="text-[12px] font-semibold text-foreground block mt-0.5">{paymentTriggerLabel}</span>
+                    </div>
+                  )}
+                  {showCostPassthrough && contract.cost_passthrough_rate != null && (
+                    <div className="pt-3 border-t border-border/20 pb-3">
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">Cost Passthrough</span>
+                      <span className="text-[12px] font-semibold text-foreground block mt-0.5 tabular-nums">{fmtRate(contract.cost_passthrough_rate)}</span>
+                    </div>
+                  )}
+                  {showFixedFee && contract.fixed_fee_amount != null && (
+                    <div className="pt-3 border-t border-border/20 pb-3">
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">Fixed Fee</span>
+                      <span className="text-[12px] font-semibold text-foreground block mt-0.5 tabular-nums">{fmtMoney(contract.fixed_fee_amount, contractCurrency)}</span>
+                    </div>
+                  )}
+                  {showDeposit && contract.deposit_amount != null && (
+                    <div className="pt-3 border-t border-border/20 pb-3">
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">Deposit</span>
+                      <span className="text-[12px] font-semibold text-foreground block mt-0.5 tabular-nums">{fmtMoney(contract.deposit_amount, contractCurrency)}</span>
+                    </div>
+                  )}
+                  {showMonthlyFee && contract.monthly_fee != null && (
+                    <div className="pt-3 border-t border-border/20 pb-3">
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">Monthly Fee</span>
+                      <span className="text-[12px] font-semibold text-foreground block mt-0.5 tabular-nums">{fmtMoney(contract.monthly_fee, contractCurrency)} / mo</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Invoice cadence */}
+                {contract.invoice_cadence && (
+                  <div className="pt-3 border-t border-border/20">
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">Invoice Cadence</span>
+                    <span className="text-[12px] font-semibold text-foreground block mt-0.5 capitalize">{contract.invoice_cadence}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Attach / Replace PDF (agency only) */}
+            {isAgencyUser && (
+              <div className="shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setUploadOpen(v => !v)}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/60 border border-border/30 text-[12px] font-medium text-foreground/70 hover:text-foreground hover:bg-white/80 transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <Upload className="h-3.5 w-3.5" />
+                    {contract.file_data ? "Replace PDF" : "Attach signed PDF"}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">{uploadOpen ? "▲" : "▼"}</span>
+                </button>
+
+                {uploadOpen && (
+                  <div
+                    className="mt-[3px] border-2 border-dashed border-border/50 rounded-xl p-5 text-center cursor-pointer hover:border-brand-indigo/40 transition-colors bg-white/40"
+                    onClick={() => fileInputRef.current?.click()}
+                    onDrop={handleDrop}
+                    onDragOver={e => e.preventDefault()}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center">
+                        {uploading
+                          ? <div className="h-4 w-4 rounded-full border-2 border-brand-indigo border-t-transparent animate-spin" />
+                          : <FileText className="h-4 w-4 text-muted-foreground" />}
+                      </div>
+                      <p className="text-[12px] font-medium text-foreground/70">
+                        {uploading ? "Uploading..." : "Drop PDF here or click to browse"}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">PDF only, max 5 MB</p>
+                    </div>
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      hidden
+                      ref={fileInputRef}
+                      onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file);
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Bottom spacer so last widget isn't flush with edge */}
+            <div className="shrink-0 h-1" />
           </div>
 
         </div>

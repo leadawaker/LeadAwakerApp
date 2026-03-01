@@ -100,7 +100,7 @@ export default function PipelineToolbar({
 
       {/* ── 1. Search (expandable) ── */}
       {searchOpen ? (
-        <div className="flex items-center gap-1.5 h-10 rounded-full border border-border/30 bg-card/60 px-2.5 shrink-0">
+        <div className="flex items-center gap-1.5 h-10 rounded-full border border-black/[0.125] bg-card/60 px-2.5 shrink-0">
           <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
           <input
             autoFocus

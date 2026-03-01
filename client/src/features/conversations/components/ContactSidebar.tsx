@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react";
 import {
   X, Phone, Mail, Tag, TrendingUp, Calendar, User, ClipboardList, FileText,
-  Plus, Loader2, Check, ChevronDown, PanelRightClose, ExternalLink,
-  // Kanban stage icons
-  Zap, MessageSquare, ArrowUpRight, CheckCircle2, ShieldCheck, HeartCrack, Target,
+  Plus, Loader2, Check, ChevronDown, PanelRightClose, ExternalLink, MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
 import { SkeletonContactPanel } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import type { Thread, Lead, Interaction } from "../hooks/useConversationsData";
@@ -18,7 +15,6 @@ import {
   getStatusAvatarColor,
   getStatus,
   formatRelativeTime,
-  PIPELINE_STATUSES,
   PIPELINE_HEX,
 } from "../utils/conversationHelpers";
 
@@ -85,36 +81,6 @@ function scoreTextColor(score: number): string {
   return "text-muted-foreground";
 }
 
-function getPipelineStage(lead: Lead): { label: string; description: string; color: string } {
-  const status = (lead.Conversion_Status ?? lead.conversion_status ?? lead.conversionStatus ?? "New");
-  const bumpStage = Number(lead.current_bump_stage ?? 0);
-
-  if (status === "Booked") return { label: "Booked", description: "Call booked", color: "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700/30" };
-  if (status === "Qualified") return { label: "Qualified", description: "Lead qualified", color: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700/30" };
-  if (status === "Interested") return { label: "Interested", description: "Lead interested", color: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-700/30" };
-  if (status === "Responded") return { label: "Responded", description: "Lead replied", color: "bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-900/30 dark:text-teal-400 dark:border-teal-700/30" };
-  if (bumpStage >= 3) return { label: `Bump ${bumpStage}`, description: "All bumps sent", color: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-700/30" };
-  if (bumpStage > 0) return { label: `Bump ${bumpStage}`, description: `Bump ${bumpStage} sent`, color: "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-700/30" };
-  return { label: status || "New", description: "Initial contact", color: "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800/60 dark:text-gray-400 dark:border-gray-700/40" };
-}
-
-
-// ── Kanban stage icon map ────────────────────────────────────────────────────
-const STAGE_ICONS: Record<string, React.ElementType> = {
-  New: Zap,
-  Contacted: MessageSquare,
-  Responded: TrendingUp,
-  "Multiple Responses": ArrowUpRight,
-  Qualified: CheckCircle2,
-  Booked: Calendar,
-  Closed: ShieldCheck,
-  Lost: HeartCrack,
-  DND: Target,
-};
-
-function getStageIcon(status: string): React.ElementType {
-  return STAGE_ICONS[status] ?? Zap;
-}
 
 // ── Score grade helper ──────────────────────────────────────────────────────
 function getGrade(score: number): string {
@@ -125,37 +91,39 @@ function getGrade(score: number): string {
   return "F";
 }
 
-// ── Score Arc — half-circle gauge (9 o'clock → top → 3 o'clock) ─────────────
+// ── Score Arc — half-circle gauge using stroke-dasharray ─────────────────────
 function ScoreArc({ score, status }: { score: number; status?: string }) {
-  const cx = 100, cy = 95, r = 72, sw = 18;
   const fillColor = (status && PIPELINE_HEX[status]) || "#4F46E5";
   const grade = getGrade(score);
-
-  // Arc drawn at center of stroke width
-  const half = r - sw / 2;
   const pct = Math.max(0, Math.min(100, score)) / 100;
-  const bgPath = `M ${cx - half} ${cy} A ${half} ${half} 0 1 1 ${cx + half} ${cy}`;
-  const endX = cx - half * Math.cos(Math.PI * pct);
-  const endY = cy - half * Math.sin(Math.PI * pct);
-  const fillPath = pct > 0
-    ? `M ${cx - half} ${cy} A ${half} ${half} 0 ${pct > 0.5 ? 1 : 0} 1 ${endX} ${endY}`
-    : "";
+
+  const cx = 100, cy = 85, r = 58, sw = 14;
+  const arcLen = Math.PI * r; // half-circle arc length
+  const arcPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
 
   return (
-    <svg viewBox="0 0 200 110" className="w-full max-w-[140px] mx-auto">
+    <svg viewBox="0 0 200 100" className="w-full max-w-[140px] mx-auto">
       {/* Track */}
-      <path d={bgPath} fill="none" stroke="#E5E7EB" strokeWidth={sw} strokeLinecap="round" />
+      <path d={arcPath} fill="none" stroke="#E5E7EB" strokeWidth={sw} strokeLinecap="round" />
       {/* Fill */}
-      {fillPath && (
-        <path d={fillPath} fill="none" stroke={fillColor} strokeWidth={sw} strokeLinecap="round" />
+      {pct > 0 && (
+        <path
+          d={arcPath}
+          fill="none"
+          stroke={fillColor}
+          strokeWidth={sw}
+          strokeLinecap="round"
+          strokeDasharray={`${arcLen}`}
+          strokeDashoffset={`${arcLen * (1 - pct)}`}
+        />
       )}
       {/* Score number */}
-      <text x={cx} y={cy - 18} textAnchor="middle" dominantBaseline="central"
-        style={{ fontSize: 38, fontWeight: 900, fill: "#111827", letterSpacing: -2 }}>
+      <text x={cx} y={cy - 20} textAnchor="middle" dominantBaseline="central"
+        style={{ fontSize: 34, fontWeight: 900, fill: "#111827", letterSpacing: -2 }}>
         {score}
       </text>
       {/* Grade label */}
-      <text x={cx} y={cy + 8} textAnchor="middle" dominantBaseline="central"
+      <text x={cx} y={cy - 2} textAnchor="middle" dominantBaseline="central"
         style={{ fontSize: 10, fontWeight: 700, fill: "#9CA3AF", letterSpacing: 2 }}>
         GRADE {grade}
       </text>
@@ -206,7 +174,7 @@ function useLeadTags(leadId: number | null) {
 }
 
 // ── Collapsible section IDs ──────────────────────────────────────────────────
-type SectionId = "contact" | "score" | "activity" | "notes" | "messages";
+type SectionId = "contact" | "score" | "tags" | "activity" | "notes" | "messages";
 
 function SectionHeader({
   id,
@@ -257,9 +225,11 @@ interface ContactSidebarProps {
   recentMessagesLoading?: boolean;
   /** Callback when user clicks "View full conversation" in the messages widget */
   onViewConversation?: () => void;
+  /** Toolbar actions rendered in the header (e.g. +, Search, Settings) */
+  headerActions?: React.ReactNode;
 }
 
-export function ContactSidebar({ selected, loading = false, onClose, onUpdateLead, className, recentMessages, recentMessagesLoading, onViewConversation }: ContactSidebarProps) {
+export function ContactSidebar({ selected, loading = false, onClose, onUpdateLead, className, recentMessages, recentMessagesLoading, onViewConversation, headerActions }: ContactSidebarProps) {
   const [collapsedSections, setCollapsedSections] = useState<Set<SectionId>>(new Set());
   const toggleSection = (id: SectionId) => {
     setCollapsedSections((prev) => {
@@ -274,7 +244,6 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
 
   const lead = selected?.lead ?? null;
   const score = lead ? computeLeadScore(lead) : 0;
-  const stage = lead ? getPipelineStage(lead) : null;
   const status = lead ? getStatus(lead) || "New" : "New";
   const avatarColor = getStatusAvatarColor(status);
 
@@ -372,14 +341,14 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                   : "Lead Context"}
               </p>
               <p className="text-[11px] text-muted-foreground mt-0.5">
-                {lead ? (status || "\u2014") : "Score, stage & details"}
+                {lead ? (status || "\u2014") : "Score & details"}
               </p>
             </div>
           </div>
           {onClose && (
             <button
               onClick={onClose}
-              className="h-10 w-10 rounded-full border border-border/40 flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0"
+              className="h-10 w-10 rounded-full border border-black/[0.125] flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0"
               title="Collapse panel"
               data-testid="btn-close-contact-panel"
             >
@@ -388,17 +357,9 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
           )}
         </div>
 
-        {/* Meta: Source — matching KanbanDetailPanel */}
-        {lead && (
-          <div className="flex items-start gap-5 flex-wrap">
-            <div>
-              <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Source</div>
-              <div className="text-[12px] font-bold text-foreground">{lead.Source ?? lead.source ?? "API"}</div>
-            </div>
-            <div>
-              <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Rating</div>
-              <div className="text-[12px] font-bold text-foreground">{score >= 70 ? "Hot" : score >= 40 ? "Warm" : "Cold"}</div>
-            </div>
+        {headerActions && (
+          <div className="flex items-center gap-1.5 mt-2.5">
+            {headerActions}
           </div>
         )}
       </div>
@@ -442,139 +403,14 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                   ))}
                 </div>
 
-                {/* Pipeline Status */}
-                {lead && onUpdateLead && (
-                  <div className="mt-2.5" data-testid="contact-pipeline-status">
-                    <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1.5">Pipeline Status</div>
-                    <Select
-                      value={localStatus}
-                      onValueChange={(val) => {
-                        setLocalStatus(val);
-                        onUpdateLead(lead.id, { Conversion_Status: val });
-                      }}
-                    >
-                      <SelectTrigger className="h-9 text-[12px] rounded-lg bg-white/60 border-border/30">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PIPELINE_STATUSES.map((s) => {
-                          const ItemIcon = getStageIcon(s);
-                          return (
-                            <SelectItem key={s} value={s} className="text-[12px]">
-                              <div className="flex items-center gap-2">
-                                <ItemIcon
-                                  className="h-4 w-4 shrink-0"
-                                  style={{ color: PIPELINE_HEX[s] ?? "#6B7280" }}
-                                />
-                                {s}
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                {/* Tags */}
-                <div className="mt-2.5" data-testid="contact-tags">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
-                      <Tag className="h-4 w-4" />
-                      Tags
-                    </div>
-                    {lead && (
-                      <Popover open={showTagPopover} onOpenChange={setShowTagPopover}>
-                        <PopoverTrigger asChild>
-                          <button
-                            onClick={(e) => e.stopPropagation()}
-                            className="h-10 w-10 rounded-full border border-border/40 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/60"
-                            title="Add tag"
-                            data-testid="btn-add-tag"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent
-                          className="w-52 p-2 bg-white/95 backdrop-blur-sm"
-                          align="end"
-                          sideOffset={4}
-                        >
-                          <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1.5 px-1">
-                            Available Tags
-                          </div>
-                          {availableTags.length === 0 ? (
-                            <div className="text-[11px] text-muted-foreground/60 italic px-1 py-2">
-                              No more tags available
-                            </div>
-                          ) : (
-                            <div className="flex flex-col gap-0.5 max-h-[200px] overflow-y-auto">
-                              {availableTags.map((tag) => (
-                                <button
-                                  key={tag.id}
-                                  onClick={() => handleAddTag(tag)}
-                                  className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] font-medium text-foreground hover:bg-muted/60 text-left"
-                                  data-testid={`tag-option-${tag.id}`}
-                                >
-                                  <span
-                                    className={cn(
-                                      "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold",
-                                      tagColorClass(tag.color),
-                                    )}
-                                  >
-                                    {tag.name}
-                                  </span>
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </PopoverContent>
-                      </Popover>
-                    )}
-                  </div>
-                  {tagsLoading ? (
-                    <div className="flex flex-wrap gap-1.5">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="h-6 w-16 rounded-full bg-muted animate-pulse" />
-                      ))}
-                    </div>
-                  ) : leadTags.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5">
-                      {leadTags.map((t) => (
-                        <span
-                          key={t.id}
-                          className={cn(
-                            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold group",
-                            tagColorClass(t.color),
-                          )}
-                          title={t.category ? `${t.category}: ${t.name}` : t.name}
-                        >
-                          {t.name}
-                          {lead && (
-                            <button
-                              onClick={() => handleRemoveTag(t.id)}
-                              className="ml-0.5 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity"
-                              title={`Remove ${t.name}`}
-                              data-testid={`btn-remove-tag-${t.id}`}
-                            >
-                              <X className="h-2.5 w-2.5" />
-                            </button>
-                          )}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-xs text-muted-foreground/60 italic">No tags assigned.</div>
-                  )}
-                </div>
               </div>
             )}
 
-            {/* ── Score & Pipeline ── */}
-            <div className="border-t border-border/20 mt-1" />
+            {/* ── Score ── */}
+            <div className="border-t border-border/20" />
             <SectionHeader
               id="score"
-              label="Score & Pipeline"
+              label="Score"
               icon={TrendingUp}
               collapsed={collapsedSections.has("score")}
               onToggle={toggleSection}
@@ -585,41 +421,113 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
               }
             />
             {!collapsedSections.has("score") && (
-              <div className="px-4 pb-5 space-y-3">
+              <div className="px-4 pb-4">
                 <div className="bg-white/60 rounded-xl p-3.5 flex flex-col items-center" data-testid="lead-score">
                   <ScoreArc score={score} status={status} />
                 </div>
-
-                {/* Pipeline stage */}
-                {stage && (
-                  <div className="bg-white/60 rounded-xl p-3.5" data-testid="pipeline-stage">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${stage.color}`}>
-                        {stage.label}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground">{stage.description}</span>
-                    </div>
-                    <div className="mt-2 flex items-center gap-1">
-                      {[1, 2, 3].map((n) => (
-                        <div
-                          key={n}
-                          className={`h-1.5 flex-1 rounded-full transition-colors ${
-                            Number(selected.lead.current_bump_stage ?? 0) >= n ? "bg-primary" : "bg-muted"
-                          }`}
-                          title={`Bump ${n}`}
-                        />
-                      ))}
-                    </div>
-                    <div className="text-[10px] text-muted-foreground mt-1">
-                      Bumps sent: {Number(selected.lead.current_bump_stage ?? 0)} / 3
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
+            {/* ── Tags ── */}
+            <div className="border-t border-border/20" />
+            <SectionHeader
+              id="tags"
+              label="Tags"
+              icon={Tag}
+              collapsed={collapsedSections.has("tags")}
+              onToggle={toggleSection}
+              trailing={
+                lead ? (
+                  <Popover open={showTagPopover} onOpenChange={setShowTagPopover}>
+                    <PopoverTrigger asChild>
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-muted-foreground hover:text-foreground"
+                        title="Add tag"
+                        data-testid="btn-add-tag"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-52 p-2 bg-white/95 backdrop-blur-sm"
+                      align="end"
+                      sideOffset={4}
+                    >
+                      <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1.5 px-1">
+                        Available Tags
+                      </div>
+                      {availableTags.length === 0 ? (
+                        <div className="text-[11px] text-muted-foreground/60 italic px-1 py-2">
+                          No more tags available
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-0.5 max-h-[200px] overflow-y-auto">
+                          {availableTags.map((tag) => (
+                            <button
+                              key={tag.id}
+                              onClick={() => handleAddTag(tag)}
+                              className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] font-medium text-foreground hover:bg-muted/60 text-left"
+                              data-testid={`tag-option-${tag.id}`}
+                            >
+                              <span
+                                className={cn(
+                                  "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold",
+                                  tagColorClass(tag.color),
+                                )}
+                              >
+                                {tag.name}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </PopoverContent>
+                  </Popover>
+                ) : undefined
+              }
+            />
+            {!collapsedSections.has("tags") && (
+            <div className="px-4 pb-4" data-testid="contact-tags">
+              {tagsLoading ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-6 w-16 rounded-full bg-muted animate-pulse" />
+                  ))}
+                </div>
+              ) : leadTags.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {leadTags.map((t) => (
+                    <span
+                      key={t.id}
+                      className={cn(
+                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold group",
+                        tagColorClass(t.color),
+                      )}
+                      title={t.category ? `${t.category}: ${t.name}` : t.name}
+                    >
+                      {t.name}
+                      {lead && (
+                        <button
+                          onClick={() => handleRemoveTag(t.id)}
+                          className="ml-0.5 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity"
+                          title={`Remove ${t.name}`}
+                          data-testid={`btn-remove-tag-${t.id}`}
+                        >
+                          <X className="h-2.5 w-2.5" />
+                        </button>
+                      )}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground/60 italic">No tags assigned.</div>
+              )}
+            </div>
+            )}
+
             {/* ── Activity ── */}
-            <div className="border-t border-border/20 mt-1" />
+            <div className="border-t border-border/20" />
             <SectionHeader id="activity" label="Activity" icon={ClipboardList} collapsed={collapsedSections.has("activity")} onToggle={toggleSection} />
             {!collapsedSections.has("activity") && (
               <div className="px-4 pb-5">
@@ -640,7 +548,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             )}
 
             {/* ── Notes ── */}
-            <div className="border-t border-border/20 mt-1" />
+            <div className="border-t border-border/20" />
             <SectionHeader
               id="notes"
               label="Notes"
@@ -682,7 +590,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             {/* ── Recent Messages (optional — used on Calendar page) ── */}
             {recentMessages !== undefined && (
               <>
-                <div className="border-t border-border/20 mt-1" />
+                <div className="border-t border-border/20" />
                 <SectionHeader id="messages" label="Recent Messages" icon={MessageSquare} collapsed={collapsedSections.has("messages")} onToggle={toggleSection} />
                 {!collapsedSections.has("messages") && (
                   <div className="px-4 pb-5">

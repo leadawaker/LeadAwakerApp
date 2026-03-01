@@ -202,7 +202,7 @@ There is ONE standard size for interactive circle/pill elements: **36px** (`h-9`
 | Position | `fixed left-0 top-16 bottom-0` |
 | Collapsed width | `w-[86px]` |
 | Expanded width | `w-[259px]` |
-| Nav icon circles | `h-10 w-10` with `border border-border/65` |
+| Nav icon circles | `h-10 w-10` with `border border-black/25` (overlay mode) |
 | Active pill (expanded) | `h-[43px] rounded-full bg-[var(--highlight-active)]` |
 | Active pill (collapsed) | Circle fills `bg-[var(--highlight-active)]` |
 | DbStatusIndicator | Bottom-left, `h-10 w-10` circle, `justify-start` |
@@ -233,9 +233,9 @@ These components live in `client/src/components/ui/` and MUST be used instead of
 
 | State | Background | Text | Example Usage |
 |-------|------------|------|---------------|
-| Active tab/pill | `--highlight-active` (`#F5DFB3`) | `--foreground` | ViewTabBar active, nav active pill. |
-| Selected card | `--highlight-selected` (`#FBF2E0`) | `--foreground` | LeadsCardView selected, campaign selected. |
-| Selected row | `--highlight-selected` (`#FBF2E0`) | `--foreground` | Highlighted table row. |
+| Active tab/pill | `--highlight-active` (`#FFF28D`) | `--foreground` | ViewTabBar active, nav active pill. |
+| Selected card | `--highlight-selected` (`#FFF9D9`) | `--foreground` | LeadsCardView selected, campaign selected. |
+| Selected row | `--highlight-selected` (`#FFF9D9`) | `--foreground` | Highlighted table row. |
 | Hover (warm) | `--highlight-hover` (`#EDCC8A`) | `--foreground` | Hover on already-highlighted element. |
 | Hover (neutral) | `--card` (`#F1F1F1`) | `--foreground` | Default hover on cards, rows. |
 | Focus ring | `--brand-indigo` (`#4F46E5`) | — | 2px outline, 2px offset. |
@@ -248,7 +248,7 @@ These components live in `client/src/components/ui/` and MUST be used instead of
 - No visible borders on cards — depth comes from color contrast.
 - Detail panel right sidebar (LeadInfoPanel): 288px wide (`w-72`).
 - Full slide-over panel (LeadDetailPanel): Sheet component.
-- Detail panel header bloom effect: use `--highlight-active` (`#F5DFB3`), not lime yellow.
+- Detail panel header bloom effect: use `--highlight-active` (`#FFF28D`), not lime yellow.
 
 ### 5.4 Tables (DataTable pattern)
 
@@ -487,7 +487,7 @@ Applies to **both** `LeadsCardView.tsx` (list view) and `LeadsKanban.tsx` / `Kan
 |-------|-----------|--------|
 | Default | `bg-[#F1F1F1]` | none |
 | Hover | `hover:bg-[#FAFAFA]` | `shadow-[0_2px_8px_rgba(0,0,0,0.08)]` (optional) |
-| Selected / Active | `bg-[#FFF1C8]` | none |
+| Selected / Active | `bg-[#FFF9D9]` | none |
 | Dragging (kanban only) | `bg-white scale-[1.02] rotate-1 opacity-95` | — |
 
 > **DEFAULT:** All left panel cards (Leads, Campaigns, Accounts, Inbox, Calendar, Users, Billing) use `bg-[#F1F1F1]` as the unselected background. This matches the invoices/billing card standard. Kanban cards may still use `bg-white`.
@@ -602,9 +602,9 @@ Applies to **all** table views: Leads, Accounts, Campaigns, Users, Tags, Automat
 Define these constants at the top of every table component:
 
 ```ts
-const tbBase    = "h-10 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
-const tbDefault = "border border-border/55 text-foreground/60 hover:text-foreground hover:bg-card";
-const tbActive  = "bg-card border border-border/55 text-foreground";
+const tbBase    = "h-9 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
+const tbDefault = "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:bg-card";
+const tbActive  = "bg-card border border-black/[0.125] text-foreground";
 ```
 
 ### 17.2 Responsive Collapse
@@ -630,19 +630,58 @@ useEffect(() => {
 ### 17.3 Toolbar Layout
 
 ```
-[ViewTabBar]  [│]  [+ New]  [Search]  [Sort]  [Filter]  [Group]  [Fields]  ··· [ml-auto → row actions]
+[ViewTabBar]  [│]  [+ New]  [Search]  [Sort]  [Filter]  [Group]  [Fields]  ··· [ml-auto → selection actions]
 ```
 
 The separator `[│]` is `<div className="w-px h-5 bg-border/40 mx-1 shrink-0" />`.
 
 ### 17.4 Row Selection Actions
 
-- Appear **only** when `selectedIds.size > 0`, floated right via `ml-auto`
-- Order: action buttons → count badge with X dismiss
+- Appear **only** when `selectedIds.size > 0`, floated right via `ml-auto` (use `<div className="flex-1 min-w-0" />` spacer)
+- Appear **inline** in the toolbar row — NEVER as a separate bar below/above the toolbar
+- InlineTable components must NOT render their own selection bars — all selection UI lives in the Page/orchestrator toolbar
+- Order: action buttons (Change Stage, Duplicate, Delete) → count badge with X dismiss
 - Count badge: `cn(tbBase, tbDefault, "cursor-default")` with `{count} <X>` inside
 - **Edit button:** only in tables that do NOT support inline cell editing
 - **Delete:** add `hover:text-red-600`
 - Single-select-only actions: `disabled={selectedIds.size !== 1}` + `disabled:opacity-40 disabled:pointer-events-none`
+
+### 17.5 Search Bar (Always Visible)
+
+All table toolbars use a permanently visible search input — never a toggle/popup:
+
+```tsx
+<div className="h-9 flex items-center gap-1.5 rounded-full border border-border/30 bg-card px-3 shrink-0">
+  <Search className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+  <input
+    className="h-full bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/40 w-32 min-w-0"
+    placeholder="Search…"
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+  />
+  {search && (
+    <button onClick={() => setSearch("")} className="text-muted-foreground/40 hover:text-muted-foreground shrink-0">
+      <X className="h-3 w-3" />
+    </button>
+  )}
+</div>
+```
+
+Reference implementation: `AccountsPage.tsx` (lines 371–386).
+
+### 17.6 Active Button Style (Outline Only)
+
+Active/selected `IconBtn` and toolbar circles use **outline only** — transparent background with brand-indigo border and text:
+
+```css
+icon-circle-selected {
+  background-color: transparent;
+  border-color: hsl(var(--brand-indigo));
+  color: hsl(var(--brand-indigo));
+}
+```
+
+Never use filled indigo background for active toggle buttons.
 
 ---
 
@@ -670,9 +709,9 @@ Only two elements — view tabs are **not** here (moved to left panel):
 
 | Element | Classes |
 |---------|---------|
-| Prev / Next | `h-10 w-10 rounded-full border border-border/65` |
+| Prev / Next | `h-10 w-10 rounded-full border border-black/25` |
 | Date label | `font-semibold text-[12px] text-center tabular-nums min-w-[140px]` |
-| Today | `h-10 px-3 rounded-full border border-border/65 text-[12px] font-medium` |
+| Today | `h-10 px-3 rounded-full border border-black/25 text-[12px] font-medium` |
 
 ---
 
@@ -704,18 +743,86 @@ Settings uses the standard left-panel layout with section-based navigation:
 - **Sections:** Profile, Security, Notifications, Dashboard
 - **Active section:** `bg-[var(--highlight-active)] text-foreground font-semibold` with `h-10 px-3 rounded-xl`
 
-## §21 — Campaign Detail View Widget Layout
+## §21 — Campaign Detail View
 
-The Campaign detail "Overview" tab has a 3-column grid:
+### 21.1 Structure
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Gradient header                                            │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │ Row 1: [Add][Search][Sort][Filter][Group]  …ml-auto… │   │
+│  │         [Pause][Refresh][Delete]                      │   │
+│  │ Row 2: [Avatar 72px]  Campaign Name + Badges         │   │
+│  └──────────────────────────────────────────────────────┘   │
+│  Tab row: [Summary] [1D 7D 1M All Custom] [Config] [Tags]  │
+│  ────────────────────────────────────────────────────────    │
+│  Body (scrollable, 3-col grid for Summary)                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 21.2 Toolbar Row (Row 1)
+
+The detail panel toolbar has **two groups on one line**:
+
+- **LEFT:** Campaign-list controls — Add, Search (expanding input), Sort, Filter, Group. These are pill buttons (`h-9 px-4 rounded-full text-[12px] border border-black/[0.125]`). Only rendered when the detail view is inside a list context (props provided).
+- **RIGHT (ml-auto):** Entity actions — Pause/Activate, Refresh, Delete. Same pill style.
+
+When editing configurations: Save + Cancel replace the left-side controls.
+
+### 21.3 Tab Row
+
+Tabs: **Summary** | **Configurations** | **Tags** (agency-only).
+
+- Tab height: **`h-9`** (36px) — exception to the global 40px rule in §4.1.
+- Active: `bg-foreground text-background` (filled black/dark).
+- Inactive: `border border-black/[0.125] text-foreground/60 hover:text-foreground`.
+- DateRangeFilter pill bar appears **inline** after Summary tab when Summary is active.
+
+### 21.4 Date Range Pill Bar
+
+The date range filter (1D, 7D, 1M, All, Custom) renders as a **single unified pill bar** — NOT separate buttons:
+
+```tsx
+<div className="inline-flex items-center h-9 rounded-full border border-black/[0.125] bg-muted/30 p-0.5 gap-0">
+  {/* Each option inside: */}
+  <button className="px-3 h-full rounded-full text-[11px] font-semibold ...">1D</button>
+  ...
+</div>
+```
+
+- **Active option:** `bg-white text-foreground shadow-sm` — white "ceiling" highlight.
+- **Inactive option:** `text-foreground/50 hover:text-foreground` — no background.
+- **Custom:** Opens a calendar popover when clicked.
+
+Component: `DateRangeFilter` in `@/components/crm/DateRangeFilter.tsx`.
+
+### 21.5 Summary Tab — 3-Column Grid
 
 | Col 1 | Col 2 | Col 3 |
 |-------|-------|-------|
-| Campaign Info/KPIs | Pipeline Funnel ↔ Conversions (toggle) | Financials |
-| Performance Trends | Recent Activity Feed | ROI Trend |
+| Campaign Info/KPIs | Up Next (Agenda) | Pipeline Funnel |
+| Financials + ROI Trend | Activity Feed | Conversions Doughnut |
 
-- **Pipeline Funnel / Conversions toggle:** A single widget with a toggle button in the top-right corner to switch between Funnel view and Conversions pie chart
-- **Recent Activity Feed:** Uses `ActivityFeed` component, replaces the old standalone Conversions widget spot
-- **Activity Feed in left panel:** REMOVED — activity feed is now in the detail view only
+- **Pipeline Funnel / Conversions:** Separate widgets (no toggle).
+- **Activity Feed:** Uses `ActivityFeed` component.
+- **Activity Feed in left panel:** REMOVED — activity feed is in the detail view only.
+
+### 21.6 Tags Tab
+
+Tags are NOT a standalone page — they live inside the Campaign detail panel as a tab.
+
+- Component: `CampaignTagsSection` in `features/campaigns/components/CampaignTagsSection.tsx`.
+- Hook: `useCampaignTags(campaignId, campaignName)` — filters tags by `campaign_id`.
+- **Default group: category** — tags are grouped by category on first load.
+- Toolbar: `[Search (always visible)] [+Add] [Sorting▼] [Filter▼] [Group▼]  …ml-auto… [count or selection]`.
+- Uses compact `h-9` pills (NOT the full `h-10` table toolbar from §17).
+- Selection bar: `"N selected" [X clear] [Delete]` — appears via `ml-auto` when tags are selected.
+- Columns: reuses `TAG_TABLE_COLUMNS` from `@/features/tags/types` but hides Account and Campaign columns (redundant in campaign context).
+
+### 21.7 Default Tags on Campaign Creation
+
+When a new campaign is created, tags are **automatically cloned** from the existing campaign with the most tags. This ensures every campaign starts with a consistent set of tags. Implementation is in `CampaignsPage.tsx` → `handleAddCampaign`.
 
 ---
 
@@ -922,6 +1029,93 @@ Most pages have only 2 view tabs (List | Table). The same `w-[309px] justify-bet
 
 ---
 
+## §27 — Table Group Header Standard
+
+Applies to **all** inline table views: Leads, Campaigns, Accounts, Users, Billing.
+
+### 27.1 Structure — 3-Cell `<tr>`
+
+Every group header row consists of exactly 3 `<td>` cells:
+
+| Cell | Width | Sticky | Content |
+|------|-------|--------|---------|
+| Checkbox | 36px | `sticky left-0 z-30` | Group select checkbox |
+| Label | auto | `sticky left-[36px] z-30` | `[▼ arrow] [Group Name] [count]` |
+| Spacer | `colSpan={remaining}` | none | Empty, carries background color |
+
+### 27.2 Row Styling
+
+```tsx
+<tr className="cursor-pointer select-none h-[44px]" onClick={toggleCollapse}>
+```
+
+- All 3 cells share the same background: `style={{ backgroundColor: \`${hexColor}12\` }}`
+- `hexColor` comes from `PIPELINE_HEX[groupLabel]` or equivalent status color map
+
+### 27.3 Checkbox Cell
+
+```tsx
+<td className="sticky left-0 z-30 w-[36px] px-0" style={{ backgroundColor: `${hexColor}12` }}>
+  <div className="flex items-center justify-center h-full">
+    <div className={cn(
+      "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
+      isGroupFullySelected ? "border-brand-indigo bg-brand-indigo" : "border-border/40"
+    )} onClick={(e) => { e.stopPropagation(); handleGroupCheckbox(label); }}>
+      {isGroupFullySelected && <Check className="h-2.5 w-2.5 text-white" />}
+    </div>
+  </div>
+</td>
+```
+
+Must align horizontally with data row checkboxes (also in a 36px sticky-left cell).
+
+### 27.4 Label Cell
+
+```tsx
+<td className="sticky left-[36px] z-30 pl-1 pr-3" style={{ backgroundColor: `${hexColor}12` }}>
+  <div className="flex items-center gap-2">
+    {isCollapsed ? <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/50" />}
+    <span className="text-[11px] font-bold text-foreground/70">{label}</span>
+    <span className="text-[10px] text-muted-foreground/50 font-medium tabular-nums">{count}</span>
+  </div>
+</td>
+```
+
+- Arrow is **next to** the group name (left side), NOT at the far right (`ml-auto`)
+- Label is **title case** (e.g., "Call Booked"), NOT `uppercase tracking-widest`
+- No color dot — the tinted row background already conveys the group color
+
+### 27.5 Data Row Checkbox Cell
+
+Every data row must have a separate checkbox `<td>` — NOT embedded inside the name cell:
+
+```tsx
+<td className="sticky left-0 z-10 w-[36px] px-0" style bg={...}>
+  <div className="flex items-center justify-center h-full">
+    <div className={cn("h-4 w-4 rounded border ...", isSelected ? "border-brand-indigo bg-brand-indigo" : "border-border/40")} onClick={toggle}>
+      {isSelected && <Check className="h-2.5 w-2.5 text-white" />}
+    </div>
+  </div>
+</td>
+```
+
+The first visible data column (Name) then starts at `sticky left-[36px]`.
+
+### 27.6 Header Row (`<thead>`)
+
+The `<thead>` checkbox `<th>` must also be 36px sticky left-0, matching the data row checkbox column.
+
+### 27.7 Rules
+
+1. **Always** 3 cells for group headers — never a single `colSpan` td
+2. **Always** separate checkbox `<td>` for data rows — never embedded in name cell
+3. **Arrow near name** — never `ml-auto` to push it right
+4. **Title case labels** — never `uppercase tracking-widest`
+5. **Colored background** on all group header cells — never plain `bg-muted`
+6. **Selection bars** inside InlineTable components are banned — use Page toolbar (§17.4)
+
+---
+
 ## Changelog
 
 - **2026-02-25:** Initial creation. Consolidated from CLAUDE.md, frontend.md, DESIGN_TOKENS.md, BUTTONS.md. Color system overhauled: primary shifted from `#5170FF` (periwinkle) → `#4F46E5` (indigo-600). Highlight system shifted from `#FFF375` (lime) → Indian Yellow `#E3A857` derived tints. `#FCB803` reserved for KPI/data emphasis only.
@@ -932,4 +1126,6 @@ Most pages have only 2 view tabs (List | Table). The same `w-[309px] justify-bet
 - **2026-02-27:** §15.1.1 updated: added Virtualized Lists note for `@tanstack/react-virtual` gap handling. §23 added: Avatar / Entity Circle Standard — `EntityAvatar` component, `avatarUtils.ts` color functions, sizes, and rules.
 - **2026-02-27:** §24 added: Group Headers in Left Panel Lists — centered layout with decorative lines, `text-[12px]` label + gray en-dash + count, `bg-muted` sticky headers. Applied to all 8 list views (Leads, Campaigns, Accounts, Billing, Prompts, Users, Calendar, Conversations).
 - **2026-02-27:** §25 added: Entity Name & Widget Title Typography — unified `text-[16px] font-semibold font-heading` for all left panel card names and right panel widget titles. Updated §15.2. Applied to 11 files across Leads, Accounts, Campaigns, Users, Prompts, Calendar, Conversations, Kanban.
+- **2026-02-28:** §27 added: Table Group Header Standard — 3-cell structure (checkbox, label, spacer), colored backgrounds, arrow near name, title case labels. §17.4 updated: selection actions must be inline in toolbar only. §17.5 added: always-visible search bar. §17.6 added: active button outline-only style. `icon-circle-selected` CSS changed from filled to outline.
 - **2026-02-27:** §26 added: ViewTabBar Rigid Positioning Standard — fixed `w-[309px] justify-between` wrapper for title + ViewTabBar circles, ensuring the rightmost circle sits flush with the panel's right content edge. Same position maintained across all views (List, Table, Kanban). Pages with 2 tabs get a naturally wider gap.
+- **2026-02-28:** §21 rewritten: Campaign Detail View — full structure documented (toolbar layout, tab row, date range pill bar, summary grid, tags tab, default tags on creation). §17.1 fixed: `h-10` → `h-9` to match §4.1 standard. §17.5 fixed: search bar height `h-10` → `h-9`.

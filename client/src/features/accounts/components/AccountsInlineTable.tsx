@@ -1,23 +1,13 @@
 import { useState, useCallback, useRef, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import {
-  Pencil,
   Check,
-  X,
   ChevronDown,
   ChevronRight,
   Building2,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { updateAccount } from "../api/accountsApi";
-import { getAccountAvatarColor } from "@/lib/avatarUtils";
+import { getAccountAvatarColor, ACCOUNT_STATUS_HEX } from "@/lib/avatarUtils";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import type { AccountRow } from "./AccountDetailsDialog";
 
@@ -55,13 +45,6 @@ const STATUS_DOT: Record<string, string> = {
   Trial:     "bg-amber-500",
   Inactive:  "bg-slate-400",
   Suspended: "bg-rose-500",
-};
-
-const ACCOUNT_STATUS_HEX: Record<string, string> = {
-  Active:    "#10B981",
-  Trial:     "#F59E0B",
-  Inactive:  "#94A3B8",
-  Suspended: "#F43F5E",
 };
 
 const DB_FIELD_MAP: Partial<Record<ColKey, string>> = {
@@ -216,7 +199,6 @@ export function AccountsInlineTable({
 
   // ── Shift-click ref ────────────────────────────────────────────────────────
   const lastClickedIndexRef = useRef<number>(-1);
-  const [bulkStageOpen, setBulkStageOpen] = useState(false);
 
   // ── Group collapse ────────────────────────────────────────────────────────
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
@@ -362,55 +344,34 @@ export function AccountsInlineTable({
     }
   }, [accountIndexMap, accountOnlyItems, onSelectAccount, onSelectionChange, selectedIds]);
 
-  // ── Bulk status change ────────────────────────────────────────────────────
-  const handleBulkStageChange = useCallback(async (stage: string) => {
-    if (selectedIds.size === 0) return;
-    try {
-      await Promise.all(Array.from(selectedIds).map((id) => updateAccount(id, { status: stage })));
-      onSelectionChange(new Set());
-      setBulkStageOpen(false);
-      onRefresh?.();
-    } catch (err) { console.error("Bulk status change failed", err); }
-  }, [selectedIds, onRefresh, onSelectionChange]);
+  // ── Group checkbox helpers ──────────────────────────────────────────────────
+  const getGroupAccountIds = useCallback((groupLabel: string): number[] => {
+    const ids: number[] = [];
+    let inGroup = false;
+    for (const item of displayItems) {
+      if (item.kind === "header") {
+        inGroup = item.label === groupLabel;
+        continue;
+      }
+      if (inGroup) ids.push(getAccountId(item.account));
+    }
+    return ids;
+  }, [displayItems]);
+
+  const handleGroupCheckbox = useCallback((groupLabel: string) => {
+    const groupIds = getGroupAccountIds(groupLabel);
+    const allSelected = groupIds.every((id) => selectedIds.has(id));
+    const next = new Set(selectedIds);
+    if (allSelected) {
+      groupIds.forEach((id) => next.delete(id));
+    } else {
+      groupIds.forEach((id) => next.add(id));
+    }
+    onSelectionChange(next);
+  }, [getGroupAccountIds, selectedIds, onSelectionChange]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-transparent">
-
-      {/* ── Change Status bar (only when multi-selection active) ── */}
-      {selectedIds.size > 1 && (
-        <div className="shrink-0 px-3 py-1.5 flex items-center gap-1.5 border-b border-border/20">
-          <span className="text-[11px] font-semibold text-foreground tabular-nums mr-1">
-            {selectedIds.size} selected
-          </span>
-
-          <DropdownMenu open={bulkStageOpen} onOpenChange={setBulkStageOpen}>
-            <DropdownMenuTrigger asChild>
-              <button className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border border-border/30 bg-transparent text-muted-foreground hover:bg-card hover:text-foreground">
-                <Pencil className="h-3 w-3" />
-                Change Status
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-44">
-              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Set status</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {STATUS_OPTIONS.map((s) => (
-                <DropdownMenuItem key={s} onClick={() => handleBulkStageChange(s)} className="text-[12px]">
-                  <span className={cn("w-1.5 h-1.5 rounded-full shrink-0 mr-2", STATUS_DOT[s] ?? "bg-zinc-400")} />
-                  {s}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <button
-            className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground"
-            onClick={() => onSelectionChange(new Set())}
-          >
-            <X className="h-3 w-3" />
-            Clear
-          </button>
-        </div>
-      )}
 
       {/* ── Table ── */}
       {loading ? (
@@ -422,12 +383,37 @@ export function AccountsInlineTable({
             {/* Sticky header */}
             <thead className="sticky top-0 z-20">
               <tr>
+                {/* Select-all checkbox */}
+                <th className="sticky left-0 z-30 w-[36px] px-0 bg-muted border-b border-border/20">
+                  <div className="flex items-center justify-center h-full">
+                    <div
+                      className={cn(
+                        "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
+                        accountCount > 0 && selectedIds.size === accountCount
+                          ? "border-brand-indigo bg-brand-indigo"
+                          : "border-border/40"
+                      )}
+                      onClick={() => {
+                        if (selectedIds.size === accountCount) {
+                          onSelectionChange(new Set());
+                        } else {
+                          const allIds = new Set(accountOnlyItems.map((i) => getAccountId(i.account)));
+                          onSelectionChange(allIds);
+                        }
+                      }}
+                    >
+                      {accountCount > 0 && selectedIds.size === accountCount && (
+                        <Check className="h-2.5 w-2.5 text-white" />
+                      )}
+                    </div>
+                  </div>
+                </th>
                 {visibleColumns.map((col, ci) => (
                   <th
                     key={col.key}
                     className={cn(
                       "px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/50 whitespace-nowrap select-none bg-muted border-b border-border/20",
-                      ci === 0 && "sticky left-0 z-30",
+                      ci === 0 && "sticky left-[36px] z-30",
                     )}
                     style={{
                       width: col.key === "notes" ? undefined : col.width,
@@ -444,7 +430,7 @@ export function AccountsInlineTable({
               {/* Empty state */}
               {accountCount === 0 && (
                 <tr>
-                  <td colSpan={colSpan} className="py-12 text-center">
+                  <td colSpan={colSpan + 1} className="py-12 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <Building2 className="h-7 w-7 text-muted-foreground/30" />
                       <p className="text-xs text-muted-foreground">
@@ -457,30 +443,46 @@ export function AccountsInlineTable({
 
               {(() => {
                 let currentGroup: string | null = null;
+                let rowIdx = 0;
                 return displayItems.map((item, index) => {
                   if (item.kind === "header") {
                     currentGroup = item.label;
                     const isCollapsed = collapsedGroups.has(item.label);
                     const hexColor = ACCOUNT_STATUS_HEX[item.label] || "#94A3B8";
+                    const groupIds = getGroupAccountIds(item.label);
+                    const isGroupFullySelected = groupIds.length > 0 && groupIds.every((id) => selectedIds.has(id));
                     return (
                       <tr
                         key={`h-${item.label}-${index}`}
-                        className="cursor-pointer select-none hover:bg-black/[0.02]"
+                        className="cursor-pointer select-none h-[44px]"
                         onClick={() => toggleGroupCollapse(item.label)}
                       >
-                        {/* Sticky group title — stays fixed during horizontal scroll */}
-                        <td colSpan={colSpan} className="px-4 pt-4 pb-1.5 sticky left-0 z-30 bg-muted">
-                          <div className="flex items-center gap-2">
-                            <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: hexColor }} />
-                            <span className="text-[11px] font-bold uppercase tracking-widest text-foreground/55">{item.label}</span>
-                            <span className="text-[10px] text-muted-foreground/40 font-medium tabular-nums">{item.count}</span>
-                            <div className="ml-auto text-muted-foreground/40">
-                              {isCollapsed
-                                ? <ChevronRight className="h-3.5 w-3.5" />
-                                : <ChevronDown className="h-3.5 w-3.5" />}
+                        {/* Cell 1: Checkbox */}
+                        <td className="sticky left-0 z-30 w-[36px] px-0" style={{ backgroundColor: `${hexColor}12` }}>
+                          <div className="flex items-center justify-center h-full">
+                            <div
+                              className={cn(
+                                "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
+                                isGroupFullySelected ? "border-brand-indigo bg-brand-indigo" : "border-border/40"
+                              )}
+                              onClick={(e) => { e.stopPropagation(); handleGroupCheckbox(item.label); }}
+                            >
+                              {isGroupFullySelected && <Check className="h-2.5 w-2.5 text-white" />}
                             </div>
                           </div>
                         </td>
+
+                        {/* Cell 2: Label */}
+                        <td className="sticky left-[36px] z-30 pl-1 pr-3" style={{ backgroundColor: `${hexColor}12` }}>
+                          <div className="flex items-center gap-2">
+                            {isCollapsed ? <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/50" />}
+                            <span className="text-[11px] font-bold text-foreground/70">{item.label}</span>
+                            <span className="text-[10px] text-muted-foreground/50 font-medium tabular-nums">{item.count}</span>
+                          </div>
+                        </td>
+
+                        {/* Cell 3: Spacer */}
+                        <td colSpan={Math.max(1, visibleColumns.length - 1)} style={{ backgroundColor: `${hexColor}12` }} />
                       </tr>
                     );
                   }
@@ -495,21 +497,48 @@ export function AccountsInlineTable({
                   const name = String(account.name || "Unnamed");
                   const status = String(account.status || "");
                   const avatarColor = getAccountAvatarColor(status);
+                  const bgClass = isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover";
 
+                  const currentRowIdx = rowIdx++;
                   return (
                     <tr
                       key={aid}
                       className={cn(
-                        "group/row cursor-pointer h-[52px]",
+                        "group/row cursor-pointer h-[52px] animate-card-enter",
                         isHighlighted ? "bg-highlight-selected" : "bg-card hover:bg-card-hover",
                       )}
+                      style={{ animationDelay: `${Math.min(currentRowIdx, 15) * 30}ms` }}
                       onClick={(e) => handleRowClick(account, e)}
                     >
+                      {/* Separate checkbox td */}
+                      <td className={cn("sticky left-0 z-10 w-[36px] px-0", bgClass)}>
+                        <div className="flex items-center justify-center h-full">
+                          <div
+                            className={cn(
+                              "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
+                              isMultiSelected ? "border-brand-indigo bg-brand-indigo" : "border-border/40"
+                            )}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const next = new Set(selectedIds);
+                              if (next.has(aid)) next.delete(aid); else next.add(aid);
+                              onSelectionChange(next);
+                              if (next.size === 1) {
+                                const only = accountOnlyItems.find((i) => getAccountId(i.account) === Array.from(next)[0]);
+                                if (only) onSelectAccount(only.account);
+                              }
+                            }}
+                          >
+                            {isMultiSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                          </div>
+                        </div>
+                      </td>
+
                       {visibleColumns.map((col, ci) => {
                         const isFirst = ci === 0;
                         const tdClass = cn(
-                          isFirst && "sticky left-0 z-10",
-                          isFirst && (isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover"),
+                          isFirst && "sticky left-[36px] z-10",
+                          isFirst && bgClass,
                         );
 
                         // ── Name (sticky, with avatar) ──
@@ -517,25 +546,6 @@ export function AccountsInlineTable({
                           return (
                             <td key="name" className={cn("px-2.5", tdClass)} style={{ width: 200, minWidth: 200 }}>
                               <div className="flex items-center gap-2 min-w-0">
-                                {/* Checkbox — always visible */}
-                                <div
-                                  className={cn(
-                                    "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
-                                    isMultiSelected ? "border-brand-indigo bg-brand-indigo" : "border-border/40"
-                                  )}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const next = new Set(selectedIds);
-                                    if (next.has(aid)) next.delete(aid); else next.add(aid);
-                                    onSelectionChange(next);
-                                    if (next.size === 1) {
-                                      const only = accountOnlyItems.find((i) => getAccountId(i.account) === Array.from(next)[0]);
-                                      if (only) onSelectAccount(only.account);
-                                    }
-                                  }}
-                                >
-                                  {isMultiSelected && <Check className="h-2.5 w-2.5 text-white" />}
-                                </div>
                                 <EntityAvatar
                                   name={name}
                                   photoUrl={account.logo_url}

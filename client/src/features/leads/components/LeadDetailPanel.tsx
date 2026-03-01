@@ -809,6 +809,19 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   const priority = lead.priority || lead.Priority || "";
   const isAgency = window.location.pathname.startsWith("/agency");
 
+  // Derived engagement metrics
+  const sentCount = Number(lead.message_count_sent || 0);
+  const recvCount = Number(lead.message_count_received || 0);
+  const responseRate = sentCount > 0 ? `${Math.round((recvCount / sentCount) * 100)}%` : "—";
+
+  const lastActivityTs = Math.max(
+    lead.last_message_sent_at ? new Date(lead.last_message_sent_at).getTime() : 0,
+    lead.last_message_received_at ? new Date(lead.last_message_received_at).getTime() : 0,
+  );
+  const daysInactive = lastActivityTs > 0
+    ? `${Math.floor((Date.now() - lastActivityTs) / 86400000)}d ago`
+    : "—";
+
   const handleViewFull = () => {
     onClose();
     const path = isAgency ? `/agency/contacts/${leadId}` : `/subaccount/contacts/${leadId}`;
@@ -873,6 +886,16 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
               >
                 <Globe className="h-3 w-3 shrink-0 text-muted-foreground/60" />
                 <span>Source: <span className="text-foreground/80">{source}</span></span>
+              </div>
+            )}
+            {(lead.account_name || lead.campaign_name) && (
+              <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                <Layers className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+                <span>
+                  {lead.account_name && <span className="text-foreground/80">{lead.account_name}</span>}
+                  {lead.account_name && lead.campaign_name && <span className="mx-1 text-muted-foreground/40">·</span>}
+                  {lead.campaign_name && <span className="text-foreground/80">{lead.campaign_name}</span>}
+                </span>
               </div>
             )}
             {autoStatus && (
@@ -1195,13 +1218,20 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
           {/* Activity */}
           <SectionTitle icon={<MessageSquare className="h-3.5 w-3.5" />} title="Activity" />
           <div className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5">
+            <InfoRow label="Lead Created" value={fmtDate(lead.created_at)} />
+            <InfoRow label="Last Updated" value={fmtDateTime(lead.updated_at)} />
             <InfoRow label="Last Interaction" value={fmtDateTime(lead.last_interaction_at)} />
             <InfoRow label="Last Sent" value={fmtDateTime(lead.last_message_sent_at)} />
             <InfoRow label="Last Received" value={fmtDateTime(lead.last_message_received_at)} />
             <InfoRow label="Sent Count" value={lead.message_count_sent} />
             <InfoRow label="Received Count" value={lead.message_count_received} />
+            <InfoRow label="Response Rate" value={responseRate} />
+            <InfoRow label="Days Inactive" value={daysInactive} />
             <InfoRow label="First Contacted" value={fmtDate(lead.first_message_sent_at)} />
             <InfoRow label="Next Action" value={fmtDateTime(lead.next_action_at)} />
+            {lead.what_has_the_lead_done && (
+              <InfoRow label="What They Did" value={lead.what_has_the_lead_done} />
+            )}
           </div>
 
           {/* Booking */}
@@ -1244,18 +1274,28 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                     </span>
                   </div>
                 )}
+                {lead.call_duration_minutes != null && (
+                  <InfoRow label="Duration" value={`${lead.call_duration_minutes} min`} />
+                )}
               </div>
             </>
           )}
 
           {/* AI Insights */}
-          {(lead.ai_sentiment || lead.ai_memory) && (
+          {(lead.ai_sentiment || lead.ai_memory || lead.ai_summary) && (
             <>
               <SectionTitle icon={<Bot className="h-3.5 w-3.5" />} title="AI Insights" />
               <div
                 className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5"
                 data-testid="ai-insights-section"
               >
+                {/* AI summary */}
+                {lead.ai_summary && (
+                  <div className="py-1.5 border-b border-border/30">
+                    <div className="text-[11px] text-muted-foreground mb-1">Summary</div>
+                    <p className="text-[12px] text-foreground/80 leading-relaxed">{lead.ai_summary}</p>
+                  </div>
+                )}
                 {/* Sentiment badge — color coded */}
                 {lead.ai_sentiment && (
                   <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
@@ -1374,7 +1414,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                     type="button"
                     onClick={() => setShowTagDropdown((v) => !v)}
                     disabled={addingTag}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border border-dashed border-border/60 text-muted-foreground hover:text-foreground hover:border-border transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border border-dashed border-black/[0.125] text-muted-foreground hover:text-foreground hover:border-black/[0.175] transition-colors disabled:opacity-50"
                     data-testid="lead-tag-add-button"
                     aria-label="Add tag"
                   >

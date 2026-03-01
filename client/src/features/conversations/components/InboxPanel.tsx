@@ -1,34 +1,15 @@
-import { useState, useRef, useMemo } from "react";
+import { useRef, useMemo } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/lib/utils";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
-import { IconBtn } from "@/components/ui/icon-btn";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
-import { Search, SlidersHorizontal, Layers, ArrowUpDown, Filter, Check, Plus } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Inbox, BellDot } from "lucide-react";
 import type { Thread, Lead, Interaction } from "../hooks/useConversationsData";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import {
-  initialsFor,
   getStatus,
   getStatusAvatarColor,
-  PIPELINE_STATUSES,
-  PIPELINE_HEX,
   formatRelativeTime,
 } from "../utils/conversationHelpers";
 
@@ -57,11 +38,8 @@ function getLastMessageDisplay(last: Interaction | undefined): string {
   return content;
 }
 
-// ── Group / Sort types ─────────────────────────────────────────────────────────
-type ChatGroupBy = "date" | "status" | "campaign" | "ai_human" | "none";
-type ChatSortBy = "newest" | "oldest" | "name_asc" | "name_desc";
-
-const GROUP_LABELS: Record<ChatGroupBy, string> = {
+// Group / Sort label maps are exported for use by the settings dropdown in Conversations.tsx
+export const GROUP_LABELS: Record<ChatGroupBy, string> = {
   date:     "Date",
   status:   "Status",
   campaign: "Campaign",
@@ -69,7 +47,7 @@ const GROUP_LABELS: Record<ChatGroupBy, string> = {
   none:     "None",
 };
 
-const SORT_LABELS: Record<ChatSortBy, string> = {
+export const SORT_LABELS: Record<ChatSortBy, string> = {
   newest:    "Most Recent",
   oldest:    "Oldest First",
   name_asc:  "Name A \u2192 Z",
@@ -101,17 +79,8 @@ type VirtualItem =
   | { type: "thread"; thread: Thread };
 
 // ── Types ──────────────────────────────────────────────────────────────────────
-interface Campaign {
-  id: number;
-  name: string;
-  accounts_id?: number;
-  Accounts_id?: number;
-}
-
-interface Account {
-  id: number;
-  name: string;
-}
+export type ChatGroupBy = "date" | "status" | "campaign" | "ai_human" | "none";
+export type ChatSortBy = "newest" | "oldest" | "name_asc" | "name_desc";
 
 interface InboxPanelProps {
   threads: Thread[];
@@ -121,16 +90,13 @@ interface InboxPanelProps {
   tab: "all" | "unread";
   onTabChange: (tab: "all" | "unread") => void;
   searchQuery: string;
-  onSearchChange: (query: string) => void;
+  groupBy: ChatGroupBy;
+  sortBy: ChatSortBy;
+  filterStatus: string[];
   selectedCampaignId: number | "all";
-  onCampaignChange: (id: number | "all") => void;
-  campaigns?: Campaign[];
-  accounts?: Account[];
   selectedAccountId?: number | "all";
-  onAccountChange?: (id: number | "all") => void;
   isAgencyUser?: boolean;
-  onClearFilters?: () => void;
-  onNewConversation?: () => void;
+  onClearAll?: () => void;
   className?: string;
 }
 
@@ -143,55 +109,21 @@ export function InboxPanel({
   tab,
   onTabChange,
   searchQuery,
-  onSearchChange,
+  groupBy,
+  sortBy,
+  filterStatus,
   selectedCampaignId,
-  onCampaignChange,
-  campaigns = [],
-  accounts = [],
   selectedAccountId,
-  onAccountChange,
   isAgencyUser = false,
-  onClearFilters,
-  onNewConversation,
+  onClearAll,
   className,
 }: InboxPanelProps) {
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-
-  // Local group / sort / filter state
-  const [groupBy, setGroupBy] = useState<ChatGroupBy>("date");
-  const [sortBy, setSortBy] = useState<ChatSortBy>("newest");
-  const [filterStatus, setFilterStatus] = useState<string[]>([]);
-
-  const isGroupNonDefault = groupBy !== "date";
-  const isSortNonDefault = sortBy !== "newest";
   const hasNonDefaultControls =
-    isGroupNonDefault ||
-    isSortNonDefault ||
+    groupBy !== "date" ||
+    sortBy !== "newest" ||
     filterStatus.length > 0 ||
     selectedCampaignId !== "all" ||
     (isAgencyUser && selectedAccountId !== "all");
-
-  const handleToggleFilterStatus = (status: string) => {
-    setFilterStatus((prev) =>
-      prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
-    );
-  };
-
-  const handleResetControls = () => {
-    setGroupBy("date");
-    setSortBy("newest");
-    setFilterStatus([]);
-    onCampaignChange("all");
-    if (isAgencyUser && onAccountChange) onAccountChange("all");
-  };
-
-  const handleClearAll = () => {
-    handleResetControls();
-    onSearchChange("");
-    onTabChange("all");
-    if (onClearFilters) onClearFilters();
-  };
 
   // When in "unread" tab, show only threads the hook marked as unread
   const tabFiltered =
@@ -300,12 +232,13 @@ export function InboxPanel({
   const totalUnread = threads.filter((t) => t.unread).length;
 
   const INBOX_TABS: TabDef[] = [
-    { id: "all", label: "Inbox" },
+    { id: "all", label: "Inbox", icon: Inbox },
     {
       id: "unread",
       label: "Unread",
+      icon: BellDot,
       badge: totalUnread > 0 ? (
-        <span className="min-w-[18px] h-[18px] rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center px-1">
+        <span className="ml-0.5 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold leading-none">
           {totalUnread > 99 ? "99+" : totalUnread}
         </span>
       ) : undefined,
@@ -320,172 +253,15 @@ export function InboxPanel({
       )}
       data-testid="panel-inbox"
     >
-      {/* ── Panel header: title + count ── */}
-      <div className="px-3.5 pt-5 pb-1 shrink-0 flex items-center justify-between" data-testid="panel-inbox-head">
-        <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">My Chats</h2>
-        <span className="w-10 text-center text-[12px] font-medium text-muted-foreground tabular-nums">{threads.length}</span>
-      </div>
-
-      {/* ── Controls row: tabs (left) + search/settings (right) ── */}
-      <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center justify-between gap-2">
-        {/* Tab switchers — Inbox / Unread */}
-        <ViewTabBar tabs={INBOX_TABS} activeId={tab} onTabChange={(id) => onTabChange(id as "all" | "unread")} />
-
-        {/* Search + Settings buttons */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          {/* New conversation */}
-          <IconBtn title="New Conversation" onClick={onNewConversation}>
-            <Plus className="h-4 w-4" />
-          </IconBtn>
-
-          {/* Search popup */}
-          <Popover open={searchOpen} onOpenChange={(open) => { setSearchOpen(open); if (!open) onSearchChange(""); }}>
-            <PopoverTrigger asChild>
-              <IconBtn active={searchOpen || !!searchQuery} title="Search contacts">
-                <Search className="h-4 w-4" />
-              </IconBtn>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-56 p-2" sideOffset={4}>
-              <input
-                value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
-                placeholder="Search contacts..."
-                autoFocus
-                className="w-full h-8 px-3 rounded-lg bg-muted/60 text-[12px] text-foreground focus:outline-none focus:ring-2 focus:ring-brand-indigo/30 placeholder:text-muted-foreground/60"
-              />
-            </PopoverContent>
-          </Popover>
-
-          {/* Settings */}
-          <DropdownMenu open={settingsOpen} onOpenChange={setSettingsOpen}>
-            <DropdownMenuTrigger asChild>
-              <IconBtn
-                active={settingsOpen || hasNonDefaultControls}
-                title="Group, Sort & Filter"
-                data-testid="button-toggle-filters"
-              >
-                <SlidersHorizontal className="h-4 w-4" />
-              </IconBtn>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
-              {/* Group */}
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-[12px]">
-                  <Layers className="h-3.5 w-3.5 mr-2" />
-                  Group
-                  {isGroupNonDefault && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{GROUP_LABELS[groupBy]}</span>}
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-40">
-                  {(Object.keys(GROUP_LABELS) as ChatGroupBy[]).map((opt) => (
-                    <DropdownMenuItem key={opt} onClick={() => setGroupBy(opt)} className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}>
-                      {GROUP_LABELS[opt]}
-                      {groupBy === opt && <Check className="h-3 w-3 ml-auto" />}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-
-              {/* Sort */}
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-[12px]">
-                  <ArrowUpDown className="h-3.5 w-3.5 mr-2" />
-                  Sort
-                  {isSortNonDefault && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{SORT_LABELS[sortBy]}</span>}
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-44">
-                  {(Object.keys(SORT_LABELS) as ChatSortBy[]).map((opt) => (
-                    <DropdownMenuItem key={opt} onClick={() => setSortBy(opt)} className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}>
-                      {SORT_LABELS[opt]}
-                      {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-
-              <DropdownMenuSeparator />
-
-              {/* Filter Status */}
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-[12px]">
-                  <Filter className="h-3.5 w-3.5 mr-2" />
-                  Filter Status
-                  {filterStatus.length > 0 && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{filterStatus.length}</span>}
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-48 max-h-60 overflow-y-auto">
-                  {PIPELINE_STATUSES.map((s) => (
-                    <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); handleToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
-                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PIPELINE_HEX[s] ?? "#6B7280" }} />
-                      <span className="flex-1">{s}</span>
-                      {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-
-              {/* Account filter (agency only) */}
-              {isAgencyUser && accounts.length > 0 && onAccountChange && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="text-[12px]">
-                      Account
-                      {selectedAccountId !== "all" && (
-                        <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[80px]">
-                          {accounts.find((a) => a.id === selectedAccountId)?.name ?? ""}
-                        </span>
-                      )}
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="w-44 max-h-60 overflow-y-auto">
-                      <DropdownMenuItem onClick={() => onAccountChange("all")} className={cn("text-[12px]", selectedAccountId === "all" && "font-semibold text-brand-indigo")}>
-                        All Accounts
-                        {selectedAccountId === "all" && <Check className="h-3 w-3 ml-auto" />}
-                      </DropdownMenuItem>
-                      {accounts.map((a) => (
-                        <DropdownMenuItem key={a.id} onClick={() => onAccountChange(a.id)} className={cn("text-[12px]", selectedAccountId === a.id && "font-semibold text-brand-indigo")}>
-                          {a.name}
-                          {selectedAccountId === a.id && <Check className="h-3 w-3 ml-auto" />}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
-                </>
-              )}
-
-              {/* Campaign filter */}
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="text-[12px]">
-                  Campaign
-                  {selectedCampaignId !== "all" && (
-                    <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[80px]">
-                      {campaigns.find((c) => c.id === selectedCampaignId)?.name ?? ""}
-                    </span>
-                  )}
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-44 max-h-60 overflow-y-auto">
-                  <DropdownMenuItem onClick={() => onCampaignChange("all")} className={cn("text-[12px]", selectedCampaignId === "all" && "font-semibold text-brand-indigo")}>
-                    All Campaigns
-                    {selectedCampaignId === "all" && <Check className="h-3 w-3 ml-auto" />}
-                  </DropdownMenuItem>
-                  {campaigns.map((c) => (
-                    <DropdownMenuItem key={c.id} onClick={() => onCampaignChange(c.id)} className={cn("text-[12px]", selectedCampaignId === c.id && "font-semibold text-brand-indigo")}>
-                      {c.name}
-                      {selectedCampaignId === c.id && <Check className="h-3 w-3 ml-auto" />}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-
-              {/* Reset */}
-              {hasNonDefaultControls && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleResetControls} className="text-[12px] text-destructive">
-                    Reset all settings
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+      {/* ── Panel header: title + Inbox/Unread text tabs ── */}
+      <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center" data-testid="panel-inbox-head">
+        <div className="flex items-center justify-between w-[309px] shrink-0">
+          <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Chats</h2>
+          <ViewTabBar
+            tabs={INBOX_TABS}
+            activeId={tab}
+            onTabChange={(id) => onTabChange(id as "all" | "unread")}
+          />
         </div>
       </div>
 
@@ -512,7 +288,7 @@ export function InboxPanel({
                   : "No conversations match the selected filters."
               }
               actionLabel={hasNonDefaultControls ? "Clear filters" : undefined}
-              onAction={hasNonDefaultControls ? handleClearAll : undefined}
+              onAction={hasNonDefaultControls && onClearAll ? onClearAll : undefined}
               compact
               data-testid="empty-state-filtered"
             />
@@ -576,12 +352,14 @@ export function InboxPanel({
                   key={lead.id}
                   data-index={virtualRow.index}
                   ref={threadVirtualizer.measureElement}
+                  className="animate-fade-in"
                   style={{
                     position: "absolute",
                     top: 0,
                     left: 0,
                     right: 0,
                     transform: `translateY(${virtualRow.start}px)`,
+                    animationDelay: `${Math.min(virtualRow.index, 15) * 30}ms`,
                   }}
                 >
                   <div
@@ -590,7 +368,7 @@ export function InboxPanel({
                     onClick={() => onSelectLead(lead.id)}
                     onKeyDown={(e) => e.key === "Enter" && onSelectLead(lead.id)}
                     className={cn(
-                      "relative mx-[3px] rounded-xl cursor-pointer transition-colors",
+                      "relative rounded-xl cursor-pointer transition-colors",
                       active ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
                     )}
                     data-testid={`button-thread-${lead.id}`}
@@ -610,7 +388,7 @@ export function InboxPanel({
                             <span
                               className={cn(
                                 "absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] rounded-full bg-[#FCB803] text-[#131B49] text-[8px] font-bold flex items-center justify-center px-0.5",
-                                active ? "shadow-[0_0_0_2px_#FFF1C8]" : "shadow-[0_0_0_2px_#F1F1F1]"
+                                active ? "shadow-[0_0_0_2px_var(--color-highlight-selected)]" : "shadow-[0_0_0_2px_var(--color-card)]"
                               )}
                             >
                               {unreadCount > 99 ? "99+" : unreadCount}

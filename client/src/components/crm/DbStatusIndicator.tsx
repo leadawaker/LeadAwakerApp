@@ -39,7 +39,7 @@ export function DbStatusIndicator({ collapsed: _collapsed = false }: { collapsed
       title={`${label}${detail ? ` — ${detail}` : ""}`}
     >
       {/* Database icon in standardized circle */}
-      <div className="h-10 w-10 rounded-full border border-border/65 flex items-center justify-center bg-transparent text-muted-foreground">
+      <div className="h-10 w-10 rounded-full border border-black/[0.125] flex items-center justify-center bg-transparent text-muted-foreground">
         <Database className="h-4 w-4" />
       </div>
 

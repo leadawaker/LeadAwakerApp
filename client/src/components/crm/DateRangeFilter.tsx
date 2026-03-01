@@ -156,18 +156,18 @@ export function DateRangeFilter({ value, onChange, allFrom }: DateRangeFilterPro
     return null;
   }, [value]);
 
-  const btnBase = "h-10 px-3 text-[11px] font-semibold transition-colors whitespace-nowrap rounded-full";
-  const btnActive = "bg-foreground text-[#FCB803]";
-  const btnInactive = "border border-border/50 text-foreground/50 hover:text-foreground hover:border-foreground/30";
+  const optBase = "px-3 h-full rounded-full text-[11px] font-semibold transition-colors whitespace-nowrap";
+  const optActive = "bg-white text-foreground shadow-sm";
+  const optInactive = "text-foreground/50 hover:text-foreground";
 
   return (
-    <div className="inline-flex items-center gap-1.5" data-testid="date-range-filter">
+    <div className="inline-flex items-center h-9 rounded-full border border-black/[0.125] bg-muted/30 p-0.5 gap-0" data-testid="date-range-filter">
       {PRESET_LABELS.map((p) => (
         <button
           key={p.value}
           type="button"
           onClick={() => handlePresetClick(p.value)}
-          className={cn(btnBase, value.preset === p.value ? btnActive : btnInactive)}
+          className={cn(optBase, value.preset === p.value ? optActive : optInactive)}
           data-testid={`date-preset-${p.value}`}
           data-active={value.preset === p.value}
         >
@@ -179,7 +179,7 @@ export function DateRangeFilter({ value, onChange, allFrom }: DateRangeFilterPro
         <button
           type="button"
           onClick={handleAllClick}
-          className={cn(btnBase, value.preset === "all" ? btnActive : btnInactive)}
+          className={cn(optBase, value.preset === "all" ? optActive : optInactive)}
           data-testid="date-preset-all"
           data-active={value.preset === "all"}
         >
@@ -192,9 +192,9 @@ export function DateRangeFilter({ value, onChange, allFrom }: DateRangeFilterPro
           <button
             type="button"
             className={cn(
-              btnBase,
+              optBase,
               "flex items-center gap-1",
-              value.preset === "custom" ? btnActive : btnInactive
+              value.preset === "custom" ? optActive : optInactive
             )}
             data-testid="date-preset-custom"
             data-active={value.preset === "custom"}

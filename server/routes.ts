@@ -35,6 +35,8 @@ import {
   insertExpensesSchema,
   notifications,
   insertNotificationsSchema,
+  insertSupportSessionSchema,
+  insertSupportMessageSchema,
 } from "@shared/schema";
 import crypto from "crypto";
 import fs from "fs";
@@ -1691,6 +1693,354 @@ Rules:
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
     fs.createReadStream(expense.pdfPath).pipe(res);
+  }));
+
+  // ─── Support Chat ────────────────────────────────────────────────
+
+  // 1-day cleanup on startup + daily interval
+  const runSupportCleanup = async () => {
+    try {
+      const result = await storage.cleanupOldSupportData(1);
+      if (result.sessions > 0 || result.messages > 0) {
+        console.log(`[support-chat] Cleanup: removed ${result.messages} messages, ${result.sessions} sessions older than 1 day`);
+      }
+    } catch (err) {
+      console.error("[support-chat] Cleanup error:", err);
+    }
+  };
+  runSupportCleanup();
+  setInterval(runSupportCleanup, 24 * 60 * 60 * 1000);
+
+  // Seed the support bot prompt into Prompt_Library (idempotent)
+  (async () => {
+    try {
+      const existing = await storage.getPrompts();
+      const hasBot = existing.some((p: any) => (p.name || p.Name) === "Lead Awaker Support Bot");
+      if (!hasBot) {
+        await storage.createPrompt({
+          name: "Lead Awaker Support Bot",
+          promptText: "",
+          systemMessage: `You are Sophie, the Lead Awaker support assistant. You help clients understand and get the most out of Lead Awaker — an AI-powered WhatsApp lead reactivation platform that converts inactive leads into booked calls.
+
+PERSONALITY
+- Friendly, concise, and professional
+- Use simple language — no technical jargon unless the user is technical
+- Keep responses under 300 tokens
+
+PLATFORM KNOWLEDGE
+1. Campaigns — Create WhatsApp outreach campaigns targeting inactive leads with AI-powered messaging sequences
+2. Lead Pipeline — Visual Kanban board tracking leads: New → Contacted → Responded → Multiple Responses → Qualified → Call Booked → Lost → DND
+3. AI Conversations — Automated WhatsApp messages that engage leads naturally, with smart follow-up bumps
+4. Lead Scoring — Automatic 0-100 scoring based on engagement signals, response quality, and conversion likelihood
+5. Manual Takeover — Human agents can take over any AI conversation at any time and hand back to AI when done
+6. Calendar — View and manage scheduled calls and follow-ups with leads
+7. Analytics — Campaign performance, conversion rates, cost-per-lead, ROI tracking
+8. Tags — Organize and segment leads with custom color-coded tags
+9. Billing — Track expenses, invoices, and campaign costs with BTW/VAT support
+
+WHAT YOU CAN HELP WITH
+- Explaining how any feature works
+- Guiding through common workflows (creating campaigns, managing leads, reading analytics)
+- Suggesting best practices for lead reactivation
+- Clarifying what pipeline stages mean and when leads move between them
+- Explaining how AI conversations and bump sequences work
+
+WHAT YOU CANNOT DO
+- Access or modify account data, leads, or campaigns directly
+- Process payments or change billing information
+- Make promises about specific conversion rates or results
+- Discuss other clients' accounts or data
+
+ESCALATION RULES — When you determine a human agent is needed:
+- User explicitly asks for a human
+- You cannot resolve the issue after 2-3 exchanges on the same topic
+- The question involves billing disputes, account deletion, or sensitive changes
+- User reports a bug or technical issue you cannot diagnose
+- User is visibly frustrated
+When escalating, write a natural farewell/handoff message to the user, then append [ESCALATE] at the very end of your response. Do NOT mention this marker to the user — it is processed automatically by the system.
+
+GUARDRAILS
+- Stay strictly on Lead Awaker topics. Politely redirect off-topic questions.
+- Never fabricate features that don't exist
+- If unsure, say "I'm not sure about that — let me connect you with an agent who can help." and append [ESCALATE]
+- Maximum response length: 300 tokens`,
+          model: "gpt-5-nano",
+          temperature: "0.6",
+          maxTokens: "400",
+          status: "active",
+          useCase: "customer-support",
+          notes: "System prompt for the in-app support chatbot widget. Edit here to update bot behavior.",
+        } as any);
+        console.log("[support-chat] Seeded 'Lead Awaker Support Bot' prompt");
+      }
+    } catch (err) {
+      console.error("[support-chat] Failed to seed prompt:", err);
+    }
+  })();
+
+  // POST /api/support-chat/sessions — create or get active session
+  app.post("/api/support-chat/sessions", requireAuth, wrapAsync(async (req, res) => {
+    const user = req.user!;
+    // Check for existing active session
+    const existing = await storage.getActiveSupportSession(user.id!);
+    if (existing) return res.json(existing);
+    // Create new session
+    const sessionId = `sc_${user.id}_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+    const session = await storage.createSupportSession({
+      sessionId,
+      userId: user.id!,
+      accountId: user.accountsId ?? null,
+      status: "active",
+    });
+    res.status(201).json(session);
+  }));
+
+  // GET /api/support-chat/sessions/active — get current user's active session
+  app.get("/api/support-chat/sessions/active", requireAuth, wrapAsync(async (req, res) => {
+    const user = req.user!;
+    const session = await storage.getActiveSupportSession(user.id!);
+    res.json(session || null);
+  }));
+
+  // GET /api/support-chat/messages/:sessionId — fetch message history
+  app.get("/api/support-chat/messages/:sessionId", requireAuth, wrapAsync(async (req, res) => {
+    const user = req.user!;
+    const { sessionId } = req.params;
+    const session = await storage.getSupportSessionBySessionId(sessionId);
+    if (!session || session.userId !== user.id!) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    const messages = await storage.getSupportMessagesBySessionId(sessionId);
+    res.json(messages);
+  }));
+
+  // POST /api/support-chat/messages — send message + forward to n8n webhook
+  app.post("/api/support-chat/messages", requireAuth, wrapAsync(async (req, res) => {
+    const user = req.user!;
+    const { sessionId, content } = req.body;
+    if (!sessionId || !content) {
+      return res.status(400).json({ message: "sessionId and content are required" });
+    }
+    const session = await storage.getSupportSessionBySessionId(sessionId);
+    if (!session || session.userId !== user.id!) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    // Save user message
+    const userMsg = await storage.createSupportMessage({
+      sessionId,
+      userId: user.id!,
+      accountId: user.accountsId ?? null,
+      role: "user",
+      content,
+    });
+
+    // Forward to n8n webhook for AI response
+    const webhookUrl = process.env.SUPPORT_CHAT_WEBHOOK_URL;
+    if (!webhookUrl) {
+      // No webhook configured — return fallback
+      const fallbackMsg = await storage.createSupportMessage({
+        sessionId,
+        userId: user.id!,
+        accountId: user.accountsId ?? null,
+        role: "assistant",
+        content: "Support is being configured. Please try again later.",
+      });
+      return res.json({ userMessage: userMsg, assistantMessage: fallbackMsg, escalated: false });
+    }
+
+    try {
+      // Get conversation history for context
+      const history = await storage.getSupportMessagesBySessionId(sessionId);
+      const webhookRes = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          message: content,
+          userId: user.id,
+          accountId: user.accountsId,
+          userName: user.fullName1 || user.email,
+          history: history.map((m) => ({ role: m.role, content: m.content })),
+        }),
+      });
+      const webhookData = await webhookRes.json() as { response?: string; escalate?: boolean };
+      const aiContent = webhookData.response || "I'm sorry, I couldn't process that. Please try again.";
+      const shouldEscalate = webhookData.escalate === true;
+      const assistantMsg = await storage.createSupportMessage({
+        sessionId,
+        userId: user.id!,
+        accountId: user.accountsId ?? null,
+        role: "assistant",
+        content: aiContent,
+      });
+
+      // Auto-escalation: if the AI flagged this conversation for human handoff
+      let escalationMessage = null;
+      if (shouldEscalate) {
+        await storage.updateSupportSession(session.id, {
+          status: "escalated",
+          escalatedAt: new Date(),
+        } as any);
+
+        escalationMessage = await storage.createSupportMessage({
+          sessionId,
+          userId: user.id!,
+          accountId: user.accountsId ?? null,
+          role: "assistant",
+          content: "I've connected you with a human agent. They'll be with you shortly.",
+        });
+
+        // In-app notification for admin
+        try {
+          await storage.createNotification({
+            type: "escalation",
+            title: "Support escalation",
+            body: `${user.fullName1 || user.email} needs human assistance`,
+            userId: 1,
+            accountId: user.accountsId ?? null,
+            read: false,
+            link: null,
+            leadId: null,
+          });
+        } catch (notifErr) {
+          console.error("[support-chat] Failed to create escalation notification:", notifErr);
+        }
+
+        // Fire Telegram webhook
+        const telegramUrl = process.env.SUPPORT_CHAT_TELEGRAM_WEBHOOK_URL;
+        if (telegramUrl) {
+          fetch(telegramUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "support_escalation",
+              userName: user.fullName1 || user.email,
+              userEmail: user.email,
+              accountId: user.accountsId,
+              sessionId,
+              timestamp: new Date().toISOString(),
+            }),
+          }).catch((err) => console.error("[support-chat] Telegram webhook error:", err));
+        }
+      }
+
+      res.json({
+        userMessage: userMsg,
+        assistantMessage: assistantMsg,
+        escalated: shouldEscalate,
+        escalationMessage,
+      });
+    } catch (err) {
+      console.error("[support-chat] Webhook error:", err);
+      const errorMsg = await storage.createSupportMessage({
+        sessionId,
+        userId: user.id!,
+        accountId: user.accountsId ?? null,
+        role: "assistant",
+        content: "I'm having trouble connecting right now. Please try again in a moment.",
+      });
+      res.json({ userMessage: userMsg, assistantMessage: errorMsg, escalated: false });
+    }
+  }));
+
+  // POST /api/support-chat/escalate — escalate session to human agent
+  app.post("/api/support-chat/escalate", requireAuth, wrapAsync(async (req, res) => {
+    const user = req.user!;
+    const { sessionId } = req.body;
+    if (!sessionId) return res.status(400).json({ message: "sessionId is required" });
+    const session = await storage.getSupportSessionBySessionId(sessionId);
+    if (!session || session.userId !== user.id!) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    // Update session status
+    await storage.updateSupportSession(session.id, {
+      status: "escalated",
+      escalatedAt: new Date(),
+    } as any);
+
+    // Add system message to chat
+    await storage.createSupportMessage({
+      sessionId,
+      userId: user.id!,
+      accountId: user.accountsId ?? null,
+      role: "assistant",
+      content: "I've notified an agent. They'll be with you shortly. You can continue describing your issue here.",
+    });
+
+    // Create in-app notification for admin users (userId 1 = primary admin)
+    try {
+      await storage.createNotification({
+        type: "escalation",
+        title: "Support escalation",
+        body: `${user.fullName1 || user.email} requested to speak with an agent`,
+        userId: 1, // admin user
+        accountId: user.accountsId ?? null,
+        read: false,
+        link: null,
+        leadId: null,
+      });
+    } catch (err) {
+      console.error("[support-chat] Failed to create notification:", err);
+    }
+
+    // Fire Telegram webhook (fire-and-forget)
+    const telegramUrl = process.env.SUPPORT_CHAT_TELEGRAM_WEBHOOK_URL;
+    if (telegramUrl) {
+      fetch(telegramUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "support_escalation",
+          userName: user.fullName1 || user.email,
+          userEmail: user.email,
+          accountId: user.accountsId,
+          sessionId,
+          timestamp: new Date().toISOString(),
+        }),
+      }).catch((err) => console.error("[support-chat] Telegram webhook error:", err));
+    }
+
+    res.json({ success: true, status: "escalated" });
+  }));
+
+  // GET /api/support-chat/config — get bot display config (name, photo)
+  app.get("/api/support-chat/config", requireAuth, wrapAsync(async (req, res) => {
+    // Bot config is stored as JSON in the agency account (id=1) metadata
+    try {
+      const account = await storage.getAccountById(1);
+      const raw = (account as any)?.support_bot_config;
+      if (raw) {
+        const config = typeof raw === "string" ? JSON.parse(raw) : raw;
+        return res.json(config);
+      }
+    } catch {
+      // Fallback to defaults
+    }
+    res.json({ name: "Sophie", photoUrl: null, enabled: true });
+  }));
+
+  // PATCH /api/support-chat/config — update bot display config (admin only)
+  app.patch("/api/support-chat/config", requireAgency, wrapAsync(async (req, res) => {
+    const { name, photoUrl, enabled } = req.body;
+    const config = { name: name || "Sophie", photoUrl: photoUrl || null, enabled: enabled !== false };
+    await storage.updateAccount(1, { supportBotConfig: JSON.stringify(config) } as any);
+    res.json(config);
+  }));
+
+  // POST /api/support-chat/close — close a session
+  app.post("/api/support-chat/close", requireAuth, wrapAsync(async (req, res) => {
+    const user = req.user!;
+    const { sessionId } = req.body;
+    if (!sessionId) return res.status(400).json({ message: "sessionId is required" });
+    const session = await storage.getSupportSessionBySessionId(sessionId);
+    if (!session || session.userId !== user.id!) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    await storage.updateSupportSession(session.id, {
+      status: "closed",
+      closedAt: new Date(),
+    } as any);
+    res.json({ success: true });
   }));
 
   return httpServer;

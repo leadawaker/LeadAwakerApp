@@ -93,7 +93,7 @@ export function PromptsToolbar({
       <div className="w-px h-4 bg-border/25 mx-0.5 shrink-0" />
 
       {/* ── 1. Search (always visible) ───────────────────────────────────── */}
-      <div className="h-10 flex items-center gap-1.5 rounded-full border border-border/30 bg-card/60 px-3 min-w-[180px] max-w-[240px]">
+      <div className="h-10 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card/60 px-3 min-w-[180px] max-w-[240px]">
         <Search className="h-4 w-4 text-muted-foreground/50 shrink-0" />
         <input
           type="text"
@@ -303,7 +303,7 @@ export function PromptsToolbar({
                 >
                   <div className={cn(
                     "h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0",
-                    isVisible ? "bg-brand-indigo border-brand-indigo" : "border-border/50",
+                    isVisible ? "bg-brand-indigo border-brand-indigo" : "border-black/[0.125]",
                   )}>
                     {isVisible && <Check className="h-2 w-2 text-white" />}
                   </div>

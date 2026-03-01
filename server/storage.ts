@@ -1,4 +1,4 @@
-import { eq, desc, asc, count, SQL, inArray, and, gte, isNotNull } from "drizzle-orm";
+import { eq, desc, asc, count, SQL, inArray, and, gte, lt, isNotNull } from "drizzle-orm";
 import { PgTableWithColumns } from "drizzle-orm/pg-core";
 import { db } from "./db";
 import {
@@ -44,6 +44,12 @@ import {
   type InsertExpenses,
   type Notifications,
   type InsertNotifications,
+  supportSessions,
+  supportMessages,
+  type SupportSession,
+  type InsertSupportSession,
+  type SupportMessage,
+  type InsertSupportMessage,
 } from "@shared/schema";
 
 
@@ -164,6 +170,15 @@ export interface IStorage {
   createNotification(data: InsertNotifications): Promise<Notifications>;
   updateNotification(id: number, data: Partial<InsertNotifications>): Promise<Notifications | undefined>;
   markAllNotificationsRead(userId: number): Promise<number>;
+
+  // Support Chat
+  createSupportSession(data: InsertSupportSession): Promise<SupportSession>;
+  getActiveSupportSession(userId: number): Promise<SupportSession | undefined>;
+  getSupportSessionBySessionId(sessionId: string): Promise<SupportSession | undefined>;
+  updateSupportSession(id: number, data: Partial<InsertSupportSession>): Promise<SupportSession | undefined>;
+  createSupportMessage(data: InsertSupportMessage): Promise<SupportMessage>;
+  getSupportMessagesBySessionId(sessionId: string): Promise<SupportMessage[]>;
+  cleanupOldSupportData(olderThanDays: number): Promise<{ sessions: number; messages: number }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -671,6 +686,59 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(notifications.userId, userId), eq(notifications.read, false)))
       .returning({ id: notifications.id });
     return rows.length;
+  }
+
+  // ─── Support Chat ─────────────────────────────────────────────────────
+
+  async createSupportSession(data: InsertSupportSession): Promise<SupportSession> {
+    const [row] = await db.insert(supportSessions).values(data as any).returning();
+    return row;
+  }
+
+  async getActiveSupportSession(userId: number): Promise<SupportSession | undefined> {
+    const [row] = await db
+      .select()
+      .from(supportSessions)
+      .where(and(eq(supportSessions.userId, userId), eq(supportSessions.status, "active")))
+      .orderBy(desc(supportSessions.createdAt))
+      .limit(1);
+    return row;
+  }
+
+  async getSupportSessionBySessionId(sessionId: string): Promise<SupportSession | undefined> {
+    const [row] = await db.select().from(supportSessions).where(eq(supportSessions.sessionId, sessionId));
+    return row;
+  }
+
+  async updateSupportSession(id: number, data: Partial<InsertSupportSession>): Promise<SupportSession | undefined> {
+    const [row] = await db.update(supportSessions).set(data as any).where(eq(supportSessions.id, id)).returning();
+    return row;
+  }
+
+  async createSupportMessage(data: InsertSupportMessage): Promise<SupportMessage> {
+    const [row] = await db.insert(supportMessages).values(data as any).returning();
+    return row;
+  }
+
+  async getSupportMessagesBySessionId(sessionId: string): Promise<SupportMessage[]> {
+    return db
+      .select()
+      .from(supportMessages)
+      .where(eq(supportMessages.sessionId, sessionId))
+      .orderBy(asc(supportMessages.createdAt));
+  }
+
+  async cleanupOldSupportData(olderThanDays: number): Promise<{ sessions: number; messages: number }> {
+    const cutoff = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
+    const deletedMsgs = await db
+      .delete(supportMessages)
+      .where(lt(supportMessages.createdAt, cutoff))
+      .returning({ id: supportMessages.id });
+    const deletedSessions = await db
+      .delete(supportSessions)
+      .where(lt(supportSessions.createdAt, cutoff))
+      .returning({ id: supportSessions.id });
+    return { sessions: deletedSessions.length, messages: deletedMsgs.length };
   }
 }
 

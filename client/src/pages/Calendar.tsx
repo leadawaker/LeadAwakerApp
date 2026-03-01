@@ -3,7 +3,7 @@ import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLeads, useCampaigns } from "@/hooks/useApiData";
 import { FiltersBar } from "@/components/crm/FiltersBar";
-import { ChevronLeft, ChevronRight, ChevronDown, AlertCircle, RefreshCw, X, User, ExternalLink, Filter, Building2, CalendarDays, Grid3X3, Columns3, CalendarRange, ArrowUpDown, Layers, Check, SlidersHorizontal, Plus, Search, Phone, Mail, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, AlertCircle, RefreshCw, X, Filter, Building2, ArrowUpDown, Layers, Check, SlidersHorizontal, Plus, Search, Phone, Mail, Grid3X3, Columns3, CalendarDays } from "lucide-react";
 import { getLeadStatusAvatarColor } from "@/lib/avatarUtils";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { ContactSidebar } from "@/features/conversations/components/ContactSidebar";
@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { IconBtn } from "@/components/ui/icon-btn";
+import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,10 +73,10 @@ type Appointment = {
 };
 
 // ── View mode tab config ──────────────────────────────────────────────────────
-const VIEW_MODE_TABS: { id: ViewMode; label: string; icon: typeof CalendarDays }[] = [
-  { id: "month", label: "Monthly", icon: Grid3X3 },
-  { id: "week",  label: "Weekly",  icon: Columns3 },
-  { id: "day",   label: "Daily",   icon: CalendarDays },
+const CALENDAR_TABS: TabDef[] = [
+  { id: "month", label: "Month", icon: Grid3X3 },
+  { id: "week",  label: "Week",  icon: Columns3 },
+  { id: "day",   label: "Day",   icon: CalendarDays },
 ];
 
 // ── Appointment date grouping ─────────────────────────────────────────────────
@@ -282,8 +283,7 @@ function AppointmentCard({
       <div className="px-2.5 pt-2.5 pb-2 flex items-start gap-2">
         {/* Avatar */}
         <div
-          className="shrink-0 cursor-pointer hover:opacity-80"
-          onClick={(e) => { e.stopPropagation(); onSelectLead?.(appt.rawLead); }}
+          className="shrink-0"
           data-testid={`appt-avatar-${appt.id}`}
         >
           <EntityAvatar
@@ -297,10 +297,9 @@ function AppointmentCard({
         <div className="flex-1 min-w-0 pt-0.5">
           <p
             className={cn(
-              "text-[16px] font-semibold font-heading leading-tight truncate cursor-pointer hover:underline",
+              "text-[16px] font-semibold font-heading leading-tight truncate",
               appt.no_show ? "text-red-600 dark:text-red-400" : "text-foreground"
             )}
-            onClick={(e) => { e.stopPropagation(); onSelectLead?.(appt.rawLead); }}
             data-testid={`text-appt-name-${appt.id}`}
           >
             {appt.lead_name}
@@ -656,6 +655,15 @@ export default function CalendarPage() {
     return sortedAppts.length;
   }, [sortedAppts]);
 
+  // Auto-select first upcoming appointment when nothing is selected
+  useEffect(() => {
+    if (selectedBooking || sortedAppts.length === 0) return;
+    const now = new Date(); now.setHours(0, 0, 0, 0);
+    const firstUpcoming = sortedAppts.find((a) => new Date(a.raw_booked_call_date) >= now);
+    if (firstUpcoming) setSelectedBooking(firstUpcoming);
+    else setSelectedBooking(sortedAppts[0]);
+  }, [sortedAppts]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const bookFilteredLeads = useMemo(() => {
     if (!bookLeadSearch.trim()) return [];
     const q = bookLeadSearch.toLowerCase();
@@ -970,20 +978,30 @@ export default function CalendarPage() {
               <div className="px-3.5 pt-5 pb-2.5 flex flex-wrap items-center gap-2 shrink-0">
                 {/* Date navigation */}
                 <div className="flex items-center gap-1.5">
-                  <IconBtn title="Previous" onClick={() => navigate(-1)} data-testid="button-prev">
+                  <button
+                    className="h-9 w-9 rounded-full border border-black/[0.125] bg-transparent hover:bg-card inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
+                    onClick={() => navigate(-1)}
+                    title="Previous"
+                    data-testid="button-prev"
+                  >
                     <ChevronLeft className="h-4 w-4" />
-                  </IconBtn>
+                  </button>
                   <div className="text-2xl font-semibold font-heading text-foreground text-center leading-tight" data-testid="text-view-label">
                     {viewLabel}
                   </div>
-                  <IconBtn title="Next" onClick={() => navigate(1)} data-testid="button-next">
+                  <button
+                    className="h-9 w-9 rounded-full border border-black/[0.125] bg-transparent hover:bg-card inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
+                    onClick={() => navigate(1)}
+                    title="Next"
+                    data-testid="button-next"
+                  >
                     <ChevronRight className="h-4 w-4" />
-                  </IconBtn>
+                  </button>
                 </div>
 
                 {/* Today button */}
                 <button
-                  className="h-10 px-3 rounded-full border border-border/65 bg-transparent text-[12px] font-medium hover:bg-card"
+                  className="h-9 px-3 rounded-full border border-black/[0.125] bg-transparent text-[12px] font-medium hover:bg-card"
                   onClick={() => setAnchorDate(new Date())}
                   data-testid="button-today"
                   aria-label="Go to today"
@@ -991,334 +1009,10 @@ export default function CalendarPage() {
                   Today
                 </button>
 
-                {/* Spacer */}
-                <div className="flex-1 min-w-0" />
-
-                {/* Inline Booked Calls KPI */}
-                <BookedCallsKpi
-                  variant="inline"
-                  accountId={isAgencyUser ? (effectiveAccountFilter === "all" ? undefined : effectiveAccountFilter) : currentAccountId}
-                />
-              </div>
-
-              {/* ── Month view ── */}
-              {viewMode === "month" && (
-                <>
-                  <div className="grid grid-cols-7 text-xs text-center font-bold text-muted-foreground bg-muted/30 shrink-0" data-testid="row-dow">
-                    {(() => {
-                      const todayDow = new Date().getDay(); // 0=Sun
-                      return ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((d, i) => (
-                        <div key={i} className={cn("px-3 py-3", (i === 0 || i === 6) && "bg-muted/10 opacity-70", i === todayDow && "text-brand-indigo")} data-testid={`dow-${i}`}>{d}</div>
-                      ));
-                    })()}
-                  </div>
-                  <div className="flex-1 grid grid-cols-7 overflow-y-auto" data-testid="grid-days">
-                    {days.map((d, idx) => {
-                      const inMonth = d.date.getMonth() === month.getMonth();
-                      const isToday = d.date.toLocaleDateString() === todayStr;
-                      const isSelected = selectedDate === d.date.toLocaleDateString();
-                      const isWeekend = d.date.getDay() === 0 || d.date.getDay() === 6;
-                      const dateKey = d.date.toLocaleDateString();
-                      return (
-                        <DroppableDay
-                          key={idx}
-                          dateKey={dateKey}
-                          onClick={() => handleDateClick(dateKey)}
-                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleDateClick(dateKey); } }}
-                          aria-label={`Select ${dateKey}`}
-                          className={cn(
-                            "min-h-[100px] border-b border-r border-border/30 last:border-r-0 p-2 cursor-pointer hover:bg-muted/30 relative",
-                            !inMonth && "bg-muted/5 opacity-40",
-                            isWeekend && inMonth && "bg-stone-200/30",
-                            isSelected && "bg-brand-indigo/[0.08] z-10",
-                            isToday && !isSelected && "bg-brand-indigo/5"
-                          )}
-                          data-testid={`day-${idx}`}
-                        >
-                          <div className="flex justify-between items-start">
-                            <div className={cn(
-                              "text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full",
-                              isToday ? "text-white bg-brand-indigo" : inMonth ? "text-foreground" : "text-muted-foreground"
-                            )}>
-                              {d.date.getDate()}
-                            </div>
-                          </div>
-                          {d.count > 0 && (
-                            <div className="mt-1 space-y-0.5">
-                              {appts.filter((a) => a.date === dateKey).slice(0, 2).map((a) => (
-                                <DraggableBookingCard
-                                  key={a.id}
-                                  appt={a}
-                                  onClick={(e) => { e.stopPropagation(); setSelectedBooking(a); }}
-                                  className={cn("text-left overflow-hidden hover:ring-1 hover:ring-inset", a.no_show ? "hover:ring-red-400" : "hover:ring-brand-indigo")}
-                                >
-                                  {(() => {
-                                    const apptDate = new Date(a.raw_booked_call_date);
-                                    const todayStart = new Date(); todayStart.setHours(0,0,0,0);
-                                    const isPast = apptDate < todayStart;
-                                    return (
-                                      <div className={cn(
-                                        "h-9 px-2 rounded-full flex items-center gap-1.5 overflow-hidden",
-                                        isPast
-                                          ? "bg-muted/70 text-muted-foreground"
-                                          : a.no_show
-                                            ? "bg-red-600 text-white"
-                                            : "bg-[#4F46E5] text-white"
-                                      )}>
-                                        <span className={cn("text-[9px] font-bold truncate flex-1 leading-none",
-                                          isPast ? "text-muted-foreground" : "text-white"
-                                        )} data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</span>
-                                        <span className="text-[8px] font-medium shrink-0 tabular-nums leading-none opacity-80" data-testid={`booking-time-${a.id}`}>{a.time}</span>
-                                      </div>
-                                    );
-                                  })()}
-                                </DraggableBookingCard>
-                              ))}
-                              {d.count > 2 && (
-                                <div className="text-[8px] font-bold text-muted-foreground text-center">+{d.count - 2} more</div>
-                              )}
-                            </div>
-                          )}
-                        </DroppableDay>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-
-              {/* ── Week / Day time grid ── */}
-              {(viewMode === "week" || viewMode === "day") && (() => {
-                const gridDays = viewMode === "week" ? weekDays : [anchorDate];
-                const totalH = 24 * HOUR_H;
-                return (
-                  <div ref={timeGridRef} className="flex-1 overflow-y-auto" data-testid="grid-time">
-
-                    {/* Sticky day-header row */}
-                    <div
-                      className="sticky top-0 z-30 flex shrink-0 bg-muted border-b border-border/30"
-                      style={{ height: 56 }}
-                    >
-                      <div className="shrink-0 border-r border-border/20" style={{ width: LABEL_W }} />
-                      {gridDays.map((d, i) => {
-                        const isToday = d.toLocaleDateString() === todayStr;
-                        const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-                        return (
-                          <div key={i} className={cn(
-                            "flex-1 flex flex-col items-center justify-center border-r border-border/20 last:border-r-0 gap-0.5",
-                            isToday && "bg-brand-indigo/5",
-                            isWeekend && "bg-muted/50"
-                          )}>
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                              {["SUN","MON","TUE","WED","THU","FRI","SAT"][d.getDay()]}
-                            </span>
-                            <span className={cn("text-lg font-black leading-none", isToday ? "text-brand-indigo" : "text-foreground")}>
-                              {d.getDate()}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Time grid coordinate space */}
-                    <div className="relative" style={{ height: totalH }}>
-                      {/* Time labels */}
-                      {hours.map(h => h > 0 ? (
-                        <div
-                          key={h}
-                          className="absolute text-[10px] font-semibold text-muted-foreground leading-none pointer-events-none select-none"
-                          style={{
-                            top: h * HOUR_H,
-                            width: LABEL_W,
-                            transform: "translateY(-50%)",
-                            textAlign: "right",
-                            paddingRight: 8,
-                          }}
-                        >
-                          {h < 12 ? `${h} AM` : h === 12 ? "12 PM" : `${h - 12} PM`}
-                        </div>
-                      ) : null)}
-
-                      {/* Vertical separator */}
-                      <div
-                        className="absolute top-0 bottom-0 border-r border-border/20 pointer-events-none"
-                        style={{ left: LABEL_W }}
-                      />
-
-                      {/* Day columns */}
-                      <div className="absolute top-0 bottom-0 right-0 flex" style={{ left: LABEL_W }}>
-                        {gridDays.map((d, i) => {
-                          const isToday = d.toLocaleDateString() === todayStr;
-                          const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-                          const dateKey = d.toLocaleDateString();
-                          return (
-                            <div key={i} className={cn(
-                              "flex-1 relative border-r border-border/20 last:border-r-0",
-                              isWeekend && "bg-stone-200/20",
-                              isToday && "bg-brand-indigo/[0.03]"
-                            )}>
-                              {/* Gridlines */}
-                              {hours.map(h => (
-                                <div
-                                  key={h}
-                                  className="absolute left-0 right-0 border-t border-border/20 pointer-events-none"
-                                  style={{ top: h * HOUR_H }}
-                                />
-                              ))}
-
-                              {/* DnD drop zones */}
-                              {hours.map(h => (
-                                <DroppableTimeSlot key={h} dateKey={dateKey} hour={h} hourHeight={HOUR_H} />
-                              ))}
-
-                              {/* Current time line — always visible across all columns */}
-                              <div
-                                className="absolute left-0 right-0 z-20 pointer-events-none"
-                                style={{ top: (currentTime.getHours() * 60 + currentTime.getMinutes()) * (HOUR_H / 60) }}
-                              >
-                                <div className={cn("absolute inset-x-0", isToday ? "border-t-2 border-red-500" : "border-t border-red-400/25")} />
-                                {isToday && <div className="absolute -left-1.5 -top-1.5 w-3 h-3 rounded-full bg-red-500" />}
-                              </div>
-
-                              {/* Appointment cards */}
-                              {appts.filter(a => a.date === dateKey).map(a => {
-                                const endTotalMin = a.hour * 60 + a.minutes + (a.callDurationMinutes || 60);
-                                const eH = Math.floor(endTotalMin / 60) % 24;
-                                const eM = endTotalMin % 60;
-                                const eAmPm = eH >= 12 ? "PM" : "AM";
-                                const eH12 = eH % 12 || 12;
-                                const endStr = `${eH12}:${String(eM).padStart(2,"0")} ${eAmPm}`;
-                                return (
-                                  <DraggableBookingCard
-                                    key={a.id}
-                                    appt={a}
-                                    onClick={(e) => { e.stopPropagation(); setSelectedBooking(a); }}
-                                    className={cn(
-                                      "absolute left-1 right-1 px-2 py-1.5 rounded-xl shadow-sm z-10 hover:ring-2 overflow-hidden",
-                                      a.no_show
-                                        ? "bg-red-600 text-white hover:ring-red-400"
-                                        : "bg-[#4F46E5] text-white hover:ring-brand-indigo"
-                                    )}
-                                    style={{
-                                      top: `${(a.hour * 60 + a.minutes) * (HOUR_H / 60)}px`,
-                                      height: `${((a.callDurationMinutes || 60) / 60) * HOUR_H - 4}px`,
-                                    }}
-                                  >
-                                    <div className="flex items-center gap-1 min-w-0">
-                                      <div className="text-[10px] font-bold truncate flex-1 text-white" data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</div>
-                                    </div>
-                                    <div className="text-[9px] font-medium text-white/80" data-testid={`booking-time-${a.id}`}>
-                                      {a.time} — {endStr}
-                                    </div>
-                                  </DraggableBookingCard>
-                                );
-                              })}
-
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* Right detail panel — 3rd column (reuses ContactSidebar from Chats) */}
-            {(selectedBooking || selectedLead) && (() => {
-              const panelLead = (selectedBooking?.rawLead ?? selectedLead) as ConversationLead;
-              const panelLeadId = panelLead?.id ?? panelLead?.Id;
-              const fakeThread = panelLead ? {
-                lead: panelLead,
-                msgs: [] as Interaction[],
-                last: undefined as Interaction | undefined,
-                unread: false,
-                unreadCount: 0,
-              } : null;
-              return (
-                <div className="overflow-hidden flex flex-col lg:order-3 h-full">
-                  <ContactSidebar
-                    selected={fakeThread}
-                    onClose={() => { setSelectedBooking(null); setSelectedLead(null); }}
-                    onUpdateLead={handleCalendarUpdateLead}
-                    className="flex"
-                    recentMessages={recentMessages}
-                    recentMessagesLoading={recentMessagesLoading}
-                    onViewConversation={() => goTo(`/conversations?leadId=${panelLeadId}`)}
-                  />
-                </div>
-              );
-            })()}
-
-            {/* ══════════════════════════════════════════════════════════════════
-                LEFT PANEL — My Calendar (appointment list)
-               ══════════════════════════════════════════════════════════════════ */}
-            <div className={cn(
-              "bg-muted flex flex-col overflow-hidden rounded-lg lg:order-1",
-              isMobile || isTablet ? "min-h-[200px] max-h-[300px]" : "h-full"
-            )} data-testid="calendar-list">
-
-              {/* ── Panel header ── */}
-              <div className="px-3.5 pt-5 pb-1 shrink-0 flex items-center justify-between">
-                <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight" data-testid="text-list-title">
-                  My Calendar
-                </h2>
-                <span className="w-10 text-center text-[12px] font-medium text-muted-foreground tabular-nums">{totalApptCount}</span>
-              </div>
-
-              {/* Subtitle */}
-              {selectedDate && (
-                <div className="px-3.5 pb-1 flex items-center gap-2">
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
-                    {selectedDate}
-                  </span>
-                  <button
-                    onClick={() => setSelectedDate(null)}
-                    className="h-4 w-4 rounded-full hover:bg-card flex items-center justify-center text-muted-foreground"
-                    title="Clear date filter"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              )}
-
-              {/* ── Controls row: view tabs + action buttons ── */}
-              <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5">
-                {/* View mode tabs */}
-                <div className="flex items-center gap-1" data-testid="view-tab-strip">
-                  {VIEW_MODE_TABS.map((tab) => {
-                    const Icon = tab.icon;
-                    const isActive = viewMode === tab.id;
-                    return isActive ? (
-                      <button
-                        key={tab.id}
-                        onClick={() => setViewMode(tab.id)}
-                        className="inline-flex items-center gap-1.5 h-10 px-3 rounded-full bg-highlight-active text-foreground text-[12px] font-semibold"
-                        data-testid={`button-view-${tab.id}`}
-                      >
-                        <Icon className="h-4 w-4" />
-                        {tab.label}
-                      </button>
-                    ) : (
-                      <button
-                        key={tab.id}
-                        onClick={() => setViewMode(tab.id)}
-                        className="h-10 w-10 rounded-full border border-border/65 flex items-center justify-center bg-transparent hover:bg-card text-muted-foreground"
-                        data-testid={`button-view-${tab.id}`}
-                        title={tab.label}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Spacer */}
-                <div className="flex-1 min-w-0" />
-
                 {/* + New appointment */}
                 <Popover open={bookPopoverOpen} onOpenChange={setBookPopoverOpen}>
                   <PopoverTrigger asChild>
-                    <IconBtn title="New appointment"><Plus className="h-4 w-4" /></IconBtn>
+                    <IconBtn className="!h-9 !w-9" title="New appointment"><Plus className="h-4 w-4" /></IconBtn>
                   </PopoverTrigger>
                   <PopoverContent className="w-72 p-0 overflow-hidden" align="end">
                     <div className="px-3 pt-3 pb-2 border-b border-border/30">
@@ -1373,173 +1067,485 @@ export default function CalendarPage() {
                 </Popover>
 
                 {/* Search */}
-                <IconBtn title="Search appointments" active={searchOpen} onClick={() => { setSearchOpen((p) => !p); if (searchOpen) setSearchQuery(""); }}>
+                <IconBtn className="!h-9 !w-9" title="Search appointments" active={searchOpen} onClick={() => { setSearchOpen((p) => !p); if (searchOpen) setSearchQuery(""); }}>
                   <Search className="h-4 w-4" />
                 </IconBtn>
 
                 {/* Settings */}
                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <IconBtn active={apptSortBy !== "time" || apptGroupBy !== "date" || apptFilterStatuses.length > 0 || calendarAccountFilter !== "all" || campaignId !== "all"} title="Group, Sort & Filter">
-                        <SlidersHorizontal className="h-4 w-4" />
-                      </IconBtn>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      {/* Account filter — agency only */}
-                      {isAgencyUser && (
-                        <>
-                          <DropdownMenuSub>
-                            <DropdownMenuSubTrigger className="text-[12px]">
-                              <Building2 className="h-3.5 w-3.5 mr-2" />
-                              Account
-                              {calendarAccountFilter !== "all" && <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[72px]">{selectedAccountName}</span>}
-                            </DropdownMenuSubTrigger>
-                            <DropdownMenuSubContent className="w-52 max-h-64 overflow-y-auto">
-                              <DropdownMenuItem
-                                className={cn("flex items-center px-3 py-2 text-[12px] font-medium rounded-lg cursor-pointer", calendarAccountFilter === "all" && "font-bold")}
-                                onClick={() => handleAccountFilterChange("all")}
-                                data-testid="account-filter-option-all"
-                              >
-                                All Accounts
-                                {calendarAccountFilter === "all" && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
-                              </DropdownMenuItem>
-                              {(accounts || []).filter((a: any) => (a.id || a.Id) !== 1).length > 0 && (
-                                <DropdownMenuSeparator />
-                              )}
-                              {(accounts || [])
-                                .filter((a: any) => (a.id || a.Id) !== 1)
-                                .map((acc: any) => {
-                                  const accId = acc.id || acc.Id;
-                                  return (
-                                    <DropdownMenuItem
-                                      key={accId}
-                                      className={cn("flex items-center px-3 py-2 text-[12px] rounded-lg cursor-pointer", calendarAccountFilter === accId && "font-bold text-foreground")}
-                                      onClick={() => handleAccountFilterChange(accId)}
-                                      data-testid={`account-filter-option-${accId}`}
-                                    >
-                                      <span className="truncate">{acc.name || acc.Name}</span>
-                                      {calendarAccountFilter === accId && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
-                                    </DropdownMenuItem>
-                                  );
-                                })
-                              }
-                            </DropdownMenuSubContent>
-                          </DropdownMenuSub>
-                          <DropdownMenuSeparator />
-                        </>
-                      )}
+                  <DropdownMenuTrigger asChild>
+                    <IconBtn className="!h-9 !w-9" active={apptSortBy !== "time" || apptGroupBy !== "date" || apptFilterStatuses.length > 0 || calendarAccountFilter !== "all" || campaignId !== "all"} title="Group, Sort & Filter">
+                      <SlidersHorizontal className="h-4 w-4" />
+                    </IconBtn>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {/* Account filter — agency only */}
+                    {isAgencyUser && (
+                      <>
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className="text-[12px]">
+                            <Building2 className="h-3.5 w-3.5 mr-2" />
+                            Account
+                            {calendarAccountFilter !== "all" && <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[72px]">{selectedAccountName}</span>}
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent className="w-52 max-h-64 overflow-y-auto">
+                            <DropdownMenuItem
+                              className={cn("flex items-center px-3 py-2 text-[12px] font-medium rounded-lg cursor-pointer", calendarAccountFilter === "all" && "font-bold")}
+                              onClick={() => handleAccountFilterChange("all")}
+                              data-testid="account-filter-option-all"
+                            >
+                              All Accounts
+                              {calendarAccountFilter === "all" && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
+                            </DropdownMenuItem>
+                            {(accounts || []).filter((a: any) => (a.id || a.Id) !== 1).length > 0 && (
+                              <DropdownMenuSeparator />
+                            )}
+                            {(accounts || [])
+                              .filter((a: any) => (a.id || a.Id) !== 1)
+                              .map((acc: any) => {
+                                const accId = acc.id || acc.Id;
+                                return (
+                                  <DropdownMenuItem
+                                    key={accId}
+                                    className={cn("flex items-center px-3 py-2 text-[12px] rounded-lg cursor-pointer", calendarAccountFilter === accId && "font-bold text-foreground")}
+                                    onClick={() => handleAccountFilterChange(accId)}
+                                    data-testid={`account-filter-option-${accId}`}
+                                  >
+                                    <span className="truncate">{acc.name || acc.Name}</span>
+                                    {calendarAccountFilter === accId && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
+                                  </DropdownMenuItem>
+                                );
+                              })
+                            }
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
 
-                      {/* Campaign filter */}
-                      <DropdownMenuSub>
-                        <DropdownMenuSubTrigger className="text-[12px]">
-                          <Filter className="h-3.5 w-3.5 mr-2" />
-                          Campaign
-                          {campaignId !== "all" && <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[72px]">{selectedCampaignName ?? ""}</span>}
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent className="w-52 max-h-64 overflow-y-auto">
+                    {/* Campaign filter */}
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="text-[12px]">
+                        <Filter className="h-3.5 w-3.5 mr-2" />
+                        Campaign
+                        {campaignId !== "all" && <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[72px]">{selectedCampaignName ?? ""}</span>}
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="w-52 max-h-64 overflow-y-auto">
+                        <DropdownMenuItem
+                          className={cn("flex items-center px-3 py-2 text-[12px] font-medium rounded-lg cursor-pointer", campaignId === "all" && "font-bold")}
+                          onClick={() => setCampaignId("all")}
+                          data-testid="campaign-filter-all"
+                        >
+                          All Campaigns
+                          {campaignId === "all" && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
+                        </DropdownMenuItem>
+                        {campaignOptions.length > 0 && <DropdownMenuSeparator />}
+                        {campaignOptions.map((c: any) => (
                           <DropdownMenuItem
-                            className={cn("flex items-center px-3 py-2 text-[12px] font-medium rounded-lg cursor-pointer", campaignId === "all" && "font-bold")}
-                            onClick={() => setCampaignId("all")}
-                            data-testid="campaign-filter-all"
+                            key={c.id}
+                            className={cn("flex items-center gap-2 px-3 py-2 text-[12px] rounded-lg cursor-pointer", campaignId === c.id && "font-bold text-brand-indigo")}
+                            onClick={() => setCampaignId(c.id)}
+                            data-testid={`campaign-filter-option-${c.id}`}
                           >
-                            All Campaigns
-                            {campaignId === "all" && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
+                            <span className="truncate flex-1">{c.name}</span>
+                            {c.status && (
+                              <span className={cn(
+                                "text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase shrink-0",
+                                c.status === "Active" ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                                  : c.status === "Finished" ? "bg-muted/40 text-muted-foreground"
+                                  : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                              )}>
+                                {c.status}
+                              </span>
+                            )}
+                            {campaignId === c.id && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                           </DropdownMenuItem>
-                          {campaignOptions.length > 0 && <DropdownMenuSeparator />}
-                          {campaignOptions.map((c: any) => (
-                            <DropdownMenuItem
-                              key={c.id}
-                              className={cn("flex items-center gap-2 px-3 py-2 text-[12px] rounded-lg cursor-pointer", campaignId === c.id && "font-bold text-brand-indigo")}
-                              onClick={() => setCampaignId(c.id)}
-                              data-testid={`campaign-filter-option-${c.id}`}
-                            >
-                              <span className="truncate flex-1">{c.name}</span>
-                              {c.status && (
-                                <span className={cn(
-                                  "text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase shrink-0",
-                                  c.status === "Active" ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                                    : c.status === "Finished" ? "bg-muted/40 text-muted-foreground"
-                                    : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
-                                )}>
-                                  {c.status}
-                                </span>
-                              )}
-                              {campaignId === c.id && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                            </DropdownMenuItem>
-                          ))}
-                          {campaignOptions.length === 0 && (
-                            <div className="px-3 py-2 text-[12px] text-muted-foreground italic">No campaigns</div>
-                          )}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuSub>
+                        ))}
+                        {campaignOptions.length === 0 && (
+                          <div className="px-3 py-2 text-[12px] text-muted-foreground italic">No campaigns</div>
+                        )}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
 
-                      <DropdownMenuSeparator />
+                    <DropdownMenuSeparator />
 
-                      <DropdownMenuSub>
-                        <DropdownMenuSubTrigger className="text-[12px]">
-                          <Layers className="h-3.5 w-3.5 mr-2" />
-                          Group
-                          {apptGroupBy !== "date" && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{APPT_GROUP_LABELS[apptGroupBy]}</span>}
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent className="w-40">
-                          {(["date", "campaign", "status", "none"] as ApptGroupBy[]).map((opt) => (
-                            <DropdownMenuItem key={opt} onClick={() => setApptGroupBy(opt)} className={cn("text-[12px]", apptGroupBy === opt && "font-semibold text-brand-indigo")}>
-                              {APPT_GROUP_LABELS[opt]}
-                              {apptGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuSub>
-
-                      <DropdownMenuSub>
-                        <DropdownMenuSubTrigger className="text-[12px]">
-                          <ArrowUpDown className="h-3.5 w-3.5 mr-2" />
-                          Sort
-                          {apptSortBy !== "time" && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{APPT_SORT_LABELS[apptSortBy]}</span>}
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent className="w-44">
-                          {(["time", "name", "campaign", "status"] as ApptSortBy[]).map((opt) => (
-                            <DropdownMenuItem key={opt} onClick={() => setApptSortBy(opt)} className={cn("text-[12px]", apptSortBy === opt && "font-semibold text-brand-indigo")}>
-                              {APPT_SORT_LABELS[opt]}
-                              {apptSortBy === opt && <Check className="h-3 w-3 ml-auto" />}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuSub>
-
-                      <DropdownMenuSeparator />
-
-                      <DropdownMenuSub>
-                        <DropdownMenuSubTrigger className="text-[12px]">
-                          <Filter className="h-3.5 w-3.5 mr-2" />
-                          Filter
-                          {apptFilterStatuses.length > 0 && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{apptFilterStatuses.length}</span>}
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent className="w-48">
-                          {(["no_show", "rescheduled", "confirmed"] as ApptFilterStatus[]).map((opt) => (
-                            <DropdownMenuItem
-                              key={opt}
-                              onClick={(e) => { e.preventDefault(); setApptFilterStatuses((prev) => prev.includes(opt) ? prev.filter((s) => s !== opt) : [...prev, opt]); }}
-                              className="flex items-center gap-2 text-[12px]"
-                            >
-                              <span className="flex-1">{APPT_FILTER_LABELS[opt]}</span>
-                              {apptFilterStatuses.includes(opt) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuSub>
-
-                      {(apptSortBy !== "time" || apptGroupBy !== "date" || apptFilterStatuses.length > 0 || calendarAccountFilter !== "all" || campaignId !== "all") && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => { setApptSortBy("time"); setApptGroupBy("date"); setApptFilterStatuses([]); handleAccountFilterChange("all"); setCampaignId("all"); }} className="text-[12px] text-destructive">
-                            Reset all settings
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="text-[12px]">
+                        <Layers className="h-3.5 w-3.5 mr-2" />
+                        Group
+                        {apptGroupBy !== "date" && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{APPT_GROUP_LABELS[apptGroupBy]}</span>}
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="w-40">
+                        {(["date", "campaign", "status", "none"] as ApptGroupBy[]).map((opt) => (
+                          <DropdownMenuItem key={opt} onClick={() => setApptGroupBy(opt)} className={cn("text-[12px]", apptGroupBy === opt && "font-semibold text-brand-indigo")}>
+                            {APPT_GROUP_LABELS[opt]}
+                            {apptGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
                           </DropdownMenuItem>
-                        </>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="text-[12px]">
+                        <ArrowUpDown className="h-3.5 w-3.5 mr-2" />
+                        Sort
+                        {apptSortBy !== "time" && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{APPT_SORT_LABELS[apptSortBy]}</span>}
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="w-44">
+                        {(["time", "name", "campaign", "status"] as ApptSortBy[]).map((opt) => (
+                          <DropdownMenuItem key={opt} onClick={() => setApptSortBy(opt)} className={cn("text-[12px]", apptSortBy === opt && "font-semibold text-brand-indigo")}>
+                            {APPT_SORT_LABELS[opt]}
+                            {apptSortBy === opt && <Check className="h-3 w-3 ml-auto" />}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="text-[12px]">
+                        <Filter className="h-3.5 w-3.5 mr-2" />
+                        Filter
+                        {apptFilterStatuses.length > 0 && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{apptFilterStatuses.length}</span>}
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="w-48">
+                        {(["no_show", "rescheduled", "confirmed"] as ApptFilterStatus[]).map((opt) => (
+                          <DropdownMenuItem
+                            key={opt}
+                            onClick={(e) => { e.preventDefault(); setApptFilterStatuses((prev) => prev.includes(opt) ? prev.filter((s) => s !== opt) : [...prev, opt]); }}
+                            className="flex items-center gap-2 text-[12px]"
+                          >
+                            <span className="flex-1">{APPT_FILTER_LABELS[opt]}</span>
+                            {apptFilterStatuses.includes(opt) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+
+                    {(apptSortBy !== "time" || apptGroupBy !== "date" || apptFilterStatuses.length > 0 || calendarAccountFilter !== "all" || campaignId !== "all") && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => { setApptSortBy("time"); setApptGroupBy("date"); setApptFilterStatuses([]); handleAccountFilterChange("all"); setCampaignId("all"); }} className="text-[12px] text-destructive">
+                          Reset all settings
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Spacer */}
+                <div className="flex-1 min-w-0" />
+
+                {/* Inline Booked Calls KPI */}
+                <BookedCallsKpi
+                  variant="inline"
+                  accountId={isAgencyUser ? (effectiveAccountFilter === "all" ? undefined : effectiveAccountFilter) : currentAccountId}
+                />
               </div>
+
+              {/* ── Month view ── */}
+              {viewMode === "month" && (
+                <>
+                  <div className="grid grid-cols-7 text-xs text-center font-bold text-muted-foreground bg-muted/30 shrink-0" data-testid="row-dow">
+                    {(() => {
+                      const todayDow = new Date().getDay(); // 0=Sun
+                      return ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((d, i) => (
+                        <div key={i} className={cn("px-3 py-3", (i === 0 || i === 6) && "bg-muted/10 opacity-70", i === todayDow && "text-brand-indigo")} data-testid={`dow-${i}`}>{d}</div>
+                      ));
+                    })()}
+                  </div>
+                  <div className="flex-1 grid grid-cols-7 overflow-y-auto" data-testid="grid-days">
+                    {days.map((d, idx) => {
+                      const inMonth = d.date.getMonth() === month.getMonth();
+                      const isToday = d.date.toLocaleDateString() === todayStr;
+                      const isSelected = selectedDate === d.date.toLocaleDateString();
+                      const isWeekend = d.date.getDay() === 0 || d.date.getDay() === 6;
+                      const dateKey = d.date.toLocaleDateString();
+                      return (
+                        <DroppableDay
+                          key={idx}
+                          dateKey={dateKey}
+                          onClick={() => handleDateClick(dateKey)}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleDateClick(dateKey); } }}
+                          aria-label={`Select ${dateKey}`}
+                          className={cn(
+                            "min-h-[100px] border-b border-r border-border/30 last:border-r-0 p-2 cursor-pointer hover:bg-muted/30 relative",
+                            !inMonth && "bg-muted/5 opacity-40",
+                            isWeekend && "bg-stone-200/30",
+                            isSelected && "bg-brand-indigo/[0.08] z-10",
+                            isToday && !isSelected && "bg-teal-600/5"
+                          )}
+                          data-testid={`day-${idx}`}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className={cn(
+                              "text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full",
+                              isToday ? "text-white bg-teal-600" : inMonth ? "text-foreground" : "text-muted-foreground"
+                            )}>
+                              {d.date.getDate()}
+                            </div>
+                          </div>
+                          {d.count > 0 && (
+                            <div className="mt-1 space-y-0.5">
+                              {appts.filter((a) => a.date === dateKey).slice(0, 2).map((a, ai) => {
+                                const apptDate = new Date(a.raw_booked_call_date);
+                                const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+                                const todayEnd = new Date(todayStart); todayEnd.setDate(todayEnd.getDate() + 1);
+                                const isPast = apptDate < todayStart;
+                                const isToday = apptDate >= todayStart && apptDate < todayEnd;
+                                const hoverRing = a.no_show ? "hover:ring-red-400" : isPast ? "hover:ring-muted-foreground/40" : isToday ? "hover:ring-teal-400" : "hover:ring-amber-400";
+                                const pillColor = isPast
+                                  ? "bg-muted/70 text-muted-foreground"
+                                  : a.no_show
+                                    ? "bg-red-600 text-white"
+                                    : isToday
+                                      ? "bg-teal-600 text-white"
+                                      : "bg-amber-500 text-white";
+                                return (
+                                <DraggableBookingCard
+                                  key={a.id}
+                                  appt={a}
+                                  onClick={(e) => { e.stopPropagation(); setSelectedBooking(a); }}
+                                  className={cn("text-left overflow-hidden hover:ring-1 hover:ring-inset animate-pill-pop", hoverRing)}
+                                  style={{ animationDelay: `${ai * 60}ms` }}
+                                >
+                                  <div className={cn(
+                                    "h-9 px-2 rounded-full flex items-center gap-1.5 overflow-hidden",
+                                    pillColor
+                                  )}>
+                                    <span className={cn("text-[9px] font-bold truncate flex-1 leading-none",
+                                      isPast ? "text-muted-foreground" : "text-white"
+                                    )} data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</span>
+                                    <span className="text-[8px] font-medium shrink-0 tabular-nums leading-none opacity-80" data-testid={`booking-time-${a.id}`}>{a.time}</span>
+                                  </div>
+                                </DraggableBookingCard>
+                                );
+                              })}
+                              {d.count > 2 && (
+                                <div className="text-[8px] font-bold text-muted-foreground text-center">+{d.count - 2} more</div>
+                              )}
+                            </div>
+                          )}
+                        </DroppableDay>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+
+              {/* ── Week / Day time grid ── */}
+              {(viewMode === "week" || viewMode === "day") && (() => {
+                const gridDays = viewMode === "week" ? weekDays : [anchorDate];
+                const totalH = 24 * HOUR_H;
+                return (
+                  <div ref={timeGridRef} className="flex-1 overflow-y-auto" data-testid="grid-time">
+
+                    {/* Sticky day-header row */}
+                    <div
+                      className="sticky top-0 z-30 flex shrink-0 bg-muted border-b border-border/30"
+                      style={{ height: 56 }}
+                    >
+                      <div className="shrink-0 border-r border-border/20" style={{ width: LABEL_W }} />
+                      {gridDays.map((d, i) => {
+                        const isToday = d.toLocaleDateString() === todayStr;
+                        const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                        return (
+                          <div key={i} className={cn(
+                            "flex-1 flex flex-col items-center justify-center border-r border-border/20 last:border-r-0 gap-0.5",
+                            isToday && "bg-teal-600/5",
+                            isWeekend && "bg-muted/50"
+                          )}>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                              {["SUN","MON","TUE","WED","THU","FRI","SAT"][d.getDay()]}
+                            </span>
+                            <span className={cn("text-lg font-black leading-none", isToday ? "text-teal-600" : "text-foreground")}>
+                              {d.getDate()}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Time grid coordinate space */}
+                    <div className="relative" style={{ height: totalH }}>
+                      {/* Time labels */}
+                      {hours.map(h => h > 0 ? (
+                        <div
+                          key={h}
+                          className="absolute text-[10px] font-semibold text-muted-foreground leading-none pointer-events-none select-none"
+                          style={{
+                            top: h * HOUR_H,
+                            width: LABEL_W,
+                            transform: "translateY(-50%)",
+                            textAlign: "right",
+                            paddingRight: 8,
+                          }}
+                        >
+                          {h < 12 ? `${h} AM` : h === 12 ? "12 PM" : `${h - 12} PM`}
+                        </div>
+                      ) : null)}
+
+                      {/* Vertical separator */}
+                      <div
+                        className="absolute top-0 bottom-0 border-r border-border/20 pointer-events-none"
+                        style={{ left: LABEL_W }}
+                      />
+
+                      {/* Day columns */}
+                      <div className="absolute top-0 bottom-0 right-0 flex" style={{ left: LABEL_W }}>
+                        {gridDays.map((d, i) => {
+                          const isToday = d.toLocaleDateString() === todayStr;
+                          const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                          const dateKey = d.toLocaleDateString();
+                          return (
+                            <div key={i} className={cn(
+                              "flex-1 relative border-r border-border/20 last:border-r-0",
+                              isWeekend && "bg-stone-200/20",
+                              isToday && "bg-teal-600/[0.03]"
+                            )}>
+                              {/* Gridlines */}
+                              {hours.map(h => (
+                                <div
+                                  key={h}
+                                  className="absolute left-0 right-0 border-t border-border/20 pointer-events-none"
+                                  style={{ top: h * HOUR_H }}
+                                />
+                              ))}
+
+                              {/* DnD drop zones */}
+                              {hours.map(h => (
+                                <DroppableTimeSlot key={h} dateKey={dateKey} hour={h} hourHeight={HOUR_H} />
+                              ))}
+
+                              {/* Current time line — always visible across all columns */}
+                              <div
+                                className="absolute left-0 right-0 z-20 pointer-events-none"
+                                style={{ top: (currentTime.getHours() * 60 + currentTime.getMinutes()) * (HOUR_H / 60) }}
+                              >
+                                <div className={cn("absolute inset-x-0", isToday ? "border-t-2 border-teal-500" : "border-t border-teal-400/25")} />
+                                {isToday && <div className="absolute -left-1.5 -top-1.5 w-3 h-3 rounded-full bg-teal-500" />}
+                              </div>
+
+                              {/* Appointment cards */}
+                              {appts.filter(a => a.date === dateKey).map((a, ai) => {
+                                const endTotalMin = a.hour * 60 + a.minutes + (a.callDurationMinutes || 60);
+                                const eH = Math.floor(endTotalMin / 60) % 24;
+                                const eM = endTotalMin % 60;
+                                const eAmPm = eH >= 12 ? "PM" : "AM";
+                                const eH12 = eH % 12 || 12;
+                                const endStr = `${eH12}:${String(eM).padStart(2,"0")} ${eAmPm}`;
+                                const apptDate = new Date(a.raw_booked_call_date);
+                                const dayStart = new Date(); dayStart.setHours(0,0,0,0);
+                                const dayEnd = new Date(dayStart); dayEnd.setDate(dayEnd.getDate() + 1);
+                                const isPast = apptDate < dayStart;
+                                const isApptToday = apptDate >= dayStart && apptDate < dayEnd;
+                                const cardColor = isPast
+                                  ? "bg-muted/70 text-muted-foreground hover:ring-muted-foreground/40"
+                                  : a.no_show
+                                    ? "bg-red-600 text-white hover:ring-red-400"
+                                    : isApptToday
+                                      ? "bg-teal-600 text-white hover:ring-teal-400"
+                                      : "bg-amber-500 text-white hover:ring-amber-400";
+                                return (
+                                  <DraggableBookingCard
+                                    key={a.id}
+                                    appt={a}
+                                    onClick={(e) => { e.stopPropagation(); setSelectedBooking(a); }}
+                                    className={cn(
+                                      "absolute left-1 right-1 px-2 py-1.5 rounded-xl shadow-sm z-10 hover:ring-2 overflow-hidden animate-pill-pop",
+                                      cardColor
+                                    )}
+                                    style={{
+                                      top: `${(a.hour * 60 + a.minutes) * (HOUR_H / 60)}px`,
+                                      height: `${((a.callDurationMinutes || 60) / 60) * HOUR_H - 4}px`,
+                                      animationDelay: `${ai * 60}ms`,
+                                    }}
+                                  >
+                                    <div className="flex items-center gap-1 min-w-0">
+                                      <div className={cn("text-[10px] font-bold truncate flex-1", isPast ? "text-muted-foreground" : "text-white")} data-testid={`booking-lead-name-${a.id}`}>{a.lead_name}</div>
+                                    </div>
+                                    <div className={cn("text-[9px] font-medium", isPast ? "text-muted-foreground/70" : "text-white/80")} data-testid={`booking-time-${a.id}`}>
+                                      {a.time} — {endStr}
+                                    </div>
+                                  </DraggableBookingCard>
+                                );
+                              })}
+
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Right detail panel — 3rd column (reuses ContactSidebar from Chats) */}
+            {(selectedBooking || selectedLead) && (() => {
+              const panelLead = (selectedBooking?.rawLead ?? selectedLead) as ConversationLead;
+              const panelLeadId = panelLead?.id ?? panelLead?.Id;
+              const fakeThread = panelLead ? {
+                lead: panelLead,
+                msgs: [] as Interaction[],
+                last: undefined as Interaction | undefined,
+                unread: false,
+                unreadCount: 0,
+              } : null;
+              return (
+                <div className="overflow-hidden flex flex-col lg:order-3 h-full">
+                  <ContactSidebar
+                    selected={fakeThread}
+                    onClose={() => { setSelectedBooking(null); setSelectedLead(null); }}
+                    onUpdateLead={handleCalendarUpdateLead}
+                    className="flex"
+                    recentMessages={recentMessages}
+                    recentMessagesLoading={recentMessagesLoading}
+                    onViewConversation={() => goTo(`/conversations?leadId=${panelLeadId}`)}
+                  />
+                </div>
+              );
+            })()}
+
+            {/* ══════════════════════════════════════════════════════════════════
+                LEFT PANEL — My Calendar (appointment list)
+               ══════════════════════════════════════════════════════════════════ */}
+            <div className={cn(
+              "bg-muted flex flex-col overflow-hidden rounded-lg lg:order-1",
+              isMobile || isTablet ? "min-h-[200px] max-h-[300px]" : "h-full"
+            )} data-testid="calendar-list">
+
+              {/* ── Panel header ── */}
+              <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center">
+                <div className="flex items-center justify-between w-[309px] shrink-0">
+                  <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight" data-testid="text-list-title">
+                    My Calendar
+                  </h2>
+                  <ViewTabBar
+                    tabs={CALENDAR_TABS}
+                    activeId={viewMode}
+                    onTabChange={(id) => setViewMode(id as ViewMode)}
+                  />
+                </div>
+              </div>
+
+              {/* Subtitle */}
+              {selectedDate && (
+                <div className="px-3.5 pb-1 flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
+                    {selectedDate}
+                  </span>
+                  <button
+                    onClick={() => setSelectedDate(null)}
+                    className="h-4 w-4 rounded-full hover:bg-card flex items-center justify-center text-muted-foreground"
+                    title="Clear date filter"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+
 
               {/* ── Search bar (collapsible) ── */}
               {searchOpen && (
@@ -1569,14 +1575,15 @@ export default function CalendarPage() {
                         {group.label && (
                           <ApptGroupHeader label={group.label} count={group.items.length} />
                         )}
-                        {group.items.map((a) => (
-                          <AppointmentCard
-                            key={a.id}
-                            appt={a}
-                            isActive={selectedBooking?.id === a.id}
-                            onSelect={() => setSelectedBooking(a)}
-                            onSelectLead={handleSelectLead}
-                          />
+                        {group.items.map((a, ai) => (
+                          <div key={a.id} className="animate-card-enter" style={{ animationDelay: `${Math.min(ai, 15) * 30}ms` }}>
+                            <AppointmentCard
+                              appt={a}
+                              isActive={selectedBooking?.id === a.id}
+                              onSelect={() => setSelectedBooking(a)}
+                              onSelectLead={handleSelectLead}
+                            />
+                          </div>
                         ))}
                       </div>
                     ))}

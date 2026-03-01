@@ -1,11 +1,13 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 import {
   Building2, Phone, Bot, Globe, Clock, FileText, Ban,
   Eye, EyeOff, Copy, Check,
   Plus, Trash2, FileDown,
   Pencil, X, RefreshCw, Camera,
   ChevronRight, Megaphone, Users,
+  Paintbrush,
 } from "lucide-react";
+import { GradientTester, GradientControlPoints, DEFAULT_LAYERS, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
 import { getInitials, getAccountAvatarColor } from "@/lib/avatarUtils";
@@ -697,7 +699,10 @@ function AccountUsersPanel({ accountId, routePrefix }: { accountId: number; rout
               <li
                 key={u.id ?? u.Id ?? i}
                 className="flex items-center gap-2 py-2 px-2 -mx-2 border-b border-border/15 last:border-0 cursor-pointer rounded-lg hover:bg-black/[0.04] transition-colors"
-                onClick={() => setLocation(`${routePrefix}/users`)}
+                onClick={() => {
+                  sessionStorage.setItem("pendingSettingsSection", "team");
+                  setLocation(`${routePrefix}/settings`);
+                }}
               >
                 {(() => {
                   const colors = getAvatarColor(name);
@@ -729,19 +734,28 @@ function AccountUsersPanel({ accountId, routePrefix }: { accountId: number; rout
 
 // ── Empty state ────────────────────────────────────────────────────────────────
 
-export function AccountDetailViewEmpty() {
+export function AccountDetailViewEmpty({ toolbarPrefix }: { toolbarPrefix?: ReactNode }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8 text-center">
-      <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-stone-50 to-gray-100 flex items-center justify-center ring-1 ring-stone-200/50">
-        <Building2 className="h-10 w-10 text-stone-400" />
+    <div className="flex-1 flex flex-col">
+      {toolbarPrefix && (
+        <div className="shrink-0 px-4 pt-5 pb-3">
+          <div className="flex items-center gap-1 flex-wrap">
+            {toolbarPrefix}
+          </div>
+        </div>
+      )}
+      <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8 text-center">
+        <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-stone-50 to-gray-100 flex items-center justify-center ring-1 ring-stone-200/50">
+          <Building2 className="h-10 w-10 text-stone-400" />
+        </div>
+        <div className="space-y-1.5">
+          <p className="text-sm font-semibold text-foreground/70">Select an account</p>
+          <p className="text-xs text-muted-foreground max-w-[180px] leading-relaxed">
+            Click any account on the left to see its details and configuration.
+          </p>
+        </div>
+        <div className="text-[11px] text-stone-400 font-medium">&larr; Choose from the list</div>
       </div>
-      <div className="space-y-1.5">
-        <p className="text-sm font-semibold text-foreground/70">Select an account</p>
-        <p className="text-xs text-muted-foreground max-w-[180px] leading-relaxed">
-          Click any account on the left to see its details and configuration.
-        </p>
-      </div>
-      <div className="text-[11px] text-stone-400 font-medium">&larr; Choose from the list</div>
     </div>
   );
 }
@@ -766,7 +780,7 @@ type AccountDraft = {
   default_typo_frequency: string; opt_out_keyword: string; preferred_terminology: string;
   timezone: string; business_hours_start: string; business_hours_end: string; max_daily_sends: string;
   twilio_account_sid: string; twilio_auth_token: string; twilio_messaging_service_sid: string;
-  twilio_default_from_number: string; webhook_url: string; logo_url: string;
+  twilio_default_from_number: string; webhook_url: string; webhook_secret: string; logo_url: string;
 };
 
 // ── Main Component ─────────────────────────────────────────────────────────────
@@ -777,9 +791,10 @@ interface AccountDetailViewProps {
   onAddAccount: () => void;
   onDelete: () => void;
   onToggleStatus: (account: AccountRow) => void;
+  toolbarPrefix?: ReactNode;
 }
 
-export function AccountDetailView({ account, onSave, onAddAccount, onDelete }: AccountDetailViewProps) {
+export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onToggleStatus, toolbarPrefix }: AccountDetailViewProps) {
   const status     = String(account.status || "Unknown");
   const badgeStyle = getStatusBadgeStyle(status);
   const accountId  = account.Id ?? account.id ?? 0;
@@ -796,6 +811,22 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete }: A
 
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [leadCount, setLeadCount] = useState<number | null>(null);
+
+  // ── Gradient tester state ──────────────────────────────────────────────────
+  const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
+  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
+  const [gradientDragMode, setGradientDragMode] = useState(false);
+
+  const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
+    if (id === -1) { setGradientLayers(prev => [...prev, patch as GradientLayer]); return; }
+    if ((patch as any).id === -999) { setGradientLayers(prev => prev.filter(l => l.id !== id)); return; }
+    setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
+  }, []);
+
+  const resetGradientLayers = useCallback(() => {
+    setGradientLayers(DEFAULT_LAYERS);
+    setGradientDragMode(false);
+  }, []);
 
   useEffect(() => {
     const id = (account as any).Id ?? (account as any).id;
@@ -839,6 +870,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete }: A
       twilio_messaging_service_sid: String(account.twilio_messaging_service_sid || ""),
       twilio_default_from_number: String(account.twilio_default_from_number   || ""),
       webhook_url:                String(account.webhook_url                  || ""),
+      webhook_secret:             String(account.webhook_secret               || ""),
       logo_url:                   String(account.logo_url                     || ""),
     });
     setIsEditing(true);
@@ -918,13 +950,28 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete }: A
     <div className="relative flex flex-col h-full overflow-hidden" data-testid="account-detail-view">
 
       {/* ── Full-height warm gradient ── */}
-      <div className="absolute inset-0 bg-[#F8F3EB]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_72%_56%_at_100%_0%,#FFFFFF_0%,rgba(255,255,255,0.80)_30%,transparent_60%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_95%_80%_at_0%_0%,#FFF286_0%,rgba(255,242,134,0.60)_40%,rgba(255,242,134,0.25)_64%,transparent_80%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_62%_72%_at_100%_36%,rgba(241,218,162,0.62)_0%,transparent_64%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_92%_36%_at_48%_53%,rgba(210,188,130,0.22)_0%,transparent_72%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_98%_74%_at_50%_88%,rgba(105,170,255,0.60)_0%,transparent_74%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_54%_at_54%_60%,rgba(165,205,255,0.38)_0%,transparent_66%)]" />
+      {gradientTesterOpen ? (
+        <>
+          {gradientLayers.map(layer => {
+            const style = layerToStyle(layer);
+            if (!style) return null;
+            return <div key={layer.id} className="absolute inset-0" style={style} />;
+          })}
+          {gradientDragMode && (
+            <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
+          )}
+        </>
+      ) : (
+        <>
+          <div className="absolute inset-0 bg-[#F8F3EB]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_72%_56%_at_100%_0%,#FFFFFF_0%,rgba(255,255,255,0.80)_30%,transparent_60%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_95%_80%_at_0%_0%,#FFF286_0%,rgba(255,242,134,0.60)_40%,rgba(255,242,134,0.25)_64%,transparent_80%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_62%_72%_at_100%_36%,rgba(241,218,162,0.62)_0%,transparent_64%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_92%_36%_at_48%_53%,rgba(210,188,130,0.22)_0%,transparent_72%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_98%_74%_at_50%_88%,rgba(105,170,255,0.60)_0%,transparent_74%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_54%_at_54%_60%,rgba(165,205,255,0.38)_0%,transparent_66%)]" />
+        </>
+      )}
 
       {/* ── Header ── */}
       <div className="shrink-0">
@@ -932,13 +979,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete }: A
 
           {/* Row 1: Toolbar */}
           <div className="flex items-center gap-1 flex-wrap">
-            <button
-              onClick={onAddAccount}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors"
-            >
-              <Plus className="h-3 w-3" />
-              Add
-            </button>
+            {toolbarPrefix}
 
             {isEditing ? (
               <>
@@ -953,7 +994,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete }: A
                 <button
                   onClick={cancelEdit}
                   disabled={saving}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 transition-colors"
                 >
                   <X className="h-3 w-3" />
                   Cancel
@@ -962,7 +1003,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete }: A
             ) : (
               <button
                 onClick={startEdit}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 transition-colors"
               >
                 <Pencil className="h-3 w-3" />
                 Edit
@@ -971,7 +1012,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete }: A
 
             <button
               onClick={handlePDF}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-muted/50 transition-colors"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 transition-colors"
             >
               <FileDown className="h-3 w-3" />
               PDF
@@ -982,11 +1023,19 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete }: A
                 "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border transition-colors",
                 deleteConfirm
                   ? "border-red-400/60 text-red-600 bg-red-50/50 hover:bg-red-50/70"
-                  : "border-border/60 bg-transparent text-foreground hover:bg-muted/50"
+                  : "border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50"
               )}
             >
               <Trash2 className="h-3 w-3" />
               {deleteConfirm ? "Confirm?" : "Delete"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setGradientTesterOpen(prev => !prev)}
+              className={`inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border transition-colors ${gradientTesterOpen ? "bg-indigo-100 text-indigo-600 border-indigo-200" : "border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50"}`}
+              title="Gradient Tester"
+            >
+              <Paintbrush className="h-4 w-4" />
             </button>
           </div>
 
@@ -1017,7 +1066,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete }: A
                 <button
                   onClick={(e) => { e.stopPropagation(); handleRemoveLogo(); }}
                   title="Remove logo"
-                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-white border border-border/50 flex items-center justify-center text-foreground/50 hover:text-red-500 hover:border-red-300 transition-colors z-10 opacity-0 group-hover:opacity-100"
+                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-white border border-black/[0.125] flex items-center justify-center text-foreground/50 hover:text-red-500 hover:border-red-300 transition-colors z-10 opacity-0 group-hover:opacity-100"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -1285,6 +1334,15 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete }: A
                 value={<MonoValue value={val("webhook_url")} />}
                 editChild={isEditing ? <EditText value={val("webhook_url")} onChange={(v) => set("webhook_url", v)} type="url" placeholder="https://..." /> : undefined}
               />
+              <InfoRow
+                label="API Key (Intake)"
+                value={<SecretDisplay value={val("webhook_secret")} />}
+                editChild={isEditing ? <EditText value={val("webhook_secret")} onChange={(v) => set("webhook_secret", v)} type="password" placeholder="Webhook secret" /> : undefined}
+              />
+              <InfoRow
+                label="Intake URL"
+                value={<MonoValue value="https://webhooks.leadawaker.com/api/leads/intake" />}
+              />
             </div>
           </div>
 
@@ -1310,6 +1368,16 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete }: A
           onCancel={handleCropCancel}
         />
       )}
+
+      <GradientTester
+        open={gradientTesterOpen}
+        onClose={() => setGradientTesterOpen(false)}
+        layers={gradientLayers}
+        onUpdateLayer={updateGradientLayer}
+        onResetLayers={resetGradientLayers}
+        dragMode={gradientDragMode}
+        onToggleDragMode={() => setGradientDragMode(prev => !prev)}
+      />
     </div>
   );
 }

@@ -93,10 +93,12 @@ export function useTagsData() {
 
   /* ── Create ─────────────────────────────────────────────────────────────── */
   const handleCreate = useCallback(
-    async (payload: { name: string; color?: string; category?: string; description?: string }) => {
+    async (payload: { name: string; color?: string; category?: string; description?: string; campaign_id?: number; campaign_name?: string }) => {
       const body: Record<string, any> = { name: payload.name.trim(), color: payload.color ?? "blue" };
       if (payload.category?.trim()) body.category = payload.category.trim();
       if (payload.description?.trim()) body.description = payload.description.trim();
+      if (payload.campaign_id) body.campaign_id = payload.campaign_id;
+      if (payload.campaign_name) body.campaign_name = payload.campaign_name;
 
       const res = await apiFetch("/api/tags", {
         method: "POST",

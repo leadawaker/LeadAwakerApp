@@ -4,7 +4,6 @@ import {
   Building2,
   List,
   Table2,
-  SlidersHorizontal,
   Layers,
   ArrowUpDown,
   Filter,
@@ -12,42 +11,27 @@ import {
   Mail,
   Phone,
   Plus,
+  Check,
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { IconBtn } from "@/components/ui/icon-btn";
 import { ViewTabBar } from "@/components/ui/view-tab-bar";
-import { AccountDetailsDialog, type AccountRow } from "./AccountDetailsDialog";
+import { ToolbarPill } from "@/components/ui/toolbar-pill";
+import { type AccountRow } from "./AccountDetailsDialog";
 import { AccountDetailView, AccountDetailViewEmpty } from "./AccountDetailView";
 import { AccountCreatePanel } from "./AccountCreatePanel";
-import { getInitials, getAccountAvatarColor } from "@/lib/avatarUtils";
+import { getInitials, getAccountAvatarColor, ACCOUNT_STATUS_HEX } from "@/lib/avatarUtils";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import type { NewAccountForm } from "./AccountCreateDialog";
 import type { AccountViewMode, AccountGroupBy, AccountSortBy } from "../pages/AccountsPage";
 import { apiFetch } from "@/lib/apiUtils";
-
-// ── Status colors ─────────────────────────────────────────────────────────────
-
-const ACCOUNT_STATUS_HEX: Record<string, string> = {
-  Active:    "#10B981",
-  Trial:     "#F59E0B",
-  Inactive:  "#94A3B8",
-  Suspended: "#F43F5E",
-};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -481,152 +465,130 @@ export function AccountListView({
 
   const isFilterActive = filterStatus.length > 0;
 
+  // ── Toolbar prefix for the right panel ──────────────────────────────────────
+  const toolbarPrefix = (
+    <>
+      {/* +Add */}
+      <ToolbarPill icon={Plus} label="Add" onClick={() => setPanelMode("create")} />
+
+      {/* Search — toggle between pill and inline input */}
+      {searchOpen ? (
+        <div className="h-10 flex items-center gap-1.5 px-3 rounded-full border border-brand-indigo/50 bg-brand-indigo/5">
+          <Search className="h-4 w-4 text-brand-indigo shrink-0" />
+          <input
+            value={listSearch}
+            onChange={(e) => onListSearchChange(e.target.value)}
+            placeholder="Search..."
+            autoFocus
+            onBlur={() => { if (!listSearch) onSearchOpenChange(false); }}
+            onKeyDown={(e) => { if (e.key === "Escape") { onListSearchChange(""); onSearchOpenChange(false); } }}
+            className="bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/60 w-[120px]"
+          />
+          <button onClick={() => { onListSearchChange(""); onSearchOpenChange(false); }} className="text-muted-foreground/60 hover:text-foreground">
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      ) : (
+        <ToolbarPill icon={Search} label="Search" active={!!listSearch} onClick={() => onSearchOpenChange(true)} />
+      )}
+
+      {/* Sort */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <ToolbarPill
+            icon={ArrowUpDown}
+            label="Sort"
+            active={isSortNonDefault}
+            activeValue={isSortNonDefault ? SORT_LABELS[sortBy].split(" ")[0] : undefined}
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-44">
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Sort by</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {(Object.keys(SORT_LABELS) as AccountSortBy[]).map((opt) => (
+            <DropdownMenuItem key={opt} onClick={() => onSortByChange(opt)} className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}>
+              {SORT_LABELS[opt]}
+              {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Filter */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <ToolbarPill
+            icon={Filter}
+            label="Filter"
+            active={isFilterActive}
+            activeValue={isFilterActive ? filterStatus.length : undefined}
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-48">
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Status</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {STATUS_FILTER_OPTIONS.map((s) => (
+            <DropdownMenuItem
+              key={s}
+              onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }}
+              className="flex items-center gap-2 text-[12px]"
+            >
+              <span
+                className="w-1.5 h-1.5 rounded-full shrink-0"
+                style={{ backgroundColor: ACCOUNT_STATUS_HEX[s] || "#94A3B8" }}
+              />
+              <span className="flex-1">{s}</span>
+              {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+            </DropdownMenuItem>
+          ))}
+          {isFilterActive && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={onResetControls} className="text-[12px] text-muted-foreground">
+                Clear all filters
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Group */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <ToolbarPill
+            icon={Layers}
+            label="Group"
+            active={isGroupNonDefault}
+            activeValue={isGroupNonDefault ? GROUP_LABELS[groupBy] : undefined}
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-44">
+          {(Object.keys(GROUP_LABELS) as AccountGroupBy[]).map((opt) => (
+            <DropdownMenuItem key={opt} onClick={() => onGroupByChange(opt)} className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}>
+              {GROUP_LABELS[opt]}
+              {groupBy === opt && <Check className="h-3 w-3 ml-auto" />}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
+  );
+
   return (
     <div className="flex h-full gap-[3px]" data-testid="account-list-view">
 
       {/* ── LEFT PANEL ──────────────────────────────────────────────── */}
       <div className="w-[340px] shrink-0 flex flex-col bg-muted rounded-lg overflow-hidden">
 
-        {/* Header: title + count */}
-        <div className="px-3.5 pt-5 pb-1 shrink-0 flex items-center justify-between">
-          <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Accounts</h2>
-          <span className="text-[12px] font-medium text-muted-foreground tabular-nums">{totalAccounts}</span>
-        </div>
-
-        {/* Controls row: tabs (left) + search & settings (right) */}
-        <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
-          <ViewTabBar
-            tabs={VIEW_TABS}
-            activeId={viewMode}
-            onTabChange={(id) => onViewModeChange(id as AccountViewMode)}
-          />
-
-          {/* Right controls: + / search / settings */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            {/* New account — wired to open create panel */}
-            <IconBtn title="New Account" onClick={() => setPanelMode("create")}>
-              <Plus className="h-4 w-4" />
-            </IconBtn>
-
-            {/* Search popover */}
-            <Popover open={searchOpen} onOpenChange={onSearchOpenChange}>
-              <PopoverTrigger asChild>
-                <IconBtn active={!!listSearch} title="Search">
-                  <Search className="h-4 w-4" />
-                </IconBtn>
-              </PopoverTrigger>
-              <PopoverContent
-                side="bottom"
-                align="end"
-                className="w-56 p-2"
-                onOpenAutoFocus={(e) => e.preventDefault()}
-              >
-                <div className="relative">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
-                  <input
-                    autoFocus
-                    type="text"
-                    placeholder="Search accounts..."
-                    value={listSearch}
-                    onChange={(e) => onListSearchChange(e.target.value)}
-                    className="w-full pl-7 pr-7 py-1.5 text-[12px] rounded-md border border-border bg-popover placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-brand-indigo/50"
-                  />
-                  {listSearch && (
-                    <button
-                      onClick={() => onListSearchChange("")}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            {/* Settings */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <IconBtn active={hasNonDefaultControls} title="Group, Sort & Filter">
-                  <SlidersHorizontal className="h-4 w-4" />
-                </IconBtn>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                {/* Group sub-menu */}
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <Layers className="h-3.5 w-3.5 mr-2" />
-                    <span>Group</span>
-                    {isGroupNonDefault && <span className="ml-auto text-[10px] text-brand-indigo font-semibold">{GROUP_LABELS[groupBy]}</span>}
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    {(Object.keys(GROUP_LABELS) as AccountGroupBy[]).map((g) => (
-                      <DropdownMenuItem
-                        key={g}
-                        onClick={() => onGroupByChange(g)}
-                        className={cn(groupBy === g && "font-bold text-brand-indigo")}
-                      >
-                        {GROUP_LABELS[g]}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-
-                {/* Sort sub-menu */}
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <ArrowUpDown className="h-3.5 w-3.5 mr-2" />
-                    <span>Sort</span>
-                    {isSortNonDefault && <span className="ml-auto text-[10px] text-brand-indigo font-semibold">{SORT_LABELS[sortBy].split(" ")[0]}</span>}
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    {(Object.keys(SORT_LABELS) as AccountSortBy[]).map((s) => (
-                      <DropdownMenuItem
-                        key={s}
-                        onClick={() => onSortByChange(s)}
-                        className={cn(sortBy === s && "font-bold text-brand-indigo")}
-                      >
-                        {SORT_LABELS[s]}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-
-                {/* Filter sub-menu */}
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <Filter className="h-3.5 w-3.5 mr-2" />
-                    <span>Filter Status</span>
-                    {isFilterActive && <span className="ml-auto text-[10px] text-brand-indigo font-semibold">{filterStatus.length}</span>}
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    {STATUS_FILTER_OPTIONS.map((s) => (
-                      <DropdownMenuItem
-                        key={s}
-                        onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }}
-                        className="flex items-center gap-2"
-                      >
-                        <span
-                          className="h-2 w-2 rounded-full shrink-0"
-                          style={{ backgroundColor: ACCOUNT_STATUS_HEX[s] || "#94A3B8" }}
-                        />
-                        <span className={cn(filterStatus.includes(s) && "font-bold text-brand-indigo")}>{s}</span>
-                        {filterStatus.includes(s) && <span className="ml-auto text-brand-indigo">{"\u2713"}</span>}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-
-                {/* Reset */}
-                {hasNonDefaultControls && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={onResetControls} className="text-muted-foreground">
-                      Reset to defaults
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+        {/* Header: title + 309px wrapper with ViewTabBar */}
+        <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center">
+          <div className="flex items-center justify-between w-[309px] shrink-0">
+            <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Accounts</h2>
+            <ViewTabBar
+              tabs={VIEW_TABS}
+              activeId={viewMode}
+              onTabChange={(id) => onViewModeChange(id as AccountViewMode)}
+            />
           </div>
         </div>
 
@@ -705,9 +667,10 @@ export function AccountListView({
             onAddAccount={onAddAccount}
             onDelete={onDelete}
             onToggleStatus={onToggleStatus}
+            toolbarPrefix={toolbarPrefix}
           />
         ) : (
-          <AccountDetailViewEmpty />
+          <AccountDetailViewEmpty toolbarPrefix={toolbarPrefix} />
         )}
       </div>
     </div>

@@ -62,6 +62,7 @@ export interface AccountRow {
   business_hours_end?: string;
   max_daily_sends?: number;
   webhook_url?: string;
+  webhook_secret?: string;
   twilio_account_sid?: string;
   twilio_auth_token?: string;
   twilio_messaging_service_sid?: string;
@@ -241,6 +242,7 @@ export function AccountDetailsDialog({
         "twilio_auth_token",
         "twilio_messaging_service_sid",
         "twilio_default_from_number",
+        "webhook_secret",
       ];
       for (const k of keys) {
         if (form[k] !== account?.[k]) {
@@ -613,6 +615,10 @@ export function AccountDetailsDialog({
       <FieldRow label="Auth Token">{textField("twilio_auth_token", "")}</FieldRow>
       <FieldRow label="Messaging Service SID">{textField("twilio_messaging_service_sid", "MGxxxxxxxx")}</FieldRow>
       <FieldRow label="From Number">{textField("twilio_default_from_number", "+1 555 000 0000")}</FieldRow>
+      <FieldRow label="API Key (Intake)">{textField("webhook_secret", "")}</FieldRow>
+      <FieldRow label="Intake URL">
+        <span className="text-[11px] font-mono text-foreground/70 select-all">https://webhooks.leadawaker.com/api/leads/intake</span>
+      </FieldRow>
     </div>
   );
 

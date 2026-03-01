@@ -36,7 +36,7 @@ export function ContractCard({ contract, isSelected, onClick }: ContractCardProp
       <div className="flex items-start gap-2.5">
         {/* File icon avatar */}
         <div
-          className="h-[34px] w-[34px] rounded-full shrink-0 flex items-center justify-center border border-border/50"
+          className="h-[34px] w-[34px] rounded-full shrink-0 flex items-center justify-center border border-black/[0.125]"
           style={{ backgroundColor: colors.bg, color: colors.text }}
         >
           <FileText className="h-3.5 w-3.5" />

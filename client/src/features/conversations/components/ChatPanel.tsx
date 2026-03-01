@@ -16,6 +16,8 @@ import {
   PanelRight,
   ArrowUpCircle,
   RotateCcw,
+  Paintbrush,
+  Wallpaper,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
@@ -30,8 +32,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import type { Thread, Interaction } from "../hooks/useConversationsData";
-import { formatRelativeTime } from "../utils/conversationHelpers";
+import { formatRelativeTime, getStatus, PIPELINE_HEX } from "../utils/conversationHelpers";
+import {
+  GradientTester,
+  GradientControlPoints,
+  DEFAULT_LAYERS,
+  layerToStyle,
+  type GradientLayer,
+} from "@/components/ui/gradient-tester";
+import { useChatDoodle } from "@/hooks/useChatDoodle";
+import { getDoodleStyle, BLEND_MODES, patternIdToNumber, numberToPatternId } from "@/components/ui/doodle-patterns";
 
 interface ChatPanelProps {
   selected: Thread | null;
@@ -43,6 +61,8 @@ interface ChatPanelProps {
   showContactPanel?: boolean;
   onShowContactPanel?: () => void;
   className?: string;
+  /** Extra toolbar actions rendered in the header (e.g. +, Search, Settings) */
+  headerActions?: React.ReactNode;
 }
 
 export function ChatPanel({
@@ -55,6 +75,7 @@ export function ChatPanel({
   showContactPanel,
   onShowContactPanel,
   className,
+  headerActions,
 }: ChatPanelProps) {
   const isHuman = selected?.lead.manual_takeover === true;
   const [draft, setDraft] = useState("");
@@ -63,6 +84,10 @@ export function ChatPanel({
   const prevMsgCount = useRef(0);
   const [showScrollButton, setShowScrollButton] = useState(false);
 
+  // Track whether we just switched conversations (for bubble entrance animation)
+  const [isInitialLoad, setIsInitialLoad] = useState(false);
+  const initialLoadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Takeover flow state
   const [hasConfirmedTakeover, setHasConfirmedTakeover] = useState(false);
   const [showTakeoverConfirm, setShowTakeoverConfirm] = useState(false);
@@ -70,6 +95,31 @@ export function ChatPanel({
 
   // AI resume flow state
   const [showAiResumeConfirm, setShowAiResumeConfirm] = useState(false);
+
+  // ── Doodle overlay ─────────────────────────────────────────────────────────
+  const { config: doodleConfig, setConfig: setDoodleConfig } = useChatDoodle();
+
+  // ── Gradient tester state (dev tool) ────────────────────────────────────────
+  const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
+  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
+  const [gradientDragMode, setGradientDragMode] = useState(false);
+
+  const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
+    if (id === -1) {
+      setGradientLayers(prev => [...prev, patch as GradientLayer]);
+      return;
+    }
+    if ((patch as any).id === -999) {
+      setGradientLayers(prev => prev.filter(l => l.id !== id));
+      return;
+    }
+    setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
+  }, []);
+
+  const resetGradientLayers = useCallback(() => {
+    setGradientLayers(DEFAULT_LAYERS);
+    setGradientDragMode(false);
+  }, []);
 
   /** Scroll the chat area to the very bottom. */
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
@@ -87,6 +137,13 @@ export function ChatPanel({
       prevMsgCount.current = selected?.msgs.length ?? 0;
       setTimeout(() => scrollToBottom("instant"), 0);
       setShowScrollButton(false);
+
+      // Trigger bubble entrance animation for 800ms after switching
+      if (leadId !== null) {
+        setIsInitialLoad(true);
+        if (initialLoadTimer.current) clearTimeout(initialLoadTimer.current);
+        initialLoadTimer.current = setTimeout(() => setIsInitialLoad(false), 800);
+      }
     }
   }, [selected?.lead.id, scrollToBottom]);
 
@@ -171,14 +228,37 @@ export function ChatPanel({
         )}
         data-testid="panel-chat"
       >
-        {/* ── Warm gradient bloom background (matching Invoices/Expenses) ── */}
-        <div className="absolute inset-0 bg-[#F8F3EB]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.9)_0%,transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,242,134,0.35)_0%,transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(241,218,162,0.2)_0%,transparent_70%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(210,188,130,0.15)_0%,transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(105,170,255,0.18)_0%,transparent_55%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_center,rgba(165,205,255,0.12)_0%,transparent_60%)]" />
+        {/* ── Gradient background ── */}
+        {gradientTesterOpen ? (
+          <>
+            {gradientLayers.map(layer => {
+              const style = layerToStyle(layer);
+              if (!style) return null;
+              return <div key={layer.id} className="absolute inset-0" style={style} />;
+            })}
+            {gradientDragMode && (
+              <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
+            )}
+            {doodleConfig.enabled && (
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={getDoodleStyle(doodleConfig.patternId, doodleConfig.color, doodleConfig.size, doodleConfig.strokeColor, doodleConfig.blendMode)}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-[#ffffff]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_199%_160%_at_100%_100%,rgba(255,249,82,0.4)_0%,transparent_60%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_112%_103%_at_9%_0%,#d3ffe4_0%,transparent_60%)]" />
+            {doodleConfig.enabled && (
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={getDoodleStyle(doodleConfig.patternId, doodleConfig.color, doodleConfig.size, doodleConfig.strokeColor, doodleConfig.blendMode)}
+              />
+            )}
+          </>
+        )}
 
         {/* ── Content above gradient ── */}
         <div className="relative flex flex-col h-full overflow-hidden">
@@ -200,14 +280,30 @@ export function ChatPanel({
                         `${selected.lead.first_name ?? ""} ${selected.lead.last_name ?? ""}`.trim()
                       : "Select a conversation"}
                   </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">
-                    {selected ? `${selected.lead.phone ?? ""} • ${selected.lead.email ?? ""}` : ""}
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[11px] text-muted-foreground">
+                      {selected ? `${selected.lead.phone ?? ""} • ${selected.lead.email ?? ""}` : ""}
+                    </span>
+                    {selected && (() => {
+                      const status = getStatus(selected.lead);
+                      const hex = PIPELINE_HEX[status] ?? "#6B7280";
+                      return status ? (
+                        <span
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                          style={{ backgroundColor: `${hex}20`, color: hex }}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: hex }} />
+                          {status}
+                        </span>
+                      ) : null;
+                    })()}
                   </div>
                 </>
               )}
             </div>
 
             <div className="flex items-center gap-1.5 shrink-0">
+              {headerActions}
               {/* "Let AI continue" — only shown when human has taken over */}
               {selected && isHuman && onToggleTakeover && (
                 <button
@@ -227,7 +323,7 @@ export function ChatPanel({
                 <button
                   type="button"
                   onClick={onShowContactPanel}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[12px] font-medium border border-border/30 bg-transparent text-muted-foreground hover:bg-card hover:text-foreground transition-colors"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-muted-foreground hover:bg-card hover:text-foreground transition-colors"
                   data-testid="btn-show-contact-panel"
                   title="Show lead context panel"
                 >
@@ -235,6 +331,114 @@ export function ChatPanel({
                   View
                 </button>
               )}
+              {/* Doodle overlay popover */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className={`inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border transition-colors ${doodleConfig.enabled ? "bg-indigo-100 text-indigo-600 border-indigo-200" : "border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50"}`}
+                    title="Chat background doodle"
+                  >
+                    <Wallpaper className="h-4 w-4" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-64 p-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] font-semibold">Doodle Overlay</span>
+                    <Switch
+                      checked={doodleConfig.enabled}
+                      onCheckedChange={(enabled) => setDoodleConfig({ enabled })}
+                    />
+                  </div>
+                  {doodleConfig.enabled && (
+                    <>
+                      {/* Pattern picker — slider 1–42 */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] text-muted-foreground">Pattern</span>
+                          <span className="text-[11px] font-semibold tabular-nums text-foreground/70">
+                            #{patternIdToNumber(doodleConfig.patternId)}
+                          </span>
+                        </div>
+                        <Slider
+                          value={[patternIdToNumber(doodleConfig.patternId)]}
+                          onValueChange={([v]) => setDoodleConfig({ patternId: numberToPatternId(v) })}
+                          min={1}
+                          max={42}
+                          step={1}
+                        />
+                      </div>
+                      {/* Stroke color slider (0=black → 100=white) */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] text-muted-foreground">Color</span>
+                          <span className="text-[11px] text-muted-foreground tabular-nums">
+                            {doodleConfig.strokeColor === 0 ? "Black" : doodleConfig.strokeColor === 100 ? "White" : `${doodleConfig.strokeColor}%`}
+                          </span>
+                        </div>
+                        <Slider
+                          value={[doodleConfig.strokeColor ?? 0]}
+                          onValueChange={([v]) => setDoodleConfig({ strokeColor: v })}
+                          min={0}
+                          max={100}
+                          step={1}
+                        />
+                      </div>
+                      {/* Opacity slider (0–100 → 0–80% opacity) */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] text-muted-foreground">Opacity</span>
+                          <span className="text-[11px] text-muted-foreground tabular-nums">{doodleConfig.color}%</span>
+                        </div>
+                        <Slider
+                          value={[doodleConfig.color]}
+                          onValueChange={([v]) => setDoodleConfig({ color: v })}
+                          min={0}
+                          max={100}
+                          step={1}
+                        />
+                      </div>
+                      {/* Size slider */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] text-muted-foreground">Size</span>
+                          <span className="text-[11px] text-muted-foreground tabular-nums">{doodleConfig.size}px</span>
+                        </div>
+                        <Slider
+                          value={[doodleConfig.size]}
+                          onValueChange={([v]) => setDoodleConfig({ size: v })}
+                          min={200}
+                          max={800}
+                          step={25}
+                        />
+                      </div>
+                      {/* Blend mode selector */}
+                      <div className="space-y-1.5">
+                        <span className="text-[11px] text-muted-foreground">Blend mode</span>
+                        <select
+                          value={doodleConfig.blendMode ?? "overlay"}
+                          onChange={(e) => setDoodleConfig({ blendMode: e.target.value })}
+                          className="w-full h-8 px-2 rounded-md border border-black/[0.125] bg-card text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-brand-indigo/40"
+                        >
+                          {BLEND_MODES.map((m) => (
+                            <option key={m} value={m}>
+                              {m.charAt(0).toUpperCase() + m.slice(1).replace(/-/g, " ")}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </>
+                  )}
+                </PopoverContent>
+              </Popover>
+              <button
+                type="button"
+                onClick={() => setGradientTesterOpen(prev => !prev)}
+                className={`inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border transition-colors ${gradientTesterOpen ? "bg-indigo-100 text-indigo-600 border-indigo-200" : "border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50"}`}
+                title="Gradient Tester"
+              >
+                <Paintbrush className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>
@@ -269,17 +473,23 @@ export function ChatPanel({
               </div>
             ) : (() => {
               const threadGroups = groupMessagesByThread(selected.msgs);
+              let globalMsgIdx = 0;
               return threadGroups.map((group, gi) => (
                 <div key={group.threadId} data-testid={`thread-group-${gi}`}>
                   <ThreadDivider group={group} total={threadGroups.length} />
-                  {group.msgs.map((m) => (
-                    <ChatBubble
-                      key={m.id}
-                      item={m}
-                      onRetry={onRetry}
-                      leadName={selected.lead.full_name || `${selected.lead.first_name ?? ""} ${selected.lead.last_name ?? ""}`.trim()}
-                    />
-                  ))}
+                  {group.msgs.map((m) => {
+                    const msgIdx = globalMsgIdx++;
+                    return (
+                      <ChatBubble
+                        key={m.id}
+                        item={m}
+                        onRetry={onRetry}
+                        leadName={selected.lead.full_name || `${selected.lead.first_name ?? ""} ${selected.lead.last_name ?? ""}`.trim()}
+                        animateEntrance={isInitialLoad}
+                        entranceDelay={msgIdx}
+                      />
+                    );
+                  })}
                 </div>
               ));
             })()}
@@ -290,7 +500,7 @@ export function ChatPanel({
             <button
               type="button"
               onClick={() => scrollToBottom("smooth")}
-              className="absolute bottom-3 right-3 z-10 h-10 w-10 rounded-full border border-border/65 bg-card flex items-center justify-center text-foreground shadow-sm hover:bg-muted active:scale-[0.92] transition-[background-color,transform] duration-150"
+              className="absolute bottom-3 right-3 z-10 h-10 w-10 rounded-full border border-black/[0.125] bg-card flex items-center justify-center text-foreground shadow-sm hover:bg-muted active:scale-[0.92] transition-[background-color,transform] duration-150"
               data-testid="button-scroll-to-bottom"
               title="Scroll to latest message"
               aria-label="Scroll to latest message"
@@ -334,6 +544,17 @@ export function ChatPanel({
           </button>
         </div>
         </div>
+
+        {/* ── Gradient Tester (dev tool) ── */}
+        <GradientTester
+          open={gradientTesterOpen}
+          onClose={() => setGradientTesterOpen(false)}
+          layers={gradientLayers}
+          onUpdateLayer={updateGradientLayer}
+          onResetLayers={resetGradientLayers}
+          dragMode={gradientDragMode}
+          onToggleDragMode={() => setGradientDragMode(prev => !prev)}
+        />
       </section>
 
       {/* Human takeover confirmation dialog */}
@@ -672,7 +893,7 @@ function getSenderLabel(item: Interaction, inbound: boolean, aiMsg: boolean, lea
   return "You";
 }
 
-function ChatBubble({ item, onRetry, leadName }: { item: Interaction; onRetry?: (failedMsg: Interaction) => Promise<void>; leadName: string }) {
+function ChatBubble({ item, onRetry, leadName, animateEntrance = false, entranceDelay = 0 }: { item: Interaction; onRetry?: (failedMsg: Interaction) => Promise<void>; leadName: string; animateEntrance?: boolean; entranceDelay?: number }) {
   const outbound = item.direction === "Outbound";
   const inbound = !outbound;
   const statusNorm = (item.status ?? "").toLowerCase();
@@ -685,7 +906,14 @@ function ChatBubble({ item, onRetry, leadName }: { item: Interaction; onRetry?: 
   const humanAgentMsg = outbound && isHumanAgentMessage(item);
 
   return (
-    <div className={cn("flex flex-col", outbound ? "items-end" : "items-start")}>
+    <div
+      className={cn(
+        "flex flex-col",
+        outbound ? "items-end" : "items-start",
+        animateEntrance && (outbound ? "animate-bubble-right" : "animate-bubble-left")
+      )}
+      style={animateEntrance ? { animationDelay: `${Math.min(entranceDelay, 20) * 25}ms` } : undefined}
+    >
       <div
         className={cn(
           "max-w-[78%] rounded-2xl px-3 py-2 text-sm border",

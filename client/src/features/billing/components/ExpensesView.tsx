@@ -111,12 +111,12 @@ function ExpenseDataRow({
         hasSelection && "cursor-pointer",
         !sel && "hover:bg-card-hover"
       )}
-      style={{ backgroundColor: sel ? "#FFF1C8" : "#F1F1F1" }}
+      style={{ backgroundColor: sel ? "var(--color-highlight-selected)" : "var(--color-card)" }}
     >
       {hasSelection && (
         <td
           className="px-3 py-0 w-10"
-          style={{ backgroundColor: sel ? "#FFF1C8" : undefined }}
+          style={{ backgroundColor: sel ? "var(--color-highlight-selected)" : undefined }}
         >
           <div
             className={cn(

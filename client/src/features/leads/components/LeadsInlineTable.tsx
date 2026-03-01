@@ -1,22 +1,12 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
-  Pencil,
   Check,
-  X,
   ChevronDown,
   ChevronRight,
   Tag as TagIcon,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { updateLead, bulkUpdateLeads } from "../api/leadsApi";
+import { updateLead } from "../api/leadsApi";
 import { resolveColor } from "@/features/tags/types";
 import type { VirtualListItem } from "./LeadsCardView";
 import { PIPELINE_HEX, ListScoreRing } from "./LeadsCardView";
@@ -246,9 +236,6 @@ export function LeadsInlineTable({
   const TABLE_PAGE_SIZE = 50;
   const [tablePage, setTablePage] = useState(0);
 
-  // ── Bulk stage change (still in inline table) ──────────────────────────────
-  const [bulkStageOpen, setBulkStageOpen] = useState(false);
-
   // ── Group collapse ─────────────────────────────────────────────────────────
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
@@ -401,17 +388,6 @@ export function LeadsInlineTable({
     }
   }, [leadIndexMap, leadOnlyItems, onSelectLead, onSelectionChange, selectedIds]);
 
-  // ── Bulk stage change (still useful as inline action) ──────────────────────
-  const handleBulkStageChange = useCallback(async (stage: string) => {
-    if (selectedIds.size === 0) return;
-    try {
-      await bulkUpdateLeads(Array.from(selectedIds), { Conversion_Status: stage });
-      onSelectionChange(new Set());
-      setBulkStageOpen(false);
-      onRefresh?.();
-    } catch (err) { console.error("Bulk stage change failed", err); }
-  }, [selectedIds, onRefresh, onSelectionChange]);
-
   // ── Select-all toggle ───────────────────────────────────────────────────
   const allLeadIds = useMemo(() => leadOnlyItems.map((i) => getLeadId(i.lead)), [leadOnlyItems]);
   const allSelected = leadCount > 0 && allLeadIds.every((id) => selectedIds.has(id));
@@ -483,42 +459,6 @@ export function LeadsInlineTable({
   return (
     <div className="h-full flex flex-col overflow-hidden bg-transparent">
 
-      {/* ── Change Stage bar (only when multi-selection active) ── */}
-      {selectedIds.size > 1 && (
-        <div className="shrink-0 px-3 py-1.5 flex items-center gap-1.5 border-b border-border/20">
-          <span className="text-[11px] font-semibold text-foreground tabular-nums mr-1">
-            {selectedIds.size} selected
-          </span>
-
-          <DropdownMenu open={bulkStageOpen} onOpenChange={setBulkStageOpen}>
-            <DropdownMenuTrigger asChild>
-              <button className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border border-border/30 bg-transparent text-muted-foreground hover:bg-card hover:text-foreground">
-                <Pencil className="h-3 w-3" />
-                Change Stage
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-44">
-              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Move to</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {STATUS_OPTIONS.map((s) => (
-                <DropdownMenuItem key={s} onClick={() => handleBulkStageChange(s)} className="text-[12px]">
-                  <span className={cn("w-1.5 h-1.5 rounded-full shrink-0 mr-2", STATUS_DOT[s] ?? "bg-zinc-400")} />
-                  {s}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <button
-            className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground"
-            onClick={() => onSelectionChange(new Set())}
-          >
-            <X className="h-3 w-3" />
-            Clear
-          </button>
-        </div>
-      )}
-
       {/* ── Table ── */}
       {loading ? (
         <TableSkeleton />
@@ -577,6 +517,7 @@ export function LeadsInlineTable({
 
               {(() => {
                 let currentGroup: string | null = null;
+                let rowIdx = 0;
                 return paginatedItems.map((item, index) => {
                   if (item.kind === "header") {
                     currentGroup = item.label;
@@ -587,15 +528,15 @@ export function LeadsInlineTable({
                     return (
                       <tr
                         key={`h-${item.label}-${index}`}
-                        className="cursor-pointer select-none"
+                        className="cursor-pointer select-none h-[44px]"
                         onClick={() => toggleGroupCollapse(item.label)}
                       >
+                        {/* Cell 1: Checkbox */}
                         <td
-                          colSpan={colSpan}
-                          className="px-4 pt-4 pb-1.5 sticky left-0 z-30"
+                          className="sticky left-0 z-30 w-[36px] px-0"
                           style={{ backgroundColor: `${hexColor}12` }}
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center h-full">
                             <div
                               className={cn(
                                 "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
@@ -608,16 +549,28 @@ export function LeadsInlineTable({
                             >
                               {isGroupFullySelected && <Check className="h-2.5 w-2.5 text-white" />}
                             </div>
-                            <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: hexColor }} />
-                            <span className="text-[11px] font-bold uppercase tracking-widest text-foreground/55">{item.label}</span>
-                            <span className="text-[10px] text-muted-foreground/40 font-medium tabular-nums">{item.count}</span>
-                            <div className="ml-auto text-muted-foreground/40">
-                              {isCollapsed
-                                ? <ChevronRight className="h-3.5 w-3.5" />
-                                : <ChevronDown  className="h-3.5 w-3.5" />}
-                            </div>
                           </div>
                         </td>
+
+                        {/* Cell 2: Label (arrow + name + count) */}
+                        <td
+                          className="sticky left-[36px] z-30 pl-1 pr-3"
+                          style={{ backgroundColor: `${hexColor}12` }}
+                        >
+                          <div className="flex items-center gap-2">
+                            {isCollapsed
+                              ? <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
+                              : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/50" />}
+                            <span className="text-[11px] font-bold text-foreground/70">{item.label}</span>
+                            <span className="text-[10px] text-muted-foreground/50 font-medium tabular-nums">{item.count}</span>
+                          </div>
+                        </td>
+
+                        {/* Cell 3: Spacer */}
+                        <td
+                          colSpan={Math.max(1, visibleColumns.length - 1)}
+                          style={{ backgroundColor: `${hexColor}12` }}
+                        />
                       </tr>
                     );
                   }
@@ -634,19 +587,50 @@ export function LeadsInlineTable({
                   const leadStatus       = getStatus(lead);
                   const avatarColor      = getLeadStatusAvatarColor(leadStatus);
 
+                  const currentRowIdx = rowIdx++;
                   return (
                     <tr
                       key={leadId}
                       className={cn(
-                        "group/row cursor-pointer h-[52px]",
+                        "group/row cursor-pointer h-[52px] animate-card-enter",
                         isHighlighted ? "bg-highlight-selected" : "bg-card hover:bg-card-hover",
                       )}
+                      style={{ animationDelay: `${Math.min(currentRowIdx, 15) * 30}ms` }}
                       onClick={(e) => handleRowClick(lead, e)}
                     >
+                      {/* Checkbox cell */}
+                      <td
+                        className={cn(
+                          "sticky left-0 z-10 w-[36px] px-0",
+                          isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover"
+                        )}
+                      >
+                        <div className="flex items-center justify-center h-full">
+                          <div
+                            className={cn(
+                              "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
+                              isMultiSelected ? "border-brand-indigo bg-brand-indigo" : "border-border/40"
+                            )}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const next = new Set(selectedIds);
+                              if (next.has(leadId)) next.delete(leadId);
+                              else next.add(leadId);
+                              onSelectionChange(next);
+                              if (next.size === 1) {
+                                const only = leadOnlyItems.find((i) => getLeadId(i.lead) === Array.from(next)[0]);
+                                if (only) onSelectLead(only.lead);
+                              }
+                            }}
+                          >
+                            {isMultiSelected && <Check className="h-2.5 w-2.5 text-white" />}
+                          </div>
+                        </div>
+                      </td>
                       {visibleColumns.map((col, ci) => {
                         const isFirst = ci === 0;
                         const tdClass = cn(
-                          isFirst && "sticky left-0 z-10",
+                          isFirst && "sticky left-[36px] z-10",
                           isFirst && (isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover"),
                         );
 
@@ -655,30 +639,6 @@ export function LeadsInlineTable({
                           return (
                             <td key="name" className={cn("px-2.5", tdClass)} style={{ width: 200, minWidth: 200 }}>
                               <div className="flex items-center gap-2 min-w-0">
-                                {/* Checkbox — always visible */}
-                                <div
-                                  className={cn(
-                                    "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
-                                    isMultiSelected ? "border-brand-indigo bg-brand-indigo" : "border-border/40"
-                                  )}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const next = new Set(selectedIds);
-                                    if (next.has(leadId)) {
-                                      next.delete(leadId);
-                                      // If deselecting and something remains, keep selection
-                                    } else {
-                                      next.add(leadId);
-                                    }
-                                    onSelectionChange(next);
-                                    if (next.size === 1) {
-                                      const only = leadOnlyItems.find((i) => getLeadId(i.lead) === Array.from(next)[0]);
-                                      if (only) onSelectLead(only.lead);
-                                    }
-                                  }}
-                                >
-                                  {isMultiSelected && <Check className="h-2.5 w-2.5 text-white" />}
-                                </div>
                                 <EntityAvatar
                                   name={name}
                                   bgColor={avatarColor.bg}
@@ -828,7 +788,7 @@ export function LeadsInlineTable({
           <button
             onClick={() => setTablePage((p) => Math.max(0, p - 1))}
             disabled={tablePage === 0}
-            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border border-border/30 text-muted-foreground hover:text-foreground hover:bg-card disabled:opacity-30 disabled:pointer-events-none"
+            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border border-black/[0.125] text-muted-foreground hover:text-foreground hover:bg-card disabled:opacity-30 disabled:pointer-events-none"
           >
             <ChevronDown className="h-3 w-3 rotate-90" /> Prev
           </button>
@@ -851,7 +811,7 @@ export function LeadsInlineTable({
           <button
             onClick={() => setTablePage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={tablePage >= totalPages - 1}
-            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border border-border/30 text-muted-foreground hover:text-foreground hover:bg-card disabled:opacity-30 disabled:pointer-events-none"
+            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border border-black/[0.125] text-muted-foreground hover:text-foreground hover:bg-card disabled:opacity-30 disabled:pointer-events-none"
           >
             Next <ChevronDown className="h-3 w-3 -rotate-90" />
           </button>

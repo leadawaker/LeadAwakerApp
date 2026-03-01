@@ -54,14 +54,15 @@ export function PromptsInlineTable({
     (col) => col.key === "actions" || visibleCols.has(col.key),
   );
 
-  function renderRow(p: any) {
+  function renderRow(p: any, rowIndex: number) {
     const promptId = getPromptId(p);
     const isToggling = togglingIds.has(promptId);
 
     return (
       <tr
         key={promptId}
-        className="group/row h-[52px] border-b border-border/15 bg-card hover:bg-popover transition-colors"
+        className="group/row h-[52px] border-b border-border/15 bg-card hover:bg-popover transition-colors animate-card-enter"
+        style={{ animationDelay: `${Math.min(rowIndex, 15) * 30}ms` }}
         data-testid={`row-prompt-${promptId}`}
       >
         {columns.map((col) => {

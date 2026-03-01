@@ -1,13 +1,11 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
-  List, Table2, Plus, Trash2, Copy, Filter, Layers, Eye, Check, Search, X,
-  PanelRightClose, PanelRightOpen, Loader2,
+  List, Table2, Plus, Trash2, Copy, Filter, Layers, Eye, Check, Search, X, Pencil,
+  PanelRightClose, PanelRightOpen, ArrowUpDown,
 } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
+import { ToolbarPill } from "@/components/ui/toolbar-pill";
+import { IconBtn } from "@/components/ui/icon-btn";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
 import { CampaignListView } from "../components/CampaignListView";
@@ -29,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/apiUtils";
 import { createCampaign, deleteCampaign, updateCampaign } from "../api/campaignsApi";
 export type CampaignViewMode = "list" | "table";
 export type CampaignGroupBy = "status" | "account" | "type" | "none";
@@ -66,6 +65,22 @@ const TABLE_GROUP_LABELS: Record<TableGroupByOption, string> = {
   none:    "None",
 };
 
+const TABLE_SORT_LABELS: Record<string, string> = {
+  name:         "Name",
+  status:       "Status",
+  account:      "Account",
+  type:         "Type",
+  leads:        "Leads",
+  responseRate: "Response %",
+  bookingRate:  "Booking %",
+  cost:         "Cost",
+  roi:          "ROI %",
+  startDate:    "Start Date",
+  endDate:      "End Date",
+  lastModified: "Last Modified",
+  description:  "Description",
+};
+
 const STATUS_OPTIONS = ["Active", "Paused", "Draft", "Completed", "Inactive"];
 
 const STATUS_DOT: Record<string, string> = {
@@ -81,10 +96,14 @@ const STATUS_DOT: Record<string, string> = {
 const CAMPAIGN_STATUS_ORDER = ["Active", "Paused", "Draft", "Completed", "Finished", "Inactive", "Archived"];
 
 /* ── Tab definitions ── */
-const VIEW_TABS: { id: CampaignViewMode; label: string; icon: typeof List }[] = [
+const VIEW_TABS: TabDef[] = [
   { id: "list",  label: "List",  icon: List   },
   { id: "table", label: "Table", icon: Table2 },
 ];
+
+/* ── Toolbar pill class tokens (§17) ── */
+const tbBase = "h-10 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
+const tbDefault = "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:bg-card";
 
 function getCampaignName(c: Campaign): string {
   return String(c.name || "Unnamed");
@@ -102,7 +121,7 @@ function ConfirmToolbarButton({
   const [loading, setLoading] = useState(false);
   if (confirming) {
     return (
-      <div className="h-10 flex items-center gap-1 rounded-full border border-border/30 bg-card px-2.5 text-[12px] shrink-0">
+      <div className="h-10 flex items-center gap-1 rounded-full border border-black/[0.125] bg-card px-2.5 text-[12px] shrink-0">
         <span className="text-foreground/60 mr-0.5 whitespace-nowrap">{label}?</span>
         <button
           className="px-2 py-0.5 rounded-full bg-brand-indigo text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
@@ -121,7 +140,7 @@ function ConfirmToolbarButton({
         "h-10 inline-flex items-center gap-1.5 rounded-full border px-3 text-[12px] font-medium shrink-0",
         variant === "danger"
           ? "border-red-300/50 text-red-600 hover:bg-red-50/60"
-          : "border-border/30 text-foreground/70 hover:bg-card hover:text-foreground",
+          : "border-black/[0.125] text-foreground/70 hover:bg-card hover:text-foreground",
       )}
       onClick={() => setConfirming(true)}
     >
@@ -172,7 +191,6 @@ function CampaignsContent() {
 
   // ── Table toolbar state ────────────────────────────────────────────────────
   const [tableSearch,        setTableSearch]        = useState("");
-  const [tableSearchOpen,    setTableSearchOpen]    = useState(false);
   const [tableSortCol,       setTableSortCol]       = useState<string>("lastModified");
   const [tableSortDir,       setTableSortDir]       = useState<"asc" | "desc">("desc");
   const [tableGroupBy,       setTableGroupBy]       = useState<TableGroupByOption>("status");
@@ -334,9 +352,54 @@ function CampaignsContent() {
     try {
       const newCampaign = await createCampaign({ name: "New Campaign", status: "Draft", type: "Re-engagement", description: "", start_date: new Date().toISOString().slice(0, 10) });
       await handleRefresh();
-      if (newCampaign?.id || newCampaign?.Id) {
+      const campaignId = newCampaign?.id ?? newCampaign?.Id;
+      if (campaignId) {
         setSelectedCampaign(newCampaign);
-        setTableSelectedIds(new Set([newCampaign.id ?? newCampaign.Id]));
+        setTableSelectedIds(new Set([campaignId]));
+
+        // Auto-create default tags by cloning from the campaign with the most tags
+        try {
+          const tagsRes = await apiFetch("/api/tags");
+          if (tagsRes.ok) {
+            const allTags: any[] = await tagsRes.json();
+            if (Array.isArray(allTags) && allTags.length > 0) {
+              // Group tags by campaign_id, pick the campaign with the most tags
+              const byCampaign = new Map<number, any[]>();
+              allTags.forEach((t) => {
+                if (t.campaign_id && t.campaign_id !== campaignId) {
+                  if (!byCampaign.has(t.campaign_id)) byCampaign.set(t.campaign_id, []);
+                  byCampaign.get(t.campaign_id)!.push(t);
+                }
+              });
+              let templateTags: any[] = [];
+              byCampaign.forEach((tags) => {
+                if (tags.length > templateTags.length) templateTags = tags;
+              });
+              // Clone template tags to the new campaign (fire-and-forget for speed)
+              if (templateTags.length > 0) {
+                const campaignName = newCampaign.name || "New Campaign";
+                await Promise.allSettled(
+                  templateTags.map((tag) =>
+                    apiFetch("/api/tags", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        name: tag.name,
+                        color: tag.color,
+                        category: tag.category,
+                        description: tag.description,
+                        campaign_id: campaignId,
+                        campaign_name: campaignName,
+                      }),
+                    }),
+                  ),
+                );
+              }
+            }
+          }
+        } catch (tagErr) {
+          console.error("Failed to auto-create default tags:", tagErr);
+        }
       }
     } catch (err) { console.error("Create campaign failed", err); }
   }, [handleRefresh, setSelectedCampaign]);
@@ -350,6 +413,15 @@ function CampaignsContent() {
       handleRefresh();
     } catch (err) { console.error("Bulk delete campaigns failed", err); }
   }, [tableSelectedIds, handleRefresh, setSelectedCampaign]);
+
+  const handleBulkStatusChange = useCallback(async (newStatus: string) => {
+    if (tableSelectedIds.size === 0) return;
+    try {
+      await Promise.all(Array.from(tableSelectedIds).map((id) => updateCampaign(id, { status: newStatus })));
+      setTableSelectedIds(new Set());
+      handleRefresh();
+    } catch (err) { console.error("Bulk status change failed", err); }
+  }, [tableSelectedIds, handleRefresh]);
 
   const handleDuplicateCampaigns = useCallback(async () => {
     if (tableSelectedIds.size === 0) return;
@@ -474,74 +546,64 @@ function CampaignsContent() {
     return result;
   }, [campaigns, tableFilterStatus, tableFilterAccount, tableSortCol, tableSortDir, tableGroupBy]);
 
-  // ── Responsive toolbar class tokens ─────────────────────────────────────────
-  const tbBase = "h-10 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
-  const tbDefault = "border border-border/55 text-foreground/60 hover:text-foreground hover:bg-card";
-  const tbActive  = "bg-card border border-border/55 text-foreground";
-
-  // ── Table toolbar (rendered inline with tab buttons) ───────────────────────
+  // ── Table toolbar (rendered inline with tab buttons using ToolbarPill) ─────
   const tableToolbar = (
     <>
-      <div className="w-px h-4 bg-border/25 mx-0.5 shrink-0" />
+      <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
 
-      {/* Search — responsive: expanded when wide, popover when narrow */}
-      {isNarrow ? (
-        <Popover open={tableSearchOpen} onOpenChange={setTableSearchOpen}>
-          <PopoverTrigger asChild>
-            <button className={cn(tbBase, "w-10 px-0 justify-center", tableSearch ? tbActive : tbDefault)}>
-              <Search className="h-4 w-4" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent side="bottom" align="start" className="w-56 p-2">
-            <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
-              <input
-                autoFocus
-                value={tableSearch}
-                onChange={(e) => setTableSearch(e.target.value)}
-                placeholder="Search campaigns..."
-                className="w-full pl-7 pr-7 py-1.5 text-[12px] rounded-md border border-border bg-popover placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-brand-indigo/50"
-              />
-              {tableSearch && (
-                <button
-                  onClick={() => setTableSearch("")}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              )}
-            </div>
-          </PopoverContent>
-        </Popover>
-      ) : (
-        <div className="flex items-center gap-1.5 h-10 rounded-full border border-border/30 bg-card/60 px-2.5 shrink-0">
-          <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-          <input
-            value={tableSearch}
-            onChange={(e) => setTableSearch(e.target.value)}
-            placeholder="Search campaigns..."
-            className="text-[12px] bg-transparent outline-none w-28 min-w-0 text-foreground placeholder:text-muted-foreground/60"
-          />
-          {tableSearch && (
-            <button type="button" onClick={() => setTableSearch("")}>
-              <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* +Add with confirmation (agency only) */}
+      {/* +Add (agency only) */}
       {isAgencyUser && (
         <ConfirmToolbarButton icon={Plus} label="Add" onConfirm={handleAddCampaign} />
       )}
 
+      {/* Search — always visible */}
+      <div className="h-10 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card px-3 shrink-0">
+        <Search className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+        <input
+          className="h-full bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/40 w-32 min-w-0"
+          placeholder="Search campaigns…"
+          value={tableSearch}
+          onChange={(e) => setTableSearch(e.target.value)}
+        />
+        {tableSearch && (
+          <button onClick={() => setTableSearch("")} className="text-muted-foreground/40 hover:text-muted-foreground shrink-0">
+            <X className="h-3 w-3" />
+          </button>
+        )}
+      </div>
+
+      {/* Sort */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <ToolbarPill
+            icon={ArrowUpDown}
+            label="Sort"
+            active={tableSortCol !== "lastModified" || tableSortDir !== "desc"}
+            activeValue={tableSortCol !== "lastModified" || tableSortDir !== "desc" ? TABLE_SORT_LABELS[tableSortCol] || tableSortCol : undefined}
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-48">
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Sort by</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {Object.entries(TABLE_SORT_LABELS).map(([col, label]) => (
+            <DropdownMenuItem
+              key={col}
+              onClick={() => handleTableSortChange(col)}
+              className={cn("text-[12px]", tableSortCol === col && "font-semibold text-brand-indigo")}
+            >
+              {label}
+              {tableSortCol === col && (
+                <span className="ml-auto text-[10px] text-brand-indigo">{tableSortDir === "asc" ? "↑" : "↓"}</span>
+              )}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       {/* Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(tbBase, isTableFilterActive ? tbActive : tbDefault)}>
-            <Filter className="h-4 w-4" />
-            {!isNarrow && <>Filter{isTableFilterActive ? ` \u00b7 ${tableActiveFilterCount}` : ""}</>}
-          </button>
+          <ToolbarPill icon={Filter} label="Filter" active={isTableFilterActive} activeValue={isTableFilterActive ? tableActiveFilterCount : undefined} />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Status</DropdownMenuLabel>
@@ -582,10 +644,7 @@ function CampaignsContent() {
       {/* Group */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(tbBase, tableGroupBy !== "status" ? tbActive : tbDefault)}>
-            <Layers className="h-4 w-4" />
-            {!isNarrow && <>Group{tableGroupBy !== "status" ? ` \u00b7 ${TABLE_GROUP_LABELS[tableGroupBy]}` : ""}</>}
-          </button>
+          <ToolbarPill icon={Layers} label="Group" active={tableGroupBy !== "status"} activeValue={tableGroupBy !== "status" ? TABLE_GROUP_LABELS[tableGroupBy] : undefined} />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           {(Object.keys(TABLE_GROUP_LABELS) as TableGroupByOption[]).map((opt) => (
@@ -600,10 +659,7 @@ function CampaignsContent() {
       {/* Fields (Column Visibility) */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(tbBase, visibleCols.size !== DEFAULT_VISIBLE.length ? tbActive : tbDefault)}>
-            <Eye className="h-4 w-4" />
-            {!isNarrow && "Fields"}
-          </button>
+          <ToolbarPill icon={Eye} label="Fields" active={visibleCols.size !== DEFAULT_VISIBLE.length} />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Show / Hide Columns</DropdownMenuLabel>
@@ -644,13 +700,43 @@ function CampaignsContent() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* ── Selection actions -- far right, visible when rows selected (agency only) ── */}
-      {isAgencyUser && tableSelectedIds.size > 0 && (
+      {/* ── Selection actions -- far right, visible when rows selected ── */}
+      {tableSelectedIds.size > 0 && (
         <>
           <div className="flex-1 min-w-0" />
           <div className="flex items-center gap-1 shrink-0">
-            <ConfirmToolbarButton icon={Copy} label="Duplicate" onConfirm={handleDuplicateCampaigns} />
-            <ConfirmToolbarButton icon={Trash2} label="Delete" onConfirm={handleBulkDeleteCampaigns} variant="danger" />
+            {/* Change Status dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className={cn(tbBase, tbDefault)}>
+                  <Pencil className="h-4 w-4" />
+                  Change Status
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                {STATUS_OPTIONS.map((s) => (
+                  <DropdownMenuItem key={s} onClick={() => handleBulkStatusChange(s)} className="text-[12px]">
+                    {s}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {isAgencyUser && (
+              <>
+                <ConfirmToolbarButton icon={Copy} label="Duplicate" onConfirm={handleDuplicateCampaigns} />
+                <ConfirmToolbarButton icon={Trash2} label="Delete" onConfirm={handleBulkDeleteCampaigns} variant="danger" />
+              </>
+            )}
+
+            {/* Count badge with dismiss */}
+            <button
+              className={cn(tbBase, tbDefault, "cursor-default ml-1")}
+              onClick={() => setTableSelectedIds(new Set())}
+            >
+              <span className="tabular-nums">{tableSelectedIds.size}</span>
+              <X className="h-3.5 w-3.5" />
+            </button>
           </div>
         </>
       )}
@@ -698,50 +784,24 @@ function CampaignsContent() {
           ) : (
             <div className="h-full flex gap-[3px] overflow-hidden min-h-0">
               <div className="flex flex-col bg-muted rounded-lg overflow-hidden flex-1 min-w-0">
-                {/* Title */}
-                <div className="px-3.5 pt-5 pb-1 shrink-0 flex items-center justify-between">
-                  <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Campaigns</h2>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[12px] font-medium text-muted-foreground tabular-nums">{campaigns.length}</span>
-                    <button
-                      onClick={() => setRightPanelOpen((p) => !p)}
-                      title={rightPanelOpen ? "Hide detail panel" : "Show detail panel"}
-                      className="icon-circle-lg icon-circle-base"
-                    >
-                      {rightPanelOpen
-                        ? <PanelRightClose className="h-4 w-4" />
-                        : <PanelRightOpen className="h-4 w-4" />}
-                    </button>
+                {/* Title + ViewTabBar + inline toolbar (309px rigid wrapper) */}
+                <div ref={toolbarRef} className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
+                  <div className="flex items-center justify-between w-[309px] shrink-0">
+                    <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Campaigns</h2>
+                    <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as CampaignViewMode)} />
                   </div>
-                </div>
-                {/* Controls row: tabs + inline toolbar */}
-                <div ref={toolbarRef} className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
-                  {VIEW_TABS.map((tab) => {
-                    const Icon = tab.icon;
-                    const isActive = viewMode === tab.id;
-                    return isActive ? (
-                      <button
-                        key={tab.id}
-                        onClick={() => handleViewSwitch(tab.id)}
-                        className="h-10 inline-flex items-center gap-1.5 px-3 rounded-full bg-[#FFE35B] text-foreground text-[12px] font-semibold shrink-0"
-                      >
-                        <Icon className="h-4 w-4" />
-                        {tab.label}
-                      </button>
-                    ) : (
-                      <button
-                        key={tab.id}
-                        onClick={() => handleViewSwitch(tab.id)}
-                        title={tab.label}
-                        className="icon-circle-lg icon-circle-base shrink-0"
-                      >
-                        <Icon className="h-4 w-4" />
-                      </button>
-                    );
-                  })}
-
                   {/* Inline table toolbar */}
                   {tableToolbar}
+                  {/* Panel toggle (far right) */}
+                  <div className="flex-1 min-w-0" />
+                  <IconBtn
+                    onClick={() => setRightPanelOpen((p) => !p)}
+                    title={rightPanelOpen ? "Hide detail panel" : "Show detail panel"}
+                  >
+                    {rightPanelOpen
+                      ? <PanelRightClose className="h-4 w-4" />
+                      : <PanelRightOpen className="h-4 w-4" />}
+                  </IconBtn>
                 </div>
                 {/* Table content */}
                 <div className="flex-1 min-h-0 overflow-hidden">

@@ -347,7 +347,7 @@ export function OpportunitiesPage() {
             <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight mr-6">
               Opportunities
             </h2>
-            <span className="h-10 w-10 rounded-full border border-border/50 flex items-center justify-center text-[10px] font-semibold text-foreground tabular-nums shrink-0">
+            <span className="h-10 w-10 rounded-full border border-black/[0.125] flex items-center justify-center text-[10px] font-semibold text-foreground tabular-nums shrink-0">
               {totalLeads}
             </span>
 

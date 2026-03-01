@@ -19,11 +19,11 @@ import { LeadsInlineTable } from "./LeadsInlineTable";
 import { LeadsKanban } from "./LeadsKanban";
 import { LeadDetailPanel } from "./LeadDetailPanel";
 import { CsvImportWizard } from "./CsvImportWizard";
-import { createLead, bulkDeleteLeads, updateLead } from "../api/leadsApi";
+import { createLead, bulkDeleteLeads, bulkUpdateLeads, updateLead } from "../api/leadsApi";
 import { apiFetch } from "@/lib/apiUtils";
 import {
   Table2, List, Kanban,
-  Plus, Trash2, Copy, ArrowUpDown, Filter, Layers,
+  Plus, Trash2, Copy, ArrowUpDown, Filter, Layers, Pencil,
   FileSpreadsheet, Eye, Check, Upload, Download,
   Search, X, SlidersHorizontal, Flame, Phone, Mail, Columns3, Tag,
 } from "lucide-react";
@@ -131,7 +131,7 @@ function ConfirmToolbarButton({
   const [loading, setLoading] = useState(false);
   if (confirming) {
     return (
-      <div className="h-9 flex items-center gap-1 rounded-full border border-border/30 bg-card px-2.5 text-[12px] shrink-0">
+      <div className="h-9 flex items-center gap-1 rounded-full border border-black/[0.125] bg-card px-2.5 text-[12px] shrink-0">
         <span className="text-foreground/60 mr-0.5 whitespace-nowrap">{label}?</span>
         <button
           className="px-2 py-0.5 rounded-full bg-brand-indigo text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
@@ -169,6 +169,10 @@ export function LeadsTable() {
   const { currentAccountId, isAgencyView } = useWorkspace();
   const filterAccountId = (isAgencyView && currentAccountId === 1) ? undefined : currentAccountId;
   const { leads, loading, error, handleRefresh } = useLeadsData(filterAccountId);
+
+  /* ── Toolbar button constants ───────────────────────────────────────────── */
+  const tbBase = "h-10 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
+  const tbDefault = "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:bg-card";
 
   /* ── View mode (persisted) ─────────────────────────────────────────────── */
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
@@ -221,7 +225,6 @@ export function LeadsTable() {
 
   /* ── Table toolbar state ─────────────────────────────────────────────────── */
   const [tableSearch,         setTableSearch]         = useState("");
-  const [tableSearchOpen,     setTableSearchOpen]     = useState(false);
   const [tableSortBy,         setTableSortBy]         = useState<TableSortByOption>("recent");
   const [tableFilterStatus,   setTableFilterStatus]   = useState<string[]>([]);
   const [tableFilterCampaign, setTableFilterCampaign] = useState<string>("");
@@ -615,6 +618,15 @@ export function LeadsTable() {
     } catch (err) { console.error("Duplicate leads failed", err); }
   }, [tableSelectedIds, leads, handleRefresh]);
 
+  const handleBulkStageChange = useCallback(async (stage: string) => {
+    if (tableSelectedIds.size === 0) return;
+    try {
+      await bulkUpdateLeads(Array.from(tableSelectedIds), { Conversion_Status: stage });
+      setTableSelectedIds(new Set());
+      handleRefresh();
+    } catch (err) { console.error("Bulk stage change failed", err); }
+  }, [tableSelectedIds, handleRefresh]);
+
   const handleExportCsv = useCallback(() => {
     const headers = ["Name", "Status", "Score", "Phone", "Email", "Campaign", "Tags", "Last Activity", "Notes"];
     const rows = tableFlatItems
@@ -670,26 +682,21 @@ export function LeadsTable() {
       {/* +Add */}
       <ToolbarPill icon={Plus} label="Add" onClick={handleAddLead} />
 
-      {/* Search — toggle pill */}
-      {tableSearchOpen ? (
-        <div className="h-9 flex items-center gap-1.5 px-3 rounded-full border border-brand-indigo/50 bg-brand-indigo/5">
-          <Search className="h-3.5 w-3.5 text-brand-indigo shrink-0" />
-          <input
-            value={tableSearch}
-            onChange={(e) => setTableSearch(e.target.value)}
-            placeholder="Search…"
-            autoFocus
-            onBlur={() => { if (!tableSearch) setTableSearchOpen(false); }}
-            onKeyDown={(e) => { if (e.key === "Escape") { setTableSearch(""); setTableSearchOpen(false); } }}
-            className="bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/60 w-[120px]"
-          />
-          <button onClick={() => { setTableSearch(""); setTableSearchOpen(false); }} className="text-muted-foreground/60 hover:text-foreground">
+      {/* Search — always visible */}
+      <div className="h-10 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card px-3 shrink-0">
+        <Search className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+        <input
+          className="h-full bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/40 w-32 min-w-0"
+          placeholder="Search leads…"
+          value={tableSearch}
+          onChange={(e) => setTableSearch(e.target.value)}
+        />
+        {tableSearch && (
+          <button onClick={() => setTableSearch("")} className="text-muted-foreground/40 hover:text-muted-foreground shrink-0">
             <X className="h-3 w-3" />
           </button>
-        </div>
-      ) : (
-        <ToolbarPill icon={Search} label="Search" active={!!tableSearch} onClick={() => setTableSearchOpen(true)} />
-      )}
+        )}
+      </div>
 
       {/* Group */}
       <DropdownMenu>
@@ -846,6 +853,26 @@ export function LeadsTable() {
         <>
           <div className="flex-1 min-w-0" />
           <div className="flex items-center gap-1 shrink-0">
+            {/* Change Stage dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className={cn(tbBase, tbDefault)}>
+                  <Pencil className="h-4 w-4" />
+                  Change Stage
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Move to</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {STATUS_OPTIONS.map((s) => (
+                  <DropdownMenuItem key={s} onClick={() => handleBulkStageChange(s)} className="text-[12px]">
+                    <span className={cn("w-1.5 h-1.5 rounded-full shrink-0 mr-2", STATUS_DOT[s] ?? "bg-zinc-400")} />
+                    {s}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <ConfirmToolbarButton
               icon={Copy}
               label="Duplicate"
@@ -857,6 +884,15 @@ export function LeadsTable() {
               onConfirm={handleBulkDeleteLeads}
               variant="danger"
             />
+
+            {/* Count badge with dismiss */}
+            <button
+              className={cn(tbBase, tbDefault, "cursor-default ml-1")}
+              onClick={() => setTableSelectedIds(new Set())}
+            >
+              <span className="tabular-nums">{tableSelectedIds.size}</span>
+              <X className="h-3.5 w-3.5" />
+            </button>
           </div>
         </>
       )}
@@ -1032,13 +1068,13 @@ export function LeadsTable() {
 
             {/* Fold / Unfold button */}
             {hasAnyCollapsed ? (
-              <button onClick={() => setFoldAction((prev) => ({ type: "expand-all", seq: prev.seq + 1 }))} className="h-9 px-3 rounded-full flex items-center gap-1.5 text-[12px] font-medium bg-white text-foreground border border-border/60 hover:bg-muted/50 transition-colors">
+              <button onClick={() => setFoldAction((prev) => ({ type: "expand-all", seq: prev.seq + 1 }))} className="h-9 px-3 rounded-full flex items-center gap-1.5 text-[12px] font-medium bg-white text-foreground border border-black/[0.125] hover:bg-muted/50 transition-colors">
                 <Columns3 className="h-4 w-4 shrink-0" /><span>Unfold</span>
               </button>
             ) : (
               <Popover open={foldPopoverOpen} onOpenChange={setFoldPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <button className={cn("h-9 px-3 rounded-full flex items-center gap-1.5 text-[12px] font-medium transition-colors", foldPopoverOpen ? "bg-white text-foreground border border-border/60" : "border border-border/60 text-muted-foreground hover:bg-card hover:text-foreground")}>
+                  <button className={cn("h-9 px-3 rounded-full flex items-center gap-1.5 text-[12px] font-medium transition-colors", foldPopoverOpen ? "bg-white text-foreground border border-black/[0.125]" : "border border-black/[0.125] text-muted-foreground hover:bg-card hover:text-foreground")}>
                     <Columns3 className="h-4 w-4 shrink-0" /><span>Fold</span>
                   </button>
                 </PopoverTrigger>
@@ -1055,7 +1091,7 @@ export function LeadsTable() {
             )}
 
             {/* Tags always-show toggle */}
-            <button onClick={() => setShowTagsAlways((v) => !v)} title={showTagsAlways ? "Tags always visible -- click to hover-only" : "Show tags on hover only -- click to always show"} className={cn("h-9 w-9 rounded-full flex items-center justify-center shrink-0 transition-colors", showTagsAlways ? "bg-white text-foreground border border-border/60 hover:bg-muted/50" : "border border-border/60 text-muted-foreground hover:bg-card hover:text-foreground")}>
+            <button onClick={() => setShowTagsAlways((v) => !v)} title={showTagsAlways ? "Tags always visible -- click to hover-only" : "Show tags on hover only -- click to always show"} className={cn("h-9 w-9 rounded-full flex items-center justify-center shrink-0 transition-colors", showTagsAlways ? "bg-white text-foreground border border-black/[0.125] hover:bg-muted/50" : "border border-black/[0.125] text-muted-foreground hover:bg-card hover:text-foreground")}>
               <Tag className="h-4 w-4" />
             </button>
 

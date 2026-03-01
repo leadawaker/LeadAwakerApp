@@ -397,7 +397,7 @@ export function ContractCreatePanel({
                       className={cn(
                         "h-9 px-3 rounded-lg text-[12px] font-medium border",
                         language === lang
-                          ? "bg-[#F5DFB3] border-[#E3A857] text-foreground"
+                          ? "bg-highlight-active border-highlight-active text-foreground"
                           : "bg-card border-border text-muted-foreground"
                       )}
                       onClick={() => setLanguage(lang)}>
@@ -452,7 +452,7 @@ export function ContractCreatePanel({
                     className={cn(
                       "h-7 px-2.5 rounded-full text-[11px] font-medium border transition-colors",
                       endDatePreset === (p.months === 0 ? "custom" : p.months)
-                        ? "bg-[#F5DFB3] border-[#E3A857] text-foreground"
+                        ? "bg-highlight-active border-highlight-active text-foreground"
                         : "bg-card border-border/60 text-muted-foreground hover:text-foreground"
                     )}>
                     {p.label}
@@ -475,7 +475,7 @@ export function ContractCreatePanel({
                     className={cn(
                       "flex flex-col gap-0.5 px-2.5 py-2 text-left rounded-xl border transition-colors",
                       dealType === opt.value
-                        ? "bg-[#FFE35B] border-yellow-400 border-2"
+                        ? "bg-highlight-active border-highlight-active border-2"
                         : "bg-card border-border hover:bg-muted/60"
                     )}>
                     <span className="text-[11px] font-semibold leading-tight">{opt.label}</span>
@@ -597,7 +597,7 @@ export function ContractCreatePanel({
                     className={cn(
                       "h-9 px-3 rounded-full border text-[12px] font-medium transition-colors",
                       invoiceCadence === opt.value
-                        ? "bg-[#F5DFB3] border-[#E3A857] text-foreground"
+                        ? "bg-highlight-active border-highlight-active text-foreground"
                         : "bg-card border-border text-foreground/70 hover:bg-muted/60"
                     )}>
                     {opt.label}
@@ -616,7 +616,7 @@ export function ContractCreatePanel({
                     className={cn(
                       "flex-1 flex flex-col gap-0.5 px-3 py-2 rounded-xl border text-left transition-colors",
                       paymentPreset === opt.value
-                        ? "bg-[#F5DFB3] border-[#E3A857] text-foreground"
+                        ? "bg-highlight-active border-highlight-active text-foreground"
                         : "bg-card border-border text-foreground/70 hover:bg-muted/60"
                     )}>
                     <span className="text-[12px] font-semibold">{opt.label}</span>

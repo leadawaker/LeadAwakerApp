@@ -16,6 +16,7 @@ import { logout } from "@/hooks/useSession";
 import { TopbarActionsProvider } from "@/contexts/TopbarActionsContext";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
+import { PAGE_ACCENTS } from "@/lib/pageAccents";
 
 export function CrmShell({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
@@ -71,7 +72,16 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   }, [notifData]);
 
   // ── Color Tester: force re-render when JS-based colors change (debounced) ──
-  const [, setColorTick] = useState(0);
+  const [colorTick, setColorTick] = useState(0);
+
+  // ── Per-page accent colors (hue shifts along yellow → blue spectrum) ──────
+  // PAGE_ACCENTS is a mutable module-level object; colorTick dep ensures re-read
+  // whenever the Color Tester widget mutates it and dispatches "color-tester-update".
+  const pageAccent = useMemo(() => {
+    const seg = location.split("/").filter(Boolean)[1] ?? "";
+    return PAGE_ACCENTS[seg] ?? null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location, colorTick]);
   const rafRef = useRef(0);
   const bumpColors = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
@@ -87,7 +97,15 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
 
   return (
     <TopbarActionsProvider>
-    <div className={cn("min-h-screen bg-background", isAgencyView && "agency-mode")} data-testid="shell-crm" key={isAgencyView ? 'agency' : 'subaccount'}>
+    <div
+      className={cn("min-h-screen bg-background", isAgencyView && "agency-mode")}
+      data-testid="shell-crm"
+      key={isAgencyView ? 'agency' : 'subaccount'}
+      style={pageAccent ? {
+        "--highlight-active": pageAccent.active,
+        "--highlight-selected": pageAccent.selected,
+      } as React.CSSProperties : undefined}
+    >
       {/* Skip to main content link — visible only on keyboard focus for accessibility */}
       <a href="#main-content" className="sr-skip-link" data-testid="skip-to-main">
         Skip to main content
@@ -144,7 +162,12 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
               {activePanel === 'settings' && <SettingsPanel />}
               {activePanel === 'help' && (
                 <div className="p-4 space-y-2 overflow-auto h-full">
-                  <a href="#" className="block rounded-xl px-4 py-3 text-sm hover:bg-muted/30 transition-colors font-medium border border-transparent hover:border-border">Documentation</a>
+                  <button
+                    onClick={() => { closePanel(); setLocation(`${location.startsWith("/agency") ? "/agency" : "/subaccount"}/docs`); }}
+                    className="w-full text-left block rounded-xl px-4 py-3 text-sm hover:bg-muted/30 transition-colors font-medium border border-transparent hover:border-border"
+                  >
+                    Documentation
+                  </button>
                   <a href="#" className="block rounded-xl px-4 py-3 text-sm hover:bg-muted/30 transition-colors font-medium border border-transparent hover:border-border">Social Media</a>
                   <a href="#" className="block rounded-xl px-4 py-3 text-sm hover:bg-muted/30 transition-colors font-medium border border-transparent hover:border-border">What's New</a>
                 </div>

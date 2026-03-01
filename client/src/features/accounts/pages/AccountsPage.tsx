@@ -1,7 +1,7 @@
 // src/features/accounts/pages/AccountsPage.tsx
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
-  List, Table2, Plus, Trash2, Copy, ArrowUpDown, Filter, Layers, Eye, Check,
+  List, Table2, Plus, Trash2, Copy, ArrowUpDown, Filter, Layers, Eye, Check, Pencil, X,
 } from "lucide-react";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
 import { AccountListView } from "../components/AccountListView";
@@ -23,7 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import { ToolbarPill } from "@/components/ui/toolbar-pill";
-import { createAccount } from "../api/accountsApi";
+import { createAccount, updateAccount } from "../api/accountsApi";
 
 export type AccountViewMode = "list" | "table";
 export type AccountGroupBy  = "status" | "type" | "none";
@@ -74,6 +74,10 @@ const STATUS_DOT: Record<string, string> = {
   Suspended: "bg-rose-500",
 };
 
+/* ── Toolbar button constants (§17) ── */
+const tbBase = "h-10 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
+const tbDefault = "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:bg-card";
+
 /* ── Tab definitions ── */
 const VIEW_TABS: TabDef[] = [
   { id: "list",  label: "List",  icon: List   },
@@ -92,7 +96,7 @@ function ConfirmToolbarButton({
   const [loading, setLoading] = useState(false);
   if (confirming) {
     return (
-      <div className="h-10 flex items-center gap-1 rounded-full border border-border/30 bg-card px-2.5 text-[12px] shrink-0">
+      <div className="h-10 flex items-center gap-1 rounded-full border border-black/[0.125] bg-card px-2.5 text-[12px] shrink-0">
         <span className="text-foreground/60 mr-0.5 whitespace-nowrap">{label}?</span>
         <button
           className="px-2 py-0.5 rounded-full bg-brand-indigo text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
@@ -111,7 +115,7 @@ function ConfirmToolbarButton({
         "h-10 inline-flex items-center gap-1.5 rounded-full border px-3 text-[12px] font-medium shrink-0",
         variant === "danger"
           ? "border-red-300/50 text-red-600 hover:bg-red-50/60"
-          : "border-border/30 text-foreground/70 hover:bg-card hover:text-foreground",
+          : "border-black/[0.125] text-foreground/70 hover:bg-card hover:text-foreground",
       )}
       onClick={() => setConfirming(true)}
     >
@@ -292,6 +296,15 @@ export default function AccountsPage() {
     } catch (err) { console.error("Duplicate accounts failed", err); }
   }, [tableSelectedIds, rows, fetchData]);
 
+  const handleBulkStatusChange = useCallback(async (status: string) => {
+    if (tableSelectedIds.size === 0) return;
+    try {
+      await Promise.all(Array.from(tableSelectedIds).map((id) => updateAccount(id, { status })));
+      setTableSelectedIds(new Set());
+      fetchData();
+    } catch (err) { console.error("Bulk status change failed", err); }
+  }, [tableSelectedIds, fetchData]);
+
   /* ── Available types (for table filter dropdown) ────────────────────────── */
   const availableTypes = useMemo(() => {
     const seen = new Set<string>();
@@ -368,7 +381,7 @@ export default function AccountsPage() {
       <div className="w-px h-4 bg-border/25 mx-0.5 shrink-0" />
 
       {/* Search — always open */}
-      <div className="h-10 flex items-center gap-1.5 rounded-full border border-border/30 bg-card px-3 shrink-0">
+      <div className="h-10 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card px-3 shrink-0">
         <svg className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
         </svg>
@@ -512,13 +525,36 @@ export default function AccountsPage() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Delete / Duplicate — far right, when rows selected */}
+      {/* Selection actions — far right, when rows selected */}
       {tableSelectedIds.size > 0 && (
         <>
           <div className="flex-1 min-w-0" />
           <div className="flex items-center gap-1 shrink-0">
+            {/* Change Status dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className={cn(tbBase, tbDefault)}>
+                  <Pencil className="h-4 w-4" />
+                  Change Status
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                {STATUS_OPTIONS.map((s) => (
+                  <DropdownMenuItem key={s} onClick={() => handleBulkStatusChange(s)} className="text-[12px]">
+                    {s}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <ConfirmToolbarButton icon={Copy} label="Duplicate" onConfirm={handleDuplicateAccounts} />
             <ConfirmToolbarButton icon={Trash2} label="Delete" onConfirm={handleBulkDeleteAccounts} variant="danger" />
+
+            {/* Count badge with dismiss */}
+            <button className={cn(tbBase, tbDefault, "cursor-default ml-1")} onClick={() => setTableSelectedIds(new Set())}>
+              <span className="tabular-nums">{tableSelectedIds.size}</span>
+              <X className="h-3.5 w-3.5" />
+            </button>
           </div>
         </>
       )}
@@ -567,15 +603,13 @@ export default function AccountsPage() {
             <div className="flex-1 min-h-0 flex gap-[3px] overflow-hidden h-full">
               <div className="flex flex-col bg-muted rounded-lg overflow-hidden flex-1 min-w-0">
 
-                {/* Title */}
-                <div className="px-3.5 pt-5 pb-1 shrink-0">
-                  <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Accounts</h2>
-                </div>
-
-                {/* Controls row: tabs + inline toolbar */}
-                <div className="px-3 pt-1.5 pb-2.5 shrink-0 flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
-                  <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as AccountViewMode)} />
-
+                {/* Title + 309px wrapper with ViewTabBar + toolbar */}
+                <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
+                  <div className="flex items-center justify-between w-[309px] shrink-0">
+                    <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Accounts</h2>
+                    <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as AccountViewMode)} />
+                  </div>
+                  <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
                   {/* Inline table toolbar */}
                   {tableToolbar}
                 </div>

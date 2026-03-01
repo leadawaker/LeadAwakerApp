@@ -13,7 +13,7 @@ interface SearchPillProps {
 export function SearchPill({ value, onChange, open, onOpenChange, placeholder = "Search...", className }: SearchPillProps) {
   if (open) {
     return (
-      <div className={cn("flex items-center gap-1.5 h-10 rounded-full border border-border/30 bg-card/60 px-2.5 shrink-0", className)}>
+      <div className={cn("flex items-center gap-1.5 h-10 rounded-full border border-black/[0.125] bg-card/60 px-2.5 shrink-0", className)}>
         <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <input
           autoFocus

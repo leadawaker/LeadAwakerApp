@@ -414,17 +414,17 @@ export function InvoicesInlineTable({
       dot: "#94A3B8",
     };
 
-    const rowBg = isHighlighted ? "#FFF1C8" : "#F1F1F1";
+    const rowBg = isHighlighted ? "var(--color-highlight-selected)" : "var(--color-card)";
     const rowHoverClass = isHighlighted ? "" : "hover:bg-card-hover";
 
     return (
       <tr
         key={invoice.id}
         className={cn(
-          "group/row cursor-pointer h-[52px]",
+          "group/row cursor-pointer h-[52px] animate-card-enter",
           rowHoverClass,
         )}
-        style={{ backgroundColor: rowBg }}
+        style={{ backgroundColor: rowBg, animationDelay: `${Math.min(index, 15) * 30}ms` }}
         onClick={(e) => handleRowClick(invoice, index, e)}
       >
         {/* Checkbox */}
@@ -433,7 +433,7 @@ export function InvoicesInlineTable({
           style={{
             width: 40,
             minWidth: 40,
-            backgroundColor: isHighlighted ? "#FFF1C8" : undefined,
+            backgroundColor: isHighlighted ? "var(--color-highlight-selected)" : undefined,
           }}
         >
           <div

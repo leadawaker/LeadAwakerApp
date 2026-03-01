@@ -116,8 +116,8 @@ export default function AutomationLogsPage() {
 
   // ── Toolbar constants ─────────────────────────────────────────────────────
   const tbBase    = "h-10 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
-  const tbDefault = "border border-border/55 text-foreground/60 hover:text-foreground hover:bg-card";
-  const tbActive  = "bg-card border border-border/55 text-foreground";
+  const tbDefault = "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:bg-card";
+  const tbActive  = "bg-card border border-black/[0.125] text-foreground";
 
   // ── Responsive collapse ───────────────────────────────────────────────────
   const [isNarrow, setIsNarrow] = useState(false);
@@ -260,9 +260,9 @@ export default function AutomationLogsPage() {
         <div className="flex-1 min-h-0 flex gap-[3px] overflow-hidden">
           <div className="flex flex-col bg-muted rounded-lg overflow-hidden flex-1 min-w-0">
 
-            {/* ── Title ── */}
-            <div className="px-3.5 pt-5 pb-1 shrink-0">
-              <div className="flex items-center gap-2 min-h-[40px]">
+            {/* ── Title + Toolbar (single row) ── */}
+            <div ref={toolbarRef} className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
+              <div className="flex items-center gap-2 shrink-0">
                 <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
                   Automation Logs
                 </h2>
@@ -275,10 +275,9 @@ export default function AutomationLogsPage() {
                   </span>
                 )}
               </div>
-            </div>
 
-            {/* ── Toolbar ── */}
-            <div ref={toolbarRef} className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
+              <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
+
               {/* Search */}
               <SearchPill
                 value={workflowFilter}
@@ -485,11 +484,12 @@ export default function AutomationLogsPage() {
                             <tr
                               data-testid={isCritical ? "row-critical-error" : "row-log"}
                               className={cn(
-                                "h-[52px] border-b border-border/15",
+                                "h-[52px] border-b border-border/15 animate-card-enter",
                                 isCritical
                                   ? "bg-red-500/5 hover:bg-red-500/10 dark:bg-red-950/20 dark:hover:bg-red-950/30"
                                   : "bg-card hover:bg-card-hover",
                               )}
+                              style={{ animationDelay: `${Math.min(idx, 15) * 30}ms` }}
                             >
                               {/* Expand toggle */}
                               <td className="px-1" style={{ width: 36 }}>

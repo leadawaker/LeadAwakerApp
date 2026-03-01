@@ -112,31 +112,69 @@ export const PIPELINE_STATUSES = [
   "Qualified", "Booked", "Closed", "Lost", "DND",
 ];
 
-// ── Account status avatar colors ──────────────────────────────────────────────
-const ACCOUNT_STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  Active:    { bg: "#D1FAE5", text: "#065F46" },
-  Trial:     { bg: "#FEF3C7", text: "#92400E" },
-  Inactive:  { bg: "#F4F4F5", text: "#52525B" },
-  Suspended: { bg: "#FFE4E6", text: "#9F1239" },
+// ── Account status colors — exported mutable for Color Tester ─────────────────
+export const ACCOUNT_STATUS_HEX: Record<string, string> = {
+  Active:    "#10B981",
+  Trial:     "#F59E0B",
+  Inactive:  "#94A3B8",
+  Suspended: "#F43F5E",
+};
+
+export const ACCOUNT_AVATAR_BG: Record<string, string> = {
+  Active:    "#D1FAE5",
+  Trial:     "#FEF3C7",
+  Inactive:  "#F4F4F5",
+  Suspended: "#FFE4E6",
+};
+export const ACCOUNT_AVATAR_TEXT: Record<string, string> = {
+  Active:    "#065F46",
+  Trial:     "#92400E",
+  Inactive:  "#52525B",
+  Suspended: "#9F1239",
 };
 
 export function getAccountAvatarColor(status: string): { bg: string; text: string } {
-  return ACCOUNT_STATUS_COLORS[status] ?? { bg: "#E5E7EB", text: "#374151" };
+  return {
+    bg:   ACCOUNT_AVATAR_BG[status]   ?? "#E5E7EB",
+    text: ACCOUNT_AVATAR_TEXT[status] ?? "#374151",
+  };
 }
 
-// ── Campaign status avatar colors ─────────────────────────────────────────────
-const CAMPAIGN_STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  Active:    { bg: "#DCFCE7", text: "#15803D" },
-  Paused:    { bg: "#FEF3C7", text: "#92400E" },
-  Completed: { bg: "#DBEAFE", text: "#1D4ED8" },
-  Finished:  { bg: "#DBEAFE", text: "#1D4ED8" },
-  Inactive:  { bg: "#F4F4F5", text: "#52525B" },
-  Archived:  { bg: "#F4F4F5", text: "#52525B" },
-  Draft:     { bg: "#E5E7EB", text: "#374151" },
+// ── Campaign status colors — exported mutable for Color Tester ────────────────
+export const CAMPAIGN_STATUS_HEX: Record<string, string> = {
+  Active:    "#22C55E",
+  Paused:    "#F59E0B",
+  Completed: "#3B82F6",
+  Finished:  "#3B82F6",
+  Inactive:  "#94A3B8",
+  Archived:  "#94A3B8",
+  Draft:     "#6B7280",
+};
+
+export const CAMPAIGN_AVATAR_BG: Record<string, string> = {
+  Active:    "#DCFCE7",
+  Paused:    "#FEF3C7",
+  Completed: "#DBEAFE",
+  Finished:  "#DBEAFE",
+  Inactive:  "#F4F4F5",
+  Archived:  "#F4F4F5",
+  Draft:     "#E5E7EB",
+};
+export const CAMPAIGN_AVATAR_TEXT: Record<string, string> = {
+  Active:    "#15803D",
+  Paused:    "#92400E",
+  Completed: "#1D4ED8",
+  Finished:  "#1D4ED8",
+  Inactive:  "#52525B",
+  Archived:  "#52525B",
+  Draft:     "#374151",
 };
 
 export function getCampaignAvatarColor(status: string): { bg: string; text: string } {
-  return CAMPAIGN_STATUS_COLORS[status] ?? { bg: "#E5E7EB", text: "#374151" };
+  return {
+    bg:   CAMPAIGN_AVATAR_BG[status]   ?? "#E5E7EB",
+    text: CAMPAIGN_AVATAR_TEXT[status] ?? "#374151",
+  };
 }
 
 // ── User role avatar colors ───────────────────────────────────────────────────
@@ -152,12 +190,19 @@ export function getUserRoleAvatarColor(role: string): { bg: string; text: string
   return ROLE_AVATAR[role] ?? { bg: "#E5E7EB", text: "#374151" };
 }
 
-// ── Prompt status avatar colors ───────────────────────────────────────────────
-const PROMPT_STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  Active:   { bg: "#D1FAE5", text: "#065F46" },
-  Archived: { bg: "#F4F4F5", text: "#52525B" },
+// ── Prompt status avatar colors — exported mutable for Color Tester ───────────
+export const PROMPT_AVATAR_BG: Record<string, string> = {
+  Active:   "#D1FAE5",
+  Archived: "#F4F4F5",
+};
+export const PROMPT_AVATAR_TEXT: Record<string, string> = {
+  Active:   "#065F46",
+  Archived: "#52525B",
 };
 
 export function getPromptAvatarColor(status: string): { bg: string; text: string } {
-  return PROMPT_STATUS_COLORS[status] ?? { bg: "#E5E7EB", text: "#374151" };
+  return {
+    bg:   PROMPT_AVATAR_BG[status]   ?? "#E5E7EB",
+    text: PROMPT_AVATAR_TEXT[status] ?? "#374151",
+  };
 }

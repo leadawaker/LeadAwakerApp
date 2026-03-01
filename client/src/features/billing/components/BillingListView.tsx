@@ -3,16 +3,15 @@ import { useQueryClient } from "@tanstack/react-query";
 import { deleteExpense as deleteExpenseApi } from "../api/expensesApi";
 import {
   Search,
-  SlidersHorizontal,
   Building2,
   Receipt,
-  FileText,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
   X,
   Check,
-  ReceiptText,
+  Wallet,
+  PenLine,
   LayoutList,
   LayoutGrid,
   Plus,
@@ -27,12 +26,22 @@ import {
   Eye,
   ListTree,
   Printer,
+  Paintbrush,
 } from "lucide-react";
+import { GradientTester, GradientControlPoints, DEFAULT_LAYERS, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import { IconBtn } from "@/components/ui/icon-btn";
 import { cn } from "@/lib/utils";
@@ -63,13 +72,13 @@ export type RightPanelMode = "view" | "create" | "edit";
 
 const BILLING_TABS_AGENCY: TabDef[] = [
   { id: "invoices",  label: "Invoices",  icon: Receipt  },
-  { id: "expenses",  label: "Expenses",  icon: ReceiptText },
-  { id: "contracts", label: "Contracts", icon: FileText },
+  { id: "expenses",  label: "Expenses",  icon: Wallet },
+  { id: "contracts", label: "Contracts", icon: PenLine },
 ];
 
 const BILLING_TABS_CLIENT: TabDef[] = [
   { id: "invoices",  label: "Invoices",  icon: Receipt  },
-  { id: "contracts", label: "Contracts", icon: FileText },
+  { id: "contracts", label: "Contracts", icon: PenLine },
 ];
 
 const VIEW_MODE_TABS: TabDef[] = [
@@ -270,7 +279,6 @@ export function BillingListView({
 }: BillingListViewProps) {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(0);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [duplicatingInvoice, setDuplicatingInvoice] = useState<InvoiceRow | null>(null);
 
   // Multi-select state for inline tables
@@ -307,7 +315,22 @@ export function BillingListView({
   // Responsive toolbar state
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [isNarrow, setIsNarrow] = useState(false);
-  const [tableSearchExpanded, setTableSearchExpanded] = useState(true);
+
+  // ── Gradient tester state ──────────────────────────────────────────────────
+  const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
+  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
+  const [gradientDragMode, setGradientDragMode] = useState(false);
+
+  const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
+    if (id === -1) { setGradientLayers(prev => [...prev, patch as GradientLayer]); return; }
+    if ((patch as any).id === -999) { setGradientLayers(prev => prev.filter(l => l.id !== id)); return; }
+    setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
+  }, []);
+
+  const resetGradientLayers = useCallback(() => {
+    setGradientLayers(DEFAULT_LAYERS);
+    setGradientDragMode(false);
+  }, []);
 
   // Accounts for filter dropdown (agency only)
   const { accounts } = useAccounts({ enabled: isAgencyUser });
@@ -329,7 +352,6 @@ export function BillingListView({
     const observer = new ResizeObserver(([entry]) => {
       const w = entry.contentRect.width;
       setIsNarrow(w < 920);
-      if (w >= 920) setTableSearchExpanded(false);
     });
     observer.observe(el);
     return () => observer.disconnect();
@@ -532,7 +554,6 @@ export function BillingListView({
   const statusColors = isInvoicesTab ? INVOICE_STATUS_COLORS : CONTRACT_STATUS_COLORS;
   const isFilterActive = filterStatus.length > 0;
   const isSortNonDefault = sortBy !== "recent";
-  const isSettingsActive = isFilterActive || isSortNonDefault || !!quarterFilter || !!yearFilter;
   // Table-mode computed active states
   const isDateActive = !!quarterFilter || !!yearFilter;
   const isTableFilterActive = filterStatus.length > 0 || (isAgencyUser && !isExpensesTab && accountFilter !== "all");
@@ -567,6 +588,39 @@ export function BillingListView({
 
   // ── Tabs ──────────────────────────────────────────────────────────────────
   const billingTabs = isAgencyUser ? BILLING_TABS_AGENCY : BILLING_TABS_CLIENT;
+
+  /** Navigate to a billing sub-tab (parent handles URL navigation) */
+  const handleBillingTabNav = useCallback((tabId: string) => {
+    onTabChange(tabId);
+  }, [onTabChange]);
+
+  /** Inline billing sub-tab buttons (36px icon circles, active = pill) */
+  const billingTabButtons = (
+    <div className="flex items-center gap-1">
+      {billingTabs.map((tab) => {
+        const Icon = tab.icon!;
+        const active = activeTab === tab.id;
+        return active ? (
+          <button
+            key={tab.id}
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-[12px] font-semibold shrink-0 bg-highlight-active text-foreground"
+          >
+            <Icon className="h-4 w-4 shrink-0 stroke-[2.5]" />
+            {tab.label}
+          </button>
+        ) : (
+          <button
+            key={tab.id}
+            onClick={() => handleBillingTabNav(tab.id)}
+            title={tab.label}
+            className="h-9 w-9 rounded-full border border-black/[0.125] bg-transparent hover:bg-white inline-flex items-center justify-center shrink-0 text-muted-foreground hover:text-foreground transition-[background-color,color] duration-150"
+          >
+            <Icon className="h-4 w-4 shrink-0" />
+          </button>
+        );
+      })}
+    </div>
+  );
 
   // ── Add button handler ─────────────────────────────────────────────────────
 
@@ -687,304 +741,223 @@ export function BillingListView({
 
   // ── Toolbar button base classes ────────────────────────────────────────────
 
-  const tbBase = "h-10 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
-  const tbDefault = "border border-border/55 text-foreground/60 hover:text-foreground hover:bg-card";
-  const tbActive = "bg-card border border-border/55 text-foreground";
+  const tbBase = "h-9 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
+  const tbDefault = "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:bg-card";
+  const tbActive = "bg-card border border-black/[0.125] text-foreground";
 
-  // ── Left panel header (list mode) ─────────────────────────────────────────
+  // ── Left panel header (list mode) — 309px wrapper ─────────────────────────
 
   const leftPanelHeader = (
+    <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center">
+      <div className="flex items-center justify-between w-[309px] shrink-0">
+        <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Billing</h2>
+        {billingTabButtons}
+      </div>
+    </div>
+  );
+
+  // ── Right panel list-mode toolbar (Sort, Filter, Date, Search, +) ────────
+
+  const pill = "h-9 px-3 rounded-full border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors";
+  const pillActive = "h-9 px-3 rounded-full border border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors";
+
+  const toolbarControls = (
     <>
-      {/* Header row 1: title + printer (expenses only) */}
-      <div className="px-3.5 pt-5 pb-1 shrink-0">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight shrink-0">
-            {isExpensesTab ? "Expenses" : isInvoicesTab ? "Invoices" : "Contracts"}
-          </h2>
-          {isExpensesTab && viewMode === "list" && (
-            <IconBtn
-              onClick={() => setExpenseExportTrigger((t) => t + 1)}
-              title="Export PDF"
-            >
-              <Printer className="h-3.5 w-3.5" />
-            </IconBtn>
-          )}
-        </div>
+      {/* View mode toggle (List | Table) */}
+      <ViewTabBar tabs={VIEW_MODE_TABS} activeId={viewMode} onTabChange={(m) => setViewMode(m as "list" | "table")} />
+
+      <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
+
+      {/* Add button — labeled */}
+      {isAgencyUser && (
+        <button
+          onClick={isExpensesTab ? () => setExpensePanelOpen(true) : handleAddClick}
+          className={pill}
+        >
+          <Plus className="h-4 w-4" />
+          {isExpensesTab ? "New Expense" : isInvoicesTab ? "New Invoice" : "New Contract"}
+        </button>
+      )}
+
+      {/* Inline search bar */}
+      <div className="h-9 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-white/60 px-3 shrink-0">
+        <Search className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+        <input
+          className="h-full bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/40 w-32 min-w-0"
+          placeholder={isExpensesTab ? "Search expenses…" : isInvoicesTab ? "Search invoices…" : "Search contracts…"}
+          value={isExpensesTab ? expenseSearch : listSearch}
+          onChange={(e) => isExpensesTab ? setExpenseSearch(e.target.value) : setListSearch(e.target.value)}
+        />
+        {(isExpensesTab ? expenseSearch : listSearch) && (
+          <button onClick={() => isExpensesTab ? setExpenseSearch("") : setListSearch("")} className="text-muted-foreground/40 hover:text-muted-foreground shrink-0">
+            <X className="h-3 w-3" />
+          </button>
+        )}
       </div>
 
-      {/* Header row 2: view mode toggle + search + settings */}
-      <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
-        <div className="flex-1 min-w-0">
-          <ViewTabBar
-            tabs={VIEW_MODE_TABS}
-            activeId={viewMode}
-            onTabChange={(m) => setViewMode(m as "list" | "table")}
-          />
-        </div>
+      {/* Sort pill */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className={isSortNonDefault ? pillActive : pill}>
+            <ArrowUpDown className="h-4 w-4" />
+            {isSortNonDefault ? SORT_LABELS[sortBy] : "Sort"}
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-44">
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Sort by</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {(isExpensesTab
+            ? ([
+                { key: "recent" as SortBy, label: "Most Recent" },
+                { key: "amount_desc" as SortBy, label: "Amount High" },
+                { key: "amount_asc" as SortBy, label: "Amount Low" },
+                { key: "name_asc" as SortBy, label: "Supplier A\u2013Z" },
+              ])
+            : (Object.keys(SORT_LABELS) as SortBy[]).map((k) => ({ key: k, label: SORT_LABELS[k] }))
+          ).map(({ key: opt, label }) => (
+            <DropdownMenuItem key={opt} onClick={() => setSortBy(opt)} className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}>
+              {label}
+              {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-        {/* Expenses circle add button (list mode only) */}
-        {isExpensesTab && isAgencyUser && viewMode === "list" && (
-          <IconBtn
-            onClick={() => setExpensePanelOpen(true)}
-            title="Add Expense"
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </IconBtn>
-        )}
-
-        {/* Invoice/Contract circle add button (list mode only) */}
-        {!isExpensesTab && isAgencyUser && viewMode === "list" && (
-          <IconBtn
-            onClick={handleAddClick}
-            title={isInvoicesTab ? "New Invoice" : "New Contract"}
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </IconBtn>
-        )}
-
-        {/* Expense search (list mode) */}
-        {isExpensesTab && viewMode === "list" && (
-          <Popover open={expenseSearchOpen} onOpenChange={setExpenseSearchOpen}>
-            <PopoverTrigger asChild>
-              <IconBtn active={!!expenseSearch} title="Search">
-                <Search className="h-3.5 w-3.5" />
-              </IconBtn>
-            </PopoverTrigger>
-            <PopoverContent
-              side="bottom"
-              align="end"
-              className="w-56 p-2"
-              onOpenAutoFocus={(e) => e.preventDefault()}
-            >
-              <div className="relative">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
-                <input
-                  autoFocus
-                  type="text"
-                  placeholder="Search expenses..."
-                  value={expenseSearch}
-                  onChange={(e) => setExpenseSearch(e.target.value)}
-                  className="w-full pl-7 pr-7 py-1.5 text-[12px] rounded-md border border-border bg-popover placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-brand-indigo/50"
-                />
-                {expenseSearch && (
-                  <button
-                    onClick={() => setExpenseSearch("")}
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
-        )}
-
-        {/* Search — only show for non-expenses tab */}
-        {!isExpensesTab && (
-          <Popover open={searchOpen} onOpenChange={setSearchOpen}>
-            <PopoverTrigger asChild>
-              <IconBtn active={!!listSearch} title="Search">
-                <Search className="h-3.5 w-3.5" />
-              </IconBtn>
-            </PopoverTrigger>
-            <PopoverContent
-              side="bottom"
-              align="end"
-              className="w-56 p-2"
-              onOpenAutoFocus={(e) => e.preventDefault()}
-            >
-              <div className="relative">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
-                <input
-                  autoFocus
-                  type="text"
-                  placeholder={isInvoicesTab ? "Search invoices..." : "Search contracts..."}
-                  value={listSearch}
-                  onChange={(e) => setListSearch(e.target.value)}
-                  className="w-full pl-7 pr-7 py-1.5 text-[12px] rounded-md border border-border bg-popover placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-brand-indigo/50"
-                />
-                {listSearch && (
-                  <button
-                    onClick={() => setListSearch("")}
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
-        )}
-
-        {/* Settings (merged filter + sort + account filter + quarter + year) */}
-        <Popover open={settingsOpen} onOpenChange={setSettingsOpen}>
-          <PopoverTrigger asChild>
-            <IconBtn active={isSettingsActive} title="Filter & Sort">
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-            </IconBtn>
-          </PopoverTrigger>
-          <PopoverContent side="bottom" align="end" className="w-56 p-0 overflow-hidden">
-
-            {/* Account filter (agency only, not on expenses tab) */}
-            {isAgencyUser && !isExpensesTab && (
-              <>
-                <div className="px-3 pt-2.5 pb-1">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Account</span>
-                </div>
-                <div className="max-h-32 overflow-y-auto px-1 pb-1">
-                  <button
-                    onClick={() => setAccountFilter("all")}
-                    className={cn(
-                      "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted",
-                      accountFilter === "all" && "font-semibold text-brand-indigo"
-                    )}
-                  >
-                    <span className="flex-1 text-left">All Accounts</span>
-                    {accountFilter === "all" && <Check className="h-3 w-3 shrink-0" />}
-                  </button>
-                  {accounts.map((acct) => (
-                    <button
-                      key={acct.id}
-                      onClick={() => setAccountFilter(acct.id)}
-                      className={cn(
-                        "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted",
-                        accountFilter === acct.id && "font-semibold text-brand-indigo"
-                      )}
-                    >
-                      <Building2 className="h-3 w-3 shrink-0 text-muted-foreground" />
-                      <span className="flex-1 text-left truncate">{acct.name}</span>
-                      {accountFilter === acct.id && <Check className="h-3 w-3 shrink-0" />}
-                    </button>
-                  ))}
-                </div>
-                <div className="h-px bg-border/40 mx-1" />
-              </>
-            )}
-
-            {/* Sort */}
-            <div className="px-3 pt-2.5 pb-1">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Sort by</span>
-            </div>
-            <div className="px-1 pb-1">
-              {(isExpensesTab
-                ? ([
-                    { key: "recent" as SortBy,      label: "Most Recent" },
-                    { key: "amount_desc" as SortBy, label: "Amount High" },
-                    { key: "amount_asc" as SortBy,  label: "Amount Low" },
-                    { key: "name_asc" as SortBy,    label: "Supplier A–Z" },
-                  ])
-                : (Object.keys(SORT_LABELS) as SortBy[]).map((k) => ({ key: k, label: SORT_LABELS[k] }))
-              ).map(({ key: opt, label }) => (
-                <button
-                  key={opt}
-                  onClick={() => setSortBy(opt)}
-                  className={cn(
-                    "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted",
-                    sortBy === opt && "font-semibold text-brand-indigo"
-                  )}
-                >
-                  <span className="flex-1 text-left">{label}</span>
-                  {sortBy === opt && <Check className="h-3 w-3 shrink-0" />}
-                </button>
-              ))}
-            </div>
-
-            {/* Status filter (not on expenses tab) */}
-            {!isExpensesTab && (
-              <>
-                <div className="h-px bg-border/40 mx-1" />
-                <div className="px-3 pt-2.5 pb-1 flex items-center justify-between">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Status</span>
-                  {isFilterActive && (
-                    <button
-                      onClick={() => setFilterStatus([])}
-                      className="text-[9px] text-destructive hover:underline font-semibold"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
-                <div className="px-1 pb-1">
-                  {statusOptions.map((s) => {
-                    const color = statusColors[s];
-                    return (
-                      <button
-                        key={s}
-                        onClick={() => toggleFilterStatus(s)}
-                        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted"
-                      >
-                        <span
-                          className="w-1.5 h-1.5 rounded-full shrink-0"
-                          style={{ backgroundColor: color?.dot || "#94A3B8" }}
-                        />
-                        <span className="flex-1 text-left">{s}</span>
-                        {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-
-            {/* Year filter — above Quarter */}
-            {availableYears.length > 0 && (
-              <>
-                <div className="h-px bg-border/40 mx-1" />
-                <div className="px-3 pt-2.5 pb-1 flex items-center justify-between">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Year</span>
-                  {yearFilter && (
-                    <button onClick={() => setYearFilter(null)} className="text-[9px] text-destructive hover:underline font-semibold">Clear</button>
-                  )}
-                </div>
-                <div className="px-1 pb-1">
-                  {availableYears.map((year) => (
-                    <button
-                      key={year}
-                      onClick={() => setYearFilter(yearFilter === year ? null : year)}
-                      className={cn(
-                        "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted",
-                        yearFilter === year && "font-semibold text-brand-indigo"
-                      )}
-                    >
-                      <span className="flex-1 text-left">{year}</span>
-                      {yearFilter === year && <Check className="h-3 w-3 shrink-0" />}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {/* Quarter filter */}
-            <div className="h-px bg-border/40 mx-1" />
-            <div className="px-3 pt-2.5 pb-1 flex items-center justify-between">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Quarter</span>
-              {quarterFilter && (
-                <button onClick={() => setQuarterFilter(null)} className="text-[9px] text-destructive hover:underline font-semibold">Clear</button>
+      {/* Filter pill (Status + Account) — not on expenses */}
+      {!isExpensesTab && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className={isFilterActive || (isAgencyUser && accountFilter !== "all") ? pillActive : pill}>
+              <Filter className="h-4 w-4" />
+              Filter
+              {(filterStatus.length > 0 || (isAgencyUser && accountFilter !== "all")) && (
+                <span className="text-[10px]">{` · ${filterStatus.length + (accountFilter !== "all" ? 1 : 0)}`}</span>
               )}
-            </div>
-            <div className="px-1 pb-2">
-              {[
-                { id: "Q1", label: "Q1 — Jan – Mar" },
-                { id: "Q2", label: "Q2 — Apr – Jun" },
-                { id: "Q3", label: "Q3 – Jul – Sep" },
-                { id: "Q4", label: "Q4 — Oct – Dec" },
-              ].map(({ id, label }) => (
-                <button
-                  key={id}
-                  onClick={() => setQuarterFilter(quarterFilter === id ? null : id)}
-                  className={cn(
-                    "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] hover:bg-muted",
-                    quarterFilter === id && "font-semibold text-brand-indigo"
-                  )}
-                >
-                  <span className="flex-1 text-left">{label}</span>
-                  {quarterFilter === id && <Check className="h-3 w-3 shrink-0" />}
-                </button>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
+            <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Status</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {statusOptions.map((s) => {
+              const color = statusColors[s];
+              return (
+                <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color?.dot || "#94A3B8" }} />
+                  <span className="flex-1">{s}</span>
+                  {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                </DropdownMenuItem>
+              );
+            })}
+            {isAgencyUser && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setAccountFilter("all")} className={cn("text-[12px]", accountFilter === "all" && "font-semibold text-brand-indigo")}>
+                  All Accounts
+                  {accountFilter === "all" && <Check className="h-3 w-3 ml-auto" />}
+                </DropdownMenuItem>
+                {accounts.map((acct) => (
+                  <DropdownMenuItem key={acct.id} onClick={() => setAccountFilter(acct.id)} className={cn("text-[12px]", accountFilter === acct.id && "font-semibold text-brand-indigo")}>
+                    <Building2 className="h-3 w-3 shrink-0 text-muted-foreground mr-1.5" />
+                    {acct.name}
+                    {accountFilter === acct.id && <Check className="h-3 w-3 ml-auto" />}
+                  </DropdownMenuItem>
+                ))}
+              </>
+            )}
+            {(isFilterActive || (isAgencyUser && accountFilter !== "all")) && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => { setFilterStatus([]); setAccountFilter("all"); }} className="text-[12px] text-destructive">Clear all filters</DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+
+      {/* Date pill (Quarter + Year) */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className={isDateActive ? pillActive : pill}>
+            <CalendarDays className="h-4 w-4" />
+            {isDateActive
+              ? [quarterFilter, yearFilter ? String(yearFilter) : null].filter(Boolean).join(" · ")
+              : "Date"}
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-48">
+          {availableYears.length > 0 && (
+            <>
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Year</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {availableYears.map((year) => (
+                <DropdownMenuItem key={year} onClick={() => setYearFilter(yearFilter === year ? null : year)} className={cn("text-[12px]", yearFilter === year && "font-semibold text-brand-indigo")}>
+                  {year}
+                  {yearFilter === year && <Check className="h-3 w-3 ml-auto" />}
+                </DropdownMenuItem>
               ))}
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
+              <DropdownMenuSeparator />
+            </>
+          )}
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Quarter</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {[
+            { id: "Q1", months: "Jan–Mar" },
+            { id: "Q2", months: "Apr–Jun" },
+            { id: "Q3", months: "Jul–Sep" },
+            { id: "Q4", months: "Oct–Dec" },
+          ].map(({ id, months }) => (
+            <DropdownMenuItem key={id} onClick={() => setQuarterFilter(quarterFilter === id ? null : id)} className={cn("text-[12px]", quarterFilter === id && "font-semibold text-brand-indigo")}>
+              <span className="flex-1 flex items-center gap-2">
+                <span className="font-medium text-foreground">{id}</span>
+                <span className="text-muted-foreground">{months}</span>
+              </span>
+              {quarterFilter === id && <Check className="h-3 w-3 shrink-0" />}
+            </DropdownMenuItem>
+          ))}
+          {isDateActive && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => { setQuarterFilter(null); setYearFilter(null); }} className="text-[12px] text-destructive">Clear dates</DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Group pill (expenses only) */}
+      {isExpensesTab && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className={expenseGroupBy !== "none" ? pillActive : pill}>
+              <ListTree className="h-4 w-4" />
+              {expenseGroupBy === "year_quarter" ? "By Quarter" : "Group"}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-40">
+            <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Group by</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setExpenseGroupBy("none")} className={cn("text-[12px]", expenseGroupBy === "none" && "font-semibold text-brand-indigo")}>
+              None
+              {expenseGroupBy === "none" && <Check className="h-3 w-3 ml-auto" />}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setExpenseGroupBy("year_quarter")} className={cn("text-[12px]", expenseGroupBy === "year_quarter" && "font-semibold text-brand-indigo")}>
+              Year · Quarter
+              {expenseGroupBy === "year_quarter" && <Check className="h-3 w-3 ml-auto" />}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+
+      {/* Gradient tester toggle */}
+      <button
+        type="button"
+        onClick={() => setGradientTesterOpen(prev => !prev)}
+        className={`inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border transition-colors ${gradientTesterOpen ? "bg-indigo-100 text-indigo-600 border-indigo-200" : "border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50"}`}
+        title="Gradient Tester"
+      >
+        <Paintbrush className="h-4 w-4" />
+      </button>
     </>
   );
 
@@ -1001,7 +974,7 @@ export function BillingListView({
             {isInvoicesTab ? (
               <Receipt className="w-8 h-8 text-muted-foreground/30 mb-3" />
             ) : (
-              <FileText className="w-8 h-8 text-muted-foreground/30 mb-3" />
+              <PenLine className="w-8 h-8 text-muted-foreground/30 mb-3" />
             )}
             <p className="text-sm font-medium text-muted-foreground">
               {isInvoicesTab ? "No invoices yet" : "No contracts yet"}
@@ -1077,9 +1050,9 @@ export function BillingListView({
   // ── Table mode toolbar ─────────────────────────────────────────────────────
 
   const tableToolbar = (
-    <div ref={toolbarRef} className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
+    <div ref={toolbarRef} className="flex items-center gap-1.5 flex-1 min-w-0">
 
-      {/* View mode toggle */}
+      {/* View mode toggle (List | Table) */}
       <ViewTabBar
         tabs={VIEW_MODE_TABS}
         activeId={viewMode}
@@ -1096,7 +1069,7 @@ export function BillingListView({
           className={cn(
             isNarrow
               ? "icon-circle-lg icon-circle-base"
-              : cn(tbBase, "border border-border/60 text-foreground hover:bg-card")
+              : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card")
           )}
         >
           <Plus className="h-4 w-4" />
@@ -1106,58 +1079,20 @@ export function BillingListView({
       {isExpensesTab && (
         <>
           <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
-          {isNarrow ? (
-            <Popover open={expenseSearchOpen} onOpenChange={setExpenseSearchOpen}>
-              <PopoverTrigger asChild>
-                <button
-                  title="Search"
-                  className={cn("icon-circle-lg icon-circle-base", expenseSearch && "ring-2 ring-brand-indigo/30")}
-                >
-                  <Search className="h-4 w-4" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent side="bottom" align="start" className="w-56 p-2" onOpenAutoFocus={(e) => e.preventDefault()}>
-                <div className="relative">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
-                  <input
-                    autoFocus
-                    type="text"
-                    placeholder="Search expenses…"
-                    value={expenseSearch}
-                    onChange={(e) => setExpenseSearch(e.target.value)}
-                    className="w-full pl-7 pr-7 py-1.5 text-[12px] rounded-md border border-border bg-popover placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-brand-indigo/50"
-                  />
-                  {expenseSearch && (
-                    <button
-                      onClick={() => setExpenseSearch("")}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-          ) : (
-            <div className={cn(
-              "h-10 px-3 rounded-full inline-flex items-center gap-1.5 border border-border/60 shrink-0",
-              expenseSearch ? "bg-card text-foreground" : "bg-transparent text-foreground/60"
-            )}>
-              <Search className="h-4 w-4 shrink-0" />
-              <input
-                type="text"
-                placeholder="Search expenses…"
-                value={expenseSearch}
-                onChange={(e) => setExpenseSearch(e.target.value)}
-                className="w-[130px] bg-transparent text-[12px] focus:outline-none placeholder:text-muted-foreground/50"
-              />
-              {expenseSearch && (
-                <button onClick={() => setExpenseSearch("")} className="text-muted-foreground hover:text-foreground shrink-0">
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
-          )}
+          <div className="h-9 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card px-3 shrink-0">
+            <Search className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+            <input
+              className="h-full bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/40 w-32 min-w-0"
+              placeholder="Search expenses…"
+              value={expenseSearch}
+              onChange={(e) => setExpenseSearch(e.target.value)}
+            />
+            {expenseSearch && (
+              <button onClick={() => setExpenseSearch("")} className="text-muted-foreground/40 hover:text-muted-foreground shrink-0">
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
         </>
       )}
 
@@ -1169,7 +1104,7 @@ export function BillingListView({
           className={cn(
             isNarrow
               ? "icon-circle-lg icon-circle-base"
-              : cn(tbBase, "border border-border/60 text-foreground hover:bg-card")
+              : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card")
           )}
         >
           <Plus className="h-4 w-4" />
@@ -1181,58 +1116,20 @@ export function BillingListView({
       {!isExpensesTab && (
         <>
           {isAgencyUser && <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />}
-          {isNarrow ? (
-            <Popover open={tableSearchExpanded} onOpenChange={setTableSearchExpanded}>
-              <PopoverTrigger asChild>
-                <button
-                  title="Search"
-                  className={cn("icon-circle-lg icon-circle-base", listSearch && "ring-2 ring-brand-indigo/30")}
-                >
-                  <Search className="h-4 w-4" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent side="bottom" align="start" className="w-56 p-2" onOpenAutoFocus={(e) => e.preventDefault()}>
-                <div className="relative">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
-                  <input
-                    autoFocus
-                    type="text"
-                    placeholder={isInvoicesTab ? "Search invoices…" : "Search contracts…"}
-                    value={listSearch}
-                    onChange={(e) => setListSearch(e.target.value)}
-                    className="w-full pl-7 pr-7 py-1.5 text-[12px] rounded-md border border-border bg-popover placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-brand-indigo/50"
-                  />
-                  {listSearch && (
-                    <button
-                      onClick={() => setListSearch("")}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-          ) : (
-            <div className={cn(
-              "h-10 px-3 rounded-full inline-flex items-center gap-1.5 border border-border/60 shrink-0",
-              listSearch ? "bg-card text-foreground" : "bg-transparent text-foreground/60"
-            )}>
-              <Search className="h-4 w-4 shrink-0" />
-              <input
-                type="text"
-                placeholder={isInvoicesTab ? "Search invoices…" : "Search contracts…"}
-                value={listSearch}
-                onChange={(e) => setListSearch(e.target.value)}
-                className="w-[130px] bg-transparent text-[12px] focus:outline-none placeholder:text-muted-foreground/50"
-              />
-              {listSearch && (
-                <button onClick={() => setListSearch("")} className="text-muted-foreground hover:text-foreground shrink-0">
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
-          )}
+          <div className="h-9 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card px-3 shrink-0">
+            <Search className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+            <input
+              className="h-full bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/40 w-32 min-w-0"
+              placeholder={isInvoicesTab ? "Search invoices…" : "Search contracts…"}
+              value={listSearch}
+              onChange={(e) => setListSearch(e.target.value)}
+            />
+            {listSearch && (
+              <button onClick={() => setListSearch("")} className="text-muted-foreground/40 hover:text-muted-foreground shrink-0">
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
         </>
       )}
 
@@ -1550,7 +1447,7 @@ export function BillingListView({
               className={cn(
                 isNarrow
                   ? "icon-circle-lg icon-circle-base disabled:opacity-40 disabled:pointer-events-none"
-                  : cn(tbBase, "border border-border/60 text-foreground hover:bg-card disabled:opacity-40 disabled:pointer-events-none")
+                  : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card disabled:opacity-40 disabled:pointer-events-none")
               )}
             >
               <Pencil className="h-4 w-4" />
@@ -1563,7 +1460,7 @@ export function BillingListView({
               className={cn(
                 isNarrow
                   ? "icon-circle-lg icon-circle-base disabled:opacity-40 disabled:pointer-events-none"
-                  : cn(tbBase, "border border-border/60 text-foreground hover:bg-card disabled:opacity-40 disabled:pointer-events-none")
+                  : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card disabled:opacity-40 disabled:pointer-events-none")
               )}
             >
               <Copy className="h-4 w-4" />
@@ -1575,7 +1472,7 @@ export function BillingListView({
               className={cn(
                 isNarrow
                   ? "icon-circle-lg icon-circle-base hover:text-red-600"
-                  : cn(tbBase, "border border-border/60 text-foreground hover:bg-card hover:text-red-600")
+                  : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card hover:text-red-600")
               )}
             >
               <Trash2 className="h-4 w-4" />
@@ -1587,7 +1484,7 @@ export function BillingListView({
               className={cn(
                 isNarrow
                   ? "icon-circle-lg icon-circle-base"
-                  : cn(tbBase, "border border-border/60 text-foreground hover:bg-card", invoiceSendPaidAction === "paid" && "hover:text-emerald-700")
+                  : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card", invoiceSendPaidAction === "paid" && "hover:text-emerald-700")
               )}
             >
               {invoiceSendPaidAction === "paid" ? <CheckCircle2 className="h-4 w-4" /> : <SendHorizontal className="h-4 w-4" />}
@@ -1625,7 +1522,7 @@ export function BillingListView({
               className={cn(
                 isNarrow
                   ? "icon-circle-lg icon-circle-base hover:text-red-600"
-                  : cn(tbBase, "border border-border/60 text-foreground hover:bg-card hover:text-red-600")
+                  : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card hover:text-red-600")
               )}
             >
               <Trash2 className="h-4 w-4" />
@@ -1638,7 +1535,7 @@ export function BillingListView({
               className={cn(
                 isNarrow
                   ? "icon-circle-lg icon-circle-base hover:text-emerald-700 disabled:opacity-40 disabled:pointer-events-none"
-                  : cn(tbBase, "border border-border/60 text-foreground hover:bg-card hover:text-emerald-700 disabled:opacity-40 disabled:pointer-events-none")
+                  : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card hover:text-emerald-700 disabled:opacity-40 disabled:pointer-events-none")
               )}
             >
               <CheckCircle2 className="h-4 w-4" />
@@ -1683,7 +1580,7 @@ export function BillingListView({
               className={cn(
                 isNarrow
                   ? "icon-circle-lg icon-circle-base disabled:opacity-40 disabled:pointer-events-none"
-                  : cn(tbBase, "border border-border/60 text-foreground hover:bg-card disabled:opacity-40 disabled:pointer-events-none")
+                  : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card disabled:opacity-40 disabled:pointer-events-none")
               )}
             >
               <Pencil className="h-4 w-4" />
@@ -1701,7 +1598,7 @@ export function BillingListView({
               className={cn(
                 isNarrow
                   ? "icon-circle-lg icon-circle-base hover:text-red-600"
-                  : cn(tbBase, "border border-border/60 text-foreground hover:bg-card hover:text-red-600")
+                  : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card hover:text-red-600")
               )}
             >
               <Trash2 className="h-4 w-4" />
@@ -1761,12 +1658,13 @@ export function BillingListView({
                   setSelectedExpenseId(expense.id);
                   setExpensePanelOpen(false);
                 }}
+                groupBy={expenseGroupBy}
               />
             )}
           </div>
 
           {/* Right panel */}
-          <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-card rounded-lg">
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden rounded-lg bg-card">
             {isExpensesTab ? (
               expensePanelOpen ? (
                 <ExpenseCreatePanel
@@ -1787,10 +1685,12 @@ export function BillingListView({
                     }}
                     onDeleted={() => setSelectedExpenseId(null)}
                     onNew={isAgencyUser ? () => { setEditingExpense(null); setExpensePanelOpen(true); } : undefined}
+                    toolbarSlot={toolbarControls}
                   />
                 ) : (
                   <ExpenseDetailViewEmpty
                     onNew={isAgencyUser ? () => { setEditingExpense(null); setExpensePanelOpen(true); } : undefined}
+                    toolbarSlot={toolbarControls}
                   />
                 );
               })()
@@ -1826,9 +1726,10 @@ export function BillingListView({
                   onDuplicate={handleDuplicate}
                   onDelete={onDeleteInvoice}
                   onRefresh={onRefreshInvoices}
+                  toolbarSlot={toolbarControls}
                 />
               ) : (
-                <InvoiceDetailViewEmpty />
+                <InvoiceDetailViewEmpty toolbarSlot={toolbarControls} />
               )
             ) : activeTab === "contracts" ? (
               rightPanelMode === "create" ? (
@@ -1847,20 +1748,45 @@ export function BillingListView({
                   onRefresh={onRefreshContracts}
                   onUpdate={onUpdateContract}
                   onNew={isAgencyUser ? () => { onSelectContract(null); setRightPanelMode("create"); } : undefined}
+                  toolbarSlot={toolbarControls}
                 />
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-                  <FileText className="w-12 h-12 text-muted-foreground/20 mb-4" />
-                  <p className="text-sm font-medium text-muted-foreground">Select a contract</p>
-                  <p className="text-xs text-muted-foreground/60 mt-1">Choose a contract from the list to view details</p>
-                  {isAgencyUser && (
-                    <button
-                      onClick={() => { onSelectContract(null); setRightPanelMode("create"); }}
-                      className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-brand-indigo text-white hover:opacity-90"
-                    >
-                      Upload Contract
-                    </button>
+                <div className="relative flex flex-col h-full overflow-hidden">
+                  {gradientTesterOpen ? (
+                    <>
+                      {gradientLayers.map(layer => {
+                        const style = layerToStyle(layer);
+                        if (!style) return null;
+                        return <div key={layer.id} className="absolute inset-0" style={style} />;
+                      })}
+                      {gradientDragMode && (
+                        <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="absolute inset-0 bg-[#F8F3EB]" />
+                      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.9)_0%,transparent_60%)]" />
+                    </>
                   )}
+                  <div className="relative z-10 shrink-0 px-[3px] pt-[3px]">
+                    <div className="px-4 pt-3 pb-1.5 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
+                      {toolbarControls}
+                    </div>
+                  </div>
+                  <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6">
+                    <PenLine className="w-12 h-12 text-muted-foreground/20 mb-4" />
+                    <p className="text-sm font-medium text-muted-foreground">Select a contract</p>
+                    <p className="text-xs text-muted-foreground/60 mt-1">Choose a contract from the list to view details</p>
+                    {isAgencyUser && (
+                      <button
+                        onClick={() => { onSelectContract(null); setRightPanelMode("create"); }}
+                        className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-brand-indigo text-white hover:opacity-90"
+                      >
+                        Upload Contract
+                      </button>
+                    )}
+                  </div>
                 </div>
               )
             ) : null}
@@ -1872,15 +1798,14 @@ export function BillingListView({
           {/* Left: table area */}
           <div className="flex-1 min-w-0 flex flex-col overflow-hidden rounded-lg bg-muted">
 
-            {/* Header row 1: title */}
-            <div className="px-3.5 pt-5 pb-1 shrink-0">
-              <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight shrink-0">
-                {isExpensesTab ? "Expenses" : isInvoicesTab ? "Invoices" : "Contracts"}
-              </h2>
+            {/* Title + billing tabs (same 309px wrapper as list mode) + table toolbar */}
+            <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
+              <div className="flex items-center justify-between w-[309px] shrink-0">
+                <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Billing</h2>
+                {billingTabButtons}
+              </div>
+              {tableToolbar}
             </div>
-
-            {/* Toolbar (includes List/Table toggle + action + filter buttons) */}
-            {tableToolbar}
 
             {/* Table content — edge-to-edge, no side margins */}
             <div className="flex-1 min-h-0 overflow-hidden bg-card">
@@ -1984,6 +1909,15 @@ export function BillingListView({
         onCreate={onCreateContract}
       />
 
+      <GradientTester
+        open={gradientTesterOpen}
+        onClose={() => setGradientTesterOpen(false)}
+        layers={gradientLayers}
+        onUpdateLayer={updateGradientLayer}
+        onResetLayers={resetGradientLayers}
+        dragMode={gradientDragMode}
+        onToggleDragMode={() => setGradientDragMode(prev => !prev)}
+      />
 
     </div>
   );

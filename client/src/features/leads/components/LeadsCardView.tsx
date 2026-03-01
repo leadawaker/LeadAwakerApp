@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect, type ReactNode } from "react";
+import { GradientTester, GradientControlPoints, DEFAULT_LAYERS, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
 import { cn } from "@/lib/utils";
 import {
   Phone,
@@ -45,6 +46,7 @@ import {
   ArrowRight,
   CircleDot,
   Kanban,
+  Paintbrush,
 } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
 import { updateLead, deleteLead } from "../api/leadsApi";
@@ -1505,6 +1507,22 @@ export function LeadDetailView({
     navigate(`${prefix}/calendar`);
   }, [navigate]);
 
+  // ── Gradient tester state ──────────────────────────────────────────────────
+  const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
+  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
+  const [gradientDragMode, setGradientDragMode] = useState(false);
+
+  const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
+    if (id === -1) { setGradientLayers(prev => [...prev, patch as GradientLayer]); return; }
+    if ((patch as any).id === -999) { setGradientLayers(prev => prev.filter(l => l.id !== id)); return; }
+    setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
+  }, []);
+
+  const resetGradientLayers = useCallback(() => {
+    setGradientLayers(DEFAULT_LAYERS);
+    setGradientDragMode(false);
+  }, []);
+
   // ── Toolbar button styles ─────────────────────────────────────────────────
   const toolBtn = "inline-flex items-center gap-1.5 px-3 h-9 rounded-full text-[12px] font-medium border transition-colors";
   const toolBtnDefault = "border-border/60 bg-transparent text-foreground hover:bg-muted/50";
@@ -1518,11 +1536,25 @@ export function LeadDetailView({
     <div ref={panelRef} className="relative flex flex-col h-full overflow-hidden">
 
       {/* ── Full-height gradient ── */}
-      <div className="absolute inset-0 bg-[#F8F3EB]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_72%_56%_at_100%_0%,#FFFFFF_0%,rgba(255,255,255,0.80)_30%,transparent_60%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_95%_80%_at_0%_0%,#F5E4B5_0%,rgba(245,228,181,0.60)_40%,rgba(245,228,181,0.25)_64%,transparent_80%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_62%_72%_at_100%_36%,rgba(241,218,162,0.62)_0%,transparent_64%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_98%_74%_at_50%_88%,rgba(105,170,255,0.60)_0%,transparent_74%)]" />
+      {gradientTesterOpen ? (
+        <>
+          {gradientLayers.map(layer => {
+            const style = layerToStyle(layer);
+            if (!style) return null;
+            return <div key={layer.id} className="absolute inset-0" style={style} />;
+          })}
+          {gradientDragMode && (
+            <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
+          )}
+        </>
+      ) : (
+        <>
+          <div className="absolute inset-0 bg-[#ffffff]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_79%_101%_at_42%_91%,rgba(255,102,17,0.4)_0%,transparent_69%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_2%_2%,#f0ffb5_5%,transparent_30%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_73%_92%_at_69%_50%,rgba(255,191,135,0.38)_0%,transparent_66%)]" />
+        </>
+      )}
 
       {/* ── Scrollable content ── */}
       <div className="relative flex-1 overflow-y-auto">
@@ -1546,6 +1578,14 @@ export function LeadDetailView({
             )}
             <button onClick={handlePdf} className={cn(toolBtn, toolBtnDefault)}>
               <FileText className="h-3 w-3" />To PDF
+            </button>
+            <button
+              type="button"
+              onClick={() => setGradientTesterOpen(prev => !prev)}
+              className={`inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border transition-colors ${gradientTesterOpen ? "bg-indigo-100 text-indigo-600 border-indigo-200" : "border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50"}`}
+              title="Gradient Tester"
+            >
+              <Paintbrush className="h-4 w-4" />
             </button>
           </div>
 
@@ -1699,6 +1739,16 @@ export function LeadDetailView({
           </div>
         </div>
       </div>
+
+      <GradientTester
+        open={gradientTesterOpen}
+        onClose={() => setGradientTesterOpen(false)}
+        layers={gradientLayers}
+        onUpdateLayer={updateGradientLayer}
+        onResetLayers={resetGradientLayers}
+        dragMode={gradientDragMode}
+        onToggleDragMode={() => setGradientDragMode(prev => !prev)}
+      />
     </div>
   );
 }
@@ -1863,6 +1913,7 @@ function LeadListCard({
         </div>
 
       </div>
+
     </div>
   );
 }
@@ -2030,7 +2081,7 @@ export function KanbanDetailPanel({
             className={cn(
               "inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-medium",
               activeTab === id
-                ? "bg-[#FFE35B] text-foreground"
+                ? "bg-highlight-active text-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
             )}
           >
@@ -2322,8 +2373,8 @@ export function LeadsCardView({
             onRefresh={onRefresh}
             toolbarPrefix={({ isNarrow: narrow }) => {
               const pill = narrow
-                ? "h-9 w-9 rounded-full border border-border/60 bg-transparent inline-flex items-center justify-center transition-colors"
-                : "h-9 px-3 rounded-full border border-border/60 bg-transparent text-foreground hover:bg-muted/50 inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors";
+                ? "h-9 w-9 rounded-full border border-black/[0.125] bg-transparent inline-flex items-center justify-center transition-colors"
+                : "h-9 px-3 rounded-full border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors";
               const pillActive = narrow
                 ? "h-9 w-9 rounded-full border border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo inline-flex items-center justify-center transition-colors"
                 : "h-9 px-3 rounded-full border border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors";

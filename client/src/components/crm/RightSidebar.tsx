@@ -7,8 +7,6 @@ import {
   Megaphone,
   Calendar,
   ScrollText,
-  Users,
-  Tag,
   BookOpen,
   PanelLeftClose,
   PanelLeftOpen,
@@ -20,8 +18,6 @@ import {
   Building2,
   LogOut,
   Receipt,
-  ReceiptText,
-  FileText,
   Settings,
   Palette,
 } from "lucide-react";
@@ -107,7 +103,7 @@ export function RightSidebar({
       : location.replace(/^\/(agency|subaccount)/, "");
 
     // Agency-only pages don't exist in subaccount view — always go to campaigns
-    const agencyOnlyPaths = ["/accounts", "/tags", "/prompt-library", "/automation-logs", "/expenses", "/contracts"];
+    const agencyOnlyPaths = ["/accounts", "/prompt-library", "/automation-logs", "/expenses", "/contracts"];
     const isAgencyOnlyPage = agencyOnlyPaths.some((p) => tail.startsWith(p));
     const safeTail = (!nextIsAgency && isAgencyOnlyPage) ? "/campaigns" : tail;
 
@@ -142,7 +138,6 @@ export function RightSidebar({
     { href: `${prefix}/contacts`, label: "Leads", icon: BookUser, testId: "nav-contacts" },
     { href: `${prefix}/conversations`, label: "Chats", icon: MessageSquare, testId: "nav-chats" },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "nav-calendar" },
-    { href: `${prefix}/tags`, label: "Tags", icon: Tag, testId: "nav-tags", agencyOnly: true },
     {
       href: `${prefix}/prompt-library`,
       label: "Library",
@@ -150,27 +145,7 @@ export function RightSidebar({
       testId: "nav-library",
       agencyOnly: true,
     },
-    { href: `${prefix}/users`, label: "Users", icon: Users, testId: "nav-users", agencyOnly: true },
-    {
-      href: `${prefix}/invoices`,
-      label: "Invoices",
-      icon: Receipt,
-      testId: "nav-invoices",
-    },
-    {
-      href: `${prefix}/expenses`,
-      label: "Expenses",
-      icon: ReceiptText,
-      testId: "nav-expenses",
-      agencyOnly: true,
-    },
-    {
-      href: `${prefix}/contracts`,
-      label: "Contracts",
-      icon: FileText,
-      testId: "nav-contracts",
-      agencyOnly: true,
-    },
+    { href: `${prefix}/invoices`, label: "Billing", icon: Receipt, testId: "nav-billing" },
     {
       href: `${prefix}/automation-logs`,
       label: "Automations",
@@ -194,6 +169,8 @@ export function RightSidebar({
     // For sub-routes like /agency/contacts/123, highlight the parent nav item
     // But don't let /agency/campaigns match sub-routes (campaigns has no sub-routes)
     if (href !== `${prefix}/campaigns` && location.startsWith(href + '/')) return true;
+    // Billing nav highlights for all billing sub-routes
+    if (href === `${prefix}/invoices` && (location === `${prefix}/expenses` || location === `${prefix}/contracts`)) return true;
     return false;
   };
 
@@ -223,7 +200,7 @@ export function RightSidebar({
             data-active={active || undefined}
           >
             <div className={cn(
-              "relative h-10 w-10 rounded-full flex items-center justify-center shrink-0 border border-border/65",
+              "relative h-10 w-10 rounded-full flex items-center justify-center shrink-0 border border-black/[0.125]",
               active && "bg-highlight-active"
             )}>
               <Icon className="h-4 w-4" />
@@ -557,10 +534,10 @@ export function RightSidebar({
                 );
               })()}
 
-              {/* Section: Admin (agency only) */}
+              {/* Section: Admin (agency only) + Billing */}
               {(() => {
                 const adminItems = visibleNavItems.filter(it =>
-                  ["Accounts", "Users"].includes(it.label)
+                  ["Accounts", "Billing"].includes(it.label)
                 );
                 if (adminItems.length === 0) return null;
                 return (
@@ -579,32 +556,10 @@ export function RightSidebar({
                 );
               })()}
 
-              {/* Section: Billing */}
-              {(() => {
-                const billingItems = visibleNavItems.filter(it =>
-                  ["Invoices", "Expenses", "Contracts"].includes(it.label)
-                );
-                if (billingItems.length === 0) return null;
-                return (
-                  <div className="mt-4">
-                    {collapsed ? (
-                      <div className="mx-auto w-5 border-t border-border/30 my-3" />
-                    ) : (
-                      <div className="px-1 pt-1.5 pb-1.5">
-                        <span className="text-[11px] font-bold tracking-wide text-foreground/50">
-                          Billing
-                        </span>
-                      </div>
-                    )}
-                    {billingItems.map((it) => renderDesktopNavLink(it))}
-                  </div>
-                );
-              })()}
-
               {/* Section: Backend (agency only) */}
               {(() => {
                 const backendItems = visibleNavItems.filter(it =>
-                  ["Tags", "Library", "Automations"].includes(it.label)
+                  ["Library", "Automations"].includes(it.label)
                 );
                 if (backendItems.length === 0) return null;
                 return (

@@ -8,6 +8,13 @@ interface InvoiceCardProps {
   onClick: () => void;
 }
 
+function toDisplayTitle(title: string | null): string {
+  if (!title) return "Untitled Invoice";
+  return title
+    .replace(/[_-]/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export function InvoiceCard({ invoice, isSelected, onClick }: InvoiceCardProps) {
   const displayStatus = isOverdue(invoice) ? "Overdue" : (invoice.status || "Draft");
   const colors = INVOICE_STATUS_COLORS[displayStatus] || INVOICE_STATUS_COLORS.Draft;
@@ -28,7 +35,7 @@ export function InvoiceCard({ invoice, isSelected, onClick }: InvoiceCardProps) 
       <div className="flex items-start gap-2.5">
         {/* Status-colored avatar */}
         <div
-          className="h-[34px] w-[34px] rounded-full shrink-0 flex items-center justify-center border border-border/50"
+          className="h-[34px] w-[34px] rounded-full shrink-0 flex items-center justify-center border border-black/[0.125]"
           style={{ backgroundColor: colors.bg, color: colors.text }}
         >
           <span className="text-[11px] font-bold">$</span>
@@ -38,7 +45,7 @@ export function InvoiceCard({ invoice, isSelected, onClick }: InvoiceCardProps) 
           {/* Row 1: Title + Amount */}
           <div className="flex items-center justify-between gap-1">
             <span className="text-[16px] font-semibold font-heading text-foreground truncate">
-              {invoice.title || invoice.invoice_number || "Untitled"}
+              {invoice.title ? toDisplayTitle(invoice.title) : (invoice.invoice_number || "Untitled")}
             </span>
             <span className="text-[12px] font-bold text-foreground shrink-0 tabular-nums">
               {formatCurrency(invoice.total, invoice.currency || "USD")}

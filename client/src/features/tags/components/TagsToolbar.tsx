@@ -94,7 +94,7 @@ function ConfirmToolbarButton({
 
   if (confirming) {
     return (
-      <div className="h-10 flex items-center gap-1 rounded-full border border-border/30 bg-card px-2.5 text-[12px] shrink-0">
+      <div className="h-10 flex items-center gap-1 rounded-full border border-black/[0.125] bg-card px-2.5 text-[12px] shrink-0">
         <span className="text-foreground/60 mr-0.5 whitespace-nowrap">
           {label}?
         </span>
@@ -144,8 +144,8 @@ function ConfirmToolbarButton({
    ════════════════════════════════════════════════════════════════════════════ */
 
 const tbBase    = "h-10 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
-const tbDefault = "border border-border/55 text-foreground/60 hover:text-foreground hover:bg-card";
-const tbActive  = "bg-card border border-border/55 text-foreground";
+const tbDefault = "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:bg-card";
+const tbActive  = "bg-card border border-black/[0.125] text-foreground";
 
 export function TagsToolbar({
   searchQuery,
@@ -232,7 +232,7 @@ export function TagsToolbar({
   return (
     <div ref={toolbarRef} className="flex items-center gap-1 flex-1 min-w-0">
       {/* ── 1. Search (always visible) ───────────────────────────────────── */}
-      <div className="h-10 flex items-center gap-1.5 rounded-full border border-border/30 bg-card/60 px-3 min-w-[140px] max-w-[220px]">
+      <div className="h-10 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card/60 px-3 min-w-[140px] max-w-[220px]">
         <Search className="h-4 w-4 text-muted-foreground/50 shrink-0" />
         <input
           type="text"
@@ -294,7 +294,7 @@ export function TagsToolbar({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           {isNarrow ? (
-            <button className={cn("icon-circle-lg icon-circle-base shrink-0", selectedAccountId !== "all" && "bg-card border-border/55")} title="Account filter">
+            <button className={cn("icon-circle-lg icon-circle-base shrink-0", selectedAccountId !== "all" && "bg-card border-black/[0.175]")} title="Account filter">
               <Building2 className="h-4 w-4" />
             </button>
           ) : (
@@ -324,7 +324,7 @@ export function TagsToolbar({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           {isNarrow ? (
-            <button className={cn("icon-circle-lg icon-circle-base shrink-0", campaignId !== "all" && "bg-card border-border/55")} title="Campaign filter">
+            <button className={cn("icon-circle-lg icon-circle-base shrink-0", campaignId !== "all" && "bg-card border-black/[0.175]")} title="Campaign filter">
               <Megaphone className="h-4 w-4" />
             </button>
           ) : (
@@ -354,7 +354,7 @@ export function TagsToolbar({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           {isNarrow ? (
-            <button className={cn("icon-circle-lg icon-circle-base shrink-0", sortBy !== "name_asc" && "bg-card border-border/55")} title="Sort">
+            <button className={cn("icon-circle-lg icon-circle-base shrink-0", sortBy !== "name_asc" && "bg-card border-black/[0.175]")} title="Sort">
               <ArrowUpDown className="h-4 w-4" />
             </button>
           ) : (
@@ -391,7 +391,7 @@ export function TagsToolbar({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           {isNarrow ? (
-            <button className={cn("icon-circle-lg icon-circle-base shrink-0", isFilterActive && "bg-card border-border/55")} title="Filter">
+            <button className={cn("icon-circle-lg icon-circle-base shrink-0", isFilterActive && "bg-card border-black/[0.175]")} title="Filter">
               <Filter className="h-4 w-4" />
             </button>
           ) : (
@@ -425,7 +425,7 @@ export function TagsToolbar({
                     "h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0",
                     checked
                       ? "border-brand-indigo bg-brand-indigo"
-                      : "border-border/50",
+                      : "border-black/[0.125]",
                   )}
                 >
                   {checked && <Check className="h-2.5 w-2.5 text-white" />}
@@ -463,7 +463,7 @@ export function TagsToolbar({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           {isNarrow ? (
-            <button className={cn("icon-circle-lg icon-circle-base shrink-0", groupBy !== "none" && "bg-card border-border/55")} title="Group">
+            <button className={cn("icon-circle-lg icon-circle-base shrink-0", groupBy !== "none" && "bg-card border-black/[0.175]")} title="Group">
               <Layers className="h-4 w-4" />
             </button>
           ) : (
@@ -528,7 +528,7 @@ export function TagsToolbar({
                     "h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0",
                     checked
                       ? "border-brand-indigo bg-brand-indigo"
-                      : "border-border/50",
+                      : "border-black/[0.125]",
                   )}
                 >
                   {checked && <Check className="h-2.5 w-2.5 text-white" />}
@@ -571,7 +571,7 @@ export function TagsToolbar({
             className={cn(
               isNarrow
                 ? "icon-circle-lg icon-circle-base hover:text-red-600 shrink-0"
-                : cn(tbBase, "border border-border/60 hover:text-red-600")
+                : cn(tbBase, "border border-black/[0.125] hover:text-red-600")
             )}
             onClick={onOpenDeleteBulk}
             title="Delete selected"

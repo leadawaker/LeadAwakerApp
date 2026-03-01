@@ -20,7 +20,7 @@ export function BillingPage() {
   const { clearTopbarActions } = useTopbarActions();
 
   // Tab state — derived from URL path
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const activeTab = useMemo<BillingTab>(() => {
     if (location.endsWith("/expenses")) return "expenses";
     if (location.endsWith("/contracts")) return "contracts";
@@ -158,14 +158,16 @@ export function BillingPage() {
   useEffect(() => { clearTopbarActions(); return () => clearTopbarActions(); }, [clearTopbarActions]);
 
   // Clear selection + panel mode on tab switch (keep viewMode across tab switches)
-  const handleTabChange = useCallback((_tab: string) => {
-    // No-op for tab switching — tab changes happen via URL navigation now
+  const handleTabChange = useCallback((tab: string) => {
     setListSearch("");
     setSearchOpen(false);
     setFilterStatus([]);
     setRightPanelMode("view");
     setEditingInvoice(null);
-  }, []);
+    // Navigate to the tab route
+    const routePrefix = location.startsWith("/subaccount") ? "/subaccount" : "/agency";
+    setLocation(`${routePrefix}/${tab}`);
+  }, [location, setLocation]);
 
   return (
     <CrmShell>

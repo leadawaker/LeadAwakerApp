@@ -20,6 +20,7 @@ interface InvoiceDetailViewProps {
   allInvoices?: InvoiceRow[];
   account?: AccountRow | null;
   isAgencyUser: boolean;
+  toolbarSlot?: React.ReactNode;
   onMarkSent: (id: number) => Promise<any>;
   onMarkPaid: (id: number) => Promise<any>;
   onEdit: (invoice: InvoiceRow) => void;
@@ -40,19 +41,26 @@ function toDisplayTitle(title: string | null): string {
 
 // ── Empty state ───────────────────────────────────────────────────────────────
 
-export function InvoiceDetailViewEmpty() {
+export function InvoiceDetailViewEmpty({ toolbarSlot }: { toolbarSlot?: React.ReactNode }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8 text-center">
-      <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-stone-50 to-gray-100 flex items-center justify-center ring-1 ring-stone-200/50">
-        <FileText className="h-10 w-10 text-stone-400" />
+    <div className="flex-1 flex flex-col h-full overflow-hidden">
+      {toolbarSlot && (
+        <div className="px-4 pt-3 pb-1.5 flex items-center gap-1.5">
+          {toolbarSlot}
+        </div>
+      )}
+      <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8 text-center">
+        <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-stone-50 to-gray-100 flex items-center justify-center ring-1 ring-stone-200/50">
+          <FileText className="h-10 w-10 text-stone-400" />
+        </div>
+        <div className="space-y-1.5">
+          <p className="text-sm font-semibold text-foreground/70">Select an invoice</p>
+          <p className="text-xs text-muted-foreground max-w-[180px] leading-relaxed">
+            Click any invoice on the left to see its details and line items.
+          </p>
+        </div>
+        <div className="text-[11px] text-stone-400 font-medium">&larr; Choose from the list</div>
       </div>
-      <div className="space-y-1.5">
-        <p className="text-sm font-semibold text-foreground/70">Select an invoice</p>
-        <p className="text-xs text-muted-foreground max-w-[180px] leading-relaxed">
-          Click any invoice on the left to see its details and line items.
-        </p>
-      </div>
-      <div className="text-[11px] text-stone-400 font-medium">&larr; Choose from the list</div>
     </div>
   );
 }
@@ -113,6 +121,7 @@ export function InvoiceDetailView({
   allInvoices,
   account,
   isAgencyUser,
+  toolbarSlot,
   onMarkSent,
   onMarkPaid,
   onEdit,
@@ -357,29 +366,27 @@ export function InvoiceDetailView({
       <div className="relative z-10 shrink-0 px-[3px] pt-[3px] pb-[3px] space-y-[3px]">
 
         {/* Action toolbar (above header, no container) */}
-        {isAgencyUser && (
-          <div className="px-3 py-2 flex items-center gap-1 flex-wrap">
-            {/* Group 1: Download + Copy Link */}
-            <button
-              onClick={handleDownloadPdf}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
-            >
-              <Download className="h-3 w-3" />
-              PDF
-            </button>
+        <div className="px-4 pt-3 pb-1.5 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
+          {toolbarSlot}
+          {isAgencyUser && (
+            <div className="ml-auto flex items-center gap-1 shrink-0">
+              <button
+                onClick={handleDownloadPdf}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
+              >
+                <Download className="h-3 w-3" />
+                PDF
+              </button>
 
-            <button
-              onClick={handleCopyLink}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
-            >
-              {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Link className="h-3 w-3" />}
-              {copied ? "Copied!" : "Copy Link"}
-            </button>
+              <button
+                onClick={handleCopyLink}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
+              >
+                {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Link className="h-3 w-3" />}
+                {copied ? "Copied!" : "Copy Link"}
+              </button>
 
-            {/* Group 2 (conditional): divider + Mark Sent */}
-            {invoice.status === "Draft" && (
-              <>
-                <div className="h-4 w-px bg-border/40 shrink-0" />
+              {invoice.status === "Draft" && (
                 <button
                   onClick={handleMarkSent}
                   disabled={markingSent}
@@ -388,13 +395,9 @@ export function InvoiceDetailView({
                   <Send className="h-3 w-3" />
                   {markingSent ? "Sending..." : "Mark Sent"}
                 </button>
-              </>
-            )}
+              )}
 
-            {/* Group 2 (conditional): divider + Mark Paid */}
-            {(invoice.status === "Sent" || invoice.status === "Viewed") && (
-              <>
-                <div className="h-4 w-px bg-border/40 shrink-0" />
+              {(invoice.status === "Sent" || invoice.status === "Viewed") && (
                 <button
                   onClick={handleMarkPaid}
                   disabled={markingPaid}
@@ -403,49 +406,41 @@ export function InvoiceDetailView({
                   <CheckCircle className="h-3 w-3" />
                   {markingPaid ? "Updating..." : "Mark Paid"}
                 </button>
-              </>
-            )}
+              )}
 
-            {/* Divider before Group 3 */}
-            <div className="h-4 w-px bg-border/40 shrink-0" />
-
-            {/* Group 3: Edit + Duplicate */}
-            <button
-              onClick={() => onEdit(invoice)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
-            >
-              <Pencil className="h-3 w-3" />
-              Edit
-            </button>
-
-            {onDuplicate && (
               <button
-                onClick={() => onDuplicate(invoice)}
+                onClick={() => onEdit(invoice)}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
               >
-                <CopyPlus className="h-3 w-3" />
-                Duplicate
+                <Pencil className="h-3 w-3" />
+                Edit
               </button>
-            )}
 
-            {/* Divider before Group 4 */}
-            <div className="h-4 w-px bg-border/40 shrink-0" />
-
-            {/* Group 4: Delete */}
-            <button
-              onClick={handleDelete}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border transition-colors",
-                deleteConfirm
-                  ? "border-red-400/60 text-red-600 bg-red-50/50 hover:bg-red-50/70"
-                  : "border-border/60 bg-transparent text-foreground hover:bg-card"
+              {onDuplicate && (
+                <button
+                  onClick={() => onDuplicate(invoice)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
+                >
+                  <CopyPlus className="h-3 w-3" />
+                  Duplicate
+                </button>
               )}
-            >
-              <Trash2 className="h-3 w-3" />
-              {deleteConfirm ? "Confirm?" : "Delete"}
-            </button>
-          </div>
-        )}
+
+              <button
+                onClick={handleDelete}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border transition-colors",
+                  deleteConfirm
+                    ? "border-red-400/60 text-red-600 bg-red-50/50 hover:bg-red-50/70"
+                    : "border-border/60 bg-transparent text-foreground hover:bg-card"
+                )}
+              >
+                <Trash2 className="h-3 w-3" />
+                {deleteConfirm ? "Confirm?" : "Delete"}
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Title + status + tracking */}
         <div className="px-4 pt-3 pb-2 space-y-2">
@@ -468,41 +463,6 @@ export function InvoiceDetailView({
             </div>
           </div>
 
-          {/* Status badge + Tracking inline */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold"
-              style={{ backgroundColor: statusColors.bg, color: statusColors.text }}
-            >
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: statusColors.dot }}
-              />
-              {displayStatus}
-            </span>
-
-            {/* Tracking */}
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/50">
-              <Eye className="h-3.5 w-3.5 text-foreground/40" />
-              <span className="text-[12px] font-semibold tabular-nums text-foreground">
-                {invoice.viewed_count ?? 0}
-              </span>
-              <span className="text-[11px] text-foreground/40">
-                {(invoice.viewed_count ?? 0) === 1 ? "view" : "views"}
-              </span>
-              {invoice.viewed_count && invoice.viewed_count > 0 && invoice.account_name && (
-                <span className="text-[11px] text-foreground/40">
-                  by {invoice.account_name}
-                </span>
-              )}
-            </div>
-
-            {invoice.viewed_at && (
-              <span className="text-[10px] text-foreground/40">
-                First viewed {fmtDate(invoice.viewed_at)}
-              </span>
-            )}
-          </div>
         </div>
       </div>
 
@@ -617,6 +577,40 @@ export function InvoiceDetailView({
               <span className="text-[28px] font-bold tabular-nums text-foreground leading-none block">
                 {formatCurrency(totalNum, currency)}
               </span>
+            </div>
+
+            {/* Status */}
+            <div className="bg-white/60 rounded-xl p-5">
+              <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
+                Status
+              </span>
+              <div className="space-y-3">
+                {/* Status badge */}
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold"
+                  style={{ backgroundColor: statusColors.bg, color: statusColors.text }}
+                >
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors.dot }} />
+                  {displayStatus}
+                </span>
+
+                {/* Views */}
+                <div className="flex items-center gap-1.5">
+                  <Eye className="h-3.5 w-3.5 text-foreground/40" />
+                  <span className="text-[18px] font-bold tabular-nums text-foreground leading-none">
+                    {invoice.viewed_count ?? 0}
+                  </span>
+                  <span className="text-[11px] text-foreground/40">
+                    {(invoice.viewed_count ?? 0) === 1 ? "view" : "views"}
+                  </span>
+                </div>
+
+                {invoice.viewed_at && (
+                  <span className="text-[10px] text-foreground/40 block">
+                    First viewed {fmtDate(invoice.viewed_at)}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Dates — Due Date + Sent Date */}

@@ -97,7 +97,7 @@ function formatRelativeTime(dateStr: string | null | undefined): string {
 function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
     <div className="flex items-center gap-2 mb-3">
-      <div className="icon-circle-lg border-2 border-border/25 text-muted-foreground flex items-center justify-center shrink-0">
+      <div className="icon-circle-lg border-2 border-black/[0.125] text-muted-foreground flex items-center justify-center shrink-0">
         {icon}
       </div>
       <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
@@ -859,7 +859,7 @@ export function PromptsListView({
           <div className="flex items-center gap-1">
             <button
               onClick={() => onViewModeChange("list")}
-              className="inline-flex items-center gap-1.5 h-10 px-3 rounded-full bg-[#FFE35B] text-foreground text-[12px] font-semibold shrink-0"
+              className="inline-flex items-center gap-1.5 h-10 px-3 rounded-full bg-highlight-active text-foreground text-[12px] font-semibold shrink-0"
             >
               <List className="h-4 w-4" />
               List
@@ -867,7 +867,7 @@ export function PromptsListView({
             <button
               onClick={() => onViewModeChange("table")}
               title="Table"
-              className="h-10 w-10 rounded-full border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors shrink-0"
+              className="h-10 w-10 rounded-full border border-black/[0.125] flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-black/[0.175] transition-colors shrink-0"
             >
               <Table2 className="h-4 w-4" />
             </button>

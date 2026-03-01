@@ -385,7 +385,7 @@ export function ExpenseCreatePanel({ editingExpense, onClose }: ExpenseCreatePan
             className={cn(
               "w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-colors duration-[150ms]",
               nlBtwDeductible
-                ? "bg-[#FFE35B] border-yellow-400 border-2"
+                ? "bg-highlight-active border-highlight-active border-2"
                 : "bg-card border-border hover:bg-muted/60"
             )}
           >
@@ -401,7 +401,7 @@ export function ExpenseCreatePanel({ editingExpense, onClose }: ExpenseCreatePan
             )}>
               <div className={cn(
                 "absolute top-0.5 h-3 w-3 rounded-full transition-transform duration-[150ms]",
-                nlBtwDeductible ? "bg-[#FFE35B] translate-x-[18px]" : "bg-foreground/30 translate-x-0.5"
+                nlBtwDeductible ? "bg-highlight-active translate-x-[18px]" : "bg-foreground/30 translate-x-0.5"
               )} />
             </div>
           </button>

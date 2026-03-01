@@ -428,17 +428,17 @@ export function ContractsInlineTable({
                 const dealTypeColors = DEAL_TYPE_COLORS[dealTypeKey] ?? null;
                 const dealTypeLabel = formatDealType(contract.deal_type);
 
-                const rowBg = isHighlighted ? "#FFF1C8" : "#F1F1F1";
+                const rowBg = isHighlighted ? "var(--color-highlight-selected)" : "var(--color-card)";
                 const rowHoverClass = isHighlighted ? "" : "hover:bg-card-hover";
 
                 return (
                   <tr
                     key={contract.id}
                     className={cn(
-                      "group/row cursor-pointer h-[52px] border-b border-border/15",
+                      "group/row cursor-pointer h-[52px] border-b border-border/15 animate-card-enter",
                       rowHoverClass,
                     )}
-                    style={{ backgroundColor: rowBg }}
+                    style={{ backgroundColor: rowBg, animationDelay: `${Math.min(index, 15) * 30}ms` }}
                     onClick={(e) => handleRowClick(contract, index, e)}
                   >
                     {/* Checkbox */}
@@ -447,7 +447,7 @@ export function ContractsInlineTable({
                       style={{
                         width: 40,
                         minWidth: 40,
-                        backgroundColor: isHighlighted ? "#FFF1C8" : undefined,
+                        backgroundColor: isHighlighted ? "var(--color-highlight-selected)" : undefined,
                       }}
                     >
                       <div

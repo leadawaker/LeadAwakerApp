@@ -1,55 +1,20 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import {
-  Search,
-  Zap,
   List,
   Table2,
-  SlidersHorizontal,
-  Layers,
-  ArrowUpDown,
-  Filter,
-  X,
   Megaphone,
   Building2,
-  Plus,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import type { Campaign, CampaignMetricsHistory } from "@/types/models";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
-import { IconBtn } from "@/components/ui/icon-btn";
 import { cn } from "@/lib/utils";
 import { CampaignDetailView, CampaignDetailViewEmpty } from "./CampaignDetailView";
-import { getInitials, getCampaignAvatarColor } from "@/lib/avatarUtils";
+import { getInitials, getCampaignAvatarColor, CAMPAIGN_STATUS_HEX } from "@/lib/avatarUtils";
 import type {
   CampaignViewMode,
   CampaignGroupBy,
   CampaignSortBy,
 } from "../pages/CampaignsPage";
-
-// ── Status dot hex colors ────────────────────────────────────────────────────
-const CAMPAIGN_STATUS_HEX: Record<string, string> = {
-  Active:    "#22C55E",
-  Paused:    "#F59E0B",
-  Completed: "#3B82F6",
-  Finished:  "#3B82F6",
-  Inactive:  "#94A3B8",
-  Archived:  "#94A3B8",
-  Draft:     "#6B7280",
-};
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function getCampaignId(c: Campaign): number {
@@ -64,41 +29,7 @@ function getResponseRate(c: Campaign): number {
   return Number(c.response_rate_percent ?? 0);
 }
 
-function formatRelativeTime(dateStr: string | null | undefined): string {
-  if (!dateStr) return "";
-  try {
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return "";
-    const diffMs = Date.now() - date.getTime();
-    const diffDays = Math.floor(diffMs / 86_400_000);
-    if (diffDays === 0) {
-      const h = Math.floor(diffMs / 3_600_000);
-      return h === 0 ? "Just now" : `${h}h ago`;
-    }
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7) return `${diffDays}d ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-    return `${Math.floor(diffDays / 30)}mo ago`;
-  } catch { return ""; }
-}
-
-// ── Group/Sort labels ────────────────────────────────────────────────────────
-const GROUP_LABELS: Record<CampaignGroupBy, string> = {
-  status:  "Status",
-  account: "Account",
-  type:    "Type",
-  none:    "None",
-};
-const SORT_LABELS: Record<CampaignSortBy, string> = {
-  recent:        "Most Recent",
-  name_asc:      "Name A → Z",
-  name_desc:     "Name Z → A",
-  leads_desc:    "Most Leads",
-  response_desc: "Best Response",
-};
-
 const STATUS_GROUP_ORDER = ["Active", "Paused", "Completed", "Finished", "Draft", "Inactive", "Archived"];
-const STATUS_FILTER_OPTIONS = ["Active", "Paused", "Completed", "Inactive", "Draft"];
 
 // ── View tab definitions ────────────────────────────────────────────────────
 const VIEW_TABS: TabDef[] = [
@@ -333,6 +264,9 @@ export function CampaignListView({
   const [currentPage, setCurrentPage] = useState(0);
   const PAGE_SIZE = 20;
 
+  // Active filter state
+  const isFilterActive = filterStatus.length > 0 || !!filterAccount;
+
   // Build flat grouped list
   const flatItems = useMemo((): VirtualListItem[] => {
     // 1. Text search
@@ -473,188 +407,17 @@ export function CampaignListView({
     }
   }, [flatItems, selectedCampaign, campaigns.length, onSelectCampaign]);
 
-  // Active filter / sort / group state booleans for button highlights
-  const isFilterActive = filterStatus.length > 0 || !!filterAccount;
-
   return (
     <div className="flex h-full gap-[3px]" data-testid="campaign-list-view">
 
       {/* ── LEFT PANEL: campaign list ─────────────────────────────────── */}
       <div className="w-[340px] shrink-0 flex flex-col bg-muted rounded-lg overflow-hidden">
 
-        {/* Header: title + count */}
-        <div className="px-3.5 pt-5 pb-1 shrink-0 flex items-center justify-between">
-          <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Campaigns</h2>
-          <span className="text-[12px] font-medium text-muted-foreground tabular-nums">{totalCampaigns}</span>
-        </div>
-
-        {/* Controls row: tabs (left) + search & settings (right) */}
-        <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5">
-          {/* Tab buttons */}
-          <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as CampaignViewMode)} />
-
-          <div className="flex-1 min-w-0" />
-
-          {/* Right controls: + / search / settings */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            {/* New campaign */}
-            <IconBtn title="New Campaign" onClick={onCreateCampaign}>
-              <Plus className="h-4 w-4" />
-            </IconBtn>
-
-            {/* Search popover */}
-            <Popover open={searchOpen} onOpenChange={onSearchOpenChange}>
-              <PopoverTrigger asChild>
-                <IconBtn active={!!listSearch} title="Search">
-                  <Search className="h-4 w-4" />
-                </IconBtn>
-              </PopoverTrigger>
-              <PopoverContent
-                side="bottom"
-                align="end"
-                className="w-56 p-2"
-                onOpenAutoFocus={(e) => e.preventDefault()}
-              >
-                <div className="relative">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
-                  <input
-                    autoFocus
-                    type="text"
-                    placeholder="Search campaigns..."
-                    value={listSearch}
-                    onChange={(e) => onListSearchChange(e.target.value)}
-                    className="w-full pl-7 pr-7 py-1.5 text-[12px] rounded-md border border-border bg-popover placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-brand-indigo/50"
-                  />
-                  {listSearch && (
-                    <button
-                      onClick={() => onListSearchChange("")}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            {/* Settings */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <IconBtn active={hasNonDefaultControls} title="Group, Sort & Filter">
-                  <SlidersHorizontal className="h-4 w-4" />
-                </IconBtn>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                {/* Group sub-menu */}
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <Layers className="h-3.5 w-3.5 mr-2" />
-                    <span>Group</span>
-                    {isGroupNonDefault && <span className="ml-auto text-[10px] text-brand-indigo font-semibold">{GROUP_LABELS[groupBy]}</span>}
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    {(Object.keys(GROUP_LABELS) as CampaignGroupBy[]).map((g) => (
-                      <DropdownMenuItem
-                        key={g}
-                        onClick={() => onGroupByChange(g)}
-                        className={cn(groupBy === g && "font-bold text-brand-indigo")}
-                      >
-                        {GROUP_LABELS[g]}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-
-                {/* Sort sub-menu */}
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <ArrowUpDown className="h-3.5 w-3.5 mr-2" />
-                    <span>Sort</span>
-                    {isSortNonDefault && <span className="ml-auto text-[10px] text-brand-indigo font-semibold">{SORT_LABELS[sortBy].split(" ")[0]}</span>}
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    {(Object.keys(SORT_LABELS) as CampaignSortBy[]).map((s) => (
-                      <DropdownMenuItem
-                        key={s}
-                        onClick={() => onSortByChange(s)}
-                        className={cn(sortBy === s && "font-bold text-brand-indigo")}
-                      >
-                        {SORT_LABELS[s]}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-
-                {/* Filter Status sub-menu */}
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>
-                    <Filter className="h-3.5 w-3.5 mr-2" />
-                    <span>Filter Status</span>
-                    {filterStatus.length > 0 && <span className="ml-auto text-[10px] text-brand-indigo font-semibold">{filterStatus.length}</span>}
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    {STATUS_FILTER_OPTIONS.map((s) => (
-                      <DropdownMenuItem
-                        key={s}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          onToggleFilterStatus(s);
-                        }}
-                        className="flex items-center gap-2"
-                      >
-                        <span
-                          className="h-2 w-2 rounded-full shrink-0"
-                          style={{ backgroundColor: CAMPAIGN_STATUS_HEX[s] || "#6B7280" }}
-                        />
-                        <span className={cn(filterStatus.includes(s) && "font-bold text-brand-indigo")}>{s}</span>
-                        {filterStatus.includes(s) && <span className="ml-auto text-brand-indigo">✓</span>}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-
-                {/* Filter Account sub-menu — agency users only */}
-                {availableAccounts.length > 0 && (
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                      <Building2 className="h-3.5 w-3.5 mr-2" />
-                      <span>Filter Account</span>
-                      {filterAccount && <span className="ml-auto text-[10px] text-brand-indigo font-semibold truncate max-w-[60px]">{filterAccount}</span>}
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="max-h-60 overflow-y-auto">
-                      <DropdownMenuItem
-                        onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(""); }}
-                        className={cn("flex items-center gap-2", !filterAccount && "font-bold text-brand-indigo")}
-                      >
-                        <span className="flex-1">All Accounts</span>
-                        {!filterAccount && <span className="text-brand-indigo">✓</span>}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      {availableAccounts.map((a) => (
-                        <DropdownMenuItem
-                          key={a}
-                          onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(filterAccount === a ? "" : a); }}
-                          className={cn("flex items-center gap-2", filterAccount === a && "font-bold text-brand-indigo")}
-                        >
-                          <span className="flex-1 truncate">{a}</span>
-                          {filterAccount === a && <span className="text-brand-indigo">✓</span>}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
-                )}
-
-                {/* Reset */}
-                {hasNonDefaultControls && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={onResetControls} className="text-muted-foreground">
-                      Reset to defaults
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+        {/* Header: title + ViewTabBar (309px rigid wrapper) — NO buttons */}
+        <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center">
+          <div className="flex items-center justify-between w-[309px] shrink-0">
+            <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Campaigns</h2>
+            <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as CampaignViewMode)} />
           </div>
         </div>
 
@@ -723,22 +486,44 @@ export function CampaignListView({
         )}
       </div>
 
-      {/* ── RIGHT PANEL: detail view ──────────────────────────────────── */}
+      {/* ── RIGHT PANEL: toolbar + detail view ──────────────────────── */}
       <div ref={rightPanelRef} className="flex-1 flex flex-col overflow-hidden rounded-lg">
-        {selectedCampaign ? (
-          <CampaignDetailView
-            campaign={selectedCampaign}
-            metrics={metrics}
-            allCampaigns={campaigns}
-            onToggleStatus={onToggleStatus}
-            onSave={onSave}
-            onRefresh={onRefresh}
-            onDelete={onDelete}
-            compact={isDetailCompact}
-          />
-        ) : (
-          <CampaignDetailViewEmpty />
-        )}
+
+        {/* Detail view */}
+        <div className="flex-1 min-h-0 overflow-hidden">
+          {selectedCampaign ? (
+            <CampaignDetailView
+              campaign={selectedCampaign}
+              metrics={metrics}
+              allCampaigns={campaigns}
+              onToggleStatus={onToggleStatus}
+              onSave={onSave}
+              onRefresh={onRefresh}
+              onDelete={onDelete}
+              compact={isDetailCompact}
+              onCreateCampaign={onCreateCampaign}
+              listSearch={listSearch}
+              onListSearchChange={onListSearchChange}
+              searchOpen={searchOpen}
+              onSearchOpenChange={onSearchOpenChange}
+              sortBy={sortBy}
+              onSortByChange={onSortByChange}
+              isSortNonDefault={isSortNonDefault}
+              filterStatus={filterStatus}
+              onToggleFilterStatus={onToggleFilterStatus}
+              filterAccount={filterAccount}
+              onFilterAccountChange={onFilterAccountChange}
+              isFilterActive={isFilterActive}
+              groupBy={groupBy}
+              onGroupByChange={onGroupByChange}
+              isGroupNonDefault={isGroupNonDefault}
+              availableAccounts={availableAccounts}
+              onResetControls={onResetControls}
+            />
+          ) : (
+            <CampaignDetailViewEmpty />
+          )}
+        </div>
       </div>
     </div>
   );

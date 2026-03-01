@@ -30,7 +30,9 @@ import {
   Thermometer,
   Hash,
   Settings,
+  Paintbrush,
 } from "lucide-react";
+import { GradientTester, GradientControlPoints, DEFAULT_LAYERS, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
 import { useToast } from "@/hooks/use-toast";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
 import { cn } from "@/lib/utils";
@@ -636,12 +638,16 @@ function PromptDetailPanel({
   onDelete,
   onToggleStatus,
   isToggling,
+  gradientTesterOpen,
+  onToggleGradientTester,
 }: {
   prompt: any;
   onEdit: () => void;
   onDelete: () => void;
   onToggleStatus: () => void;
   isToggling: boolean;
+  gradientTesterOpen: boolean;
+  onToggleGradientTester: () => void;
 }) {
   const statusNorm = ((prompt.status || "") as string).toLowerCase().trim();
   const promptText = prompt.promptText || prompt.prompt_text || "";
@@ -656,6 +662,14 @@ function PromptDetailPanel({
           Prompt Detail
         </span>
         <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={onToggleGradientTester}
+            className={`inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border transition-colors ${gradientTesterOpen ? "bg-indigo-100 text-indigo-600 border-indigo-200" : "border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50"}`}
+            title="Gradient Tester"
+          >
+            <Paintbrush className="h-4 w-4" />
+          </button>
           <button
             onClick={onEdit}
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-foreground/5 hover:bg-foreground/10 text-foreground border border-border/50 text-xs font-semibold transition-colors"
@@ -847,6 +861,22 @@ export default function PromptLibraryPage() {
   // Status toggle loading state (keyed by prompt id)
   const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
 
+  // Gradient tester state
+  const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
+  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
+  const [gradientDragMode, setGradientDragMode] = useState(false);
+
+  const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
+    if (id === -1) { setGradientLayers(prev => [...prev, patch as GradientLayer]); return; }
+    if ((patch as any).id === -999) { setGradientLayers(prev => prev.filter(l => l.id !== id)); return; }
+    setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
+  }, []);
+
+  const resetGradientLayers = useCallback(() => {
+    setGradientLayers(DEFAULT_LAYERS);
+    setGradientDragMode(false);
+  }, []);
+
   // Clear topbar actions (tabs are inline)
   useEffect(() => {
     clearTopbarActions();
@@ -1003,36 +1033,32 @@ export default function PromptLibraryPage() {
           {/* ── LEFT PANEL ── list of prompts ────────────────────────── */}
           <div className="w-[340px] shrink-0 flex flex-col bg-muted rounded-lg overflow-hidden">
 
-            {/* Title row — per section 16 */}
-            <div className="px-3.5 pt-5 pb-1 flex items-center justify-between shrink-0">
-              <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
-                Library
-              </h2>
-              <span className="text-[12px] font-medium text-muted-foreground tabular-nums">
-                {rows.length}
-              </span>
-            </div>
-
-            {/* Controls row */}
-            <div className="px-3 pt-1.5 pb-3 shrink-0 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
-              <div className="flex-1" />
-              <IconBtn onClick={openCreate} title="Create prompt">
-                <Plus className="h-4 w-4" />
-              </IconBtn>
-              <SearchPill
-                value={q}
-                onChange={setQ}
-                open={searchOpen}
-                onOpenChange={setSearchOpen}
-                placeholder="Search prompts\u2026"
-              />
-              <SettingsDropdown
-                statusFilter={statusFilter}
-                onStatusFilterChange={setStatusFilter}
-                modelFilter={modelFilter}
-                onModelFilterChange={setModelFilter}
-                availableModels={availableModels}
-              />
+            {/* Title + controls (single row) */}
+            <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center">
+              <div className="flex items-center justify-between w-[309px] shrink-0">
+                <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
+                  Library
+                </h2>
+                <div className="flex items-center gap-1.5">
+                  <IconBtn onClick={openCreate} title="Create prompt">
+                    <Plus className="h-4 w-4" />
+                  </IconBtn>
+                  <SearchPill
+                    value={q}
+                    onChange={setQ}
+                    open={searchOpen}
+                    onOpenChange={setSearchOpen}
+                    placeholder="Search prompts..."
+                  />
+                  <SettingsDropdown
+                    statusFilter={statusFilter}
+                    onStatusFilterChange={setStatusFilter}
+                    modelFilter={modelFilter}
+                    onModelFilterChange={setModelFilter}
+                    availableModels={availableModels}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Prompt list */}
@@ -1087,13 +1113,28 @@ export default function PromptLibraryPage() {
           {/* ── RIGHT PANEL ── prompt details ────────────────────────── */}
           <div className="flex-1 min-w-0 flex flex-col rounded-lg ml-1.5 overflow-hidden relative">
             {/* ── Warm gradient bloom background (matching Invoices/Expenses) ── */}
-            <div className="absolute inset-0 bg-[#F8F3EB]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.9)_0%,transparent_60%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,242,134,0.35)_0%,transparent_50%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(241,218,162,0.2)_0%,transparent_70%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(210,188,130,0.15)_0%,transparent_50%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(105,170,255,0.18)_0%,transparent_55%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_center,rgba(165,205,255,0.12)_0%,transparent_60%)]" />
+            {gradientTesterOpen ? (
+              <>
+                {gradientLayers.map(layer => {
+                  const style = layerToStyle(layer);
+                  if (!style) return null;
+                  return <div key={layer.id} className="absolute inset-0" style={style} />;
+                })}
+                {gradientDragMode && (
+                  <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
+                )}
+              </>
+            ) : (
+              <>
+                <div className="absolute inset-0 bg-[#F8F3EB]" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.9)_0%,transparent_60%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,242,134,0.35)_0%,transparent_50%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(241,218,162,0.2)_0%,transparent_70%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(210,188,130,0.15)_0%,transparent_50%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(105,170,255,0.18)_0%,transparent_55%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_center,rgba(165,205,255,0.12)_0%,transparent_60%)]" />
+              </>
+            )}
             <div className="relative z-10 flex flex-col flex-1 min-h-0">
               {selectedPrompt ? (
                 <PromptDetailPanel
@@ -1102,6 +1143,8 @@ export default function PromptLibraryPage() {
                   onDelete={() => openDelete(selectedPrompt)}
                   onToggleStatus={() => handleToggleStatus(selectedPrompt)}
                   isToggling={togglingIds.has(selectedPromptId!)}
+                  gradientTesterOpen={gradientTesterOpen}
+                  onToggleGradientTester={() => setGradientTesterOpen(prev => !prev)}
                 />
               ) : (
                 <PromptDetailEmpty />
@@ -1126,6 +1169,17 @@ export default function PromptLibraryPage() {
         onClose={() => setDeleteOpen(false)}
         prompt={deletingPrompt}
         onDeleted={handleDeleted}
+      />
+
+      {/* Gradient Tester */}
+      <GradientTester
+        open={gradientTesterOpen}
+        onClose={() => setGradientTesterOpen(false)}
+        layers={gradientLayers}
+        onUpdateLayer={updateGradientLayer}
+        onResetLayers={resetGradientLayers}
+        dragMode={gradientDragMode}
+        onToggleDragMode={() => setGradientDragMode(prev => !prev)}
       />
     </CrmShell>
   );

@@ -508,7 +508,7 @@ export function InvoiceCreatePanel({
                       className={cn(
                         "px-1.5 py-0.5 rounded-full text-[9px] font-bold transition-colors leading-none",
                         activeNetPreset === days
-                          ? "bg-[#FFE35B] text-foreground shadow-sm"
+                          ? "bg-highlight-active text-foreground shadow-sm"
                           : "text-muted-foreground hover:text-foreground"
                       )}
                     >
@@ -730,7 +730,7 @@ export function InvoiceCreatePanel({
                     className={cn(
                       "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold transition-colors",
                       selectedPreset === key
-                        ? "bg-[#FFE35B] text-foreground shadow-sm"
+                        ? "bg-highlight-active text-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
                     )}
                   >

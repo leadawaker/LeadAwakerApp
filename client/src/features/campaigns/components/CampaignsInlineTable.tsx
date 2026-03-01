@@ -1,23 +1,14 @@
 import { useState, useCallback, useRef, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import {
-  Pencil,
   Check,
   X,
   ChevronDown,
   ChevronRight,
   ChevronUp,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { updateCampaign } from "../api/campaignsApi";
-import { getCampaignAvatarColor } from "@/lib/avatarUtils";
+import { getCampaignAvatarColor, CAMPAIGN_STATUS_HEX } from "@/lib/avatarUtils";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import type { Campaign } from "@/types/models";
 
@@ -60,16 +51,6 @@ const STATUS_OPTIONS = ["Active", "Paused", "Completed", "Inactive", "Draft"];
 const DB_FIELD_MAP: Partial<Record<ColKey, string>> = {
   status:      "status",
   description: "description",
-};
-
-const CAMPAIGN_STATUS_HEX: Record<string, string> = {
-  Active:    "#22C55E",
-  Paused:    "#F59E0B",
-  Completed: "#3B82F6",
-  Finished:  "#3B82F6",
-  Inactive:  "#94A3B8",
-  Archived:  "#94A3B8",
-  Draft:     "#6B7280",
 };
 
 const STATUS_DOT: Record<string, string> = {
@@ -260,7 +241,6 @@ export function CampaignsInlineTable({
 
   // ── Shift-click ref ────────────────────────────────────────────────────────
   const lastClickedIndexRef = useRef<number>(-1);
-  const [bulkStageOpen, setBulkStageOpen] = useState(false);
 
   // ── Group collapse ─────────────────────────────────────────────────────────
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
@@ -426,18 +406,6 @@ export function CampaignsInlineTable({
     }
   }, [campaignIndexMap, campaignOnlyItems, onSelectCampaign, onSelectionChange, selectedIds]);
 
-  // ── Bulk stage change ─────────────────────────────────────────────────────
-  const handleBulkStageChange = useCallback(async (stage: string) => {
-    if (selectedIds.size === 0) return;
-    try {
-      await Promise.all(Array.from(selectedIds).map((id) => updateCampaign(id, { status: stage })));
-      onSelectionChange(new Set());
-      setBulkStageOpen(false);
-      onRefresh?.();
-    } catch (err) { console.error("Bulk stage change failed", err); }
-  }, [selectedIds, onRefresh, onSelectionChange]);
-
-
   // ── Helper: toggle all campaigns in a group ──────────────────────────────
   const toggleGroupSelection = useCallback((groupLabel: string) => {
     const groupCampaignIds: number[] = [];
@@ -475,62 +443,8 @@ export function CampaignsInlineTable({
     return groupCampaignIds.length > 0 && groupCampaignIds.every((id) => selectedIds.has(id));
   }, [displayItems, selectedIds]);
 
-  const isGroupSomeSelected = useCallback((groupLabel: string): boolean => {
-    let inGroup = false;
-    let anySelected = false;
-    let allSelected = true;
-    let count = 0;
-    for (const item of displayItems) {
-      if (item.kind === "header") {
-        if (item.label === groupLabel) inGroup = true;
-        else if (inGroup) break;
-      } else if (inGroup) {
-        count++;
-        if (selectedIds.has(getCampaignId(item.campaign))) anySelected = true;
-        else allSelected = false;
-      }
-    }
-    return count > 0 && anySelected && !allSelected;
-  }, [displayItems, selectedIds]);
-
   return (
     <div className="h-full flex flex-col overflow-hidden bg-transparent">
-
-      {/* ── Change Status bar (only when multi-selection active) ── */}
-      {selectedIds.size > 1 && (
-        <div className="shrink-0 px-3 py-1.5 flex items-center gap-1.5 border-b border-border/20">
-          <span className="text-[11px] font-semibold text-foreground tabular-nums mr-1">
-            {selectedIds.size} selected
-          </span>
-
-          <DropdownMenu open={bulkStageOpen} onOpenChange={setBulkStageOpen}>
-            <DropdownMenuTrigger asChild>
-              <button className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border border-border/30 bg-transparent text-muted-foreground hover:bg-card hover:text-foreground">
-                <Pencil className="h-3 w-3" />
-                Change Status
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-44">
-              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Move to</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {STATUS_OPTIONS.map((s) => (
-                <DropdownMenuItem key={s} onClick={() => handleBulkStageChange(s)} className="text-[12px]">
-                  <span className={cn("w-1.5 h-1.5 rounded-full shrink-0 mr-2", STATUS_DOT[s] ?? "bg-zinc-400")} />
-                  {s}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <button
-            className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground"
-            onClick={() => onSelectionChange(new Set())}
-          >
-            <X className="h-3 w-3" />
-            Clear
-          </button>
-        </div>
-      )}
 
       {/* ── Table ── */}
       {loading ? (
@@ -596,50 +510,60 @@ export function CampaignsInlineTable({
 
               {(() => {
                 let currentGroup: string | null = null;
+                let rowIdx = 0;
                 return displayItems.map((item, index) => {
                   if (item.kind === "header") {
                     currentGroup = item.label;
                     const isCollapsed = collapsedGroups.has(item.label);
                     const hexColor = CAMPAIGN_STATUS_HEX[item.label] || "#6B7280";
                     const groupAllSel = isGroupAllSelected(item.label);
-                    const groupSomeSel = isGroupSomeSelected(item.label);
 
                     return (
                       <tr
                         key={`h-${item.label}-${index}`}
-                        className="cursor-pointer select-none"
-                        style={{ backgroundColor: `${hexColor}12` }}
+                        className="cursor-pointer select-none h-[44px]"
                         onClick={() => toggleGroupCollapse(item.label)}
                       >
+                        {/* Cell 1: Checkbox */}
                         <td
-                          colSpan={colSpan + 1}
-                          className="px-4 pt-4 pb-1.5 sticky left-0 z-[2]"
+                          className="sticky left-0 z-30 w-[36px] px-0"
                           style={{ backgroundColor: `${hexColor}12` }}
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center h-full">
                             <div
                               className={cn(
                                 "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
-                                groupAllSel ? "bg-[#FCB803] border-[#FCB803]" : groupSomeSel ? "bg-[#FCB803]/40 border-[#FCB803]" : "border-border/40"
+                                groupAllSel ? "border-brand-indigo bg-brand-indigo" : "border-border/40"
                               )}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 toggleGroupSelection(item.label);
                               }}
                             >
-                              {groupAllSel && <Check className="h-2.5 w-2.5 text-[#131B49]" />}
-                              {groupSomeSel && !groupAllSel && <div className="h-0.5 w-2 bg-[#131B49] rounded" />}
-                            </div>
-                            <div className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: hexColor }} />
-                            <span className="text-[11px] font-bold uppercase tracking-widest text-foreground/55">{item.label}</span>
-                            <span className="text-[10px] text-muted-foreground/40 font-medium tabular-nums">{item.count}</span>
-                            <div className="ml-auto text-muted-foreground/40">
-                              {isCollapsed
-                                ? <ChevronRight className="h-3.5 w-3.5" />
-                                : <ChevronDown className="h-3.5 w-3.5" />}
+                              {groupAllSel && <Check className="h-2.5 w-2.5 text-white" />}
                             </div>
                           </div>
                         </td>
+
+                        {/* Cell 2: Label (arrow + name + count) */}
+                        <td
+                          className="sticky left-[36px] z-30 pl-1 pr-3"
+                          style={{ backgroundColor: `${hexColor}12` }}
+                        >
+                          <div className="flex items-center gap-2">
+                            {isCollapsed
+                              ? <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
+                              : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/50" />}
+                            <span className="text-[11px] font-bold text-foreground/70">{item.label}</span>
+                            <span className="text-[10px] text-muted-foreground/50 font-medium tabular-nums">{item.count}</span>
+                          </div>
+                        </td>
+
+                        {/* Cell 3: Spacer */}
+                        <td
+                          colSpan={Math.max(1, visibleColumns.length - 1)}
+                          style={{ backgroundColor: `${hexColor}12` }}
+                        />
                       </tr>
                     );
                   }
@@ -656,13 +580,15 @@ export function CampaignsInlineTable({
                   const status = String(campaign.status || "");
                   const avatarColor = getCampaignAvatarColor(status);
 
+                  const currentRowIdx = rowIdx++;
                   return (
                     <tr
                       key={cid}
                       className={cn(
-                        "group/row cursor-pointer h-[52px]",
+                        "group/row cursor-pointer h-[52px] animate-card-enter",
                         isHighlighted ? "bg-highlight-selected" : "bg-card hover:bg-card-hover",
                       )}
+                      style={{ animationDelay: `${Math.min(currentRowIdx, 15) * 30}ms` }}
                       onClick={(e) => handleRowClick(campaign, e)}
                     >
                       {/* Dedicated checkbox column */}
