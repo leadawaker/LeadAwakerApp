@@ -8,6 +8,9 @@ import { verifySmtp } from "./email";
 const app = express();
 const httpServer = createServer(app);
 
+// Trust Cloudflare proxy so secure cookies work over HTTPS tunnel
+app.set("trust proxy", 1);
+
 // Prevent unhandled errors from crashing the process
 process.on("uncaughtException", (err) => {
   console.error("[express] uncaughtException:", err);

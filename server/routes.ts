@@ -88,6 +88,11 @@ function wrapAsync(
   };
 }
 
+/** Derive the automation engine base URL from the support chat webhook URL. */
+function getEngineUrl(): string {
+  return process.env.SUPPORT_CHAT_WEBHOOK_URL?.replace(/\/[^/]+$/, "") ?? "http://192.168.1.107:8100";
+}
+
 /**
  * Coerce ISO date strings to Date objects for Drizzle timestamp fields.
  * JSON payloads send dates as strings, but Drizzle/Zod expects Date objects.
@@ -200,6 +205,19 @@ export async function registerRoutes(
     res.status(204).end();
   }));
 
+  app.post("/api/accounts/:id/sync-instagram", requireAgency, wrapAsync(async (req, res) => {
+    const account = await storage.getAccountById(Number(req.params.id));
+    if (!account) return res.status(404).json({ message: "Account not found" });
+    const engineUrl = getEngineUrl();
+    try {
+      const engineRes = await fetch(`${engineUrl}/api/accounts/${req.params.id}/sync-instagram-contacts`, { method: "POST" });
+      const data = await engineRes.json();
+      res.status(engineRes.status).json(data);
+    } catch {
+      res.status(502).json({ message: "Could not reach automation engine" });
+    }
+  }));
+
   // ─── Campaigns ────────────────────────────────────────────────────
 
   app.get("/api/campaigns", requireAuth, scopeToAccount, wrapAsync(async (req, res) => {
@@ -248,6 +266,13 @@ export async function registerRoutes(
     const campaign = await storage.updateCampaign(Number(req.params.id), parsed.data);
     if (!campaign) return res.status(404).json({ message: "Campaign not found" });
     res.json(toDbKeys(campaign as any, campaigns));
+
+    // When a campaign is activated, immediately kick the campaign launcher
+    const becomingActive = parsed.data.status === "Active" && existing.status !== "Active";
+    if (becomingActive) {
+      const engineUrl = getEngineUrl();
+      fetch(`${engineUrl}/api/campaigns/${req.params.id}/trigger`, { method: "POST" }).catch(() => {});
+    }
   }));
 
   app.delete("/api/campaigns/:id", requireAuth, wrapAsync(async (req, res) => {
@@ -260,6 +285,167 @@ export async function registerRoutes(
     const ok = await storage.deleteCampaign(Number(req.params.id));
     if (!ok) return res.status(404).json({ message: "Campaign not found" });
     res.status(204).end();
+  }));
+
+  // ─── Prompt Library helpers ─────────────────────────────────────────
+  // Interpolate {{variable}} placeholders in a template string
+  function interpolateTemplate(template: string, vars: Record<string, string>): string {
+    return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? "");
+  }
+
+  // Default prompt templates (used to auto-seed the Prompt Library)
+  const DEFAULT_CAMPAIGN_SUMMARY_SYSTEM = `You are an AI analyst for a WhatsApp lead reactivation agency. You write concise, data-driven campaign performance summaries. Keep the tone professional but direct. Do not simply restate the raw numbers — interpret them and draw conclusions. IMPORTANT formatting rules: use single asterisks *text* for bold (NEVER double **text**). Use _text_ for italic. Use __text__ for underline on action items. Always single * for bold, never **.`;
+
+  const DEFAULT_CAMPAIGN_SUMMARY_PROMPT = `Write a concise (2-3 paragraphs) performance summary for this campaign.
+
+Campaign: {{campaignName}}
+Status: {{campaignStatus}}
+Description: {{campaignDescription}}
+Campaign created: {{campaignCreatedAt}}
+Report date: {{reportDate}}
+
+## Pipeline breakdown
+Total leads: {{totalLeads}}
+{{pipelineBreakdown}}
+
+## Key metrics
+Response rate: {{responseRate}}%  ({{responded}} of {{totalLeads}})
+Booking rate: {{bookingRate}}%  ({{booked}} of {{totalLeads}})
+Cost per booking: \${{costPerBooking}}
+Total cost: \${{totalCost}}
+
+Cover: overall performance highlights, what's working well, pipeline bottlenecks (where are leads stalling?), and one actionable recommendation.`;
+
+  // Fetch a system prompt from the library, auto-creating it if it doesn't exist
+  async function getOrCreateSystemPrompt(useCase: string, defaultName: string, defaultTemplate: string, defaultSystemMsg?: string) {
+    let entry = await storage.getPromptByUseCase(useCase);
+    if (!entry) {
+      entry = await storage.createPrompt({
+        name: defaultName,
+        useCase,
+        promptText: defaultTemplate,
+        ...(defaultSystemMsg ? { systemMessage: defaultSystemMsg } : {}),
+        model: "llama-3.1-8b-instant",
+        temperature: "0.7",
+        maxTokens: BigInt(600),
+        status: "active",
+        notes: "System prompt — auto-created. Edit freely. Use {{variable}} placeholders for dynamic data.",
+      } as any);
+      console.log(`[prompt-library] Auto-created system prompt: "${defaultName}" (useCase=${useCase})`);
+    }
+    return entry;
+  }
+
+  // POST /api/campaigns/:id/generate-summary — Groq AI summary
+  app.post("/api/campaigns/:id/generate-summary", requireAuth, wrapAsync(async (req, res) => {
+    const campaignId = Number(req.params.id);
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) return res.status(200).json({ error: "NO_GROQ_API_KEY" });
+
+    const campaign = await storage.getCampaignById(campaignId);
+    if (!campaign) return res.status(404).json({ message: "Campaign not found" });
+
+    // Fetch leads for this campaign to build context
+    const leadList = await storage.getLeadsByCampaignId(campaignId);
+    const total = leadList.length;
+    const booked = leadList.filter((l: any) => l.conversion_status === "Booked" || l.Conversion_Status === "Booked").length;
+    const responded = leadList.filter((l: any) => {
+      const s = l.conversion_status || l.Conversion_Status || "";
+      return ["Responded", "Multiple Responses", "Qualified", "Booked", "Closed"].includes(s);
+    }).length;
+    const lost = leadList.filter((l: any) => ["Lost", "DND"].includes(l.conversion_status || l.Conversion_Status || "")).length;
+    const qualified = leadList.filter((l: any) => ["Qualified", "Booked"].includes(l.conversion_status || l.Conversion_Status || "")).length;
+
+    const responseRate = total > 0 ? ((responded / total) * 100).toFixed(1) : "0";
+    const bookingRate = total > 0 ? ((booked / total) * 100).toFixed(1) : "0";
+    const totalCostNum = Number(campaign.totalCost || 0);
+    const costPerBooking = booked > 0 ? (totalCostNum / booked).toFixed(2) : "N/A";
+
+    // Pipeline breakdown: count leads per conversion status
+    const statusCounts = new Map<string, number>();
+    for (const l of leadList) {
+      const s = ((l as any).conversion_status || (l as any).Conversion_Status || "Unknown").trim();
+      statusCounts.set(s, (statusCounts.get(s) || 0) + 1);
+    }
+    const pipelineBreakdown = Array.from(statusCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([status, count]) => `  ${status}: ${count}`)
+      .join("\n");
+
+    // Campaign date context
+    const campaignCreatedAt = (campaign as any).createdAt
+      ? new Date((campaign as any).createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
+      : "Unknown";
+    const reportDate = new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+
+    // Fetch prompt template from library (auto-creates on first use)
+    const promptEntry = await getOrCreateSystemPrompt(
+      "system:campaign-summary",
+      "Campaign Summary (System)",
+      DEFAULT_CAMPAIGN_SUMMARY_PROMPT,
+      DEFAULT_CAMPAIGN_SUMMARY_SYSTEM,
+    );
+
+    const prompt = interpolateTemplate(promptEntry.promptText || DEFAULT_CAMPAIGN_SUMMARY_PROMPT, {
+      campaignName: campaign.name || "Unknown",
+      campaignStatus: campaign.status || "Unknown",
+      campaignDescription: campaign.description || "—",
+      campaignCreatedAt,
+      reportDate,
+      totalLeads: String(total),
+      pipelineBreakdown: pipelineBreakdown || "  (no leads)",
+      responded: String(responded),
+      responseRate,
+      qualified: String(qualified),
+      booked: String(booked),
+      bookingRate,
+      lost: String(lost),
+      totalCost: totalCostNum.toFixed(2),
+      costPerBooking,
+    });
+
+    const model = promptEntry.model || "llama-3.1-8b-instant";
+    const temperature = promptEntry.temperature != null ? Number(promptEntry.temperature) : 0.7;
+    const maxTokens = promptEntry.maxTokens != null ? Number(promptEntry.maxTokens) : 600;
+
+    try {
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: promptEntry.systemMessage || DEFAULT_CAMPAIGN_SUMMARY_SYSTEM },
+            { role: "user", content: prompt },
+          ],
+          max_tokens: maxTokens,
+          temperature,
+        }),
+      });
+
+      if (!response.ok) {
+        const errBody = await response.text();
+        console.error("[generate-summary] Groq error:", errBody);
+        return res.status(500).json({ error: "Groq API error", detail: errBody });
+      }
+
+      const json = await response.json() as any;
+      const summaryText = json.choices?.[0]?.message?.content?.trim() ?? "";
+      const now = new Date();
+
+      await storage.updateCampaign(campaignId, {
+        aiSummary: summaryText,
+        aiSummaryGeneratedAt: now,
+      } as any);
+
+      return res.json({ summary: summaryText, generated_at: now.toISOString() });
+    } catch (err) {
+      console.error("[generate-summary] Error:", err);
+      return res.status(500).json({ error: "Internal error" });
+    }
   }));
 
   // ─── Leads ────────────────────────────────────────────────────────
@@ -278,7 +464,18 @@ export async function registerRoutes(
         where = eq(leads.accountsId, accountId);
       }
       const result = await paginatedQuery(leads, pagination, where);
-      return res.json({ ...result, data: toDbKeysArray(result.data as any, leads) });
+      const pageData = result.data as any[];
+      const pageIds = pageData.map((l: any) => l.id).filter((id: any): id is number => typeof id === "number");
+      const pageTagRows = pageIds.length > 0 ? await storage.getTagsByLeadIds(pageIds) : [];
+      const pageTagMap = new Map<number, number[]>();
+      pageTagRows.forEach((row: any) => {
+        if (row.leadsId == null || row.tagsId == null) return;
+        const arr = pageTagMap.get(row.leadsId) ?? [];
+        arr.push(row.tagsId);
+        pageTagMap.set(row.leadsId, arr);
+      });
+      const enrichedPage = pageData.map((l: any) => ({ ...l, tag_ids: pageTagMap.get(l.id) ?? [] }));
+      return res.json({ ...result, data: toDbKeysArray(enrichedPage as any, leads) });
     }
 
     let data;
@@ -289,7 +486,17 @@ export async function registerRoutes(
     } else {
       data = await storage.getLeads();
     }
-    res.json(toDbKeysArray(data as any, leads));
+    const leadIds = data.map((l: any) => l.id).filter((id: any): id is number => typeof id === "number");
+    const tagRows = leadIds.length > 0 ? await storage.getTagsByLeadIds(leadIds) : [];
+    const tagIdsByLead = new Map<number, number[]>();
+    tagRows.forEach((row: any) => {
+      if (row.leadsId == null || row.tagsId == null) return;
+      const arr = tagIdsByLead.get(row.leadsId) ?? [];
+      arr.push(row.tagsId);
+      tagIdsByLead.set(row.leadsId, arr);
+    });
+    const enrichedData = data.map((l: any) => ({ ...l, tag_ids: tagIdsByLead.get(l.id) ?? [] }));
+    res.json(toDbKeysArray(enrichedData as any, leads));
   }));
 
   app.get("/api/leads/:id", requireAuth, wrapAsync(async (req, res) => {
@@ -339,6 +546,65 @@ export async function registerRoutes(
     const ok = await storage.deleteLead(Number(req.params.id));
     if (!ok) return res.status(404).json({ message: "Lead not found" });
     res.status(204).end();
+  }));
+
+  // POST /api/leads/:id/transcribe-voice — Groq Whisper transcription
+  app.post("/api/leads/:id/transcribe-voice", requireAuth, wrapAsync(async (req, res) => {
+    const leadId = Number(req.params.id);
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) return res.status(200).json({ error: "NO_GROQ_API_KEY" });
+
+    const lead = await storage.getLeadById(leadId);
+    if (!lead) return res.status(404).json({ message: "Lead not found" });
+
+    if (req.user!.accountsId !== 1 && (lead as any).accountsId !== req.user!.accountsId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const { audio_data, mime_type } = req.body;
+    if (!audio_data) return res.status(400).json({ message: "No audio data provided" });
+
+    try {
+      // Decode base64 to Buffer
+      const base64Clean = (audio_data as string).replace(/^data:[^,]+,/, "");
+      const audioBuffer = Buffer.from(base64Clean, "base64");
+      console.log("[transcribe-voice] mime_type:", mime_type, "| audio_data length:", (audio_data as string).length, "| buffer size:", audioBuffer.length, "bytes");
+
+      // Determine extension + clean mime type (strip codec params for Groq)
+      const rawMime = (mime_type || "audio/webm") as string;
+      const mimeBase = rawMime.split(";")[0].trim(); // "audio/webm;codecs=opus" → "audio/webm"
+      const ext = mimeBase.includes("webm") ? "webm" : mimeBase.includes("ogg") ? "ogg" : mimeBase.includes("mp4") ? "mp4" : mimeBase.includes("wav") ? "wav" : "webm";
+
+      // Build FormData with native Node.js File (Blob+filename doesn't work with Groq)
+      const file = new File([audioBuffer], `recording.${ext}`, { type: mimeBase });
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("model", "whisper-large-v3-turbo");
+      formData.append("response_format", "json");
+      formData.append("temperature", "0");
+
+      const response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errBody = await response.text();
+        console.error("[transcribe-voice] Groq error:", errBody);
+        return res.status(500).json({ error: "Transcription failed", detail: errBody });
+      }
+
+      const json = await response.json() as any;
+      const text = json.text?.trim() ?? "";
+
+      return res.json({ transcription: text });
+    } catch (err) {
+      console.error("[transcribe-voice] Error:", err);
+      return res.status(500).json({ error: "Internal error" });
+    }
   }));
 
   // ─── Bulk Lead Operations ──────────────────────────────────────────
@@ -576,6 +842,15 @@ export async function registerRoutes(
   }));
 
   // ─── Lead Tags ────────────────────────────────────────────────────
+
+  // GET /api/leads/tags/all?ids=1,2,3 — bulk fetch all lead-tag rows in one query
+  app.get("/api/leads/tags/all", requireAuth, wrapAsync(async (req, res) => {
+    const idsParam = req.query.ids as string | undefined;
+    if (!idsParam) return res.json([]);
+    const ids = idsParam.split(",").map(Number).filter((n) => !isNaN(n));
+    const data = ids.length > 0 ? await storage.getTagsByLeadIds(ids) : [];
+    res.json(data);
+  }));
 
   app.get("/api/leads/:id/tags", requireAuth, wrapAsync(async (req, res) => {
     const data = await storage.getTagsByLeadId(Number(req.params.id));

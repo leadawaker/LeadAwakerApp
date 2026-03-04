@@ -1,4 +1,37 @@
-import { X } from "lucide-react";
+import { useState } from "react";
+import { X, Instagram, Facebook, Mail, Phone, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const SOCIAL_LINKS = [
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/leadawaker/",
+    handle: "@leadawaker",
+    icon: Instagram,
+    color: "text-pink-600",
+  },
+  {
+    label: "Facebook",
+    href: "https://www.facebook.com/profile.php?id=61552291063345",
+    handle: "Lead Awaker",
+    icon: Facebook,
+    color: "text-blue-600",
+  },
+  {
+    label: "Email",
+    href: "mailto:gabriel@leadawaker.com",
+    handle: "gabriel@leadawaker.com",
+    icon: Mail,
+    color: "text-foreground/70",
+  },
+  {
+    label: "WhatsApp",
+    href: "https://wa.me/5547974002162",
+    handle: "+(55) 47 9740-02162",
+    icon: Phone,
+    color: "text-emerald-600",
+  },
+];
 
 export function HelpMenu({
   open,
@@ -7,6 +40,8 @@ export function HelpMenu({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
+  const [socialExpanded, setSocialExpanded] = useState(false);
+
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[70] pointer-events-none" data-testid="overlay-help">
@@ -28,8 +63,41 @@ export function HelpMenu({
         </div>
         <div className="p-4 space-y-2">
           <MenuItem href="https://docs.example.com" label="Documentation" testId="link-help-docs" />
-          <MenuItem href="https://x.com/" label="Social media" testId="link-help-social" />
-          <MenuItem href="#" label="What’s new" testId="link-help-whatsnew" />
+
+          {/* Social media — expandable */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setSocialExpanded((v) => !v)}
+              className="w-full rounded-xl px-4 py-3 text-sm hover:bg-muted/30 transition-colors border border-transparent hover:border-border font-medium flex items-center justify-between"
+              data-testid="link-help-social"
+            >
+              Social media
+              <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", socialExpanded && "rotate-180")} />
+            </button>
+
+            {socialExpanded && (
+              <div className="mt-1 ml-2 space-y-0.5">
+                {SOCIAL_LINKS.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm hover:bg-muted/30 transition-colors group"
+                  >
+                    <link.icon className={cn("h-4 w-4 shrink-0", link.color)} />
+                    <div className="min-w-0">
+                      <span className="font-medium text-foreground">{link.label}</span>
+                      <span className="block text-[12px] text-muted-foreground truncate">{link.handle}</span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <MenuItem href="#" label="What's new" testId="link-help-whatsnew" />
         </div>
       </aside>
     </div>

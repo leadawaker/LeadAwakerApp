@@ -157,11 +157,11 @@ export function DateRangeFilter({ value, onChange, allFrom }: DateRangeFilterPro
   }, [value]);
 
   const optBase = "px-3 h-full rounded-full text-[11px] font-semibold transition-colors whitespace-nowrap";
-  const optActive = "bg-white text-foreground shadow-sm";
+  const optActive = "bg-white dark:bg-card text-foreground shadow-sm";
   const optInactive = "text-foreground/50 hover:text-foreground";
 
   return (
-    <div className="inline-flex items-center h-9 rounded-full border border-black/[0.125] bg-muted/30 p-0.5 gap-0" data-testid="date-range-filter">
+    <div className="inline-flex items-center h-9 rounded-full border border-black/[0.125] p-0.5 gap-0" data-testid="date-range-filter">
       {PRESET_LABELS.map((p) => (
         <button
           key={p.value}

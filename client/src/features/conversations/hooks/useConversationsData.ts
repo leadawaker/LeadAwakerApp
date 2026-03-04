@@ -149,11 +149,16 @@ export function useConversationsData(
         const leadId = lead.id;
         const msgs = interactions
           .filter((i) => (i.lead_id ?? i.leads_id ?? i.Leads_id) === leadId)
-          .sort((a, b) =>
-            (a.created_at ?? a.createdAt ?? "").localeCompare(
-              b.created_at ?? b.createdAt ?? "",
-            ),
-          );
+          .sort((a, b) => {
+            const aTs = a.created_at ?? a.createdAt ?? null;
+            const bTs = b.created_at ?? b.createdAt ?? null;
+            // Both have timestamps — compare as ISO strings (lexicographic = chronological)
+            if (aTs && bTs) return aTs.localeCompare(bTs);
+            // Null timestamps: fall back to id (autoincrement = insertion order)
+            if (!aTs && !bTs) return (a.id ?? 0) - (b.id ?? 0);
+            // One has a timestamp, one doesn't — null goes last (newer, no default)
+            return aTs ? -1 : 1;
+          });
         const last = msgs[msgs.length - 1];
         const inboundMsgs = msgs.filter((m) => m.direction === "Inbound");
         // Compare inbound messages against the last-read timestamp for this lead

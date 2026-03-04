@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
-import { Bell, Search, Settings, Moon, Sun, Menu, X, LogOut, Check, BookOpen, Share2, Sparkles, User, Headphones } from "lucide-react";
+import { Bell, Search, Settings, Moon, Sun, Menu, X, LogOut, Check, BookOpen, User, Headphones, Instagram, Facebook, Mail, Phone } from "lucide-react";
 import { IconBtn } from "@/components/ui/icon-btn";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -20,6 +20,7 @@ import { apiFetch } from "@/lib/apiUtils";
 import { BookedCallsKpi } from "@/components/crm/BookedCallsKpi";
 import { NotificationCenter } from "@/components/crm/NotificationCenter";
 import { SupportChatWidget } from "@/components/crm/SupportChatWidget";
+import { useSupportChat } from "@/hooks/useSupportChat";
 import { useQuery } from "@tanstack/react-query";
 
 export function Topbar({
@@ -39,9 +40,47 @@ export function Topbar({
   const { isAgencyView, isAgencyUser, currentAccountId, accounts, setCurrentAccountId, currentAccount } = useWorkspace();
   const { isDark, toggleTheme } = useTheme();
 
+  // ── Support Chat ─────────────────────────────────────────────────────────────
+  const {
+    messages: supportMessages,
+    sending: supportSending,
+    loading: supportLoading,
+    escalated: supportEscalated,
+    botConfig: supportBotConfig,
+    initialize: supportInitialize,
+    sendMessage: supportSendMessage,
+    closeSession: supportCloseSession,
+    updateBotConfig: supportUpdateBotConfig,
+    clearContext: supportClearContext,
+    resetInit: supportResetInit,
+    unreadCount: supportUnreadCount,
+    markAsRead: supportMarkAsRead,
+    notifyOpen: supportNotifyOpen,
+  } = useSupportChat();
+
+  const [supportOpen, setSupportOpen] = useState(false);
+
+  // Determine admin status from localStorage role (stored as "Admin" with capital A)
+  const currentUserRole = localStorage.getItem("leadawaker_user_role") || "";
+  const isAdmin = currentUserRole === "Admin";
+
+  // Open the support chat in the Conversations page (support tab) instead of floating widget
+  const handleSupportOpenInChats = () => {
+    // Reset so the floating widget re-fetches fresh messages when reopened later
+    supportResetInit();
+    setSupportOpen(false);
+    try { sessionStorage.setItem("support-chat-open", "1"); } catch {}
+    setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/conversations`);
+  };
+
+  // Sync open state with hook so it knows when to count unreads
+  useEffect(() => {
+    supportNotifyOpen(supportOpen);
+    if (supportOpen) supportMarkAsRead();
+  }, [supportOpen, supportNotifyOpen, supportMarkAsRead]);
+
   // ── Notification Center ─────────────────────────────────────────────────────
   const [notifOpen, setNotifOpen] = useState(false);
-  const [supportOpen, setSupportOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Lightweight poll for the badge count (every 60s)
@@ -174,8 +213,10 @@ export function Topbar({
   const accountLabel = isAgencyView ? "Agency View" : (currentAccount?.name || "");
 
   return (
+    <>
     <header
-      className="fixed top-0 left-0 right-0 h-[62px] bg-background z-50 flex items-end pb-[7px] px-4 md:px-6"
+      className="fixed top-0 left-0 right-0 bg-background z-50 flex items-end px-4 md:px-6"
+      style={{ height: "var(--topbar-h)", paddingTop: "var(--safe-top)", paddingBottom: "7px" }}
       data-testid="header-crm-topbar"
     >
       {/* ── Branding ── */}
@@ -307,93 +348,121 @@ export function Topbar({
             </PopoverContent>
           </Popover>
 
-          {/* Dark mode toggle */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <IconBtn
-                onClick={toggleTheme}
-                data-testid="button-dark-mode-toggle"
-                aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-              >
-                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </IconBtn>
-            </TooltipTrigger>
-            <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
-              {isDark ? "Light mode" : "Dark mode"}
-            </TooltipContent>
-          </Tooltip>
-
-          {/* Customer Support Chat */}
-          <Popover open={supportOpen} onOpenChange={setSupportOpen}>
+          {/* Dark mode toggle — hidden on mobile */}
+          <span className="hidden md:contents">
             <Tooltip>
               <TooltipTrigger asChild>
-                <PopoverTrigger asChild>
-                  <IconBtn data-testid="button-support-chat" aria-label="Customer Support">
+                <IconBtn
+                  onClick={toggleTheme}
+                  data-testid="button-dark-mode-toggle"
+                  aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+                >
+                  {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </IconBtn>
+              </TooltipTrigger>
+              <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
+                {isDark ? "Light mode" : "Dark mode"}
+              </TooltipContent>
+            </Tooltip>
+          </span>
+
+          {/* Customer Support Chat — hidden on mobile */}
+          <span className="hidden md:contents">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="relative">
+                  <IconBtn
+                    onClick={() => setSupportOpen((v) => !v)}
+                    data-testid="button-support-chat"
+                    aria-label={`Customer Support${supportUnreadCount > 0 ? ` (${supportUnreadCount} unread)` : ""}`}
+                  >
                     <Headphones className="h-4 w-4" />
                   </IconBtn>
-                </PopoverTrigger>
+                  {supportUnreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-semibold rounded-full flex items-center justify-center px-0.5 leading-none pointer-events-none">
+                      {supportUnreadCount > 9 ? "9+" : supportUnreadCount}
+                    </span>
+                  )}
+                </div>
               </TooltipTrigger>
               <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
                 Customer Support
               </TooltipContent>
             </Tooltip>
-            <PopoverContent
-              align="end"
-              sideOffset={8}
-              className="p-0 border-0 bg-transparent shadow-none rounded-2xl w-auto"
-            >
-              <SupportChatWidget onClose={() => setSupportOpen(false)} />
-            </PopoverContent>
-          </Popover>
+          </span>
 
-          {/* Help */}
-          <DropdownMenu>
+          {/* Help — hidden on mobile */}
+          <span className="hidden md:contents">
+            <DropdownMenu>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <IconBtn data-testid="button-help-top" aria-label="Help">
+                      <span className="text-[13px] font-bold leading-none">?</span>
+                    </IconBtn>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
+                  Help
+                </TooltipContent>
+              </Tooltip>
+              <DropdownMenuContent align="end" className="w-44 rounded-2xl shadow-xl border-black/[0.08] bg-white dark:bg-popover mt-2">
+                <DropdownMenuItem
+                  className="flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1"
+                  onClick={() => setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/docs`)}
+                >
+                  <BookOpen className="h-4 w-4" />
+                  Documentation
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <div className="px-3 pt-1.5 pb-1">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Social</span>
+                </div>
+                <DropdownMenuItem asChild className="flex items-center gap-2 cursor-pointer py-2 rounded-xl mx-1">
+                  <a href="https://www.instagram.com/leadawaker/" target="_blank" rel="noopener noreferrer">
+                    <Instagram className="h-4 w-4 text-pink-600" />
+                    Instagram
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="flex items-center gap-2 cursor-pointer py-2 rounded-xl mx-1">
+                  <a href="https://www.facebook.com/profile.php?id=61552291063345" target="_blank" rel="noopener noreferrer">
+                    <Facebook className="h-4 w-4 text-blue-600" />
+                    Facebook
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="flex items-center gap-2 cursor-pointer py-2 rounded-xl mx-1">
+                  <a href="mailto:gabriel@leadawaker.com">
+                    <Mail className="h-4 w-4 text-foreground/60" />
+                    Email
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="flex items-center gap-2 cursor-pointer py-2 rounded-xl mx-1">
+                  <a href="https://wa.me/5547974002162" target="_blank" rel="noopener noreferrer">
+                    <Phone className="h-4 w-4 text-emerald-600" />
+                    WhatsApp
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </span>
+
+          {/* Settings — hidden on mobile */}
+          <span className="hidden md:contents">
             <Tooltip>
               <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <IconBtn data-testid="button-help-top" aria-label="Help">
-                    <span className="text-[13px] font-bold leading-none">?</span>
-                  </IconBtn>
-                </DropdownMenuTrigger>
+                <IconBtn
+                  onClick={() => setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/settings`)}
+                  data-testid="button-settings-top"
+                  aria-label="Settings"
+                >
+                  <Settings className="h-4 w-4" />
+                </IconBtn>
               </TooltipTrigger>
               <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
-                Help
+                Settings
               </TooltipContent>
             </Tooltip>
-            <DropdownMenuContent align="end" className="w-44 rounded-2xl shadow-xl border-border bg-background mt-2">
-              <DropdownMenuItem
-                className="flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1"
-                onClick={() => setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/docs`)}
-              >
-                <BookOpen className="h-4 w-4" />
-                Documentation
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1">
-                <Share2 className="h-4 w-4" />
-                Social Media
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1">
-                <Sparkles className="h-4 w-4" />
-                What's New
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Settings */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <IconBtn
-                onClick={() => setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/settings`)}
-                data-testid="button-settings-top"
-                aria-label="Settings"
-              >
-                <Settings className="h-4 w-4" />
-              </IconBtn>
-            </TooltipTrigger>
-            <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
-              Settings
-            </TooltipContent>
-          </Tooltip>
+          </span>
 
           {/* ── Notifications ── */}
           <Tooltip>
@@ -455,6 +524,27 @@ export function Topbar({
                 {currentUserEmail && <div className="text-xs text-muted-foreground truncate">{currentUserEmail}</div>}
               </div>
 
+              {/* Mobile-only items (hidden on md+) */}
+              <div className="md:hidden">
+                <DropdownMenuItem
+                  onClick={toggleTheme}
+                  className="flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1 mt-1"
+                  data-testid="button-dark-mode-toggle-mobile"
+                >
+                  {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  Toggle dark mode
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setSupportOpen((v) => !v)}
+                  className="flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1"
+                  data-testid="button-support-chat-mobile"
+                >
+                  <Headphones className="h-4 w-4" />
+                  Customer support
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="mx-2" />
+              </div>
+
               {isAgencyUser && (
                 <>
                   <div className="px-3 pt-2 pb-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
@@ -508,5 +598,24 @@ export function Topbar({
       </TooltipProvider>
 
     </header>
+    {supportOpen && (
+      <SupportChatWidget
+        messages={supportMessages}
+        sending={supportSending}
+        loading={supportLoading}
+        escalated={supportEscalated}
+        botConfig={supportBotConfig}
+        initialize={supportInitialize}
+        sendMessage={supportSendMessage}
+        closeSession={supportCloseSession}
+        updateBotConfig={supportUpdateBotConfig}
+        clearContext={supportClearContext}
+        isAdmin={isAdmin}
+        onClose={() => setSupportOpen(false)}
+        mode="floating"
+        onOpenInChats={handleSupportOpenInChats}
+      />
+    )}
+    </>
   );
 }

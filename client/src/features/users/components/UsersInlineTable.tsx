@@ -439,7 +439,7 @@ export function UsersInlineTable({
                   key={uid}
                   className={cn(
                     "group/row cursor-pointer h-[52px] animate-card-enter",
-                    isHighlighted ? "bg-highlight-selected" : "bg-[#F1F1F1] hover:bg-[#FAFAFA]",
+                    isHighlighted ? "bg-highlight-selected" : "bg-[#F1F1F1] dark:bg-card hover:bg-[#FAFAFA] dark:hover:bg-card-hover",
                   )}
                   style={{ animationDelay: `${Math.min(currentRowIdx, 15) * 30}ms` }}
                   onClick={(e) => handleRowClick(user, e)}
@@ -449,7 +449,7 @@ export function UsersInlineTable({
                   {/* Checkbox cell — sticky left */}
                   <td className={cn(
                     "w-[36px] px-0 sticky left-0 z-10",
-                    isHighlighted ? "bg-highlight-selected" : "bg-[#F1F1F1] group-hover/row:bg-[#FAFAFA]",
+                    isHighlighted ? "bg-highlight-selected" : "bg-[#F1F1F1] dark:bg-card group-hover/row:bg-[#FAFAFA] dark:group-hover/row:bg-card-hover",
                   )}>
                     <div className="flex items-center justify-center h-full">
                       <div
@@ -477,7 +477,7 @@ export function UsersInlineTable({
                     const isFirst = ci === 0;
                     const tdClass = cn(
                       isFirst && "sticky left-[36px] z-10",
-                      isFirst && (isHighlighted ? "bg-highlight-selected" : "bg-[#F1F1F1] group-hover/row:bg-[#FAFAFA]"),
+                      isFirst && (isHighlighted ? "bg-highlight-selected" : "bg-[#F1F1F1] dark:bg-card group-hover/row:bg-[#FAFAFA] dark:group-hover/row:bg-card-hover"),
                     );
 
                     // ── Name cell (sticky, with avatar) ──

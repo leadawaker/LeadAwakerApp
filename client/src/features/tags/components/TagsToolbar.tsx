@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   Plus,
@@ -27,7 +27,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ToolbarPill } from "@/components/ui/toolbar-pill";
 import { InlineColorPicker } from "./ColorPicker";
 import type {
   TagSortOption,
@@ -143,9 +142,10 @@ function ConfirmToolbarButton({
    Main component
    ════════════════════════════════════════════════════════════════════════════ */
 
-const tbBase    = "h-10 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
-const tbDefault = "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:bg-card";
-const tbActive  = "bg-card border border-black/[0.125] text-foreground";
+const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
+const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
+const xActive  = "border-brand-indigo text-brand-indigo";
+const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
 export function TagsToolbar({
   searchQuery,
@@ -177,17 +177,6 @@ export function TagsToolbar({
   onCampaignChange,
   accountNameMap,
 }: TagsToolbarProps) {
-  /* ── Responsive collapse (ResizeObserver) ────────────────────────────── */
-  const [isNarrow, setIsNarrow] = useState(false);
-  const toolbarRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = toolbarRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(([e]) => setIsNarrow(e.contentRect.width < 920));
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
   /* ── Create popover state ────────────────────────────────────────────── */
   const [createOpen, setCreateOpen] = useState(false);
   const [createName, setCreateName] = useState("");
@@ -230,7 +219,7 @@ export function TagsToolbar({
   const hasSelection = selectedTagIds.size > 0;
 
   return (
-    <div ref={toolbarRef} className="flex items-center gap-1 flex-1 min-w-0">
+    <div className="flex items-center gap-1 flex-1 min-w-0">
       {/* ── 1. Search (always visible) ───────────────────────────────────── */}
       <div className="h-10 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card/60 px-3 min-w-[140px] max-w-[220px]">
         <Search className="h-4 w-4 text-muted-foreground/50 shrink-0" />
@@ -251,15 +240,10 @@ export function TagsToolbar({
       {/* ── 2. +Add (Popover with inline create form) ────────────────────── */}
       <Popover open={createOpen} onOpenChange={setCreateOpen}>
         <PopoverTrigger asChild>
-          {isNarrow ? (
-            <button className="icon-circle-lg icon-circle-base shrink-0" title="Add tag">
-              <Plus className="h-4 w-4" />
-            </button>
-          ) : (
-            <button className={cn(tbBase, tbDefault, "shrink-0")}>
-              <Plus className="h-4 w-4" />Add
-            </button>
-          )}
+          <button className={cn(xBase, xDefault, "hover:max-w-[80px]")} title="Add tag">
+            <Plus className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Add</span>
+          </button>
         </PopoverTrigger>
         <PopoverContent className="w-[280px] p-3 bg-popover" align="start" side="bottom" sideOffset={4}>
           <div className="space-y-2.5">
@@ -293,17 +277,10 @@ export function TagsToolbar({
       {/* ── 3. Account dropdown ──────────────────────────────────────────── */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          {isNarrow ? (
-            <button className={cn("icon-circle-lg icon-circle-base shrink-0", selectedAccountId !== "all" && "bg-card border-black/[0.175]")} title="Account filter">
-              <Building2 className="h-4 w-4" />
-            </button>
-          ) : (
-            <ToolbarPill
-              icon={Building2}
-              label={selectedAccountId === "all" ? "Account" : (accountNameMap.get(selectedAccountId) ?? "Account")}
-              active={selectedAccountId !== "all"}
-            />
-          )}
+          <button className={cn(xBase, selectedAccountId !== "all" ? xActive : xDefault, "hover:max-w-[100px]")} title="Account filter">
+            <Building2 className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Account</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
           <DropdownMenuItem className="text-[12px]" onClick={() => onAccountChange("all")}>
@@ -323,17 +300,10 @@ export function TagsToolbar({
       {/* ── 4. Campaign dropdown ─────────────────────────────────────────── */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          {isNarrow ? (
-            <button className={cn("icon-circle-lg icon-circle-base shrink-0", campaignId !== "all" && "bg-card border-black/[0.175]")} title="Campaign filter">
-              <Megaphone className="h-4 w-4" />
-            </button>
-          ) : (
-            <ToolbarPill
-              icon={Megaphone}
-              label={campaignId === "all" ? "Campaign" : (campaigns.find((c: any) => String(c.id) === campaignId)?.name ?? "Campaign")}
-              active={campaignId !== "all"}
-            />
-          )}
+          <button className={cn(xBase, campaignId !== "all" ? xActive : xDefault, "hover:max-w-[120px]")} title="Campaign filter">
+            <Megaphone className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Campaign</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
           <DropdownMenuItem className="text-[12px]" onClick={() => onCampaignChange("all")}>
@@ -353,17 +323,10 @@ export function TagsToolbar({
       {/* ── 5. Sort ──────────────────────────────────────────────────────── */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          {isNarrow ? (
-            <button className={cn("icon-circle-lg icon-circle-base shrink-0", sortBy !== "name_asc" && "bg-card border-black/[0.175]")} title="Sort">
-              <ArrowUpDown className="h-4 w-4" />
-            </button>
-          ) : (
-            <ToolbarPill
-              icon={ArrowUpDown}
-              label="Sort"
-              active={sortBy !== "name_asc"}
-            />
-          )}
+          <button className={cn(xBase, sortBy !== "name_asc" ? xActive : xDefault, "hover:max-w-[100px]")} title="Sort">
+            <ArrowUpDown className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Sort</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -390,18 +353,10 @@ export function TagsToolbar({
       {/* ── 6. Filter ────────────────────────────────────────────────────── */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          {isNarrow ? (
-            <button className={cn("icon-circle-lg icon-circle-base shrink-0", isFilterActive && "bg-card border-black/[0.175]")} title="Filter">
-              <Filter className="h-4 w-4" />
-            </button>
-          ) : (
-            <ToolbarPill
-              icon={Filter}
-              label="Filter"
-              active={isFilterActive}
-              activeValue={isFilterActive ? filterCount : undefined}
-            />
-          )}
+          <button className={cn(xBase, isFilterActive ? xActive : xDefault, "hover:max-w-[100px]")} title="Filter">
+            <Filter className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Filter{isFilterActive && filterCount > 0 ? ` (${filterCount})` : ""}</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52">
           {/* Category checkboxes */}
@@ -462,17 +417,10 @@ export function TagsToolbar({
       {/* ── 7. Group ─────────────────────────────────────────────────────── */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          {isNarrow ? (
-            <button className={cn("icon-circle-lg icon-circle-base shrink-0", groupBy !== "none" && "bg-card border-black/[0.175]")} title="Group">
-              <Layers className="h-4 w-4" />
-            </button>
-          ) : (
-            <ToolbarPill
-              icon={Layers}
-              label="Group"
-              active={groupBy !== "none"}
-            />
-          )}
+          <button className={cn(xBase, groupBy !== "none" ? xActive : xDefault, "hover:max-w-[100px]")} title="Group">
+            <Layers className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Group</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-40">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -499,13 +447,10 @@ export function TagsToolbar({
       {/* ── 8. Fields (column visibility) ────────────────────────────────── */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          {isNarrow ? (
-            <button className="icon-circle-lg icon-circle-base shrink-0" title="Fields">
-              <Eye className="h-4 w-4" />
-            </button>
-          ) : (
-            <ToolbarPill icon={Eye} label="Fields" />
-          )}
+          <button className={cn(xBase, xDefault, "hover:max-w-[100px]")} title="Fields">
+            <Eye className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Fields</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -551,37 +496,23 @@ export function TagsToolbar({
       {/* ── 11. Bulk actions (only when selection exists) ─────────────────── */}
       {hasSelection && (
         <div className="ml-auto flex items-center gap-1.5">
-          {isNarrow ? (
-            <button
-              className="icon-circle-lg icon-circle-base shrink-0"
-              onClick={() => onDuplicate()}
-              title="Duplicate selected"
-            >
-              <Copy className="h-4 w-4" />
-            </button>
-          ) : (
-            <ConfirmToolbarButton
-              icon={Copy}
-              label="Duplicate"
-              onConfirm={onDuplicate}
-            />
-          )}
+          <ConfirmToolbarButton
+            icon={Copy}
+            label="Duplicate"
+            onConfirm={onDuplicate}
+          />
 
           <button
-            className={cn(
-              isNarrow
-                ? "icon-circle-lg icon-circle-base hover:text-red-600 shrink-0"
-                : cn(tbBase, "border border-black/[0.125] hover:text-red-600")
-            )}
+            className={cn(xBase, "border-black/[0.125] text-foreground/60 hover:text-red-600 hover:border-red-300/50 hover:max-w-[100px]")}
             onClick={onOpenDeleteBulk}
             title="Delete selected"
           >
-            <Trash2 className="h-4 w-4" />
-            {!isNarrow && "Delete"}
+            <Trash2 className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Delete</span>
           </button>
 
           {/* Selection count badge */}
-          <span className={cn(tbBase, tbDefault, "cursor-default")}>
+          <span className="h-9 px-3 rounded-full border border-black/[0.125] text-foreground/60 text-[12px] font-medium inline-flex items-center gap-1.5 shrink-0 cursor-default">
             {selectedTagIds.size}
             <button onClick={() => onClearSelection?.()} className="text-foreground/40 hover:text-foreground" title="Clear selection">
               <X className="h-3.5 w-3.5" />

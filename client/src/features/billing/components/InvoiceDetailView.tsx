@@ -4,6 +4,12 @@ import {
   Eye, Check, FileText, CopyPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// ── Expand-on-hover toolbar button constants ──────────────────────────────────
+const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
+const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
+const xActive  = "border-brand-indigo text-brand-indigo";
+const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 import type { InvoiceRow } from "../types";
 import type { AccountRow } from "@/features/accounts/components/AccountDetailsDialog";
 import {
@@ -21,6 +27,7 @@ interface InvoiceDetailViewProps {
   account?: AccountRow | null;
   isAgencyUser: boolean;
   toolbarSlot?: React.ReactNode;
+  noBackground?: boolean;
   onMarkSent: (id: number) => Promise<any>;
   onMarkPaid: (id: number) => Promise<any>;
   onEdit: (invoice: InvoiceRow) => void;
@@ -122,6 +129,7 @@ export function InvoiceDetailView({
   account,
   isAgencyUser,
   toolbarSlot,
+  noBackground,
   onMarkSent,
   onMarkPaid,
   onEdit,
@@ -354,13 +362,17 @@ export function InvoiceDetailView({
     <div className="relative flex flex-col h-full overflow-hidden" data-testid="invoice-detail-view">
 
       {/* ── Full-height warm gradient bloom background ── */}
-      <div className="absolute inset-0 bg-[#F8F3EB]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.9)_0%,transparent_60%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,242,134,0.35)_0%,transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(241,218,162,0.2)_0%,transparent_70%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(210,188,130,0.15)_0%,transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(105,170,255,0.18)_0%,transparent_55%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_center,rgba(165,205,255,0.12)_0%,transparent_60%)]" />
+      {!noBackground && (
+        <>
+          <div className="absolute inset-0 bg-popover dark:bg-background" />
+          {/* Layer 1: White bloom — disabled */}
+          {/* Layer 2: Yellow — disabled */}
+          {/* Layer 3: Peach — disabled */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_150%_92%_at_18%_92%,rgba(51,149,133,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_2%_2%,#C7E0FF_5%,transparent_30%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_77%_93%_at_63%_52%,rgba(71,162,134,0.38)_0%,transparent_66%)] dark:opacity-[0.08]" />
+        </>
+      )}
 
       {/* ── Header ── */}
       <div className="relative z-10 shrink-0 px-[3px] pt-[3px] pb-[3px] space-y-[3px]">
@@ -372,28 +384,28 @@ export function InvoiceDetailView({
             <div className="ml-auto flex items-center gap-1 shrink-0">
               <button
                 onClick={handleDownloadPdf}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
+                className={cn(xBase, xDefault, "hover:max-w-[80px]")}
               >
-                <Download className="h-3 w-3" />
-                PDF
+                <Download className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>PDF</span>
               </button>
 
               <button
                 onClick={handleCopyLink}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
+                className={cn(xBase, copied ? xActive : xDefault, "hover:max-w-[110px]")}
               >
-                {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Link className="h-3 w-3" />}
-                {copied ? "Copied!" : "Copy Link"}
+                {copied ? <Check className="h-4 w-4 shrink-0 text-emerald-500" /> : <Link className="h-4 w-4 shrink-0" />}
+                <span className={xSpan}>{copied ? "Copied!" : "Copy Link"}</span>
               </button>
 
               {invoice.status === "Draft" && (
                 <button
                   onClick={handleMarkSent}
                   disabled={markingSent}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors disabled:opacity-50"
+                  className={cn(xBase, xDefault, "hover:max-w-[110px] disabled:opacity-50")}
                 >
-                  <Send className="h-3 w-3" />
-                  {markingSent ? "Sending..." : "Mark Sent"}
+                  <Send className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>{markingSent ? "Sending..." : "Mark Sent"}</span>
                 </button>
               )}
 
@@ -401,42 +413,43 @@ export function InvoiceDetailView({
                 <button
                   onClick={handleMarkPaid}
                   disabled={markingPaid}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors disabled:opacity-50"
+                  className={cn(xBase, xDefault, "hover:max-w-[110px] disabled:opacity-50")}
                 >
-                  <CheckCircle className="h-3 w-3" />
-                  {markingPaid ? "Updating..." : "Mark Paid"}
+                  <CheckCircle className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>{markingPaid ? "Updating..." : "Mark Paid"}</span>
                 </button>
               )}
 
               <button
                 onClick={() => onEdit(invoice)}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
+                className={cn(xBase, xDefault, "hover:max-w-[80px]")}
               >
-                <Pencil className="h-3 w-3" />
-                Edit
+                <Pencil className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>Edit</span>
               </button>
 
               {onDuplicate && (
                 <button
                   onClick={() => onDuplicate(invoice)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
+                  className={cn(xBase, xDefault, "hover:max-w-[110px]")}
                 >
-                  <CopyPlus className="h-3 w-3" />
-                  Duplicate
+                  <CopyPlus className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>Duplicate</span>
                 </button>
               )}
 
               <button
                 onClick={handleDelete}
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border transition-colors",
+                  xBase,
+                  "hover:max-w-[100px]",
                   deleteConfirm
-                    ? "border-red-400/60 text-red-600 bg-red-50/50 hover:bg-red-50/70"
-                    : "border-border/60 bg-transparent text-foreground hover:bg-card"
+                    ? "border-red-400/60 text-red-600"
+                    : xDefault
                 )}
               >
-                <Trash2 className="h-3 w-3" />
-                {deleteConfirm ? "Confirm?" : "Delete"}
+                <Trash2 className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>{deleteConfirm ? "Confirm?" : "Delete"}</span>
               </button>
             </div>
           )}
@@ -468,10 +481,10 @@ export function InvoiceDetailView({
 
       {/* ── Scrollable content area (two columns: wide + narrow) ── */}
       <div className="relative z-10 flex-1 overflow-y-auto px-[3px] pb-[3px] min-h-0">
-        <div className="grid grid-cols-[1.6fr_1fr] gap-[3px] h-full">
+        <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-[3px]">
 
           {/* ── Left column (wide): Line items only ── */}
-          <div className="bg-white/60 rounded-xl p-5 flex flex-col">
+          <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5 flex flex-col">
             <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
               Line Items
             </p>
@@ -567,10 +580,10 @@ export function InvoiceDetailView({
           </div>
 
           {/* ── Right column (narrow): Total Amount → Dates → Payment Info → Notes & Details ── */}
-          <div className="flex flex-col gap-[3px] h-full">
+          <div className="flex flex-col gap-[3px]">
 
             {/* Total Amount — top of right column, 30% taller */}
-            <div className="bg-white/60 rounded-xl px-5 py-7 min-h-[110px]">
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl px-5 py-7 min-h-[110px]">
               <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-2">
                 Total Amount
               </span>
@@ -580,7 +593,7 @@ export function InvoiceDetailView({
             </div>
 
             {/* Status */}
-            <div className="bg-white/60 rounded-xl p-5">
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
               <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
                 Status
               </span>
@@ -614,7 +627,7 @@ export function InvoiceDetailView({
             </div>
 
             {/* Dates — Due Date + Sent Date */}
-            <div className="bg-white/60 rounded-xl p-5">
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5">
               <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
                 Dates
               </span>
@@ -657,7 +670,7 @@ export function InvoiceDetailView({
             {invoice.payment_info && (() => {
               const lines = parsePaymentLines(invoice.payment_info);
               return (
-                <div className="bg-white/60 rounded-xl p-5 flex-1">
+                <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5 flex-1">
                   <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
                     Payment Info
                   </span>

@@ -1,84 +1,132 @@
-# Lead Awaker — AI Agent Guide
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-Lead Awaker is an AI-powered WhatsApp lead reactivation engine with a CRM and client dashboard layer. It converts inactive leads into booked calls (north star KPI) through AI-powered WhatsApp conversations orchestrated via n8n and Twilio.
+Lead Awaker is an AI-powered WhatsApp lead reactivation engine with a CRM and client dashboard layer. It converts inactive leads into booked calls through AI-powered WhatsApp conversations orchestrated via a Python automation engine and Twilio.
 
-**Scope:** Post-login UI only. The frontend is being redesigned/rebuilt while the backend, database, and API contracts remain in place.
+**Scope:** Post-login UI only. The frontend is being redesigned/rebuilt while the backend and database remain in place.
+
+---
+
+## Development Commands
+
+```bash
+# Full-stack dev (Express + Vite on single port :5000)
+npm run dev
+
+# Split-mode dev (separate processes)
+npm run dev:client        # Vite frontend only → :5000 (proxies /api → :5001)
+npm run dev:server        # Express API only → :5001 (STANDALONE_API=true)
+
+# Type checking
+npm run check             # npx tsc --noEmit
+
+# Database
+npm run db:push           # Drizzle schema sync → live PostgreSQL
+
+# Build & production
+npm run build             # Vite (frontend) + esbuild (backend) → dist/
+npm start                 # Production server from dist/
+```
+
+**`npm run dev`** is the default — it starts Express with Vite middleware embedded, everything on `:5000`. Use `dev:client` + `dev:server` only when you need to restart backend/frontend independently.
 
 ---
 
 ## Active Branch
 
-The UI redesign is being developed on **`feat/leads-redesign`**.
 - `main` = stable, production-safe
 - `feat/leads-redesign` = active redesign — always use this branch for UI changes until merged
 
 ---
 
-## Tech Stack
+## Architecture
 
-Primary: React 19, TypeScript, Vite 7, Tailwind CSS v4, shadcn/ui, TanStack Query, Wouter, @dnd-kit. Backend: Node.js/Express + PostgreSQL (locked — do not modify). See `package.json` for full dependency list.
+Single-repo, single `package.json`. Three source directories share the same TypeScript project:
 
-**API:** REST — use `apiFetch` from `apiUtils.ts` and `apiRequest` from `queryClient.ts` for all API calls.
+```
+client/src/     → React 19 app (Vite, Tailwind v4, shadcn/ui)
+server/         → Express API (Passport auth, PostgreSQL via Drizzle)
+shared/         → Drizzle schema + shared TypeScript types
+```
+
+**Path aliases** (in `vite.config.ts` and `tsconfig.json`):
+- `@/*` → `client/src/*`
+- `@shared/*` → `shared/*`
+
+**Build output:** `dist/public/` (frontend), `dist/index.cjs` (backend bundle)
 
 ---
 
 ## Critical Rules
 
-1. **DO NOT modify backend code** — Express server logic is locked.
-2. **You ARE allowed to modify the database schema** — PostgreSQL tables/columns may be altered, but ONLY upon explicit user request.
-3. **You ARE allowed to modify API contracts** — Existing endpoints may be changed if needed, but do so carefully and deliberately.
-4. **DO NOT touch landing/marketing pages** — Only modify post-login UI. Everything before the login screen is out of scope.
-5. **DO NOT introduce new npm packages** unless absolutely necessary — the existing stack is comprehensive.
-6. **DO respect database field names exactly** — NocoDB conventions are used (e.g., `Conversion_Status`, `Accounts_id`, `full_name_1`). Do not rename fields in queries or types.
-7. **DO use existing API helpers** — Always use `apiFetch` from `apiUtils.ts` and `apiRequest` from `queryClient.ts`. Never use raw `fetch` directly.
-8. **DO use existing Shadcn/ui components** — Components live in `client/src/components/ui/`. Prefer these over building new ones.
-9. **DO follow the existing feature-based folder structure** — `client/src/features/{feature}/`.
+1. **DO NOT modify backend code** — Express server logic (`server/routes.ts`, `server/auth.ts`, `server/storage.ts`) is locked unless explicitly requested.
+2. **You ARE allowed to modify the database schema** — but ONLY upon explicit user request. **CRITICAL: Schema changes in `shared/schema.ts` MUST be accompanied by a matching `ALTER TABLE` migration run against the live database immediately.** Drizzle does NOT auto-migrate — if a column exists in the schema but not in the database, every query on that table will fail at runtime. After any schema edit, verify with: `node -e "const {Pool}=require('pg');const p=new Pool({connectionString:process.env.DATABASE_URL});p.query('SELECT column_name FROM information_schema.columns WHERE table_schema=\'p2mxx34fvbf3ll6\' AND table_name=\'TableName\'').then(r=>console.log(r.rows.map(x=>x.column_name))).finally(()=>p.end())"` (load `.env` first).
+3. **You ARE allowed to modify API contracts** — existing endpoints may be changed if needed, but do so carefully.
+4. **DO NOT touch landing/marketing pages** — only modify post-login UI.
+5. **DO NOT introduce new npm packages** unless absolutely necessary.
+6. **DO respect database field names exactly** — NocoDB conventions (e.g., `Conversion_Status`, `Accounts_id`, `full_name_1`). Do not rename fields.
+7. **DO use existing API helpers** — `apiFetch` from `@/lib/apiUtils`, `apiRequest` from `@/lib/queryClient`. Never use raw `fetch`.
+8. **DO use existing Shadcn/ui components** — `client/src/components/ui/`. Prefer these over building new ones.
+9. **DO follow the feature-based folder structure** — `client/src/features/{feature}/`.
 
 ---
 
 ## Database
 
-Key tables: `Leads`, `Campaigns`, `Accounts`, `Interactions`, `Tags`, `Users`, `Leads_Tags`, `Automation_Logs`, `Prompt_Library`, `Lead_Score_History`, `Campaign_Metrics_History`. Full schema: `/home/gabriel/LEADAWAKER_DATABASE_SCHEMA.md`
+PostgreSQL via Drizzle ORM. Schema: `shared/schema.ts`. Drizzle config: `drizzle.config.ts` (schema filter: `p2mxx34fvbf3ll6`).
+
+Key tables: `Leads`, `Campaigns`, `Accounts`, `Interactions`, `Tags`, `Users`, `Leads_Tags`, `Automation_Logs`, `Prompt_Library`, `Lead_Score_History`, `Campaign_Metrics_History`.
 
 ---
 
-## User Roles & Access Control
+## Routing & Access Control
 
-There are 4 roles split across two view modes:
+Routes defined in `client/src/pages/app.tsx` with two path prefixes:
+- `/agency/*` — Admin + Operator (full CRM)
+- `/subaccount/*` — Manager + Viewer (scoped to their account)
 
-### Agency View (Admin + Operator)
-Full operational interface. All nav items visible. Pages filterable by account or campaign.
+**Agency-only pages** (behind `<AgencyOnly>` guard): Accounts, Automation Logs, Prompt Library, Expenses. Non-agency users redirect to `/campaigns`.
 
-- **Admin** — Full access to all pages, accounts, campaigns, leads. Full CRUD on all entities. Manages users, tags, prompts, automation logs, accounts.
-- **Operator** — Access to most pages filtered by assigned accounts. Can manage leads, campaigns, conversations. Cannot manage users or system-level settings.
+**Key redirects:** `/users` → `/settings`, `/tags` → `/campaigns`, `/dashboard` → `/campaigns` (Campaigns is the landing page).
 
-### Subaccount / Client View (Manager + Viewer)
-Restricted view scoped to their account. Pages hidden entirely (not in nav, inaccessible via URL): Accounts, Prompts, Automation Logs, Tags, Users. All data auto-scoped to the client's account.
+### User Roles
 
-- **Manager** — Scoped to their account only. Can view campaigns, leads, conversations, calendar. Limited modification abilities.
-- **Viewer** — Read-only. Scoped to their account only. No modification capabilities.
+| Role | View Mode | Access |
+|------|-----------|--------|
+| Admin | Agency | Full CRUD on all entities |
+| Operator | Agency | Filtered by assigned accounts, no user management |
+| Manager | Subaccount | Read/limited-write, scoped to their account |
+| Viewer | Subaccount | Read-only, scoped to their account |
 
-All API calls must include account scoping for subaccount users (Manager/Viewer). Agency users (Admin/Operator) see all data unfiltered.
+All API calls from subaccount users must be scoped by `Accounts_id`.
+
+---
+
+## API Conventions
+
+- All API calls include `credentials: "include"` for session cookies.
+- `apiFetch` (from `@/lib/apiUtils`) for GET requests.
+- `apiRequest` (from `@/lib/queryClient`) for mutations + TanStack Query integration.
+- TanStack Query defaults: `staleTime: Infinity`, `refetchOnWindowFocus: false`, retry on 5xx/network errors only.
+- Server-side auth middleware: `requireAuth`, `requireAgency`, `scopeToAccount`.
 
 ---
 
 ## Design System & UI Standards
 
-> **Canonical reference: [`UI_STANDARDS.md`](UI_STANDARDS.md)** — READ THIS FILE before any frontend/UI work.
-> It contains the complete color system, component patterns, spacing rules, animation standards, and coding rules.
-> If a rule exists in `UI_STANDARDS.md`, it overrides anything else.
+> **Two canonical files — read BOTH before any frontend/UI work:**
+>
+> - **[`UI_STANDARDS.md`](UI_STANDARDS.md)** — Rules, tokens, bans, design decisions (the "what" and "why")
+> - **[`UI_PATTERNS.md`](UI_PATTERNS.md)** — Implementation patterns, exact markup, code references (the "how")
+>
+> If a rule exists in either file, it overrides anything else. `UI_STANDARDS.md` wins on design decisions, `UI_PATTERNS.md` wins on implementation details.
 
-**Key brand colors (see `UI_STANDARDS.md` §2 for full palette):**
-- Primary: Indigo `#4F46E5` — buttons, links, focus rings, CTAs
-- KPI accent: Yellow `#FCB803` — Call Booked highlights, badges, data emphasis
-- UI highlights: Indian Yellow `#E3A857` derived tints — active pills, selected cards, nav highlights
-- Deep Blue: `#131B49` — text on yellow, strong emphasis
+**Dark mode:** Fully implemented. See **[`NIGHT_MODE.md`](NIGHT_MODE.md)** for the dark mode architecture, surface hierarchy, accent system, avatar palettes, and rules for adding dark support to new components.
 
-**Banned colors:** `#FFF375` (lime yellow), `#FFF6C8` (lime cream), `#5170FF` (old periwinkle blue).
-
-**Performance:** Lightweight, virtualized, Raspberry Pi–friendly (no heavy animations, virtualized tables for large datasets).
+**Performance:** Lightweight, virtualized, Raspberry Pi-friendly. No heavy animations, virtualized tables for large datasets.
 
 ---
 
@@ -86,38 +134,30 @@ All API calls must include account scoping for subaccount users (Manager/Viewer)
 
 ```
 client/src/
-├── components/
-│   └── ui/           ← Shadcn/ui components (use these, don't recreate)
+├── components/ui/      ← Shadcn/ui components (use these, don't recreate)
 ├── features/
-│   ├── leads/        ← Leads Kanban, Table, Detail Panel
-│   ├── campaigns/    ← Campaigns page
-│   ├── chats/        ← Inbox / Chat view
-│   ├── dashboard/    ← Dashboard & KPIs
-│   └── ...           ← One folder per feature domain
-├── pages/            ← Top-level route pages
-├── hooks/            ← Shared hooks
-└── lib/              ← Utilities, API helpers
+│   ├── leads/          ← List, Table, Kanban, Detail views
+│   ├── campaigns/      ← List + detail (Summary/Configurations/Tags tabs)
+│   ├── conversations/  ← Inbox + Chat panel
+│   ├── accounts/       ← Accounts management
+│   ├── billing/        ← Contracts, Invoices, Expenses
+│   ├── tags/           ← Campaign tag management
+│   ├── prompts/        ← Prompt library
+│   └── users/          ← User/team management
+├── pages/              ← Top-level route pages
+├── hooks/              ← Shared hooks
+└── lib/                ← Utilities, API helpers, color system
 ```
 
-See `FILE_MAP.md` in project root for a quick-lookup index of every key component file.
-
----
-
-## API Conventions
-
-- All API calls must include `credentials: "include"` for session cookies.
-- Use `apiFetch` (from `apiUtils.ts`) for standard data requests.
-- Use `apiRequest` (from `queryClient.ts`) for mutations and TanStack Query integration.
-- Handle error states gracefully — show user-friendly messages when the backend is unreachable.
-- Subaccount users must have their requests scoped by `Accounts_id` automatically.
+See `FILE_MAP.md` for a quick-lookup index of every key component file.
 
 ---
 
 ## Hooks & Performance
 
-A **PostToolUse hook** runs `npx tsc --noEmit` after every Edit/Write to a `client/src/**/*.{ts,tsx}` file. This catches type errors immediately but is expensive (~500MB RAM per run).
+A **PostToolUse hook** (`.claude/tsc-check.sh`) runs `npx tsc --noEmit` after every Edit/Write to `client/src/**/*.{ts,tsx}`. It does NOT check `server/` or `shared/` files. This catches type errors immediately but costs ~500MB RAM per run.
 
-**For bulk/parallel agent runs** (3+ agents), disable it first to avoid OOM on the Pi:
+**For bulk/parallel agent runs** (3+ agents), disable it to avoid OOM on the Pi:
 ```bash
 touch /tmp/skip-tsc-check      # disable
 # ... run agents ...
@@ -125,16 +165,11 @@ rm /tmp/skip-tsc-check          # re-enable
 npx tsc --noEmit                # one final check
 ```
 
-**Max parallel agents on this Pi: 2-3.** More than that risks OOM from concurrent tsc processes.
+**Max parallel agents on this Pi: 2-3.** More risks OOM from concurrent tsc processes.
 
 ---
 
 ## Feature-Specific Guides
 
-- **[`EXPENSES.md`](EXPENSES.md)** — Expenses tab (Billing section): PostgreSQL table, Dutch BTW/VAT logic, OpenAI PDF parsing, disk storage, frontend architecture. **Read this before touching anything expenses-related.**
-
----
-
-## Active Implementation Plans
-
-- **`contract_plan.md`** (project root) — Contract Deal Structure feature: schema additions for `deal_type`/`value_per_booking`/`payment_trigger` on contracts, campaign→contract reference, Financials widget ROI redesign, Billing Expenses tab, Plus button move, and role-access updates. **If this topic comes up, read `contract_plan.md` first.** Delete `contract_plan.md` once all tasks in it are verified complete.
+- **[`EXPENSES.md`](EXPENSES.md)** — Expenses tab: PostgreSQL table, Dutch BTW/VAT logic, OpenAI PDF parsing, disk storage, frontend architecture.
+- **[`NIGHT_MODE.md`](NIGHT_MODE.md)** — Dark mode: surface hierarchy, per-page accent system, avatar palettes, substitution rules, gradient overlays.

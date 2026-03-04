@@ -520,6 +520,7 @@ export default function TagsPage() {
                 tabs={VIEW_TABS}
                 activeId={viewMode}
                 onTabChange={handleViewSwitch}
+                variant="segment"
               />
             </div>
             <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />

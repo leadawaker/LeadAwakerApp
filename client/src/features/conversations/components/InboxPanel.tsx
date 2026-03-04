@@ -1,10 +1,10 @@
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect, useCallback, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/lib/utils";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
-import { Inbox, BellDot } from "lucide-react";
+import { Inbox, BellDot, Headphones } from "lucide-react";
 import type { Thread, Lead, Interaction } from "../hooks/useConversationsData";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import {
@@ -81,14 +81,18 @@ type VirtualItem =
 // ── Types ──────────────────────────────────────────────────────────────────────
 export type ChatGroupBy = "date" | "status" | "campaign" | "ai_human" | "none";
 export type ChatSortBy = "newest" | "oldest" | "name_asc" | "name_desc";
+export type InboxTab = "all" | "unread" | "support";
 
 interface InboxPanelProps {
   threads: Thread[];
   loading: boolean;
   selectedLeadId: number | null;
+  /** The explicitly stored/requested lead ID to scroll to on load — distinct from the
+   *  auto-fallback selectedLeadId which may resolve to threads[0]. */
+  scrollToLeadId?: number | null;
   onSelectLead: (id: number) => void;
-  tab: "all" | "unread";
-  onTabChange: (tab: "all" | "unread") => void;
+  tab: InboxTab;
+  onTabChange: (tab: InboxTab) => void;
   searchQuery: string;
   groupBy: ChatGroupBy;
   sortBy: ChatSortBy;
@@ -98,6 +102,10 @@ interface InboxPanelProps {
   isAgencyUser?: boolean;
   onClearAll?: () => void;
   className?: string;
+  /** Bot config for the support tab card — name & photo */
+  supportBotConfig?: { name: string; photoUrl: string | null };
+  /** Unread count badge for the support tab */
+  supportUnreadCount?: number;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -105,6 +113,7 @@ export function InboxPanel({
   threads,
   loading,
   selectedLeadId,
+  scrollToLeadId,
   onSelectLead,
   tab,
   onTabChange,
@@ -117,6 +126,8 @@ export function InboxPanel({
   isAgencyUser = false,
   onClearAll,
   className,
+  supportBotConfig,
+  supportUnreadCount = 0,
 }: InboxPanelProps) {
   const hasNonDefaultControls =
     groupBy !== "date" ||
@@ -229,6 +240,138 @@ export function InboxPanel({
     overscan: 5,
   });
 
+  // Scroll to selected lead once on initial load (when threads arrive from the API).
+  // Does NOT scroll again on user card clicks.
+  // Uses two rAFs: first lets React commit the new virtualizer count, second lets
+  // the virtualizer measure and compute item offsets before scrollToIndex is called.
+  const hasScrolledRef = useRef(false);
+  const virtualizerRef = useRef(threadVirtualizer);
+  virtualizerRef.current = threadVirtualizer;
+
+  // Returns the pixel offset for a virtualizer index, accounting for the group header above it.
+  const getScrollTopForIdx = useCallback((idx: number): number => {
+    const cache = (virtualizerRef.current as any).measurementsCache as Array<{ start: number }> | undefined;
+    let itemStart: number;
+    if (cache && cache[idx]) {
+      itemStart = cache[idx].start;
+    } else {
+      // Fallback: estimate from item sizes
+      let offset = 0;
+      for (let i = 0; i < idx; i++) {
+        offset += virtualItems[i]?.type === "header" ? 35 : 91;
+      }
+      itemStart = offset;
+    }
+    // Subtract the preceding group header height so the card sits just below it
+    let headerHeight = 0;
+    for (let i = idx - 1; i >= 0; i--) {
+      if (virtualItems[i]?.type === "header") {
+        const hCache = cache && cache[i];
+        headerHeight = hCache ? (cache![i + 1]!.start - hCache.start) : 35;
+        break;
+      }
+    }
+    return itemStart - headerHeight;
+  }, [virtualItems]);
+
+  // Initial load: scroll to the stored lead ID once data arrives
+  useEffect(() => {
+    const targetId = scrollToLeadId ?? null;
+    if (targetId == null) return;
+    if (hasScrolledRef.current) return;
+
+    const idx = virtualItems.findIndex(
+      (item) => item.type === "thread" && item.thread.lead.id === targetId
+    );
+    if (idx === -1) return;
+
+    hasScrolledRef.current = true;
+    window.setTimeout(() => {
+      const container = listContainerRef.current;
+      if (!container) return;
+      container.scrollTop = getScrollTopForIdx(idx);
+    }, 300);
+  }, [scrollToLeadId, virtualItems, getScrollTopForIdx]);
+
+  // On card selection: smooth-scroll the newly selected thread to the top.
+  // Uses setTimeout (no cleanup) so re-renders don't cancel the scroll mid-flight.
+  const prevScrolledIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (selectedLeadId == null) return;
+    if (prevScrolledIdRef.current === null) { prevScrolledIdRef.current = selectedLeadId; return; }
+    if (prevScrolledIdRef.current === selectedLeadId) return;
+    prevScrolledIdRef.current = selectedLeadId;
+
+    const capturedId = selectedLeadId;
+    const capturedItems = virtualItems;
+    window.setTimeout(() => {
+      const idx = capturedItems.findIndex(
+        (item) => item.type === "thread" && item.thread.lead.id === capturedId
+      );
+      if (idx === -1) return;
+      const container = listContainerRef.current;
+      if (!container) return;
+      container.scrollTo({ top: getScrollTopForIdx(idx), behavior: "smooth" });
+    }, 0);
+  }, [selectedLeadId, virtualItems, getScrollTopForIdx]);
+
+  // Sticky group header — tracks the active group label as the user scrolls
+  const [activeGroupLabel, setActiveGroupLabel] = useState<{ label: string; count: number } | null>(null);
+
+  const updateStickyHeader = useCallback(() => {
+    if (groupBy === "none") { setActiveGroupLabel(null); return; }
+    const container = listContainerRef.current;
+    if (!container) return;
+    const scrollTop = container.scrollTop;
+
+    // Use virtualizer's offset cache (available for all items, not just rendered ones).
+    // threadVirtualizer.measurementsCache[i].start gives the absolute top of each item.
+    const cache = (threadVirtualizer as any).measurementsCache as Array<{ start: number; end: number }> | undefined;
+
+    let activeLabel = "";
+    let activeCount = 0;
+
+    if (cache && cache.length === virtualItems.length) {
+      // Fast path: use the measurements cache — available for all items regardless of render window
+      for (let i = 0; i < virtualItems.length; i++) {
+        const item = virtualItems[i];
+        if (item.type !== "header") continue;
+        const start = cache[i]?.start ?? 0;
+        if (start <= scrollTop + 1) {
+          activeLabel = item.label;
+          activeCount = item.count;
+        }
+      }
+    } else {
+      // Fallback: DOM query — read positions directly from rendered header spacer elements
+      const headerEls = container.querySelectorAll<HTMLElement>("[data-group-label]");
+      headerEls.forEach((el) => {
+        const elTop = el.getBoundingClientRect().top - container.getBoundingClientRect().top + scrollTop;
+        if (elTop <= scrollTop + 1) {
+          const label = el.dataset.groupLabel ?? "";
+          const count = parseInt(el.dataset.groupCount ?? "0", 10);
+          if (label) { activeLabel = label; activeCount = count; }
+        }
+      });
+    }
+
+    // Fallback: use first header if none found above scroll
+    if (!activeLabel) {
+      const first = virtualItems.find((i) => i.type === "header");
+      if (first?.type === "header") { activeLabel = first.label; activeCount = first.count; }
+    }
+
+    setActiveGroupLabel(activeLabel ? { label: activeLabel, count: activeCount } : null);
+  }, [groupBy, virtualItems, threadVirtualizer]);
+
+  useEffect(() => {
+    const container = listContainerRef.current;
+    if (!container) return;
+    updateStickyHeader();
+    container.addEventListener("scroll", updateStickyHeader, { passive: true });
+    return () => container.removeEventListener("scroll", updateStickyHeader);
+  }, [updateStickyHeader]);
+
   const totalUnread = threads.filter((t) => t.unread).length;
 
   const INBOX_TABS: TabDef[] = [
@@ -243,6 +386,16 @@ export function InboxPanel({
         </span>
       ) : undefined,
     },
+    {
+      id: "support",
+      label: "Support",
+      icon: Headphones,
+      badge: supportUnreadCount > 0 ? (
+        <span className="ml-0.5 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold leading-none">
+          {supportUnreadCount > 9 ? "9+" : supportUnreadCount}
+        </span>
+      ) : undefined,
+    },
   ];
 
   return (
@@ -253,20 +406,69 @@ export function InboxPanel({
       )}
       data-testid="panel-inbox"
     >
-      {/* ── Panel header: title + Inbox/Unread text tabs ── */}
-      <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center" data-testid="panel-inbox-head">
-        <div className="flex items-center justify-between w-[309px] shrink-0">
+      {/* ── Header: title + Inbox/Unread tabs on same row ── */}
+      <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-3 shrink-0 flex items-center" data-testid="panel-inbox-head">
+        <div className="flex items-center justify-between w-full md:w-[309px] shrink-0">
           <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Chats</h2>
           <ViewTabBar
             tabs={INBOX_TABS}
             activeId={tab}
-            onTabChange={(id) => onTabChange(id as "all" | "unread")}
+            onTabChange={(id) => onTabChange(id as InboxTab)}
+            variant="segment"
           />
         </div>
       </div>
 
-      {/* ── Thread list ── */}
-      <div ref={listContainerRef} className="flex-1 overflow-y-auto p-[3px]" data-testid="list-inbox">
+      {/* ── Support tab: single bot card ── */}
+      {tab === "support" && (
+        <div className="flex-1 overflow-y-auto p-[3px]">
+          <div
+            className="rounded-xl bg-highlight-selected px-2.5 pt-2.5 pb-2 flex items-start gap-2 cursor-default"
+          >
+            <div className="h-9 w-9 rounded-full bg-brand-indigo/10 flex items-center justify-center shrink-0 overflow-hidden">
+              {supportBotConfig?.photoUrl ? (
+                <img
+                  src={supportBotConfig.photoUrl}
+                  alt={supportBotConfig.name}
+                  className="h-9 w-9 rounded-full object-cover"
+                />
+              ) : (
+                <Headphones className="h-4 w-4 text-brand-indigo" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0 pt-0.5">
+              <p className="text-[16px] font-semibold font-heading leading-tight truncate text-foreground">
+                {supportBotConfig?.name || "Support"}
+              </p>
+              <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
+                Support Assistant
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Thread list (all / unread tabs) ── */}
+      {/* Outer wrapper: relative so absolute overlay can pin to top */}
+      <div className={cn("flex-1 min-h-0 relative", tab === "support" && "hidden")}>
+        {/* Sticky group header overlay — absolute so it doesn't push content down */}
+        {groupBy !== "none" && !loading && sorted.length > 0 && activeGroupLabel && (
+          <div className="absolute top-0 left-0 right-0 z-20 bg-muted px-3 pt-3 pb-3 pointer-events-none">
+            <div className="flex items-center gap-[10px]">
+              <div className="flex-1 h-px bg-foreground/15" />
+              <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">
+                {activeGroupLabel.label}
+              </span>
+              <span className="text-foreground/20 shrink-0">–</span>
+              <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">
+                {activeGroupLabel.count}
+              </span>
+              <div className="flex-1 h-px bg-foreground/15" />
+            </div>
+          </div>
+        )}
+        <div ref={listContainerRef} className="h-full overflow-y-auto" data-testid="list-inbox">
+        <div className="p-[3px]">
         {loading ? (
           <SkeletonList count={6} />
         ) : sorted.length === 0 ? (
@@ -305,12 +507,14 @@ export function InboxPanel({
               const item = virtualItems[virtualRow.index];
               if (!item) return null;
 
-              // ── Group header — centered label with lines ──
+              // ── Group header — visible in the virtualizer; the absolute overlay floats on top ──
               if (item.type === "header") {
                 return (
                   <div
                     key={`header-${item.label}`}
                     data-index={virtualRow.index}
+                    data-group-label={item.label}
+                    data-group-count={item.count}
                     ref={threadVirtualizer.measureElement}
                     style={{
                       position: "absolute",
@@ -320,16 +524,12 @@ export function InboxPanel({
                       transform: `translateY(${virtualRow.start}px)`,
                     }}
                   >
-                    <div className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
+                    <div className="px-3 pt-3 pb-3">
                       <div className="flex items-center gap-[10px]">
                         <div className="flex-1 h-px bg-foreground/15" />
-                        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">
-                          {item.label}
-                        </span>
+                        <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{item.label}</span>
                         <span className="text-foreground/20 shrink-0">–</span>
-                        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">
-                          {item.count}
-                        </span>
+                        <span className="text-[12px] font-medium text-muted-foreground tabular-nums shrink-0">{item.count}</span>
                         <div className="flex-1 h-px bg-foreground/15" />
                       </div>
                     </div>
@@ -412,33 +612,41 @@ export function InboxPanel({
                           </div>
                           {/* Conversion status — hide when grouped by status */}
                           {status && groupBy !== "status" && (
-                            <p className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5">
+                            <p className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5 flex items-center gap-1">
+                              <span
+                                className="w-1.5 h-1.5 rounded-full shrink-0"
+                                style={{ backgroundColor: avatarColor.bg }}
+                              />
                               {status}
                             </p>
                           )}
+
+                          {/* Last message — aligned with name */}
+                          {lastContent && (
+                            <p className="text-[13px] text-muted-foreground truncate leading-snug mt-1">
+                              {lastContent}
+                            </p>
+                          )}
+
+                          {/* Tags — inside name column so they align with name */}
+                          {tags.length > 0 && (
+                            <div className="flex items-center gap-1 flex-wrap mt-0.5">
+                              {tags.slice(0, 3).map((t) => (
+                                <span
+                                  key={t}
+                                  className="inline-flex items-center px-1.5 py-px rounded-full text-[10px] font-medium"
+                                  style={{
+                                    backgroundColor: active ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.09)",
+                                    color: "rgba(0,0,0,0.45)",
+                                  }}
+                                >
+                                  {t}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
-
-                      {/* Row 2: Last message — bigger, italic, truncated */}
-                      {lastContent && (
-                        <p className="text-[13px] text-muted-foreground truncate italic leading-snug">
-                          {lastContent}
-                        </p>
-                      )}
-
-                      {/* Row 3: Tags */}
-                      {tags.length > 0 && (
-                        <div className="flex items-center gap-1 flex-wrap">
-                          {tags.slice(0, 3).map((t) => (
-                            <span
-                              key={t}
-                              className="inline-flex items-center px-1.5 py-px rounded-full text-[10px] font-medium bg-black/[0.06] text-foreground/55"
-                            >
-                              {t}
-                            </span>
-                          ))}
-                        </div>
-                      )}
 
                     </div>
                   </div>
@@ -447,7 +655,9 @@ export function InboxPanel({
             })}
           </div>
         )}
-      </div>
+        </div>
+        </div>{/* end listContainerRef */}
+      </div>{/* end outer relative wrapper */}
     </section>
   );
 }

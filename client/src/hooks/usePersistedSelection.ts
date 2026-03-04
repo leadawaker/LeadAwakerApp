@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 
 /**
  * Persists selection state (by ID) to localStorage so it survives page navigation.
- * On mount, restores the previously selected item from the items array.
- * Supports both direct value and updater function patterns for the setter.
+ * Derives the selected object synchronously from the items array — no extra render
+ * cycle when items first arrive, preventing visible "pop" on initial load.
  */
 export function usePersistedSelection<T>(
   key: string,
@@ -12,49 +12,47 @@ export function usePersistedSelection<T>(
 ): [T | null, (item: T | null | ((prev: T | null) => T | null)) => void] {
   const idRef = useRef(idExtractor);
   idRef.current = idExtractor;
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
 
-  const [selected, setSelectedRaw] = useState<T | null>(null);
+  // Store only the ID in state — initialized synchronously from localStorage
+  const [selectedId, setSelectedId] = useState<string | null>(() => {
+    try { return localStorage.getItem(key); } catch { return null; }
+  });
 
-  // Restore selection when items become available
-  useEffect(() => {
-    if (items.length === 0) return;
-    const storedId = localStorage.getItem(key);
-    if (!storedId) return;
-
-    // If current selection matches stored, sync with latest data
-    if (selected) {
-      const currentId = String(idRef.current(selected));
-      if (currentId === storedId) {
-        const refreshed = items.find((i) => String(idRef.current(i)) === storedId);
-        if (refreshed && refreshed !== selected) setSelectedRaw(refreshed);
-        return;
-      }
-    }
-
-    // No current selection — restore from storage
-    const found = items.find((i) => String(idRef.current(i)) === storedId);
-    if (found) setSelectedRaw(found);
-  }, [items, key, selected]);
+  // Derive the selected object synchronously — same render as items arriving
+  const selected = useMemo(() => {
+    if (!selectedId || items.length === 0) return null;
+    return items.find((i) => String(idRef.current(i)) === selectedId) ?? null;
+  }, [selectedId, items]);
 
   const setSelected = useCallback(
     (itemOrUpdater: T | null | ((prev: T | null) => T | null)) => {
       if (typeof itemOrUpdater === "function") {
         const updater = itemOrUpdater as (prev: T | null) => T | null;
-        setSelectedRaw((prev) => {
-          const next = updater(prev);
+        setSelectedId((prevId) => {
+          // Reconstruct prev object from current items to pass to updater
+          const prevItem = prevId
+            ? itemsRef.current.find((i) => String(idRef.current(i)) === prevId) ?? null
+            : null;
+          const next = updater(prevItem);
           if (next) {
-            localStorage.setItem(key, String(idRef.current(next)));
+            const nextId = String(idRef.current(next));
+            try { localStorage.setItem(key, nextId); } catch {}
+            return nextId;
           } else {
-            localStorage.removeItem(key);
+            try { localStorage.removeItem(key); } catch {}
+            return null;
           }
-          return next;
         });
       } else {
-        setSelectedRaw(itemOrUpdater);
         if (itemOrUpdater) {
-          localStorage.setItem(key, String(idRef.current(itemOrUpdater)));
+          const nextId = String(idRef.current(itemOrUpdater));
+          try { localStorage.setItem(key, nextId); } catch {}
+          setSelectedId(nextId);
         } else {
-          localStorage.removeItem(key);
+          try { localStorage.removeItem(key); } catch {}
+          setSelectedId(null);
         }
       }
     },

@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect, type ReactNode } from "react";
-import { GradientTester, GradientControlPoints, DEFAULT_LAYERS, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
-import { cn } from "@/lib/utils";
+import { cn, relativeTime } from "@/lib/utils";
 import {
   Phone,
   Mail,
@@ -9,8 +8,12 @@ import {
   MessageSquare,
   Copy,
   Check,
+  CheckCheck,
   Send,
   Bot,
+  Smile,
+  Paperclip,
+  Mic,
   User as UserIcon,
   ChevronLeft,
   ChevronRight,
@@ -46,9 +49,16 @@ import {
   ArrowRight,
   CircleDot,
   Kanban,
-  Paintbrush,
+  Maximize2,
+  Eye,
+  EyeOff,
+  Palette,
+  ChevronDown,
+  Square,
+  Loader2,
 } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
+import { useToast } from "@/hooks/use-toast";
 import { updateLead, deleteLead } from "../api/leadsApi";
 import { useLocation } from "wouter";
 import {
@@ -68,17 +78,26 @@ import {
 } from "@/components/ui/popover";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import { IconBtn } from "@/components/ui/icon-btn";
-import { useInteractions } from "@/hooks/useApiData";
+import { SearchPill } from "@/components/ui/search-pill";
+import { useInteractions, useInteractionsPaginated } from "@/hooks/useApiData";
 import { sendMessage } from "@/features/conversations/api/conversationsApi";
 import type { Interaction } from "@/types/models";
 import { resolveColor } from "@/features/tags/types";
-import { getLeadStatusAvatarColor, PIPELINE_HEX as PIPELINE_HEX_UTIL, getInitials as getInitialsUtil } from "@/lib/avatarUtils";
+import { getLeadStatusAvatarColor, getCampaignAvatarColor, PIPELINE_HEX as PIPELINE_HEX_UTIL, getInitials as getInitialsUtil } from "@/lib/avatarUtils";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
+import { CAMPAIGN_STICKERS } from "@/assets/campaign-stickers/index";
+import { SkeletonLeadPanel } from "@/components/ui/skeleton";
+import { renderRichText } from "@/lib/richTextUtils";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { useSession, type SessionUser } from "@/hooks/useSession";
 
 // ── Re-exports for backward compat — other files importing from LeadsCardView still work ──
 export { getLeadStatusAvatarColor as getStatusAvatarColor, PIPELINE_HEX } from "@/lib/avatarUtils";
 
 export type ViewMode = "list" | "table" | "pipeline";
+
+// ── Score insight tag type ──────────────────────────────────────────────────
+type ScoreInsight = { direction: "up" | "down"; label: string };
 
 interface LeadsCardViewProps {
   leads: Record<string, any>[];
@@ -112,6 +131,8 @@ interface LeadsCardViewProps {
   isSortNonDefault: boolean;
   onResetControls: () => void;
   onCreateLead?: () => void;
+  mobileView?: "list" | "detail";
+  onMobileViewChange?: (v: "list" | "detail") => void;
 }
 
 // ── Pipeline stages ────────────────────────────────────────────────────────────
@@ -256,6 +277,30 @@ function formatRelativeTime(dateStr: string | null | undefined): string {
     return `${Math.floor(diffDays / 30)}mo ago`;
   } catch { return ""; }
 }
+// ── Date helpers (matching ChatPanel) ─────────────────────────────────────────
+function getDateKey(ts: string | null | undefined): string {
+  if (!ts) return "";
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return "";
+  return d.toDateString();
+}
+function formatDateLabel(ts: string): string {
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return "";
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const msgDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diff = Math.round((today.getTime() - msgDay.getTime()) / 86_400_000);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Yesterday";
+  return d.toLocaleDateString([], { month: "long", day: "numeric" });
+}
+function formatBubbleTime(ts: string | null | undefined): string {
+  if (!ts) return "";
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
 function formatMsgTime(dateStr: string): string {
   if (!dateStr) return "";
   try {
@@ -289,7 +334,6 @@ function formatBookedDate(dateStr: string): string {
 function ScoreArc({ score, status }: { score: number; status?: string }) {
   const cx = 100, cy = 95, r = 72, sw = 18;
   const fillColor = (status && PIPELINE_HEX[status]) || "#4F46E5";
-  const grade = getGrade(score);
 
   // Background track: semicircle from left to right, arcing upward through the top
   const bgPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
@@ -315,15 +359,10 @@ function ScoreArc({ score, status }: { score: number; status?: string }) {
       {fillPath && (
         <path d={fillPath} fill="none" stroke={fillColor} strokeWidth={sw} strokeLinecap="round" />
       )}
-      {/* Score number */}
-      <text x={cx} y={cy - 16} textAnchor="middle"
+      {/* Score number — baseline aligned with arc base */}
+      <text x={cx} y={cy + 6} textAnchor="middle"
         fontSize="38" fontWeight="900" fontFamily="inherit" fill="#111827" letterSpacing="-2">
         {score}
-      </text>
-      {/* Grade label */}
-      <text x={cx} y={cy + 1} textAnchor="middle"
-        fontSize="10" fontWeight="700" fontFamily="inherit" fill="#9CA3AF" letterSpacing="1">
-        {grade} GRADE
       </text>
     </svg>
   );
@@ -375,13 +414,28 @@ const STAGE_ICON: Record<string, React.ElementType> = {
   Closed: Check,
 };
 
+// ── Default anchor stage for terminal statuses ───────────────────────────────
+// DND typically happens at Responded or Multi; Lost similarly.
+// "Multiple Responses" (index 3) is the default anchor for both.
+const TERMINAL_DEFAULT_ANCHOR: Record<string, number> = {
+  DND:  3, // after "Multiple Responses"
+  Lost: 3,
+};
+
 // ── Pipeline progress — monochrome tube, icons+labels at left of each segment ─
 function PipelineProgress({ status }: { status: string }) {
   const currentIndex = PIPELINE_STAGES.findIndex((s) => s.key === status);
-  const isLost = LOST_STAGES.includes(status);
-  const effectiveIndex = isLost ? -1 : currentIndex;
+  const isTerminal = LOST_STAGES.includes(status);
   const tubeHeight = 46;
   const stageCount = PIPELINE_STAGES.length;
+
+  // For terminal statuses (DND/Lost), anchor = the last normal stage before the exit.
+  // The terminal icon replaces the stage right after the anchor (same slot, same position).
+  const anchorIndex = isTerminal
+    ? (TERMINAL_DEFAULT_ANCHOR[status] ?? 3)
+    : currentIndex;
+  // effectiveIndex = the slot whose icon gets the "current" treatment
+  const effectiveIndex = isTerminal ? anchorIndex + 1 : anchorIndex;
 
   // Sizes — current stage is slightly bigger
   const iconSizeBase = 30;
@@ -389,9 +443,8 @@ function PipelineProgress({ status }: { status: string }) {
   const innerIconBase = 16;
   const innerIconCurrent = 20;
 
-  // Monochrome: ALL filled segments use the current stage's color
+  // Monochrome: entire filled bar uses the status color
   const activeHex = PIPELINE_HEX[status] || "#6B7280";
-  // Paler bar so icons pop — append alpha for ~69% opacity
   const barHex = `${activeHex}B0`;
 
   return (
@@ -403,7 +456,7 @@ function PipelineProgress({ status }: { status: string }) {
           style={{ left: 0, right: 0, top: "50%", transform: "translateY(-50%)", height: tubeHeight - 6, backgroundColor: "rgba(55,55,55,0.160)", mixBlendMode: "multiply" }}
         />
 
-        {/* Colored segments on top — paler activeHex */}
+        {/* Colored segments on top */}
         <div
           className="absolute overflow-hidden rounded-full"
           style={{ left: 0, right: 0, top: "50%", transform: "translateY(-50%)", height: tubeHeight }}
@@ -439,13 +492,21 @@ function PipelineProgress({ status }: { status: string }) {
           const isCurrent = i === effectiveIndex;
           const isFuture = i > effectiveIndex;
 
-          const IconComponent = (isPast || isCurrent)
-            ? (STAGE_ICON[stage.key] || CircleDot)
-            : Lock;
+          // For the terminal slot, show DND/Lost icon instead of the normal stage icon
+          const isTerminalSlot = isTerminal && i === effectiveIndex;
+
+          const IconComponent = isTerminalSlot
+            ? (status === "DND" ? Ban : AlertTriangle)
+            : (isPast || isCurrent)
+              ? (STAGE_ICON[stage.key] || CircleDot)
+              : Lock;
 
           const pct = (i / stageCount) * 100;
           const sz = isCurrent ? iconSizeCurrent : iconSizeBase;
           const innerSz = isCurrent ? innerIconCurrent : innerIconBase;
+
+          // Terminal slot label shows "DND" or "Lost" instead of the stage name
+          const label = isTerminalSlot ? status : stage.short;
 
           return (
             <div
@@ -457,7 +518,7 @@ function PipelineProgress({ status }: { status: string }) {
                 transform: i === 0 ? "translate(15px, -50%)" : `translate(calc(15px - ${sz / 2}px), -50%)`,
               }}
             >
-              {/* Icon circle — white fill, black icon, bright border */}
+              {/* Icon circle */}
               <div
                 className="flex items-center justify-center rounded-full shrink-0"
                 style={{
@@ -475,11 +536,11 @@ function PipelineProgress({ status }: { status: string }) {
                   style={{
                     width: innerSz,
                     height: innerSz,
-                    color: (isPast || isCurrent) ? "#1F1F1F" : "rgba(0,0,0,0.20)",
+                    color: isTerminalSlot ? activeHex : (isPast || isCurrent) ? "#1F1F1F" : "rgba(0,0,0,0.20)",
                   }}
                 />
               </div>
-              {/* Label next to icon — black, capitalize only */}
+              {/* Label next to icon */}
               <span
                 className="ml-2 font-bold tracking-wide leading-none whitespace-nowrap select-none capitalize"
                 style={{
@@ -487,23 +548,59 @@ function PipelineProgress({ status }: { status: string }) {
                   fontSize: isCurrent ? "11px" : "8px",
                 }}
               >
-                {stage.short}
+                {label}
               </span>
             </div>
           );
         })}
       </div>
+    </div>
+  );
+}
 
-      {/* Lost/DND chip */}
-      {isLost && (
+// ── Pipeline progress — compact version for mobile ─────────────────────────
+function PipelineProgressCompact({ status }: { status: string }) {
+  const currentIndex = PIPELINE_STAGES.findIndex((s) => s.key === status);
+  const isTerminal = LOST_STAGES.includes(status);
+  const anchorIndex = isTerminal ? (TERMINAL_DEFAULT_ANCHOR[status] ?? 3) : currentIndex;
+  const effectiveIndex = isTerminal ? anchorIndex + 1 : anchorIndex;
+  const futureCount = Math.max(0, PIPELINE_STAGES.length - 1 - effectiveIndex);
+  const locksToShow = Math.min(futureCount, 2);
+  const activeHex = PIPELINE_HEX[status] || "#6B7280";
+  const barHex = `${activeHex}B0`;
+  const currentStage = isTerminal ? status : (PIPELINE_STAGES[effectiveIndex]?.short ?? status);
+  const CurrentIcon = isTerminal
+    ? (status === "DND" ? Ban : AlertTriangle)
+    : (STAGE_ICON[PIPELINE_STAGES[effectiveIndex]?.key] || CircleDot);
+  const filledPct = effectiveIndex > 0
+    ? `${(effectiveIndex / (PIPELINE_STAGES.length - 1)) * 100}%`
+    : "0%";
+
+  return (
+    <div className="flex items-center gap-2 w-full">
+      {effectiveIndex > 0 && (
         <div
-          className="flex items-center gap-1.5 mt-2.5 px-2.5 py-1.5 rounded-lg"
-          style={{ backgroundColor: `${PIPELINE_HEX[status]}15` }}
-        >
-          {status === "DND" ? <Ban className="h-3 w-3" style={{ color: PIPELINE_HEX[status] }} /> : <AlertTriangle className="h-3 w-3" style={{ color: PIPELINE_HEX[status] }} />}
-          <span className="text-[10px] font-bold" style={{ color: PIPELINE_HEX[status] }}>{status}</span>
-        </div>
+          className="h-[8px] rounded-full shrink-0"
+          style={{ width: filledPct, maxWidth: "30%", background: barHex }}
+        />
       )}
+      <div
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full shrink-0"
+        style={{ border: `2px solid ${activeHex}`, boxShadow: `0 0 0 3px ${activeHex}30`, background: "#fff" }}
+      >
+        <CurrentIcon style={{ width: 14, height: 14, color: activeHex }} />
+        <span className="text-[11px] font-bold" style={{ color: activeHex }}>{currentStage}</span>
+      </div>
+      {Array.from({ length: locksToShow }).map((_, i) => (
+        <div
+          key={i}
+          className="h-[28px] w-[28px] rounded-full flex items-center justify-center shrink-0"
+          style={{ border: "1.5px solid rgba(0,0,0,0.12)", background: "#fff" }}
+        >
+          <Lock style={{ width: 12, height: 12, color: "rgba(0,0,0,0.20)" }} />
+        </div>
+      ))}
+      <div className="flex-1 h-[8px] rounded-full" style={{ background: "rgba(55,55,55,0.10)" }} />
     </div>
   );
 }
@@ -565,7 +662,7 @@ function InlineEditField({ value, field, leadId, onSaved, type = "text" }: {
         onChange={(e) => setDraft(e.target.value)}
         onBlur={save}
         onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setDraft(value); setEditing(false); } }}
-        className="w-full text-[12px] font-semibold bg-white/80 border border-brand-indigo/30 rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-brand-indigo/40 text-foreground"
+        className="w-full text-[12px] font-semibold bg-white/80 dark:bg-white/[0.08] border border-brand-indigo/30 rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-brand-indigo/40 text-foreground"
       />
     );
   }
@@ -608,8 +705,8 @@ function ContactWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefre
   ];
 
   return (
-    <div className="bg-white/60 rounded-xl p-[21px] flex flex-col h-full overflow-y-auto">
-      <p className="text-[16px] font-semibold font-heading text-foreground mb-3">Contact</p>
+    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-[21px] flex flex-col h-full overflow-y-auto">
+      <p className="text-[18px] font-semibold font-heading text-foreground mb-3">Contact</p>
       <div className="flex flex-col">
         {editableRows.map((row) => (
           <div key={row.label} className="py-2.5 border-b border-border/20 last:border-0 last:pb-0">
@@ -683,6 +780,130 @@ function buildInsights(lead: Record<string, any>, score: number): { text: string
   return out.slice(0, 4);
 }
 
+// ── Score insights — scripted rules tied to the real scoring formula ──────────
+// Formula: Lead Score = 40% Funnel + 30% Engagement + 30% Activity
+function buildScoreInsights(lead: Record<string, any>): ScoreInsight[] {
+  const out: ScoreInsight[] = [];
+
+  const status = (lead.conversion_status || lead.Conversion_Status || "").toString();
+  const sentimentRaw = (lead.ai_sentiment || lead.aiSentiment || "").toString().toLowerCase();
+  const received = Number(lead.message_count_received ?? lead.messageCountReceived ?? 0);
+  const sent = Number(lead.message_count_sent ?? lead.messageCountSent ?? 0);
+  const bumps = Number(lead.current_bump_stage ?? lead.currentBumpStage ?? 0);
+  const optedOut = !!(lead.opted_out ?? lead.optedOut);
+  const bookingConfirmed = !!(lead.booking_confirmed_at_ || lead.bookingConfirmedAt);
+
+  const now = Date.now();
+  const lastReceivedAt = lead.last_message_received_at || lead.lastMessageReceivedAt;
+  const lastReceivedMs = lastReceivedAt ? new Date(lastReceivedAt).getTime() : null;
+  const lastReceivedDays = lastReceivedMs !== null ? (now - lastReceivedMs) / 86_400_000 : null;
+
+  // ── Positive factors (funnel stage — 40% weight) ─────────────────────────
+  if (bookingConfirmed || status === "Booked") {
+    out.push({ direction: "up", label: "Call successfully booked" });
+  } else if (status === "Qualified") {
+    out.push({ direction: "up", label: "Lead is qualified" });
+  } else if (status === "Multiple Responses") {
+    out.push({ direction: "up", label: "Multiple responses received" });
+  } else if (status === "Responded") {
+    out.push({ direction: "up", label: "Lead has responded" });
+  }
+
+  // ── Negative factors (funnel stage) ──────────────────────────────────────
+  if (optedOut) {
+    out.push({ direction: "down", label: "Lead opted out" });
+  } else if (status === "DND") {
+    out.push({ direction: "down", label: "Do-not-disturb status" });
+  } else if (status === "Lost") {
+    out.push({ direction: "down", label: "Lead marked as lost" });
+  }
+
+  // ── Sentiment (engagement score ±10) ─────────────────────────────────────
+  if (sentimentRaw === "positive") {
+    out.push({ direction: "up", label: "Positive sentiment detected" });
+  } else if (sentimentRaw === "negative") {
+    out.push({ direction: "down", label: "Negative sentiment detected" });
+  } else if (sentimentRaw === "neutral") {
+    out.push({ direction: "down", label: "Neutral sentiment detected" });
+  }
+
+  // ── Recency tiers (engagement score +5/+10/+20, exclusive) ───────────────
+  if (lastReceivedDays !== null) {
+    if (lastReceivedDays < 1) {
+      out.push({ direction: "up", label: "Replied in last 24h" });
+    } else if (lastReceivedDays < 2) {
+      out.push({ direction: "up", label: "Replied within 48h" });
+    } else if (lastReceivedDays < 7) {
+      out.push({ direction: "up", label: "Replied this week" });
+    } else if (lastReceivedDays > 30) {
+      out.push({ direction: "down", label: "No reply in 30+ days" });
+    } else if (lastReceivedDays > 14) {
+      out.push({ direction: "down", label: "Quiet for 2+ weeks" });
+    }
+  }
+
+  // ── Message count / activity score ───────────────────────────────────────
+  if (received === 0 && sent > 0) {
+    out.push({ direction: "down", label: "Lead hasn't replied yet" });
+  } else if (received >= 4) {
+    out.push({ direction: "up", label: "High message activity" });
+  } else if (received >= 2) {
+    out.push({ direction: "up", label: "Replied multiple times" });
+  }
+
+  // Reply ratio >= 1.0 (activity score +30)
+  if (received > 0 && sent > 0 && received / sent >= 1.0) {
+    out.push({ direction: "up", label: "Replies more than pinged" });
+  }
+
+  // ── Bump stage (many follow-ups = diminishing returns) ───────────────────
+  if (bumps >= 3) {
+    out.push({ direction: "down", label: "Many follow-ups sent" });
+  }
+
+  return out.slice(0, 4);
+}
+
+// ── Score insight tag component ───────────────────────────────────────────────
+function ScoreInsightTag({ insight }: { insight: ScoreInsight }) {
+  const isUp = insight.direction === "up";
+  const color = isUp ? "#6da611" : "#d66c42";
+  return (
+    <div className="flex items-center gap-2.5 min-h-[34px]">
+      {/* Circle outline button — no fill, gray border, colored triangle inside */}
+      <span className="shrink-0 w-[34px] h-[34px] rounded-full border border-black/[0.125] flex items-center justify-center">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 14 13"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ transform: isUp ? "none" : "scaleY(-1)" }}
+        >
+          <path d="M7 1 L13.5 12 H0.5 Z" fill={color} />
+          {isUp ? (
+            <polyline
+              points="4.5,7.5 6.2,9.5 9.5,5.5"
+              stroke="white"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          ) : (
+            <>
+              <line x1="5" y1="6" x2="9" y2="10" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="9" y1="6" x2="5" y2="10" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+            </>
+          )}
+        </svg>
+      </span>
+      {/* Label text */}
+      <span className="text-[12px] text-foreground/80 leading-snug">{insight.label}</span>
+    </div>
+  );
+}
+
 // ── Score widget with AI summary ──────────────────────────────────────────────
 function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<string, any>; status?: string }) {
   const aiSummary = lead?.ai_summary || lead?.aiSummary || "";
@@ -698,13 +919,21 @@ function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<str
   const summaryText = aiSummary || parsedSummary;
 
   if (score === 0) {
+    const zeroInsights = lead ? buildScoreInsights(lead) : [];
     return (
-      <div className="bg-white/60 rounded-xl p-[21px] flex flex-col gap-3 h-full overflow-y-auto">
-        <p className="text-[16px] font-semibold font-heading text-foreground">Lead Score</p>
-        <div className="flex-1 flex flex-col items-center justify-center gap-[3px]">
+      <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-[21px] flex flex-col gap-3 h-full overflow-y-auto">
+        <p className="text-[18px] font-semibold font-heading text-foreground">Lead Score</p>
+        <div className="flex flex-col items-center gap-[3px] shrink-0">
           <p className="text-2xl font-black text-muted-foreground/25">—</p>
           <p className="text-[10px] text-muted-foreground/50">Not scored</p>
         </div>
+        {zeroInsights.length > 0 && (
+          <div className="flex flex-col gap-2 shrink-0">
+            {zeroInsights.map((ins, i) => (
+              <ScoreInsightTag key={i} insight={ins} />
+            ))}
+          </div>
+        )}
         {summaryText && status === "Booked" && (
           <div className="border-t border-border/20 pt-3">
             <p className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 mb-1.5">AI Summary</p>
@@ -715,14 +944,25 @@ function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<str
     );
   }
 
+  const insights = lead ? buildScoreInsights(lead) : [];
+
   return (
-    <div className="bg-white/50 rounded-xl p-[21px] flex flex-col gap-2 h-full overflow-y-auto">
-      <p className="text-[16px] font-semibold font-heading text-foreground shrink-0">Lead Score</p>
+    <div className="bg-white/50 dark:bg-white/[0.10] rounded-xl p-[21px] flex flex-col gap-2 h-full overflow-y-auto">
+      <p className="text-[18px] font-semibold font-heading text-foreground shrink-0">Lead Score</p>
 
       {/* Arc gauge */}
       <div className="flex flex-col items-center shrink-0">
         <ScoreArc score={score} status={status} />
       </div>
+
+      {/* Score insight tags */}
+      {insights.length > 0 && (
+        <div className="flex flex-col gap-2 mt-1 shrink-0">
+          {insights.map((ins, i) => (
+            <ScoreInsightTag key={i} insight={ins} />
+          ))}
+        </div>
+      )}
 
       {/* AI Summary — only shown for Booked status */}
       {status === "Booked" && summaryText ? (
@@ -743,75 +983,348 @@ function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<str
   );
 }
 
-// ── Chat bubble ────────────────────────────────────────────────────────────────
+// ── Message type detection (matches ChatPanel) ───────────────────────────────
 function isAiMsg(item: Interaction): boolean {
-  if (item.ai_generated) return true;
-  if (item.is_bump) return true;
-  if ((item.triggered_by || item.triggeredBy) === "Automation") return true;
-  const who = ((item.Who ?? item.who) || "").toLowerCase();
-  return ["ai", "bot", "automation"].includes(who);
+  if (item.ai_generated === true) return true;
+  if (item.is_bump === true) return true;
+  if ((item.triggered_by ?? item.triggeredBy) === "Automation") return true;
+  const who = (item.Who ?? item.who ?? "").toLowerCase();
+  if (who === "ai" || who === "bot" || who === "automation") return true;
+  if (/^bump\s*\d/.test(who)) return true;
+  if (who === "start") return true;
+  return false;
 }
 
-function ChatBubble({ item }: { item: Interaction }) {
-  const outbound = item.direction === "Outbound";
-  const isAi = isAiMsg(item);
-  const ts = item.created_at || item.createdAt || "";
+function isHumanAgentMsg(item: Interaction): boolean {
+  if (item.direction !== "Outbound") return false;
+  return !isAiMsg(item);
+}
 
+// ── Sender run tracking (matches ChatPanel) ──────────────────────────────────
+type MiniSenderKey = "inbound" | "ai" | "human";
+
+interface MiniMsgMeta {
+  senderKey: MiniSenderKey;
+  isFirstInRun: boolean;
+  isLastInRun: boolean;
+}
+
+function computeMiniMsgMeta(msgs: Interaction[]): MiniMsgMeta[] {
+  const result: MiniMsgMeta[] = [];
+  for (let i = 0; i < msgs.length; i++) {
+    const m = msgs[i];
+    const sk: MiniSenderKey = m.direction !== "Outbound"
+      ? "inbound"
+      : isAiMsg(m) ? "ai" : "human";
+    const prevSk: MiniSenderKey | "" = i > 0
+      ? (msgs[i - 1].direction !== "Outbound" ? "inbound" : isAiMsg(msgs[i - 1]) ? "ai" : "human")
+      : "";
+    const nextSk: MiniSenderKey | "" = i < msgs.length - 1
+      ? (msgs[i + 1].direction !== "Outbound" ? "inbound" : isAiMsg(msgs[i + 1]) ? "ai" : "human")
+      : "";
+    result.push({
+      senderKey: sk,
+      isFirstInRun: sk !== prevSk,
+      isLastInRun: sk !== nextSk,
+    });
+  }
+  return result;
+}
+
+// ── Thread grouping (matches ChatPanel) ──────────────────────────────────────
+interface MiniThreadGroup {
+  threadId: string;
+  threadIndex: number;
+  msgs: Interaction[];
+}
+
+const MINI_THREAD_GAP_MS = 2 * 60 * 60 * 1000;
+
+function groupMiniMessagesByThread(msgs: Interaction[]): MiniThreadGroup[] {
+  if (msgs.length === 0) return [];
+  const groups: MiniThreadGroup[] = [];
+  let currentGroup: MiniThreadGroup | null = null;
+  let groupIndex = 0;
+
+  function getThreadKey(m: Interaction): string | null {
+    const tid = m.conversation_thread_id ?? m.conversationThreadId;
+    if (tid) return `thread-${tid}`;
+    if (m.bump_number != null) return `bump-${m.bump_number}`;
+    if (m.is_bump && m.Who) return `bump-who-${m.Who.toLowerCase().replace(/\s+/g, "-")}`;
+    return null;
+  }
+
+  let lastTimestamp: number | null = null;
+  for (const m of msgs) {
+    const key = getThreadKey(m);
+    const ts = m.created_at || m.createdAt;
+    const currentTimestamp = ts ? new Date(ts).getTime() : null;
+    let startNew = false;
+    if (!currentGroup) {
+      startNew = true;
+    } else if (key !== null) {
+      if (key !== currentGroup.threadId) startNew = true;
+    } else {
+      if (currentTimestamp !== null && lastTimestamp !== null && currentTimestamp - lastTimestamp > MINI_THREAD_GAP_MS) startNew = true;
+    }
+    if (startNew) {
+      const tid: string = key ?? `session-${groupIndex}`;
+      currentGroup = { threadId: tid, threadIndex: groupIndex++, msgs: [] };
+      groups.push(currentGroup);
+    }
+    currentGroup!.msgs.push(m);
+    if (currentTimestamp !== null) lastTimestamp = currentTimestamp;
+  }
+  return groups;
+}
+
+function formatMiniThreadLabel(group: MiniThreadGroup, total: number): string {
+  const { threadId, threadIndex } = group;
+  if (threadId.startsWith("bump-who-")) {
+    const who = threadId.replace("bump-who-", "").replace(/-/g, " ");
+    return who.charAt(0).toUpperCase() + who.slice(1);
+  }
+  if (threadId.startsWith("bump-")) return `Bump ${threadId.replace("bump-", "")}`;
+  if (threadId.startsWith("thread-")) {
+    const id = threadId.replace("thread-", "");
+    return id.length > 12 ? `Thread ${threadIndex + 1}` : `Thread ${id}`;
+  }
+  if (total === 1) return "Conversation";
+  return `Conversation ${threadIndex + 1}`;
+}
+
+// ── Mini date separator (matches ChatPanel DateSeparator) ────────────────────
+function MiniDateSeparator({ label }: { label: string }) {
   return (
-    <div className={cn("flex gap-2", outbound ? "flex-row-reverse" : "flex-row")} data-testid={`row-interaction-${item.id}`}>
-      {!outbound && (
-        <div className="h-6 w-6 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0 mt-0.5">
-          <UserIcon className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
-        </div>
-      )}
-      {outbound && (
-        <div className={cn(
-          "h-6 w-6 rounded-full flex items-center justify-center shrink-0 mt-0.5",
-          isAi ? "bg-brand-indigo/15" : "bg-emerald-900/20"
-        )}>
-          {isAi
-            ? <Bot className="h-3 w-3 text-brand-indigo" />
-            : <UserIcon className="h-3 w-3 text-emerald-800" />
-          }
-        </div>
-      )}
+    <div className="flex justify-center py-3">
+      <span className="text-[11px] font-medium text-foreground/50 bg-black/[0.06] rounded-full px-3 py-0.5 select-none">
+        {label}
+      </span>
+    </div>
+  );
+}
 
-      <div className={cn("flex flex-col gap-0.5 max-w-[75%]", outbound ? "items-end" : "items-start")}>
-        {outbound && (
-          <div className="text-[9px] text-muted-foreground/70 flex items-center gap-1">
-            {isAi ? "AI" : "Agent"} · {item.type || "WhatsApp"}
-          </div>
-        )}
-        <div className={cn(
-          "rounded-2xl px-3 py-2 text-[12px] leading-relaxed whitespace-pre-wrap",
-          outbound
-            ? isAi
-              ? "bg-brand-indigo text-white rounded-tr-sm"
-              : "bg-[#166534] text-white rounded-tr-sm"
-            : "bg-muted/70 text-foreground dark:bg-muted/50 rounded-tl-sm"
-        )}>
-          {item.content || item.Content || ""}
-        </div>
-        <div className="text-[10px] text-muted-foreground/60 tabular-nums">{formatMsgTime(ts)}</div>
+// ── Mini thread divider (matches ChatPanel ThreadDivider) ────────────────────
+function MiniThreadDivider({ group, total }: { group: MiniThreadGroup; total: number }) {
+  const label = formatMiniThreadLabel(group, total);
+  const firstMsg = group.msgs[0];
+  const ts = firstMsg?.created_at || firstMsg?.createdAt;
+  const time = ts ? formatBubbleTime(ts) : null;
+  const isBump = group.threadId.startsWith("bump-");
+  return (
+    <div className="flex justify-center my-3">
+      <span className={cn(
+        "text-[11px] font-semibold rounded-full px-3 py-1 select-none",
+        isBump ? "bg-amber-100 text-amber-700" : "bg-indigo-50 text-brand-indigo",
+      )}>
+        {label}{time ? ` · ${time}` : ""}
+      </span>
+    </div>
+  );
+}
+
+// ── Mini avatars (matching ChatPanel, scaled to 32px) ────────────────────────
+function MiniAgentAvatar({ currentUser }: { currentUser: SessionUser | null }) {
+  const displayName = currentUser?.fullName || "You";
+  const photoUrl = currentUser?.avatarUrl ?? null;
+  return (
+    <EntityAvatar
+      name={displayName}
+      photoUrl={photoUrl}
+      bgColor="#4F46E5"
+      textColor="#ffffff"
+      size={32}
+      className="shrink-0"
+    />
+  );
+}
+
+function MiniBotAvatar() {
+  return (
+    <div className="h-8 w-8 shrink-0">
+      <img src="/6. Favicon.svg" alt="AI" className="h-full w-full object-contain" />
+    </div>
+  );
+}
+
+// ── Run wrappers with sticky bottom avatars (matching ChatPanel) ─────────────
+function MiniAgentRunWrapper({ msgs, metas, leadName, leadAvatarColors, currentUser }: {
+  msgs: Interaction[];
+  metas: MiniMsgMeta[];
+  leadName: string;
+  leadAvatarColors: { bgColor: string; textColor: string };
+  currentUser: SessionUser | null;
+}) {
+  return (
+    <div className="flex justify-end gap-1">
+      <div className="flex flex-col min-w-0 flex-1">
+        {msgs.map((m, i) => (
+          <MiniChatBubble key={m.id ?? i} item={m} meta={metas[i]} leadName={leadName} leadAvatarColors={leadAvatarColors} suppressAvatar />
+        ))}
+      </div>
+      <div className="w-8 shrink-0 self-end sticky bottom-0">
+        <MiniAgentAvatar currentUser={currentUser} />
       </div>
     </div>
   );
 }
 
-// ── Conversation widget ────────────────────────────────────────────────────────
+function MiniLeadRunWrapper({ msgs, metas, leadName, leadAvatarColors }: {
+  msgs: Interaction[];
+  metas: MiniMsgMeta[];
+  leadName: string;
+  leadAvatarColors: { bgColor: string; textColor: string };
+}) {
+  return (
+    <div className="flex justify-start gap-1">
+      <div className="w-8 shrink-0 self-end sticky bottom-0">
+        <EntityAvatar
+          name={leadName || "?"}
+          bgColor={leadAvatarColors.bgColor}
+          textColor={leadAvatarColors.textColor}
+          size={32}
+        />
+      </div>
+      <div className="flex flex-col min-w-0 flex-1">
+        {msgs.map((m, i) => (
+          <MiniChatBubble key={m.id ?? i} item={m} meta={metas[i]} leadName={leadName} leadAvatarColors={leadAvatarColors} suppressAvatar />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MiniBotRunWrapper({ msgs, metas, leadName, leadAvatarColors }: {
+  msgs: Interaction[];
+  metas: MiniMsgMeta[];
+  leadName: string;
+  leadAvatarColors: { bgColor: string; textColor: string };
+}) {
+  return (
+    <div className="flex justify-end gap-1">
+      <div className="flex flex-col min-w-0 flex-1">
+        {msgs.map((m, i) => (
+          <MiniChatBubble key={m.id ?? i} item={m} meta={metas[i]} leadName={leadName} leadAvatarColors={leadAvatarColors} suppressAvatar />
+        ))}
+      </div>
+      <div className="w-8 shrink-0 self-end sticky bottom-0">
+        <MiniBotAvatar />
+      </div>
+    </div>
+  );
+}
+
+// ── Mini delivery status icon (matches ChatPanel MessageStatusIcon) ──────────
+function MiniStatusIcon({ status }: { status: string }) {
+  const s = status.toLowerCase();
+  if (s === "sending") return <span className="inline-flex items-center"><Clock className="w-2.5 h-2.5 animate-pulse opacity-70" /></span>;
+  if (s === "read") return <span className="inline-flex items-center text-sky-300"><CheckCheck className="w-2.5 h-2.5" /></span>;
+  if (s === "delivered") return <span className="inline-flex items-center opacity-80"><CheckCheck className="w-2.5 h-2.5" /></span>;
+  if (s === "sent") return <span className="inline-flex items-center opacity-60"><Check className="w-2.5 h-2.5" /></span>;
+  return null;
+}
+
+// ── Chat bubble (matches ChatPanel — 45% width, time-only, suppressAvatar) ───
+function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppressAvatar = false }: {
+  item: Interaction;
+  meta: MiniMsgMeta;
+  leadName: string;
+  leadAvatarColors: { bgColor: string; textColor: string };
+  suppressAvatar?: boolean;
+}) {
+  const outbound = item.direction === "Outbound";
+  const inbound = !outbound;
+  const aiMsg = outbound && isAiMsg(item);
+  const humanAgentMsg = outbound && isHumanAgentMsg(item);
+  const rawTs = item.created_at ?? item.createdAt ?? null;
+  const time = formatBubbleTime(rawTs);
+  const statusNorm = ((item as any).status ?? "").toLowerCase();
+  const { isLastInRun } = meta;
+
+  const bubbleRadius = inbound
+    ? isLastInRun ? "rounded-sm rounded-bl-none" : "rounded-sm"
+    : isLastInRun ? "rounded-sm rounded-br-none" : "rounded-sm";
+
+  return (
+    <div
+      className={cn("flex items-end gap-1 my-0.5", outbound ? "justify-end" : "justify-start")}
+      data-testid={`row-interaction-${item.id}`}
+    >
+      {/* Lead avatar — left side (only when NOT suppressed by wrapper) */}
+      {inbound && !suppressAvatar && isLastInRun && (
+        <EntityAvatar name={leadName || "?"} bgColor={leadAvatarColors.bgColor} textColor={leadAvatarColors.textColor} size={32} className="shrink-0" />
+      )}
+      {inbound && !suppressAvatar && !isLastInRun && <div className="w-8 shrink-0" />}
+
+      {/* Bubble — 45% max-width, time-only, ChatPanel colors + hard-light outline */}
+      <div
+        className={cn(
+          "max-w-[45%] px-2.5 pt-1.5 pb-1 text-[13px] relative",
+          bubbleRadius,
+          inbound && "bg-white dark:bg-card text-gray-900 dark:text-foreground",
+          aiMsg && "bg-[#f2f5ff] dark:bg-[#1e2340] text-gray-900 dark:text-foreground",
+          humanAgentMsg && "bg-[#f1fff5] dark:bg-[#1a2e1f] text-gray-900 dark:text-foreground",
+        )}
+      >
+        {/* Hard-light outline overlay — only the shadow uses hard-light, text is unaffected */}
+        <div
+          className={cn("absolute inset-0 pointer-events-none", bubbleRadius)}
+          style={{
+            boxShadow: inbound
+              ? "0 0 2px rgba(0,0,0,0.175)"
+              : aiMsg
+                ? "0 0 2px rgba(0,0,200,0.55)"
+                : humanAgentMsg
+                  ? "0 0 2px rgba(0,122,0,0.45)"
+                  : "none",
+            mixBlendMode: "hard-light",
+          }}
+        />
+        <div className="whitespace-pre-wrap leading-relaxed break-words">{item.content || item.Content || ""}</div>
+        <div className="flex items-center justify-end gap-1 mt-0.5">
+          <span className="text-[10px] leading-none select-none" style={{ color: "#888" }}>
+            {time || (rawTs ? rawTs.toString().slice(11, 16) : "")}
+          </span>
+          {outbound && <MiniStatusIcon status={statusNorm} />}
+        </div>
+      </div>
+
+      {/* Outbound avatars — right side (only when NOT suppressed by wrapper) */}
+      {aiMsg && !suppressAvatar && isLastInRun && <MiniBotAvatar />}
+      {aiMsg && !suppressAvatar && !isLastInRun && <div className="w-8 shrink-0" />}
+      {humanAgentMsg && !suppressAvatar && isLastInRun && <MiniAgentAvatar currentUser={null} />}
+      {humanAgentMsg && !suppressAvatar && !isLastInRun && <div className="w-8 shrink-0" />}
+    </div>
+  );
+}
+
+// ── Conversation widget (ChatPanel-style with run wrappers + separators) ─────
 function ConversationWidget({ lead, showHeader = false }: { lead: Record<string, any>; showHeader?: boolean }) {
   const leadId = getLeadId(lead);
   const { interactions, loading, refresh } = useInteractions(undefined, leadId);
+  const { isAgencyView } = useWorkspace();
+  const [, setLocation] = useLocation();
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [showBypassConfirm, setShowBypassConfirm] = useState(false);
+  const [showAiResumeConfirm, setShowAiResumeConfirm] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const session = useSession();
+  const currentUser: SessionUser | null = session.status === "authenticated" ? session.user : null;
+  const isHumanTakeover = Boolean(lead.manual_takeover || lead.manualTakeover);
 
   const sorted = useMemo(
     () => [...interactions].sort((a, b) => (a.created_at || "").localeCompare(b.created_at || "")),
     [interactions]
   );
+
+  const leadName = lead.full_name || `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() || "Lead";
+  const leadAvatarColors = useMemo(() => {
+    const status = lead.Conversion_Status || lead.conversion_status || "";
+    const colors = getLeadStatusAvatarColor(status);
+    return { bgColor: colors.bg, textColor: colors.text };
+  }, [lead.Conversion_Status, lead.conversion_status]);
 
   // Scroll to bottom whenever messages change or a new lead is selected
   useEffect(() => {
@@ -844,37 +1357,228 @@ function ConversationWidget({ lead, showHeader = false }: { lead: Record<string,
     }
   }, [draft, sending, leadId, lead, refresh]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
   const [refreshing, setRefreshing] = useState(false);
   const handleRefreshChat = useCallback(async () => {
     setRefreshing(true);
     try { await refresh(); } finally { setTimeout(() => setRefreshing(false), 600); }
   }, [refresh]);
 
+  const handleAiResume = useCallback(async () => {
+    setShowAiResumeConfirm(false);
+    try {
+      await updateLead(leadId, { manual_takeover: false });
+      await refresh();
+    } catch (err) {
+      console.error("Failed to resume AI", err);
+    }
+  }, [leadId, refresh]);
+
+  // Build structured render list: date separators + thread dividers + sender-run wrappers
+  const chatItems = useMemo(() => {
+    if (sorted.length === 0) return null;
+
+    const threadGroups = groupMiniMessagesByThread(sorted);
+    const globalMetas = computeMiniMsgMeta(sorted);
+
+    type Token =
+      | { kind: "msg"; msgIdx: number }
+      | { kind: "date"; label: string; key: string }
+      | { kind: "thread"; group: MiniThreadGroup; total: number; key: string };
+
+    const tokens: Token[] = [];
+    let lastDateKey = "";
+    let flatIdx = 0;
+
+    for (let gi = 0; gi < threadGroups.length; gi++) {
+      const group = threadGroups[gi];
+      const isMeaningfulThread = group.threadId.startsWith("bump-") || group.threadId.startsWith("thread-");
+
+      for (let mi = 0; mi < group.msgs.length; mi++) {
+        const m = group.msgs[mi];
+        const ts = m.created_at ?? m.createdAt;
+        const dk = getDateKey(ts);
+
+        if (dk && dk !== lastDateKey) {
+          if (mi === 0 && isMeaningfulThread) {
+            tokens.push({ kind: "thread", group, total: threadGroups.length, key: group.threadId });
+          }
+          if (ts) tokens.push({ kind: "date", label: formatDateLabel(ts), key: `date-${gi}-${mi}` });
+          lastDateKey = dk;
+        } else if (mi === 0 && isMeaningfulThread) {
+          tokens.push({ kind: "thread", group, total: threadGroups.length, key: group.threadId });
+        }
+
+        tokens.push({ kind: "msg", msgIdx: flatIdx });
+        flatIdx++;
+      }
+    }
+
+    // Second pass: collect same-sender runs and wrap them
+    const items: React.ReactNode[] = [];
+    let ti = 0;
+
+    while (ti < tokens.length) {
+      const tok = tokens[ti];
+
+      if (tok.kind === "date") {
+        items.push(<MiniDateSeparator key={tok.key} label={tok.label} />);
+        ti++;
+        continue;
+      }
+      if (tok.kind === "thread") {
+        items.push(<MiniThreadDivider key={tok.key} group={tok.group} total={tok.total} />);
+        ti++;
+        continue;
+      }
+
+      const firstMsg = sorted[tok.msgIdx];
+      const senderType: MiniSenderKey = firstMsg.direction !== "Outbound"
+        ? "inbound"
+        : isAiMsg(firstMsg) ? "ai" : "human";
+
+      const runMsgs: Interaction[] = [];
+      const runMetas: MiniMsgMeta[] = [];
+      const runStartIdx = tok.msgIdx;
+      const pendingSeparators: { node: React.ReactNode }[] = [];
+
+      let lookahead = ti;
+      while (lookahead < tokens.length) {
+        const lt = tokens[lookahead];
+        if (lt.kind === "date" || lt.kind === "thread") {
+          pendingSeparators.push({
+            node: lt.kind === "date"
+              ? <MiniDateSeparator key={lt.key} label={lt.label} />
+              : <MiniThreadDivider key={lt.key} group={lt.group} total={lt.total} />,
+          });
+          lookahead++;
+          continue;
+        }
+        const m = sorted[lt.msgIdx];
+        const sk: MiniSenderKey = m.direction !== "Outbound"
+          ? "inbound"
+          : isAiMsg(m) ? "ai" : "human";
+        if (sk !== senderType) break;
+        runMsgs.push(m);
+        runMetas.push(globalMetas[lt.msgIdx]);
+        pendingSeparators.length = 0;
+        lookahead++;
+      }
+      ti = lookahead;
+
+      const trailingSeparators = pendingSeparators.map(p => p.node);
+
+      if (senderType === "human") {
+        items.push(
+          <MiniAgentRunWrapper
+            key={`run-${runMsgs[0]?.id ?? runStartIdx}`}
+            msgs={runMsgs}
+            metas={runMetas}
+            leadName={leadName}
+            leadAvatarColors={leadAvatarColors}
+            currentUser={currentUser}
+          />
+        );
+      } else if (senderType === "inbound") {
+        items.push(
+          <MiniLeadRunWrapper
+            key={`lead-run-${runMsgs[0]?.id ?? runStartIdx}`}
+            msgs={runMsgs}
+            metas={runMetas}
+            leadName={leadName}
+            leadAvatarColors={leadAvatarColors}
+          />
+        );
+      } else {
+        items.push(
+          <MiniBotRunWrapper
+            key={`bot-run-${runMsgs[0]?.id ?? runStartIdx}`}
+            msgs={runMsgs}
+            metas={runMetas}
+            leadName={leadName}
+            leadAvatarColors={leadAvatarColors}
+          />
+        );
+      }
+
+      items.push(...trailingSeparators);
+    }
+
+    return items;
+  }, [sorted, leadName, leadAvatarColors, currentUser]);
+
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* Header with refresh */}
+      {/* Header with refresh + open-in-chats */}
       {showHeader && (
         <div className="px-[21px] pt-[21px] pb-2 flex items-center justify-between shrink-0">
-          <p className="text-[16px] font-semibold font-heading text-foreground">Chat</p>
-          <button
-            onClick={handleRefreshChat}
-            className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
-            title="Refresh messages"
-          >
-            <RefreshCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
-          </button>
+          <p className="text-[18px] font-semibold font-heading text-foreground">Chat</p>
+          <div className="flex items-center gap-1">
+            {/* Let AI continue — only when human has taken over */}
+            {isHumanTakeover && <Popover open={showAiResumeConfirm} onOpenChange={setShowAiResumeConfirm}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="group relative inline-flex items-center justify-center h-[34px] w-[34px] rounded-full border border-black/[0.125] hover:border-brand-indigo shrink-0 overflow-hidden transition-[width,border-color] duration-200 hover:w-[130px]"
+                  aria-label="Let AI continue"
+                >
+                  <img src="/6. Favicon.svg" alt="AI" className="h-5 w-5 shrink-0 absolute left-[6px]" />
+                  <span className="whitespace-nowrap pl-7 pr-2 text-[11px] font-medium text-brand-indigo opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                    Let AI continue
+                  </span>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="end"
+                side="bottom"
+                sideOffset={6}
+                className="w-auto p-3 shadow-md border border-black/[0.08] bg-white dark:bg-popover rounded-xl"
+              >
+                <p className="text-[12px] text-foreground/70 mb-2.5 max-w-[200px]">
+                  AI will resume this conversation. You can take over again anytime.
+                </p>
+                <div className="flex items-center gap-2 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowAiResumeConfirm(false)}
+                    className="text-[12px] text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted/60 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAiResume}
+                    className="text-[12px] font-medium text-white bg-brand-indigo hover:bg-brand-indigo/90 px-3 py-1 rounded-md transition-colors"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </PopoverContent>
+            </Popover>}
+            <button
+              onClick={() => {
+                localStorage.setItem("selected-conversation-lead-id", String(leadId));
+                setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/conversations`);
+              }}
+              className="h-[34px] w-[34px] rounded-full border border-black/[0.125] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              title="Open in Chats"
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={handleRefreshChat}
+              className="h-[34px] w-[34px] rounded-full border border-black/[0.125] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              title="Refresh messages"
+            >
+              <RefreshCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
+            </button>
+          </div>
         </div>
       )}
+
+      {/* Messages scroll area */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0"
+        className="flex-1 overflow-y-auto px-3 pt-3 pb-2 min-h-0"
         data-testid="list-interactions"
       >
         {loading ? (
@@ -882,7 +1586,7 @@ function ConversationWidget({ lead, showHeader = false }: { lead: Record<string,
             {[70, 50, 80, 55].map((w, i) => (
               <div key={i} className={cn("flex", i % 2 === 0 ? "flex-row-reverse" : "flex-row")}>
                 <div
-                  className="h-8 rounded-2xl bg-muted/60 animate-pulse"
+                  className="h-8 rounded-sm bg-muted/60 animate-pulse"
                   style={{ width: `${w}%`, animationDelay: `${i * 80}ms` }}
                 />
               </div>
@@ -894,13 +1598,21 @@ function ConversationWidget({ lead, showHeader = false }: { lead: Record<string,
             <p className="text-xs text-muted-foreground">No messages yet</p>
             <p className="text-[11px] text-muted-foreground/60">Messages will appear here once outreach begins</p>
           </div>
-        ) : (
-          sorted.map((item) => <ChatBubble key={item.id} item={item} />)
-        )}
+        ) : chatItems}
       </div>
 
-      <div className="shrink-0 px-3 pb-3 pt-2 rounded-b-xl">
-        <div className="flex items-end gap-2">
+      {/* Compose area — ChatPanel style: white bar with border + shadow */}
+      <div className="shrink-0 px-3 pb-3 pt-1">
+        <div className="flex items-end gap-1.5 bg-white dark:bg-card rounded-lg border border-black/[0.1] shadow-sm px-2.5 py-1.5">
+          <button
+            type="button"
+            className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground shrink-0 transition-colors"
+            title="Emoji"
+            onClick={() => textareaRef.current?.focus()}
+          >
+            <Smile className="h-5 w-5" />
+          </button>
+
           <textarea
             ref={textareaRef}
             value={draft}
@@ -915,33 +1627,53 @@ function ConversationWidget({ lead, showHeader = false }: { lead: Record<string,
                 if (draft.trim()) setShowBypassConfirm(true);
               }
             }}
-            placeholder="Type a message… (Enter to send)"
+            placeholder="Type a message…"
             rows={1}
-            className="flex-1 text-[12px] bg-[#F6F6F6] rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-brand-indigo/30 placeholder:text-muted-foreground/40"
-            style={{ minHeight: "36px", maxHeight: "80px" }}
+            className="flex-1 text-[13px] bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/50 leading-5"
+            style={{ minHeight: "28px", maxHeight: "80px" }}
             data-testid="input-message-compose"
           />
+
+          <button
+            type="button"
+            className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground shrink-0 transition-colors"
+            title="Attach file"
+          >
+            <Paperclip className="h-5 w-5" />
+          </button>
+
           <div className="relative">
-            <button
-              onClick={() => { if (draft.trim()) setShowBypassConfirm(true); }}
-              disabled={!draft.trim() || sending}
-              className="h-10 w-10 rounded-lg bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 disabled:opacity-40 shrink-0"
-              title="Send message"
-              data-testid="btn-send-message"
-            >
-              {sending
-                ? <div className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                : <Send className="h-3.5 w-3.5 text-white" />}
-            </button>
-            {/* Bypass AI confirmation tooltip */}
+            {draft.trim() ? (
+              <button
+                type="button"
+                onClick={() => { if (draft.trim()) setShowBypassConfirm(true); }}
+                disabled={sending}
+                className="h-8 w-8 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
+                title="Send message"
+                data-testid="btn-send-message"
+              >
+                {sending
+                  ? <div className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  : <Send className="h-3.5 w-3.5 text-white" />}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="h-8 w-8 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 shrink-0 transition-colors"
+                title="Record voice message"
+              >
+                <Mic className="h-4 w-4 text-white" />
+              </button>
+            )}
+
             {showBypassConfirm && (
-              <div className="absolute bottom-12 right-0 z-50 w-52 bg-white rounded-xl shadow-lg border border-border/40 p-3 space-y-2">
+              <div className="absolute bottom-10 right-0 z-50 w-52 bg-white dark:bg-popover rounded-xl shadow-lg border border-border/40 p-3 space-y-2">
                 <p className="text-[11px] font-semibold text-foreground">Bypass AI for this message?</p>
                 <p className="text-[10px] text-muted-foreground/70 leading-snug">This will send as a human takeover and pause the AI agent.</p>
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => { setShowBypassConfirm(false); handleSend(); }}
-                    className="flex-1 px-2 py-1.5 rounded-lg bg-gray-900 text-white text-[11px] font-semibold hover:bg-gray-800 transition-colors"
+                    className="flex-1 px-2 py-1.5 rounded-lg bg-brand-indigo text-white text-[11px] font-semibold hover:bg-brand-indigo/90 transition-colors"
                   >
                     Yes, send
                   </button>
@@ -1036,9 +1768,9 @@ function TeamWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefresh?
   };
 
   return (
-    <div className="bg-white/60 rounded-xl p-[21px] flex flex-col h-full overflow-y-auto">
+    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-[21px] flex flex-col h-full overflow-y-auto">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[16px] font-semibold font-heading text-foreground">Team</p>
+        <p className="text-[18px] font-semibold font-heading text-foreground">Team</p>
         <Popover open={addOpen} onOpenChange={setAddOpen}>
           <PopoverTrigger asChild>
             <button className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
@@ -1128,7 +1860,7 @@ function TeamWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefresh?
   );
 }
 
-// ── Notes widget (click-to-edit) ─────────────────────────────────────────────
+// ── Notes widget (click-to-edit + voice memo + AI notes) ─────────────────────
 function NotesWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefresh?: () => void }) {
   const leadId = lead.Id ?? lead.id ?? 0;
   const currentNotes = lead.notes || lead.Notes || "";
@@ -1137,6 +1869,16 @@ function NotesWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefresh
   const [saving, setSaving] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Voice recording state
+  const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordingChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [transcribing, setTranscribing] = useState(false);
+
+  const { toast } = useToast();
+
   useEffect(() => { setDraft(currentNotes); }, [currentNotes]);
   useEffect(() => {
     if (editing && textareaRef.current) {
@@ -1144,6 +1886,12 @@ function NotesWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefresh
       textareaRef.current.selectionStart = textareaRef.current.value.length;
     }
   }, [editing]);
+  useEffect(() => {
+    return () => {
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+      if (mediaRecorderRef.current) { try { mediaRecorderRef.current.stop(); } catch {} }
+    };
+  }, []);
 
   const save = useCallback(async () => {
     if (draft === currentNotes) { setEditing(false); return; }
@@ -1157,9 +1905,105 @@ function NotesWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefresh
     }
   }, [draft, currentNotes, leadId, onRefresh]);
 
+  const startVoiceRecording = useCallback(async () => {
+    if (!leadId) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "audio/webm",
+      });
+      recordingChunksRef.current = [];
+      mr.ondataavailable = (e) => { if (e.data.size > 0) recordingChunksRef.current.push(e.data); };
+      mr.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(recordingChunksRef.current, { type: mr.mimeType });
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const dataUrl = reader.result as string;
+          setTranscribing(true);
+          try {
+            console.log("[voice] Sending audio:", dataUrl.length, "chars, mime:", mr.mimeType);
+            const httpRes = await apiFetch(`/api/leads/${leadId}/transcribe-voice`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ audio_data: dataUrl, mime_type: mr.mimeType }),
+            });
+            const res = await httpRes.json() as any;
+            if (!httpRes.ok || res.error) {
+              const desc = res.error === "NO_GROQ_API_KEY"
+                ? "Groq API key not configured."
+                : res.detail || res.error || "Could not transcribe audio. Try again.";
+              console.error("[voice] Transcription error:", res);
+              toast({ title: "Transcription failed", description: String(desc).slice(0, 200), variant: "destructive" });
+              return;
+            }
+            if (res.transcription) {
+              setDraft((prev: string) => {
+                const sep = prev.trim() ? "\n\n" : "";
+                return prev + sep + res.transcription;
+              });
+              setEditing(true);
+            }
+          } catch {
+            toast({ title: "Transcription failed", description: "Network error. Try again.", variant: "destructive" });
+          } finally {
+            setTranscribing(false);
+          }
+        };
+        reader.readAsDataURL(blob);
+      };
+      mr.start(250);
+      mediaRecorderRef.current = mr;
+      setIsRecordingVoice(true);
+      setRecordingSeconds(0);
+      recordingTimerRef.current = setInterval(() => setRecordingSeconds((s) => s + 1), 1000);
+    } catch {
+      toast({ title: "Microphone access denied", description: "Allow microphone access to record voice memos.", variant: "destructive" });
+    }
+  }, [leadId, toast]);
+
+  const stopVoiceRecording = useCallback(() => {
+    if (recordingTimerRef.current) { clearInterval(recordingTimerRef.current); recordingTimerRef.current = null; }
+    mediaRecorderRef.current?.stop();
+    mediaRecorderRef.current = null;
+    setIsRecordingVoice(false);
+    setRecordingSeconds(0);
+  }, []);
+
   return (
-    <div className="bg-white/60 rounded-xl p-[21px] flex flex-col gap-3 min-h-full">
-      <p className="text-[16px] font-semibold font-heading text-foreground">Notes</p>
+    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-[21px] flex flex-col gap-3 min-h-full">
+      {/* Header row: title + voice memo button */}
+      <div className="flex items-center justify-between">
+        <p className="text-[18px] font-semibold font-heading text-foreground">Notes</p>
+        <div className="flex items-center gap-1.5">
+          {transcribing ? (
+            <div className="flex items-center gap-1.5 text-[10px] text-brand-indigo">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Transcribing…
+            </div>
+          ) : isRecordingVoice ? (
+            <button
+              onClick={stopVoiceRecording}
+              className="flex items-center gap-1.5 h-9 px-3 rounded-full bg-red-500/15 text-red-600 text-[12px] font-medium border border-red-300/60 hover:bg-red-500/25 transition-colors"
+              title="Stop recording"
+            >
+              <Square className="h-3 w-3 fill-current" />
+              {recordingSeconds}s
+            </button>
+          ) : (
+            <button
+              onClick={startVoiceRecording}
+              disabled={saving || transcribing}
+              className="inline-flex items-center justify-center h-9 w-9 rounded-full border border-black/[0.125] text-muted-foreground hover:text-foreground hover:border-black/[0.175] transition-colors disabled:opacity-50"
+              title="Record voice memo (transcribe to text)"
+            >
+              <Mic className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Manual notes: click-to-edit */}
       {editing ? (
         <textarea
           ref={textareaRef}
@@ -1170,14 +2014,14 @@ function NotesWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefresh
             if (e.key === "Escape") { setDraft(currentNotes); setEditing(false); }
           }}
           rows={8}
-          className="text-[12px] bg-white/70 border border-brand-indigo/30 rounded-lg px-2 py-1.5 w-full resize-none focus:outline-none focus:ring-1 focus:ring-brand-indigo/40 flex-1"
+          className="text-[12px] bg-white/70 dark:bg-white/[0.07] border border-brand-indigo/30 rounded-lg px-2 py-1.5 w-full resize-none focus:outline-none focus:ring-1 focus:ring-brand-indigo/40 flex-1"
         />
       ) : currentNotes ? (
         <p
           className="text-[12px] text-foreground/80 leading-relaxed cursor-text hover:bg-muted/30 rounded-lg px-1 py-0.5 -mx-1 transition-colors"
           onClick={() => setEditing(true)}
         >
-          {currentNotes}
+          {renderRichText(currentNotes)}
         </p>
       ) : (
         <p
@@ -1187,151 +2031,193 @@ function NotesWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefresh
           Click to add notes...
         </p>
       )}
+
     </div>
   );
 }
 
 // ── Activity timeline widget ────────────────────────────────────────────────
+
+const TIMELINE_ICON: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
+  bump:           { icon: Zap,            color: "text-brand-indigo",                             bg: "bg-brand-indigo/10" },
+  outbound_ai:    { icon: Bot,            color: "text-brand-indigo",                             bg: "bg-brand-indigo/10" },
+  outbound_agent: { icon: UserIcon,       color: "text-emerald-700 dark:text-emerald-400",        bg: "bg-emerald-50 dark:bg-emerald-950/30" },
+  inbound:        { icon: MessageSquare,  color: "text-emerald-600 dark:text-emerald-400",        bg: "bg-emerald-50 dark:bg-emerald-950/30" },
+  booked:         { icon: Calendar,       color: "text-amber-500 dark:text-amber-400",            bg: "bg-amber-50 dark:bg-amber-950/30" },
+  dnd:            { icon: Ban,            color: "text-red-500 dark:text-red-400",                bg: "bg-red-50 dark:bg-red-950/30" },
+  optout:         { icon: Shield,         color: "text-red-500 dark:text-red-400",                bg: "bg-red-50 dark:bg-red-950/30" },
+  tag:            { icon: TagIcon,        color: "text-violet-600 dark:text-violet-400",          bg: "bg-violet-50 dark:bg-violet-950/30" },
+};
+
+type TimelineEvent = { ts: string; styleKey: string; label: string; detail?: string };
+
 function ActivityTimeline({ lead, tagEvents }: {
   lead: Record<string, any>;
   tagEvents: { name: string; color?: string; appliedAt?: string }[];
 }) {
-  const { interactions, loading } = useInteractions(undefined, getLeadId(lead));
+  const leadId = getLeadId(lead);
+  const { interactions, total, totalPages, page, loading, error, nextPage, prevPage } =
+    useInteractionsPaginated(leadId, 15);
   const status = getStatus(lead);
 
   // Build a unified timeline from interactions + tags + status events
   const timeline = useMemo(() => {
-    const events: { ts: string; type: string; label: string; detail?: string; icon: React.ElementType; color: string }[] = [];
+    const events: TimelineEvent[] = [];
 
-    // Tag events
-    tagEvents.forEach((evt) => {
-      events.push({
-        ts: evt.appliedAt || "",
-        type: "tag",
-        label: `Tag "${evt.name}" applied`,
-        icon: TagIcon,
-        color: resolveColor(evt.color),
+    // Tag/status events only on page 1 (avoid repeating on every page)
+    if (page === 1) {
+      tagEvents.forEach((evt) => {
+        events.push({
+          ts: evt.appliedAt || "",
+          styleKey: "tag",
+          label: `Tag "${evt.name}" applied`,
+        });
       });
-    });
 
-    // Status-based events
-    if (status === "Booked") {
-      const bookedDate = lead.booked_call_date || lead.bookedCallDate || "";
-      events.push({
-        ts: bookedDate || lead.updated_at || "",
-        type: "booked",
-        label: "Call Booked",
-        detail: bookedDate ? `Scheduled for ${formatMsgTime(bookedDate)}` : undefined,
-        icon: Calendar,
-        color: "#FCB803",
-      });
+      if (status === "Booked") {
+        const bookedDate = lead.booked_call_date || lead.bookedCallDate || "";
+        events.push({
+          ts: bookedDate || lead.updated_at || "",
+          styleKey: "booked",
+          label: "Call Booked",
+          detail: bookedDate ? `Scheduled for ${formatMsgTime(bookedDate)}` : undefined,
+        });
+      }
+
+      if (status === "DND") {
+        events.push({
+          ts: lead.updated_at || "",
+          styleKey: "dnd",
+          label: "Do Not Disturb",
+          detail: lead.dnc_reason || "Lead requested no contact",
+        });
+      }
+
+      if (lead.opted_out) {
+        events.push({
+          ts: lead.updated_at || "",
+          styleKey: "optout",
+          label: "Opted Out",
+          detail: lead.dnc_reason || undefined,
+        });
+      }
     }
 
-    if (status === "DND") {
-      events.push({
-        ts: lead.updated_at || "",
-        type: "dnd",
-        label: "Do Not Disturb",
-        detail: lead.dnc_reason || "Lead requested no contact",
-        icon: Ban,
-        color: "#EF4444",
-      });
-    }
-
-    if (lead.opted_out) {
-      events.push({
-        ts: lead.updated_at || "",
-        type: "optout",
-        label: "Opted Out",
-        detail: lead.dnc_reason || undefined,
-        icon: Shield,
-        color: "#EF4444",
-      });
-    }
-
-    // Interaction events (last 10)
-    const sortedInteractions = [...interactions]
-      .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))
-      .slice(0, 10);
-
-    sortedInteractions.forEach((item) => {
+    // Interaction events (already paginated & sorted by server)
+    interactions.forEach((item) => {
       const isAi = isAiMsg(item);
       const outbound = item.direction === "Outbound";
-      const content = (item.content || item.Content || "").substring(0, 60);
+      const raw = item.content || item.Content || "";
+      const content = raw.substring(0, 120);
+      const ellipsis = raw.length > 120 ? "…" : "";
 
       if (item.is_bump) {
         events.push({
           ts: item.created_at || "",
-          type: "bump",
+          styleKey: "bump",
           label: `AI Follow-up #${item.bump_stage || ""}`,
-          detail: content ? `"${content}…"` : undefined,
-          icon: Zap,
-          color: "#4F46E5",
+          detail: content ? `"${content}${ellipsis}"` : undefined,
         });
       } else {
         events.push({
           ts: item.created_at || "",
-          type: outbound ? "outbound" : "inbound",
+          styleKey: outbound ? (isAi ? "outbound_ai" : "outbound_agent") : "inbound",
           label: outbound ? (isAi ? "AI Message Sent" : "Agent Message Sent") : "Lead Replied",
-          detail: content ? `"${content}${(item.content || item.Content || "").length > 60 ? "…" : ""}"` : undefined,
-          icon: outbound ? (isAi ? Bot : UserIcon) : MessageSquare,
-          color: outbound ? (isAi ? "#4F46E5" : "#166534") : "#10B981",
+          detail: content ? `"${content}${ellipsis}"` : undefined,
         });
       }
     });
 
-    // Sort by timestamp desc
     events.sort((a, b) => (b.ts || "").localeCompare(a.ts || ""));
     return events;
-  }, [interactions, tagEvents, status, lead]);
+  }, [interactions, tagEvents, status, lead, page]);
 
   return (
-    <div className="bg-white/60 rounded-xl p-[21px] flex flex-col h-full overflow-y-auto">
-      <p className="text-[16px] font-semibold font-heading text-foreground mb-3">Activity</p>
+    <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col h-full overflow-y-auto gap-6">
+      <span className="text-[18px] font-semibold font-heading leading-tight text-foreground shrink-0">Activity</span>
+
       {loading ? (
-        <div className="flex flex-col gap-3 py-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex items-start gap-2.5 animate-pulse">
-              <div className="h-6 w-6 rounded-full bg-foreground/10 shrink-0 mt-0.5" />
-              <div className="flex-1 space-y-1.5">
-                <div className="h-3 bg-foreground/10 rounded w-3/4" />
-                <div className="h-2.5 bg-foreground/8 rounded w-1/2" />
+        <div className="space-y-1">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-start gap-2.5 bg-white/90 dark:bg-card/90 rounded-xl px-2 py-1.5">
+              <div className="h-7 w-7 rounded-lg bg-muted animate-pulse shrink-0" />
+              <div className="flex-1 min-w-0 space-y-1.5 pt-0.5">
+                <div className="h-3.5 w-3/5 bg-muted animate-pulse rounded" />
+                <div className="h-3 w-4/5 bg-muted animate-pulse rounded" />
               </div>
+              <div className="h-3 w-8 bg-muted animate-pulse rounded shrink-0 mt-1" />
             </div>
           ))}
         </div>
+      ) : error ? (
+        <div className="flex items-center justify-center py-8 px-4 flex-1">
+          <p className="text-xs text-muted-foreground">Could not load activity timeline.</p>
+        </div>
       ) : timeline.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2 py-6 text-center flex-1">
-          <Activity className="h-6 w-6 text-muted-foreground/30" />
-          <p className="text-[11px] text-muted-foreground/50">No activity yet</p>
+        <div className="flex flex-col items-center justify-center text-center py-8 px-4 flex-1">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted mb-2">
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <p className="text-sm font-medium text-foreground">No recent activity</p>
+          <p className="text-xs text-muted-foreground max-w-[240px] mt-1">
+            Activity will appear here as this lead interacts with your campaigns.
+          </p>
         </div>
       ) : (
-        <div className="relative flex flex-col gap-0">
-          {/* Vertical line */}
-          <div className="absolute left-[11px] top-3 bottom-3 w-[1.5px] bg-border/25" />
-
+        <div className="overflow-y-auto space-y-1 flex-1 min-h-0">
           {timeline.map((evt, i) => {
-            const Icon = evt.icon;
+            const cfg = TIMELINE_ICON[evt.styleKey] ?? TIMELINE_ICON.inbound;
+            const Icon = cfg.icon;
             return (
-              <div key={`${evt.type}-${i}`} className="relative flex items-start gap-2.5 py-2">
-                <div
-                  className="relative z-10 h-[22px] w-[22px] rounded-full flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: `${evt.color}18`, border: `1.5px solid ${evt.color}40` }}
-                >
-                  <Icon className="h-2.5 w-2.5" style={{ color: evt.color }} />
+              <div
+                key={`${evt.styleKey}-${i}`}
+                className="w-full flex items-start gap-2.5 bg-white/90 dark:bg-card/90 rounded-xl px-2 py-1.5 transition-colors hover:bg-white dark:hover:bg-card"
+              >
+                <div className={cn("shrink-0 flex items-center justify-center rounded-lg h-7 w-7", cfg.bg)}>
+                  <Icon className={cn("h-4 w-4", cfg.color)} />
                 </div>
-                <div className="flex-1 min-w-0 pt-0.5">
-                  <p className="text-[11px] font-semibold text-foreground leading-tight">{evt.label}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] font-medium text-foreground leading-snug truncate">{evt.label}</p>
                   {evt.detail && (
-                    <p className="text-[10px] text-muted-foreground/65 leading-snug mt-0.5 truncate">{evt.detail}</p>
-                  )}
-                  {evt.ts && (
-                    <p className="text-[9px] text-muted-foreground/45 mt-0.5 tabular-nums">{formatMsgTime(evt.ts)}</p>
+                    <p className="text-[11px] text-muted-foreground truncate mt-0.5">{evt.detail}</p>
                   )}
                 </div>
+                {evt.ts && (
+                  <span className="text-[10px] text-muted-foreground tabular-nums shrink-0 mt-0.5">
+                    {relativeTime(evt.ts)}
+                  </span>
+                )}
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {total > 15 && (
+        <div className="shrink-0 flex items-center justify-between pt-2 border-t border-border/20 mt-1">
+          <button
+            type="button"
+            onClick={prevPage}
+            disabled={page <= 1}
+            className="icon-circle-lg icon-circle-base disabled:opacity-30 disabled:pointer-events-none"
+            aria-label="Previous page"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="text-[11px] font-medium text-muted-foreground tabular-nums select-none">
+            {page} / {totalPages}
+            <span className="text-muted-foreground/50 ml-1.5">({total})</span>
+          </span>
+          <button
+            type="button"
+            onClick={nextPage}
+            disabled={page >= totalPages}
+            className="icon-circle-lg icon-circle-base disabled:opacity-30 disabled:pointer-events-none"
+            aria-label="Next page"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
       )}
     </div>
@@ -1383,7 +2269,6 @@ export function LeadDetailView({
   const avatarColor = getStatusAvatarColor(status);
   const leadId      = getLeadId(lead);
   const lastActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
-  const sentiment    = lead.ai_sentiment || lead.aiSentiment || "";
   const bookedDate   = lead.booked_call_date || lead.bookedCallDate || "";
   const ratingLabel  = score >= 70 ? "Hot" : score >= 40 ? "Warm" : "Cold";
 
@@ -1442,6 +2327,26 @@ export function LeadDetailView({
       .then((data: any) => setAccountLogo(data?.logo_url || null))
       .catch(() => setAccountLogo(null));
   }, [lead.Accounts_id, lead.account_id, lead.accounts_id]);
+
+  // ── Campaign sticker ──────────────────────────────────────────────────────
+  const [campaignStickerUrl, setCampaignStickerUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const cId = lead.Campaigns_id || lead.campaigns_id || lead.campaignsId;
+    if (!cId) { setCampaignStickerUrl(null); return; }
+    apiFetch(`/api/campaigns/${cId}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: any) => {
+        const slug = data?.campaign_sticker || data?.campaignSticker;
+        if (slug) {
+          const sticker = CAMPAIGN_STICKERS.find(s => s.slug === slug);
+          setCampaignStickerUrl(sticker?.url || null);
+        } else {
+          setCampaignStickerUrl(null);
+        }
+      })
+      .catch(() => setCampaignStickerUrl(null));
+  }, [lead.Campaigns_id, lead.campaigns_id, lead.campaignsId]);
 
   // ── Edit mode ──────────────────────────────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false);
@@ -1507,27 +2412,9 @@ export function LeadDetailView({
     navigate(`${prefix}/calendar`);
   }, [navigate]);
 
-  // ── Gradient tester state ──────────────────────────────────────────────────
-  const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
-  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
-  const [gradientDragMode, setGradientDragMode] = useState(false);
-
-  const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
-    if (id === -1) { setGradientLayers(prev => [...prev, patch as GradientLayer]); return; }
-    if ((patch as any).id === -999) { setGradientLayers(prev => prev.filter(l => l.id !== id)); return; }
-    setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
-  }, []);
-
-  const resetGradientLayers = useCallback(() => {
-    setGradientLayers(DEFAULT_LAYERS);
-    setGradientDragMode(false);
-  }, []);
-
-  // ── Toolbar button styles ─────────────────────────────────────────────────
-  const toolBtn = "inline-flex items-center gap-1.5 px-3 h-9 rounded-full text-[12px] font-medium border transition-colors";
-  const toolBtnDefault = "border-border/60 bg-transparent text-foreground hover:bg-muted/50";
-  const toolBtnActive  = "border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo";
-  const toolBtnDanger  = "border-red-300 bg-red-50 text-red-600 hover:bg-red-100";
+  // ── Expand-on-hover button helpers ───────────────────────────────────────
+  const xBtn = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
+  const xSpan = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
   // Status color helpers
   const statusBadge = STATUS_COLORS[status] ?? { badge: "bg-muted text-muted-foreground border-border" };
@@ -1536,25 +2423,12 @@ export function LeadDetailView({
     <div ref={panelRef} className="relative flex flex-col h-full overflow-hidden">
 
       {/* ── Full-height gradient ── */}
-      {gradientTesterOpen ? (
-        <>
-          {gradientLayers.map(layer => {
-            const style = layerToStyle(layer);
-            if (!style) return null;
-            return <div key={layer.id} className="absolute inset-0" style={style} />;
-          })}
-          {gradientDragMode && (
-            <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
-          )}
-        </>
-      ) : (
-        <>
-          <div className="absolute inset-0 bg-[#ffffff]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_79%_101%_at_42%_91%,rgba(255,102,17,0.4)_0%,transparent_69%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_2%_2%,#f0ffb5_5%,transparent_30%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_73%_92%_at_69%_50%,rgba(255,191,135,0.38)_0%,transparent_66%)]" />
-        </>
-      )}
+      <>
+        <div className="absolute inset-0 bg-popover dark:bg-background" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_79%_101%_at_42%_91%,rgba(255,102,17,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_2%_2%,#f0ffb5_5%,transparent_30%)] dark:opacity-[0.08]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_73%_92%_at_69%_50%,rgba(255,191,135,0.38)_0%,transparent_66%)] dark:opacity-[0.08]" />
+      </>
 
       {/* ── Scrollable content ── */}
       <div className="relative flex-1 overflow-y-auto">
@@ -1565,32 +2439,36 @@ export function LeadDetailView({
           {/* Toolbar */}
           <div className="flex items-center gap-1 flex-wrap">
             {toolbarPrefix?.({ isNarrow })}
-            {deleteConfirm ? (
-              <div className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full border border-red-200 bg-red-50">
-                <span className="text-[11px] text-red-600 font-medium">Delete lead?</span>
-                <button onClick={handleDelete} disabled={deleting} className="text-[11px] font-bold text-red-600 hover:text-red-700 px-1">{deleting ? "…" : "Yes"}</button>
-                <button onClick={() => setDeleteConfirm(false)} className="text-[11px] text-muted-foreground hover:text-foreground px-1">No</button>
-              </div>
-            ) : (
-              <button onClick={() => setDeleteConfirm(true)} className={cn(toolBtn, toolBtnDefault)}>
-                <Trash2 className="h-3 w-3" />Delete
+
+            {/* Right-edge: To PDF + Delete */}
+            <div className="ml-auto flex items-center gap-1">
+              {/* To PDF */}
+              <button onClick={handlePdf} className={cn(xBtn, "hover:max-w-[110px] border-black/[0.125] text-foreground/60 hover:text-foreground")}>
+                <span className="relative inline-flex h-4 w-4 shrink-0">
+                  <FileText className="h-4 w-4" />
+                  <span className="absolute bottom-[1px] left-0 right-0 flex justify-center text-[5px] font-black leading-none">PDF</span>
+                </span>
+                <span className={xSpan}>To PDF</span>
               </button>
-            )}
-            <button onClick={handlePdf} className={cn(toolBtn, toolBtnDefault)}>
-              <FileText className="h-3 w-3" />To PDF
-            </button>
-            <button
-              type="button"
-              onClick={() => setGradientTesterOpen(prev => !prev)}
-              className={`inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border transition-colors ${gradientTesterOpen ? "bg-indigo-100 text-indigo-600 border-indigo-200" : "border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50"}`}
-              title="Gradient Tester"
-            >
-              <Paintbrush className="h-4 w-4" />
-            </button>
+
+              {/* Delete */}
+              {deleteConfirm ? (
+                <div className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full border border-red-200 bg-red-50">
+                  <span className="text-[11px] text-red-600 font-medium">Delete lead?</span>
+                  <button onClick={handleDelete} disabled={deleting} className="text-[11px] font-bold text-red-600 hover:text-red-700 px-1">{deleting ? "…" : "Yes"}</button>
+                  <button onClick={() => setDeleteConfirm(false)} className="text-[11px] text-muted-foreground hover:text-foreground px-1">No</button>
+                </div>
+              ) : (
+                <button onClick={() => setDeleteConfirm(true)} className={cn(xBtn, "hover:max-w-[110px] border-red-300/60 text-red-400 hover:border-red-400 hover:text-red-600")}>
+                  <Trash2 className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>Delete</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Avatar + Name + Tags + Info row (merged onto one line) */}
-          <div className="flex items-start gap-3">
+          <div className="relative flex items-start gap-3">
             <EntityAvatar
               name={name}
               bgColor={avatarColor.bg}
@@ -1607,11 +2485,11 @@ export function LeadDetailView({
                   onBlur={handleSaveEdit}
                   onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(); if (e.key === "Escape") setIsEditing(false); }}
                   autoFocus
-                  className="text-[24px] font-semibold font-heading bg-white/70 border border-brand-indigo/30 rounded-lg px-2 py-0.5 w-full focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
+                  className="text-[24px] font-semibold font-heading bg-white/70 dark:bg-white/[0.07] border border-brand-indigo/30 rounded-lg px-2 py-0.5 w-full focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
                 />
               ) : (
                 <div className="group/name flex items-center gap-2 cursor-text" onClick={startEdit}>
-                  <h2 className="text-[27px] font-semibold font-heading text-foreground leading-tight truncate">{name}</h2>
+                  <h2 className="text-[18px] md:text-[27px] font-semibold font-heading text-foreground leading-tight truncate">{name}</h2>
                   <button
                     onClick={(e) => { e.stopPropagation(); startEdit(); }}
                     className="opacity-0 group-hover/name:opacity-100 p-1 rounded hover:bg-muted/50 transition-opacity text-muted-foreground hover:text-foreground shrink-0"
@@ -1623,37 +2501,31 @@ export function LeadDetailView({
               )}
               <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                 <span className="inline-flex items-center px-2 py-0.5 rounded border border-border/50 text-[10px] font-medium text-muted-foreground">Lead</span>
-                {sentiment && (
-                  <span className="text-[11px] text-foreground/60 font-medium">
-                    {sentiment === "Positive" ? "😊" : sentiment === "Negative" ? "😞" : "😐"}{" "}
-                    <span className="capitalize">{sentiment}</span>
-                  </span>
-                )}
                 {tagEvents.map((evt, i) => {
                   const hex = resolveColor(evt.color);
                   return (
                     <span
                       key={i}
                       className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0"
-                      style={{ backgroundColor: `${hex}20`, color: hex }}
+                      style={{ backgroundColor: `${hex}40`, color: hex }}
                     >
-                      <TagIcon className="h-2.5 w-2.5" />{evt.name}
+                      {evt.name}
                     </span>
                   );
                 })}
               </div>
             </div>
 
-            {/* Info items — centered, double gap, pr-[19px] matches pipeline tube inset */}
-            <div className="flex items-start gap-6 pt-2 pr-[19px] flex-wrap">
+            {/* Info chips — centered on right edge of col 2 (same formula as Campaign panel) */}
+            <div className="hidden md:flex items-center gap-10 pointer-events-auto z-10 absolute -translate-x-1/2 bottom-[15px]" style={{ left: "calc(66.67% - 5px)" }}>
               {bookedDate && (
-                <div>
+                <div className="whitespace-nowrap">
                   <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Booked</div>
                   <button
                     onClick={handleBookedClick}
                     className="text-[12px] font-bold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1"
                   >
-                    <Calendar className="h-3 w-3" />{formatBookedDate(bookedDate)}
+                    <Calendar className="h-3 w-3 shrink-0" />{formatBookedDate(bookedDate)}
                   </button>
                 </div>
               )}
@@ -1663,7 +2535,7 @@ export function LeadDetailView({
                   <input
                     value={editFields.source ?? ""}
                     onChange={(e) => setEditFields((f) => ({ ...f, source: e.target.value }))}
-                    className="text-[11px] font-bold bg-white/70 border border-brand-indigo/30 rounded px-1.5 py-0.5 w-20 focus:outline-none"
+                    className="text-[11px] font-bold bg-white/70 dark:bg-white/[0.07] border border-brand-indigo/30 rounded px-1.5 py-0.5 w-20 focus:outline-none"
                   />
                 ) : (
                   <div className="text-[11px] font-bold text-foreground">{lead.source || lead.Source || "API"}</div>
@@ -1676,15 +2548,29 @@ export function LeadDetailView({
                   <span className="text-[11px] font-bold text-foreground">{ratingLabel}</span>
                 </div>
               </div>
-              <div>
-                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Campaign</div>
-                <div className="text-[11px] font-bold text-foreground truncate max-w-[100px]">
-                  {lead.Campaign || lead.campaign || lead.campaign_name || "—"}
+              <div className="flex items-center gap-2">
+                {campaignStickerUrl ? (
+                  <img src={campaignStickerUrl} alt="" className="h-[45px] w-[45px] object-contain shrink-0" />
+                ) : (
+                  <EntityAvatar
+                    name={lead.Campaign || lead.campaign || lead.campaign_name || "?"}
+                    photoUrl={accountLogo || undefined}
+                    bgColor={getCampaignAvatarColor("Active").bg}
+                    textColor={getCampaignAvatarColor("Active").text}
+                    size={45}
+                    className="shrink-0"
+                  />
+                )}
+                <div>
+                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Campaign</div>
+                  <div className="text-[11px] font-bold text-foreground truncate max-w-[120px]">
+                    {lead.Campaign || lead.campaign || lead.campaign_name || "—"}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
                 <div
-                  className="h-[34px] w-[34px] rounded-full flex items-center justify-center shrink-0 overflow-hidden"
+                  className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 overflow-hidden"
                   style={accountLogo ? {} : { backgroundColor: "rgba(0,0,0,0.08)", color: "#374151" }}
                 >
                   {accountLogo
@@ -1699,8 +2585,81 @@ export function LeadDetailView({
             </div>
           </div>
 
+          {/* Info chips — mobile row (appears below name row) */}
+          <div className="md:hidden flex items-center gap-5 flex-wrap">
+            {bookedDate && (
+              <div className="whitespace-nowrap">
+                <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Booked</div>
+                <button
+                  onClick={handleBookedClick}
+                  className="text-[12px] font-bold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1"
+                >
+                  <Calendar className="h-3 w-3 shrink-0" />{formatBookedDate(bookedDate)}
+                </button>
+              </div>
+            )}
+            <div>
+              <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Source</div>
+              {isEditing ? (
+                <input
+                  value={editFields.source ?? ""}
+                  onChange={(e) => setEditFields((f) => ({ ...f, source: e.target.value }))}
+                  className="text-[11px] font-bold bg-white/70 dark:bg-white/[0.07] border border-brand-indigo/30 rounded px-1.5 py-0.5 w-20 focus:outline-none"
+                />
+              ) : (
+                <div className="text-[11px] font-bold text-foreground">{lead.source || lead.Source || "API"}</div>
+              )}
+            </div>
+            <div>
+              <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Rating</div>
+              <div className="flex items-center gap-1">
+                <Star className="h-3 w-3" style={{ color: ratingLabel === "Hot" ? "#EF4444" : ratingLabel === "Warm" ? "#F59E0B" : "#6B7280" }} />
+                <span className="text-[11px] font-bold text-foreground">{ratingLabel}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {campaignStickerUrl ? (
+                <img src={campaignStickerUrl} alt="" className="h-[45px] w-[45px] object-contain shrink-0" />
+              ) : (
+                <EntityAvatar
+                  name={lead.Campaign || lead.campaign || lead.campaign_name || "?"}
+                  photoUrl={accountLogo || undefined}
+                  bgColor={getCampaignAvatarColor("Active").bg}
+                  textColor={getCampaignAvatarColor("Active").text}
+                  size={40}
+                  className="shrink-0"
+                />
+              )}
+              <div>
+                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Campaign</div>
+                <div className="text-[11px] font-bold text-foreground truncate max-w-[120px]">
+                  {lead.Campaign || lead.campaign || lead.campaign_name || "—"}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div
+                className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 overflow-hidden"
+                style={accountLogo ? {} : { backgroundColor: "rgba(0,0,0,0.08)", color: "#374151" }}
+              >
+                {accountLogo
+                  ? <img src={accountLogo} alt="account" className="h-full w-full object-cover" />
+                  : <Building2 className="h-4 w-4" />}
+              </div>
+              <div>
+                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Owner</div>
+                <span className="text-[11px] font-bold text-foreground truncate max-w-[90px]">{lead.Account || lead.account_name || "—"}</span>
+              </div>
+            </div>
+          </div>
+
           {/* Pipeline tube */}
-          {status && <div className="pt-2 pb-10"><PipelineProgress status={status} /></div>}
+          {status && (
+            <div className="pt-2 pb-6">
+              <div className="hidden md:block"><PipelineProgress status={status} /></div>
+              <div className="md:hidden"><PipelineProgressCompact status={status} /></div>
+            </div>
+          )}
         </div>
 
         {/* ── Body — 3x2 widget grid matching Accounts page (each 48vh) ── */}
@@ -1709,15 +2668,15 @@ export function LeadDetailView({
           {/* Row 1 */}
           <div className="grid gap-[3px]" style={{ gridTemplateColumns: isNarrow ? "1fr" : "1fr 1fr 1fr" }}>
             {/* Contact */}
-            <div className="overflow-y-auto rounded-xl" style={{ height: "42vh" }}>
+            <div className="overflow-y-auto rounded-xl" style={{ height: isNarrow ? "auto" : 620, minHeight: isNarrow ? 280 : undefined }}>
               <ContactWidget lead={lead} onRefresh={onRefresh} />
             </div>
             {/* Chat (top of middle column) */}
-            <div className="overflow-hidden rounded-xl bg-white/60 flex flex-col" style={{ height: "42vh" }}>
+            <div className="overflow-hidden rounded-xl bg-white/60 dark:bg-white/[0.10] flex flex-col" style={{ height: isNarrow ? "auto" : 620, minHeight: isNarrow ? 320 : undefined }}>
               <ConversationWidget lead={lead} showHeader />
             </div>
             {/* Lead Score */}
-            <div className="overflow-y-auto rounded-xl" style={{ height: "42vh" }}>
+            <div className="overflow-y-auto rounded-xl" style={{ height: isNarrow ? "auto" : 620, minHeight: isNarrow ? 280 : undefined }}>
               <ScoreWidget score={score} lead={lead} status={status} />
             </div>
           </div>
@@ -1725,30 +2684,21 @@ export function LeadDetailView({
           {/* Row 2 */}
           <div className="grid gap-[3px]" style={{ gridTemplateColumns: isNarrow ? "1fr" : "1fr 1fr 1fr" }}>
             {/* Activity Timeline */}
-            <div className="overflow-y-auto rounded-xl" style={{ height: "42vh" }}>
+            <div className="overflow-y-auto rounded-xl" style={{ height: isNarrow ? "auto" : 620, minHeight: isNarrow ? 280 : undefined }}>
               <ActivityTimeline lead={lead} tagEvents={tagEvents} />
             </div>
             {/* Team */}
-            <div className="overflow-y-auto rounded-xl" style={{ height: "42vh" }}>
+            <div className="overflow-y-auto rounded-xl" style={{ height: isNarrow ? "auto" : 620, minHeight: isNarrow ? 280 : undefined }}>
               <TeamWidget lead={lead} onRefresh={onRefresh} />
             </div>
             {/* Notes (click-to-edit) */}
-            <div className="overflow-y-auto rounded-xl" style={{ height: "42vh" }}>
+            <div className="overflow-y-auto rounded-xl" style={{ height: isNarrow ? "auto" : 620, minHeight: isNarrow ? 280 : undefined }}>
               <NotesWidget lead={lead} onRefresh={onRefresh} />
             </div>
           </div>
         </div>
       </div>
 
-      <GradientTester
-        open={gradientTesterOpen}
-        onClose={() => setGradientTesterOpen(false)}
-        layers={gradientLayers}
-        onUpdateLayer={updateGradientLayer}
-        onResetLayers={resetGradientLayers}
-        dragMode={gradientDragMode}
-        onToggleDragMode={() => setGradientDragMode(prev => !prev)}
-      />
     </div>
   );
 }
@@ -1759,7 +2709,7 @@ export const LIST_RING_STROKE = 2.5;
 const LIST_RING_RADIUS = (LIST_RING_SIZE - LIST_RING_STROKE * 2) / 2;
 const LIST_RING_CIRC   = 2 * Math.PI * LIST_RING_RADIUS;
 
-export function ListScoreRing({ score, status }: { score: number; status: string }) {
+export function ListScoreRing({ score, status, isActive }: { score: number; status: string; isActive?: boolean }) {
   const offset = LIST_RING_CIRC * (1 - Math.max(0, Math.min(1, score / 100)));
   return (
     <div className="relative shrink-0" style={{ width: LIST_RING_SIZE, height: LIST_RING_SIZE }}>
@@ -1774,7 +2724,7 @@ export function ListScoreRing({ score, status }: { score: number; status: string
         />
         <circle
           cx={LIST_RING_SIZE / 2} cy={LIST_RING_SIZE / 2} r={LIST_RING_RADIUS}
-          fill="none" stroke="#D1D1D1" strokeWidth={LIST_RING_STROKE}
+          fill="none" stroke={isActive ? "#555555" : "#D1D1D1"} strokeWidth={LIST_RING_STROKE}
           strokeDasharray={LIST_RING_CIRC} strokeDashoffset={offset} strokeLinecap="round"
         />
       </svg>
@@ -1793,6 +2743,7 @@ function LeadListCard({
   leadTags,
   showContactAlways = false,
   tagsColorful = false,
+  hideTags = false,
 }: {
   lead: Record<string, any>;
   isActive: boolean;
@@ -1800,6 +2751,7 @@ function LeadListCard({
   leadTags: { name: string; color: string }[];
   showContactAlways?: boolean;
   tagsColorful?: boolean;
+  hideTags?: boolean;
 }) {
   const name        = getFullName(lead);
   const status      = getStatus(lead);
@@ -1823,69 +2775,61 @@ function LeadListCard({
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onClick()}
     >
-      <div className="px-2.5 pt-2 pb-1.5 flex flex-col gap-0.5">
+      <div className={cn("px-2.5 flex flex-col gap-0.5", hideTags ? "pt-1.5 pb-1" : "pt-2 pb-1.5")}>
 
-        {/* Row 1: Avatar | Name + status dot + lastActivity */}
-        <div className="flex items-start gap-2">
+        {/* Main layout: [avatar + text] on left, [date + score] column on right */}
+        <div className="flex items-stretch gap-2">
           <EntityAvatar
             name={name}
             bgColor={avatarColor.bg}
             textColor={avatarColor.text}
-            className="mt-0.5"
+            className="self-start mt-0.5 shrink-0"
           />
 
+          {/* Left: name + status */}
           <div className="flex-1 min-w-0 pt-0.5">
-            <div className="flex items-center gap-1.5">
-              <p className="text-[16px] font-semibold font-heading leading-tight truncate text-foreground flex-1 min-w-0">
-                {name}
-              </p>
-              {lastActivity && (
-                <span className="text-[10px] tabular-nums leading-none text-muted-foreground/60 shrink-0">
-                  {formatRelativeTime(lastActivity)}
-                </span>
-              )}
-            </div>
+            <p className="text-[18px] font-semibold font-heading leading-tight truncate text-foreground">
+              {name}
+            </p>
             <div className="flex items-center gap-1 mt-0.5">
               <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: statusHex }} />
               <span className="text-[10px] text-muted-foreground/65 truncate">{status}</span>
             </div>
-          </div>
-        </div>
 
-        {/* Tags + contact + score ring in a flex row, score bottom-aligned */}
-        <div className="flex items-end gap-2">
-          <div className="flex-1 min-w-0">
-            {/* Tags — always visible by default */}
-            {visibleTags.length > 0 && (
-              <div className="flex items-center gap-1 flex-wrap mt-1">
-                {visibleTags.map((t) => {
-                  const hex = resolveColor(t.color);
-                  return (
-                    <span
-                      key={t.name}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
-                      style={tagsColorful
-                        ? { backgroundColor: `${hex}20`, color: hex }
-                        : { backgroundColor: "rgba(0,0,0,0.06)", color: "rgba(0,0,0,0.50)" }
-                      }
-                    >
-                      <TagIcon className="h-2.5 w-2.5" />{t.name}
-                    </span>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Hover-expanded (or always-on): phone/email */}
+            {/* Tags + contact — collapses when hideTags, expands on hover */}
             <div className={cn(
               "overflow-hidden transition-[max-height,opacity] duration-200 ease-out",
-              showContactAlways
-                ? "max-h-36 opacity-100"
-                : "max-h-0 opacity-0 group-hover/card:max-h-36 group-hover/card:opacity-100"
+              hideTags
+                ? "max-h-0 opacity-0 group-hover/card:max-h-24 group-hover/card:opacity-100"
+                : "max-h-24 opacity-100"
             )}>
-              <div className="pt-1 pb-0.5 flex flex-col gap-1.5">
+              {visibleTags.length > 0 && (
+                <div className="relative z-10 flex items-center gap-1 flex-wrap mt-1">
+                  {visibleTags.map((t) => {
+                    const hex = resolveColor(t.color);
+                    return (
+                      <span
+                        key={t.name}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                        style={tagsColorful
+                          ? { backgroundColor: `${hex}20`, color: hex }
+                          : { backgroundColor: isActive ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.09)", color: "rgba(0,0,0,0.45)" }
+                        }
+                      >
+                        {t.name}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+              <div className={cn(
+                "overflow-hidden transition-[max-height,opacity] duration-200 ease-out",
+                showContactAlways
+                  ? "max-h-12 opacity-100"
+                  : "max-h-0 opacity-0 group-hover/card:max-h-12 group-hover/card:opacity-100"
+              )}>
                 {(phone || email) && (
-                  <div className="flex items-center gap-2.5 text-[10px] text-muted-foreground/70">
+                  <div className="pt-1 pb-0.5 flex items-center gap-2.5 text-[10px] text-muted-foreground/70">
                     {phone && (
                       <span className="inline-flex items-center gap-1 truncate">
                         <Phone className="h-3 w-3 shrink-0" />
@@ -1904,10 +2848,19 @@ function LeadListCard({
             </div>
           </div>
 
-          {/* Score ring on the right, bottom-aligned */}
-          {score > 0 && (
-            <div className="shrink-0 mb-0.5">
-              <ListScoreRing score={score} status={status} />
+          {/* Right column: date on top, score ring on bottom */}
+          {(lastActivity || score > 0) && (
+            <div className="shrink-0 flex flex-col items-end justify-between">
+              {lastActivity && (
+                <span className="text-[10px] tabular-nums leading-none text-muted-foreground/60 pt-0.5">
+                  {formatRelativeTime(lastActivity)}
+                </span>
+              )}
+              {score > 0 && (
+                <div className="mt-auto pt-1">
+                  <ListScoreRing score={score} status={status} isActive={isActive} />
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1921,7 +2874,7 @@ function LeadListCard({
 // ── Group header ───────────────────────────────────────────────────────────────
 function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
+    <div data-group-header="true" className="sticky top-0 z-30 bg-muted px-3 pt-3 pb-3">
       <div className="flex items-center gap-[10px]">
         <div className="flex-1 h-px bg-foreground/15" />
         <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
@@ -2020,7 +2973,7 @@ export function KanbanDetailPanel({
               size={72}
             />
             <div>
-              <p className="text-[16px] font-semibold font-heading text-foreground leading-tight truncate max-w-[180px]">{name}</p>
+              <p className="text-[18px] font-semibold font-heading text-foreground leading-tight truncate max-w-[180px]">{name}</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">{status || "—"}</p>
             </div>
           </div>
@@ -2106,7 +3059,7 @@ export function KanbanDetailPanel({
         )}
         {activeTab === "activity" && (
           <div className="h-full overflow-y-auto p-4">
-            <p className="text-[16px] font-semibold font-heading text-foreground mb-3">Activity</p>
+            <p className="text-[18px] font-semibold font-heading text-foreground mb-3">Activity</p>
             <div className="flex flex-col gap-2">
               {[
                 { label: "Messages sent",      value: String(lead.message_count_sent ?? lead.messageCountSent ?? "—") },
@@ -2124,10 +3077,10 @@ export function KanbanDetailPanel({
         )}
         {activeTab === "notes" && (
           <div className="h-full overflow-y-auto p-4">
-            <p className="text-[16px] font-semibold font-heading text-foreground mb-3">Notes</p>
+            <p className="text-[18px] font-semibold font-heading text-foreground mb-3">Notes</p>
             {lead.notes || lead.Notes ? (
               <p className="text-[12px] text-foreground/80 leading-relaxed">
-                {lead.notes || lead.Notes}
+                {renderRichText(lead.notes || lead.Notes || "")}
               </p>
             ) : (
               <p className="text-[12px] text-muted-foreground/50 italic">No notes yet</p>
@@ -2174,9 +3127,58 @@ export function LeadsCardView({
   isSortNonDefault,
   onResetControls,
   onCreateLead,
+  mobileView = "list",
+  onMobileViewChange,
 }: LeadsCardViewProps) {
   const [currentPage, setCurrentPage]   = useState(0);
   const PAGE_SIZE = 50;
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // Track which card IDs have been rendered before — only animate genuinely new cards
+  const seenCardIds = useRef<Set<number>>(new Set());
+
+  // Shared scroll helper — finds the card in the DOM and positions it just below its group header.
+  const scrollToLead = useCallback((id: number, behavior: ScrollBehavior) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const el = container.querySelector(`[data-lead-id="${id}"]`) as HTMLElement | null;
+    if (!el) return;
+    let headerHeight = 0;
+    let sibling = el.previousElementSibling;
+    while (sibling) {
+      if (sibling.getAttribute("data-group-header") === "true") {
+        headerHeight = (sibling as HTMLElement).offsetHeight;
+        break;
+      }
+      sibling = sibling.previousElementSibling;
+    }
+    const cardTop = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
+    container.scrollTo({ top: cardTop - headerHeight - 3, behavior });
+  }, []);
+
+  // Initial load: snap to the selected card instantly (no slide-down artifact).
+  const initialScrollDoneRef = useRef(false);
+  useEffect(() => {
+    if (!selectedLead || initialScrollDoneRef.current) return;
+    const id = getLeadId(selectedLead);
+    // Use setTimeout so the card is in the DOM before we query it
+    const t = window.setTimeout(() => {
+      initialScrollDoneRef.current = true;
+      scrollToLead(id, "instant");
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [selectedLead, scrollToLead]);
+
+  // On card click: smooth-scroll the newly selected card to the top.
+  const prevSelectedIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!selectedLead) return;
+    const id = getLeadId(selectedLead);
+    if (prevSelectedIdRef.current === null) { prevSelectedIdRef.current = id; return; }
+    if (prevSelectedIdRef.current === id) return;
+    prevSelectedIdRef.current = id;
+    const capturedId = id;
+    window.setTimeout(() => scrollToLead(capturedId, "smooth"), 0);
+  }, [selectedLead, scrollToLead]);
 
   const [showContactAlways, setShowContactAlways] = useState<boolean>(() => {
     try { return localStorage.getItem("list_contact_always_show") === "true"; } catch {} return false;
@@ -2191,6 +3193,40 @@ export function LeadsCardView({
   useEffect(() => {
     try { localStorage.setItem("list_tags_colorful", String(tagsColorful)); } catch {}
   }, [tagsColorful]);
+
+  const [hideTags, setHideTags] = useState<boolean>(() => {
+    try { return localStorage.getItem("list_tags_hidden") === "true"; } catch {} return false;
+  });
+  useEffect(() => {
+    try { localStorage.setItem("list_tags_hidden", String(hideTags)); } catch {}
+  }, [hideTags]);
+
+  // ── Local filter state: account & campaign ────────────────────────────────
+  const [filterAccount, setFilterAccount] = useState<string>("");
+  const [filterCampaign, setFilterCampaign] = useState<string>("");
+  const [tagSearchInput, setTagSearchInput] = useState<string>("");
+
+  // Derive available accounts + campaigns from leads data
+  const availableAccounts = useMemo(() => {
+    const map = new Map<string, string>();
+    leads.forEach((l) => {
+      const id = String(l.Accounts_id || l.account_id || l.accounts_id || "");
+      const name = l.Account || l.account_name || "";
+      if (id && name) map.set(id, name);
+    });
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [leads]);
+
+  const availableCampaigns = useMemo(() => {
+    const set = new Set<string>();
+    leads.forEach((l) => {
+      const c = l.Campaign || l.campaign || l.campaign_name || "";
+      if (c) set.add(c);
+    });
+    return Array.from(set).sort();
+  }, [leads]);
 
   const flatItems = useMemo((): VirtualListItem[] => {
     // 1. Text search
@@ -2217,6 +3253,20 @@ export function LeadsCardView({
         const tags = leadTagsInfo.get(getLeadId(l)) || [];
         return filterTags.some((ft) => tags.some((t) => t.name === ft));
       });
+    }
+
+    // 3b. Account filter
+    if (filterAccount) {
+      filtered = filtered.filter((l) =>
+        String(l.Accounts_id || l.account_id || l.accounts_id || "") === filterAccount
+      );
+    }
+
+    // 3c. Campaign filter
+    if (filterCampaign) {
+      filtered = filtered.filter((l) =>
+        (l.Campaign || l.campaign || l.campaign_name || "") === filterCampaign
+      );
     }
 
     // 4. Sort
@@ -2275,31 +3325,40 @@ export function LeadsCardView({
     });
 
     return result;
-  }, [leads, listSearch, groupBy, sortBy, filterStatus, filterTags, leadTagsInfo]);
+  }, [leads, listSearch, groupBy, sortBy, filterStatus, filterTags, filterAccount, filterCampaign, leadTagsInfo]);
 
   // Reset to page 0 whenever the filtered/sorted list changes
   useEffect(() => { setCurrentPage(0); }, [flatItems]);
 
-  const isFilterActive     = filterStatus.length > 0 || filterTags.length > 0;
+  const isFilterActive     = filterStatus.length > 0 || filterTags.length > 0 || !!filterAccount || !!filterCampaign;
 
   return (
     /* Outer shell: transparent — gaps between panels reveal stone-gray page background */
-    <div className="flex h-full min-h-[600px] overflow-hidden gap-[3px]">
+    <div className="relative flex h-full min-h-[600px] gap-[3px]">
 
       {/* ── LEFT: Lead List ── muted panel (#E3E3E3) */}
-      <div className="flex flex-col bg-muted rounded-lg overflow-hidden w-[340px] flex-shrink-0">
+      <div className={cn(
+        "flex-col bg-muted rounded-lg overflow-hidden w-full md:w-[340px] md:shrink-0",
+        mobileView === "detail" ? "hidden md:flex" : "flex"
+      )}>
 
-        {/* ── Panel header: title + count ── */}
-        <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center">
-          <div className="flex items-center justify-between w-[309px] shrink-0">
+        {/* ── Panel header: title + ViewTabBar ── */}
+        <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-1 md:pb-3 shrink-0 flex flex-col gap-2 md:flex-row md:items-center md:gap-0">
+          <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
             <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">My Leads</h2>
-            <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as ViewMode)} />
+            <span className="hidden md:block">
+              <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as ViewMode)} variant="segment" />
+            </span>
+          </div>
+          {/* ViewTabBar below title on mobile */}
+          <div className="md:hidden">
+            <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as ViewMode)} variant="segment" />
           </div>
         </div>
 
 
         {/* Lead list — card list (pagination inside scroll area, below last card) */}
-        <div className="flex-1 overflow-y-auto px-[3px] pt-0 pb-[3px]">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-[3px] pt-0 pb-[3px]">
           {loading ? (
             <ListSkeleton />
           ) : flatItems.length === 0 ? (
@@ -2318,19 +3377,26 @@ export function LeadsCardView({
                     const selectedId = selectedLead ? getLeadId(selectedLead) : null;
                     return item.kind === "header" ? (
                       <GroupHeader key={`h-${item.label}-${i}`} label={item.label} count={item.count} />
-                    ) : (
-                      <div key={getLeadId(item.lead)} className="animate-card-enter" style={{ animationDelay: `${Math.min(i, 15) * 30}ms` }}>
+                    ) : (() => {
+                      const lid = getLeadId(item.lead);
+                      const isNew = !seenCardIds.current.has(lid);
+                      if (isNew) seenCardIds.current.add(lid);
+                      return (
+                      <div key={lid} data-lead-id={lid} className={isNew ? "animate-card-enter" : undefined} style={isNew ? { animationDelay: `${Math.min(i, 15) * 30}ms` } : undefined}>
                         <LeadListCard
                           lead={item.lead}
                           isActive={selectedId === getLeadId(item.lead)}
-                          onClick={() => onSelectLead(item.lead)}
+                          onClick={() => { onSelectLead(item.lead); onMobileViewChange?.("detail"); }}
                           leadTags={item.tags}
                           showContactAlways={showContactAlways}
                           tagsColorful={tagsColorful}
+                          hideTags={hideTags}
                         />
                       </div>
-                    );
+                      );
+                    })()
                   })}
+
               </div>
 
               {/* Pagination — below last card, inside scroll area */}
@@ -2364,55 +3430,56 @@ export function LeadsCardView({
       </div>
 
       {/* ── RIGHT: Detail panel ── */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-card rounded-lg">
-        {selectedLead ? (
+      <div className={cn(
+        "flex-1 flex-col min-w-0 overflow-hidden bg-card rounded-lg",
+        mobileView === "list" ? "hidden md:flex" : "flex mobile-panel-enter"
+      )}>
+        {loading && !selectedLead ? (
+          <SkeletonLeadPanel />
+        ) : selectedLead ? (
           <LeadDetailView
             lead={selectedLead}
             onClose={onClose}
             leadTags={leadTagsInfo.get(getLeadId(selectedLead)) || []}
             onRefresh={onRefresh}
-            toolbarPrefix={({ isNarrow: narrow }) => {
-              const pill = narrow
-                ? "h-9 w-9 rounded-full border border-black/[0.125] bg-transparent inline-flex items-center justify-center transition-colors"
-                : "h-9 px-3 rounded-full border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors";
-              const pillActive = narrow
-                ? "h-9 w-9 rounded-full border border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo inline-flex items-center justify-center transition-colors"
-                : "h-9 px-3 rounded-full border border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors";
+            toolbarPrefix={() => {
+              const xBtn = (active: boolean, maxW: string) => cn(
+                "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0",
+                "transition-[max-width,color,border-color] duration-200 max-w-9", maxW,
+                active ? "border-brand-indigo text-brand-indigo" : "border-black/[0.125] text-foreground/60 hover:text-foreground"
+              );
+              const xSpan = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
               return (
                 <>
-                  {/* +Add */}
-                  <button onClick={onCreateLead} className={pill} title="New lead">
-                    <Plus className="h-3.5 w-3.5" />{!narrow && "Add"}
+                  {/* Back to list — mobile only */}
+                  <button
+                    onClick={() => onMobileViewChange?.("list")}
+                    className="md:hidden h-9 w-9 rounded-full border border-black/[0.125] bg-background grid place-items-center shrink-0"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
                   </button>
 
-                  {/* Search — inline expanding input */}
-                  {searchOpen ? (
-                    <div className="h-9 flex items-center gap-1.5 px-3 rounded-full border border-brand-indigo/50 bg-brand-indigo/5">
-                      <Search className="h-3.5 w-3.5 text-brand-indigo shrink-0" />
-                      <input
-                        value={listSearch}
-                        onChange={(e) => onListSearchChange(e.target.value)}
-                        placeholder="Search…"
-                        autoFocus
-                        onBlur={() => { if (!listSearch) onSearchOpenChange(false); }}
-                        onKeyDown={(e) => { if (e.key === "Escape") { onListSearchChange(""); onSearchOpenChange(false); } }}
-                        className="bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/60 w-[120px]"
-                      />
-                      <button onClick={() => { onListSearchChange(""); onSearchOpenChange(false); }} className="text-muted-foreground/60 hover:text-foreground">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ) : (
-                    <button onClick={() => onSearchOpenChange(true)} className={listSearch ? pillActive : pill} title="Search leads">
-                      <Search className="h-3.5 w-3.5" />{!narrow && "Search"}
-                    </button>
-                  )}
+                  {/* +Add */}
+                  <button onClick={onCreateLead} className={xBtn(false, "hover:max-w-[90px]")} title="New lead">
+                    <Plus className="h-4 w-4 shrink-0" />
+                    <span className={xSpan}>Add</span>
+                  </button>
+
+                  {/* Search — always extended, no fill */}
+                  <SearchPill
+                    value={listSearch}
+                    onChange={onListSearchChange}
+                    open={searchOpen}
+                    onOpenChange={onSearchOpenChange}
+                    placeholder="Search leads…"
+                  />
 
                   {/* Group */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className={isGroupNonDefault ? pillActive : pill} title="Group">
-                        <Layers className="h-3.5 w-3.5" />{!narrow && "Group"}
+                      <button className={xBtn(isGroupNonDefault, "hover:max-w-[115px]")} title="Group">
+                        <Layers className="h-4 w-4 shrink-0" />
+                        <span className={xSpan}>Group</span>
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-40">
@@ -2428,8 +3495,9 @@ export function LeadsCardView({
                   {/* Sort */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className={isSortNonDefault ? pillActive : pill} title="Sort">
-                        <ArrowUpDown className="h-3.5 w-3.5" />{!narrow && "Sort"}
+                      <button className={xBtn(isSortNonDefault, "hover:max-w-[100px]")} title="Sort">
+                        <ArrowUpDown className="h-4 w-4 shrink-0" />
+                        <span className={xSpan}>Sort</span>
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-44">
@@ -2445,46 +3513,169 @@ export function LeadsCardView({
                   {/* Filter */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className={(filterStatus.length > 0 || filterTags.length > 0) ? pillActive : pill} title="Filter">
-                        <Filter className="h-3.5 w-3.5" />{!narrow && "Filter"}
+                      <button className={xBtn(isFilterActive, "hover:max-w-[110px]")} title="Filter">
+                        <Filter className="h-4 w-4 shrink-0" />
+                        <span className={xSpan}>Filter</span>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-52">
+                      {/* Status — submenu */}
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                          <span className="flex-1">Status</span>
+                          {filterStatus.length > 0 && (
+                            <span className="text-[10px] tabular-nums text-brand-indigo font-semibold">{filterStatus.length}</span>
+                          )}
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent className="w-48">
+                          {STATUS_GROUP_ORDER.map((s) => (
+                            <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
+                              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PIPELINE_HEX[s] ?? "#6B7280" }} />
+                              <span className="flex-1">{s}</span>
+                              {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+
+                      {/* Account — submenu */}
+                      {availableAccounts.length > 0 && (
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                            <span className="flex-1">Account</span>
+                            {filterAccount && <span className="text-[10px] text-brand-indigo font-semibold">1</span>}
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent className="w-48">
+                            <DropdownMenuItem
+                              onClick={(e) => { e.preventDefault(); setFilterAccount(""); }}
+                              className={cn("text-[12px]", !filterAccount && "font-semibold text-brand-indigo")}
+                            >
+                              All Accounts
+                              {!filterAccount && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {availableAccounts.map((a) => (
+                              <DropdownMenuItem
+                                key={a.id}
+                                onClick={(e) => { e.preventDefault(); setFilterAccount(filterAccount === a.id ? "" : a.id); }}
+                                className={cn("text-[12px]", filterAccount === a.id && "font-semibold text-brand-indigo")}
+                              >
+                                <span className="flex-1 truncate">{a.name}</span>
+                                {filterAccount === a.id && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      )}
+
+                      {/* Campaign — submenu */}
+                      {availableCampaigns.length > 0 && (
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
+                            <span className="flex-1">Campaign</span>
+                            {filterCampaign && <span className="text-[10px] text-brand-indigo font-semibold">1</span>}
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent className="w-52 max-h-64 overflow-y-auto">
+                            <DropdownMenuItem
+                              onClick={(e) => { e.preventDefault(); setFilterCampaign(""); }}
+                              className={cn("text-[12px]", !filterCampaign && "font-semibold text-brand-indigo")}
+                            >
+                              All Campaigns
+                              {!filterCampaign && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {availableCampaigns.map((c) => (
+                              <DropdownMenuItem
+                                key={c}
+                                onClick={(e) => { e.preventDefault(); setFilterCampaign(filterCampaign === c ? "" : c); }}
+                                className={cn("text-[12px]", filterCampaign === c && "font-semibold text-brand-indigo")}
+                              >
+                                <span className="flex-1 truncate">{c}</span>
+                                {filterCampaign === c && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                      )}
+
+                      {/* Tags — search-based */}
+                      <DropdownMenuSeparator />
+                      <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Tags</div>
+                      <div className="px-2 pb-1.5" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="text"
+                          value={tagSearchInput}
+                          onChange={(e) => setTagSearchInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            e.stopPropagation();
+                            if (e.key === "Enter" && tagSearchInput.trim()) {
+                              const match = allTags.find((t) => t.name.toLowerCase() === tagSearchInput.trim().toLowerCase());
+                              if (match) { onToggleFilterTag(match.name); setTagSearchInput(""); }
+                            }
+                          }}
+                          placeholder="Search tag name…"
+                          className="w-full h-7 px-2 rounded-md border border-black/[0.1] bg-muted/30 text-[11px] placeholder:text-muted-foreground/50 outline-none focus:border-brand-indigo/40"
+                        />
+                      </div>
+                      {(() => {
+                        const q = tagSearchInput.trim().toLowerCase();
+                        const filtered = q ? allTags.filter((t) => t.name.toLowerCase().includes(q)) : [];
+                        const shown = filterTags.length > 0 && !q
+                          ? allTags.filter((t) => filterTags.includes(t.name))
+                          : filtered.slice(0, 8);
+                        return shown.map((t) => (
+                          <DropdownMenuItem key={t.name} onClick={(e) => { e.preventDefault(); onToggleFilterTag(t.name); }} className="flex items-center gap-2 text-[12px]">
+                            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: resolveColor(t.color) }} />
+                            <span className="flex-1 truncate">{t.name}</span>
+                            {filterTags.includes(t.name) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                          </DropdownMenuItem>
+                        ));
+                      })()}
+
+                      {/* Reset */}
+                      {isFilterActive && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => {
+                            filterStatus.forEach((s) => onToggleFilterStatus(s));
+                            filterTags.forEach((t) => onToggleFilterTag(t));
+                            setFilterAccount("");
+                            setFilterCampaign("");
+                            setTagSearchInput("");
+                          }} className="text-[12px] text-destructive">
+                            Clear all filters
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Tags display settings */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className={xBtn(tagsColorful || hideTags || showContactAlways, "hover:max-w-[100px]")} title="Tags">
+                        <TagIcon className="h-4 w-4 shrink-0" />
+                        <span className={xSpan}>Tags</span>
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
-                      <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Status</div>
-                      {STATUS_GROUP_ORDER.map((s) => (
-                        <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
-                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PIPELINE_HEX[s] ?? "#6B7280" }} />
-                          <span className="flex-1">{s}</span>
-                          {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                        </DropdownMenuItem>
-                      ))}
-                      {allTags.length > 0 && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Tags</div>
-                          {allTags.map((t) => (
-                            <DropdownMenuItem key={t.name} onClick={(e) => { e.preventDefault(); onToggleFilterTag(t.name); }} className="flex items-center gap-2 text-[12px]">
-                              <span className="flex-1">{t.name}</span>
-                              {filterTags.includes(t.name) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                            </DropdownMenuItem>
-                          ))}
-                        </>
-                      )}
-                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => setTagsColorful((v) => !v)} className="flex items-center gap-2 text-[12px]">
-                        <TagIcon className="h-3.5 w-3.5 mr-0.5 shrink-0" /><span className="flex-1">Colorful Tags</span>
+                        <Palette className="h-3.5 w-3.5 mr-0.5 shrink-0" /><span className="flex-1">Tag Color</span>
                         {tagsColorful && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setHideTags((v) => !v)} className="flex items-center gap-2 text-[12px]">
+                        {hideTags
+                          ? <EyeOff className="h-3.5 w-3.5 mr-0.5 shrink-0" />
+                          : <Eye className="h-3.5 w-3.5 mr-0.5 shrink-0" />
+                        }
+                        <span className="flex-1">Hide Tags</span>
+                        {hideTags && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => setShowContactAlways((v) => !v)} className="flex items-center gap-2 text-[12px]">
                         <Phone className="h-3.5 w-3.5 mr-0.5 shrink-0" /><span className="flex-1">Show Phone & Email</span>
                         {showContactAlways && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                       </DropdownMenuItem>
-                      {hasNonDefaultControls && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={onResetControls} className="text-[12px] text-destructive">Reset all</DropdownMenuItem>
-                        </>
-                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
 

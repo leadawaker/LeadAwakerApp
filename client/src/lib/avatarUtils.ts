@@ -1,6 +1,11 @@
 // ── Shared avatar utilities — single source of truth for initials, colors, palettes ──
 // All features import from here instead of defining their own duplicates.
 
+// ── Dark mode detection ──────────────────────────────────────────────────────
+function isDarkMode(): boolean {
+  return typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+}
+
 // ── Universal initials extraction ─────────────────────────────────────────────
 export function getInitials(name: string): string {
   return name.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "?";
@@ -53,6 +58,18 @@ function pastelText(hex: string): string {
   return hslToHex(h, s * 0.7, 0.25);
 }
 
+/** Derive a dark-mode pastel bg (low lightness, desaturated) */
+function pastelBgDark(hex: string): string {
+  const [h, s, _l] = hexToHsl(hex);
+  return hslToHex(h, s * 0.5, 0.15);
+}
+
+/** Derive a dark-mode pastel text (high lightness, moderate saturation) */
+function pastelTextDark(hex: string): string {
+  const [h, s, _l] = hexToHsl(hex);
+  return hslToHex(h, s * 0.6, 0.78);
+}
+
 // ── Pipeline stage hex colors ─────────────────────────────────────────────────
 export const PIPELINE_HEX: Record<string, string> = {
   New:                  "#6B7280",
@@ -62,21 +79,21 @@ export const PIPELINE_HEX: Record<string, string> = {
   Qualified:            "#AED62E",
   Booked:               "#F7BF0E",
   Closed:               "#FFFFFF",
-  Lost:                 "#FF0000",
-  DND:                  "#CB257D",
+  Lost:                 "#DC2626",
+  DND:                  "#722F37",
 };
 
 // ── Lead avatar colors — hand-picked pastels, mutable for Color Tester ───────
 export const LEAD_AVATAR_BG: Record<string, string> = {
-  New:                  "#DDDDDF",
-  Contacted:            "#BEBDEC",
-  Responded:            "#BDE8EC",
-  "Multiple Responses": "#B7E6C2",
-  Qualified:            "#D8E3BB",
-  Booked:               "#FDEAAD",
-  Closed:               "#DEDEDE",
-  Lost:                 "#EDCFCF",
-  DND:                  "#E8D4DE",
+  New:                  "#C9C9C9",
+  Contacted:            "#BBB9FF",
+  Responded:            "#B9E7EF",
+  "Multiple Responses": "#AFE3BB",
+  Qualified:            "#C7DF7D",
+  Booked:               "#FFDB74",
+  Closed:               "#FFFFFF",
+  Lost:                 "#F5BFBF",
+  DND:                  "#D4B5B9",
 };
 export const LEAD_AVATAR_TEXT: Record<string, string> = {
   New:                  "#374151",
@@ -87,7 +104,31 @@ export const LEAD_AVATAR_TEXT: Record<string, string> = {
   Booked:               "#78350F",
   Closed:               "#374151",
   Lost:                 "#991B1B",
-  DND:                  "#6B2154",
+  DND:                  "#4A1A20",
+};
+
+// ── Dark mode lead avatar colors ────────────────────────────────────────────
+export const LEAD_AVATAR_BG_DARK: Record<string, string> = {
+  New:                  "#2A2D33",
+  Contacted:            "#272547",
+  Responded:            "#1A3338",
+  "Multiple Responses": "#1A3325",
+  Qualified:            "#283314",
+  Booked:               "#33290A",
+  Closed:               "#2A2D33",
+  Lost:                 "#3D1A1A",
+  DND:                  "#3D2228",
+};
+export const LEAD_AVATAR_TEXT_DARK: Record<string, string> = {
+  New:                  "#9CA3AF",
+  Contacted:            "#BBB9FF",
+  Responded:            "#7CDCE8",
+  "Multiple Responses": "#6AE87C",
+  Qualified:            "#B5E050",
+  Booked:               "#FFD54F",
+  Closed:               "#E0E0E0",
+  Lost:                 "#F48A8A",
+  DND:                  "#E0A0A8",
 };
 
 /** Recalculate LEAD_AVATAR_BG/TEXT from current PIPELINE_HEX values (used by Color Tester reset) */
@@ -95,12 +136,21 @@ export function refreshLeadAvatarColors(): void {
   for (const key of Object.keys(PIPELINE_HEX)) {
     LEAD_AVATAR_BG[key] = pastelBg(PIPELINE_HEX[key]);
     LEAD_AVATAR_TEXT[key] = pastelText(PIPELINE_HEX[key]);
+    LEAD_AVATAR_BG_DARK[key] = pastelBgDark(PIPELINE_HEX[key]);
+    LEAD_AVATAR_TEXT_DARK[key] = pastelTextDark(PIPELINE_HEX[key]);
   }
 }
 
 // ── Lead / Pipeline status avatar colors ──────────────────────────────────────
 // Reads from the mutable LEAD_AVATAR_BG/TEXT maps (pastel-derived from PIPELINE_HEX).
+// Dark-mode-aware: picks from dark maps when .dark class is on <html>.
 export function getLeadStatusAvatarColor(status: string): { bg: string; text: string } {
+  if (isDarkMode()) {
+    return {
+      bg:   LEAD_AVATAR_BG_DARK[status]   ?? LEAD_AVATAR_BG_DARK["New"]   ?? "#2A2D33",
+      text: LEAD_AVATAR_TEXT_DARK[status]  ?? LEAD_AVATAR_TEXT_DARK["New"]  ?? "#9CA3AF",
+    };
+  }
   return {
     bg:   LEAD_AVATAR_BG[status]   ?? LEAD_AVATAR_BG["New"]   ?? "#d1d5db",
     text: LEAD_AVATAR_TEXT[status]  ?? LEAD_AVATAR_TEXT["New"]  ?? "#374151",
@@ -133,7 +183,27 @@ export const ACCOUNT_AVATAR_TEXT: Record<string, string> = {
   Suspended: "#9F1239",
 };
 
+// ── Dark mode account avatar colors ─────────────────────────────────────────
+export const ACCOUNT_AVATAR_BG_DARK: Record<string, string> = {
+  Active:    "#0A2E1F",
+  Trial:     "#2E2508",
+  Inactive:  "#27272A",
+  Suspended: "#2E0A14",
+};
+export const ACCOUNT_AVATAR_TEXT_DARK: Record<string, string> = {
+  Active:    "#6EE7B7",
+  Trial:     "#FCD34D",
+  Inactive:  "#A1A1AA",
+  Suspended: "#FDA4AF",
+};
+
 export function getAccountAvatarColor(status: string): { bg: string; text: string } {
+  if (isDarkMode()) {
+    return {
+      bg:   ACCOUNT_AVATAR_BG_DARK[status]   ?? "#27272A",
+      text: ACCOUNT_AVATAR_TEXT_DARK[status] ?? "#A1A1AA",
+    };
+  }
   return {
     bg:   ACCOUNT_AVATAR_BG[status]   ?? "#E5E7EB",
     text: ACCOUNT_AVATAR_TEXT[status] ?? "#374151",
@@ -170,7 +240,33 @@ export const CAMPAIGN_AVATAR_TEXT: Record<string, string> = {
   Draft:     "#374151",
 };
 
+// ── Dark mode campaign avatar colors ────────────────────────────────────────
+export const CAMPAIGN_AVATAR_BG_DARK: Record<string, string> = {
+  Active:    "#0A2E1A",
+  Paused:    "#2E2508",
+  Completed: "#0A1A2E",
+  Finished:  "#0A1A2E",
+  Inactive:  "#27272A",
+  Archived:  "#27272A",
+  Draft:     "#1F2937",
+};
+export const CAMPAIGN_AVATAR_TEXT_DARK: Record<string, string> = {
+  Active:    "#86EFAC",
+  Paused:    "#FCD34D",
+  Completed: "#93C5FD",
+  Finished:  "#93C5FD",
+  Inactive:  "#A1A1AA",
+  Archived:  "#A1A1AA",
+  Draft:     "#9CA3AF",
+};
+
 export function getCampaignAvatarColor(status: string): { bg: string; text: string } {
+  if (isDarkMode()) {
+    return {
+      bg:   CAMPAIGN_AVATAR_BG_DARK[status]   ?? "#27272A",
+      text: CAMPAIGN_AVATAR_TEXT_DARK[status] ?? "#9CA3AF",
+    };
+  }
   return {
     bg:   CAMPAIGN_AVATAR_BG[status]   ?? "#E5E7EB",
     text: CAMPAIGN_AVATAR_TEXT[status] ?? "#374151",
@@ -186,7 +282,19 @@ export const ROLE_AVATAR: Record<string, { bg: string; text: string }> = {
   Viewer:   { bg: "#E5E7EB", text: "#374151" },
 };
 
+// ── Dark mode user role avatar colors ───────────────────────────────────────
+export const ROLE_AVATAR_DARK: Record<string, { bg: string; text: string }> = {
+  Admin:    { bg: "#2E2508", text: "#FCD34D" },
+  Operator: { bg: "#2E1508", text: "#FDBA74" },
+  Manager:  { bg: "#0A1A2E", text: "#93C5FD" },
+  Agent:    { bg: "#1A0A2E", text: "#C4B5FD" },
+  Viewer:   { bg: "#1F2937", text: "#9CA3AF" },
+};
+
 export function getUserRoleAvatarColor(role: string): { bg: string; text: string } {
+  if (isDarkMode()) {
+    return ROLE_AVATAR_DARK[role] ?? { bg: "#1F2937", text: "#9CA3AF" };
+  }
   return ROLE_AVATAR[role] ?? { bg: "#E5E7EB", text: "#374151" };
 }
 
@@ -200,9 +308,57 @@ export const PROMPT_AVATAR_TEXT: Record<string, string> = {
   Archived: "#52525B",
 };
 
+// ── Dark mode prompt avatar colors ──────────────────────────────────────────
+export const PROMPT_AVATAR_BG_DARK: Record<string, string> = {
+  Active:   "#0A2E1F",
+  Archived: "#27272A",
+};
+export const PROMPT_AVATAR_TEXT_DARK: Record<string, string> = {
+  Active:   "#6EE7B7",
+  Archived: "#A1A1AA",
+};
+
 export function getPromptAvatarColor(status: string): { bg: string; text: string } {
+  if (isDarkMode()) {
+    return {
+      bg:   PROMPT_AVATAR_BG_DARK[status]   ?? "#27272A",
+      text: PROMPT_AVATAR_TEXT_DARK[status] ?? "#A1A1AA",
+    };
+  }
   return {
     bg:   PROMPT_AVATAR_BG[status]   ?? "#E5E7EB",
     text: PROMPT_AVATAR_TEXT[status] ?? "#374151",
   };
+}
+
+// ── Prompt icon colors — deterministic per-name, gray circle + colored icon ──
+const PROMPT_ICON_PALETTE = [
+  { icon: "#6366F1", bg: "#EEF2FF", bgDark: "#1E1B4B" }, // indigo
+  { icon: "#8B5CF6", bg: "#F5F3FF", bgDark: "#2E1065" }, // violet
+  { icon: "#EC4899", bg: "#FDF2F8", bgDark: "#500724" }, // pink
+  { icon: "#F97316", bg: "#FFF7ED", bgDark: "#431407" }, // orange
+  { icon: "#14B8A6", bg: "#F0FDFA", bgDark: "#042F2E" }, // teal
+  { icon: "#0EA5E9", bg: "#F0F9FF", bgDark: "#082F49" }, // sky
+  { icon: "#10B981", bg: "#ECFDF5", bgDark: "#022C22" }, // emerald
+  { icon: "#F43F5E", bg: "#FFF1F2", bgDark: "#4C0519" }, // rose
+  { icon: "#A855F7", bg: "#FAF5FF", bgDark: "#3B0764" }, // purple
+  { icon: "#EAB308", bg: "#FEFCE8", bgDark: "#422006" }, // yellow
+];
+
+function hashString(str: string): number {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+}
+
+/** Returns a deterministic icon color + circle bg for a prompt, based on its name. */
+export function getPromptIconColor(name: string): { icon: string; bg: string } {
+  const idx = hashString(name || "P") % PROMPT_ICON_PALETTE.length;
+  const entry = PROMPT_ICON_PALETTE[idx];
+  if (isDarkMode()) {
+    return { icon: entry.icon, bg: entry.bgDark };
+  }
+  return { icon: entry.icon, bg: entry.bg };
 }

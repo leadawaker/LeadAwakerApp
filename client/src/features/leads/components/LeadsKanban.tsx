@@ -310,7 +310,7 @@ function KanbanCardContent({
         "group/card relative mx-0.5 my-0.5 rounded-xl transition-shadow duration-150",
         isSelected
           ? "bg-highlight-selected"
-          : "bg-white hover:bg-white hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]",
+          : "bg-white dark:bg-card hover:bg-white dark:hover:bg-card hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]",
         isDragging && "scale-[1.02] rotate-1 opacity-95"
       )}
     >
@@ -382,7 +382,11 @@ function KanbanCardContent({
                 {visibleTags.map((t) => (
                   <span
                     key={t.name}
-                    className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium bg-black/[0.06] text-foreground/55"
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium"
+                    style={{
+                      backgroundColor: isSelected ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.09)",
+                      color: "rgba(0,0,0,0.45)",
+                    }}
                     data-testid="kanban-card-tags"
                   >
                     {t.name}
@@ -559,8 +563,8 @@ function KanbanColumn({
         "flex flex-col rounded-lg flex-shrink-0 overflow-hidden h-full",
         isDarkColumn ? "bg-[#C5C5C5]" : isBookedStage ? "bg-[#FFFBEB]" : "bg-card",
         isBookedStage
-          ? "min-w-[280px] w-[300px] max-w-[320px] border-l-2 border-[#FCB803]/50"
-          : "min-w-[260px] w-[280px] max-w-[300px]",
+          ? "w-[calc(100vw-24px)] md:w-[300px] min-w-[calc(100vw-24px)] md:min-w-[280px] md:max-w-[320px] border-l-2 border-[#FCB803]/50 snap-start snap-always"
+          : "w-[calc(100vw-24px)] md:w-[280px] min-w-[calc(100vw-24px)] md:min-w-[260px] md:max-w-[300px] snap-start snap-always",
         isOver && "ring-2 ring-inset ring-brand-indigo/50"
       )}
       data-testid={`kanban-column-${stage}`}
@@ -913,7 +917,7 @@ export function LeadsKanban({
   if (loading) {
     return (
       <div
-        className="flex gap-[3px] overflow-x-auto pb-4 scroll-smooth"
+        className="flex gap-[3px] overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory md:snap-none"
         style={{ overscrollBehaviorX: "contain" } as React.CSSProperties}
         data-testid="kanban-loading-skeleton"
       >
@@ -923,7 +927,7 @@ export function LeadsKanban({
           return (
             <div
               key={stage}
-              className="flex flex-col bg-card rounded-lg min-w-[260px] w-[280px] flex-shrink-0 "
+              className="flex flex-col bg-card rounded-lg w-[calc(100vw-24px)] md:w-[280px] min-w-[calc(100vw-24px)] md:min-w-[260px] flex-shrink-0 snap-start snap-always"
               data-testid="kanban-skeleton-column"
             >
               {/* Header skeleton */}
@@ -942,7 +946,7 @@ export function LeadsKanban({
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="mx-0.5 my-0.5 rounded-xl bg-white/70 px-2.5 pt-2 pb-1.5 space-y-1.5 animate-pulse"
+                    className="mx-0.5 my-0.5 rounded-xl bg-white/70 dark:bg-white/[0.07] px-2.5 pt-2 pb-1.5 space-y-1.5 animate-pulse"
                     data-testid="kanban-skeleton-card"
                     style={{ animationDelay: `${i * 80}ms` }}
                   >
@@ -973,7 +977,7 @@ export function LeadsKanban({
     >
       {/* Horizontal scroll container */}
       <div
-        className="flex h-full gap-[3px] overflow-x-auto pb-0 scroll-smooth"
+        className="flex h-full gap-[3px] overflow-x-auto pb-0 scroll-smooth snap-x snap-mandatory md:snap-none"
         style={{ overscrollBehaviorX: "contain" } as React.CSSProperties}
         data-testid="kanban-board"
       >

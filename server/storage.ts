@@ -1,4 +1,4 @@
-import { eq, desc, asc, count, SQL, inArray, and, gte, lt, isNotNull } from "drizzle-orm";
+import { eq, desc, asc, count, SQL, inArray, and, gte, lt, isNotNull, getTableColumns } from "drizzle-orm";
 import { PgTableWithColumns } from "drizzle-orm/pg-core";
 import { db } from "./db";
 import {
@@ -125,6 +125,7 @@ export interface IStorage {
   // Prompt Library
   getPrompts(): Promise<Prompt_Library[]>;
   getPromptsByAccountId(accountId: number): Promise<Prompt_Library[]>;
+  getPromptByUseCase(useCase: string): Promise<Prompt_Library | undefined>;
   createPrompt(data: InsertPrompt_Library): Promise<Prompt_Library>;
   updatePrompt(id: number, data: Partial<InsertPrompt_Library>): Promise<Prompt_Library | undefined>;
   deletePrompt(id: number): Promise<boolean>;
@@ -185,7 +186,8 @@ export class DatabaseStorage implements IStorage {
   // ─── Accounts ───────────────────────────────────────────────────────
 
   async getAccounts(): Promise<Accounts[]> {
-    return db.select().from(accounts);
+    const { voiceFileData, ...cols } = getTableColumns(accounts);
+    return db.select(cols).from(accounts) as any;
   }
 
   async getAccountById(id: number): Promise<Accounts | undefined> {
@@ -295,7 +297,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createInteraction(data: InsertInteractions): Promise<Interactions> {
-    const [row] = await db.insert(interactions).values(data as any).returning();
+    const now = new Date();
+    const [row] = await db.insert(interactions).values({
+      createdAt: now,
+      updatedAt: now,
+      ...data,
+    } as any).returning();
     return row;
   }
 
@@ -480,6 +487,11 @@ export class DatabaseStorage implements IStorage {
 
   async getPromptsByAccountId(accountId: number): Promise<Prompt_Library[]> {
     return db.select().from(promptLibrary).where(eq(promptLibrary.accountsId, accountId));
+  }
+
+  async getPromptByUseCase(useCase: string): Promise<Prompt_Library | undefined> {
+    const [row] = await db.select().from(promptLibrary).where(eq(promptLibrary.useCase, useCase)).limit(1);
+    return row;
   }
 
   async createPrompt(data: InsertPrompt_Library): Promise<Prompt_Library> {

@@ -3,6 +3,11 @@ import {
   FileText, Pencil, Trash2, Plus, ExternalLink, Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// ── Expand-on-hover toolbar button constants ──────────────────────────────────
+const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
+const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
+const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 import type { ExpenseRow } from "../types";
 import { deleteExpense, updateExpense } from "../api/expensesApi";
 import { useQueryClient } from "@tanstack/react-query";
@@ -79,6 +84,7 @@ interface ExpenseDetailViewProps {
   onDeleted: () => void;
   onNew?: () => void;
   toolbarSlot?: React.ReactNode;
+  noBackground?: boolean;
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
@@ -89,6 +95,7 @@ export function ExpenseDetailView({
   onDeleted,
   onNew,
   toolbarSlot,
+  noBackground,
 }: ExpenseDetailViewProps) {
   const queryClient = useQueryClient();
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -144,12 +151,17 @@ export function ExpenseDetailView({
     <div className="relative flex flex-col h-full overflow-hidden" data-testid="expense-detail-view">
 
       {/* Warm gradient bloom background */}
-      <div className="absolute inset-0 bg-[#F8F3EB]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.9)_0%,transparent_60%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,242,134,0.35)_0%,transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(241,218,162,0.2)_0%,transparent_70%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(210,188,130,0.15)_0%,transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(105,170,255,0.18)_0%,transparent_55%)]" />
+      {!noBackground && (
+        <>
+          <div className="absolute inset-0 bg-popover dark:bg-background" />
+          {/* Layer 1: White bloom — disabled */}
+          {/* Layer 2: Yellow — disabled */}
+          {/* Layer 3: Peach — disabled */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_150%_101%_at_40%_91%,rgba(208,218,0,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_2%_2%,#c7e0ff_5%,transparent_30%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_102%_at_53%_59%,rgba(195,146,25,0.38)_0%,transparent_66%)] dark:opacity-[0.08]" />
+        </>
+      )}
 
       {/* ── Header ── */}
       <div className="relative z-10 shrink-0 px-[3px] pt-[3px] pb-[3px] space-y-[3px]">
@@ -162,10 +174,10 @@ export function ExpenseDetailView({
             {onNew && (
               <button
                 onClick={onNew}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
+                className={cn(xBase, xDefault, "hover:max-w-[80px]")}
               >
-                <Plus className="h-3 w-3" />
-                New
+                <Plus className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>New</span>
               </button>
             )}
 
@@ -175,20 +187,20 @@ export function ExpenseDetailView({
                 href={`/api/expenses/${expense.id}/pdf`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
+                className={cn(xBase, xDefault, "hover:max-w-[80px]")}
               >
-                <ExternalLink className="h-3 w-3" />
-                PDF
+                <ExternalLink className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>PDF</span>
               </a>
             )}
 
             {/* Edit */}
             <button
               onClick={() => onEdit(expense)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors"
+              className={cn(xBase, xDefault, "hover:max-w-[80px]")}
             >
-              <Pencil className="h-3 w-3" />
-              Edit
+              <Pencil className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>Edit</span>
             </button>
 
             {/* Delete */}
@@ -196,14 +208,15 @@ export function ExpenseDetailView({
               onClick={handleDelete}
               disabled={isDeleting}
               className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border transition-colors",
+                xBase,
+                "hover:max-w-[100px]",
                 deleteConfirm
-                  ? "border-red-400/60 text-red-600 bg-red-50/50 hover:bg-red-50/70"
-                  : "border-border/60 bg-transparent text-foreground hover:bg-card"
+                  ? "border-red-400/60 text-red-600"
+                  : xDefault
               )}
             >
-              <Trash2 className="h-3 w-3" />
-              {deleteConfirm ? "Confirm?" : (isDeleting ? "Deleting…" : "Delete")}
+              <Trash2 className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>{deleteConfirm ? "Confirm?" : (isDeleting ? "Deleting…" : "Delete")}</span>
             </button>
           </div>
         </div>
@@ -222,7 +235,7 @@ export function ExpenseDetailView({
             {expense.country && (
               <>
                 {expense.invoiceNumber && <span className="text-foreground/25">·</span>}
-                <span className="text-[12px] font-medium px-2 py-0.5 rounded-full bg-white/50 text-foreground/60">
+                <span className="text-[12px] font-medium px-2 py-0.5 rounded-full bg-white/50 dark:bg-white/[0.10] text-foreground/60">
                   {expense.country}
                 </span>
               </>
@@ -235,7 +248,7 @@ export function ExpenseDetailView({
                 "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition-colors",
                 expense.nlBtwDeductible
                   ? "bg-emerald-100 text-emerald-700"
-                  : "bg-white/50 text-foreground/40"
+                  : "bg-white/50 dark:bg-white/[0.10] text-foreground/40"
               )}
               title="Toggle NL BTW deductible"
             >
@@ -248,10 +261,10 @@ export function ExpenseDetailView({
 
       {/* ── Content area ── */}
       <div className="relative z-10 flex-1 overflow-y-auto px-[3px] pb-[3px] min-h-0">
-        <div className="grid grid-cols-[1.5fr_1fr] gap-[3px] h-full">
+        <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-[3px]">
 
           {/* Left column: amounts breakdown */}
-          <div className="bg-white/60 rounded-xl p-5 flex flex-col gap-4">
+          <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5 flex flex-col gap-4">
             <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading">
               Amounts
             </p>
@@ -343,7 +356,7 @@ export function ExpenseDetailView({
           <div className="flex flex-col gap-[3px]">
 
             {/* Date */}
-            <div className="bg-white/60 rounded-xl px-5 py-5">
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl px-5 py-5">
               <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-3">
                 Date
               </span>
@@ -370,7 +383,7 @@ export function ExpenseDetailView({
             </div>
 
             {/* PDF */}
-            <div className="bg-white/60 rounded-xl px-5 py-5 flex-1">
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl px-5 py-5 flex-1">
               <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-3">
                 Document
               </span>

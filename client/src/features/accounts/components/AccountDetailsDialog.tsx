@@ -78,6 +78,8 @@ export interface AccountRow {
   address?: string | null;
   tax_id?: string | null;
   logo_url?: string | null;
+  instagram_user_id?: string | null;
+  instagram_access_token?: string | null;
 }
 
 interface AccountDetailsDialogProps {
@@ -243,6 +245,8 @@ export function AccountDetailsDialog({
         "twilio_messaging_service_sid",
         "twilio_default_from_number",
         "webhook_secret",
+        "instagram_user_id",
+        "instagram_access_token",
       ];
       for (const k of keys) {
         if (form[k] !== account?.[k]) {
@@ -619,6 +623,10 @@ export function AccountDetailsDialog({
       <FieldRow label="Intake URL">
         <span className="text-[11px] font-mono text-foreground/70 select-all">https://webhooks.leadawaker.com/api/leads/intake</span>
       </FieldRow>
+
+      <SectionHeader icon={<Phone className="h-4 w-4" />} title="Instagram Integration" />
+      <FieldRow label="Instagram User ID">{textField("instagram_user_id", "IG Business Account User ID")}</FieldRow>
+      <FieldRow label="Access Token">{textField("instagram_access_token", "Long-lived Page access token")}</FieldRow>
     </div>
   );
 

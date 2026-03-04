@@ -23,7 +23,6 @@ import {
 import { cn } from "@/lib/utils";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { SearchPill } from "@/components/ui/search-pill";
-import { ToolbarPill } from "@/components/ui/toolbar-pill";
 import { IconBtn } from "@/components/ui/icon-btn";
 import {
   DropdownMenu,
@@ -114,21 +113,13 @@ function LogsTableSkeleton() {
 export default function AutomationLogsPage() {
   const { currentAccountId, isAgencyView } = useWorkspace();
 
-  // ── Toolbar constants ─────────────────────────────────────────────────────
-  const tbBase    = "h-10 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
-  const tbDefault = "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:bg-card";
-  const tbActive  = "bg-card border border-black/[0.125] text-foreground";
+  // ── Expand-on-hover button constants ─────────────────────────────────────
+  const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
+  const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
+  const xActive  = "border-brand-indigo text-brand-indigo";
+  const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
-  // ── Responsive collapse ───────────────────────────────────────────────────
-  const [isNarrow, setIsNarrow] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = toolbarRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(([e]) => setIsNarrow(e.contentRect.width < 920));
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
 
   // ── Filter state ─────────────────────────────────────────────────────────
   const [campaignId, setCampaignId] = useState<number | "all">("all");
@@ -290,18 +281,10 @@ export default function AutomationLogsPage() {
               {/* Campaign filter */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  {isNarrow ? (
-                    <button className={cn("icon-circle-lg icon-circle-base shrink-0", campaignId !== "all" && tbActive)} title="Campaign filter">
-                      <Megaphone className="h-4 w-4" />
-                    </button>
-                  ) : (
-                    <ToolbarPill
-                      icon={Megaphone}
-                      label="Campaign"
-                      active={campaignId !== "all"}
-                      activeValue={activeCampaignLabel}
-                    />
-                  )}
+                  <button className={cn(xBase, "hover:max-w-[120px]", campaignId !== "all" ? xActive : xDefault)}>
+                    <Megaphone className="h-4 w-4 shrink-0" />
+                    <span className={xSpan}>Campaign</span>
+                  </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
                   <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -334,18 +317,10 @@ export default function AutomationLogsPage() {
               {/* Status filter */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  {isNarrow ? (
-                    <button className={cn("icon-circle-lg icon-circle-base shrink-0", statusFilter !== "all" && tbActive)} title="Status filter">
-                      <Filter className="h-4 w-4" />
-                    </button>
-                  ) : (
-                    <ToolbarPill
-                      icon={Filter}
-                      label="Status"
-                      active={statusFilter !== "all"}
-                      activeValue={statusFilter !== "all" ? STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label : undefined}
-                    />
-                  )}
+                  <button className={cn(xBase, "hover:max-w-[100px]", statusFilter !== "all" ? xActive : xDefault)}>
+                    <Filter className="h-4 w-4 shrink-0" />
+                    <span className={xSpan}>Status</span>
+                  </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-44">
                   <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -368,18 +343,10 @@ export default function AutomationLogsPage() {
               {/* Date range filter */}
               <Popover>
                 <PopoverTrigger asChild>
-                  {isNarrow ? (
-                    <button className={cn("icon-circle-lg icon-circle-base shrink-0", !!(dateFrom || dateTo) && tbActive)} title="Date range filter">
-                      <CalendarDays className="h-4 w-4" />
-                    </button>
-                  ) : (
-                    <ToolbarPill
-                      icon={CalendarDays}
-                      label="Date"
-                      active={!!(dateFrom || dateTo)}
-                      activeValue={dateFrom || dateTo ? "Active" : undefined}
-                    />
-                  )}
+                  <button className={cn(xBase, "hover:max-w-[80px]", !!(dateFrom || dateTo) ? xActive : xDefault)}>
+                    <CalendarDays className="h-4 w-4 shrink-0" />
+                    <span className={xSpan}>Date</span>
+                  </button>
                 </PopoverTrigger>
                 <PopoverContent align="start" className="w-72 p-3 space-y-3">
                   <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">

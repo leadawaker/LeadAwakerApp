@@ -84,6 +84,12 @@
 
 /* LIGHT MODE - Brand Colors derived from Lead Awaker */
 :root {
+  /* Safe-area insets for notched/bar devices (iOS, Android) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --topbar-h: calc(62px + var(--safe-top));
+  --bottombar-h: calc(64px + var(--safe-bottom));
+
   /* Stone Gray Design System — floating cards aesthetic */
   --background: 0 0% 87%; /* #DEDEDE — page bg, sidebar, topbar (seamless base) */
   --foreground: 0 0% 12%; /* Near black — high contrast on stone gray */
@@ -167,35 +173,35 @@
   --sidebar-active-foreground: 0 0% 100%;
 }
 
-/* DARK MODE — Brand-tinted dark surfaces (blue-tinted, NOT pure black) */
+/* DARK MODE — Deep navy-indigo surfaces with proper elevation hierarchy */
 .dark {
-  /* Base surfaces: dark navy-blue tinted backgrounds */
-  --background: 228 35% 10%;       /* Deep navy — main page bg */
-  --foreground: 220 20% 93%;       /* Off-white with slight warmth */
-  --bg-main: 228 35% 10%;          /* Match background for dark mode */
+  /* Base surfaces — #121B2B background, stepped elevation via lightness */
+  --background: 218 41% 12%;       /* #121B2B — main page bg */
+  --foreground: 223 20% 93%;       /* #EAECF1 — primary text */
+  --bg-main: 218 41% 12%;          /* Match background */
 
-  /* Cards: slightly lighter than background for elevation */
-  --card: 226 32% 14%;             /* Elevated card surface */
-  --card-foreground: 220 20% 93%;
-  --card-hover: 226 30% 17%;      /* Subtle hover tint on cards (dark) */
+  /* Cards — #2D354B elevated surface */
+  --card: 224 25% 24%;             /* #2D354B — floating cards */
+  --card-foreground: 223 20% 93%;
+  --card-hover: 224 24% 39%;       /* #4C597D — hover tint on cards */
 
-  /* Popovers: same as cards */
-  --popover: 226 32% 14%;
-  --popover-foreground: 220 20% 93%;
+  /* Popovers — #111126 deeper than background */
+  --popover: 240 38% 11%;          /* #111126 — dropdowns, popovers */
+  --popover-foreground: 223 20% 93%;
 
-  /* Primary: Brand Indigo #4F46E5 — brighter for dark bg legibility */
+  /* Primary: Brand Indigo — brighter for dark bg legibility */
   --primary: 243 85% 68%;
   --primary-foreground: 0 0% 100%;
 
-  /* Secondary: subtle blue-tinted dark surface */
-  --secondary: 226 28% 18%;
-  --secondary-foreground: 220 20% 90%;
+  /* Secondary: subtle indigo-tinted surface */
+  --secondary: 240 31% 20%;
+  --secondary-foreground: 223 20% 90%;
 
-  /* Muted: used for hover states, subtle fills */
-  --muted: 226 28% 18%;
-  --muted-foreground: 220 15% 60%;
+  /* Muted — #232343 indigo-tinted dark surface */
+  --muted: 240 31% 20%;            /* #232343 */
+  --muted-foreground: 226 23% 59%; /* #808BAF */
 
-  /* Accent: warmer gold adjusted for dark — slightly brighter */
+  /* Accent: warmer gold adjusted for dark */
   --accent: 38 90% 58%;
   --accent-foreground: 0 0% 100%;
 
@@ -209,9 +215,9 @@
   --info: 243 85% 68%;
   --info-foreground: 0 0% 100%;
 
-  /* Borders: visible but subtle on dark surfaces */
-  --border: 226 25% 20%;
-  --input: 226 25% 20%;
+  /* Borders: subtle on dark surfaces */
+  --border: 224 20% 28%;
+  --input: 224 20% 28%;
   --ring: 243 85% 68%;
 
   /* Chart colors adjusted for dark */
@@ -224,28 +230,29 @@
   /* ── Brand Tokens (Dark Mode) ── */
   --brand-blue: 243 85% 68%;
   --brand-blue-foreground: 0 0% 100%;
-  --brand-deep-blue: 228 35% 10%;
-  --brand-deep-blue-foreground: 220 20% 93%;
+  --brand-deep-blue: 218 41% 12%;
+  --brand-deep-blue-foreground: 223 20% 93%;
   --brand-yellow: 44 98% 55%;
-  --brand-yellow-foreground: 228 35% 10%;
+  --brand-yellow-foreground: 218 41% 12%;
   --brand-soft-yellow: 43 97% 65%;
-  --brand-soft-yellow-foreground: 228 35% 10%;
-  /* Brand Indigo (dark mode — slightly brighter for dark bg) */
+  --brand-soft-yellow-foreground: 218 41% 12%;
+  /* Brand Indigo (dark mode — slightly brighter) */
   --brand-indigo: 243 85% 68%;
   --brand-indigo-foreground: 0 0% 100%;
   /* Indian Yellow (dark mode) */
   --brand-indian-yellow: 35 60% 52%;
   --brand-indian-yellow-foreground: 0 0% 100%;
-  /* Highlight tokens (dark mode — muted warm gold on dark) */
-  --highlight-active: 40 40% 30%;
-  --highlight-selected: 40 30% 18%;
-  --highlight-hover: 40 50% 36%;
-  /* Input field background (dark mode — slightly elevated) */
-  --input-bg: 226 30% 16%;
+  /* Highlight tokens — dark versions of the yellow active/selected
+     selected = active L × 1.25 (25% brighter than pill) */
+  --highlight-active: 40 50% 24%;   /* Deep warm amber — active pill/tab */
+  --highlight-selected: 40 55% 30%; /* 25% brighter amber — selected card/row */
+  --highlight-hover: 243 40% 36%;   /* Indigo-tinted — hover on highlighted */
+  /* Input field background — #242449 */
+  --input-bg: 240 34% 21%;
 
-  /* Sidebar tokens (dark mode) */
-  --sidebar-bg: 228 40% 8%;
-  --sidebar-foreground: 220 20% 85%;
+  /* Sidebar tokens (dark mode) — deeper than background */
+  --sidebar-bg: 220 42% 9%;
+  --sidebar-foreground: 223 20% 85%;
   --sidebar-active: 243 85% 68%;
   --sidebar-active-foreground: 0 0% 100%;
 }
@@ -288,6 +295,15 @@
 }
 .animate-bubble-right {
   animation: bubble-enter-right 0.2s ease-out both;
+}
+
+/* ── Detail panel slide-up — smooth entrance when selecting a new card ── */
+@keyframes panel-slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-panel-slide-up {
+  animation: panel-slide-up 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* ── Calendar pill pop-in — scale+fade for booking pills in grid ────── */
@@ -1297,6 +1313,49 @@
     display: block;
     width: 6px;
     height: 6px;
+  }
+}
+
+/* Desktop override: bottom bar doesn't exist on md+ so clear the padding var */
+@media (min-width: 768px) {
+  :root {
+    --bottombar-h: 0px;
+  }
+}
+
+/* Mobile touch target — invisible 44px tap zone around 36px buttons */
+@utility touch-target {
+  @media (max-width: 767px) {
+    position: relative;
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      min-width: 44px;
+      min-height: 44px;
+    }
+  }
+}
+
+/* Mobile panel slide-in — list→detail navigation */
+@utility mobile-panel-enter {
+  @media (max-width: 767px) {
+    animation: mobile-panel-in 200ms cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+}
+
+@keyframes mobile-panel-in {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Scroll lock when mobile nav overlay is open */
+@utility mobile-scroll-lock {
+  @media (max-width: 767px) {
+    overflow: hidden;
+    touch-action: none;
   }
 }
 

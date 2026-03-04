@@ -1,9 +1,6 @@
 import {
   Plus,
   Filter,
-  Cpu,
-  Search,
-  X,
   Check,
   ArrowUpDown,
   Layers,
@@ -17,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ToolbarPill } from "@/components/ui/toolbar-pill";
+import { SearchPill } from "@/components/ui/search-pill";
 import { cn } from "@/lib/utils";
 
 import {
@@ -34,9 +31,17 @@ import {
    PromptsToolbar — search, filters, sort, group, fields, create
    ════════════════════════════════════════════════════════════════════════════ */
 
+/* ── Expand-on-hover button constants ──────────────────────────────────────── */
+const xBase = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
+const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
+const xActive  = "border-brand-indigo text-brand-indigo";
+const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
+
 interface PromptsToolbarProps {
   searchQuery: string;
   onSearchQueryChange: (q: string) => void;
+  searchOpen?: boolean;
+  onSearchOpenChange?: (v: boolean) => void;
   statusFilter: string;
   onStatusFilterChange: (s: string) => void;
   modelFilter: string;
@@ -66,6 +71,8 @@ const GROUP_OPTIONS: PromptGroupOption[] = ["status", "model", "campaign", "none
 export function PromptsToolbar({
   searchQuery,
   onSearchQueryChange,
+  searchOpen,
+  onSearchOpenChange,
   statusFilter,
   onStatusFilterChange,
   modelFilter,
@@ -92,43 +99,32 @@ export function PromptsToolbar({
       {/* ── Separator from ViewTabBar ───────────────────────────────────── */}
       <div className="w-px h-4 bg-border/25 mx-0.5 shrink-0" />
 
-      {/* ── 1. Search (always visible) ───────────────────────────────────── */}
-      <div className="h-10 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card/60 px-3 min-w-[180px] max-w-[240px]">
-        <Search className="h-4 w-4 text-muted-foreground/50 shrink-0" />
-        <input
-          type="text"
-          placeholder="Search prompts..."
-          value={searchQuery}
-          onChange={(e) => onSearchQueryChange(e.target.value)}
-          className="flex-1 bg-transparent text-[12px] text-foreground placeholder:text-muted-foreground/40 outline-none min-w-0"
-          data-testid="input-prompt-search"
-        />
-        {searchQuery && (
-          <button onClick={() => onSearchQueryChange("")} className="shrink-0">
-            <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-          </button>
-        )}
-      </div>
+      {/* ── 1. Search ───────────────────────────────────────────────────── */}
+      <SearchPill
+        value={searchQuery}
+        onChange={onSearchQueryChange}
+        open={searchOpen ?? false}
+        onOpenChange={onSearchOpenChange ?? (() => {})}
+        placeholder="Search prompts..."
+      />
 
       {/* ── 2. +Create button ────────────────────────────────────────────── */}
       <button
-        className="toolbar-pill-base shrink-0"
+        className={cn(xBase, "hover:max-w-[100px]", xDefault)}
         onClick={onOpenCreate}
         data-testid="button-create-prompt"
       >
-        <Plus className="h-4 w-4" />
-        Create
+        <Plus className="h-4 w-4 shrink-0" />
+        <span className={xSpan}>Create</span>
       </button>
 
       {/* ── 3. Sort dropdown ─────────────────────────────────────────────── */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill
-            icon={ArrowUpDown}
-            label="Sort"
-            active={sortBy !== "recent"}
-            activeValue={sortBy !== "recent" ? PROMPT_SORT_LABELS[sortBy].split(" ")[0] : undefined}
-          />
+          <button className={cn(xBase, "hover:max-w-[80px]", sortBy !== "recent" ? xActive : xDefault)}>
+            <ArrowUpDown className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Sort</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -151,12 +147,10 @@ export function PromptsToolbar({
       {/* ── 4. Filter dropdown (status + model + campaign) ───────────────── */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill
-            icon={Filter}
-            label="Filter"
-            active={isFilterActive}
-            activeValue={isFilterActive ? activeFilterCount : undefined}
-          />
+          <button className={cn(xBase, "hover:max-w-[100px]", isFilterActive ? xActive : xDefault)}>
+            <Filter className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Filter</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
           {/* Status section */}
@@ -245,12 +239,10 @@ export function PromptsToolbar({
       {showTableControls && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <ToolbarPill
-              icon={Layers}
-              label="Group"
-              active={groupBy !== "none"}
-              activeValue={groupBy !== "none" ? PROMPT_GROUP_LABELS[groupBy] : undefined}
-            />
+            <button className={cn(xBase, "hover:max-w-[100px]", groupBy !== "none" ? xActive : xDefault)}>
+              <Layers className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>Group</span>
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-44">
             {GROUP_OPTIONS.map((opt) => (
@@ -271,11 +263,10 @@ export function PromptsToolbar({
       {showTableControls && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <ToolbarPill
-              icon={Eye}
-              label="Fields"
-              active={visibleCols.size !== DEFAULT_VISIBLE_PROMPT_COLS.length}
-            />
+            <button className={cn(xBase, "hover:max-w-[100px]", visibleCols.size !== DEFAULT_VISIBLE_PROMPT_COLS.length ? xActive : xDefault)}>
+              <Eye className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>Fields</span>
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
             <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">

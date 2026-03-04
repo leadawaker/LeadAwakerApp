@@ -8,8 +8,8 @@ import {
   Calendar,
   ScrollText,
   BookOpen,
-  PanelLeftClose,
-  PanelLeftOpen,
+  ChevronLeft,
+  ChevronRight,
   BookUser,
   ChevronsUpDown,
   Check,
@@ -22,6 +22,7 @@ import {
   Palette,
 } from "lucide-react";
 import { ColorPickerWidget } from "@/components/ui/color-picker-widget";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import {
@@ -68,6 +69,7 @@ export function RightSidebar({
 }) {
   const [location, setLocation] = useLocation();
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
+  const { crumb } = useBreadcrumb();
   const {
     currentAccount,
     currentAccountId,
@@ -140,7 +142,7 @@ export function RightSidebar({
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "nav-calendar" },
     {
       href: `${prefix}/prompt-library`,
-      label: "Library",
+      label: "Prompt Library",
       icon: BookOpen,
       testId: "nav-library",
       agencyOnly: true,
@@ -162,6 +164,22 @@ export function RightSidebar({
     if (it.agencyViewOnly && !isAgencyView) return false;
     return true;
   });
+
+  const PAGE_LABELS: Record<string, string> = {
+    campaigns: "Campaigns",
+    contacts: "Leads",
+    conversations: "Chats",
+    calendar: "Calendar",
+    accounts: "Accounts",
+    invoices: "Billing",
+    expenses: "Billing",
+    contracts: "Billing",
+    "prompt-library": "Prompt Library",
+    "automation-logs": "Automations",
+    settings: "Settings",
+    docs: "Docs",
+  };
+  const pageLabel = PAGE_LABELS[location.split("/").filter(Boolean)[1] ?? ""] ?? "";
 
   /** Check if a nav item is active (exact match or sub-route match) */
   const isActive = (href: string) => {
@@ -241,14 +259,15 @@ export function RightSidebar({
           {/* Backdrop - tap outside to close */}
           <button
             type="button"
-            className="absolute inset-0 bg-black/25 glass-overlay"
+            className="absolute inset-0 bg-black/50"
             onClick={onCloseMobileMenu}
             aria-label="Close menu"
             data-testid="mobile-sidebar-backdrop"
           />
           {/* Slide-in sidebar */}
           <aside
-            className="absolute left-0 top-0 bottom-0 w-[260px] bg-white/90 dark:bg-card/90 glass-accent shadow-2xl flex flex-col animate-in slide-in-from-left duration-250 ease-out"
+            className="absolute left-0 top-0 bottom-0 w-[260px] bg-background shadow-[4px_0_24px_rgba(0,0,0,0.12)] flex flex-col animate-in slide-in-from-left duration-250 ease-out"
+            style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
             data-testid="mobile-sidebar-panel"
           >
             {/* LOGO */}
@@ -418,11 +437,14 @@ export function RightSidebar({
       )}
 
       {/* MOBILE BOTTOM BAR */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 h-[64px] border-t border-border/50 bg-white/80 dark:bg-card/80 glass-nav z-[100] flex justify-around items-center">
+      <div
+        className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border/50 bg-background/95 z-[100] flex justify-around items-start pt-2"
+        style={{ height: "calc(64px + env(safe-area-inset-bottom, 0px))", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
         <button
           onClick={() => setLocation(`${prefix}/campaigns`)}
           className={cn(
-            "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
+            "relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
             isActive(`${prefix}/campaigns`)
               ? "text-brand-indigo"
               : "text-muted-foreground"
@@ -432,11 +454,12 @@ export function RightSidebar({
         >
           <Megaphone className="h-4 w-4" />
           <span className="text-[10px] font-semibold">Campaigns</span>
+          {isActive(`${prefix}/campaigns`) && <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-indigo" />}
         </button>
         <button
           onClick={() => setLocation(`${prefix}/contacts`)}
           className={cn(
-            "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
+            "relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
             isActive(`${prefix}/contacts`)
               ? "text-brand-indigo"
               : "text-muted-foreground"
@@ -446,11 +469,12 @@ export function RightSidebar({
         >
           <BookUser className="h-4 w-4" />
           <span className="text-[10px] font-semibold">Contacts</span>
+          {isActive(`${prefix}/contacts`) && <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-indigo" />}
         </button>
         <button
           onClick={() => setLocation(`${prefix}/conversations`)}
           className={cn(
-            "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
+            "relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
             isActive(`${prefix}/conversations`)
               ? "text-brand-indigo"
               : "text-muted-foreground"
@@ -460,17 +484,19 @@ export function RightSidebar({
         >
           <MessageSquare className="h-4 w-4" />
           <span className="text-[10px] font-semibold">Chats</span>
+          {isActive(`${prefix}/conversations`) && <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-indigo" />}
         </button>
         <button
           onClick={onToggleMobileMenu}
           className={cn(
-            "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
+            "relative flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors",
             isMobileMenuOpen ? "text-brand-indigo" : "text-muted-foreground"
           )}
           data-testid="mobile-nav-menu"
         >
           {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           <span className="text-[10px] font-semibold">Menu</span>
+          {isMobileMenuOpen && <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-indigo" />}
         </button>
       </div>
 
@@ -486,7 +512,7 @@ export function RightSidebar({
           {/* HEADER — "Menu" label + collapse button */}
           <div
             className={cn(
-              "flex items-center shrink-0 px-2.5 mt-[45px] mb-2 h-10",
+              "flex items-center shrink-0 px-2.5 mt-[45px] mb-6 h-10",
               collapsed ? "justify-center" : "justify-between"
             )}
           >
@@ -499,9 +525,9 @@ export function RightSidebar({
               title={collapsed ? "Expand menu" : "Collapse menu"}
             >
               {collapsed ? (
-                <PanelLeftOpen className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4" />
               ) : (
-                <PanelLeftClose className="h-4 w-4" />
+                <ChevronLeft className="h-4 w-4" />
               )}
             </button>
           </div>
@@ -523,8 +549,8 @@ export function RightSidebar({
                     {collapsed ? (
                       <div className="mx-auto w-5 border-t border-border/30 my-3" />
                     ) : (
-                      <div className="px-1 pt-1.5 pb-1.5">
-                        <span className="text-[11px] font-bold tracking-wide text-foreground/50">
+                      <div className="px-1 pt-1.5 pb-3">
+                        <span className="text-[11px] font-bold tracking-wide text-foreground">
                           Engage
                         </span>
                       </div>
@@ -545,8 +571,8 @@ export function RightSidebar({
                     {collapsed ? (
                       <div className="mx-auto w-5 border-t border-border/30 my-3" />
                     ) : (
-                      <div className="px-1 pt-1.5 pb-1.5">
-                        <span className="text-[11px] font-bold tracking-wide text-foreground/50">
+                      <div className="px-1 pt-1.5 pb-3">
+                        <span className="text-[11px] font-bold tracking-wide text-foreground">
                           Admin
                         </span>
                       </div>
@@ -559,7 +585,7 @@ export function RightSidebar({
               {/* Section: Backend (agency only) */}
               {(() => {
                 const backendItems = visibleNavItems.filter(it =>
-                  ["Library", "Automations"].includes(it.label)
+                  ["Prompt Library", "Automations"].includes(it.label)
                 );
                 if (backendItems.length === 0) return null;
                 return (
@@ -567,8 +593,8 @@ export function RightSidebar({
                     {collapsed ? (
                       <div className="mx-auto w-5 border-t border-border/30 my-3" />
                     ) : (
-                      <div className="px-1 pt-1.5 pb-1.5">
-                        <span className="text-[11px] font-bold tracking-wide text-foreground/50">
+                      <div className="px-1 pt-1.5 pb-3">
+                        <span className="text-[11px] font-bold tracking-wide text-foreground">
                           Backend
                         </span>
                       </div>
@@ -581,34 +607,41 @@ export function RightSidebar({
             </nav>
           </TooltipProvider>
 
-          {/* Color Picker — dev tool, above Settings */}
-          <div className="shrink-0 px-2.5 pb-1">
+          {/* Color Picker toggle — round 40px button */}
+          <div className="shrink-0 px-2.5 pb-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={() => setColorPickerOpen((p) => !p)}
                   className={cn(
-                    "flex items-center justify-center rounded-xl transition-colors",
-                    collapsed ? "h-10 w-10" : "h-10 w-full gap-2 px-3",
+                    "h-10 w-10 rounded-full flex items-center justify-center border border-black/[0.125] transition-colors",
                     colorPickerOpen
-                      ? "bg-brand-indigo text-white"
-                      : "text-foreground/50 hover:text-foreground hover:bg-card",
+                      ? "bg-brand-indigo text-white border-brand-indigo"
+                      : "text-foreground/50 hover:text-foreground hover:bg-card"
                   )}
                   title="Color Tester"
                 >
-                  <Palette className="h-4 w-4 shrink-0" />
-                  {!collapsed && (
-                    <span className="text-[13px] font-medium truncate">Colors</span>
-                  )}
+                  <Palette className="h-4 w-4" />
                 </button>
               </TooltipTrigger>
-              {collapsed && (
-                <TooltipContent side="right" sideOffset={8}>
-                  Color Tester
-                </TooltipContent>
-              )}
+              <TooltipContent side="right" sideOffset={8}>
+                Color Tester
+              </TooltipContent>
             </Tooltip>
           </div>
+
+          {/* Breadcrumb — current page + selected item */}
+          {!collapsed && pageLabel && (
+            <div className="shrink-0 px-4 pb-3 min-w-0 flex items-center gap-1 overflow-hidden">
+              <span className="text-[12px] font-medium text-muted-foreground shrink-0">{pageLabel}</span>
+              {crumb && (
+                <>
+                  <span className="text-[12px] text-muted-foreground/50 shrink-0">/</span>
+                  <span className="text-[12px] font-semibold text-foreground truncate">{crumb}</span>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Settings — pinned to bottom */}
           <TooltipProvider delayDuration={300}>

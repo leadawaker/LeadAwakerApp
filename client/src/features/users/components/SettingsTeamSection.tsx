@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   ArrowUpDown, Filter, Eye, Check, Search, X,
   UserPlus, Mail, Phone, Copy, Clock, User, Shield, Calendar,
@@ -26,7 +27,6 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ToolbarPill } from "@/components/ui/toolbar-pill";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { getInitials, ROLE_AVATAR } from "@/lib/avatarUtils";
 
@@ -62,9 +62,11 @@ const COL_META: { key: UserColKey; label: string; defaultVisible: boolean }[] = 
   { key: "timezone",    label: "Timezone",     defaultVisible: false },
 ];
 
-// Toolbar pill base classes (§17.1)
-const tbBase    = "h-10 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
-const tbDefault = "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:bg-card";
+// Expand-on-hover button constants
+const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
+const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
+const xActive  = "border-brand-indigo text-brand-indigo";
+const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
 function isActiveStatus(s: string | null | undefined) { return (s || "").toLowerCase() === "active"; }
 function getUserName(u: AppUser) { return u.fullName1 || u.email || `User #${u.id}`; }
@@ -88,9 +90,10 @@ function ConfirmToolbarButton({
 }) {
   const [confirming, setConfirming] = useState(false);
   const [loading, setLoading] = useState(false);
+  const isMobile = useIsMobile();
   if (confirming) {
     return (
-      <div className="h-10 flex items-center gap-1 rounded-full border border-black/[0.125] bg-card px-2.5 text-[12px] shrink-0">
+      <div className="h-9 flex items-center gap-1 rounded-full border border-black/[0.125] bg-card px-2.5 text-[12px] shrink-0">
         <span className="text-foreground/60 mr-0.5 whitespace-nowrap">{label}?</span>
         <button
           className="px-2 py-0.5 rounded-full bg-brand-indigo text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
@@ -104,15 +107,15 @@ function ConfirmToolbarButton({
   return (
     <button
       className={cn(
-        "h-10 inline-flex items-center gap-1.5 rounded-full border px-3 text-[12px] font-medium shrink-0",
+        xBase,
         variant === "danger"
-          ? "border-red-300/50 text-red-600 hover:bg-red-50/60"
-          : "border-black/[0.125] text-foreground/70 hover:bg-card hover:text-foreground",
+          ? cn("border-red-300/50 text-foreground/60 hover:text-red-600 hover:border-red-300/50", isMobile ? "max-w-[120px]" : "hover:max-w-[120px]")
+          : cn(xDefault, isMobile ? "max-w-[120px]" : "hover:max-w-[120px]"),
       )}
       onClick={() => setConfirming(true)}
     >
-      <Icon className="h-4 w-4" />
-      {label}
+      <Icon className="h-4 w-4 shrink-0" />
+      <span className={cn(xSpan, isMobile && "!opacity-100")}>{label}</span>
     </button>
   );
 }
@@ -209,6 +212,7 @@ function isInviteExpired(u: AppUser): boolean {
 // ══════════════════════════════════════════════════════════════════════════════
 export function SettingsTeamSection() {
   const [, setLocation] = useLocation();
+  const isMobile = useIsMobile();
 
   // ── Data fetching ──────────────────────────────────────────────────────────
   const [users, setUsers] = useState<AppUser[]>([]);
@@ -478,6 +482,17 @@ export function SettingsTeamSection() {
   const [viewTakeoverCount, setViewTakeoverCount] = useState(0);
   const [viewDataLoading, setViewDataLoading]     = useState(false);
 
+  // Deep-link: AccountDetailView sets pendingUserSelection to auto-open a user
+  useEffect(() => {
+    if (loading || users.length === 0) return;
+    const pending = sessionStorage.getItem("pendingUserSelection");
+    if (!pending) return;
+    sessionStorage.removeItem("pendingUserSelection");
+    const uid = Number(pending);
+    const match = users.find((u) => u.id === uid);
+    if (match) setViewingUser(match);
+  }, [loading, users]);
+
   useEffect(() => {
     if (!viewingUser?.accountsId) {
       setViewCampaigns([]); setViewTakeoverCount(0);
@@ -542,33 +557,22 @@ export function SettingsTeamSection() {
     if (searchOpen && searchInputRef.current) searchInputRef.current.focus();
   }, [searchOpen]);
 
-  // ── ResizeObserver for narrow toolbar ──────────────────────────────────────
-  const toolbarRef = useRef<HTMLDivElement>(null);
-  const [isNarrow, setIsNarrow] = useState(false);
-  useEffect(() => {
-    const el = toolbarRef.current;
-    if (!el) return;
-    const obs = new ResizeObserver(([entry]) => setIsNarrow(entry.contentRect.width < 920));
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-
   // ══════════════════════════════════════════════════════════════════════════
   // RENDER
   // ══════════════════════════════════════════════════════════════════════════
   return (
     <div className="flex flex-col flex-1 min-h-0 h-full">
       {/* ── Toolbar ─────────────────────────────────────────────────────────── */}
-      <div ref={toolbarRef} className="flex items-center gap-1.5 flex-wrap px-3.5 pt-3 pb-2.5 shrink-0">
+      <div className="flex items-center gap-1.5 flex-wrap px-3.5 pt-3 pb-2.5 shrink-0">
         {/* Invite button — opens popover below */}
         {isAdmin && (
           <Popover open={inviteOpen} onOpenChange={(open) => { if (!open) { setInviteOpen(false); setInviteResult(null); } else { handleInviteOpen(); } }} modal={false}>
             <PopoverTrigger asChild>
               <button
-                className={cn(tbBase, "bg-brand-indigo text-white hover:bg-brand-indigo/90 border-brand-indigo")}
+                className="inline-flex items-center gap-1.5 h-9 pl-[9px] pr-3 rounded-full bg-brand-indigo text-white text-[12px] font-medium hover:bg-brand-indigo/90 shrink-0"
               >
-                <UserPlus className="h-4 w-4" />
-                {!isNarrow && "Invite"}
+                <UserPlus className="h-4 w-4 shrink-0" />
+                Invite
               </button>
             </PopoverTrigger>
             <PopoverContent side="bottom" align="start" sideOffset={6} className="w-80 p-0 rounded-xl shadow-lg border border-border/40">
@@ -638,7 +642,7 @@ export function SettingsTeamSection() {
 
         {/* Search */}
         {searchOpen ? (
-          <div className="h-10 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card px-3 shrink-0">
+          <div className="h-9 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card px-3 shrink-0">
             <Search className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
             <input
               ref={searchInputRef}
@@ -652,21 +656,19 @@ export function SettingsTeamSection() {
             </button>
           </div>
         ) : (
-          <button className={cn(tbBase, tbDefault)} onClick={() => setSearchOpen(true)}>
-            <Search className="h-4 w-4" />
-            {!isNarrow && "Search"}
+          <button className={cn(xBase, xDefault, isMobile ? "max-w-[100px]" : "hover:max-w-[100px]")} onClick={() => setSearchOpen(true)}>
+            <Search className="h-4 w-4 shrink-0" />
+            <span className={cn(xSpan, isMobile && "!opacity-100")}>Search</span>
           </button>
         )}
 
         {/* Sort */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <ToolbarPill
-              icon={ArrowUpDown}
-              label={isNarrow ? "" : "Sort"}
-              active={sortBy !== "name_asc"}
-              activeValue={sortBy !== "name_asc" ? SORT_LABELS[sortBy].split(" ")[0] : undefined}
-            />
+            <button className={cn(xBase, sortBy !== "name_asc" ? xActive : xDefault, isMobile ? "max-w-[80px]" : "hover:max-w-[80px]")}>
+              <ArrowUpDown className="h-4 w-4 shrink-0" />
+              <span className={cn(xSpan, isMobile && "!opacity-100")}>Sort</span>
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-44">
             <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Sort by</DropdownMenuLabel>
@@ -683,12 +685,10 @@ export function SettingsTeamSection() {
         {/* Filter */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <ToolbarPill
-              icon={Filter}
-              label={isNarrow ? "" : "Filter"}
-              active={isFilterActive}
-              activeValue={isFilterActive ? activeFilterCount : undefined}
-            />
+            <button className={cn(xBase, isFilterActive ? xActive : xDefault, isMobile ? "max-w-[100px]" : "hover:max-w-[100px]")}>
+              <Filter className="h-4 w-4 shrink-0" />
+              <span className={cn(xSpan, isMobile && "!opacity-100")}>Filter{isFilterActive && activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}</span>
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
             <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Role</DropdownMenuLabel>
@@ -720,12 +720,10 @@ export function SettingsTeamSection() {
         {/* Group */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <ToolbarPill
-              icon={Layers}
-              label={isNarrow ? "" : "Group"}
-              active={groupBy !== "role"}
-              activeValue={groupBy !== "role" ? GROUP_LABELS[groupBy] : undefined}
-            />
+            <button className={cn(xBase, groupBy !== "role" ? xActive : xDefault, isMobile ? "max-w-[100px]" : "hover:max-w-[100px]")}>
+              <Layers className="h-4 w-4 shrink-0" />
+              <span className={cn(xSpan, isMobile && "!opacity-100")}>Group</span>
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-44">
             {(Object.keys(GROUP_LABELS) as GroupBy[]).map(opt => (
@@ -740,11 +738,10 @@ export function SettingsTeamSection() {
         {/* Fields (column visibility) */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <ToolbarPill
-              icon={Eye}
-              label={isNarrow ? "" : "Fields"}
-              active={visibleCols.size !== DEFAULT_VISIBLE_COLS.length}
-            />
+            <button className={cn(xBase, visibleCols.size !== DEFAULT_VISIBLE_COLS.length ? xActive : xDefault, isMobile ? "max-w-[100px]" : "hover:max-w-[100px]")}>
+              <Eye className="h-4 w-4 shrink-0" />
+              <span className={cn(xSpan, isMobile && "!opacity-100")}>Fields</span>
+            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
             <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Show / Hide Columns</DropdownMenuLabel>
@@ -795,7 +792,7 @@ export function SettingsTeamSection() {
       )}
 
       {/* ── Table — fills remaining space, edge-to-edge, no rounded corners */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-x-auto">
         <UsersInlineTable
           flatItems={flatItems}
           loading={loading}

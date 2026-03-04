@@ -4,6 +4,7 @@
     "services": "Use Cases",
     "about": "About",
     "login": "Login",
+    "openApp": "Open App",
     "bookDemo": "Book a Demo"
   },
   "footer": {

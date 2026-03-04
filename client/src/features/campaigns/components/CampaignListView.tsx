@@ -9,7 +9,9 @@ import type { Campaign, CampaignMetricsHistory } from "@/types/models";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import { cn } from "@/lib/utils";
 import { CampaignDetailView, CampaignDetailViewEmpty } from "./CampaignDetailView";
+import { SkeletonCampaignPanel } from "@/components/ui/skeleton";
 import { getInitials, getCampaignAvatarColor, CAMPAIGN_STATUS_HEX } from "@/lib/avatarUtils";
+import { CAMPAIGN_STICKERS } from "@/assets/campaign-stickers/index";
 import type {
   CampaignViewMode,
   CampaignGroupBy,
@@ -62,6 +64,16 @@ function CampaignListCard({
   const accountName = campaign.account_name || "";
   const accountLogo = (campaign as any).account_logo_url || "";
   const statusHex = CAMPAIGN_STATUS_HEX[status] || "#6B7280";
+  const campaignStickerSlug = campaign.campaign_sticker ?? null;
+  const campaignSticker = campaignStickerSlug
+    ? CAMPAIGN_STICKERS.find(s => s.slug === campaignStickerSlug) ?? null
+    : null;
+  const campaignStickerSize = Math.min(Number((campaign as any).campaign_sticker_size ?? 70), 70);
+  const isGrayscale = status === "Inactive";
+  const isDraft = status === "Draft";
+  const isPaused = status === "Paused";
+  const createdAt: string | null = (campaign as any).createdAt ?? (campaign as any).created_at ?? null;
+  const createdLabel = createdAt ? new Date(createdAt).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" }) : null;
 
   return (
     <div
@@ -76,26 +88,56 @@ function CampaignListCard({
     >
       <div className="px-2.5 pt-3.5 pb-2.5 flex flex-col gap-2">
 
-        {/* Top row: Avatar + Name + Booked circle */}
+        {/* Top row: Avatar + Name */}
         <div className="flex items-center gap-2.5">
-          {/* Avatar: account logo with indigo overlay, or initials fallback */}
-          <div
-            className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0 overflow-hidden relative"
-            style={accountLogo ? {} : { backgroundColor: avatarColor.bg, color: avatarColor.text }}
-          >
-            {accountLogo ? (
-              <>
-                <img src={accountLogo} alt="" className="h-full w-full object-cover" />
-                {/* Indigo overlay */}
-                <div className="absolute inset-0 rounded-full bg-brand-indigo/40 mix-blend-multiply" />
-              </>
-            ) : (
-              initials
-            )}
-          </div>
+          {/* Avatar: sticker (no circle) > account logo > initials */}
+          {campaignSticker ? (
+            <div className="flex items-center justify-center shrink-0" style={{ width: campaignStickerSize, height: campaignStickerSize }}>
+              <img
+                src={campaignSticker.url}
+                alt=""
+                className="object-contain w-full h-full"
+                style={{ filter:
+                  isGrayscale ? "grayscale(1) opacity(0.45)"
+                  : isDraft ? "grayscale(1) sepia(1) hue-rotate(185deg) saturate(4) brightness(0.9) opacity(0.6)"
+                  : isPaused ? "sepia(1) saturate(2) hue-rotate(-5deg) brightness(0.85) opacity(0.6)"
+                  : `hue-rotate(${campaign.campaign_hue ?? 0}deg)`
+                }}
+              />
+            </div>
+          ) : accountLogo ? (
+            <div className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0 overflow-hidden relative">
+              <img
+                src={accountLogo}
+                alt=""
+                className="h-full w-full object-cover"
+                style={
+                  isGrayscale ? { filter: "grayscale(1)" }
+                  : isDraft ? { filter: "grayscale(1)" }
+                  : isPaused ? { filter: "grayscale(0.5)" }
+                  : undefined
+                }
+              />
+              {!isGrayscale && !isPaused && !isDraft && <div className="absolute inset-0 rounded-full bg-brand-indigo/40 mix-blend-multiply" />}
+              {isDraft && <div className="absolute inset-0 rounded-full" style={{ backgroundColor: "rgba(80,100,220,0.35)", mixBlendMode: "color" }} />}
+              {isPaused && <div className="absolute inset-0 rounded-full" style={{ backgroundColor: "rgba(200,160,40,0.55)", mixBlendMode: "color" }} />}
+            </div>
+          ) : (
+            <div
+              className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0"
+              style={
+                isGrayscale ? { backgroundColor: "#D0D0D0", color: "#888888" }
+                : isPaused ? { backgroundColor: "#C8B86A", color: "#6B5A1E", filter: "grayscale(0.5) sepia(0.3) saturate(1.2)" }
+                : isDraft ? { backgroundColor: "#BFCFFF", color: "#3B4FA0" }
+                : { backgroundColor: avatarColor.bg, color: avatarColor.text }
+              }
+            >
+              {initials}
+            </div>
+          )}
 
           <div className="flex-1 min-w-0">
-            <p className="text-[16px] font-semibold font-heading leading-tight truncate text-foreground">
+            <p className="text-[18px] font-semibold font-heading leading-tight truncate text-foreground">
               {name}
             </p>
             <div className="flex items-center gap-1.5 mt-0.5">
@@ -113,43 +155,42 @@ function CampaignListCard({
             )}
           </div>
 
-          {/* Booked count circle — always visible */}
-          <div
-            className={cn(
-              "h-9 w-9 rounded-full flex items-center justify-center shrink-0",
-              bookings > 0
-                ? "bg-[#FCB803]/20 text-[#131B49]"
-                : "bg-foreground/5 text-muted-foreground/40"
-            )}
-            title={`${bookings} booked`}
-          >
-            <span className="text-[13px] font-bold tabular-nums leading-none">{bookings}</span>
-          </div>
         </div>
 
-        {/* Hover-only metrics strip: Leads + Response */}
+        {/* Hover-only expanded area: metrics strip + date */}
         <div className={cn(
-          "grid grid-cols-2 gap-px rounded-lg overflow-hidden transition-opacity",
-          "opacity-0 max-h-0 group-hover:opacity-100 group-hover:max-h-[40px]",
-          "transition-[opacity,max-height] duration-200",
-          isActive && "opacity-100 max-h-[40px]",
-          isActive ? "bg-[#EFE4A0]/60" : "bg-foreground/8"
+          "opacity-0 max-h-0 group-hover:opacity-100 group-hover:max-h-[64px]",
+          "transition-[opacity,max-height] duration-200 flex flex-col gap-1"
         )}>
-          {[
-            { label: "Leads", value: leads > 0 ? leads.toLocaleString() : "—" },
-            { label: "Response", value: responseRate > 0 ? `${responseRate}%` : "—" },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className={cn(
-                "flex flex-col items-center py-1.5",
-                isActive ? "bg-highlight-selected" : "bg-card group-hover:bg-card-hover"
-              )}
-            >
-              <span className="text-[13px] font-bold tabular-nums text-foreground leading-tight">{stat.value}</span>
-              <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wide mt-0.5">{stat.label}</span>
+          {/* Metrics strip */}
+          <div className={cn(
+            "grid grid-cols-3 gap-px rounded-lg overflow-hidden",
+            isActive ? "bg-[#EFE4A0]/60" : "bg-foreground/8"
+          )}>
+            {[
+              { label: "Leads",    value: leads > 0         ? leads.toLocaleString()  : "—" },
+              { label: "Response", value: responseRate > 0  ? `${responseRate}%`       : "—" },
+              { label: "Booked",   value: bookings > 0      ? bookings.toLocaleString(): "—" },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className={cn(
+                  "flex flex-col items-center py-1.5",
+                  isActive ? "bg-highlight-selected" : "bg-card group-hover:bg-card-hover"
+                )}
+              >
+                <span className="text-[13px] font-bold tabular-nums text-foreground leading-tight">{stat.value}</span>
+                <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wide mt-0.5">{stat.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Date row */}
+          {createdLabel && (
+            <div className="flex items-center gap-1 px-1">
+              <span className="text-[10px] text-muted-foreground/50 tabular-nums">Started {createdLabel}</span>
             </div>
-          ))}
+          )}
         </div>
 
       </div>
@@ -160,7 +201,7 @@ function CampaignListCard({
 // ── Group header ─────────────────────────────────────────────────────────────
 function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
+    <div data-group-header="true" className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
       <div className="flex items-center gap-[10px]">
         <div className="flex-1 h-px bg-foreground/15" />
         <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
@@ -263,6 +304,7 @@ export function CampaignListView({
 }: CampaignListViewProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const PAGE_SIZE = 20;
+  const [mobileView, setMobileView] = useState<"list" | "detail">("list");
 
   // Active filter state
   const isFilterActive = filterStatus.length > 0 || !!filterAccount;
@@ -399,30 +441,58 @@ export function CampaignListView({
     return () => ro.disconnect();
   }, []);
 
-  // Auto-select first campaign
+  // Auto-select: handled by CampaignsPage — do NOT auto-select here (causes override)
+
+  // ── Smooth scroll to selected card (§29) ────────────────────────────────────
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!selectedCampaign && campaigns.length > 0) {
-      const firstCampaign = flatItems.find((i) => i.kind === "campaign") as { kind: "campaign"; campaign: Campaign } | undefined;
-      if (firstCampaign) onSelectCampaign(firstCampaign.campaign);
-    }
-  }, [flatItems, selectedCampaign, campaigns.length, onSelectCampaign]);
+    if (!selectedCampaign || !scrollContainerRef.current) return;
+    const container = scrollContainerRef.current;
+    const run = () => {
+      const id = getCampaignId(selectedCampaign);
+      const el = container.querySelector(`[data-campaign-id="${id}"]`) as HTMLElement | null;
+      if (!el) return;
+      let headerHeight = 0;
+      let sibling = el.previousElementSibling;
+      while (sibling) {
+        if (sibling.getAttribute("data-group-header") === "true") {
+          headerHeight = (sibling as HTMLElement).offsetHeight;
+          break;
+        }
+        sibling = sibling.previousElementSibling;
+      }
+      const cardTop = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
+      container.scrollTo({ top: cardTop - headerHeight - 3, behavior: "smooth" });
+    };
+    const raf = requestAnimationFrame(run);
+    return () => cancelAnimationFrame(raf);
+  }, [selectedCampaign]);
 
   return (
     <div className="flex h-full gap-[3px]" data-testid="campaign-list-view">
 
       {/* ── LEFT PANEL: campaign list ─────────────────────────────────── */}
-      <div className="w-[340px] shrink-0 flex flex-col bg-muted rounded-lg overflow-hidden">
+      <div className={cn(
+        "w-full md:w-[340px] md:shrink-0 flex-col bg-muted rounded-lg overflow-hidden",
+        mobileView === "detail" ? "hidden md:flex" : "flex"
+      )}>
 
-        {/* Header: title + ViewTabBar (309px rigid wrapper) — NO buttons */}
-        <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center">
-          <div className="flex items-center justify-between w-[309px] shrink-0">
+        {/* Header: title + ViewTabBar */}
+        <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-1 md:pb-3 shrink-0 flex flex-col gap-2 md:flex-row md:items-center md:gap-0">
+          <div className="flex items-center justify-between w-full md:w-[309px]">
             <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Campaigns</h2>
-            <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as CampaignViewMode)} />
+            <span className="hidden md:block">
+              <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as CampaignViewMode)} variant="segment" />
+            </span>
+          </div>
+          {/* ViewTabBar below title on mobile */}
+          <div className="md:hidden px-0">
+            <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as CampaignViewMode)} variant="segment" />
           </div>
         </div>
 
         {/* Campaign list */}
-        <div className="flex-1 overflow-y-auto p-[3px]">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-[3px]">
           {loading ? (
             <ListSkeleton />
           ) : paginatedItems.length === 0 ? (
@@ -449,11 +519,14 @@ export function CampaignListView({
                   ? getCampaignId(selectedCampaign) === cid
                   : false;
                 return (
-                  <div key={cid || idx} className="animate-card-enter" style={{ animationDelay: `${Math.min(idx, 15) * 30}ms` }}>
+                  <div key={cid || idx} data-campaign-id={cid} className="animate-card-enter" style={{ animationDelay: `${Math.min(idx, 15) * 30}ms` }}>
                     <CampaignListCard
                       campaign={item.campaign}
                       isActive={isSelected}
-                      onClick={() => onSelectCampaign(item.campaign)}
+                      onClick={() => {
+                        onSelectCampaign(item.campaign);
+                        setMobileView("detail");
+                      }}
                     />
                   </div>
                 );
@@ -464,7 +537,7 @@ export function CampaignListView({
 
         {/* Pagination footer */}
         {totalCampaigns > PAGE_SIZE && (
-          <div className="h-[18px] px-3 py-1 border-t border-border/20 flex items-center justify-between shrink-0">
+          <div className="h-9 md:h-[18px] px-3 py-1 border-t border-border/20 flex items-center justify-between shrink-0">
             <button
               onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
               disabled={currentPage === 0}
@@ -487,11 +560,16 @@ export function CampaignListView({
       </div>
 
       {/* ── RIGHT PANEL: toolbar + detail view ──────────────────────── */}
-      <div ref={rightPanelRef} className="flex-1 flex flex-col overflow-hidden rounded-lg">
+      <div ref={rightPanelRef} className={cn(
+        "flex-1 flex-col overflow-hidden rounded-lg",
+        mobileView === "list" ? "hidden md:flex" : "flex mobile-panel-enter"
+      )}>
 
         {/* Detail view */}
         <div className="flex-1 min-h-0 overflow-hidden">
-          {selectedCampaign ? (
+          {loading && !selectedCampaign ? (
+            <SkeletonCampaignPanel />
+          ) : selectedCampaign ? (
             <CampaignDetailView
               campaign={selectedCampaign}
               metrics={metrics}
@@ -519,6 +597,7 @@ export function CampaignListView({
               isGroupNonDefault={isGroupNonDefault}
               availableAccounts={availableAccounts}
               onResetControls={onResetControls}
+              onBack={() => setMobileView("list")}
             />
           ) : (
             <CampaignDetailViewEmpty />

@@ -1,13 +1,11 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
-  Search,
   Building2,
   List,
   Table2,
   Layers,
   ArrowUpDown,
   Filter,
-  X,
   Mail,
   Phone,
   Plus,
@@ -23,7 +21,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { ViewTabBar } from "@/components/ui/view-tab-bar";
-import { ToolbarPill } from "@/components/ui/toolbar-pill";
+import { SearchPill } from "@/components/ui/search-pill";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { type AccountRow } from "./AccountDetailsDialog";
 import { AccountDetailView, AccountDetailViewEmpty } from "./AccountDetailView";
 import { AccountCreatePanel } from "./AccountCreatePanel";
@@ -32,6 +31,7 @@ import { EntityAvatar } from "@/components/ui/entity-avatar";
 import type { NewAccountForm } from "./AccountCreateDialog";
 import type { AccountViewMode, AccountGroupBy, AccountSortBy } from "../pages/AccountsPage";
 import { apiFetch } from "@/lib/apiUtils";
+import { SkeletonAccountPanel } from "@/components/ui/skeleton";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -143,7 +143,7 @@ function AccountListCard({
           />
           <div className="flex-1 min-w-0 pt-0.5">
             <div className="flex items-start justify-between gap-1.5">
-              <p className="text-[16px] font-semibold font-heading leading-tight truncate text-foreground">
+              <p className="text-[18px] font-semibold font-heading leading-tight truncate text-foreground">
                 {name}
               </p>
               {type && (
@@ -211,13 +211,23 @@ function AccountListCard({
                   {visibleCampaigns.map((cname, i) => (
                     <span
                       key={i}
-                      className="text-[9px] font-medium bg-black/[0.06] text-foreground/50 rounded px-1.5 py-0.5 truncate max-w-[100px]"
+                      className="text-[9px] font-medium rounded px-1.5 py-0.5 truncate max-w-[100px]"
+                      style={{
+                        backgroundColor: isActive ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.09)",
+                        color: "rgba(0,0,0,0.45)",
+                      }}
                     >
                       {cname}
                     </span>
                   ))}
                   {extraCount > 0 && (
-                    <span className="text-[9px] font-medium bg-black/[0.06] text-foreground/50 rounded px-1.5 py-0.5">
+                    <span
+                      className="text-[9px] font-medium rounded px-1.5 py-0.5"
+                      style={{
+                        backgroundColor: isActive ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.09)",
+                        color: "rgba(0,0,0,0.45)",
+                      }}
+                    >
                       +{extraCount} more
                     </span>
                   )}
@@ -236,7 +246,7 @@ function AccountListCard({
 
 function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
+    <div data-group-header="true" className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
       <div className="flex items-center gap-[10px]">
         <div className="flex-1 h-px bg-foreground/15" />
         <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
@@ -330,6 +340,7 @@ export function AccountListView({
   isSortNonDefault,
   onResetControls,
 }: AccountListViewProps) {
+  const isMobile = useIsMobile();
   const [currentPage, setCurrentPage] = useState(0);
   const [panelMode, setPanelMode] = useState<"view" | "create">("view");
   const [_editDialogAccount, _setEditDialogAccount] = useState<AccountRow | null>(null);
@@ -465,42 +476,65 @@ export function AccountListView({
 
   const isFilterActive = filterStatus.length > 0;
 
+  // ── Smooth scroll to selected card (§29) ────────────────────────────────────
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!selectedAccount || !scrollContainerRef.current) return;
+    const container = scrollContainerRef.current;
+    const run = () => {
+      const id = getAccountId(selectedAccount);
+      const el = container.querySelector(`[data-account-id="${id}"]`) as HTMLElement | null;
+      if (!el) return;
+      let headerHeight = 0;
+      let sibling = el.previousElementSibling;
+      while (sibling) {
+        if (sibling.getAttribute("data-group-header") === "true") {
+          headerHeight = (sibling as HTMLElement).offsetHeight;
+          break;
+        }
+        sibling = sibling.previousElementSibling;
+      }
+      const cardTop = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
+      container.scrollTo({ top: cardTop - headerHeight - 3, behavior: "smooth" });
+    };
+    const raf = requestAnimationFrame(run);
+    return () => cancelAnimationFrame(raf);
+  }, [selectedAccount]);
+
+  // ── Expand-on-hover button constants ────────────────────────────────────────
+  const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
+  const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
+  const xActive  = "border-brand-indigo text-brand-indigo";
+  const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
+
   // ── Toolbar prefix for the right panel ──────────────────────────────────────
   const toolbarPrefix = (
     <>
       {/* +Add */}
-      <ToolbarPill icon={Plus} label="Add" onClick={() => setPanelMode("create")} />
+      <button
+        className={cn(xBase, xDefault, "hover:max-w-[80px]")}
+        onClick={() => setPanelMode("create")}
+      >
+        <Plus className="h-4 w-4 shrink-0" />
+        <span className={xSpan}>Add</span>
+      </button>
 
-      {/* Search — toggle between pill and inline input */}
-      {searchOpen ? (
-        <div className="h-10 flex items-center gap-1.5 px-3 rounded-full border border-brand-indigo/50 bg-brand-indigo/5">
-          <Search className="h-4 w-4 text-brand-indigo shrink-0" />
-          <input
-            value={listSearch}
-            onChange={(e) => onListSearchChange(e.target.value)}
-            placeholder="Search..."
-            autoFocus
-            onBlur={() => { if (!listSearch) onSearchOpenChange(false); }}
-            onKeyDown={(e) => { if (e.key === "Escape") { onListSearchChange(""); onSearchOpenChange(false); } }}
-            className="bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/60 w-[120px]"
-          />
-          <button onClick={() => { onListSearchChange(""); onSearchOpenChange(false); }} className="text-muted-foreground/60 hover:text-foreground">
-            <X className="h-3 w-3" />
-          </button>
-        </div>
-      ) : (
-        <ToolbarPill icon={Search} label="Search" active={!!listSearch} onClick={() => onSearchOpenChange(true)} />
-      )}
+      {/* Search */}
+      <SearchPill
+        value={listSearch}
+        onChange={onListSearchChange}
+        open={searchOpen}
+        onOpenChange={onSearchOpenChange}
+        placeholder="Search accounts..."
+      />
 
       {/* Sort */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill
-            icon={ArrowUpDown}
-            label="Sort"
-            active={isSortNonDefault}
-            activeValue={isSortNonDefault ? SORT_LABELS[sortBy].split(" ")[0] : undefined}
-          />
+          <button className={cn(xBase, isSortNonDefault ? xActive : xDefault, "hover:max-w-[100px]")}>
+            <ArrowUpDown className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Sort</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Sort by</DropdownMenuLabel>
@@ -517,12 +551,10 @@ export function AccountListView({
       {/* Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill
-            icon={Filter}
-            label="Filter"
-            active={isFilterActive}
-            activeValue={isFilterActive ? filterStatus.length : undefined}
-          />
+          <button className={cn(xBase, isFilterActive ? xActive : xDefault, "hover:max-w-[100px]")}>
+            <Filter className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Filter</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-48">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Status</DropdownMenuLabel>
@@ -555,12 +587,10 @@ export function AccountListView({
       {/* Group */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill
-            icon={Layers}
-            label="Group"
-            active={isGroupNonDefault}
-            activeValue={isGroupNonDefault ? GROUP_LABELS[groupBy] : undefined}
-          />
+          <button className={cn(xBase, isGroupNonDefault ? xActive : xDefault, "hover:max-w-[100px]")}>
+            <Layers className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Group</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           {(Object.keys(GROUP_LABELS) as AccountGroupBy[]).map((opt) => (
@@ -578,22 +608,27 @@ export function AccountListView({
     <div className="flex h-full gap-[3px]" data-testid="account-list-view">
 
       {/* ── LEFT PANEL ──────────────────────────────────────────────── */}
-      <div className="w-[340px] shrink-0 flex flex-col bg-muted rounded-lg overflow-hidden">
+      <div className={cn(
+        "flex-col bg-muted rounded-lg overflow-hidden",
+        "w-full md:w-[340px] md:shrink-0",
+        isMobile && selectedAccount ? "hidden" : "flex"
+      )}>
 
         {/* Header: title + 309px wrapper with ViewTabBar */}
-        <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center">
-          <div className="flex items-center justify-between w-[309px] shrink-0">
+        <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-3 shrink-0 flex items-center">
+          <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
             <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Accounts</h2>
             <ViewTabBar
               tabs={VIEW_TABS}
               activeId={viewMode}
               onTabChange={(id) => onViewModeChange(id as AccountViewMode)}
+              variant="segment"
             />
           </div>
         </div>
 
         {/* Account list */}
-        <div className="flex-1 overflow-y-auto p-[3px]">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-[3px]">
           {loading ? (
             <ListSkeleton />
           ) : paginatedItems.length === 0 ? (
@@ -615,7 +650,7 @@ export function AccountListView({
                 const aid = getAccountId(item.account);
                 const isSelected = selectedAccount ? getAccountId(selectedAccount) === aid : false;
                 return (
-                  <div key={aid || idx} className="animate-card-enter" style={{ animationDelay: `${Math.min(idx, 15) * 30}ms` }}>
+                  <div key={aid || idx} data-account-id={aid} className="animate-card-enter" style={{ animationDelay: `${Math.min(idx, 15) * 30}ms` }}>
                     <AccountListCard
                       account={item.account}
                       isActive={isSelected}
@@ -654,12 +689,17 @@ export function AccountListView({
       </div>
 
       {/* ── RIGHT PANEL ──────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col overflow-hidden rounded-lg">
+      <div className={cn(
+        "flex-1 flex-col overflow-hidden rounded-lg",
+        isMobile && !selectedAccount ? "hidden" : "flex mobile-panel-enter"
+      )}>
         {panelMode === "create" ? (
           <AccountCreatePanel
             onCreate={async (data) => { await onCreate(data); setPanelMode("view"); }}
             onClose={() => setPanelMode("view")}
           />
+        ) : loading && !selectedAccount ? (
+          <SkeletonAccountPanel />
         ) : selectedAccount ? (
           <AccountDetailView
             account={selectedAccount}
@@ -668,6 +708,7 @@ export function AccountListView({
             onDelete={onDelete}
             onToggleStatus={onToggleStatus}
             toolbarPrefix={toolbarPrefix}
+            onBack={() => (onSelectAccount as unknown as (v: null) => void)(null)}
           />
         ) : (
           <AccountDetailViewEmpty toolbarPrefix={toolbarPrefix} />

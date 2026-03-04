@@ -1,13 +1,14 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
-  List, Table2, Plus, Trash2, Copy, Filter, Layers, Eye, Check, Search, X, Pencil,
+  List, Table2, Plus, Trash2, Copy, Filter, Layers, Eye, Check, X, Pencil,
   PanelRightClose, PanelRightOpen, ArrowUpDown,
 } from "lucide-react";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
-import { ToolbarPill } from "@/components/ui/toolbar-pill";
 import { IconBtn } from "@/components/ui/icon-btn";
+import { SearchPill } from "@/components/ui/search-pill";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { CampaignListView } from "../components/CampaignListView";
 import { CampaignDetailPanel } from "../components/CampaignDetailPanel";
 import { CampaignDetailView, CampaignDetailViewEmpty } from "../components/CampaignDetailView";
@@ -101,9 +102,11 @@ const VIEW_TABS: TabDef[] = [
   { id: "table", label: "Table", icon: Table2 },
 ];
 
-/* ── Toolbar pill class tokens (§17) ── */
-const tbBase = "h-10 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
-const tbDefault = "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:bg-card";
+/* ── Expand-on-hover toolbar button tokens ── */
+const xBase = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
+const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
+const xActive  = "border-brand-indigo text-brand-indigo";
+const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
 function getCampaignName(c: Campaign): string {
   return String(c.name || "Unnamed");
@@ -121,7 +124,7 @@ function ConfirmToolbarButton({
   const [loading, setLoading] = useState(false);
   if (confirming) {
     return (
-      <div className="h-10 flex items-center gap-1 rounded-full border border-black/[0.125] bg-card px-2.5 text-[12px] shrink-0">
+      <div className="h-9 flex items-center gap-1 rounded-full border border-black/[0.125] bg-card px-2.5 text-[12px] shrink-0">
         <span className="text-foreground/60 mr-0.5 whitespace-nowrap">{label}?</span>
         <button
           className="px-2 py-0.5 rounded-full bg-brand-indigo text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
@@ -134,18 +137,19 @@ function ConfirmToolbarButton({
       </div>
     );
   }
+  const maxW = label.length <= 4 ? "hover:max-w-[80px]" : label.length <= 8 ? "hover:max-w-[100px]" : "hover:max-w-[120px]";
   return (
     <button
       className={cn(
-        "h-10 inline-flex items-center gap-1.5 rounded-full border px-3 text-[12px] font-medium shrink-0",
+        xBase, maxW,
         variant === "danger"
-          ? "border-red-300/50 text-red-600 hover:bg-red-50/60"
-          : "border-black/[0.125] text-foreground/70 hover:bg-card hover:text-foreground",
+          ? "border-red-300/50 text-red-600"
+          : xDefault,
       )}
       onClick={() => setConfirming(true)}
     >
-      <Icon className="h-4 w-4" />
-      {label}
+      <Icon className="h-4 w-4 shrink-0" />
+      <span className={xSpan}>{label}</span>
     </button>
   );
 }
@@ -236,10 +240,10 @@ function CampaignsContent() {
     return filterAccountId as number;
   }, [isAgencyUser, filterAccountId, currentAccountId]);
 
-  const { campaigns, loading: campaignsLoading, handleRefresh, updateCampaignRow } = useCampaignsData(effectiveAccountId);
+  const { campaigns, loading: campaignsLoading, handleRefresh, updateCampaignRow, setCampaigns } = useCampaignsData(effectiveAccountId);
   const { metrics, loading: metricsLoading } = useCampaignMetrics();
 
-  const loading = campaignsLoading || metricsLoading;
+  const loading = campaignsLoading;
 
   // ── Persisted selection (after data hook) ─────────────────────────────────
   const [selectedCampaign, setSelectedCampaign] = usePersistedSelection<Campaign>(
@@ -248,22 +252,27 @@ function CampaignsContent() {
     campaigns,
   );
 
-  // Auto-select first campaign when data arrives
+  // Auto-select first campaign when data first arrives — one-shot, no loop.
+  // Uses a ref so it never re-triggers after the initial selection.
+  const hasAutoSelected = useRef(false);
+  const campaignsHaveData = campaigns.length > 0;
   useEffect(() => {
-    if (!selectedCampaign && campaigns.length > 0) {
-      setSelectedCampaign(campaigns[0]);
-    }
-  }, [campaigns, selectedCampaign]);
-
-  // Keep selectedCampaign in sync if the campaigns list refreshes
-  useEffect(() => {
-    if (selectedCampaign && campaigns.length > 0) {
-      const cid = selectedCampaign.id || selectedCampaign.Id;
-      const refreshed = campaigns.find((c) => (c.id || c.Id) === cid);
-      if (refreshed) setSelectedCampaign(refreshed);
+    if (!hasAutoSelected.current && campaignsHaveData) {
+      hasAutoSelected.current = true;
+      setSelectedCampaign((prev) => prev ?? campaigns[0]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campaigns]);
+  }, [campaignsHaveData]);
+
+  // NOTE: no sync effect needed — usePersistedSelection re-derives selectedCampaign from items
+  // by stored ID on every render, so optimistic updates and refreshes are handled automatically.
+
+  // ── Breadcrumb ─────────────────────────────────────────────────────────────
+  const { setCrumb } = useBreadcrumb();
+  useEffect(() => {
+    setCrumb(selectedCampaign ? getCampaignName(selectedCampaign) : null);
+    return () => setCrumb(null);
+  }, [selectedCampaign, setCrumb]);
 
   // ── View switch ────────────────────────────────────────────────────────────
   const handleViewSwitch = useCallback((mode: CampaignViewMode) => {
@@ -295,9 +304,11 @@ function CampaignsContent() {
   }, [updateCampaignRow]);
 
   const handleSaveCampaign = useCallback(async (id: number, patch: Record<string, unknown>) => {
+    // Optimistic update — avoids full list reload (no flicker)
+    setCampaigns((prev) => prev.map((c) => (c.id === id || c.Id === id) ? { ...c, ...patch } : c));
+    setSelectedCampaign((prev) => prev && (prev.id === id || prev.Id === id) ? { ...prev, ...patch } : prev);
     await updateCampaign(id, patch);
-    handleRefresh();
-  }, [handleRefresh]);
+  }, [setCampaigns]);
 
   // ── List-view control helpers ──────────────────────────────────────────────
   const isGroupNonDefault     = groupBy !== "status";
@@ -546,7 +557,7 @@ function CampaignsContent() {
     return result;
   }, [campaigns, tableFilterStatus, tableFilterAccount, tableSortCol, tableSortDir, tableGroupBy]);
 
-  // ── Table toolbar (rendered inline with tab buttons using ToolbarPill) ─────
+  // ── Table toolbar (rendered inline with tab buttons) ─────────────────────
   const tableToolbar = (
     <>
       <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
@@ -557,30 +568,21 @@ function CampaignsContent() {
       )}
 
       {/* Search — always visible */}
-      <div className="h-10 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card px-3 shrink-0">
-        <Search className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-        <input
-          className="h-full bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/40 w-32 min-w-0"
-          placeholder="Search campaigns…"
-          value={tableSearch}
-          onChange={(e) => setTableSearch(e.target.value)}
-        />
-        {tableSearch && (
-          <button onClick={() => setTableSearch("")} className="text-muted-foreground/40 hover:text-muted-foreground shrink-0">
-            <X className="h-3 w-3" />
-          </button>
-        )}
-      </div>
+      <SearchPill
+        value={tableSearch}
+        onChange={setTableSearch}
+        open={true}
+        onOpenChange={() => {}}
+        placeholder="Search campaigns…"
+      />
 
       {/* Sort */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill
-            icon={ArrowUpDown}
-            label="Sort"
-            active={tableSortCol !== "lastModified" || tableSortDir !== "desc"}
-            activeValue={tableSortCol !== "lastModified" || tableSortDir !== "desc" ? TABLE_SORT_LABELS[tableSortCol] || tableSortCol : undefined}
-          />
+          <button className={cn(xBase, "hover:max-w-[100px]", (tableSortCol !== "lastModified" || tableSortDir !== "desc") ? xActive : xDefault)}>
+            <ArrowUpDown className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Sort</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-48">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Sort by</DropdownMenuLabel>
@@ -603,7 +605,10 @@ function CampaignsContent() {
       {/* Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill icon={Filter} label="Filter" active={isTableFilterActive} activeValue={isTableFilterActive ? tableActiveFilterCount : undefined} />
+          <button className={cn(xBase, "hover:max-w-[100px]", isTableFilterActive ? xActive : xDefault)}>
+            <Filter className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Filter</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Status</DropdownMenuLabel>
@@ -644,7 +649,10 @@ function CampaignsContent() {
       {/* Group */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill icon={Layers} label="Group" active={tableGroupBy !== "status"} activeValue={tableGroupBy !== "status" ? TABLE_GROUP_LABELS[tableGroupBy] : undefined} />
+          <button className={cn(xBase, "hover:max-w-[100px]", tableGroupBy !== "status" ? xActive : xDefault)}>
+            <Layers className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Group</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           {(Object.keys(TABLE_GROUP_LABELS) as TableGroupByOption[]).map((opt) => (
@@ -659,7 +667,10 @@ function CampaignsContent() {
       {/* Fields (Column Visibility) */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill icon={Eye} label="Fields" active={visibleCols.size !== DEFAULT_VISIBLE.length} />
+          <button className={cn(xBase, "hover:max-w-[100px]", visibleCols.size !== DEFAULT_VISIBLE.length ? xActive : xDefault)}>
+            <Eye className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Fields</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Show / Hide Columns</DropdownMenuLabel>
@@ -708,9 +719,9 @@ function CampaignsContent() {
             {/* Change Status dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className={cn(tbBase, tbDefault)}>
-                  <Pencil className="h-4 w-4" />
-                  Change Status
+                <button className={cn(xBase, "hover:max-w-[140px]", xDefault)}>
+                  <Pencil className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>Change Status</span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
@@ -731,7 +742,7 @@ function CampaignsContent() {
 
             {/* Count badge with dismiss */}
             <button
-              className={cn(tbBase, tbDefault, "cursor-default ml-1")}
+              className="h-9 px-3 rounded-full border border-black/[0.125] text-foreground/60 inline-flex items-center gap-1.5 text-[12px] font-medium cursor-default ml-1 shrink-0"
               onClick={() => setTableSelectedIds(new Set())}
             >
               <span className="tabular-nums">{tableSelectedIds.size}</span>
@@ -788,7 +799,7 @@ function CampaignsContent() {
                 <div ref={toolbarRef} className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
                   <div className="flex items-center justify-between w-[309px] shrink-0">
                     <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Campaigns</h2>
-                    <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as CampaignViewMode)} />
+                    <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as CampaignViewMode)} variant="segment" />
                   </div>
                   {/* Inline table toolbar */}
                   {tableToolbar}

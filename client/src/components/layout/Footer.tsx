@@ -161,10 +161,10 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="mailto:leadawaker@gmail.com"
+                  href="mailto:gabriel@leadawaker.com"
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  leadawaker@gmail.com
+                  gabriel@leadawaker.com
                 </a>
               </li>
               <li>

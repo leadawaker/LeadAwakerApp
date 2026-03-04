@@ -25,6 +25,8 @@ export type Account = {
   max_daily_sends: number;
   ai_model_default: "gpt-4" | "gpt-3.5-turbo" | "claude-3";
   owner_email: string;
+  instagram_access_token?: string | null;
+  instagram_user_id?: string | null;
   [key: string]: any;
 };
 
@@ -73,6 +75,14 @@ export type Campaign = {
   cost_per_booking?: string | number | null;
   roi_percent?: string | number | null;
   last_metrics_calculated_at?: string | null;
+  // Channel
+  channel?: string;
+  // Sticker / Profile image
+  campaign_sticker?: string | null;
+  campaign_hue?: number | null;
+  // AI summary
+  ai_summary?: string | null;
+  ai_summary_generated_at?: string | null;
   // Computed/joined fields
   account_name?: string;
   [key: string]: any;
@@ -125,6 +135,9 @@ export type Lead = {
   custom_field_2: string;
   custom_field_3: string;
   tags: string[];
+  channel_identifier?: string | null;
+  ai_notes?: string | null;
+  ai_notes_generated_at?: string | null;
   [key: string]: any;
 };
 

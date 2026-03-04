@@ -59,7 +59,11 @@ export const accounts = nocodb.table("Accounts", {
   businessDescription: text("business_description"),
   businessNiche: text("business_niche"),
   logoUrl: text("logo_url"),
+  voiceFileData: text("voice_file_data"),
+  voiceFileName: varchar("voice_file_name"),
   supportBotConfig: text("support_bot_config"),
+  instagramAccessToken: text("instagram_access_token"),
+  instagramUserId: text("instagram_user_id"),
 });
 
 export const insertAccountsSchema = createInsertSchema(accounts).omit({
@@ -152,6 +156,13 @@ export const campaigns = nocodb.table("Campaigns", {
   useAiBumps: boolean("use_ai_bumps"),
   maxBumps: bigint("max_bumps", { mode: "number" }),
   stopOnResponse: boolean("stop_on_response"),
+  channel: text("channel").default("sms"),
+  firstMessageVoiceNote: boolean("first_message_voice_note").default(false),
+  bump1VoiceNote: boolean("bump_1_voice_note").default(false),
+  bump2VoiceNote: boolean("bump_2_voice_note").default(false),
+  bump3VoiceNote: boolean("bump_3_voice_note").default(false),
+  aiReplyVoiceNote: boolean("ai_reply_voice_note").default(false),
+  ttsVoiceId: text("tts_voice_id"),
   campaignNicheOverride: text("campaign_niche_override"),
   campaignService: text("campaign_service"),
   campaignUsp: text("campaign_usp"),
@@ -179,6 +190,10 @@ export const campaigns = nocodb.table("Campaigns", {
   contractId:         integer("contract_id"),
   valuePerBooking:    numeric("value_per_booking"),
   lastMetricsCalculatedAt: timestamp("last_metrics_calculated_at"),
+  campaignSticker: text("campaign_sticker"),
+  campaignHue: integer("campaign_hue"),
+  aiSummary: text("ai_summary"),
+  aiSummaryGeneratedAt: timestamp("ai_summary_generated_at"),
 }, (t) => [
   index("campaigns_accounts_id_idx").on(t.accountsId),
 ]);
@@ -319,6 +334,9 @@ export const leads = nocodb.table("Leads", {
   campaignName: text("campaign_name"),
   text2: text("Text_2"),
   leadScore: integer("lead_score"),
+  channelIdentifier: text("channel_identifier"),
+  aiNotes: text("ai_notes"),
+  aiNotesGeneratedAt: timestamp("ai_notes_generated_at"),
 }, (t) => [
   index("leads_accounts_id_idx").on(t.accountsId),
   index("leads_campaigns_id_idx").on(t.campaignsId),

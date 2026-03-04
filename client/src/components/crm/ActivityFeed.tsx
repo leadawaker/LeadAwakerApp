@@ -8,9 +8,10 @@ import {
   Bot,
   UserCheck,
   Activity,
-  Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, relativeTime } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useActivityFeed,
@@ -61,31 +62,6 @@ function getIconForItem(item: ActivityItem) {
     return { icon: ArrowRight, color: "text-red-500", bg: "bg-red-50" };
   }
   return ICON_CONFIG[item.icon] ?? ICON_CONFIG.message;
-}
-
-/* ─── Relative timestamp ───────────────────────────────────────── */
-
-function relativeTime(isoString: string | null): string {
-  if (!isoString) return "";
-  const now = Date.now();
-  const then = new Date(isoString).getTime();
-  const diffMs = now - then;
-  if (diffMs < 0) return "just now";
-
-  const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m`;
-
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h`;
-
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d`;
-
-  return new Date(isoString).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
 }
 
 /* ─── Skeleton loader ──────────────────────────────────────────── */
@@ -153,9 +129,9 @@ function ActivityRow({
       type="button"
       onClick={onClick}
       className={cn(
-        "w-full text-left flex items-start gap-3 rounded-lg transition-colors",
-        compact ? "px-2.5 py-2" : "px-3 py-2.5",
-        "hover:bg-card hover:shadow-[0_1px_4px_rgba(0,0,0,0.06)]",
+        "w-full text-left flex items-start gap-2.5 bg-white/90 dark:bg-card/90 rounded-xl transition-colors",
+        compact ? "px-2 py-1.5" : "px-2.5 py-2",
+        "hover:bg-white dark:hover:bg-card",
         onClick && "cursor-pointer",
       )}
     >
@@ -205,28 +181,69 @@ function ActivityRow({
   );
 }
 
+/* ─── Pagination bar ───────────────────────────────────────────── */
+
+function PaginationBar({
+  page,
+  totalPages,
+  total,
+  onPrev,
+  onNext,
+}: {
+  page: number;
+  totalPages: number;
+  total: number;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <div className="shrink-0 flex items-center justify-between pt-2 border-t border-border/20 mt-1">
+      <button
+        type="button"
+        onClick={onPrev}
+        disabled={page <= 1}
+        className="icon-circle-lg icon-circle-base disabled:opacity-30 disabled:pointer-events-none"
+        aria-label="Previous page"
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </button>
+      <span className="text-[11px] font-medium text-muted-foreground tabular-nums select-none">
+        {page} / {totalPages}
+        <span className="text-muted-foreground/50 ml-1.5">({total})</span>
+      </span>
+      <button
+        type="button"
+        onClick={onNext}
+        disabled={page >= totalPages}
+        className="icon-circle-lg icon-circle-base disabled:opacity-30 disabled:pointer-events-none"
+        aria-label="Next page"
+      >
+        <ChevronRight className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
 /* ─── Main component ───────────────────────────────────────────── */
 
 export interface ActivityFeedProps {
   accountId?: number;
-  limit?: number;
   className?: string;
   compact?: boolean;
 }
 
 export function ActivityFeed({
   accountId,
-  limit = 50,
   className,
   compact = false,
 }: ActivityFeedProps) {
   const [, setLocation] = useLocation();
   const { isAgencyUser } = useWorkspace();
 
-  const { items, hasMore, loading, loadingMore, error, loadMore } =
+  const { items, total, totalPages, page, loading, error, nextPage, prevPage } =
     useActivityFeed({
       accountId,
-      limit,
+      pageSize: 25,
       enabled: true,
     });
 
@@ -234,14 +251,15 @@ export function ActivityFeed({
     (item: ActivityItem) => {
       if (!item.leadId) return;
       const prefix = isAgencyUser ? "/agency" : "/subaccount";
-      setLocation(`${prefix}/leads?leadId=${item.leadId}`);
+      try { localStorage.setItem("selected-lead-id", String(item.leadId)); } catch {}
+      setLocation(`${prefix}/leads`);
     },
     [isAgencyUser, setLocation],
   );
 
   if (loading) {
     return (
-      <div className={cn("", className)}>
+      <div className={cn("flex flex-col", className)}>
         <ActivityFeedSkeleton count={compact ? 4 : 6} />
       </div>
     );
@@ -259,7 +277,7 @@ export function ActivityFeed({
 
   if (items.length === 0) {
     return (
-      <div className={className}>
+      <div className={cn("flex flex-col", className)}>
         <ActivityFeedEmpty compact={compact} />
       </div>
     );
@@ -267,8 +285,8 @@ export function ActivityFeed({
 
   return (
     <div className={cn("flex flex-col", className)}>
-      {/* Items */}
-      <div className="space-y-0.5">
+      {/* Scrollable items */}
+      <div className="overflow-y-auto space-y-1 flex-1 min-h-0">
         {items.map((item, i) => (
           <ActivityRow
             key={`${item.type}-${item.leadId}-${item.timestamp}-${i}`}
@@ -279,30 +297,15 @@ export function ActivityFeed({
         ))}
       </div>
 
-      {/* Load more */}
-      {hasMore && (
-        <div className="flex justify-center pt-2 pb-1">
-          <button
-            type="button"
-            onClick={loadMore}
-            disabled={loadingMore}
-            className={cn(
-              "h-8 px-4 rounded-full text-[12px] font-medium",
-              "text-muted-foreground hover:text-foreground hover:bg-card",
-              "transition-colors inline-flex items-center gap-1.5",
-              "disabled:opacity-50",
-            )}
-          >
-            {loadingMore ? (
-              <>
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Loading...
-              </>
-            ) : (
-              "Load more"
-            )}
-          </button>
-        </div>
+      {/* Pagination — moved to bottom */}
+      {total > 25 && (
+        <PaginationBar
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          onPrev={prevPage}
+          onNext={nextPage}
+        />
       )}
     </div>
   );

@@ -147,7 +147,7 @@ function EditableCell({
         onChange={(e) => onSave(e.target.value)}
         onBlur={() => onSave(editValue)}
         onKeyDown={(e) => { if (e.key === "Escape") onCancel(); }}
-        className="w-full h-[28px] text-[11px] bg-white rounded px-1.5 ring-1 ring-brand-indigo/40 outline-none cursor-pointer"
+        className="w-full h-[28px] text-[11px] bg-white dark:bg-popover rounded px-1.5 ring-1 ring-brand-indigo/40 outline-none cursor-pointer"
       >
         {STATUS_OPTIONS.map((s) => (
           <option key={s} value={s}>{s}</option>
@@ -168,7 +168,7 @@ function EditableCell({
           if (e.key === "Enter") e.currentTarget.blur();
           if (e.key === "Escape") onCancel();
         }}
-        className="w-full h-[28px] text-[11px] bg-white px-1.5 rounded ring-1 ring-brand-indigo/40 outline-none"
+        className="w-full h-[28px] text-[11px] bg-white dark:bg-popover px-1.5 rounded ring-1 ring-brand-indigo/40 outline-none"
       />
     );
   }
@@ -586,13 +586,13 @@ export function CampaignsInlineTable({
                       key={cid}
                       className={cn(
                         "group/row cursor-pointer h-[52px] animate-card-enter",
-                        isHighlighted ? "bg-highlight-selected" : "bg-card hover:bg-card-hover",
+                        isHighlighted ? "bg-[#FFF7DB]" : "bg-card hover:bg-card-hover",
                       )}
                       style={{ animationDelay: `${Math.min(currentRowIdx, 15) * 30}ms` }}
                       onClick={(e) => handleRowClick(campaign, e)}
                     >
                       {/* Dedicated checkbox column */}
-                      <td className={cn("px-2 sticky left-0 z-10", isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover")} style={{ width: 36, minWidth: 36 }}>
+                      <td className={cn("px-2 sticky left-0 z-10", isHighlighted ? "bg-[#FFF7DB]" : "bg-card group-hover/row:bg-card-hover")} style={{ width: 36, minWidth: 36 }}>
                         <div className="flex items-center justify-center">
                           <div
                             className={cn(
@@ -610,7 +610,7 @@ export function CampaignsInlineTable({
                         const isFirst = ci === 0;
                         const tdClass = cn(
                           isFirst && "sticky left-[36px] z-10",
-                          isFirst && (isHighlighted ? "bg-highlight-selected" : "bg-card group-hover/row:bg-card-hover"),
+                          isFirst && (isHighlighted ? "bg-[#FFF7DB]" : "bg-card group-hover/row:bg-card-hover"),
                         );
 
                       // ── Name (no checkbox — moved to dedicated column) ──

@@ -303,6 +303,159 @@ function SkeletonLeadDetail({ className, ...props }: React.HTMLAttributes<HTMLDi
   )
 }
 
+/**
+ * Right-panel detail skeleton for Campaigns split-pane view.
+ * Mirrors CampaignDetailView layout: toolbar, tab bar, 3×2 card grid.
+ */
+function SkeletonCampaignPanel() {
+  return (
+    <div className="flex flex-col h-full bg-gradient-to-b from-white dark:from-card to-amber-50/30 dark:to-transparent rounded-lg overflow-hidden">
+      {/* Toolbar row */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-black/[0.06] shrink-0">
+        <div className="flex items-center gap-1.5">
+          {[64, 32, 32, 32, 32].map((w, i) => (
+            <Skeleton key={i} className="h-9 rounded-full bg-primary/10" style={{ width: w }} />
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5">
+          {[32, 32, 32].map((_, i) => (
+            <Skeleton key={i} className="h-9 w-9 rounded-full bg-primary/10" />
+          ))}
+        </div>
+      </div>
+      {/* Tab bar */}
+      <div className="flex items-center gap-1 px-4 py-2 border-b border-black/[0.06] shrink-0">
+        {[80, 110, 60].map((w, i) => (
+          <Skeleton key={i} className="h-9 rounded-full bg-primary/10" style={{ width: w }} />
+        ))}
+      </div>
+      {/* 3×2 card grid */}
+      <div className="flex-1 min-h-0 p-3 grid grid-cols-3 grid-rows-2 gap-[3px]">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-6 flex flex-col gap-3">
+            <Skeleton className="h-4 w-2/3 rounded bg-primary/10" />
+            <Skeleton className="h-8 w-1/2 rounded bg-primary/10" />
+            <Skeleton className="h-3 w-full rounded bg-primary/10" />
+            <Skeleton className="h-3 w-4/5 rounded bg-primary/10" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Right-panel detail skeleton for Leads split-pane view.
+ * Mirrors LeadDetailPanel layout: toolbar, identity row, pipeline tube, content lines.
+ */
+function SkeletonLeadPanel() {
+  return (
+    <div className="flex flex-col h-full bg-gradient-to-b from-white dark:from-card to-amber-50/30 dark:to-transparent rounded-lg overflow-hidden">
+      {/* Toolbar row */}
+      <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-black/[0.06] shrink-0">
+        {[80, 80, 80].map((w, i) => (
+          <Skeleton key={i} className="h-9 rounded-full bg-primary/10" style={{ width: w }} />
+        ))}
+      </div>
+      {/* Identity row */}
+      <div className="flex items-center gap-4 px-5 py-4 border-b border-black/[0.06] shrink-0">
+        <Skeleton className="h-[65px] w-[65px] rounded-full bg-primary/10 shrink-0" />
+        <div className="flex flex-col gap-2 flex-1">
+          <Skeleton className="h-[27px] w-48 rounded bg-primary/10" />
+          <div className="flex items-center gap-1.5">
+            <Skeleton className="h-6 w-20 rounded-full bg-primary/10" />
+            <Skeleton className="h-6 w-16 rounded-full bg-primary/10" />
+          </div>
+        </div>
+      </div>
+      {/* Pipeline tube */}
+      <div className="px-5 py-3 border-b border-black/[0.06] shrink-0">
+        <div className="relative h-[46px] bg-black/[0.06] rounded-full w-full overflow-visible">
+          <div className="absolute inset-0 flex items-center justify-around px-3">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <Skeleton key={i} className="h-7 w-7 rounded-full bg-primary/10 shrink-0" />
+            ))}
+          </div>
+        </div>
+      </div>
+      {/* Content lines */}
+      <div className="flex-1 min-h-0 px-5 py-4 flex flex-col gap-4 overflow-hidden">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-3 w-24 rounded bg-primary/10" />
+          {[100, 80, 90].map((pct, i) => (
+            <Skeleton key={i} className="h-4 rounded bg-primary/10" style={{ width: `${pct}%` }} />
+          ))}
+        </div>
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-3 w-24 rounded bg-primary/10" />
+          {[100, 70].map((pct, i) => (
+            <Skeleton key={i} className="h-4 rounded bg-primary/10" style={{ width: `${pct}%` }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Right-panel detail skeleton for Accounts split-pane view.
+ * Mirrors AccountDetailView layout: toolbar, identity row, 3×2 card grid.
+ */
+function SkeletonAccountPanel() {
+  return (
+    <div className="flex flex-col h-full bg-gradient-to-b from-white dark:from-card to-amber-50/30 dark:to-transparent rounded-lg overflow-hidden">
+      {/* Toolbar row */}
+      <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-black/[0.06] shrink-0">
+        {[80, 60, 60].map((w, i) => (
+          <Skeleton key={i} className="h-9 rounded-full bg-primary/10" style={{ width: w }} />
+        ))}
+      </div>
+      {/* Identity row */}
+      <div className="flex items-center gap-4 px-5 py-4 border-b border-black/[0.06] shrink-0">
+        <Skeleton className="h-[72px] w-[72px] rounded-full bg-primary/10 shrink-0" />
+        <div className="flex flex-col gap-2 flex-1">
+          <Skeleton className="h-6 w-40 rounded bg-primary/10" />
+          <div className="flex items-center gap-1.5">
+            <Skeleton className="h-5 w-16 rounded-full bg-primary/10" />
+            <Skeleton className="h-5 w-20 rounded-full bg-primary/10" />
+          </div>
+        </div>
+      </div>
+      {/* 3×2 card grid */}
+      <div className="flex-1 min-h-0 p-3 grid grid-cols-3 grid-rows-2 gap-[3px]">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-5 flex flex-col gap-3">
+            <Skeleton className="h-3 w-2/3 rounded bg-primary/10" />
+            <Skeleton className="h-7 w-1/2 rounded bg-primary/10" />
+            <Skeleton className="h-3 w-full rounded bg-primary/10" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Settings section skeleton — mimics a form with labelled fields + save button.
+ */
+function SkeletonSettingsSection({
+  rows = 3,
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & { rows?: number }) {
+  return (
+    <div className={cn("space-y-5", className)} {...props}>
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="space-y-1.5" style={{ animationDelay: `${i * 60}ms` }}>
+          <Skeleton className="h-3 w-24 rounded" style={{ animationDelay: `${i * 60}ms` }} />
+          <Skeleton className="h-9 w-full rounded-lg" style={{ animationDelay: `${20 + i * 60}ms` }} />
+        </div>
+      ))}
+      <Skeleton className="h-9 w-28 rounded-full mt-2" style={{ animationDelay: `${rows * 60}ms` }} />
+    </div>
+  );
+}
+
 export {
   Skeleton,
   SkeletonText,
@@ -317,4 +470,8 @@ export {
   SkeletonChatThread,
   SkeletonContactPanel,
   SkeletonLeadDetail,
+  SkeletonCampaignPanel,
+  SkeletonLeadPanel,
+  SkeletonAccountPanel,
+  SkeletonSettingsSection,
 }

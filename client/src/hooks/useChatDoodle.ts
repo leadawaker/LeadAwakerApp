@@ -5,6 +5,8 @@
 import { useState, useCallback, useEffect } from "react";
 import type { DoodlePatternId } from "@/components/ui/doodle-patterns";
 
+export type ChatBgStyle = "crm" | "social1" | "social2";
+
 export interface ChatDoodleConfig {
   enabled: boolean;
   patternId: DoodlePatternId;
@@ -12,6 +14,7 @@ export interface ChatDoodleConfig {
   size: number;        // tile width in px (200–800)
   strokeColor: number; // 0 = black strokes, 100 = white strokes, default 0
   blendMode: string;   // CSS mix-blend-mode, default "overlay"
+  bgStyle: ChatBgStyle; // background gradient preset, default "social1"
 }
 
 const STORAGE_KEY = "leadawaker_chat_doodle";
@@ -24,6 +27,7 @@ const DEFAULT_CONFIG: ChatDoodleConfig = {
   size: 400,
   strokeColor: 0,
   blendMode: "overlay",
+  bgStyle: "social1",
 };
 
 function readConfig(): ChatDoodleConfig {

@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { deleteExpense as deleteExpenseApi } from "../api/expensesApi";
 import {
   Search,
@@ -142,6 +143,37 @@ function GroupHeader({ label, count }: { label: string; count: number }) {
 
 const PAGE_SIZE = 20;
 
+// Per-tab gradient presets — loaded when the gradient tester opens
+const DISABLED_LAYERS_1_TO_3: GradientLayer[] = [
+  { id: 1, label: "White bloom", enabled: false, type: "radial", ellipseW: 72, ellipseH: 56, posX: 100, posY: 0, colorStops: [{ color: "#FFFFFF", opacity: 1, position: 0 }, { color: "#FFFFFF", opacity: 0.8, position: 30 }, { color: "#000000", opacity: 0, position: 60 }] },
+  { id: 2, label: "Yellow", enabled: false, type: "radial", ellipseW: 95, ellipseH: 80, posX: 0, posY: 0, colorStops: [{ color: "#FFF286", opacity: 1, position: 0 }, { color: "#FFF286", opacity: 0.60, position: 40 }, { color: "#FFF286", opacity: 0.25, position: 64 }, { color: "#000000", opacity: 0, position: 80 }] },
+  { id: 3, label: "Peach", enabled: false, type: "radial", ellipseW: 62, ellipseH: 72, posX: 100, posY: 36, colorStops: [{ color: "#F1DAA2", opacity: 0.62, position: 0 }, { color: "#000000", opacity: 0, position: 64 }] },
+];
+
+const INVOICE_LAYERS: GradientLayer[] = [
+  { id: 0, label: "Base", enabled: true, type: "solid", solidColor: "#ffffff", ellipseW: 100, ellipseH: 100, posX: 50, posY: 50, colorStops: [] },
+  ...DISABLED_LAYERS_1_TO_3,
+  { id: 4, label: "Teal bloom", enabled: true, type: "radial", ellipseW: 150, ellipseH: 92, posX: 18, posY: 92, colorStops: [{ color: "#339585", opacity: 0.4, position: 0 }, { color: "#000000", opacity: 0, position: 69 }] },
+  { id: 5, label: "Blue top-left", enabled: true, type: "radial", ellipseW: 200, ellipseH: 200, posX: 2, posY: 2, colorStops: [{ color: "#C7E0FF", opacity: 1, position: 5 }, { color: "#000000", opacity: 0, position: 30 }] },
+  { id: 6, label: "Teal center", enabled: true, type: "radial", ellipseW: 77, ellipseH: 93, posX: 63, posY: 52, colorStops: [{ color: "#47A286", opacity: 0.38, position: 0 }, { color: "#000000", opacity: 0, position: 66 }] },
+];
+
+const EXPENSE_LAYERS: GradientLayer[] = [
+  { id: 0, label: "Base", enabled: true, type: "solid", solidColor: "#ffffff", ellipseW: 100, ellipseH: 100, posX: 50, posY: 50, colorStops: [] },
+  ...DISABLED_LAYERS_1_TO_3,
+  { id: 4, label: "Yellow-green bloom", enabled: true, type: "radial", ellipseW: 150, ellipseH: 101, posX: 40, posY: 91, colorStops: [{ color: "#D0DA00", opacity: 0.4, position: 0 }, { color: "#000000", opacity: 0, position: 69 }] },
+  { id: 5, label: "Blue top-left", enabled: true, type: "radial", ellipseW: 200, ellipseH: 200, posX: 2, posY: 2, colorStops: [{ color: "#C7E0FF", opacity: 1, position: 5 }, { color: "#000000", opacity: 0, position: 30 }] },
+  { id: 6, label: "Amber center", enabled: true, type: "radial", ellipseW: 80, ellipseH: 102, posX: 53, posY: 59, colorStops: [{ color: "#C39219", opacity: 0.38, position: 0 }, { color: "#000000", opacity: 0, position: 66 }] },
+];
+
+const CONTRACT_LAYERS: GradientLayer[] = [
+  { id: 0, label: "Base", enabled: true, type: "solid", solidColor: "#ffffff", ellipseW: 100, ellipseH: 100, posX: 50, posY: 50, colorStops: [] },
+  ...DISABLED_LAYERS_1_TO_3,
+  { id: 4, label: "Lilac bloom", enabled: true, type: "radial", ellipseW: 124, ellipseH: 162, posX: 20, posY: 92, colorStops: [{ color: "#DB99F4", opacity: 0.4, position: 0 }, { color: "#000000", opacity: 0, position: 69 }] },
+  { id: 5, label: "Blue top-left", enabled: true, type: "radial", ellipseW: 200, ellipseH: 200, posX: 2, posY: 2, colorStops: [{ color: "#C7E0FF", opacity: 1, position: 5 }, { color: "#000000", opacity: 0, position: 30 }] },
+  { id: 6, label: "Lavender center", enabled: true, type: "radial", ellipseW: 80, ellipseH: 102, posX: 62, posY: 47, colorStops: [{ color: "#D1BBE9", opacity: 0.38, position: 0 }, { color: "#000000", opacity: 0, position: 66 }] },
+];
+
 // ── Skeleton loader ──────────────────────────────────────────────────────────
 
 function ListSkeleton() {
@@ -278,6 +310,7 @@ export function BillingListView({
   setYearFilter,
 }: BillingListViewProps) {
   const queryClient = useQueryClient();
+  const [mobileView, setMobileView] = useState<"list" | "detail">("list");
   const [currentPage, setCurrentPage] = useState(0);
   const [duplicatingInvoice, setDuplicatingInvoice] = useState<InvoiceRow | null>(null);
 
@@ -297,6 +330,18 @@ export function BillingListView({
   const [expenseSearchOpen, setExpenseSearchOpen] = useState(false);
   const [expenseSelectedIds, setExpenseSelectedIds] = useState<Set<number>>(new Set());
   const [editingExpense, setEditingExpense] = useState<ExpenseRow | null>(null);
+
+  // ── Breadcrumb ─────────────────────────────────────────────────────────────
+  const { setCrumb } = useBreadcrumb();
+  useEffect(() => {
+    const tabLabel = activeTab === "invoices" ? "Invoices" : activeTab === "contracts" ? "Contracts" : "Expenses";
+    const itemName =
+      activeTab === "invoices" ? (selectedInvoice?.title || selectedInvoice?.invoice_number || null) :
+      activeTab === "contracts" ? (selectedContract?.title || null) :
+      null;
+    setCrumb(itemName ? `${tabLabel} / ${itemName}` : tabLabel);
+    return () => setCrumb(null);
+  }, [activeTab, selectedInvoice, selectedContract, setCrumb]);
 
   // Column visibility for table mode
   const [visibleInvoiceColumns, setVisibleInvoiceColumns] = useState<Set<string>>(new Set(DEFAULT_INVOICE_COLS));
@@ -321,6 +366,12 @@ export function BillingListView({
   const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
   const [gradientDragMode, setGradientDragMode] = useState(false);
 
+  const getTabLayers = useCallback((tab: BillingTab): GradientLayer[] => {
+    if (tab === "invoices") return INVOICE_LAYERS;
+    if (tab === "expenses") return EXPENSE_LAYERS;
+    return CONTRACT_LAYERS;
+  }, []);
+
   const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
     if (id === -1) { setGradientLayers(prev => [...prev, patch as GradientLayer]); return; }
     if ((patch as any).id === -999) { setGradientLayers(prev => prev.filter(l => l.id !== id)); return; }
@@ -328,9 +379,9 @@ export function BillingListView({
   }, []);
 
   const resetGradientLayers = useCallback(() => {
-    setGradientLayers(DEFAULT_LAYERS);
+    setGradientLayers(getTabLayers(activeTab));
     setGradientDragMode(false);
-  }, []);
+  }, [activeTab, getTabLayers]);
 
   // Accounts for filter dropdown (agency only)
   const { accounts } = useAccounts({ enabled: isAgencyUser });
@@ -594,32 +645,9 @@ export function BillingListView({
     onTabChange(tabId);
   }, [onTabChange]);
 
-  /** Inline billing sub-tab buttons (36px icon circles, active = pill) */
+  /** Inline billing sub-tab buttons */
   const billingTabButtons = (
-    <div className="flex items-center gap-1">
-      {billingTabs.map((tab) => {
-        const Icon = tab.icon!;
-        const active = activeTab === tab.id;
-        return active ? (
-          <button
-            key={tab.id}
-            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-[12px] font-semibold shrink-0 bg-highlight-active text-foreground"
-          >
-            <Icon className="h-4 w-4 shrink-0 stroke-[2.5]" />
-            {tab.label}
-          </button>
-        ) : (
-          <button
-            key={tab.id}
-            onClick={() => handleBillingTabNav(tab.id)}
-            title={tab.label}
-            className="h-9 w-9 rounded-full border border-black/[0.125] bg-transparent hover:bg-white inline-flex items-center justify-center shrink-0 text-muted-foreground hover:text-foreground transition-[background-color,color] duration-150"
-          >
-            <Icon className="h-4 w-4 shrink-0" />
-          </button>
-        );
-      })}
-    </div>
+    <ViewTabBar tabs={billingTabs} activeId={activeTab} onTabChange={handleBillingTabNav} variant="segment" />
   );
 
   // ── Add button handler ─────────────────────────────────────────────────────
@@ -660,6 +688,7 @@ export function BillingListView({
   function handleSelectInvoice(invoice: InvoiceRow) {
     onSelectInvoice(invoice);
     setRightPanelMode("view");
+    setMobileView("detail");
   }
 
   // ── Table-mode action handlers ─────────────────────────────────────────────
@@ -741,15 +770,16 @@ export function BillingListView({
 
   // ── Toolbar button base classes ────────────────────────────────────────────
 
-  const tbBase = "h-9 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
-  const tbDefault = "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:bg-card";
-  const tbActive = "bg-card border border-black/[0.125] text-foreground";
+  const xBase = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
+  const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
+  const xActive  = "border-brand-indigo text-brand-indigo";
+  const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
   // ── Left panel header (list mode) — 309px wrapper ─────────────────────────
 
   const leftPanelHeader = (
-    <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center">
-      <div className="flex items-center justify-between w-[309px] shrink-0">
+    <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-3 shrink-0 flex items-center">
+      <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
         <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Billing</h2>
         {billingTabButtons}
       </div>
@@ -758,29 +788,34 @@ export function BillingListView({
 
   // ── Right panel list-mode toolbar (Sort, Filter, Date, Search, +) ────────
 
-  const pill = "h-9 px-3 rounded-full border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors";
-  const pillActive = "h-9 px-3 rounded-full border border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors";
-
   const toolbarControls = (
     <>
+      {/* Mobile back button — only visible on small screens */}
+      <button
+        onClick={() => setMobileView("list")}
+        className="md:hidden h-9 w-9 rounded-full border border-black/[0.125] bg-background grid place-items-center shrink-0"
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </button>
+
       {/* View mode toggle (List | Table) */}
-      <ViewTabBar tabs={VIEW_MODE_TABS} activeId={viewMode} onTabChange={(m) => setViewMode(m as "list" | "table")} />
+      <ViewTabBar tabs={VIEW_MODE_TABS} activeId={viewMode} onTabChange={(m) => setViewMode(m as "list" | "table")} variant="segment" />
 
       <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
 
-      {/* Add button — labeled */}
+      {/* Add button — expand-on-hover */}
       {isAgencyUser && (
         <button
           onClick={isExpensesTab ? () => setExpensePanelOpen(true) : handleAddClick}
-          className={pill}
+          className={cn(xBase, "hover:max-w-[130px]", xDefault)}
         >
-          <Plus className="h-4 w-4" />
-          {isExpensesTab ? "New Expense" : isInvoicesTab ? "New Invoice" : "New Contract"}
+          <Plus className="h-4 w-4 shrink-0" />
+          <span className={xSpan}>{isExpensesTab ? "New Expense" : isInvoicesTab ? "New Invoice" : "New Contract"}</span>
         </button>
       )}
 
       {/* Inline search bar */}
-      <div className="h-9 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-white/60 px-3 shrink-0">
+      <div className="h-9 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-white/60 dark:bg-white/[0.10] px-3 shrink-0">
         <Search className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
         <input
           className="h-full bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/40 w-32 min-w-0"
@@ -795,12 +830,12 @@ export function BillingListView({
         )}
       </div>
 
-      {/* Sort pill */}
+      {/* Sort — expand-on-hover */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={isSortNonDefault ? pillActive : pill}>
-            <ArrowUpDown className="h-4 w-4" />
-            {isSortNonDefault ? SORT_LABELS[sortBy] : "Sort"}
+          <button className={cn(xBase, "hover:max-w-[100px]", isSortNonDefault ? xActive : xDefault)}>
+            <ArrowUpDown className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Sort</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
@@ -823,16 +858,13 @@ export function BillingListView({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Filter pill (Status + Account) — not on expenses */}
+      {/* Filter — expand-on-hover (Status + Account) — not on expenses */}
       {!isExpensesTab && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className={isFilterActive || (isAgencyUser && accountFilter !== "all") ? pillActive : pill}>
-              <Filter className="h-4 w-4" />
-              Filter
-              {(filterStatus.length > 0 || (isAgencyUser && accountFilter !== "all")) && (
-                <span className="text-[10px]">{` · ${filterStatus.length + (accountFilter !== "all" ? 1 : 0)}`}</span>
-              )}
+            <button className={cn(xBase, "hover:max-w-[100px]", isFilterActive || (isAgencyUser && accountFilter !== "all") ? xActive : xDefault)}>
+              <Filter className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>Filter</span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
@@ -876,14 +908,12 @@ export function BillingListView({
         </DropdownMenu>
       )}
 
-      {/* Date pill (Quarter + Year) */}
+      {/* Date — expand-on-hover (Quarter + Year) */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={isDateActive ? pillActive : pill}>
-            <CalendarDays className="h-4 w-4" />
-            {isDateActive
-              ? [quarterFilter, yearFilter ? String(yearFilter) : null].filter(Boolean).join(" · ")
-              : "Date"}
+          <button className={cn(xBase, "hover:max-w-[80px]", isDateActive ? xActive : xDefault)}>
+            <CalendarDays className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Date</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-48">
@@ -925,13 +955,13 @@ export function BillingListView({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Group pill (expenses only) */}
+      {/* Group — expand-on-hover (expenses only) */}
       {isExpensesTab && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className={expenseGroupBy !== "none" ? pillActive : pill}>
-              <ListTree className="h-4 w-4" />
-              {expenseGroupBy === "year_quarter" ? "By Quarter" : "Group"}
+            <button className={cn(xBase, "hover:max-w-[100px]", expenseGroupBy !== "none" ? xActive : xDefault)}>
+              <ListTree className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>Group</span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-40">
@@ -949,14 +979,18 @@ export function BillingListView({
         </DropdownMenu>
       )}
 
-      {/* Gradient tester toggle */}
+      {/* Gradient tester toggle — expand-on-hover */}
       <button
         type="button"
-        onClick={() => setGradientTesterOpen(prev => !prev)}
-        className={`inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border transition-colors ${gradientTesterOpen ? "bg-indigo-100 text-indigo-600 border-indigo-200" : "border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50"}`}
+        onClick={() => {
+          if (!gradientTesterOpen) setGradientLayers(getTabLayers(activeTab));
+          setGradientTesterOpen(prev => !prev);
+        }}
+        className={cn(xBase, "hover:max-w-[100px]", gradientTesterOpen ? "border-indigo-200 text-indigo-600 bg-indigo-100" : xDefault)}
         title="Gradient Tester"
       >
-        <Paintbrush className="h-4 w-4" />
+        <Paintbrush className="h-4 w-4 shrink-0" />
+        <span className={xSpan}>Style</span>
       </button>
     </>
   );
@@ -1011,7 +1045,7 @@ export function BillingListView({
                   <ContractCard
                     contract={item.contract}
                     isSelected={isSelected}
-                    onClick={() => onSelectContract(item.contract)}
+                    onClick={() => { onSelectContract(item.contract); setMobileView("detail"); }}
                   />
                 </div>
               );
@@ -1057,6 +1091,7 @@ export function BillingListView({
         tabs={VIEW_MODE_TABS}
         activeId={viewMode}
         onTabChange={(m) => setViewMode(m as "list" | "table")}
+        variant="segment"
       />
 
       <div className="w-px h-5 bg-border/40 mx-1 shrink-0" />
@@ -1066,14 +1101,10 @@ export function BillingListView({
         <button
           title="Add Expense"
           onClick={() => setExpensePanelOpen(true)}
-          className={cn(
-            isNarrow
-              ? "icon-circle-lg icon-circle-base"
-              : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card")
-          )}
+          className={cn(xBase, "hover:max-w-[130px]", xDefault)}
         >
-          <Plus className="h-4 w-4" />
-          {!isNarrow && "Expense"}
+          <Plus className="h-4 w-4 shrink-0" />
+          <span className={xSpan}>New Expense</span>
         </button>
       )}
       {isExpensesTab && (
@@ -1101,14 +1132,10 @@ export function BillingListView({
         <button
           title={isInvoicesTab ? "New Invoice" : "New Contract"}
           onClick={handleAddClick}
-          className={cn(
-            isNarrow
-              ? "icon-circle-lg icon-circle-base"
-              : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card")
-          )}
+          className={cn(xBase, "hover:max-w-[130px]", xDefault)}
         >
-          <Plus className="h-4 w-4" />
-          {!isNarrow && (isInvoicesTab ? "Invoice" : "Contract")}
+          <Plus className="h-4 w-4 shrink-0" />
+          <span className={xSpan}>{isInvoicesTab ? "New Invoice" : "New Contract"}</span>
         </button>
       )}
 
@@ -1133,20 +1160,15 @@ export function BillingListView({
         </>
       )}
 
-      {/* Sort */}
+      {/* Sort — expand-on-hover */}
       <Popover open={toolbarSortOpen} onOpenChange={setToolbarSortOpen}>
         <PopoverTrigger asChild>
           <button
             title="Sort"
-            className={cn(
-              isNarrow
-                ? "icon-circle-lg icon-circle-base"
-                : cn(tbBase, isSortNonDefault ? tbActive : tbDefault)
-            )}
+            className={cn(xBase, "hover:max-w-[100px]", isSortNonDefault ? xActive : xDefault)}
           >
-            <ArrowUpDown className="h-4 w-4" />
-            {!isNarrow && (isSortNonDefault ? SORT_LABELS[sortBy] : "Sort")}
-            {!isNarrow && <ChevronDown className="h-3.5 w-3.5 opacity-40" />}
+            <ArrowUpDown className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Sort</span>
           </button>
         </PopoverTrigger>
         <PopoverContent side="bottom" align="start" className="w-44 p-1">
@@ -1163,24 +1185,15 @@ export function BillingListView({
         </PopoverContent>
       </Popover>
 
-      {/* Date (combined Quarter + Year) */}
+      {/* Date — expand-on-hover (combined Quarter + Year) */}
       <Popover open={toolbarDateOpen} onOpenChange={setToolbarDateOpen}>
         <PopoverTrigger asChild>
           <button
             title="Date"
-            className={cn(
-              isNarrow
-                ? "icon-circle-lg icon-circle-base"
-                : cn(tbBase, isDateActive ? tbActive : tbDefault)
-            )}
+            className={cn(xBase, "hover:max-w-[80px]", isDateActive ? xActive : xDefault)}
           >
-            <CalendarDays className="h-4 w-4" />
-            {!isNarrow && (
-              <>
-                {[quarterFilter, yearFilter ? String(yearFilter) : null].filter(Boolean).join(" · ") || "Date"}
-                <ChevronDown className="h-3.5 w-3.5 opacity-40" />
-              </>
-            )}
+            <CalendarDays className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Date</span>
           </button>
         </PopoverTrigger>
         <PopoverContent side="bottom" align="start" className="w-48 p-1">
@@ -1239,24 +1252,15 @@ export function BillingListView({
         </PopoverContent>
       </Popover>
 
-      {/* Group — year+quarter grouping for invoices and expenses */}
+      {/* Group — expand-on-hover (year+quarter grouping for invoices and expenses) */}
       <Popover open={toolbarGroupOpen} onOpenChange={setToolbarGroupOpen}>
         <PopoverTrigger asChild>
           <button
             title="Group"
-            className={cn(
-              isNarrow
-                ? "icon-circle-lg icon-circle-base"
-                : cn(tbBase, currentGroupBy !== "none" ? tbActive : tbDefault)
-            )}
+            className={cn(xBase, "hover:max-w-[100px]", currentGroupBy !== "none" ? xActive : xDefault)}
           >
-            <ListTree className="h-4 w-4" />
-            {!isNarrow && (
-              <>
-                {currentGroupBy === "year_quarter" ? "Grouped" : "Group"}
-                <ChevronDown className="h-3.5 w-3.5 opacity-40" />
-              </>
-            )}
+            <ListTree className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Group</span>
           </button>
         </PopoverTrigger>
         <PopoverContent side="bottom" align="start" className="w-44 p-1">
@@ -1279,25 +1283,16 @@ export function BillingListView({
         </PopoverContent>
       </Popover>
 
-      {/* Filter (combined Status + Account) */}
+      {/* Filter — expand-on-hover (combined Status + Account) */}
       {!isExpensesTab && (
         <Popover open={toolbarFilterOpen} onOpenChange={setToolbarFilterOpen}>
           <PopoverTrigger asChild>
             <button
               title="Filter"
-              className={cn(
-                isNarrow
-                  ? "icon-circle-lg icon-circle-base"
-                  : cn(tbBase, isTableFilterActive ? tbActive : tbDefault)
-              )}
+              className={cn(xBase, "hover:max-w-[100px]", isTableFilterActive ? xActive : xDefault)}
             >
-              <Filter className="h-4 w-4" />
-              {!isNarrow && (
-                <>
-                  {isTableFilterActive ? "Filter" : "Filter"}
-                  <ChevronDown className="h-3.5 w-3.5 opacity-40" />
-                </>
-              )}
+              <Filter className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>Filter</span>
             </button>
           </PopoverTrigger>
           <PopoverContent side="bottom" align="start" className="w-48 p-1">
@@ -1358,20 +1353,16 @@ export function BillingListView({
         </Popover>
       )}
 
-      {/* Fields — column visibility (invoices + contracts tabs only) */}
+      {/* Fields — expand-on-hover (column visibility, invoices + contracts tabs only) */}
       {!isExpensesTab && (
         <Popover open={toolbarFieldsOpen} onOpenChange={setToolbarFieldsOpen}>
           <PopoverTrigger asChild>
             <button
               title="Fields"
-              className={cn(
-                isNarrow
-                  ? "icon-circle-lg icon-circle-base"
-                  : cn(tbBase, tbDefault)
-              )}
+              className={cn(xBase, "hover:max-w-[100px]", xDefault)}
             >
-              <Eye className="h-4 w-4" />
-              {!isNarrow && "Fields"}
+              <Eye className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>Fields</span>
             </button>
           </PopoverTrigger>
           <PopoverContent side="bottom" align="start" className="w-48 p-1">
@@ -1421,19 +1412,15 @@ export function BillingListView({
       {/* ── Right side: action buttons (visible only when items selected) + search ── */}
       <div className="ml-auto flex items-center gap-1">
 
-        {/* Print button (expenses only) */}
+        {/* Print button (expenses only) — expand-on-hover */}
         {isExpensesTab && (
           <button
             onClick={() => setExpenseExportTrigger((t) => t + 1)}
             title="Export PDF"
-            className={cn(
-              isNarrow
-                ? "icon-circle-lg icon-circle-base"
-                : cn(tbBase, tbDefault)
-            )}
+            className={cn(xBase, "hover:max-w-[130px]", xDefault)}
           >
-            <Printer className="h-4 w-4" />
-            {!isNarrow && "Export"}
+            <Printer className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Export</span>
           </button>
         )}
 
@@ -1444,71 +1431,43 @@ export function BillingListView({
               title="Edit"
               onClick={handleTableEdit}
               disabled={invoiceSelectedIds.size !== 1}
-              className={cn(
-                isNarrow
-                  ? "icon-circle-lg icon-circle-base disabled:opacity-40 disabled:pointer-events-none"
-                  : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card disabled:opacity-40 disabled:pointer-events-none")
-              )}
+              className={cn(xBase, "hover:max-w-[80px]", xDefault, "disabled:opacity-40 disabled:pointer-events-none")}
             >
-              <Pencil className="h-4 w-4" />
-              {!isNarrow && "Edit"}
+              <Pencil className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>Edit</span>
             </button>
             <button
               title="Copy"
               onClick={handleTableDuplicate}
               disabled={invoiceSelectedIds.size !== 1}
-              className={cn(
-                isNarrow
-                  ? "icon-circle-lg icon-circle-base disabled:opacity-40 disabled:pointer-events-none"
-                  : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card disabled:opacity-40 disabled:pointer-events-none")
-              )}
+              className={cn(xBase, "hover:max-w-[80px]", xDefault, "disabled:opacity-40 disabled:pointer-events-none")}
             >
-              <Copy className="h-4 w-4" />
-              {!isNarrow && "Copy"}
+              <Copy className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>Copy</span>
             </button>
             <button
               title="Delete"
               onClick={handleTableDeleteInvoices}
-              className={cn(
-                isNarrow
-                  ? "icon-circle-lg icon-circle-base hover:text-red-600"
-                  : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card hover:text-red-600")
-              )}
+              className={cn(xBase, "hover:max-w-[100px]", xDefault, "hover:text-red-600")}
             >
-              <Trash2 className="h-4 w-4" />
-              {!isNarrow && "Delete"}
+              <Trash2 className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>Delete</span>
             </button>
             <button
               title={invoiceSendPaidAction === "paid" ? "Mark Paid" : "Send"}
               onClick={() => invoiceSendPaidAction === "paid" ? handleTableMarkPaid() : handleTableMarkSent()}
-              className={cn(
-                isNarrow
-                  ? "icon-circle-lg icon-circle-base"
-                  : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card", invoiceSendPaidAction === "paid" && "hover:text-emerald-700")
-              )}
+              className={cn(xBase, "hover:max-w-[80px]", xDefault, invoiceSendPaidAction === "paid" && "hover:text-emerald-700")}
             >
-              {invoiceSendPaidAction === "paid" ? <CheckCircle2 className="h-4 w-4" /> : <SendHorizontal className="h-4 w-4" />}
-              {!isNarrow && (invoiceSendPaidAction === "paid" ? "Paid" : "Send")}
+              {invoiceSendPaidAction === "paid" ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <SendHorizontal className="h-4 w-4 shrink-0" />}
+              <span className={xSpan}>{invoiceSendPaidAction === "paid" ? "Paid" : "Send"}</span>
             </button>
             <button
               onClick={() => setInvoiceSelectedIds(new Set())}
               title="Clear selection"
-              className={cn(
-                isNarrow
-                  ? "icon-circle-lg icon-circle-base relative"
-                  : cn(tbBase, tbDefault)
-              )}
+              className={cn(xBase, "hover:max-w-[130px]", xDefault)}
             >
-              {isNarrow ? (
-                <>
-                  <span className="text-[13px] font-bold tabular-nums">{invoiceSelectedIds.size}</span>
-                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-foreground/80 text-white flex items-center justify-center">
-                    <X className="h-2.5 w-2.5" />
-                  </span>
-                </>
-              ) : (
-                `${invoiceSelectedIds.size} Selected`
-              )}
+              <X className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>{invoiceSelectedIds.size} Selected</span>
             </button>
           </>
         )}
@@ -1519,47 +1478,27 @@ export function BillingListView({
             <button
               title="Delete"
               onClick={handleTableDeleteContracts}
-              className={cn(
-                isNarrow
-                  ? "icon-circle-lg icon-circle-base hover:text-red-600"
-                  : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card hover:text-red-600")
-              )}
+              className={cn(xBase, "hover:max-w-[100px]", xDefault, "hover:text-red-600")}
             >
-              <Trash2 className="h-4 w-4" />
-              {!isNarrow && "Delete"}
+              <Trash2 className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>Delete</span>
             </button>
             <button
               title="Sign"
               onClick={handleTableMarkSigned}
               disabled={contractSelectedIds.size !== 1}
-              className={cn(
-                isNarrow
-                  ? "icon-circle-lg icon-circle-base hover:text-emerald-700 disabled:opacity-40 disabled:pointer-events-none"
-                  : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card hover:text-emerald-700 disabled:opacity-40 disabled:pointer-events-none")
-              )}
+              className={cn(xBase, "hover:max-w-[80px]", xDefault, "hover:text-emerald-700 disabled:opacity-40 disabled:pointer-events-none")}
             >
-              <CheckCircle2 className="h-4 w-4" />
-              {!isNarrow && "Sign"}
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>Sign</span>
             </button>
             <button
               onClick={() => setContractSelectedIds(new Set())}
               title="Clear selection"
-              className={cn(
-                isNarrow
-                  ? "icon-circle-lg icon-circle-base relative"
-                  : cn(tbBase, tbDefault)
-              )}
+              className={cn(xBase, "hover:max-w-[130px]", xDefault)}
             >
-              {isNarrow ? (
-                <>
-                  <span className="text-[13px] font-bold tabular-nums">{contractSelectedIds.size}</span>
-                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-foreground/80 text-white flex items-center justify-center">
-                    <X className="h-2.5 w-2.5" />
-                  </span>
-                </>
-              ) : (
-                `${contractSelectedIds.size} Selected`
-              )}
+              <X className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>{contractSelectedIds.size} Selected</span>
             </button>
           </>
         )}
@@ -1577,14 +1516,10 @@ export function BillingListView({
                 setExpensePanelOpen(true);
               }}
               disabled={expenseSelectedIds.size !== 1}
-              className={cn(
-                isNarrow
-                  ? "icon-circle-lg icon-circle-base disabled:opacity-40 disabled:pointer-events-none"
-                  : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card disabled:opacity-40 disabled:pointer-events-none")
-              )}
+              className={cn(xBase, "hover:max-w-[80px]", xDefault, "disabled:opacity-40 disabled:pointer-events-none")}
             >
-              <Pencil className="h-4 w-4" />
-              {!isNarrow && "Edit"}
+              <Pencil className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>Edit</span>
             </button>
             <button
               title="Delete"
@@ -1595,34 +1530,18 @@ export function BillingListView({
                 setExpenseSelectedIds(new Set());
                 await queryClient.invalidateQueries({ queryKey: ["expenses"] });
               }}
-              className={cn(
-                isNarrow
-                  ? "icon-circle-lg icon-circle-base hover:text-red-600"
-                  : cn(tbBase, "border border-black/[0.125] text-foreground hover:bg-card hover:text-red-600")
-              )}
+              className={cn(xBase, "hover:max-w-[100px]", xDefault, "hover:text-red-600")}
             >
-              <Trash2 className="h-4 w-4" />
-              {!isNarrow && "Delete"}
+              <Trash2 className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>Delete</span>
             </button>
             <button
               onClick={() => setExpenseSelectedIds(new Set())}
               title="Clear selection"
-              className={cn(
-                isNarrow
-                  ? "icon-circle-lg icon-circle-base relative"
-                  : cn(tbBase, tbDefault)
-              )}
+              className={cn(xBase, "hover:max-w-[130px]", xDefault)}
             >
-              {isNarrow ? (
-                <>
-                  <span className="text-[13px] font-bold tabular-nums">{expenseSelectedIds.size}</span>
-                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-foreground/80 text-white flex items-center justify-center">
-                    <X className="h-2.5 w-2.5" />
-                  </span>
-                </>
-              ) : (
-                `${expenseSelectedIds.size} Selected`
-              )}
+              <X className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>{expenseSelectedIds.size} Selected</span>
             </button>
           </>
         )}
@@ -1640,7 +1559,7 @@ export function BillingListView({
         /* ── LIST MODE: original split-panel layout ── */
         <>
           {/* Left panel */}
-          <div className="w-[340px] shrink-0 bg-muted rounded-lg flex flex-col overflow-hidden">
+          <div className={cn("w-full md:w-[340px] md:shrink-0 bg-muted rounded-lg flex flex-col overflow-hidden", mobileView === "detail" ? "hidden md:flex" : "flex")}>
             {leftPanelHeader}
 
             {/* Card list (invoices / contracts) */}
@@ -1657,6 +1576,7 @@ export function BillingListView({
                 onSelect={(expense) => {
                   setSelectedExpenseId(expense.id);
                   setExpensePanelOpen(false);
+                  setMobileView("detail");
                 }}
                 groupBy={expenseGroupBy}
               />
@@ -1664,7 +1584,27 @@ export function BillingListView({
           </div>
 
           {/* Right panel */}
-          <div className="flex-1 flex flex-col min-w-0 overflow-hidden rounded-lg bg-card">
+          <div className={cn("relative flex-1 flex flex-col min-w-0 overflow-hidden rounded-lg bg-card", mobileView === "list" ? "hidden md:flex" : "flex")}>
+            {/* Gradient background — renders across all right-panel states */}
+            {gradientTesterOpen ? (
+              <>
+                {gradientLayers.map(layer => {
+                  const style = layerToStyle(layer);
+                  if (!style) return null;
+                  return <div key={layer.id} className="absolute inset-0" style={style} />;
+                })}
+                {gradientDragMode && (
+                  <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
+                )}
+              </>
+            ) : (
+              <>
+                <div className="absolute inset-0 bg-[#F8F3EB] dark:bg-background" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.9)_0%,transparent_60%)] dark:opacity-[0.08]" />
+              </>
+            )}
+            {/* Content — relative so it renders above gradient */}
+            <div className="relative flex flex-col flex-1 min-h-0 overflow-hidden">
             {isExpensesTab ? (
               expensePanelOpen ? (
                 <ExpenseCreatePanel
@@ -1686,6 +1626,7 @@ export function BillingListView({
                     onDeleted={() => setSelectedExpenseId(null)}
                     onNew={isAgencyUser ? () => { setEditingExpense(null); setExpensePanelOpen(true); } : undefined}
                     toolbarSlot={toolbarControls}
+                    noBackground={gradientTesterOpen}
                   />
                 ) : (
                   <ExpenseDetailViewEmpty
@@ -1727,6 +1668,7 @@ export function BillingListView({
                   onDelete={onDeleteInvoice}
                   onRefresh={onRefreshInvoices}
                   toolbarSlot={toolbarControls}
+                  noBackground={gradientTesterOpen}
                 />
               ) : (
                 <InvoiceDetailViewEmpty toolbarSlot={toolbarControls} />
@@ -1749,32 +1691,16 @@ export function BillingListView({
                   onUpdate={onUpdateContract}
                   onNew={isAgencyUser ? () => { onSelectContract(null); setRightPanelMode("create"); } : undefined}
                   toolbarSlot={toolbarControls}
+                  noBackground={gradientTesterOpen}
                 />
               ) : (
-                <div className="relative flex flex-col h-full overflow-hidden">
-                  {gradientTesterOpen ? (
-                    <>
-                      {gradientLayers.map(layer => {
-                        const style = layerToStyle(layer);
-                        if (!style) return null;
-                        return <div key={layer.id} className="absolute inset-0" style={style} />;
-                      })}
-                      {gradientDragMode && (
-                        <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <div className="absolute inset-0 bg-[#F8F3EB]" />
-                      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.9)_0%,transparent_60%)]" />
-                    </>
-                  )}
-                  <div className="relative z-10 shrink-0 px-[3px] pt-[3px]">
+                <div className="flex flex-col h-full overflow-hidden">
+                  <div className="shrink-0 px-[3px] pt-[3px]">
                     <div className="px-4 pt-3 pb-1.5 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
                       {toolbarControls}
                     </div>
                   </div>
-                  <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6">
+                  <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
                     <PenLine className="w-12 h-12 text-muted-foreground/20 mb-4" />
                     <p className="text-sm font-medium text-muted-foreground">Select a contract</p>
                     <p className="text-xs text-muted-foreground/60 mt-1">Choose a contract from the list to view details</p>
@@ -1790,6 +1716,7 @@ export function BillingListView({
                 </div>
               )
             ) : null}
+            </div>
           </div>
         </>
       ) : (
@@ -1799,8 +1726,8 @@ export function BillingListView({
           <div className="flex-1 min-w-0 flex flex-col overflow-hidden rounded-lg bg-muted">
 
             {/* Title + billing tabs (same 309px wrapper as list mode) + table toolbar */}
-            <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
-              <div className="flex items-center justify-between w-[309px] shrink-0">
+            <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
+              <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
                 <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Billing</h2>
                 {billingTabButtons}
               </div>

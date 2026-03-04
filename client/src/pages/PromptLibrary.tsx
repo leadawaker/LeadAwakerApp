@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
+import { MODEL_OPTIONS } from "@/features/prompts/types";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { apiFetch } from "@/lib/apiUtils";
@@ -89,14 +90,6 @@ const EMPTY_FORM: PromptFormData = {
   notes: "",
 };
 
-const MODEL_OPTIONS = [
-  "gpt-4o",
-  "gpt-4o-mini",
-  "gpt-4-turbo",
-  "gpt-3.5-turbo",
-  "claude-3-5-sonnet-20241022",
-  "claude-3-haiku-20240307",
-];
 
 interface PromptFormDialogProps {
   open: boolean;

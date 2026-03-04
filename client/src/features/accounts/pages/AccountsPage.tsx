@@ -12,6 +12,7 @@ import type { NewAccountForm } from "../components/AccountCreateDialog";
 import { useAccountsData } from "../hooks/useAccountsData";
 import { deleteAccount } from "../api/accountsApi";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
-import { ToolbarPill } from "@/components/ui/toolbar-pill";
+import { SearchPill } from "@/components/ui/search-pill";
 import { createAccount, updateAccount } from "../api/accountsApi";
 
 export type AccountViewMode = "list" | "table";
@@ -74,9 +75,11 @@ const STATUS_DOT: Record<string, string> = {
   Suspended: "bg-rose-500",
 };
 
-/* ── Toolbar button constants (§17) ── */
-const tbBase = "h-10 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
-const tbDefault = "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:bg-card";
+/* ── Expand-on-hover button constants ── */
+const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
+const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
+const xActive  = "border-brand-indigo text-brand-indigo";
+const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
 /* ── Tab definitions ── */
 const VIEW_TABS: TabDef[] = [
@@ -96,7 +99,7 @@ function ConfirmToolbarButton({
   const [loading, setLoading] = useState(false);
   if (confirming) {
     return (
-      <div className="h-10 flex items-center gap-1 rounded-full border border-black/[0.125] bg-card px-2.5 text-[12px] shrink-0">
+      <div className="h-9 flex items-center gap-1 rounded-full border border-black/[0.125] bg-card px-2.5 text-[12px] shrink-0">
         <span className="text-foreground/60 mr-0.5 whitespace-nowrap">{label}?</span>
         <button
           className="px-2 py-0.5 rounded-full bg-brand-indigo text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
@@ -109,18 +112,21 @@ function ConfirmToolbarButton({
       </div>
     );
   }
+  // Determine max-w based on label length
+  const labelLen = label.length;
+  const hoverMaxW = labelLen <= 4 ? "hover:max-w-[80px]" : labelLen <= 6 ? "hover:max-w-[100px]" : "hover:max-w-[120px]";
   return (
     <button
       className={cn(
-        "h-10 inline-flex items-center gap-1.5 rounded-full border px-3 text-[12px] font-medium shrink-0",
+        xBase, hoverMaxW,
         variant === "danger"
-          ? "border-red-300/50 text-red-600 hover:bg-red-50/60"
-          : "border-black/[0.125] text-foreground/70 hover:bg-card hover:text-foreground",
+          ? "border-red-300/50 text-red-500 hover:text-red-600"
+          : xDefault,
       )}
       onClick={() => setConfirming(true)}
     >
-      <Icon className="h-4 w-4" />
-      {label}
+      <Icon className="h-4 w-4 shrink-0" />
+      <span className={xSpan}>{label}</span>
     </button>
   );
 }
@@ -193,6 +199,13 @@ export default function AccountsPage() {
   const handleSelectAccount = useCallback((account: AccountRow) => {
     setSelectedAccount(account);
   }, []);
+
+  // ── Breadcrumb ─────────────────────────────────────────────────────────────
+  const { setCrumb } = useBreadcrumb();
+  useEffect(() => {
+    setCrumb(selectedAccount?.name ?? null);
+    return () => setCrumb(null);
+  }, [selectedAccount, setCrumb]);
 
   const handleToggleStatus = useCallback((account: AccountRow) => {
     const aid = account.Id ?? account.id ?? 0;
@@ -380,23 +393,14 @@ export default function AccountsPage() {
     <>
       <div className="w-px h-4 bg-border/25 mx-0.5 shrink-0" />
 
-      {/* Search — always open */}
-      <div className="h-10 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card px-3 shrink-0">
-        <svg className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-        </svg>
-        <input
-          className="h-full bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/40 w-32 min-w-0"
-          placeholder="Search accounts…"
-          value={tableSearch}
-          onChange={(e) => setTableSearch(e.target.value)}
-        />
-        {tableSearch && (
-          <button onClick={() => setTableSearch("")} className="text-muted-foreground/40 hover:text-muted-foreground shrink-0">
-            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M18 6 6 18M6 6l12 12"/></svg>
-          </button>
-        )}
-      </div>
+      {/* Search */}
+      <SearchPill
+        value={tableSearch}
+        onChange={setTableSearch}
+        open={!!tableSearch}
+        onOpenChange={() => {}}
+        placeholder="Search accounts…"
+      />
 
       {/* +Add */}
       <ConfirmToolbarButton icon={Plus} label="Add" onConfirm={handleAddAccount} />
@@ -404,7 +408,10 @@ export default function AccountsPage() {
       {/* Sort */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill icon={ArrowUpDown} label="Sort" active={tableSortBy !== "recent"} activeValue={tableSortBy !== "recent" ? TABLE_SORT_LABELS[tableSortBy].split(" ")[0] : undefined} />
+          <button className={cn(xBase, tableSortBy !== "recent" ? xActive : xDefault, "hover:max-w-[100px]")}>
+            <ArrowUpDown className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Sort</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Sort by</DropdownMenuLabel>
@@ -421,7 +428,10 @@ export default function AccountsPage() {
       {/* Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill icon={Filter} label="Filter" active={isTableFilterActive} activeValue={isTableFilterActive ? tableActiveFilterCount : undefined} />
+          <button className={cn(xBase, isTableFilterActive ? xActive : xDefault, "hover:max-w-[100px]")}>
+            <Filter className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Filter</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Status</DropdownMenuLabel>
@@ -469,7 +479,10 @@ export default function AccountsPage() {
       {/* Group */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill icon={Layers} label="Group" active={tableGroupBy !== "status"} activeValue={tableGroupBy !== "status" ? TABLE_GROUP_LABELS[tableGroupBy] : undefined} />
+          <button className={cn(xBase, tableGroupBy !== "status" ? xActive : xDefault, "hover:max-w-[100px]")}>
+            <Layers className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Group</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           {(Object.keys(TABLE_GROUP_LABELS) as TableGroupByOption[]).map((opt) => (
@@ -484,7 +497,10 @@ export default function AccountsPage() {
       {/* Fields (Column Visibility) */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill icon={Eye} label="Fields" active={visibleCols.size !== DEFAULT_VISIBLE.length} />
+          <button className={cn(xBase, visibleCols.size !== DEFAULT_VISIBLE.length ? xActive : xDefault, "hover:max-w-[100px]")}>
+            <Eye className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Fields</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Show / Hide Columns</DropdownMenuLabel>
@@ -533,9 +549,9 @@ export default function AccountsPage() {
             {/* Change Status dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className={cn(tbBase, tbDefault)}>
-                  <Pencil className="h-4 w-4" />
-                  Change Status
+                <button className={cn(xBase, xDefault, "hover:max-w-[140px]")}>
+                  <Pencil className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>Change Status</span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
@@ -551,7 +567,10 @@ export default function AccountsPage() {
             <ConfirmToolbarButton icon={Trash2} label="Delete" onConfirm={handleBulkDeleteAccounts} variant="danger" />
 
             {/* Count badge with dismiss */}
-            <button className={cn(tbBase, tbDefault, "cursor-default ml-1")} onClick={() => setTableSelectedIds(new Set())}>
+            <button
+              className="h-9 inline-flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card px-3 text-[12px] font-medium shrink-0 cursor-default ml-1 text-foreground/60"
+              onClick={() => setTableSelectedIds(new Set())}
+            >
               <span className="tabular-nums">{tableSelectedIds.size}</span>
               <X className="h-3.5 w-3.5" />
             </button>
@@ -607,7 +626,7 @@ export default function AccountsPage() {
                 <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
                   <div className="flex items-center justify-between w-[309px] shrink-0">
                     <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Accounts</h2>
-                    <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as AccountViewMode)} />
+                    <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as AccountViewMode)} variant="segment" />
                   </div>
                   <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
                   {/* Inline table toolbar */}

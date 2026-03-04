@@ -1,6 +1,7 @@
 import { Suspense, type ReactElement } from "react";
 import { Switch, Route, Redirect, useLocation } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
+import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext";
 import { Loader2 } from "lucide-react";
 
 import { LeadsPage as AppLeads } from "@/features/leads/pages/LeadsPage";
@@ -11,7 +12,7 @@ import AppAccounts from "@/pages/AppAccounts";
 import CalendarPage from "@/pages/Calendar";
 import AutomationLogsPage from "@/pages/AutomationLogs";
 // UsersPage removed — user management now lives in Settings > Team tab
-import PromptLibraryPage from "@/pages/PromptLibrary";
+import PromptsPage from "@/features/prompts/pages/PromptsPage";
 import BillingPage from "@/pages/Billing";
 import SettingsPage from "@/pages/Settings";
 import DocsPage from "@/pages/Docs";
@@ -66,6 +67,7 @@ function PageLoader() {
 export default function AppArea() {
   return (
     <Protected>
+      <BreadcrumbProvider>
       <Suspense fallback={<PageLoader />}>
         <Switch>
           {/* Agency routes */}
@@ -93,7 +95,7 @@ export default function AppArea() {
             <AgencyOnly prefix="/agency"><AutomationLogsPage /></AgencyOnly>
           </Route>
           <Route path="/agency/prompt-library">
-            <AgencyOnly prefix="/agency"><PromptLibraryPage /></AgencyOnly>
+            <AgencyOnly prefix="/agency"><PromptsPage /></AgencyOnly>
           </Route>
           <Route path="/agency/invoices" component={BillingPage} />
           <Route path="/agency/expenses">
@@ -133,7 +135,7 @@ export default function AppArea() {
             <AgencyOnly prefix="/subaccount"><AutomationLogsPage /></AgencyOnly>
           </Route>
           <Route path="/subaccount/prompt-library">
-            <AgencyOnly prefix="/subaccount"><PromptLibraryPage /></AgencyOnly>
+            <AgencyOnly prefix="/subaccount"><PromptsPage /></AgencyOnly>
           </Route>
           <Route path="/subaccount/invoices" component={BillingPage} />
           <Route path="/subaccount/expenses">
@@ -158,6 +160,7 @@ export default function AppArea() {
           )} />
         </Switch>
       </Suspense>
+      </BreadcrumbProvider>
     </Protected>
   );
 }

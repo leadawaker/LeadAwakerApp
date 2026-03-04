@@ -10,13 +10,13 @@ import { ConnectionBanner } from "@/components/crm/ConnectionBanner";
 import { SettingsPanel } from "@/components/crm/SettingsPanel";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
-import { X, Search, Bell, HelpCircle, Headphones, Moon, Sun } from "lucide-react";
+import { X, Search, Bell, HelpCircle, Headphones, Moon, Sun, Instagram, Facebook, Mail, Phone, ChevronDown } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { logout } from "@/hooks/useSession";
 import { TopbarActionsProvider } from "@/contexts/TopbarActionsContext";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
-import { PAGE_ACCENTS } from "@/lib/pageAccents";
+import { PAGE_ACCENTS, PAGE_ACCENTS_DARK } from "@/lib/pageAccents";
 
 export function CrmShell({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
@@ -79,9 +79,10 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   // whenever the Color Tester widget mutates it and dispatches "color-tester-update".
   const pageAccent = useMemo(() => {
     const seg = location.split("/").filter(Boolean)[1] ?? "";
-    return PAGE_ACCENTS[seg] ?? null;
+    const map = isDark ? PAGE_ACCENTS_DARK : PAGE_ACCENTS;
+    return map[seg] ?? null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location, colorTick]);
+  }, [location, colorTick, isDark]);
   const rafRef = useRef(0);
   const bumpColors = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
@@ -98,7 +99,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   return (
     <TopbarActionsProvider>
     <div
-      className={cn("min-h-screen bg-background", isAgencyView && "agency-mode")}
+      className={cn("min-h-screen bg-background", isAgencyView && "agency-mode", isMobileMenuOpen && "mobile-scroll-lock")}
       data-testid="shell-crm"
       key={isAgencyView ? 'agency' : 'subaccount'}
       style={pageAccent ? {
@@ -161,16 +162,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
             <div className="flex-grow overflow-hidden h-full">
               {activePanel === 'settings' && <SettingsPanel />}
               {activePanel === 'help' && (
-                <div className="p-4 space-y-2 overflow-auto h-full">
-                  <button
-                    onClick={() => { closePanel(); setLocation(`${location.startsWith("/agency") ? "/agency" : "/subaccount"}/docs`); }}
-                    className="w-full text-left block rounded-xl px-4 py-3 text-sm hover:bg-muted/30 transition-colors font-medium border border-transparent hover:border-border"
-                  >
-                    Documentation
-                  </button>
-                  <a href="#" className="block rounded-xl px-4 py-3 text-sm hover:bg-muted/30 transition-colors font-medium border border-transparent hover:border-border">Social Media</a>
-                  <a href="#" className="block rounded-xl px-4 py-3 text-sm hover:bg-muted/30 transition-colors font-medium border border-transparent hover:border-border">What's New</a>
-                </div>
+                <HelpPanelContent onNavigate={(path) => { closePanel(); setLocation(path); }} prefix={location.startsWith("/agency") ? "/agency" : "/subaccount"} />
               )}
               {activePanel === 'support' && (
                 <div className="h-full">
@@ -186,9 +178,9 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         id="main-content"
         className={cn(
           "h-screen flex flex-col bg-background transition-[padding-left] duration-200 overflow-hidden",
-          collapsed ? "md:pl-[78px]" : "md:pl-[225px]",
-          "pb-[64px] md:pb-0 pt-[62px]"
+          collapsed ? "md:pl-[78px]" : "md:pl-[225px]"
         )}
+        style={{ paddingTop: "var(--topbar-h)", paddingBottom: "var(--bottombar-h)" }}
         data-testid="main-crm"
       >
         <ConnectionBanner />
@@ -205,5 +197,61 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
       <CommandPalette />
     </div>
     </TopbarActionsProvider>
+  );
+}
+
+/* ─── Help Panel Content (social media expandable) ──────────────────────── */
+
+const SOCIAL_LINKS = [
+  { label: "Instagram", handle: "@leadawaker", href: "https://www.instagram.com/leadawaker/", icon: Instagram, color: "text-pink-600" },
+  { label: "Facebook", handle: "Lead Awaker", href: "https://www.facebook.com/profile.php?id=61552291063345", icon: Facebook, color: "text-blue-600" },
+  { label: "Email", handle: "gabriel@leadawaker.com", href: "mailto:gabriel@leadawaker.com", icon: Mail, color: "text-foreground/70" },
+  { label: "WhatsApp", handle: "+(55) 47 9740-02162", href: "https://wa.me/5547974002162", icon: Phone, color: "text-emerald-600" },
+];
+
+function HelpPanelContent({ onNavigate, prefix }: { onNavigate: (path: string) => void; prefix: string }) {
+  const [socialOpen, setSocialOpen] = useState(false);
+
+  return (
+    <div className="p-4 space-y-2 overflow-auto h-full">
+      <button
+        onClick={() => onNavigate(`${prefix}/docs`)}
+        className="w-full text-left block rounded-xl px-4 py-3 text-sm hover:bg-muted/30 transition-colors font-medium border border-transparent hover:border-border"
+      >
+        Documentation
+      </button>
+
+      {/* Social Media — expandable */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setSocialOpen((v) => !v)}
+          className="w-full rounded-xl px-4 py-3 text-sm hover:bg-muted/30 transition-colors font-medium border border-transparent hover:border-border flex items-center justify-between"
+        >
+          Social Media
+          <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", socialOpen && "rotate-180")} />
+        </button>
+        {socialOpen && (
+          <div className="mt-1 ml-2 space-y-0.5">
+            {SOCIAL_LINKS.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                target={link.href.startsWith("mailto:") ? undefined : "_blank"}
+                rel={link.href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm hover:bg-muted/30 transition-colors"
+              >
+                <link.icon className={cn("h-4 w-4 shrink-0", link.color)} />
+                <div className="min-w-0">
+                  <span className="font-medium text-foreground">{link.label}</span>
+                  <span className="block text-[12px] text-muted-foreground truncate">{link.handle}</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+
+    </div>
   );
 }

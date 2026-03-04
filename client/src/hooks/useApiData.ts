@@ -132,36 +132,42 @@ export function useLeads(accountId?: number, campaignId?: number) {
 
 /* ─── Interactions ────────────────────────────────────────────── */
 
+/** Normalize raw interaction record from API */
+function normalizeInteraction(i: any): Interaction {
+  return {
+    ...i,
+    id: i.Id || i.id,
+    account_id: i.account_id || i.accounts_id || i.Accounts_id,
+    campaign_id: i.campaign_id || i.campaigns_id || i.Campaigns_id,
+    lead_id: i.lead_id || i.leads_id || i.Leads_id,
+    user_id: i.user_id || i.users_id || i.Users_id,
+    type: i.type || i.Type || "WhatsApp",
+    direction: i.direction || i.Direction || "Outbound",
+    content: i.content || i.Content || "",
+    status: i.status || i.Status || "sent",
+    created_at: i.created_at || i.Created_time || "",
+    updated_at: i.updated_at || i.Last_modified_time || "",
+  } as Interaction;
+}
+
 export function useInteractions(accountId?: number, leadId?: number) {
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams();
       if (leadId) params.set("leadId", String(leadId));
       else if (accountId) params.set("accountId", String(accountId));
       const qs = params.toString();
       const data = await fetchApi<Interaction>(`/api/interactions${qs ? `?${qs}` : ""}`);
-      // Normalize field names
-      const normalized = data.map((i: any) => ({
-        ...i,
-        id: i.Id || i.id,
-        account_id: i.account_id || i.accounts_id || i.Accounts_id,
-        campaign_id: i.campaign_id || i.campaigns_id || i.Campaigns_id,
-        lead_id: i.lead_id || i.leads_id || i.Leads_id,
-        user_id: i.user_id || i.users_id || i.Users_id,
-        type: i.type || i.Type || "WhatsApp",
-        direction: i.direction || i.Direction || "Outbound",
-        content: i.content || i.Content || "",
-        status: i.status || i.Status || "sent",
-        created_at: i.created_at || i.Created_time || "",
-        updated_at: i.updated_at || i.Last_modified_time || "",
-      }));
-      setInteractions(normalized);
-    } catch (err) {
+      setInteractions(data.map(normalizeInteraction));
+    } catch (err: any) {
       console.error("Failed to fetch interactions", err);
+      setError(err.message || "Failed to load interactions");
     } finally {
       setLoading(false);
     }
@@ -169,7 +175,59 @@ export function useInteractions(accountId?: number, leadId?: number) {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  return { interactions, loading, refresh };
+  return { interactions, loading, error, refresh };
+}
+
+/** Paginated interactions for a single lead — uses server-side limit/offset */
+export function useInteractionsPaginated(leadId: number | undefined, pageSize = 15) {
+  const [interactions, setInteractions] = useState<Interaction[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPageRaw] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  // Reset page when leadId changes
+  useEffect(() => { setPageRaw(1); }, [leadId]);
+
+  useEffect(() => {
+    if (!leadId) { setLoading(false); return; }
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    const params = new URLSearchParams();
+    params.set("leadId", String(leadId));
+    params.set("page", String(page));
+    params.set("limit", String(pageSize));
+
+    apiFetch(`/api/interactions?${params}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((result: any) => {
+        if (cancelled) return;
+        const data = Array.isArray(result.data) ? result.data : Array.isArray(result) ? result : [];
+        setInteractions(data.map(normalizeInteraction));
+        setTotal(result.total ?? data.length);
+      })
+      .catch((err: any) => {
+        if (!cancelled) setError(err.message || "Failed to load interactions");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [leadId, page, pageSize]);
+
+  const goToPage = (n: number) => setPageRaw(Math.max(1, Math.min(n, totalPages)));
+  const nextPage = () => goToPage(page + 1);
+  const prevPage = () => goToPage(page - 1);
+
+  return { interactions, total, totalPages, page, loading, error, nextPage, prevPage };
 }
 
 /* ─── Users ───────────────────────────────────────────────────── */

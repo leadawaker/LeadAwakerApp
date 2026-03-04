@@ -37,6 +37,11 @@ export default defineConfig({
     open: false,
     cors: true,
     allowedHosts: true,
+    hmr: {
+      host: "app.leadawaker.com",
+      protocol: "wss",
+      clientPort: 443,
+    },
     proxy: {
       "/api": {
         target: "http://localhost:5001",

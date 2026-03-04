@@ -34,9 +34,10 @@ export const MODEL_OPTIONS = [
   "gpt-4o-mini",
   "gpt-4-turbo",
   "gpt-3.5-turbo",
+  "chatgpt-5o",
+  "chatgpt-5-mini",
   "chatgpt-5.2-instant",
-  "claude-3-5-sonnet-20241022",
-  "claude-3-haiku-20240307",
+  "llama-3.1-8b-instant",
 ];
 
 // Column definitions for table view

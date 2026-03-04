@@ -85,35 +85,17 @@ export default function Login() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
+            className="flex flex-col items-center text-center"
           >
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              {t("title")}
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8 max-w-lg">
-              {t("subtitle")}
+            <p className="text-lg text-muted-foreground mb-6 font-medium tracking-tight">
+              Every lead gets a second chance.
             </p>
-
-            <div className="hidden lg:block space-y-6">
-              <div className="flex gap-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary shrink-0">
-                  <Mail className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold mb-2">{t("features.secureAccess.title")}</h3>
-                  <p className="text-muted-foreground">{t("features.secureAccess.description")}</p>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center text-accent shrink-0">
-                  <Lock className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold mb-2">{t("features.twoFactor.title")}</h3>
-                  <p className="text-muted-foreground">{t("features.twoFactor.description")}</p>
-                </div>
-              </div>
-            </div>
+            <img
+              src="/login-hero.png"
+              alt="Lead reactivation — qualifying leads, closing deals"
+              className="w-full max-w-md"
+              draggable={false}
+            />
           </motion.div>
 
           <motion.div

@@ -37,3 +37,14 @@ export const deleteAccount = async (rowId: number | string) => {
   });
   if (!res.ok) throw new Error("Failed to delete account");
 };
+
+export const syncInstagramContacts = async (accountId: number | string) => {
+  const res = await apiFetch(`/api/accounts/${accountId}/sync-instagram`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.message || body.detail || `Sync failed (${res.status})`);
+  }
+  return await res.json();
+};

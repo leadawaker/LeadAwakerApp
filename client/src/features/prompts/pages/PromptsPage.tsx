@@ -402,12 +402,9 @@ export default function PromptsPage() {
               availableModels={availableModels}
               availableCampaigns={availableCampaigns}
               isFilterActive={isFilterActive}
-              activeFilterCount={activeFilterCount}
               onClearAllFilters={clearAllFilters}
-              togglingIds={togglingIds}
               onSaved={handleSaved}
               onDelete={openDelete}
-              onToggleStatus={handleToggleStatus}
               onOpenCreate={openCreate}
               campaignMap={campaignMap}
               campaigns={campaigns}
@@ -428,6 +425,7 @@ export default function PromptsPage() {
                   tabs={VIEW_TABS}
                   activeId={viewMode}
                   onTabChange={handleViewSwitch}
+                  variant="segment"
                 />
                 <PromptsToolbar
                   searchQuery={q}

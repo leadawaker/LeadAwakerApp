@@ -3,10 +3,14 @@ import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+/* eslint-disable no-undef */
+const __dirnameResolved: string =
+  typeof __dirname !== "undefined"
+    ? __dirname
+    : dirname(fileURLToPath(import.meta.url));
 
 const LOGO_CID = "logo@leadawaker.com";
-const logoPath = join(__dirname, "../client/src/assets/Lead_Awaker_side_logo.png");
+const logoPath = join(__dirnameResolved, "../client/src/assets/Lead_Awaker_side_logo.png");
 const logoBuffer = (() => {
   try { return readFileSync(logoPath); } catch { return null; }
 })();

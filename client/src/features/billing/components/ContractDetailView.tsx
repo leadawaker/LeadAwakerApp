@@ -61,6 +61,7 @@ interface ContractDetailViewProps {
   onNew?: () => void;
   onUpdate?: (id: number, patch: Record<string, any>) => Promise<any>;
   toolbarSlot?: React.ReactNode;
+  noBackground?: boolean;
 }
 
 // ── Empty state ───────────────────────────────────────────────────────────────
@@ -116,8 +117,11 @@ function expiryInfo(endDate: string | null | undefined): { label: string; color:
   return           { label: `Expires in ${diff}d`,                   color: "text-foreground/60" };
 }
 
-// ── Action button base class ──────────────────────────────────────────────────
-const actionBtn = "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-border/60 bg-transparent text-foreground hover:bg-card transition-colors";
+// ── Expand-on-hover toolbar button constants ──────────────────────────────────
+const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
+const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
+const xActive  = "border-brand-indigo text-brand-indigo";
+const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
@@ -130,6 +134,7 @@ export function ContractDetailView({
   onNew,
   onUpdate,
   toolbarSlot,
+  noBackground,
 }: ContractDetailViewProps) {
   const displayStatus = isExpired(contract) ? "Expired" : (contract.status || "Draft");
   const statusColors  = CONTRACT_STATUS_COLORS[displayStatus] || CONTRACT_STATUS_COLORS.Draft;
@@ -417,13 +422,17 @@ export function ContractDetailView({
     <div className="relative flex flex-col h-full overflow-hidden" data-testid="contract-detail-view">
 
       {/* ── Background gradients ── */}
-      <div className="absolute inset-0 bg-[#F8F3EB]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.9)_0%,transparent_60%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,242,134,0.35)_0%,transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(241,218,162,0.2)_0%,transparent_70%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(210,188,130,0.15)_0%,transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(105,170,255,0.18)_0%,transparent_55%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_center,rgba(165,205,255,0.12)_0%,transparent_60%)]" />
+      {!noBackground && (
+        <>
+          <div className="absolute inset-0 bg-popover dark:bg-background" />
+          {/* Layer 1: White bloom — disabled */}
+          {/* Layer 2: Yellow — disabled */}
+          {/* Layer 3: Peach — disabled */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_124%_162%_at_20%_92%,rgba(219,153,244,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_2%_2%,#C7E0FF_5%,transparent_30%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_102%_at_62%_47%,rgba(209,187,233,0.38)_0%,transparent_66%)] dark:opacity-[0.08]" />
+        </>
+      )}
 
       {/* ── Header ── */}
       <div className="relative z-10 shrink-0 px-[3px] pt-[3px] pb-[3px] space-y-[3px]">
@@ -436,33 +445,33 @@ export function ContractDetailView({
 
               {/* New + PDF + Copy Link */}
               {onNew && (
-                <button onClick={onNew} className={actionBtn}>
-                  <Plus className="h-3 w-3" />
-                  New
+                <button onClick={onNew} className={cn(xBase, xDefault, "hover:max-w-[80px]")}>
+                  <Plus className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>New</span>
                 </button>
               )}
 
               {contract.file_data && (
-                <button onClick={handleDownloadPdf} className={actionBtn}>
-                  <Download className="h-3 w-3" />
-                  PDF
+                <button onClick={handleDownloadPdf} className={cn(xBase, xDefault, "hover:max-w-[80px]")}>
+                  <Download className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>PDF</span>
                 </button>
               )}
 
-              <button onClick={handleCopyLink} className={actionBtn}>
+              <button onClick={handleCopyLink} className={cn(xBase, linkCopied ? xActive : xDefault, "hover:max-w-[110px]")}>
                 {linkCopied
-                  ? <Check className="h-3 w-3 text-emerald-500" />
-                  : <Link  className="h-3 w-3" />}
-                {linkCopied ? "Copied!" : "Copy Link"}
+                  ? <Check className="h-4 w-4 shrink-0 text-emerald-500" />
+                  : <Link  className="h-4 w-4 shrink-0" />}
+                <span className={xSpan}>{linkCopied ? "Copied!" : "Copy Link"}</span>
               </button>
 
               {/* Edit + Send (Draft only) */}
               {contract.status === "Draft" && (
                 <>
                   {canEdit && !isEditing && (
-                    <button onClick={handleStartEdit} className={actionBtn}>
-                      <Pencil className="h-3 w-3" />
-                      Edit
+                    <button onClick={handleStartEdit} className={cn(xBase, xDefault, "hover:max-w-[80px]")}>
+                      <Pencil className="h-4 w-4 shrink-0" />
+                      <span className={xSpan}>Edit</span>
                     </button>
                   )}
 
@@ -470,10 +479,10 @@ export function ContractDetailView({
                   <button
                     onClick={handleSend}
                     disabled={sending}
-                    className={cn(actionBtn, "disabled:opacity-50")}
+                    className={cn(xBase, xDefault, "hover:max-w-[110px] disabled:opacity-50")}
                   >
-                    <Link className="h-3 w-3" />
-                    {sending ? "Sending..." : "Mark Sent"}
+                    <Link className="h-4 w-4 shrink-0" />
+                    <span className={xSpan}>{sending ? "Sending..." : "Mark Sent"}</span>
                   </button>
 
                   {/* Sign via SignWell */}
@@ -481,13 +490,13 @@ export function ContractDetailView({
                     <button
                       onClick={() => setSwDialogOpen(v => !v)}
                       className={cn(
-                        actionBtn,
-                        "bg-brand-indigo/10 border-brand-indigo/30 text-brand-indigo hover:bg-brand-indigo/20",
-                        swDialogOpen && "bg-brand-indigo/20"
+                        xBase,
+                        swDialogOpen ? xActive : "border-brand-indigo/30 text-brand-indigo hover:text-brand-indigo",
+                        "hover:max-w-[160px]"
                       )}
                     >
-                      <Send className="h-3 w-3" />
-                      Sign via SignWell
+                      <Send className="h-4 w-4 shrink-0" />
+                      <span className={xSpan}>Sign via SignWell</span>
                     </button>
                   )}
                 </>
@@ -498,10 +507,10 @@ export function ContractDetailView({
                 <button
                   onClick={handleMarkSigned}
                   disabled={markingSigned}
-                  className={cn(actionBtn, "disabled:opacity-50")}
+                  className={cn(xBase, xDefault, "hover:max-w-[120px] disabled:opacity-50")}
                 >
-                  <FileSignature className="h-3 w-3" />
-                  {markingSigned ? "Updating..." : "Mark Signed"}
+                  <FileSignature className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>{markingSigned ? "Updating..." : "Mark Signed"}</span>
                 </button>
               )}
 
@@ -509,14 +518,15 @@ export function ContractDetailView({
               <button
                 onClick={handleDelete}
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border transition-colors",
+                  xBase,
+                  "hover:max-w-[100px]",
                   deleteConfirm
-                    ? "border-red-400/60 text-red-600 bg-red-50/50 hover:bg-red-50/70"
-                    : "border-border/60 bg-transparent text-foreground hover:bg-card"
+                    ? "border-red-400/60 text-red-600"
+                    : xDefault
                 )}
               >
-                <Trash2 className="h-3 w-3" />
-                {deleteConfirm ? "Confirm?" : "Delete"}
+                <Trash2 className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>{deleteConfirm ? "Confirm?" : "Delete"}</span>
               </button>
             </div>
           )}
@@ -591,7 +601,7 @@ export function ContractDetailView({
                   Document created. Share this signing link:
                 </p>
                 <div className="flex gap-2">
-                  <div className="flex-1 px-3 py-2 rounded-lg bg-white border border-border/50 font-mono text-[10px] text-foreground/70 truncate">
+                  <div className="flex-1 px-3 py-2 rounded-lg bg-white dark:bg-card border border-border/50 font-mono text-[10px] text-foreground/70 truncate">
                     {swSigningUrl}
                   </div>
                   <button
@@ -637,11 +647,11 @@ export function ContractDetailView({
       </div>
 
       {/* ── Two-column content area ── */}
-      <div className="relative z-10 flex-1 min-h-0 px-[3px] pb-[3px] overflow-hidden">
-        <div className="grid grid-cols-[1.6fr_1fr] gap-[3px] h-full">
+      <div className="relative z-10 flex-1 min-h-0 px-[3px] pb-[3px] overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-[3px]">
 
           {/* ── LEFT column: full-height contract widget ── */}
-          <div className="bg-white/60 rounded-xl flex flex-col min-h-0 overflow-hidden">
+          <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl flex flex-col min-h-[280px] md:min-h-0 overflow-hidden">
 
             {/* Contract widget header */}
             <div className="flex items-center justify-between px-4 pt-3.5 pb-3 border-b border-border/20 shrink-0">
@@ -784,10 +794,10 @@ export function ContractDetailView({
           </div>
 
           {/* ── RIGHT column: stacked info widgets ── */}
-          <div className="flex flex-col gap-[3px] overflow-y-auto min-h-0">
+          <div className="flex flex-col gap-[3px]">
 
             {/* Status widget (consolidated with tracking) */}
-            <div className="bg-white/60 rounded-xl p-4 shrink-0">
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 shrink-0">
               <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
                 Status
               </span>
@@ -826,16 +836,16 @@ export function ContractDetailView({
                 <button
                   onClick={handleMarkSigned}
                   disabled={markingSigned}
-                  className={cn(actionBtn, "mt-3 disabled:opacity-50")}
+                  className={cn(xBase, xDefault, "mt-3 hover:max-w-[120px] disabled:opacity-50")}
                 >
-                  <FileSignature className="h-3 w-3" />
-                  {markingSigned ? "Updating..." : "Mark Signed"}
+                  <FileSignature className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>{markingSigned ? "Updating..." : "Mark Signed"}</span>
                 </button>
               )}
             </div>
 
             {/* Dates widget */}
-            <div className="bg-white/60 rounded-xl p-4 shrink-0">
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 shrink-0">
               <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
                 Dates
               </span>
@@ -874,7 +884,7 @@ export function ContractDetailView({
 
             {/* Deal Structure widget */}
             {hasDealStructure && (
-              <div className="bg-white/60 rounded-xl p-4 shrink-0">
+              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 shrink-0">
                 <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
                   Deal Structure
                 </span>
@@ -954,7 +964,7 @@ export function ContractDetailView({
                 <button
                   type="button"
                   onClick={() => setUploadOpen(v => !v)}
-                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/60 border border-border/30 text-[12px] font-medium text-foreground/70 hover:text-foreground hover:bg-white/80 transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/60 dark:bg-white/[0.10] border border-border/30 text-[12px] font-medium text-foreground/70 hover:text-foreground hover:bg-white/80 dark:hover:bg-white/[0.08] transition-colors"
                 >
                   <span className="flex items-center gap-2">
                     <Upload className="h-3.5 w-3.5" />
@@ -965,7 +975,7 @@ export function ContractDetailView({
 
                 {uploadOpen && (
                   <div
-                    className="mt-[3px] border-2 border-dashed border-border/50 rounded-xl p-5 text-center cursor-pointer hover:border-brand-indigo/40 transition-colors bg-white/40"
+                    className="mt-[3px] border-2 border-dashed border-border/50 rounded-xl p-5 text-center cursor-pointer hover:border-brand-indigo/40 transition-colors bg-white/40 dark:bg-white/[0.04]"
                     onClick={() => fileInputRef.current?.click()}
                     onDrop={handleDrop}
                     onDragOver={e => e.preventDefault()}

@@ -1,5 +1,7 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { CrmShell } from "@/components/crm/CrmShell";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLeads, useCampaigns } from "@/hooks/useApiData";
 import { FiltersBar } from "@/components/crm/FiltersBar";
@@ -76,6 +78,10 @@ type Appointment = {
 const CALENDAR_TABS: TabDef[] = [
   { id: "month", label: "Month", icon: Grid3X3 },
   { id: "week",  label: "Week",  icon: Columns3 },
+  { id: "day",   label: "Day",   icon: CalendarDays },
+];
+
+const MOBILE_CALENDAR_TABS: TabDef[] = [
   { id: "day",   label: "Day",   icon: CalendarDays },
 ];
 
@@ -228,7 +234,7 @@ function DroppableTimeSlot({
 // ── Group header for appointment list ─────────────────────────────────────────
 function ApptGroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
+    <div data-group-header="true" className="sticky top-0 z-20 bg-muted px-3 pt-3 pb-3">
       <div className="flex items-center gap-[10px]">
         <div className="flex-1 h-px bg-foreground/15" />
         <span className="text-[12px] font-bold text-foreground tracking-wide shrink-0">{label}</span>
@@ -398,6 +404,26 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Appointment | null>(null);
   const timeGridRef = useRef<HTMLDivElement>(null);
+  const apptListRef = useRef<HTMLDivElement>(null);
+
+  // Smooth scroll to selected appointment card (§29)
+  // useEffect + rAF instead of useLayoutEffect: appointments load async so the
+  // auto-select fires after data arrives; rAF ensures the card is fully painted.
+  useEffect(() => {
+    if (!selectedBooking || !apptListRef.current) return;
+    const container = apptListRef.current;
+    const run = () => {
+      const el = container.querySelector(`[data-appt-id="${selectedBooking.id}"]`) as HTMLElement | null;
+      if (!el) return;
+      const groupWrapper = el.closest("[data-group-wrapper]");
+      const header = groupWrapper?.querySelector("[data-group-header]") as HTMLElement | null;
+      const headerHeight = header ? header.offsetHeight : 0;
+      const cardTop = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
+      container.scrollTo({ top: cardTop - headerHeight - 3, behavior: "smooth" });
+    };
+    const raf = requestAnimationFrame(run);
+    return () => cancelAnimationFrame(raf);
+  }, [selectedBooking]);
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [currentTime, setCurrentTime] = useState(new Date());
   const [apptSortBy, setApptSortBy] = useState<ApptSortBy>("time");
@@ -432,19 +458,24 @@ export default function CalendarPage() {
 
   // Responsive
   const [viewportWidth, setViewportWidth] = useState(() => typeof window !== "undefined" ? window.innerWidth : 1024);
-  const isMobile = viewportWidth < 640;
+  const isMobile = useIsMobile();
   const isTablet = viewportWidth >= 640 && viewportWidth < 1024;
 
   useEffect(() => {
     const handleResize = () => {
       const w = window.innerWidth;
       setViewportWidth(w);
-      if (w < 640) setViewMode("day");
     };
     window.addEventListener("resize", handleResize);
-    if (window.innerWidth < 640) setViewMode("day");
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Default to "day" on mobile if currently on month or week
+  useEffect(() => {
+    if (isMobile && (viewMode === "month" || viewMode === "week")) {
+      setViewMode("day");
+    }
+  }, [isMobile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // DnD state
   const [activeAppt, setActiveAppt] = useState<Appointment | null>(null);
@@ -452,7 +483,7 @@ export default function CalendarPage() {
   const [dragToast, setDragToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(PointerSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
     useSensor(KeyboardSensor),
   );
 
@@ -663,6 +694,13 @@ export default function CalendarPage() {
     if (firstUpcoming) setSelectedBooking(firstUpcoming);
     else setSelectedBooking(sortedAppts[0]);
   }, [sortedAppts]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Breadcrumb ─────────────────────────────────────────────────────────────
+  const { setCrumb } = useBreadcrumb();
+  useEffect(() => {
+    setCrumb(selectedBooking?.lead_name ?? null);
+    return () => setCrumb(null);
+  }, [selectedBooking, setCrumb]);
 
   const bookFilteredLeads = useMemo(() => {
     if (!bookLeadSearch.trim()) return [];
@@ -918,21 +956,68 @@ export default function CalendarPage() {
   if (leadsLoading) {
     return (
       <CrmShell>
-        <div className="space-y-4 py-4" data-testid="page-calendar">
-          <div className="flex items-center justify-between px-2">
-            <Skeleton className="h-8 w-40 rounded-lg" />
-            <div className="flex gap-2">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <Skeleton className="h-10 w-10 rounded-full" />
+        <div className="flex-1 min-h-0 grid grid-cols-[340px_1fr] gap-[3px] p-0" data-testid="page-calendar">
+          {/* Left panel */}
+          <div className="bg-muted rounded-lg flex flex-col overflow-hidden">
+            {/* Header */}
+            <div className="px-3.5 pt-5 pb-1 flex items-center justify-between shrink-0">
+              <Skeleton className="h-5 w-24 rounded bg-primary/10" />
+              <Skeleton className="h-4 w-8 rounded bg-primary/10" />
+            </div>
+            {/* ViewTabBar skeleton */}
+            <div className="px-3 pt-1.5 pb-3 flex items-center gap-1.5 shrink-0">
+              {[70, 70, 60].map((w, i) => (
+                <Skeleton key={i} className="h-9 rounded-full bg-primary/10" style={{ width: w }} />
+              ))}
+            </div>
+            {/* Appointment list */}
+            <div className="flex-1 min-h-0 overflow-hidden px-[3px] flex flex-col gap-[3px]">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 bg-card rounded-lg px-3 py-2.5">
+                  <Skeleton className="h-9 w-9 rounded-full bg-primary/10 shrink-0" />
+                  <div className="flex-1 flex flex-col gap-1.5">
+                    <Skeleton className="h-3 w-3/4 rounded bg-primary/10" />
+                    <Skeleton className="h-3 w-1/2 rounded bg-primary/10" />
+                  </div>
+                  <Skeleton className="h-3 w-10 rounded bg-primary/10 shrink-0" />
+                </div>
+              ))}
             </div>
           </div>
-          <div className="grid grid-cols-7 gap-px rounded-2xl overflow-hidden">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <Skeleton key={`h-${i}`} className="h-8 rounded-none" />
-            ))}
-            {Array.from({ length: 35 }).map((_, i) => (
-              <Skeleton key={i} className="h-20 rounded-none bg-card" />
-            ))}
+          {/* Center panel */}
+          <div className="bg-card rounded-lg flex flex-col overflow-hidden">
+            {/* Toolbar */}
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-black/[0.06] shrink-0">
+              <Skeleton className="h-9 w-9 rounded-full bg-primary/10" />
+              <Skeleton className="h-5 w-40 rounded bg-primary/10" />
+              <Skeleton className="h-9 w-9 rounded-full bg-primary/10" />
+              <div className="ml-auto">
+                <Skeleton className="h-9 w-20 rounded-full bg-primary/10" />
+              </div>
+            </div>
+            {/* Week header row */}
+            <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-black/[0.06] shrink-0">
+              <div className="h-12" />
+              {Array.from({ length: 7 }).map((_, i) => (
+                <div key={i} className="flex flex-col items-center justify-center gap-1 h-12 border-l border-black/[0.04]">
+                  <Skeleton className="h-3 w-8 rounded bg-primary/10" />
+                  <Skeleton className="h-7 w-7 rounded-full bg-primary/10" />
+                </div>
+              ))}
+            </div>
+            {/* Time rows */}
+            <div className="flex-1 min-h-0 overflow-hidden">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-black/[0.04]" style={{ height: '52px' }}>
+                  <div className="flex items-start justify-end pr-2 pt-1">
+                    <Skeleton className="h-3 w-10 rounded bg-primary/10" />
+                  </div>
+                  {Array.from({ length: 7 }).map((_, j) => (
+                    <div key={j} className="border-l border-black/[0.04]" />
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </CrmShell>
@@ -959,7 +1044,9 @@ export default function CalendarPage() {
 
           <div className={cn(
             "flex-1 min-h-0 gap-[3px]",
-            isMobile || isTablet
+            isMobile
+              ? "flex flex-col h-full overflow-hidden"
+              : isTablet
               ? "flex flex-col overflow-y-auto"
               : (selectedBooking || selectedLead)
                 ? "grid grid-cols-[340px_1fr_340px]"
@@ -971,11 +1058,14 @@ export default function CalendarPage() {
                ══════════════════════════════════════════════════════════════════ */}
             <div className={cn(
               "bg-card overflow-hidden flex flex-col rounded-lg lg:order-2",
-              isMobile || isTablet ? "min-h-[420px]" : "h-full"
+              isMobile && viewMode !== "day" ? "hidden" : "",
+              isMobile && viewMode === "day" ? "flex-1" : "",
+              !isMobile && isTablet ? "min-h-[420px]" : "",
+              !isMobile && !isTablet ? "h-full" : ""
             )} data-testid="calendar-main">
 
               {/* ── Toolbar ── */}
-              <div className="px-3.5 pt-5 pb-2.5 flex flex-wrap items-center gap-2 shrink-0">
+              <div className="px-4 pt-4 pb-3 flex flex-wrap items-center gap-2 shrink-0 bg-white dark:bg-card border-b border-black/[0.06]">
                 {/* Date navigation */}
                 <div className="flex items-center gap-1.5">
                   <button
@@ -986,7 +1076,7 @@ export default function CalendarPage() {
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <div className="text-2xl font-semibold font-heading text-foreground text-center leading-tight" data-testid="text-view-label">
+                  <div className="text-lg md:text-2xl font-semibold font-heading text-foreground text-center leading-tight" data-testid="text-view-label">
                     {viewLabel}
                   </div>
                   <button
@@ -1503,6 +1593,7 @@ export default function CalendarPage() {
                     recentMessages={recentMessages}
                     recentMessagesLoading={recentMessagesLoading}
                     onViewConversation={() => goTo(`/conversations?leadId=${panelLeadId}`)}
+                    onNavigateToLead={(_leadId) => goTo(isAgencyUser ? `/agency/contacts` : `/subaccount/contacts`)}
                   />
                 </div>
               );
@@ -1513,19 +1604,23 @@ export default function CalendarPage() {
                ══════════════════════════════════════════════════════════════════ */}
             <div className={cn(
               "bg-muted flex flex-col overflow-hidden rounded-lg lg:order-1",
-              isMobile || isTablet ? "min-h-[200px] max-h-[300px]" : "h-full"
+              isMobile && viewMode === "day" ? "hidden" : "",
+              isMobile && viewMode !== "day" ? "flex-1" : "",
+              !isMobile && isTablet ? "min-h-[200px] max-h-[300px]" : "",
+              !isMobile && !isTablet ? "h-full" : ""
             )} data-testid="calendar-list">
 
               {/* ── Panel header ── */}
-              <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center">
-                <div className="flex items-center justify-between w-[309px] shrink-0">
+              <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-3 shrink-0 flex items-center">
+                <div className="flex items-center justify-between w-full md:w-[309px] shrink-0">
                   <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight" data-testid="text-list-title">
-                    My Calendar
+                    Calendar
                   </h2>
                   <ViewTabBar
-                    tabs={CALENDAR_TABS}
+                    tabs={isMobile ? MOBILE_CALENDAR_TABS : CALENDAR_TABS}
                     activeId={viewMode}
                     onTabChange={(id) => setViewMode(id as ViewMode)}
+                    variant="segment"
                   />
                 </div>
               </div>
@@ -1563,7 +1658,7 @@ export default function CalendarPage() {
               )}
 
               {/* ── Appointment list ── */}
-              <div className="flex-1 overflow-y-auto p-[3px]">
+              <div ref={apptListRef} className="flex-1 overflow-y-auto p-[3px]">
                 {totalApptCount === 0 ? (
                   <div data-testid="empty-appts">
                     <DataEmptyState variant="calendar" compact />
@@ -1571,12 +1666,12 @@ export default function CalendarPage() {
                 ) : (
                   <div className="flex flex-col gap-[3px]">
                     {groupedAppts.map((group, gi) => (
-                      <div key={gi} className="flex flex-col gap-[3px]">
+                      <div key={gi} data-group-wrapper className="flex flex-col gap-[3px]">
                         {group.label && (
                           <ApptGroupHeader label={group.label} count={group.items.length} />
                         )}
                         {group.items.map((a, ai) => (
-                          <div key={a.id} className="animate-card-enter" style={{ animationDelay: `${Math.min(ai, 15) * 30}ms` }}>
+                          <div key={a.id} data-appt-id={a.id} className="animate-card-enter" style={{ animationDelay: `${Math.min(ai, 15) * 30}ms` }}>
                             <AppointmentCard
                               appt={a}
                               isActive={selectedBooking?.id === a.id}

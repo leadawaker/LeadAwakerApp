@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   X, Phone, Mail, Tag, TrendingUp, Calendar, User, ClipboardList, FileText,
-  Plus, Loader2, Check, ChevronDown, PanelRightClose, ExternalLink, MessageSquare,
+  Plus, Loader2, Check, ChevronDown, ChevronRight, ExternalLink, MessageSquare, Maximize2,
+  CircleDot, Send, Users, Star, Ban, AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
@@ -31,6 +32,20 @@ interface LeadTagRow {
   tagsId?: number;
   [key: string]: any;
 }
+
+// ── Conversion status helpers ─────────────────────────────────────────────────
+const STAGE_ICON: Record<string, React.ElementType> = {
+  New:                  CircleDot,
+  Contacted:            Send,
+  Responded:            MessageSquare,
+  "Multiple Responses": Users,
+  Qualified:            Star,
+  Booked:               Calendar,
+  Closed:               Check,
+  Lost:                 AlertTriangle,
+  DND:                  Ban,
+};
+
 
 function tagColorClass(color: string): string {
   const map: Record<string, string> = {
@@ -134,12 +149,14 @@ function ScoreArc({ score, status }: { score: number; status?: string }) {
 function useLeadTags(leadId: number | null) {
   const [tags, setTags] = useState<TagData[]>([]);
   const [allTags, setAllTags] = useState<TagData[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!leadId) { setTags([]); setAllTags([]); return; }
-    let cancelled = false;
+    if (!leadId) { setTags([]); setAllTags([]); setLoading(false); return; }
+    setTags([]);
+    setAllTags([]);
     setLoading(true);
+    let cancelled = false;
     const fetchTags = async () => {
       try {
         const [junctionRes, allTagsRes] = await Promise.all([
@@ -174,7 +191,7 @@ function useLeadTags(leadId: number | null) {
 }
 
 // ── Collapsible section IDs ──────────────────────────────────────────────────
-type SectionId = "contact" | "score" | "tags" | "activity" | "notes" | "messages";
+type SectionId = "contact" | "score" | "status" | "tags" | "activity" | "notes" | "messages";
 
 function SectionHeader({
   id,
@@ -192,9 +209,12 @@ function SectionHeader({
   trailing?: React.ReactNode;
 }) {
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => onToggle(id)}
-      className="w-full flex items-center justify-between gap-2 px-4 py-2.5 hover:bg-white/30 transition-colors group"
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggle(id); } }}
+      className="w-full flex items-center justify-between gap-2 px-4 py-2.5 hover:bg-white/30 dark:hover:bg-white/[0.04] transition-colors group cursor-pointer"
       data-testid={`section-toggle-${id}`}
     >
       <div className="flex items-center gap-2">
@@ -210,7 +230,7 @@ function SectionHeader({
           )}
         />
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -219,6 +239,7 @@ interface ContactSidebarProps {
   loading?: boolean;
   onClose?: () => void;
   onUpdateLead?: (leadId: number, patch: Record<string, unknown>) => Promise<void>;
+  onNavigateToLead?: (leadId: number) => void;
   className?: string;
   /** Optional: recent messages to display in a chat widget (used on Calendar page) */
   recentMessages?: Interaction[];
@@ -229,7 +250,7 @@ interface ContactSidebarProps {
   headerActions?: React.ReactNode;
 }
 
-export function ContactSidebar({ selected, loading = false, onClose, onUpdateLead, className, recentMessages, recentMessagesLoading, onViewConversation, headerActions }: ContactSidebarProps) {
+export function ContactSidebar({ selected, loading = false, onClose, onUpdateLead, onNavigateToLead, className, recentMessages, recentMessagesLoading, onViewConversation, headerActions }: ContactSidebarProps) {
   const [collapsedSections, setCollapsedSections] = useState<Set<SectionId>>(new Set());
   const toggleSection = (id: SectionId) => {
     setCollapsedSections((prev) => {
@@ -322,46 +343,35 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
       {/* ── Content ── */}
       <div className="relative flex flex-col h-full overflow-hidden">
 
-      {/* ── Header: avatar + name + X — matching KanbanDetailPanel ── */}
-      <div className="shrink-0 px-4 pt-4 pb-3 border-b border-border/20">
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2.5">
-            {lead && (
-              <div
-                className="h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0"
-                style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
-              >
-                {initialsFor(lead)}
-              </div>
-            )}
-            <div className="min-w-0">
-              <p className="text-[16px] font-semibold font-heading text-foreground leading-tight truncate max-w-[180px]">
-                {lead
-                  ? lead.full_name || `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() || "Unknown"
-                  : "Lead Context"}
-              </p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                {lead ? (status || "\u2014") : "Score & details"}
-              </p>
-            </div>
-          </div>
+      {/* ── Header ── */}
+      <div className="shrink-0">
+        <div className="px-4 pt-5.5 pb-4 flex items-center gap-1.5">
+          {/* Fold button — expand-on-hover */}
           {onClose && (
             <button
               onClick={onClose}
-              className="h-10 w-10 rounded-full border border-black/[0.125] flex items-center justify-center text-muted-foreground hover:text-foreground shrink-0"
-              title="Collapse panel"
+              className="group inline-flex items-center h-9 pl-[9px] rounded-full border border-black/[0.125] text-foreground/60 hover:text-foreground text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[80px]"
               data-testid="btn-close-contact-panel"
             >
-              <PanelRightClose className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4 shrink-0" />
+              <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">Fold</span>
+            </button>
+          )}
+
+          {/* Extra actions */}
+          {headerActions}
+
+          {/* Details button — expand-on-hover, pushed to right */}
+          {onNavigateToLead && lead && (
+            <button
+              onClick={() => onNavigateToLead(lead.id)}
+              className="group inline-flex items-center h-9 pl-[9px] rounded-full border border-black/[0.125] text-foreground/60 hover:text-foreground text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[100px] ml-auto"
+            >
+              <Maximize2 className="h-4 w-4 shrink-0" />
+              <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">Details</span>
             </button>
           )}
         </div>
-
-        {headerActions && (
-          <div className="flex items-center gap-1.5 mt-2.5">
-            {headerActions}
-          </div>
-        )}
       </div>
 
       {/* ── Stacked collapsible widgets ── */}
@@ -380,7 +390,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             <SectionHeader id="contact" label="Contact" icon={User} collapsed={collapsedSections.has("contact")} onToggle={toggleSection} />
             {!collapsedSections.has("contact") && (
               <div className="px-4 pb-5">
-                <div className="bg-white/60 rounded-xl p-3.5 flex flex-col gap-2.5">
+                <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5 flex flex-col gap-2.5">
                   {[
                     selected.lead.phone && { icon: <Phone className="h-4 w-4" />, label: "Phone", value: selected.lead.phone, mono: true },
                     (selected.lead.Email ?? selected.lead.email) && { icon: <Mail className="h-4 w-4" />, label: "Email", value: selected.lead.Email ?? selected.lead.email },
@@ -422,8 +432,34 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             />
             {!collapsedSections.has("score") && (
               <div className="px-4 pb-4">
-                <div className="bg-white/60 rounded-xl p-3.5 flex flex-col items-center" data-testid="lead-score">
+                <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5 flex flex-col items-center" data-testid="lead-score">
                   <ScoreArc score={score} status={status} />
+                </div>
+              </div>
+            )}
+
+            {/* ── Conversion Status ── */}
+            <div className="border-t border-border/20" />
+            <SectionHeader
+              id="status"
+              label="Conversion Status"
+              icon={ClipboardList}
+              collapsed={collapsedSections.has("status")}
+              onToggle={toggleSection}
+            />
+            {!collapsedSections.has("status") && (
+              <div className="px-4 pb-4">
+                <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5 flex items-center gap-3">
+                  {(() => {
+                    const Icon = STAGE_ICON[status] ?? CircleDot;
+                    const hex = PIPELINE_HEX[status];
+                    return (
+                      <>
+                        <Icon className="h-5 w-5 shrink-0" style={hex ? { color: hex } : { color: "#6B7280" }} />
+                        <span className="text-[13px] font-semibold text-foreground">{status || "—"}</span>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             )}
@@ -450,7 +486,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                       </button>
                     </PopoverTrigger>
                     <PopoverContent
-                      className="w-52 p-2 bg-white/95 backdrop-blur-sm"
+                      className="w-52 p-2 bg-white/95 dark:bg-popover backdrop-blur-sm"
                       align="end"
                       sideOffset={4}
                     >
@@ -489,40 +525,42 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             />
             {!collapsedSections.has("tags") && (
             <div className="px-4 pb-4" data-testid="contact-tags">
-              {tagsLoading ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-6 w-16 rounded-full bg-muted animate-pulse" />
-                  ))}
-                </div>
-              ) : leadTags.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {leadTags.map((t) => (
-                    <span
-                      key={t.id}
-                      className={cn(
-                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold group",
-                        tagColorClass(t.color),
-                      )}
-                      title={t.category ? `${t.category}: ${t.name}` : t.name}
-                    >
-                      {t.name}
-                      {lead && (
-                        <button
-                          onClick={() => handleRemoveTag(t.id)}
-                          className="ml-0.5 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity"
-                          title={`Remove ${t.name}`}
-                          data-testid={`btn-remove-tag-${t.id}`}
-                        >
-                          <X className="h-2.5 w-2.5" />
-                        </button>
-                      )}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-xs text-muted-foreground/60 italic">No tags assigned.</div>
-              )}
+              <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5">
+                {tagsLoading ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-6 w-16 rounded-full bg-muted animate-pulse" />
+                    ))}
+                  </div>
+                ) : leadTags.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {leadTags.map((t) => (
+                      <span
+                        key={t.id}
+                        className={cn(
+                          "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold group",
+                          tagColorClass(t.color),
+                        )}
+                        title={t.category ? `${t.category}: ${t.name}` : t.name}
+                      >
+                        {t.name}
+                        {lead && (
+                          <button
+                            onClick={() => handleRemoveTag(t.id)}
+                            className="ml-0.5 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity"
+                            title={`Remove ${t.name}`}
+                            data-testid={`btn-remove-tag-${t.id}`}
+                          >
+                            <X className="h-2.5 w-2.5" />
+                          </button>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-xs text-muted-foreground/60 italic">No tags assigned.</div>
+                )}
+              </div>
             </div>
             )}
 
@@ -531,7 +569,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             <SectionHeader id="activity" label="Activity" icon={ClipboardList} collapsed={collapsedSections.has("activity")} onToggle={toggleSection} />
             {!collapsedSections.has("activity") && (
               <div className="px-4 pb-5">
-                <div className="bg-white/60 rounded-xl p-3.5 flex flex-col gap-2">
+                <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5 flex flex-col gap-2">
                   {[
                     { label: "Messages sent",      value: String(selected.lead.message_count_sent ?? selected.lead.messageCountSent ?? "\u2014") },
                     { label: "Messages received",  value: String(selected.lead.message_count_received ?? selected.lead.messageCountReceived ?? "\u2014") },
@@ -564,7 +602,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             />
             {!collapsedSections.has("notes") && (
               <div className="px-4 pb-5">
-                <div className="bg-white/60 rounded-xl p-3.5">
+                <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5">
                   {onUpdateLead ? (
                     <textarea
                       className="w-full text-[12px] text-foreground/80 leading-relaxed bg-transparent resize-none focus:outline-none min-h-[80px] placeholder:text-muted-foreground/40"
@@ -594,7 +632,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                 <SectionHeader id="messages" label="Recent Messages" icon={MessageSquare} collapsed={collapsedSections.has("messages")} onToggle={toggleSection} />
                 {!collapsedSections.has("messages") && (
                   <div className="px-4 pb-5">
-                    <div className="bg-white/60 rounded-xl overflow-hidden">
+                    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl overflow-hidden">
                       <div className="h-[300px] overflow-y-auto p-3 space-y-2">
                         {recentMessagesLoading ? (
                           <div className="space-y-2">
@@ -615,7 +653,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                                   "max-w-[85%] rounded-2xl px-3 py-2 text-[11px] leading-relaxed",
                                   outbound
                                     ? "bg-brand-indigo text-white"
-                                    : "bg-white text-foreground border border-border/30"
+                                    : "bg-white dark:bg-card text-foreground border border-border/30"
                                 )}>
                                   <div className="whitespace-pre-wrap">{content}</div>
                                   {ts && (

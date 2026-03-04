@@ -25,6 +25,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [location, setLocation] = useLocation();
   const { t, i18n } = useTranslation("common");
+  const isLoggedIn = Boolean(localStorage.getItem("leadawaker_auth"));
 
   /**
    * Detect language from URL
@@ -165,17 +166,31 @@ export function Navbar() {
               );
             })}
 
-            <Link href={withLang("/login")} className={`text-[15px] font-bold transition-colors hover:text-primary ${
-              location === withLang("/login") ? "text-primary" : "text-muted-foreground"
-            }`}>
-              {t("nav.login")}
-            </Link>
-
-            <Link href={withLang("/book-demo")}>
-              <Button className="font-heading font-bold bg-primary hover:bg-yellow-400 hover:text-black text-white shadow-lg shadow-primary/20 transition-all text-[15px]">
-                {t("nav.bookDemo")}
-              </Button>
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link href={withLang("/book-demo")} className="text-[15px] font-bold transition-colors hover:text-primary text-muted-foreground">
+                  {t("nav.bookDemo")}
+                </Link>
+                <Link href="/agency/campaigns">
+                  <Button className="font-heading font-bold bg-primary hover:bg-yellow-400 hover:text-black text-white shadow-lg shadow-primary/20 transition-all text-[15px]">
+                    {t("nav.openApp")}
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href={withLang("/login")} className={`text-[15px] font-bold transition-colors hover:text-primary ${
+                  location === withLang("/login") ? "text-primary" : "text-muted-foreground"
+                }`}>
+                  {t("nav.login")}
+                </Link>
+                <Link href={withLang("/book-demo")}>
+                  <Button className="font-heading font-bold bg-primary hover:bg-yellow-400 hover:text-black text-white shadow-lg shadow-primary/20 transition-all text-[15px]">
+                    {t("nav.bookDemo")}
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Toggle */}
@@ -227,7 +242,10 @@ export function Navbar() {
             </DropdownMenu>
           </div>
 
-          {[...navLinks, { href: "/login", label: t("nav.login") }, { href: "/book-demo", label: t("nav.bookDemo") }].map((link) => (
+          {[...navLinks, ...(isLoggedIn
+              ? [{ href: "/book-demo", label: t("nav.bookDemo") }, { href: "/agency/campaigns", label: t("nav.openApp") }]
+              : [{ href: "/login", label: t("nav.login") }, { href: "/book-demo", label: t("nav.bookDemo") }]
+            )].map((link) => (
             <Link
               key={link.href}
               href={withLang(link.href)}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Sheet,
   SheetContent,
@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { apiFetch } from "@/lib/apiUtils";
+import { renderRichText } from "@/lib/richTextUtils";
 import { cn } from "@/lib/utils";
 import {
   Phone,
@@ -37,6 +38,7 @@ import {
   X,
   Plus,
   Save,
+  Send,
   Smile,
   Meh,
   Frown,
@@ -47,8 +49,11 @@ import {
   RefreshCw,
   Pencil,
   Ban,
+  Mic,
+  Square,
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -491,6 +496,16 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   const [notesSaved, setNotesSaved] = useState(false);
   const notesOriginalRef = useRef<string>("");
 
+  // ── Voice recording state ──
+  const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordingChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [transcribing, setTranscribing] = useState(false);
+
+  const { toast } = useToast();
+
   // ── Manual takeover toggle state ──
   const [localManualTakeover, setLocalManualTakeover] = useState<boolean>(false);
   const [savingManualTakeover, setSavingManualTakeover] = useState(false);
@@ -519,6 +534,14 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
     setNotesDirty(false);
     setNotesSaved(false);
   }, [lead?.Id, lead?.id, lead?.notes]);
+
+  // Cleanup voice recording on unmount
+  useEffect(() => {
+    return () => {
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+      if (mediaRecorderRef.current) { try { mediaRecorderRef.current.stop(); } catch {} }
+    };
+  }, []);
 
   // Sync manual_takeover when lead changes
   useEffect(() => {
@@ -719,6 +742,91 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
     }
   };
 
+  const startVoiceRecording = useCallback(async () => {
+    if (!leadId) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+          ? "audio/webm;codecs=opus" : "audio/webm",
+      });
+      recordingChunksRef.current = [];
+      mr.ondataavailable = (e) => {
+        if (e.data.size > 0) recordingChunksRef.current.push(e.data);
+      };
+      mr.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(recordingChunksRef.current, { type: mr.mimeType });
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const dataUrl = reader.result as string;
+          setTranscribing(true);
+          try {
+            console.log("[voice] Sending audio:", dataUrl.length, "chars, mime:", mr.mimeType);
+            const httpRes = await apiFetch(`/api/leads/${leadId}/transcribe-voice`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ audio_data: dataUrl, mime_type: mr.mimeType }),
+            });
+            const res = await httpRes.json() as any;
+            if (!httpRes.ok || res.error) {
+              const desc = res.error === "NO_GROQ_API_KEY"
+                ? "Groq API key not configured."
+                : res.detail || res.error || "Could not transcribe audio. Try again.";
+              console.error("[voice] Transcription error:", res);
+              toast({
+                title: "Transcription failed",
+                description: String(desc).slice(0, 200),
+                variant: "destructive",
+              });
+              return;
+            }
+            if (res.transcription) {
+              setLocalNotes((prev) => {
+                const separator = prev.trim() ? "\n\n" : "";
+                const updated = prev + separator + res.transcription;
+                setNotesDirty(updated !== notesOriginalRef.current);
+                setNotesSaved(false);
+                return updated;
+              });
+            }
+          } catch {
+            toast({
+              title: "Transcription failed",
+              description: "Network error. Try again.",
+              variant: "destructive",
+            });
+          } finally {
+            setTranscribing(false);
+          }
+        };
+        reader.readAsDataURL(blob);
+      };
+      mr.start(250);
+      mediaRecorderRef.current = mr;
+      setIsRecordingVoice(true);
+      setRecordingSeconds(0);
+      recordingTimerRef.current = setInterval(() => setRecordingSeconds((s) => s + 1), 1000);
+    } catch {
+      toast({
+        title: "Microphone access denied",
+        description: "Allow microphone access to record voice memos.",
+        variant: "destructive",
+      });
+    }
+  }, [leadId, toast]);
+
+  const stopVoiceRecording = useCallback(() => {
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    mediaRecorderRef.current?.stop();
+    mediaRecorderRef.current = null;
+    setIsRecordingVoice(false);
+    setRecordingSeconds(0);
+  }, []);
+
   const handleManualTakeoverChange = async (checked: boolean) => {
     if (!leadId || savingManualTakeover) return;
     const prev = localManualTakeover;
@@ -832,12 +940,12 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
     <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <SheetContent
         side="right"
-        className="w-[420px] sm:max-w-[420px] p-0 flex flex-col overflow-hidden bg-background text-foreground dark:bg-card dark:border-border"
+        className="w-full sm:w-[420px] sm:max-w-[420px] p-0 flex flex-col overflow-hidden bg-background text-foreground dark:bg-card dark:border-border"
         data-testid="lead-detail-panel"
       >
         {/* Header */}
         <SheetHeader
-          className="px-5 pt-5 pb-4 border-b border-border shrink-0"
+          className="px-4 pt-4 pb-4 border-b border-border shrink-0 md:px-5 md:pt-5"
           data-testid="lead-info-header"
         >
           {/* Row 1: label + status badge */}
@@ -917,7 +1025,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
         </SheetHeader>
 
         {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto px-5 py-4" data-testid="lead-detail-panel-body">
+        <div className="flex-1 overflow-y-auto px-4 py-4 md:px-5" data-testid="lead-detail-panel-body">
 
           {/* Contact Info — with inline editing */}
           <SectionTitle icon={<User className="h-3.5 w-3.5" />} title="Contact" />
@@ -1316,7 +1424,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
             </>
           )}
 
-          {/* Notes — editable */}
+          {/* Notes — editable + voice memo + AI notes */}
           <div data-testid="lead-notes-section">
             <div className="flex items-center justify-between mb-2 mt-4">
               <div className="flex items-center gap-2">
@@ -1324,6 +1432,32 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Notes</h3>
               </div>
               <div className="flex items-center gap-1.5">
+                {/* Voice memo recording button */}
+                {transcribing ? (
+                  <div className="flex items-center gap-1.5 text-[10px] text-brand-indigo">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Transcribing…
+                  </div>
+                ) : isRecordingVoice ? (
+                  <button
+                    onClick={stopVoiceRecording}
+                    className="flex items-center gap-1.5 h-9 px-3 rounded-full bg-red-500/15 text-red-600 text-[12px] font-medium border border-red-300/60 hover:bg-red-500/25 transition-colors"
+                    title="Stop recording"
+                  >
+                    <Square className="h-3 w-3 fill-current" />
+                    {recordingSeconds}s
+                  </button>
+                ) : (
+                  <button
+                    onClick={startVoiceRecording}
+                    disabled={savingNotes || transcribing}
+                    className="inline-flex items-center justify-center h-9 w-9 rounded-full border border-black/[0.125] text-muted-foreground hover:text-foreground hover:border-black/[0.175] transition-colors disabled:opacity-50"
+                    title="Record voice memo (transcribe to text)"
+                  >
+                    <Mic className="h-4 w-4" />
+                  </button>
+                )}
+                {/* Save indicators */}
                 {savingNotes && (
                   <Loader2
                     className="h-3 w-3 animate-spin text-muted-foreground"
@@ -1363,9 +1497,10 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 placeholder="Add notes about this lead…"
                 className="min-h-[80px] resize-none text-[12px] bg-transparent border-0 shadow-none focus-visible:ring-0 p-1 leading-relaxed"
                 data-testid="lead-notes-textarea"
-                disabled={savingNotes}
+                disabled={savingNotes || transcribing}
               />
             </div>
+
           </div>
 
           {/* Tags */}
@@ -1428,7 +1563,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                   {/* Tag selection dropdown */}
                   {showTagDropdown && (
                     <div
-                      className="absolute left-0 top-7 z-50 min-w-[180px] max-h-[200px] overflow-y-auto rounded-xl border border-border bg-popover shadow-lg py-1"
+                      className="absolute left-0 top-7 z-50 min-w-[160px] max-w-[calc(100vw-2rem)] max-h-[200px] overflow-y-auto rounded-xl border border-border bg-popover shadow-lg py-1"
                       data-testid="lead-tag-dropdown"
                     >
                       {unassignedTags.length === 0 ? (
@@ -1469,21 +1604,33 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
             title={interactions.length > 0 ? `Timeline (${interactions.length})` : "Timeline"}
           />
           <div
-            className="rounded-xl border border-border/40 bg-muted/20 overflow-hidden"
             data-testid="lead-detail-panel-interactions"
           >
             {loadingInteractions ? (
-              <div className="flex items-center justify-center py-6 gap-2 text-muted-foreground text-[12px]">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading…
+              <div className="space-y-1">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex items-start gap-2.5 bg-white/90 dark:bg-card/90 rounded-xl px-2 py-1.5">
+                    <div className="h-7 w-7 rounded-lg bg-muted animate-pulse shrink-0" />
+                    <div className="flex-1 min-w-0 space-y-1.5 pt-0.5">
+                      <div className="h-3.5 w-3/5 bg-muted animate-pulse rounded" />
+                      <div className="h-3 w-4/5 bg-muted animate-pulse rounded" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : interactions.length === 0 ? (
-              <div className="py-4 px-3 text-[12px] text-muted-foreground text-center" data-testid="lead-detail-panel-no-interactions">
-                No interactions yet
+              <div className="flex flex-col items-center justify-center text-center py-8 px-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted mb-2">
+                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-sm font-medium text-foreground">No interactions yet</p>
+                <p className="text-xs text-muted-foreground max-w-[240px] mt-1">
+                  Messages will appear here as the lead interacts with your campaigns.
+                </p>
               </div>
             ) : (
               <div
-                className="max-h-[320px] overflow-y-auto divide-y divide-border/20"
+                className="max-h-[320px] overflow-y-auto space-y-1"
                 data-testid="interaction-timeline"
               >
                 {interactions.map((m, idx) => {
@@ -1491,111 +1638,59 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                   const isAI = Boolean(m.ai_generated);
                   const isHuman = Boolean(m.is_manual_follow_up) || (!isAI && outbound);
                   const isBump = Boolean(m.is_bump);
-                  // Resolve content from uppercase or lowercase field
                   const msgContent = m.Content || m.content || "";
                   const who = m.Who || m.who || "";
+
+                  // Icon config matching ActivityFeed style
+                  const iconCfg = isAI
+                    ? { icon: Bot, color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-500/10" }
+                    : isHuman && outbound
+                      ? { icon: User, color: "text-orange-600", bg: "bg-orange-50 dark:bg-orange-500/10" }
+                      : outbound
+                        ? { icon: Send, color: "text-brand-indigo", bg: "bg-brand-indigo/10" }
+                        : { icon: MessageSquare, color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-500/10" };
+                  const IconComp = iconCfg.icon;
 
                   return (
                     <div
                       key={m.id}
-                      className={cn(
-                        "px-3 py-2.5 transition-colors",
-                        outbound
-                          ? isAI
-                            ? "bg-blue-500/[0.03] hover:bg-blue-500/[0.07]"
-                            : "bg-purple-500/[0.03] hover:bg-purple-500/[0.07]"
-                          : "hover:bg-muted/30"
-                      )}
+                      className="flex items-start gap-2.5 bg-white/90 dark:bg-card/90 rounded-xl px-2 py-1.5 transition-colors hover:bg-white dark:hover:bg-card"
                       data-testid={`lead-detail-interaction-${m.id}`}
                       data-index={idx}
                       data-direction={m.direction}
                       data-ai-generated={isAI ? "true" : "false"}
                     >
-                      {/* Row 1: direction badge + sender indicator + timestamp */}
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          {/* Direction label */}
-                          <span
-                            className={cn(
-                              "text-[10px] font-bold uppercase tracking-wide shrink-0",
-                              outbound
-                                ? "text-brand-indigo"
-                                : "text-emerald-600 dark:text-emerald-400"
-                            )}
-                            data-testid={`interaction-direction-${m.id}`}
-                          >
-                            {outbound ? "↑ Sent" : "↓ Received"}
-                          </span>
-
-                          {/* AI indicator badge */}
-                          {isAI && (
-                            <span
-                              className="inline-flex items-center gap-0.5 px-1.5 py-px rounded-full text-[9px] font-semibold bg-blue-500/15 text-blue-600 dark:text-blue-400 shrink-0"
-                              data-testid={`interaction-ai-badge-${m.id}`}
-                              title="AI-generated message"
-                            >
-                              <Bot className="h-2.5 w-2.5" />
-                              AI
-                            </span>
-                          )}
-
-                          {/* Human agent indicator badge */}
-                          {isHuman && !isAI && outbound && (
-                            <span
-                              className="inline-flex items-center gap-0.5 px-1.5 py-px rounded-full text-[9px] font-semibold bg-purple-500/15 text-purple-600 dark:text-purple-400 shrink-0"
-                              data-testid={`interaction-human-badge-${m.id}`}
-                              title="Sent by human agent"
-                            >
-                              <User className="h-2.5 w-2.5" />
-                              Human
-                            </span>
-                          )}
-
-                          {/* Bump indicator */}
-                          {isBump && (
-                            <span
-                              className="inline-flex items-center px-1.5 py-px rounded-full text-[9px] font-semibold bg-amber-400/20 text-amber-600 dark:text-amber-400 shrink-0"
-                              data-testid={`interaction-bump-badge-${m.id}`}
-                              title="Automated bump message"
-                            >
-                              Bump
-                            </span>
-                          )}
-
-                          {/* Type badge (SMS, Email, etc.) */}
-                          {m.type && m.type !== "SMS" && (
-                            <span className="text-[9px] text-muted-foreground/70 shrink-0">
-                              {m.type}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Timestamp */}
-                        <span
-                          className="text-[10px] text-muted-foreground shrink-0 tabular-nums"
-                          data-testid={`interaction-timestamp-${m.id}`}
-                        >
-                          {fmtDateTime(m.created_at)}
-                        </span>
+                      {/* Icon badge */}
+                      <div className={cn("shrink-0 flex items-center justify-center rounded-lg h-7 w-7", iconCfg.bg)}>
+                        <IconComp className={cn("h-4 w-4", iconCfg.color)} />
                       </div>
 
-                      {/* Row 2: message content */}
-                      <p
-                        className={cn(
-                          "text-[12px] leading-snug",
-                          outbound ? "text-foreground" : "text-foreground/80"
-                        )}
-                        data-testid={`interaction-content-${m.id}`}
-                      >
-                        {msgContent || <span className="text-muted-foreground italic">—</span>}
-                      </p>
-
-                      {/* Row 3: sender name (if available) */}
-                      {who && (
-                        <p className="mt-0.5 text-[10px] text-muted-foreground/60">
-                          via {who}
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-[12px] font-medium text-foreground leading-snug truncate">
+                            {outbound ? (isAI ? "AI sent" : isHuman ? "Agent sent" : "Sent") : "Received"}
+                            {isBump && <span className="text-amber-600 dark:text-amber-400 ml-1">· Bump</span>}
+                            {m.type && m.type !== "SMS" && (
+                              <span className="text-muted-foreground/70 ml-1">· {m.type}</span>
+                            )}
+                          </p>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                          {msgContent || <span className="italic">—</span>}
                         </p>
-                      )}
+                        {who && (
+                          <p className="text-[10px] text-muted-foreground/60 mt-0.5">via {who}</p>
+                        )}
+                      </div>
+
+                      {/* Timestamp */}
+                      <span
+                        className="text-[10px] text-muted-foreground tabular-nums shrink-0 mt-0.5"
+                        data-testid={`interaction-timestamp-${m.id}`}
+                      >
+                        {fmtDateTime(m.created_at)}
+                      </span>
                     </div>
                   );
                 })}

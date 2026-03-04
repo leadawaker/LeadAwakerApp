@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   XCircle,
   ChevronRight,
+  ChevronLeft,
   Pencil,
   PauseCircle,
   PlayCircle,
@@ -19,13 +20,13 @@ import {
   Camera,
   Tag,
   Plus,
-  Search,
   ArrowUpDown,
   Filter,
   Layers,
+  ImageIcon,
+  Sparkles,
 } from "lucide-react";
-import { Paintbrush } from "lucide-react";
-import { GradientTester, GradientControlPoints, DEFAULT_LAYERS, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
+// Gradient tester removed — gradient is baked in
 import { CampaignTagsSection } from "./CampaignTagsSection";
 import {
   DropdownMenu,
@@ -35,6 +36,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  AreaChart,
+  Area,
   LineChart,
   Line,
   XAxis,
@@ -47,20 +50,28 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { DonutChart } from "@/components/ui/donut-chart";
+import { motion, AnimatePresence } from "framer-motion";
 import type { Campaign, CampaignMetricsHistory } from "@/types/models";
 import { cn } from "@/lib/utils";
+import { renderRichText } from "@/lib/richTextUtils";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { apiFetch } from "@/lib/apiUtils";
 import { DateRangeFilter, getDefaultDateRange, isWithinDateRange, type DateRangeValue } from "@/components/crm/DateRangeFilter";
 import { useLeads } from "@/hooks/useApiData";
 import { AgendaWidget } from "@/components/crm/AgendaWidget";
 import { ActivityFeed } from "@/components/crm/ActivityFeed";
-import { PIPELINE_HEX, getCampaignAvatarColor, CAMPAIGN_STATUS_HEX } from "@/lib/avatarUtils";
+import { PIPELINE_HEX, getCampaignAvatarColor, CAMPAIGN_STATUS_HEX, getInitials } from "@/lib/avatarUtils";
 import type { CampaignSortBy, CampaignGroupBy } from "../pages/CampaignsPage";
+import { SearchPill } from "@/components/ui/search-pill";
+import { CAMPAIGN_STICKERS } from "@/assets/campaign-stickers/index";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-// ── Toolbar pill styles ──────────────────────────────────────────────────────
-const cdvPill = "h-9 px-3 rounded-full border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors";
-const cdvPillActive = "h-9 px-3 rounded-full border border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors";
+// ── Expand-on-hover toolbar button tokens ────────────────────────────────────
+const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
+const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
+const xActive  = "border-brand-indigo text-brand-indigo";
+const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
 // ── Sort / Group / Filter labels ────────────────────────────────────────────
 const DETAIL_SORT_LABELS: Record<CampaignSortBy, string> = {
@@ -88,6 +99,30 @@ const DETAIL_STATUS_HEX: Record<string, string> = {
 };
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
+
+// ── Count-up animation hook ───────────────────────────────────────────────────
+function useCountUp(target: number, duration = 900, trigger = 0): number {
+  const [value, setValue] = useState(0);
+  const rafRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (target === 0) { setValue(0); return; }
+    const start = performance.now();
+    const from = 0;
+    const animate = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(from + (target - from) * eased));
+      if (progress < 1) rafRef.current = requestAnimationFrame(animate);
+    };
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(animate);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target, duration, trigger]);
+  return value;
+}
 
 function formatHours(h: number | null | undefined): string {
   if (!h && h !== 0) return "—";
@@ -233,7 +268,7 @@ function CopyButton({ value }: { value: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="p-1 rounded hover:bg-white/30 transition-colors text-foreground/40 hover:text-foreground shrink-0"
+      className="p-1 rounded hover:bg-white/30 dark:hover:bg-white/[0.04] transition-colors text-foreground/40 hover:text-foreground shrink-0"
       title="Copy"
     >
       {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
@@ -255,7 +290,7 @@ function EditText({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         rows={3}
-        className="w-full text-[12px] bg-white/60 border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 resize-none outline-none focus:ring-1 focus:ring-brand-indigo/40 placeholder:text-foreground/30"
+        className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 resize-none outline-none focus:ring-1 focus:ring-brand-indigo/40 placeholder:text-foreground/30"
       />
     );
   }
@@ -265,7 +300,7 @@ function EditText({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full text-[12px] bg-white/60 border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40 placeholder:text-foreground/30"
+      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40 placeholder:text-foreground/30"
     />
   );
 }
@@ -281,7 +316,7 @@ function EditNumber({
       value={String(value)}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full text-[12px] bg-white/60 border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40 placeholder:text-foreground/30"
+      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40 placeholder:text-foreground/30"
     />
   );
 }
@@ -296,7 +331,7 @@ function EditDate({
       type="date"
       value={value ? value.slice(0, 10) : ""}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full text-[12px] bg-white/60 border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40"
+      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40"
     />
   );
 }
@@ -310,7 +345,7 @@ function EditSelect({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full text-[12px] bg-white/60 border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40"
+      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40"
     >
       {options.map((o) => <option key={o} value={o}>{o}</option>)}
     </select>
@@ -371,7 +406,7 @@ function ContractSelect({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       disabled={loading}
-      className="w-full text-[12px] bg-white/60 border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40"
+      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40"
     >
       <option value="">— None linked</option>
       {contracts.map((c) => (
@@ -383,7 +418,15 @@ function ContractSelect({
   );
 }
 
-// ── Funnel Widget (6 real pipeline stages) ───────────────────────────────────
+// ── Pipeline + Donut — shared data + hover state ─────────────────────────────
+
+function tintColor(hex: string, amount: number): string {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `rgb(${Math.round(r+(255-r)*amount)},${Math.round(g+(255-g)*amount)},${Math.round(b+(255-b)*amount)})`;
+}
 
 const FUNNEL_STAGES = [
   { key: "new",       label: "New",                dbValue: "New" },
@@ -397,8 +440,21 @@ const FUNNEL_STAGES = [
   { key: "dnd",       label: "DND",                dbValue: "DND" },
 ] as const;
 
-function CampaignFunnelWidget({ campaignId }: { campaignId: number }) {
+function PipelineAndDonutWidget({ campaignId }: { campaignId: number }) {
   const { leads, loading } = useLeads(undefined, campaignId);
+  // hoveredKey: transient (mouse-over only), cleared on mouse-leave
+  // lockedKey:  persists on click, cleared on click-away or re-click
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
+  const [lockedKey,  setLockedKey]  = useState<string | null>(null);
+
+  // Reset selection whenever the campaign changes
+  useEffect(() => {
+    setHoveredKey(null);
+    setLockedKey(null);
+  }, [campaignId]);
+
+  // Effective active key: hover takes priority, then locked, then none
+  const activeKey = hoveredKey ?? lockedKey;
 
   const stages = useMemo(() => {
     return FUNNEL_STAGES.map((s) => ({
@@ -408,65 +464,193 @@ function CampaignFunnelWidget({ campaignId }: { campaignId: number }) {
     }));
   }, [leads]);
 
-  const maxCount = Math.max(...stages.map((s) => s.count), 1);
-  const allZero = stages.every((s) => s.count === 0);
   const total = stages.reduce((s, st) => s + st.count, 0);
+  const maxCount = Math.max(...stages.map((s) => s.count), 1);
+  const hasData = stages.some((s) => s.count > 0);
+
+  // Donut segments — only stages with data
+  const donutData = useMemo(() =>
+    stages.filter((s) => s.count > 0).map((s) => ({
+      key:   s.key,
+      label: s.label,
+      value: s.count,
+      color: s.color,
+    }))
+  , [stages]);
+
+  const activeStage = activeKey ? stages.find((s) => s.key === activeKey) : null;
+  const displayCount = activeStage ? activeStage.count : total;
+  const displayLabel = activeStage ? activeStage.label : "Total Leads";
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-1.5 w-full py-1">
-        {FUNNEL_STAGES.slice(0, 6).map((s) => (
-          <div key={s.key} className="h-7 rounded-r-full bg-foreground/[0.06] animate-pulse w-3/4" />
-        ))}
+      <>
+        <div className="flex justify-center" style={{ marginTop: -8 }}>
+          <div className="w-[170px] h-[170px] rounded-full border-[22px] border-foreground/[0.06] animate-pulse" />
+        </div>
+        <div className="border-t border-border/15" />
+        <div className="flex flex-col flex-1 justify-between w-full py-1">
+          {FUNNEL_STAGES.map((s) => (
+            <div key={s.key} className="flex flex-col gap-0.5">
+              <div className="h-3 w-2/3 rounded bg-foreground/[0.06] animate-pulse" />
+              <div className="h-[4px] w-full rounded-full bg-foreground/[0.06] animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  }
+
+  if (!hasData) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center text-center gap-2 py-6">
+        <p className="text-[11px] text-foreground/40">No pipeline data yet</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col w-full gap-1">
-      {stages.map((stage) => {
-        const widthPct = allZero ? 30 : Math.max((stage.count / maxCount) * 100, 12);
-        const isYellow = stage.key === "booked";
-        const textColor = isYellow ? "#131B49" : "#fff";
-        const pct = total > 0 ? ((stage.count / total) * 100).toFixed(0) : "0";
-
-        return (
-          <div key={stage.key} className="flex items-center gap-2">
-            <div
-              className={cn(
-                "h-7 rounded-r-full flex items-center px-2.5 shrink-0",
-                allZero && "border border-dashed border-foreground/15",
-              )}
-              style={{
-                width: `${widthPct}%`,
-                minWidth: "40px",
-                backgroundColor: allZero ? "transparent" : stage.color,
-                opacity: stage.count === 0 && !allZero ? 0.35 : 1,
-              }}
-            >
-              <span
-                className="text-[11px] font-semibold tabular-nums shrink-0"
-                style={{ color: allZero ? "var(--foreground)" : textColor, opacity: allZero ? 0.35 : 1 }}
+    <>
+      {/* ── Donut chart ── */}
+      <div className="flex justify-center" style={{ marginTop: -8 }}>
+        <DonutChart
+          data={donutData}
+          size={178}
+          strokeWidth={22}
+          animationDuration={1.0}
+          animationDelayPerSegment={0.04}
+          activeKey={activeKey}
+          onSegmentHover={(seg) => setHoveredKey(seg?.key ?? null)}
+          onSegmentClick={(seg) => setLockedKey(prev => prev !== null ? null : (seg.key ?? null))}
+          onBackgroundClick={() => setLockedKey(null)}
+          centerContent={
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={displayLabel}
+                initial={{ opacity: 0, scale: 0.88 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.88 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="flex flex-col items-center justify-center text-center pointer-events-none select-none"
               >
-                {allZero ? "0" : stage.count.toLocaleString()}
-              </span>
+                <span className="text-[10px] font-medium uppercase tracking-widest text-foreground/35 mb-0.5 leading-none max-w-[110px] truncate">
+                  {displayLabel}
+                </span>
+                <span className="text-[26px] font-black tabular-nums leading-none text-foreground">
+                  {displayCount.toLocaleString()}
+                </span>
+                {activeStage && total > 0 && (
+                  <span className="text-[11px] font-medium text-foreground/40 mt-0.5 leading-none">
+                    {((activeStage.count / total) * 100).toFixed(0)}%
+                  </span>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          }
+        />
+      </div>
+
+      {/* ── Funnel bars ── */}
+      <div className="flex flex-col flex-1 justify-between w-full">
+        {stages.map((stage) => {
+          const isActive   = activeKey === stage.key;
+          const isDimmed   = activeKey !== null && !isActive;
+          const hasCount   = stage.count > 0;
+          const widthPct   = hasCount ? Math.max((stage.count / maxCount) * 100, 4) : 0;
+          const pct        = total > 0 && hasCount ? ((stage.count / total) * 100).toFixed(0) : null;
+          const barColor   = isDimmed ? tintColor(stage.color, 0.72) : stage.color;
+
+          return (
+            <div
+              key={stage.key}
+              className="flex flex-col gap-0.5 cursor-pointer"
+              onMouseEnter={() => setHoveredKey(hasCount ? stage.key : null)}
+              onMouseLeave={() => setHoveredKey(null)}
+              onClick={() => { if (hasCount) setLockedKey(prev => prev !== null ? null : stage.key); }}
+            >
+              {/* Label + count */}
+              <div className="flex items-center justify-between gap-1">
+                <span
+                  className="text-[11px] font-medium truncate"
+                  style={{
+                    color: "rgba(0,0,0,0.55)",
+                    transition: "color 150ms ease",
+                  }}
+                >
+                  {stage.label}
+                </span>
+                <div className="flex items-center gap-1 shrink-0">
+                  <span
+                    className="text-[11px] font-semibold tabular-nums"
+                    style={{
+                      color: isDimmed ? "rgba(0,0,0,0.25)" : "rgba(0,0,0,0.75)",
+                      transition: "color 150ms ease",
+                    }}
+                  >
+                    {stage.count.toLocaleString()}
+                  </span>
+                  {pct && (
+                    <span
+                      className="text-[10px] tabular-nums"
+                      style={{
+                        color: isDimmed ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.3)",
+                        transition: "color 150ms ease",
+                      }}
+                    >
+                      {pct}%
+                    </span>
+                  )}
+                </div>
+              </div>
+              {/* Progress bar */}
+              <div
+                className="w-full rounded-full overflow-hidden bg-foreground/[0.03]"
+                style={{
+                  height: isActive ? "6px" : "4px",
+                  transition: "height 150ms ease",
+                }}
+              >
+                {hasCount && (
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${widthPct}%`,
+                      backgroundColor: barColor,
+                      transition: "background-color 150ms ease, width 300ms ease",
+                    }}
+                  />
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 min-w-0 flex-1">
-              <span className="text-[11px] font-medium text-foreground/60 truncate">{stage.label}</span>
-              {!allZero && stage.count > 0 && (
-                <span className="text-[10px] tabular-nums text-foreground/35 shrink-0">{pct}%</span>
-              )}
-            </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+// ── Animated metric card ─────────────────────────────────────────────────────
+function AnimatedMetricCard({ numericValue, displayValue, label, animTrigger }: {
+  numericValue: number;
+  displayValue: string;
+  label: string;
+  animTrigger: number;
+}) {
+  const isPercent = displayValue.endsWith("%");
+  const isDash = displayValue === "—";
+  const animated = useCountUp(isDash ? 0 : numericValue, 900, animTrigger);
+  const display = isDash ? "—" : isPercent ? `${animated}%` : animated.toLocaleString();
+  return (
+    <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] p-4 md:p-8 flex flex-col items-center justify-center text-center">
+      <div className="text-[22px] md:text-[28px] font-black text-foreground tabular-nums leading-none">{display}</div>
+      <div className="text-[10px] text-foreground/40 uppercase tracking-wider mt-1.5">{label}</div>
     </div>
   );
 }
 
-// ── Conversion Pie Chart ──────────────────────────────────────────────────────
+// ── Conversion Pie Chart (standalone — used in non-compact contexts) ──────────
 
-function ConversionDoughnutWidget({ campaignId }: { campaignId: number }) {
+function ConversionDoughnutWidget({ campaignId, compact = false }: { campaignId: number; compact?: boolean }) {
   const { leads, loading } = useLeads(undefined, campaignId);
 
   const data = useMemo(() => {
@@ -482,7 +666,7 @@ function ConversionDoughnutWidget({ campaignId }: { campaignId: number }) {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
+      <div className={cn("flex items-center justify-center", compact ? "h-[100px]" : "flex-1")}>
         <div className="w-5 h-5 rounded-full border-2 border-brand-indigo/30 border-t-brand-indigo animate-spin" />
       </div>
     );
@@ -490,13 +674,16 @@ function ConversionDoughnutWidget({ campaignId }: { campaignId: number }) {
 
   if (total === 0 || !hasData) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-center">
+      <div className={cn("flex flex-col items-center justify-center text-center", compact ? "h-[100px]" : "flex-1")}>
         <p className="text-[11px] text-foreground/40">No conversion data</p>
       </div>
     );
   }
 
   const visibleData = data.filter((d) => d.value > 0);
+
+  // compact prop no longer renders a separate pie — PipelineAndDonutWidget handles that
+  // This path is only reached for non-compact (legacy) usage
 
   return (
     <div className="flex flex-col gap-3 flex-1 min-h-0">
@@ -658,12 +845,12 @@ function FinancialsWidget({
 
       {/* 2-up: Total Spend + Cost / Booking — agency only */}
       {isAgencyUser && (
-        <div className="grid grid-cols-2 gap-4">
-          <div className="rounded-xl bg-white/80 px-3 py-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] px-3 py-3">
             <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Total Spend</div>
             <div className="text-[18px] font-bold tabular-nums text-foreground">{fmtCurrency(totalCost)}</div>
           </div>
-          <div className="rounded-xl bg-white/80 px-3 py-3">
+          <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] px-3 py-3">
             <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Cost / Booking</div>
             <div className="text-[18px] font-bold tabular-nums text-foreground">{fmtCurrencyDecimals(costPerBooking)}</div>
           </div>
@@ -671,14 +858,14 @@ function FinancialsWidget({
       )}
 
       {/* 2-up: Value / Booking + Payment Trigger */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-xl bg-white/80 px-3 py-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] px-3 py-3">
           <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Value / Booking</div>
           <div className="text-[18px] font-bold tabular-nums text-foreground">
             {valuePB > 0 ? fmtCurrency(valuePB) : "—"}
           </div>
         </div>
-        <div className="rounded-xl bg-white/80 px-3 py-3">
+        <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] px-3 py-3">
           <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Payment Trigger</div>
           <div className="text-[13px] font-semibold text-foreground leading-snug">
             {paymentTrigger ? (paymentTriggerLabel[paymentTrigger] ?? paymentTrigger) : "—"}
@@ -688,7 +875,7 @@ function FinancialsWidget({
 
       {/* Projected Revenue — agency only */}
       {isAgencyUser && hasContractOrValue && (
-        <div className="rounded-xl bg-white/80 px-3 py-3">
+        <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] px-3 py-3">
           <div className="flex items-center gap-2 mb-0.5">
             <div className="text-[10px] text-foreground/40 uppercase tracking-wider">Projected Revenue</div>
             {paymentTrigger === "sale_closed" && (
@@ -711,7 +898,7 @@ function FinancialsWidget({
       )}
 
       {/* ROI — large display */}
-      <div className="rounded-xl bg-white/80 px-3 py-3">
+      <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] px-3 py-3">
         <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Return on Investment</div>
         <div className={cn("text-[28px] font-black tabular-nums leading-none", getRoiColor(roiValue))}>
           {roiValue != null ? `${roiValue >= 0 ? "+" : ""}${roiValue.toFixed(0)}%` : "—"}
@@ -722,49 +909,135 @@ function FinancialsWidget({
   );
 }
 
+// ── AI Summary Widget ────────────────────────────────────────────────────────
+
+function AISummaryWidget({ campaign, summary, generatedAt, onRefreshed }: {
+  campaign: Campaign;
+  summary: string | null;
+  generatedAt: string | null;
+  onRefreshed: (summary: string, generatedAt: string) => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const formattedAt = useMemo(() => {
+    if (!generatedAt) return null;
+    try {
+      return new Date(generatedAt).toLocaleString(undefined, {
+        day: "2-digit", month: "short", year: "numeric",
+        hour: "2-digit", minute: "2-digit",
+      });
+    } catch { return null; }
+  }, [generatedAt]);
+
+  const handleGenerate = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const httpRes = await apiFetch(`/api/campaigns/${campaign.id || (campaign as any).Id}/generate-summary`, {
+        method: "POST",
+      });
+      const res = await httpRes.json() as any;
+      if (res.error === "NO_GROQ_API_KEY") {
+        setError("Groq API key not configured. Add GROQ_API_KEY to .env.");
+        return;
+      }
+      if (res.error) {
+        setError("Failed to generate summary. Try again.");
+        return;
+      }
+      onRefreshed(res.summary, res.generated_at);
+    } catch {
+      setError("Network error. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [campaign, onRefreshed]);
+
+  // Paragraph splitting for styled display
+  const paragraphs = useMemo(() => {
+    if (!summary) return [];
+    return summary.split(/\n\n+/).filter(p => p.trim().length > 0);
+  }, [summary]);
+
+  return (
+    <div className="flex-1 flex flex-col gap-4 overflow-y-auto min-h-0">
+      {/* Header row: timestamp + regenerate button */}
+      <div className="flex items-center justify-between gap-2 shrink-0">
+        {formattedAt ? (
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-foreground/35 tabular-nums">Last run: {formattedAt}</span>
+          </div>
+        ) : (
+          <span className="text-[10px] text-foreground/30 italic">No analysis yet</span>
+        )}
+        <button
+          onClick={handleGenerate}
+          disabled={loading}
+          className={cn(
+            "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9",
+            loading
+              ? "border-brand-indigo/30 text-brand-indigo/50 cursor-not-allowed"
+              : "border-brand-indigo/40 text-brand-indigo hover:text-brand-indigo hover:max-w-[140px]"
+          )}
+          title={loading ? "Generating…" : summary ? "Regenerate" : "Generate"}
+        >
+          {loading ? (
+            <div className="w-4 h-4 rounded-full border-2 border-brand-indigo/30 border-t-brand-indigo animate-spin shrink-0" />
+          ) : (
+            <Sparkles className="h-4 w-4 shrink-0" />
+          )}
+          <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+            {summary ? "Regenerate" : "Generate"}
+          </span>
+        </button>
+      </div>
+
+      {/* Error state */}
+      {error && (
+        <div className="rounded-lg bg-rose-50 border border-rose-200/60 px-3 py-2.5 text-[11px] text-rose-600 shrink-0">
+          {error}
+        </div>
+      )}
+
+      {/* Summary content */}
+      {paragraphs.length > 0 ? (
+        <div className="flex flex-col gap-3 text-[12px] leading-relaxed text-foreground/75">
+          {paragraphs.map((p, i) => (
+            <p key={i} className={cn(
+              i === 0 && "font-medium text-foreground/85"
+            )}>{renderRichText(p)}</p>
+          ))}
+        </div>
+      ) : !loading && !error && (
+        <div className="flex-1 flex flex-col items-center justify-center text-center gap-3 py-6">
+          <div className="w-10 h-10 rounded-2xl bg-brand-indigo/8 flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-brand-indigo/50" />
+          </div>
+          <div>
+            <p className="text-[12px] font-medium text-foreground/50">No AI analysis yet</p>
+            <p className="text-[11px] text-foreground/35 mt-0.5">Runs nightly or click Generate</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Empty state ──────────────────────────────────────────────────────────────
 
 export function CampaignDetailViewEmpty() {
-  const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
-  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
-  const [gradientDragMode, setGradientDragMode] = useState(false);
-
-  const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
-    if (id === -1) { setGradientLayers(prev => [...prev, patch as GradientLayer]); return; }
-    if ((patch as any).id === -999) { setGradientLayers(prev => prev.filter(l => l.id !== id)); return; }
-    setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
-  }, []);
-
-  const resetGradientLayers = useCallback(() => {
-    setGradientLayers(DEFAULT_LAYERS);
-    setGradientDragMode(false);
-  }, []);
-
   return (
-    <div className="relative flex-1 flex flex-col items-center justify-center gap-5 p-8 text-center overflow-hidden">
+    <div className="relative h-full flex flex-col items-center justify-center gap-5 p-8 text-center overflow-hidden">
       {/* ── Full-height gradient ── */}
-      {gradientTesterOpen ? (
-        <>
-          {gradientLayers.map(layer => {
-            const style = layerToStyle(layer);
-            if (!style) return null;
-            return <div key={layer.id} className="absolute inset-0" style={style} />;
-          })}
-          {gradientDragMode && (
-            <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
-          )}
-        </>
-      ) : (
-        <>
-          <div className="absolute inset-0 bg-[#ffffff]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_79%_101%_at_42%_91%,rgba(255,0,57,0.4)_0%,transparent_69%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_1%_2%,#ffeb84_0%,transparent_30%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_65%_78%_at_74%_38%,rgba(254,201,175,0.5)_0%,transparent_66%)]" />
-        </>
-      )}
+      <div className="absolute inset-0 bg-popover dark:bg-background" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_6%_5%,#fff8c6_0%,transparent_30%)] dark:opacity-[0.08]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_103%_130%_at_35%_85%,rgba(255,134,134,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_52%_48%_at_0%_0%,#fff6ba_5%,transparent_30%)] dark:opacity-[0.08]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_102%_at_78%_50%,rgba(255,194,165,0.6)_0%,transparent_66%)] dark:opacity-[0.08]" />
 
       <div className="relative z-10">
-        <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center ring-1 ring-amber-200/50">
+        <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/40 flex items-center justify-center ring-1 ring-amber-200/50 dark:ring-amber-700/30">
           <Megaphone className="h-10 w-10 text-amber-400" />
         </div>
       </div>
@@ -777,26 +1050,6 @@ export function CampaignDetailViewEmpty() {
       <div className="relative z-10 flex items-center gap-1.5 text-[11px] text-amber-500 font-medium">
         <span>&larr; Choose from the list</span>
       </div>
-
-      {/* Paintbrush button — bottom-right corner */}
-      <button
-        type="button"
-        onClick={() => setGradientTesterOpen(prev => !prev)}
-        className={`absolute bottom-4 right-4 z-20 inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border transition-colors ${gradientTesterOpen ? "bg-indigo-100 text-indigo-600 border-indigo-200" : "border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50"}`}
-        title="Gradient Tester"
-      >
-        <Paintbrush className="h-4 w-4" />
-      </button>
-
-      <GradientTester
-        open={gradientTesterOpen}
-        onClose={() => setGradientTesterOpen(false)}
-        layers={gradientLayers}
-        onUpdateLayer={updateGradientLayer}
-        onResetLayers={resetGradientLayers}
-        dragMode={gradientDragMode}
-        onToggleDragMode={() => setGradientDragMode(prev => !prev)}
-      />
     </div>
   );
 }
@@ -830,6 +1083,7 @@ interface CampaignDetailViewProps {
   isGroupNonDefault?: boolean;
   availableAccounts?: string[];
   onResetControls?: () => void;
+  onBack?: () => void;
 }
 
 export function CampaignDetailView({
@@ -837,9 +1091,9 @@ export function CampaignDetailView({
   onCreateCampaign, listSearch, onListSearchChange, searchOpen, onSearchOpenChange,
   sortBy, onSortByChange, isSortNonDefault, filterStatus, onToggleFilterStatus,
   filterAccount, onFilterAccountChange, isFilterActive, groupBy, onGroupByChange,
-  isGroupNonDefault, availableAccounts, onResetControls,
+  isGroupNonDefault, availableAccounts, onResetControls, onBack,
 }: CampaignDetailViewProps) {
-  const { isAgencyUser } = useWorkspace();
+  const { isAgencyUser, isAdmin } = useWorkspace();
 
   const campaignMetrics = useMemo(() => {
     const cid = campaign.id || campaign.Id;
@@ -854,8 +1108,10 @@ export function CampaignDetailView({
   const [dateRange, setDateRange] = useState<DateRangeValue>(getDefaultDateRange());
 
   // ── Reset tab when campaign changes ─────────────────────────────────────────
+  const [animTrigger, setAnimTrigger] = useState(0);
   useEffect(() => {
     setActiveTab("summary");
+    setAnimTrigger((n) => n + 1);
   }, [campaign.id, campaign.Id]);
 
   // ── Filter metrics by date range ───────────────────────────────────────────
@@ -867,6 +1123,9 @@ export function CampaignDetailView({
 
   const status = String(campaign.status || "");
   const avatarColor = getCampaignAvatarColor(status);
+  const isDraft = status === "Draft";
+  const isPaused = status === "Paused";
+  const isInactive = status === "Inactive";
 
   const initials = (campaign.name || "?")
     .split(" ")
@@ -875,7 +1134,6 @@ export function CampaignDetailView({
     .join("");
 
   const isActive  = status === "Active";
-  const isPaused  = status === "Paused";
   const canToggle = isActive || isPaused;
 
   // ── Compute campaign number (#N) ───────────────────────────────────────────
@@ -888,33 +1146,20 @@ export function CampaignDetailView({
     return idx >= 0 ? idx + 1 : 1;
   }, [campaign, allCampaigns]);
 
-  // ── Compute duration ───────────────────────────────────────────────────────
-  const durationLabel = useMemo(() => {
-    if (!campaign.start_date) return null;
-    const start = new Date(campaign.start_date);
-    const isCompleted = status === "Completed" || status === "Finished" || status === "Archived";
-    const end = isCompleted && campaign.end_date ? new Date(campaign.end_date) : new Date();
-    const diffMs = end.getTime() - start.getTime();
-    const days = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
-    const prefix = isCompleted ? "Ran for" : "Running for";
-    return `${prefix} ${days} day${days !== 1 ? "s" : ""}`;
-  }, [campaign.start_date, campaign.end_date, status]);
+  // ── Compute duration (created_at / createdAt — Drizzle returns camelCase) ───
+  const campaignCreatedAt: string | null = (campaign as any).createdAt ?? campaign.created_at ?? null;
+  const durationDays = useMemo(() => {
+    if (!campaignCreatedAt) return null;
+    const start = new Date(campaignCreatedAt);
+    const end = new Date();
+    const days = Math.max(0, Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    return days;
+  }, [campaignCreatedAt]);
+  const durationLabel = durationDays !== null
+    ? `${durationDays} day${durationDays !== 1 ? "s" : ""}`
+    : null;
 
-  // ── Gradient tester state ───────────────────────────────────────────────────
-  const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
-  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
-  const [gradientDragMode, setGradientDragMode] = useState(false);
-
-  const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
-    if (id === -1) { setGradientLayers(prev => [...prev, patch as GradientLayer]); return; }
-    if ((patch as any).id === -999) { setGradientLayers(prev => prev.filter(l => l.id !== id)); return; }
-    setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
-  }, []);
-
-  const resetGradientLayers = useCallback(() => {
-    setGradientLayers(DEFAULT_LAYERS);
-    setGradientDragMode(false);
-  }, []);
+  // (Gradient tester removed — gradient is now baked in)
 
   // ── Inline editing state ────────────────────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false);
@@ -922,6 +1167,25 @@ export function CampaignDetailView({
   const [deleting, setDeleting] = useState(false);
   const [draft, setDraft] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
+
+  // ── Local AI summary state (overrides prop until next campaign load) ─────────
+  const [localAiSummary, setLocalAiSummary] = useState<string | null>(campaign.ai_summary ?? null);
+  const [localAiSummaryAt, setLocalAiSummaryAt] = useState<string | null>(campaign.ai_summary_generated_at ?? null);
+  useEffect(() => {
+    setLocalAiSummary(campaign.ai_summary ?? null);
+    setLocalAiSummaryAt(campaign.ai_summary_generated_at ?? null);
+  }, [campaign.id, campaign.Id, campaign.ai_summary, campaign.ai_summary_generated_at]);
+
+  const handleAiSummaryRefreshed = useCallback((summary: string, generatedAt: string) => {
+    setLocalAiSummary(summary);
+    setLocalAiSummaryAt(generatedAt);
+  }, []);
+
+  // ── Stable refs for campaign + onSave (prevent infinite loops in callbacks) ─
+  const campaignRef = useRef(campaign);
+  campaignRef.current = campaign;
+  const onSaveRef = useRef(onSave);
+  onSaveRef.current = onSave;
 
   // ── Logo upload ────────────────────────────────────────────────────────────
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -933,16 +1197,56 @@ export function CampaignDetailView({
     const reader = new FileReader();
     reader.onload = async () => {
       const dataUrl = reader.result as string;
-      const id = campaign.id || campaign.Id;
-      if (id) await onSave(id, { logo_url: dataUrl });
+      const id = campaignRef.current.id || campaignRef.current.Id;
+      if (id) await onSaveRef.current(id, { logo_url: dataUrl });
     };
     reader.readAsDataURL(file);
-  }, [campaign, onSave]);
+  }, []);
 
   const handleRemoveLogo = useCallback(async () => {
-    const id = campaign.id || campaign.Id;
-    if (id) await onSave(id, { logo_url: "" });
-  }, [campaign, onSave]);
+    const id = campaignRef.current.id || campaignRef.current.Id;
+    if (id) await onSaveRef.current(id, { logo_url: "" });
+  }, []);
+
+  // ── Sticker / Profile image ────────────────────────────────────────────────
+  const [selectedStickerSlug, setSelectedStickerSlug] = useState<string | null>(
+    (campaign as any).campaign_sticker ?? null
+  );
+  const [hueValue, setHueValue] = useState<number>((campaign as any).campaign_hue ?? 0);
+  const [stickerSize, setStickerSize] = useState<number>((campaign as any).campaign_sticker_size ?? 130);
+  const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
+  // Pending selections inside the dialog (only committed on Submit)
+  const [pendingSlug, setPendingSlug] = useState<string | null>(null);
+  const [pendingHue, setPendingHue] = useState<number>(0);
+
+  // Sync sticker state when campaign prop changes (e.g. after optimistic save)
+  const campaignId = campaign.id || (campaign as any).Id;
+  useEffect(() => {
+    setSelectedStickerSlug((campaign as any).campaign_sticker ?? null);
+    setHueValue((campaign as any).campaign_hue ?? 0);
+    setStickerSize((campaign as any).campaign_sticker_size ?? 130);
+  }, [campaignId]);
+
+  const selectedSticker = CAMPAIGN_STICKERS.find(s => s.slug === selectedStickerSlug) ?? null;
+
+  // Stable callback — never recreates, reads latest campaign/onSave via refs
+  const saveSticker = useCallback(async (slug: string | null, hue: number, size: number) => {
+    const id = campaignRef.current.id || (campaignRef.current as any).Id;
+    if (id) await onSaveRef.current(id, { campaign_sticker: slug, campaign_hue: hue, campaign_sticker_size: size });
+  }, []);
+
+  // Debounce hue/size saves (slider drags only — skip on campaign switch / initial mount)
+  const isStickerSyncRef = useRef(true);
+  useEffect(() => {
+    // Mark that the sync just ran — skip the next debounce fire
+    isStickerSyncRef.current = true;
+  }, [campaignId]);
+  useEffect(() => {
+    if (!selectedStickerSlug) return;
+    if (isStickerSyncRef.current) { isStickerSyncRef.current = false; return; }
+    const t = setTimeout(() => saveSticker(selectedStickerSlug, hueValue, stickerSize), 600);
+    return () => clearTimeout(t);
+  }, [hueValue, stickerSize, selectedStickerSlug, saveSticker]);
 
   // ── Linked contract fetch ───────────────────────────────────────────────────
   const [linkedContract, setLinkedContract] = useState<ContractFinancials | null>(null);
@@ -991,6 +1295,7 @@ export function CampaignDetailView({
       bump_3_delay_hours: campaign.bump_3_delay_hours ?? "",
       contract_id: String(campaign.contract_id || (campaign as any).contract_id || ""),
       value_per_booking: campaign.value_per_booking ?? "",
+      channel: campaign.channel || "sms",
     });
     setIsEditing(true);
   };
@@ -1021,25 +1326,11 @@ export function CampaignDetailView({
     <div className="relative flex flex-col h-full overflow-hidden" data-testid="campaign-detail-view">
 
       {/* ── Full-height gradient ── */}
-      {gradientTesterOpen ? (
-        <>
-          {gradientLayers.map(layer => {
-            const style = layerToStyle(layer);
-            if (!style) return null;
-            return <div key={layer.id} className="absolute inset-0" style={style} />;
-          })}
-          {gradientDragMode && (
-            <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
-          )}
-        </>
-      ) : (
-        <>
-          <div className="absolute inset-0 bg-[#ffffff]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_79%_101%_at_42%_91%,rgba(255,0,57,0.4)_0%,transparent_69%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_1%_2%,#ffeb84_0%,transparent_30%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_65%_78%_at_74%_38%,rgba(254,201,175,0.5)_0%,transparent_66%)]" />
-        </>
-      )}
+      <div className="absolute inset-0 bg-popover dark:bg-background" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_6%_5%,#fff8c6_0%,transparent_30%)] dark:opacity-[0.08]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_103%_130%_at_35%_85%,rgba(255,134,134,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_52%_48%_at_0%_0%,#fff6ba_5%,transparent_30%)] dark:opacity-[0.08]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_102%_at_78%_50%,rgba(255,194,165,0.6)_0%,transparent_66%)] dark:opacity-[0.08]" />
 
       {/* ── Header content ── */}
       <div className="shrink-0">
@@ -1047,6 +1338,14 @@ export function CampaignDetailView({
 
           {/* Row 1: CRM action toolbar */}
           <div className="flex items-center gap-1.5 flex-wrap">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="md:hidden h-9 w-9 rounded-full border border-black/[0.125] bg-background grid place-items-center shrink-0 mr-2"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+            )}
             {isEditing ? (
               <>
                 <button
@@ -1071,45 +1370,33 @@ export function CampaignDetailView({
                 {activeTab === "configurations" && (
                   <button
                     onClick={startEdit}
-                    className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 transition-colors"
+                    className={cn(xBase, "hover:max-w-[80px]", xDefault)}
                   >
-                    <Pencil className="h-4 w-4" />
-                    Edit
+                    <Pencil className="h-4 w-4 shrink-0" />
+                    <span className={xSpan}>Edit</span>
                   </button>
                 )}
 
                 {onCreateCampaign && (
                   <>
-                    <button onClick={onCreateCampaign} className={cdvPill} title="New campaign">
-                      <Plus className="h-3.5 w-3.5" />Add
+                    <button onClick={onCreateCampaign} className={cn(xBase, "hover:max-w-[80px]", xDefault)} title="New campaign">
+                      <Plus className="h-4 w-4 shrink-0" />
+                      <span className={xSpan}>Add</span>
                     </button>
 
-                    {searchOpen && onListSearchChange ? (
-                      <div className="h-9 flex items-center gap-1.5 px-3 rounded-full border border-brand-indigo/50 bg-brand-indigo/5">
-                        <Search className="h-3.5 w-3.5 text-brand-indigo shrink-0" />
-                        <input
-                          value={listSearch ?? ""}
-                          onChange={(e) => onListSearchChange(e.target.value)}
-                          placeholder="Search..."
-                          autoFocus
-                          onBlur={() => { if (!listSearch) onSearchOpenChange?.(false); }}
-                          onKeyDown={(e) => { if (e.key === "Escape") { onListSearchChange(""); onSearchOpenChange?.(false); } }}
-                          className="bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/60 w-[120px]"
-                        />
-                        <button onClick={() => { onListSearchChange(""); onSearchOpenChange?.(false); }} className="text-muted-foreground/60 hover:text-foreground">
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ) : (
-                      <button onClick={() => onSearchOpenChange?.(true)} className={listSearch ? cdvPillActive : cdvPill} title="Search campaigns">
-                        <Search className="h-3.5 w-3.5" />Search
-                      </button>
-                    )}
+                    <SearchPill
+                      value={listSearch ?? ""}
+                      onChange={(v) => onListSearchChange?.(v)}
+                      open={true}
+                      onOpenChange={() => {}}
+                      placeholder="Search campaigns..."
+                    />
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className={isSortNonDefault ? cdvPillActive : cdvPill} title="Sort">
-                          <ArrowUpDown className="h-3.5 w-3.5" />Sort
+                        <button className={cn(xBase, "hover:max-w-[100px]", isSortNonDefault ? xActive : xDefault)} title="Sort">
+                          <ArrowUpDown className="h-4 w-4 shrink-0" />
+                          <span className={xSpan}>Sort</span>
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="w-44">
@@ -1128,9 +1415,9 @@ export function CampaignDetailView({
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className={isFilterActive ? cdvPillActive : cdvPill} title="Filter">
-                          <Filter className="h-3.5 w-3.5" />Filter
-                          {isFilterActive && ` \u00b7 ${(filterStatus?.length ?? 0) + (filterAccount ? 1 : 0)}`}
+                        <button className={cn(xBase, "hover:max-w-[100px]", isFilterActive ? xActive : xDefault)} title="Filter">
+                          <Filter className="h-4 w-4 shrink-0" />
+                          <span className={xSpan}>Filter</span>
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
@@ -1187,8 +1474,9 @@ export function CampaignDetailView({
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className={isGroupNonDefault ? cdvPillActive : cdvPill} title="Group">
-                          <Layers className="h-3.5 w-3.5" />Group
+                        <button className={cn(xBase, "hover:max-w-[100px]", isGroupNonDefault ? xActive : xDefault)} title="Group">
+                          <Layers className="h-4 w-4 shrink-0" />
+                          <span className={xSpan}>Group</span>
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="w-40">
@@ -1211,17 +1499,17 @@ export function CampaignDetailView({
                 {canToggle && (
                   <button
                     onClick={() => onToggleStatus(campaign)}
-                    className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 transition-colors"
+                    className={cn(xBase, isActive ? "hover:max-w-[100px]" : "hover:max-w-[110px]", xDefault)}
                   >
                     {isActive
-                      ? <><PauseCircle className="h-4 w-4" />Pause</>
-                      : <><PlayCircle className="h-4 w-4" />Activate</>
+                      ? <><PauseCircle className="h-4 w-4 shrink-0" /><span className={xSpan}>Pause</span></>
+                      : <><PlayCircle className="h-4 w-4 shrink-0" /><span className={xSpan}>Activate</span></>
                     }
                   </button>
                 )}
-                <button onClick={onRefresh} className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 transition-colors">
-                  <RefreshCw className="h-4 w-4" />
-                  Refresh
+                <button onClick={onRefresh} className={cn(xBase, "hover:max-w-[110px]", xDefault)}>
+                  <RefreshCw className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>Refresh</span>
                 </button>
                 {onDelete && (deleteConfirm ? (
                   <div className="inline-flex items-center gap-1.5 h-9 rounded-full border border-red-300/50 bg-card px-4 text-[12px]">
@@ -1236,56 +1524,89 @@ export function CampaignDetailView({
                     <button className="h-7 px-3 rounded-full text-muted-foreground text-[11px] hover:text-foreground transition-colors" onClick={() => setDeleteConfirm(false)}>No</button>
                   </div>
                 ) : (
-                  <button onClick={() => setDeleteConfirm(true)} className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 hover:text-red-600 transition-colors">
-                    <Trash2 className="h-4 w-4" />
-                    Delete
+                  <button onClick={() => setDeleteConfirm(true)} className={cn(xBase, "hover:max-w-[100px]", "border-black/[0.125] text-red-500 hover:text-red-600")}>
+                    <Trash2 className="h-4 w-4 shrink-0" />
+                    <span className={xSpan}>Delete</span>
                   </button>
                 ))}
-                <button
-                  type="button"
-                  onClick={() => setGradientTesterOpen(prev => !prev)}
-                  className={`inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border transition-colors ${gradientTesterOpen ? "bg-indigo-100 text-indigo-600 border-indigo-200" : "border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50"}`}
-                  title="Gradient Tester"
-                >
-                  <Paintbrush className="h-4 w-4" />
-                </button>
+                {/* Gradient button removed */}
               </>
             )}
           </div>
 
-          {/* Row 2: Avatar + Name */}
-          <div className="flex items-start gap-3">
-            {/* Logo circle — click to upload */}
+          {/* Row 2: Avatar + Name + Meta chips */}
+          <div className="relative flex items-center gap-3">
+            {/* Logo / Sticker circle — admin: click to open photo dialog */}
             <div className="relative group shrink-0">
               <div
-                className="h-[72px] w-[72px] rounded-full flex items-center justify-center text-xl font-bold overflow-hidden cursor-pointer"
-                style={campaign.logo_url ? {} : { backgroundColor: avatarColor.bg, color: avatarColor.text }}
-                onClick={() => logoInputRef.current?.click()}
-                title="Click to upload logo"
+                className={cn(
+                  "relative flex items-center justify-center text-xl font-bold",
+                  !selectedSticker && "rounded-full overflow-hidden",
+                  isAdmin ? "cursor-pointer" : "cursor-default"
+                )}
+                style={{
+                  width: selectedSticker ? Math.min(stickerSize, 130) : 72,
+                  height: selectedSticker ? Math.min(stickerSize, 130) : 72,
+                  ...(campaign.logo_url || selectedSticker ? {} : isDraft
+                    ? { backgroundColor: "#B8C8E8", color: "#2D3F6E" }
+                    : isPaused
+                    ? { backgroundColor: "#C8B86A", color: "#5A4A1A" }
+                    : { backgroundColor: avatarColor.bg, color: avatarColor.text }),
+                }}
+                onClick={() => {
+                  if (!isAdmin) return;
+                  setPendingSlug(selectedStickerSlug);
+                  setPendingHue(hueValue);
+                  setPhotoDialogOpen(true);
+                }}
+                title={isAdmin ? "Click to change photo" : undefined}
               >
-                {campaign.logo_url ? (
-                  <img src={campaign.logo_url} alt="logo" className="h-full w-full object-cover" />
+                {selectedSticker ? (
+                  <img
+                    src={selectedSticker.url}
+                    alt={selectedSticker.label}
+                    className="object-contain w-full h-full"
+                    style={{ filter:
+                      isInactive ? "grayscale(1) opacity(0.8)"
+                      : isDraft ? "grayscale(1) sepia(1) hue-rotate(185deg) saturate(4) brightness(0.9) opacity(0.8)"
+                      : isPaused ? "sepia(1) saturate(2) hue-rotate(-5deg) brightness(0.85) opacity(0.8)"
+                      : `hue-rotate(${hueValue}deg)`
+                    }}
+                  />
+                ) : campaign.logo_url ? (
+                  <img
+                    src={campaign.logo_url}
+                    alt="logo"
+                    className="h-full w-full object-cover"
+                    style={{ filter:
+                      isInactive ? "grayscale(1) opacity(0.5)"
+                      : isDraft ? "grayscale(1) sepia(1) hue-rotate(185deg) saturate(4) brightness(0.9) opacity(0.5)"
+                      : isPaused ? "sepia(1) saturate(2) hue-rotate(-5deg) brightness(0.85) opacity(0.5)"
+                      : undefined
+                    }}
+                  />
                 ) : (
                   initials || <Zap className="w-6 h-6" />
                 )}
               </div>
-              {/* Hover overlay */}
-              <div
-                className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer pointer-events-none"
-              >
-                <Camera className="w-5 h-5 text-white" />
-              </div>
-              {/* Remove button — hover-only, top-right */}
-              {campaign.logo_url && (
+              {/* Hover overlay — admin only */}
+              {isAdmin && (
+                <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer pointer-events-none">
+                  <Camera className="w-5 h-5 text-white" />
+                </div>
+              )}
+              {/* Remove logo button — admin, hover-only, top-right */}
+              {isAdmin && campaign.logo_url && (
                 <button
                   onClick={(e) => { e.stopPropagation(); handleRemoveLogo(); }}
                   title="Remove logo"
-                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-white border border-black/[0.125] flex items-center justify-center text-foreground/50 hover:text-red-500 hover:border-red-300 transition-colors z-10 opacity-0 group-hover:opacity-100"
+                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-white dark:bg-card border border-black/[0.125] flex items-center justify-center text-foreground/50 hover:text-red-500 hover:border-red-300 transition-colors z-10 opacity-0 group-hover:opacity-100"
                 >
                   <X className="h-3 w-3" />
                 </button>
               )}
             </div>
+            {/* Hidden file input for logo upload (used inside dialog) */}
             <input
               ref={logoInputRef}
               type="file"
@@ -1294,49 +1615,256 @@ export function CampaignDetailView({
               onChange={handleLogoFile}
             />
 
-            <div className="flex-1 min-w-0 py-1">
-              <h2 className="text-[27px] font-semibold font-heading text-foreground leading-tight truncate" data-testid="campaign-detail-view-name">
+            {/* ── Photo / Sticker dialog (Admin only) ─────────────────────── */}
+            <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
+              <DialogContent className="max-w-sm">
+                <DialogHeader>
+                  <DialogTitle>Campaign Photo</DialogTitle>
+                </DialogHeader>
+
+                {/* Preview */}
+                <div className="flex justify-center py-2">
+                  {(() => {
+                    const previewSticker = CAMPAIGN_STICKERS.find(s => s.slug === pendingSlug) ?? null;
+                    return previewSticker ? (
+                      <img
+                        src={previewSticker.url}
+                        alt={previewSticker.label}
+                        className="object-contain"
+                        style={{ width: 80, height: 80, filter: `hue-rotate(${pendingHue}deg)` }}
+                      />
+                    ) : (
+                      <div className="h-[72px] w-[72px] rounded-full flex items-center justify-center bg-muted/30 text-muted-foreground/40">
+                        <ImageIcon className="h-8 w-8" />
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Hue slider — only when a sticker is selected */}
+                {pendingSlug && (
+                  <div className="space-y-1.5 px-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold">Hue</p>
+                      <p className="text-[11px] text-muted-foreground tabular-nums">{pendingHue}°</p>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={360}
+                      value={pendingHue}
+                      onChange={(e) => setPendingHue(Number(e.target.value))}
+                      className="w-full accent-brand-indigo cursor-pointer"
+                    />
+                  </div>
+                )}
+
+                {/* Upload logo button */}
+                <button
+                  type="button"
+                  onClick={() => logoInputRef.current?.click()}
+                  className="w-full h-9 rounded-lg border border-black/[0.125] text-[12px] font-medium text-foreground/60 hover:text-foreground hover:border-black/[0.175] transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <Camera className="h-4 w-4" />
+                  Upload logo image
+                </button>
+
+                {/* Sticker grid */}
+                <div className="space-y-2">
+                  <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold">Choose sticker</p>
+                  <div className="grid grid-cols-5 gap-1.5 max-h-[200px] overflow-y-auto pr-1">
+                    <button
+                      type="button"
+                      className={cn(
+                        "h-10 w-10 rounded-lg flex items-center justify-center border transition-colors",
+                        !pendingSlug ? "border-brand-indigo bg-indigo-50" : "border-black/[0.125] hover:border-black/[0.175]"
+                      )}
+                      onClick={() => setPendingSlug(null)}
+                      title="No sticker"
+                    >
+                      <X className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                    {CAMPAIGN_STICKERS.map((s) => (
+                      <button
+                        key={s.slug}
+                        type="button"
+                        className={cn(
+                          "h-10 w-10 rounded-lg flex items-center justify-center border transition-colors p-1",
+                          pendingSlug === s.slug ? "border-brand-indigo bg-indigo-50" : "border-black/[0.125] hover:border-black/[0.175]"
+                        )}
+                        onClick={() => setPendingSlug(s.slug)}
+                        title={s.label}
+                      >
+                        <img
+                          src={s.url}
+                          alt={s.label}
+                          className="h-full w-full object-contain"
+                          style={{ filter: `hue-rotate(${pendingHue}deg)` }}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Submit */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedStickerSlug(pendingSlug);
+                    setHueValue(pendingHue);
+                    saveSticker(pendingSlug, pendingHue, stickerSize);
+                    setPhotoDialogOpen(false);
+                  }}
+                  className="w-full h-9 rounded-lg bg-brand-indigo text-white text-[13px] font-semibold hover:bg-brand-indigo/90 transition-colors"
+                >
+                  Save
+                </button>
+              </DialogContent>
+            </Dialog>
+
+            <div className="flex-1 min-w-0">
+              <h2 className="text-[18px] md:text-[27px] font-semibold font-heading text-foreground leading-tight truncate" data-testid="campaign-detail-view-name">
                 {campaign.name || "Unnamed Campaign"}
               </h2>
 
-              <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                {/* Badges */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded border border-black/[0.125] text-[10px] font-medium text-muted-foreground">
-                    Campaign #{campaignNumber}
+              {/* Subtitle: date + status */}
+              <div className="mt-1 flex flex-col gap-1" data-testid="campaign-detail-view-status">
+                {campaignCreatedAt && (
+                  <span className="inline-flex items-center gap-1 text-[11px] text-foreground/50">
+                    <Clock className="w-3 h-3 shrink-0" />
+                    Started {formatDate(campaignCreatedAt)}
+                    {durationLabel && <span className="text-foreground/35">· {durationLabel}</span>}
                   </span>
-                  {status && (
-                    <span
-                      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
-                      style={{ backgroundColor: `${CAMPAIGN_STATUS_HEX[status]}20`, color: CAMPAIGN_STATUS_HEX[status] || "#6B7280" }}
-                      data-testid="campaign-detail-view-status"
-                    >
-                      <span
-                        className="w-1.5 h-1.5 rounded-full shrink-0"
-                        style={{ backgroundColor: CAMPAIGN_STATUS_HEX[status] || "#6B7280" }}
-                      />
-                      {status}
-                    </span>
-                  )}
-                  {campaign.account_name && (
-                    <span className="text-[11px] text-foreground/50">{campaign.account_name}</span>
-                  )}
-                  {durationLabel && (
-                    <span className="inline-flex items-center gap-1 text-[11px] text-foreground/50">
-                      <Clock className="w-3 h-3" />
-                      {durationLabel}
-                    </span>
-                  )}
-                </div>
+                )}
+                {status && (
+                  <span
+                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold self-start"
+                    style={{ backgroundColor: `${CAMPAIGN_STATUS_HEX[status]}20`, color: CAMPAIGN_STATUS_HEX[status] || "#6B7280" }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: CAMPAIGN_STATUS_HEX[status] || "#6B7280" }} />
+                    {status}
+                  </span>
+                )}
               </div>
             </div>
+
+            {/* Meta chips — centered on right edge of col 2 (≈66.7% of panel minus px-4 correction), aligned with "Started" date */}
+            {/* Desktop only: absolutely positioned overlay */}
+            <div className="absolute -translate-x-1/2 bottom-[45px] hidden md:flex items-center gap-6 pointer-events-auto z-10" style={{ left: "calc(66.67% - 5px)" }}>
+              {campaign.account_name && (
+                <div className="flex items-center gap-1.5">
+                  <div
+                    className="h-[30px] w-[30px] rounded-full flex items-center justify-center shrink-0 overflow-hidden"
+                    style={(campaign as any).account_logo_url ? {} : { backgroundColor: "rgba(0,0,0,0.08)", color: "#374151" }}
+                  >
+                    {(campaign as any).account_logo_url
+                      ? <img src={(campaign as any).account_logo_url} alt="account" className="h-full w-full object-cover" />
+                      : <span className="text-[10px] font-bold">{getInitials(campaign.account_name)}</span>
+                    }
+                  </div>
+                  <div>
+                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Owner</div>
+                    <div className="text-[11px] font-bold text-foreground leading-none">{campaign.account_name}</div>
+                  </div>
+                </div>
+              )}
+              {(campaign as any).channel && (
+                <div className="flex items-center gap-1.5">
+                  <div className="h-[30px] w-[30px] rounded-full flex items-center justify-center shrink-0 overflow-hidden bg-foreground/[0.06]">
+                    <img
+                      src={`/logos/${(
+                        ({ whatsapp: "whatsapp-svgrepo-com", instagram: "instagram-svgrepo-com", email: "email-address-svgrepo-com", sms: "sms-svgrepo-com", phone: "phone-call-svgrepo-com" } as Record<string, string>)[(campaign as any).channel?.toLowerCase()] ?? "sms-svgrepo-com"
+                      )}.svg`}
+                      alt={(campaign as any).channel}
+                      className="h-[16px] w-[16px] object-contain"
+                    />
+                  </div>
+                  <div>
+                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Channel</div>
+                    <div className="text-[11px] font-bold text-foreground leading-none capitalize">{(campaign as any).channel}</div>
+                  </div>
+                </div>
+              )}
+              {campaign.type && (
+                <div>
+                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Type</div>
+                  <div className="text-[11px] font-bold text-foreground leading-none">{campaign.type}</div>
+                </div>
+              )}
+              {campaign.daily_lead_limit != null && (
+                <div>
+                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Daily Limit</div>
+                  <div className="text-[11px] font-bold text-foreground leading-none">{campaign.daily_lead_limit} leads</div>
+                </div>
+              )}
+              {(campaign.active_hours_start || (campaign as any).activeHoursStart) && (
+                <div>
+                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Active Hours</div>
+                  <div className="text-[11px] font-bold text-foreground leading-none">
+                    {((campaign.active_hours_start || (campaign as any).activeHoursStart) as string).slice(0, 5)}
+                    {" – "}
+                    {((campaign.active_hours_end || (campaign as any).activeHoursEnd) as string)?.slice(0, 5) ?? "—"}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Mobile only: meta chips row below title */}
+          <div className="flex md:hidden flex-wrap items-center gap-3 pt-1">
+            {campaign.account_name && (
+              <div className="flex items-center gap-1.5">
+                <div
+                  className="h-[24px] w-[24px] rounded-full flex items-center justify-center shrink-0 overflow-hidden"
+                  style={(campaign as any).account_logo_url ? {} : { backgroundColor: "rgba(0,0,0,0.08)", color: "#374151" }}
+                >
+                  {(campaign as any).account_logo_url
+                    ? <img src={(campaign as any).account_logo_url} alt="account" className="h-full w-full object-cover" />
+                    : <span className="text-[9px] font-bold">{getInitials(campaign.account_name)}</span>
+                  }
+                </div>
+                <div>
+                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Owner</div>
+                  <div className="text-[11px] font-bold text-foreground leading-none">{campaign.account_name}</div>
+                </div>
+              </div>
+            )}
+            {(campaign as any).channel && (
+              <div className="flex items-center gap-1.5">
+                <div className="h-[24px] w-[24px] rounded-full flex items-center justify-center shrink-0 overflow-hidden bg-foreground/[0.06]">
+                  <img
+                    src={`/logos/${(
+                      ({ whatsapp: "whatsapp-svgrepo-com", instagram: "instagram-svgrepo-com", email: "email-address-svgrepo-com", sms: "sms-svgrepo-com", phone: "phone-call-svgrepo-com" } as Record<string, string>)[(campaign as any).channel?.toLowerCase()] ?? "sms-svgrepo-com"
+                    )}.svg`}
+                    alt={(campaign as any).channel}
+                    className="h-[14px] w-[14px] object-contain"
+                  />
+                </div>
+                <div>
+                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Channel</div>
+                  <div className="text-[11px] font-bold text-foreground leading-none capitalize">{(campaign as any).channel}</div>
+                </div>
+              </div>
+            )}
+            {campaign.type && (
+              <div>
+                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Type</div>
+                <div className="text-[11px] font-bold text-foreground leading-none">{campaign.type}</div>
+              </div>
+            )}
+            {campaign.daily_lead_limit != null && (
+              <div>
+                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Daily Limit</div>
+                <div className="text-[11px] font-bold text-foreground leading-none">{campaign.daily_lead_limit} leads</div>
+              </div>
+            )}
           </div>
 
         </div>
       </div>
 
       {/* Tab row: Summary / DateRange / Configurations */}
-      <div className="relative shrink-0 px-4 pt-6 pb-[3px] flex items-center gap-2">
+      <div className="relative shrink-0 px-4 pt-4 md:pt-6 pb-[3px] flex items-center flex-wrap gap-2">
         <button
           onClick={() => setActiveTab("summary")}
           className={cn(
@@ -1348,13 +1876,6 @@ export function CampaignDetailView({
         >
           Summary
         </button>
-        {activeTab === "summary" && (
-          <DateRangeFilter
-            value={dateRange}
-            onChange={setDateRange}
-            allFrom={campaign.start_date ? new Date(campaign.start_date) : undefined}
-          />
-        )}
         <button
           onClick={() => setActiveTab("configurations")}
           className={cn(
@@ -1386,31 +1907,31 @@ export function CampaignDetailView({
 
         {/* ── Summary tab — 3-col grid, rows auto-match heights ── */}
         {activeTab === "summary" && (
-          <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-3 grid-rows-[auto_auto] gap-[3px]")}>
+          <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-1 md:grid-cols-3 md:grid-rows-[680px_680px] gap-[3px]")}>
 
             {/* ── Row 1, Col 1: Key Metrics + Performance Trends ── */}
-            <div className="bg-card/75 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-metrics">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Key Metrics</span>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { v: agg.totalLeadsTargeted.toLocaleString(), l: "Leads Targeted" },
-                  { v: agg.totalMessagesSent.toLocaleString(),  l: "Messages Sent"  },
-                  { v: agg.responseRate != null ? `${agg.responseRate}%` : "—", l: "Response %" },
-                  { v: agg.bookingRate  != null ? `${agg.bookingRate}%`  : "—", l: "Booking %"  },
-                ].map((s) => (
-                  <div key={s.l} className="rounded-xl bg-white/80 p-8 flex flex-col items-center justify-center text-center">
-                    <div className="text-[28px] font-black text-foreground tabular-nums leading-none">{s.v}</div>
-                    <div className="text-[10px] text-foreground/40 uppercase tracking-wider mt-1.5">{s.l}</div>
-                  </div>
-                ))}
+            <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-metrics">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">Key Metrics</span>
+                <DateRangeFilter
+                  value={dateRange}
+                  onChange={setDateRange}
+                  allFrom={campaignCreatedAt ? new Date(campaignCreatedAt) : undefined}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <AnimatedMetricCard numericValue={agg.totalLeadsTargeted} displayValue={agg.totalLeadsTargeted.toLocaleString()} label="Leads Targeted" animTrigger={animTrigger} />
+                <AnimatedMetricCard numericValue={agg.totalMessagesSent}  displayValue={agg.totalMessagesSent.toLocaleString()}  label="Messages Sent"  animTrigger={animTrigger} />
+                <AnimatedMetricCard numericValue={agg.responseRate ?? 0}  displayValue={agg.responseRate != null ? `${agg.responseRate}%` : "—"} label="Response %" animTrigger={animTrigger} />
+                <AnimatedMetricCard numericValue={agg.bookingRate  ?? 0}  displayValue={agg.bookingRate  != null ? `${agg.bookingRate}%`  : "—"} label="Booking %"  animTrigger={animTrigger} />
               </div>
 
               {/* Performance Trends chart — pushed to bottom */}
-              <div className="mt-auto border-t border-border/20 pt-3">
+              <div className="mt-auto pt-1">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 block">Performance Trends</span>
-                <div className="h-[180px]" data-testid="campaign-detail-view-trends">
+                <div className="h-[280px]" key={animTrigger} data-testid="campaign-detail-view-trends">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
+                    <AreaChart
                       data={(() => {
                         return [...filteredMetrics]
                           .sort((a, b) => (a.metric_date || "").localeCompare(b.metric_date || ""))
@@ -1424,34 +1945,61 @@ export function CampaignDetailView({
                       })()}
                       margin={{ top: 4, right: 4, bottom: 4, left: -20 }}
                     >
+                      <defs>
+                        <linearGradient id="fillResponse" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#3ACBDF" stopOpacity={0.25} />
+                          <stop offset="100%" stopColor="#3ACBDF" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="fillBooking" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#f5b70b" stopOpacity={0.25} />
+                          <stop offset="100%" stopColor="#f5be0b" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
                       <XAxis dataKey="date" tick={{ fontSize: 10, fill: "rgba(0,0,0,0.4)" }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
                       <YAxis tick={{ fontSize: 10, fill: "rgba(0,0,0,0.4)" }} tickLine={false} axisLine={false} />
                       <Tooltip contentStyle={{ borderRadius: "10px", border: "1px solid rgba(0,0,0,0.1)", backgroundColor: "rgba(255,255,255,0.95)", color: "#111", fontSize: "11px", padding: "6px 10px" }} />
                       <Legend wrapperStyle={{ fontSize: "10px", paddingTop: "8px" }} />
-                      <Line type="monotone" dataKey="Response %" stroke="#6366f1" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
-                      <Line type="monotone" dataKey="Booking %"  stroke="#f59e0b" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
-                    </LineChart>
+                      <Area type="monotone" dataKey="Response %" stroke="#3ACBDF" strokeWidth={2} fill="url(#fillResponse)" dot={false} activeDot={{ r: 3 }} />
+                      <Area type="monotone" dataKey="Booking %"  stroke="#f5be0b" strokeWidth={2} fill="url(#fillBooking)"  dot={false} activeDot={{ r: 3 }} />
+                    </AreaChart>
                   </ResponsiveContainer>
                 </div>
               </div>
             </div>
 
             {/* ── Row 1, Col 2: Up Next ── */}
-            <div className="bg-card/75 rounded-xl p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-agenda">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Up Next</span>
+            <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-y-auto" data-testid="campaign-detail-view-agenda">
+              <span className="text-[18px] font-semibold font-heading leading-tight text-foreground shrink-0">Up Next</span>
               <AgendaWidget accountId={undefined} className="flex-1 min-h-0 bg-transparent" hideHeader />
             </div>
 
-            {/* ── Row 1, Col 3: Pipeline Funnel ── */}
-            <div className="bg-card/75 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-funnel">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Pipeline</span>
-              <CampaignFunnelWidget campaignId={campaign.id || (campaign as any).Id} />
+            {/* ── Row 1, Col 3: Pipeline + Donut (unified, interactive) ── */}
+            <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-5 overflow-hidden" data-testid="campaign-detail-view-funnel">
+              <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">Pipeline</span>
+              <PipelineAndDonutWidget campaignId={campaign.id || (campaign as any).Id} />
             </div>
 
-            {/* ── Row 2, Col 1: Financials + ROI Trend ── */}
-            <div className="bg-card/75 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-financials">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Financials</span>
+            {/* ── Row 2, Col 1: AI Summary ── */}
+            <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-4 overflow-hidden" data-testid="campaign-detail-view-ai-summary">
+              <span className="text-[18px] font-semibold font-heading leading-tight text-foreground shrink-0">AI Analysis</span>
+              <AISummaryWidget
+                campaign={campaign}
+                summary={localAiSummary}
+                generatedAt={localAiSummaryAt}
+                onRefreshed={handleAiSummaryRefreshed}
+              />
+            </div>
+
+            {/* ── Row 2, Col 2: Activity Feed ── */}
+            <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-y-auto" data-testid="campaign-detail-view-activity">
+              <span className="text-[18px] font-semibold font-heading leading-tight text-foreground shrink-0">Activity</span>
+              <ActivityFeed accountId={undefined} compact className="flex-1 min-h-0" />
+            </div>
+
+            {/* ── Row 2, Col 3: Financials + ROI Trend ── */}
+            <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-conversions">
+              <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">Financials</span>
               <FinancialsWidget
                 agg={agg}
                 campaign={campaign}
@@ -1461,7 +2009,7 @@ export function CampaignDetailView({
                 onGoToConfig={goToConfig}
               />
 
-              {/* ROI Trend — inside Financials card, pushed to bottom */}
+              {/* ROI Trend — pushed to bottom */}
               <div className="mt-auto border-t border-border/20 pt-3">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 block">ROI Trend</span>
                 <div className="h-[180px]" data-testid="campaign-detail-view-roi">
@@ -1490,27 +2038,15 @@ export function CampaignDetailView({
               </div>
             </div>
 
-            {/* ── Row 2, Col 2: Activity Feed ── */}
-            <div className="bg-card/75 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-activity">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Activity</span>
-              <ActivityFeed accountId={undefined} limit={20} compact className="" />
-            </div>
-
-            {/* ── Row 2, Col 3: Conversions Doughnut ── */}
-            <div className="bg-card/75 rounded-xl p-8 flex flex-col gap-6" data-testid="campaign-detail-view-conversions">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Conversions</span>
-              <ConversionDoughnutWidget campaignId={campaign.id || (campaign as any).Id} />
-            </div>
-
           </div>
         )}
 
         {/* ── Configurations tab ── */}
         {activeTab === "configurations" && (
-          <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-3 gap-[3px] h-full")}>
+          <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-1 md:grid-cols-3 gap-[3px] md:h-full")}>
 
             {/* Column 1: Configuration / Settings */}
-            <div className="bg-card rounded-xl p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-settings">
+            <div className="bg-card rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-settings">
               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Configuration</span>
 
               {/* Type + Description */}
@@ -1554,12 +2090,109 @@ export function CampaignDetailView({
               {/* Behavior group */}
               <div className="space-y-0">
                 <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold pt-3 pb-2">Behavior</p>
+
+                {/* Channel picker */}
+                <div className="flex items-start justify-between gap-3 py-2 border-b border-border/20">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 shrink-0 pt-0.5 min-w-[90px]">Channel</span>
+                  {isEditing ? (
+                    <div className="flex gap-1">
+                      {(["sms", "whatsapp", "instagram"] as const).map((ch) => (
+                        <button
+                          key={ch}
+                          type="button"
+                          onClick={() => setDraft(d => ({ ...d, channel: ch }))}
+                          className={cn(
+                            "text-[11px] font-medium px-2.5 py-1 rounded-full border transition-colors",
+                            draft.channel === ch
+                              ? "border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo"
+                              : "border-black/[0.125] bg-transparent text-foreground/60 hover:bg-muted/50"
+                          )}
+                        >
+                          {ch === "sms" ? "SMS" : ch === "whatsapp" ? "WhatsApp" : "Instagram"}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-[12px] font-semibold text-foreground text-right">
+                      {campaign.channel === "whatsapp" ? "WhatsApp" : campaign.channel === "instagram" ? "Instagram" : "SMS"}
+                    </span>
+                  )}
+                </div>
+
                 <BoolRow label="Stop on response" value={campaign.stop_on_response}
                   editChild={isEditing ? <EditToggle value={Boolean(draft.stop_on_response)} onChange={(v) => setDraft(d => ({...d, stop_on_response: v}))} /> : undefined}
                 />
                 <BoolRow label="Use AI bumps" value={campaign.use_ai_bumps}
                   editChild={isEditing ? <EditToggle value={Boolean(draft.use_ai_bumps)} onChange={(v) => setDraft(d => ({...d, use_ai_bumps: v}))} /> : undefined}
                 />
+                {(isEditing ? draft.channel : campaign.channel) === "whatsapp" && (
+                  <>
+                    <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold pt-3 pb-1">
+                      Voice Notes
+                    </p>
+                    <BoolRow
+                      label="First message as voice note"
+                      value={campaign.first_message_voice_note ?? false}
+                      editChild={isEditing ? (
+                        <EditToggle
+                          value={Boolean(draft.first_message_voice_note)}
+                          onChange={(v) => setDraft(d => ({ ...d, first_message_voice_note: v }))}
+                        />
+                      ) : undefined}
+                    />
+                    <BoolRow
+                      label="Bump 1 as voice note"
+                      value={campaign.bump_1_voice_note ?? false}
+                      editChild={isEditing ? (
+                        <EditToggle
+                          value={Boolean(draft.bump_1_voice_note)}
+                          onChange={(v) => setDraft(d => ({ ...d, bump_1_voice_note: v }))}
+                        />
+                      ) : undefined}
+                    />
+                    <BoolRow
+                      label="Bump 2 as voice note"
+                      value={campaign.bump_2_voice_note ?? false}
+                      editChild={isEditing ? (
+                        <EditToggle
+                          value={Boolean(draft.bump_2_voice_note)}
+                          onChange={(v) => setDraft(d => ({ ...d, bump_2_voice_note: v }))}
+                        />
+                      ) : undefined}
+                    />
+                    <BoolRow
+                      label="Bump 3 as voice note"
+                      value={campaign.bump_3_voice_note ?? false}
+                      editChild={isEditing ? (
+                        <EditToggle
+                          value={Boolean(draft.bump_3_voice_note)}
+                          onChange={(v) => setDraft(d => ({ ...d, bump_3_voice_note: v }))}
+                        />
+                      ) : undefined}
+                    />
+                    <BoolRow
+                      label="AI replies as voice notes"
+                      value={campaign.ai_reply_voice_note ?? false}
+                      editChild={isEditing ? (
+                        <EditToggle
+                          value={Boolean(draft.ai_reply_voice_note)}
+                          onChange={(v) => setDraft(d => ({ ...d, ai_reply_voice_note: v }))}
+                        />
+                      ) : undefined}
+                    />
+                    <InfoRow
+                      label="Voice ID"
+                      value={campaign.tts_voice_id ?? ""}
+                      editChild={isEditing ? (
+                        <EditText
+                          value={String(draft.tts_voice_id ?? "")}
+                          onChange={(v) => setDraft(d => ({ ...d, tts_voice_id: v }))}
+                          placeholder="e.g. gabriel (leave blank for default)"
+                        />
+                      ) : undefined}
+                    />
+                  </>
+                )}
                 <InfoRow label="Max bumps" value={campaign.max_bumps}
                   editChild={isEditing ? <EditNumber value={String(draft.max_bumps ?? "")} onChange={(v) => setDraft(d => ({...d, max_bumps: v}))} placeholder="e.g. 3" /> : undefined}
                 />
@@ -1604,7 +2237,7 @@ export function CampaignDetailView({
             </div>
 
             {/* Column 2: AI Settings */}
-            <div className="bg-card rounded-xl p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-ai">
+            <div className="bg-card rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-ai">
               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">AI Settings</span>
               <div className="space-y-0">
                 <InfoRow label="Model" value={campaign.ai_model || "Default"}
@@ -1631,7 +2264,7 @@ export function CampaignDetailView({
                       placeholder="System prompt / AI instructions…"
                     />
                   ) : (
-                    <div className="relative rounded-lg bg-white/30 p-2 max-h-32 overflow-y-auto">
+                    <div className="relative rounded-lg bg-white/30 dark:bg-white/[0.04] p-2 max-h-32 overflow-y-auto">
                       <p className="text-[11px] text-foreground leading-relaxed whitespace-pre-wrap break-words">
                         {campaign.ai_prompt_template}
                       </p>
@@ -1642,11 +2275,11 @@ export function CampaignDetailView({
             </div>
 
             {/* Column 3: Message Templates */}
-            <div className="bg-card rounded-xl p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-templates">
+            <div className="bg-card rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-templates">
               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Message Templates</span>
 
               {/* First message */}
-              <div className="rounded-xl bg-white/80 p-6 space-y-1.5">
+              <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] p-3 md:p-6 space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">First Message</span>
                   {!isEditing && (campaign.first_message_template || campaign.First_Message) && (
@@ -1670,7 +2303,7 @@ export function CampaignDetailView({
               </div>
 
               {/* Bump 1 */}
-              <div className="rounded-xl bg-white/80 p-6 space-y-2">
+              <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] p-3 md:p-6 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Bump 1</span>
@@ -1684,7 +2317,7 @@ export function CampaignDetailView({
                           type="number"
                           value={String(draft.bump_1_delay_hours ?? "")}
                           onChange={(e) => setDraft(d => ({...d, bump_1_delay_hours: e.target.value}))}
-                          className="w-14 text-[11px] bg-white/60 border border-brand-indigo/30 rounded px-1.5 py-0.5 outline-none"
+                          className="w-14 text-[11px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded px-1.5 py-0.5 outline-none"
                           placeholder="24"
                         />
                       </div>
@@ -1712,7 +2345,7 @@ export function CampaignDetailView({
               </div>
 
               {/* Bump 2 */}
-              <div className="rounded-xl bg-white/80 p-6 space-y-2">
+              <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] p-3 md:p-6 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Bump 2</span>
@@ -1726,7 +2359,7 @@ export function CampaignDetailView({
                           type="number"
                           value={String(draft.bump_2_delay_hours ?? "")}
                           onChange={(e) => setDraft(d => ({...d, bump_2_delay_hours: e.target.value}))}
-                          className="w-14 text-[11px] bg-white/60 border border-brand-indigo/30 rounded px-1.5 py-0.5 outline-none"
+                          className="w-14 text-[11px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded px-1.5 py-0.5 outline-none"
                           placeholder="48"
                         />
                       </div>
@@ -1754,7 +2387,7 @@ export function CampaignDetailView({
               </div>
 
               {/* Bump 3 */}
-              <div className="rounded-xl bg-white/80 p-6 space-y-2">
+              <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] p-3 md:p-6 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Bump 3</span>
@@ -1768,7 +2401,7 @@ export function CampaignDetailView({
                           type="number"
                           value={String(draft.bump_3_delay_hours ?? "")}
                           onChange={(e) => setDraft(d => ({...d, bump_3_delay_hours: e.target.value}))}
-                          className="w-14 text-[11px] bg-white/60 border border-brand-indigo/30 rounded px-1.5 py-0.5 outline-none"
+                          className="w-14 text-[11px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded px-1.5 py-0.5 outline-none"
                           placeholder="72"
                         />
                       </div>
@@ -1797,6 +2430,7 @@ export function CampaignDetailView({
 
             </div>
 
+
           </div>
         )}
 
@@ -1812,15 +2446,6 @@ export function CampaignDetailView({
 
       </div>
 
-      <GradientTester
-        open={gradientTesterOpen}
-        onClose={() => setGradientTesterOpen(false)}
-        layers={gradientLayers}
-        onUpdateLayer={updateGradientLayer}
-        onResetLayers={resetGradientLayers}
-        dragMode={gradientDragMode}
-        onToggleDragMode={() => setGradientDragMode(prev => !prev)}
-      />
     </div>
   );
 }

@@ -4,13 +4,15 @@ import {
   Eye, EyeOff, Copy, Check,
   Plus, Trash2, FileDown,
   Pencil, X, RefreshCw, Camera,
-  ChevronRight, Megaphone, Users,
-  Paintbrush,
+  ChevronRight, ChevronLeft, Megaphone, Users,
+  Mic, Upload,
 } from "lucide-react";
-import { GradientTester, GradientControlPoints, DEFAULT_LAYERS, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
-import { getInitials, getAccountAvatarColor } from "@/lib/avatarUtils";
+import { syncInstagramContacts } from "../api/accountsApi";
+import { getInitials, getAccountAvatarColor, getCampaignAvatarColor, getUserRoleAvatarColor } from "@/lib/avatarUtils";
+import { CAMPAIGN_STICKERS } from "@/assets/campaign-stickers/index";
 import { useLocation } from "wouter";
 import type { AccountRow } from "./AccountDetailsDialog";
 import {
@@ -42,20 +44,6 @@ function getStatusIcon(status: string) {
   }
 }
 
-const AVATAR_COLORS = [
-  { bg: "bg-indigo-100", text: "text-indigo-700" },
-  { bg: "bg-emerald-100", text: "text-emerald-700" },
-  { bg: "bg-amber-100", text: "text-amber-700" },
-  { bg: "bg-rose-100", text: "text-rose-700" },
-  { bg: "bg-violet-100", text: "text-violet-700" },
-  { bg: "bg-cyan-100", text: "text-cyan-700" },
-];
-
-function getAvatarColor(name: string) {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffff;
-  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
-}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -98,6 +86,7 @@ function LogoCropModal({ srcUrl, onSave, onCancel }: {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const dragging  = useRef(false);
   const dragStart = useRef({ x: 0, y: 0, ox: 0, oy: 0 });
+  const pinchRef  = useRef<{ dist: number; zoom: number } | null>(null);
 
   useEffect(() => {
     const img = new globalThis.Image();
@@ -163,6 +152,38 @@ function LogoCropModal({ srcUrl, onSave, onCancel }: {
               onMouseMove={onMouseMove}
               onMouseUp={onMouseUp}
               onMouseLeave={onMouseUp}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                if (e.touches.length === 1) {
+                  const t = e.touches[0];
+                  dragging.current = true;
+                  dragStart.current = { x: t.clientX, y: t.clientY, ox: offset.x, oy: offset.y };
+                }
+                if (e.touches.length === 2) {
+                  const dx = e.touches[0].clientX - e.touches[1].clientX;
+                  const dy = e.touches[0].clientY - e.touches[1].clientY;
+                  pinchRef.current = { dist: Math.hypot(dx, dy), zoom };
+                }
+              }}
+              onTouchMove={(e) => {
+                e.preventDefault();
+                if (e.touches.length === 1 && dragging.current) {
+                  const t = e.touches[0];
+                  setOffset({ x: dragStart.current.ox + t.clientX - dragStart.current.x, y: dragStart.current.oy + t.clientY - dragStart.current.y });
+                }
+                if (e.touches.length === 2 && pinchRef.current) {
+                  const dx = e.touches[0].clientX - e.touches[1].clientX;
+                  const dy = e.touches[0].clientY - e.touches[1].clientY;
+                  const newDist = Math.hypot(dx, dy);
+                  const scale = newDist / pinchRef.current.dist;
+                  const newZoom = Math.min(8, Math.max(0.05, pinchRef.current.zoom * scale));
+                  setZoom(newZoom);
+                }
+              }}
+              onTouchEnd={() => {
+                dragging.current = false;
+                pinchRef.current = null;
+              }}
             />
           </div>
           <div className="flex items-center gap-3 w-full px-2">
@@ -228,7 +249,7 @@ function EditText({ value, onChange, placeholder, type = "text" }: {
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full text-[12px] bg-white/60 border border-brand-blue/30 rounded-lg px-2.5 py-1 outline-none focus:ring-1 focus:ring-brand-blue/40 placeholder:text-foreground/25"
+      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-blue/30 rounded-lg px-2.5 py-1 outline-none focus:ring-1 focus:ring-brand-blue/40 placeholder:text-foreground/25"
     />
   );
 }
@@ -240,7 +261,7 @@ function EditSelect({ value, onChange, options }: {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full text-[12px] bg-white/60 border border-brand-blue/30 rounded-lg px-2.5 py-1 outline-none focus:ring-1 focus:ring-brand-blue/40"
+      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-blue/30 rounded-lg px-2.5 py-1 outline-none focus:ring-1 focus:ring-brand-blue/40"
     >
       {options.map((o) => <option key={o} value={o}>{o}</option>)}
     </select>
@@ -256,7 +277,7 @@ function EditTextarea({ value, onChange, placeholder, rows = 3 }: {
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       rows={rows}
-      className="w-full text-[12px] bg-white/60 border border-brand-blue/30 rounded-lg px-2.5 py-1 resize-none outline-none focus:ring-1 focus:ring-brand-blue/40 placeholder:text-foreground/25 leading-relaxed"
+      className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-blue/30 rounded-lg px-2.5 py-1 resize-none outline-none focus:ring-1 focus:ring-brand-blue/40 placeholder:text-foreground/25 leading-relaxed"
     />
   );
 }
@@ -276,7 +297,7 @@ function MonoValue({ value }: { value?: string | null }) {
   return (
     <span className="flex items-center gap-0.5 min-w-0">
       <span className="text-[11px] font-mono text-foreground truncate">{value}</span>
-      <button onClick={copy} className="p-0.5 rounded hover:bg-white/30 transition-colors text-foreground/40 hover:text-foreground shrink-0">
+      <button onClick={copy} className="p-0.5 rounded hover:bg-white/30 dark:hover:bg-white/[0.04] transition-colors text-foreground/40 hover:text-foreground shrink-0">
         {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
       </button>
     </span>
@@ -299,10 +320,10 @@ function SecretDisplay({ value }: { value?: string | null }) {
       <span className={cn("text-[11px] font-mono text-foreground truncate", !revealed && "tracking-widest")}>
         {revealed ? value : "••••••••••••"}
       </span>
-      <button onClick={() => setRevealed((r) => !r)} className="p-0.5 rounded hover:bg-white/30 transition-colors text-foreground/40 hover:text-foreground shrink-0">
+      <button onClick={() => setRevealed((r) => !r)} className="p-0.5 rounded hover:bg-white/30 dark:hover:bg-white/[0.04] transition-colors text-foreground/40 hover:text-foreground shrink-0">
         {revealed ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
       </button>
-      <button onClick={copy} className="p-0.5 rounded hover:bg-white/30 transition-colors text-foreground/40 hover:text-foreground shrink-0">
+      <button onClick={copy} className="p-0.5 rounded hover:bg-white/30 dark:hover:bg-white/[0.04] transition-colors text-foreground/40 hover:text-foreground shrink-0">
         {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
       </button>
     </span>
@@ -413,7 +434,7 @@ function AccountCampaignsPanel({ accountId, routePrefix }: { accountId: number; 
               value={pickerSearch}
               onChange={(e) => setPickerSearch(e.target.value)}
               placeholder="Search campaigns…"
-              className="w-full text-[12px] bg-white border border-border/40 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-brand-indigo/40"
+              className="w-full text-[12px] bg-white dark:bg-popover border border-border/40 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-brand-indigo/40"
             />
             <div className="max-h-60 overflow-y-auto">
               {pickerLoading ? (
@@ -451,7 +472,7 @@ function AccountCampaignsPanel({ accountId, routePrefix }: { accountId: number; 
 
       {/* Campaigns sub-section */}
       <div>
-        <div className="flex items-center gap-1.5 mb-2">
+        <div className="flex items-center gap-1.5 mb-3">
           <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Campaigns</span>
           {!loadingC && (
             <span className="text-[10px] font-semibold text-foreground/40 bg-black/[0.05] rounded-full px-1.5 py-0.5">{campaigns.length}</span>
@@ -465,59 +486,159 @@ function AccountCampaignsPanel({ accountId, routePrefix }: { accountId: number; 
           </button>
         </div>
         {loadingC ? (
-          <div className="space-y-1.5">
-            {[1, 2, 3].map((i) => <div key={i} className="h-6 rounded bg-black/[0.05] animate-pulse" />)}
+          <div className="flex flex-col gap-2">
+            {[1, 2, 3, 4].map((i) => <div key={i} className="h-[100px] rounded-xl bg-black/[0.05] animate-pulse" />)}
           </div>
         ) : campaigns.length === 0 ? (
           <p className="text-[11px] text-foreground/30 italic">No campaigns</p>
         ) : (
-          <ul className="space-y-0">
+          <div className="flex flex-col gap-2">
             {campaigns.map((c: any, i: number) => {
-              const name   = c.name ?? c.campaign_name ?? c.Name ?? "Unnamed";
-              const status = c.status ?? c.Status ?? "";
+              const name        = c.name ?? c.campaign_name ?? c.Name ?? "Unnamed";
+              const status      = c.status ?? c.Status ?? "";
+              const cid         = c.Id ?? c.id;
+              const colors      = getCampaignAvatarColor(status);
+              const inits       = getInitials(name);
+              const stickerSlug = c.campaign_sticker ?? c.campaignSticker ?? null;
+              const hue         = Number(c.campaign_hue ?? c.campaignHue ?? 0);
+              const sticker     = stickerSlug ? CAMPAIGN_STICKERS.find(s => s.slug === stickerSlug) ?? null : null;
+              // Find the contract linked to this campaign
+              const contract    = contracts.find((k: any) => {
+                const kCid = k.campaigns_id ?? k.campaignsId ?? k.Campaigns_id;
+                return kCid && String(kCid) === String(cid);
+              }) ?? null;
+              const createdAt   = c.createdAt ?? c.created_at ?? null;
+              const leadsCount  = c.total_leads_targeted ?? c.totalLeadsTargeted ?? c.Leads ?? null;
+              const dateLabel   = createdAt
+                ? new Date(createdAt).toLocaleDateString(undefined, { month: "short", year: "numeric" })
+                : null;
               return (
-                <li
-                  key={c.Id ?? c.id ?? i}
-                  className="flex items-center justify-between gap-2 py-2 px-2 -mx-2 border-b border-border/15 last:border-0 cursor-pointer rounded-lg hover:bg-black/[0.04] transition-colors"
-                  onClick={() => setLocation(`${routePrefix}/campaigns`)}
+                <button
+                  key={cid ?? i}
+                  className="flex flex-row items-stretch gap-0 p-0 bg-white dark:bg-white/[0.08] rounded-xl border border-black/[0.07] hover:border-brand-indigo/30 hover:bg-white dark:hover:bg-white/[0.12] transition-colors duration-100 cursor-pointer text-left overflow-hidden"
+                  onClick={() => {
+                    if (cid) {
+                      try { localStorage.setItem("selected-campaign-id", String(cid)); } catch {}
+                    }
+                    setLocation(`${routePrefix}/campaigns`);
+                  }}
                 >
-                  <span className="text-[12px] text-foreground truncate flex-1">{name}</span>
-                  {status && (
-                    <span className="text-[10px] font-medium text-foreground/50 shrink-0 bg-black/[0.05] rounded-full px-1.5 py-0.5">{status}</span>
-                  )}
-                  <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                </li>
+                  {/* Sticker — 2× size, left column */}
+                  <div className="shrink-0 w-[88px] flex items-center justify-center bg-black/[0.025] dark:bg-white/[0.04] rounded-l-xl">
+                    {sticker ? (
+                      <img
+                        src={sticker.url}
+                        alt={sticker.label}
+                        className="h-[72px] w-[72px] object-contain"
+                        style={{ filter: hue ? `hue-rotate(${hue}deg)` : undefined }}
+                      />
+                    ) : (
+                      <div
+                        className="h-[72px] w-[72px] rounded-full text-[18px] font-bold flex items-center justify-center"
+                        style={{ backgroundColor: colors.bg, color: colors.text }}
+                      >
+                        {inits || "?"}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right column — name, date, status, leads */}
+                  <div className="flex flex-col justify-between flex-1 min-w-0 p-3 gap-1.5">
+                    <div className="min-w-0">
+                      <p className="text-[12px] font-semibold text-foreground truncate leading-tight">{name}</p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        {status && (
+                          <span
+                            className="text-[10px] font-medium rounded-full px-1.5 py-0.5 leading-none shrink-0"
+                            style={{ backgroundColor: colors.bg, color: colors.text }}
+                          >
+                            {status}
+                          </span>
+                        )}
+                        {dateLabel && (
+                          <span className="text-[10px] text-foreground/40 shrink-0">{dateLabel}</span>
+                        )}
+                      </div>
+                      {leadsCount != null && (
+                        <p className="text-[10px] text-foreground/50 mt-1 flex items-center gap-1">
+                          <Users className="h-3 w-3 shrink-0 text-foreground/35" />
+                          <span className="tabular-nums">{leadsCount.toLocaleString()} leads</span>
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Attached contract pill */}
+                    {!loadingK && (
+                      <div
+                        className={cn(
+                          "flex items-center gap-1.5 px-2 py-1 rounded-lg border",
+                          contract
+                            ? "bg-indigo-50/80 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800/40"
+                            : "bg-black/[0.03] border-black/[0.05]"
+                        )}
+                        onClick={(e) => {
+                          if (!contract) return;
+                          e.stopPropagation();
+                          const kid = contract.Id ?? contract.id;
+                          if (kid) { try { localStorage.setItem("billing-selected-contract", String(kid)); } catch {} }
+                          setLocation(`${routePrefix}/contracts`);
+                        }}
+                      >
+                        <FileText className={cn("h-3 w-3 shrink-0", contract ? "text-indigo-500" : "text-foreground/20")} />
+                        {contract ? (
+                          <span className="text-[10px] text-indigo-700 dark:text-indigo-300 font-medium truncate flex-1 leading-tight">
+                            {contract.title ?? contract.name ?? contract.Name ?? "Contract"}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-foreground/25 italic">No contract</span>
+                        )}
+                        {contract && (contract.status ?? contract.Status) && (
+                          <span className="text-[9px] font-medium text-indigo-500 shrink-0 bg-indigo-100/80 dark:bg-indigo-900/40 rounded-full px-1 py-0.5 leading-none">
+                            {contract.status ?? contract.Status}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </button>
               );
             })}
-          </ul>
+          </div>
         )}
       </div>
 
-      {/* Contracts sub-section */}
-      <div className="border-t border-white/30 pt-3">
-        <div className="flex items-center gap-1.5 mb-2">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Contracts</span>
-          {!loadingK && (
-            <span className="text-[10px] font-semibold text-foreground/40 bg-black/[0.05] rounded-full px-1.5 py-0.5">{contracts.length}</span>
-          )}
-        </div>
-        {loadingK ? (
-          <div className="space-y-1.5">
-            {[1, 2].map((i) => <div key={i} className="h-6 rounded bg-black/[0.05] animate-pulse" />)}
+      {/* Unlinked contracts — shown only if any contract has no campaign attached */}
+      {!loadingK && contracts.some((k: any) => {
+        const kCid = k.campaigns_id ?? k.campaignsId ?? k.Campaigns_id;
+        return !kCid;
+      }) && (
+        <div className="border-t border-white/30 pt-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">Unlinked Contracts</span>
           </div>
-        ) : contracts.length === 0 ? (
-          <p className="text-[11px] text-foreground/30 italic">No contracts</p>
-        ) : (
           <ul className="space-y-0">
-            {contracts.map((k: any, i: number) => {
+            {contracts.filter((k: any) => {
+              const kCid = k.campaigns_id ?? k.campaignsId ?? k.Campaigns_id;
+              return !kCid;
+            }).map((k: any, i: number) => {
               const name   = k.title ?? k.name ?? k.Name ?? "Unnamed";
               const status = k.status ?? k.Status ?? "";
+              const kid    = k.Id ?? k.id;
               return (
                 <li
-                  key={k.Id ?? k.id ?? i}
-                  className="flex items-center justify-between gap-2 py-2 px-2 -mx-2 border-b border-border/15 last:border-0 cursor-pointer rounded-lg hover:bg-black/[0.04] transition-colors"
-                  onClick={() => setLocation(`${routePrefix}/contracts`)}
+                  key={kid ?? i}
+                  className="flex items-center gap-2 py-1.5 px-2 -mx-2 border-b border-border/15 last:border-0 cursor-pointer rounded-lg hover:bg-black/[0.04] transition-colors duration-100"
+                  onClick={() => {
+                    if (kid) { try { localStorage.setItem("billing-selected-contract", String(kid)); } catch {} }
+                    setLocation(`${routePrefix}/contracts`);
+                  }}
                 >
+                  <div
+                    className="h-[28px] w-[28px] rounded-full text-[10px] font-bold flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: "#E0E7FF", color: "#4338CA" }}
+                  >
+                    <FileText className="h-3 w-3" />
+                  </div>
                   <span className="text-[12px] text-foreground truncate flex-1">{name}</span>
                   {status && (
                     <span className="text-[10px] font-medium text-foreground/50 shrink-0 bg-black/[0.05] rounded-full px-1.5 py-0.5">{status}</span>
@@ -527,8 +648,8 @@ function AccountCampaignsPanel({ accountId, routePrefix }: { accountId: number; 
               );
             })}
           </ul>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -555,7 +676,7 @@ function AccountUsersPanel({ accountId, routePrefix }: { accountId: number; rout
       .then((data: any) => {
         const all: any[] = Array.isArray(data) ? data : (data?.list ?? data?.data ?? []);
         setUsers(all.filter((u: any) => {
-          const uid = u.Accounts_id ?? u.accounts_id ?? u.account_id;
+          const uid = u.accountsId ?? u.Accounts_id ?? u.accounts_id ?? u.account_id;
           return uid === accountId;
         }));
       })
@@ -625,7 +746,7 @@ function AccountUsersPanel({ accountId, routePrefix }: { accountId: number; rout
               value={pickerSearch}
               onChange={(e) => setPickerSearch(e.target.value)}
               placeholder="Search users…"
-              className="w-full text-[12px] bg-white border border-border/40 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-brand-indigo/40"
+              className="w-full text-[12px] bg-white dark:bg-popover border border-border/40 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-brand-indigo/40"
             />
             <div className="max-h-60 overflow-y-auto">
               {pickerLoading ? (
@@ -691,28 +812,50 @@ function AccountUsersPanel({ accountId, routePrefix }: { accountId: number; rout
         <p className="text-[11px] text-foreground/30 italic">No users assigned</p>
       ) : (
         <ul className="space-y-0">
-          {users.map((u: any, i: number) => {
-            const name  = u.full_name ?? u.name ?? u.email ?? u.username ?? "Unknown";
-            const email = u.email ?? "";
-            const role  = u.role ?? u.Role ?? "";
+          {[...users].sort((a: any, b: any) => {
+            const roleOrder: Record<string, number> = { Admin: 0, Operator: 1, Manager: 2, Agent: 3, Viewer: 4 };
+            const ra = roleOrder[a.role ?? a.Role ?? ""] ?? 5;
+            const rb = roleOrder[b.role ?? b.Role ?? ""] ?? 5;
+            return ra - rb;
+          }).map((u: any, i: number) => {
+            const name    = u.full_name ?? u.fullName1 ?? u.name ?? u.email ?? u.username ?? "Unknown";
+            const email   = u.email ?? "";
+            const role    = u.role ?? u.Role ?? "";
+            const uid     = u.id ?? u.Id;
+            const photo   = u.avatarUrl ?? u.avatar_url ?? null;
+            const colors  = getUserRoleAvatarColor(role);
+            const inits   = getInitials(name);
+            // Role → ring color
+            const ringColor: Record<string, string> = {
+              Admin:    "#B45309",
+              Operator: "#C2410C",
+              Manager:  "#1D4ED8",
+              Agent:    "#6D28D9",
+              Viewer:   "#6B7280",
+            };
+            const ring = ringColor[role] ?? "#9CA3AF";
             return (
               <li
-                key={u.id ?? u.Id ?? i}
-                className="flex items-center gap-2 py-2 px-2 -mx-2 border-b border-border/15 last:border-0 cursor-pointer rounded-lg hover:bg-black/[0.04] transition-colors"
+                key={uid ?? i}
+                className="flex items-center gap-2 py-1.5 px-2 -mx-2 border-b border-border/15 last:border-0 cursor-pointer rounded-lg hover:bg-black/[0.04] transition-colors duration-100"
                 onClick={() => {
                   sessionStorage.setItem("pendingSettingsSection", "team");
+                  if (uid) sessionStorage.setItem("pendingUserSelection", String(uid));
                   setLocation(`${routePrefix}/settings`);
                 }}
               >
-                {(() => {
-                  const colors = getAvatarColor(name);
-                  const inits = getInitials(name);
-                  return (
-                    <div className={cn("h-7 w-7 rounded-full text-[11px] font-bold flex items-center justify-center shrink-0", colors.bg, colors.text)}>
-                      {inits || "?"}
-                    </div>
-                  );
-                })()}
+                <div
+                  className="h-[34px] w-[34px] rounded-full text-[11px] font-bold flex items-center justify-center shrink-0 overflow-hidden"
+                  style={photo
+                    ? { outline: `2.5px solid ${ring}`, outlineOffset: "1.5px" }
+                    : { backgroundColor: colors.bg, color: colors.text, outline: `2.5px solid ${ring}`, outlineOffset: "1.5px" }
+                  }
+                >
+                  {photo
+                    ? <img src={photo} alt={name} className="h-full w-full object-cover" />
+                    : (inits || "?")
+                  }
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[12px] text-foreground truncate">{name}</p>
                   {email && name !== email && (
@@ -720,7 +863,10 @@ function AccountUsersPanel({ accountId, routePrefix }: { accountId: number; rout
                   )}
                 </div>
                 {role && (
-                  <span className="text-[10px] font-medium text-foreground/50 shrink-0 bg-black/[0.05] rounded-full px-1.5 py-0.5">{role}</span>
+                  <span
+                    className="text-[10px] font-semibold shrink-0 rounded-full px-1.5 py-0.5"
+                    style={{ backgroundColor: colors.bg, color: colors.text }}
+                  >{role}</span>
                 )}
                 <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
               </li>
@@ -781,7 +927,194 @@ type AccountDraft = {
   timezone: string; business_hours_start: string; business_hours_end: string; max_daily_sends: string;
   twilio_account_sid: string; twilio_auth_token: string; twilio_messaging_service_sid: string;
   twilio_default_from_number: string; webhook_url: string; webhook_secret: string; logo_url: string;
+  instagram_user_id: string; instagram_access_token: string;
 };
+
+// ── Voice Clone Widget ───────────────────────────────────────────────────────
+
+const VOICE_MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+const VOICE_ACCEPT = "audio/*";
+
+function formatVoiceFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function VoiceCloneWidget({
+  voiceFileData,
+  voiceFileName,
+  accountId,
+  onSave,
+}: {
+  voiceFileData: string | null;
+  voiceFileName: string | null;
+  accountId: number;
+  onSave: (field: string, value: string) => Promise<void>;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const hasVoice = Boolean(voiceFileData);
+  const voiceId = `account_${accountId}`;
+
+  const processFile = useCallback(async (file: File) => {
+    if (!file.type.startsWith("audio/")) {
+      alert("Please upload an audio file (M4A, WAV, MP3, OGG, FLAC).");
+      return;
+    }
+    if (file.size > VOICE_MAX_SIZE) {
+      alert("File size must be under 10 MB.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsDataURL(file);
+      });
+      await onSave("voice_file_data", dataUrl);
+      await onSave("voice_file_name", file.name);
+    } catch (e) {
+      console.error("Voice upload failed", e);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }, [onSave]);
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  }, [processFile]);
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) processFile(file);
+  }, [processFile]);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+  }, []);
+
+  const handleRemove = useCallback(async () => {
+    setUploading(true);
+    try {
+      await onSave("voice_file_data", "");
+      await onSave("voice_file_name", "");
+    } catch (e) {
+      console.error("Voice remove failed", e);
+    } finally {
+      setUploading(false);
+    }
+  }, [onSave]);
+
+  return (
+    <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 flex flex-col min-h-full" data-testid="account-widget-voice">
+      <div className="flex items-center gap-2 mb-3">
+        <Mic className="w-5 h-5 text-foreground/50" />
+        <p className="text-[18px] font-semibold font-heading text-foreground">Voice Clone</p>
+      </div>
+
+      {hasVoice ? (
+        <div className="space-y-3">
+          {/* File info + remove */}
+          <div className="flex items-center gap-2 rounded-lg bg-foreground/[0.03] border border-foreground/[0.06] px-3 py-2">
+            <Mic className="w-4 h-4 text-brand-indigo shrink-0" />
+            <span className="text-[13px] text-foreground/70 truncate flex-1">
+              {voiceFileName || "Voice file"}
+            </span>
+            <button
+              onClick={handleRemove}
+              disabled={uploading}
+              className="ml-auto p-1 rounded hover:bg-red-50 text-foreground/40 hover:text-red-500 transition-colors"
+              title="Remove voice"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Audio player */}
+          <audio
+            controls
+            src={voiceFileData ?? undefined}
+            className="w-full h-10 rounded-lg"
+            style={{ colorScheme: "light" }}
+          />
+
+          {/* Voice ID hint */}
+          <div className="rounded-lg bg-brand-indigo/5 border border-brand-indigo/10 px-3 py-2">
+            <p className="text-[11px] text-foreground/40 uppercase tracking-wider font-medium mb-0.5">
+              Voice ID for campaigns
+            </p>
+            <p className="text-[13px] font-mono text-brand-indigo font-medium">{voiceId}</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Drop zone */}
+          <div
+            onClick={() => !uploading && fileInputRef.current?.click()}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            className={cn(
+              "flex-1 flex flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors cursor-pointer min-h-[200px]",
+              dragOver
+                ? "border-brand-indigo bg-brand-indigo/5"
+                : "border-foreground/[0.08] hover:border-foreground/20 hover:bg-foreground/[0.01]",
+              uploading && "pointer-events-none opacity-50",
+            )}
+          >
+            {uploading ? (
+              <RefreshCw className="w-8 h-8 text-foreground/20 animate-spin" />
+            ) : (
+              <>
+                <Upload className="w-8 h-8 text-foreground/20 mb-2" />
+                <p className="text-[13px] text-foreground/40 font-medium">
+                  Click or drag audio file
+                </p>
+                <p className="text-[11px] text-foreground/25 mt-1">
+                  M4A, WAV, MP3, OGG, FLAC &middot; max 10 MB
+                </p>
+              </>
+            )}
+          </div>
+
+          {/* Voice ID hint (shown even before upload) */}
+          <div className="rounded-lg bg-foreground/[0.02] border border-foreground/[0.06] px-3 py-2 mt-3">
+            <p className="text-[11px] text-foreground/30 uppercase tracking-wider font-medium mb-0.5">
+              Voice ID will be
+            </p>
+            <p className="text-[13px] font-mono text-foreground/40 font-medium">{voiceId}</p>
+          </div>
+        </>
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={VOICE_ACCEPT}
+        onChange={handleFileChange}
+        className="hidden"
+      />
+    </div>
+  );
+}
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
@@ -792,9 +1125,11 @@ interface AccountDetailViewProps {
   onDelete: () => void;
   onToggleStatus: (account: AccountRow) => void;
   toolbarPrefix?: ReactNode;
+  onBack?: () => void;
 }
 
-export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onToggleStatus, toolbarPrefix }: AccountDetailViewProps) {
+export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onToggleStatus, toolbarPrefix, onBack }: AccountDetailViewProps) {
+  const isMobile   = useIsMobile();
   const status     = String(account.status || "Unknown");
   const badgeStyle = getStatusBadgeStyle(status);
   const accountId  = account.Id ?? account.id ?? 0;
@@ -812,21 +1147,10 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [leadCount, setLeadCount] = useState<number | null>(null);
 
-  // ── Gradient tester state ──────────────────────────────────────────────────
-  const [gradientTesterOpen, setGradientTesterOpen] = useState(false);
-  const [gradientLayers, setGradientLayers] = useState<GradientLayer[]>(DEFAULT_LAYERS);
-  const [gradientDragMode, setGradientDragMode] = useState(false);
-
-  const updateGradientLayer = useCallback((id: number, patch: Partial<GradientLayer>) => {
-    if (id === -1) { setGradientLayers(prev => [...prev, patch as GradientLayer]); return; }
-    if ((patch as any).id === -999) { setGradientLayers(prev => prev.filter(l => l.id !== id)); return; }
-    setGradientLayers(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
-  }, []);
-
-  const resetGradientLayers = useCallback(() => {
-    setGradientLayers(DEFAULT_LAYERS);
-    setGradientDragMode(false);
-  }, []);
+  // ── Instagram sync state ──────────────────────────────────────────────────
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<any>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   useEffect(() => {
     const id = (account as any).Id ?? (account as any).id;
@@ -839,6 +1163,23 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
       })
       .catch(() => setLeadCount(null));
   }, [(account as any).Id ?? (account as any).id]);
+
+  // ── Instagram sync handler ─────────────────────────────────────────────────
+  const handleSyncInstagram = async () => {
+    const id = (account as any).Id ?? (account as any).id;
+    if (!id) return;
+    setSyncing(true);
+    setSyncResult(null);
+    setSyncError(null);
+    try {
+      const result = await syncInstagramContacts(id);
+      setSyncResult(result);
+    } catch (err: any) {
+      setSyncError(err.message || "Sync failed");
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   // ── Edit handlers ───────────────────────────────────────────────────────────
   const startEdit = useCallback(() => {
@@ -872,6 +1213,8 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
       webhook_url:                String(account.webhook_url                  || ""),
       webhook_secret:             String(account.webhook_secret               || ""),
       logo_url:                   String(account.logo_url                     || ""),
+      instagram_user_id:          String(account.instagram_user_id            || ""),
+      instagram_access_token:     String(account.instagram_access_token       || ""),
     });
     setIsEditing(true);
   }, [account]);
@@ -950,93 +1293,84 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
     <div className="relative flex flex-col h-full overflow-hidden" data-testid="account-detail-view">
 
       {/* ── Full-height warm gradient ── */}
-      {gradientTesterOpen ? (
-        <>
-          {gradientLayers.map(layer => {
-            const style = layerToStyle(layer);
-            if (!style) return null;
-            return <div key={layer.id} className="absolute inset-0" style={style} />;
-          })}
-          {gradientDragMode && (
-            <GradientControlPoints layers={gradientLayers} onUpdateLayer={updateGradientLayer} />
-          )}
-        </>
-      ) : (
-        <>
-          <div className="absolute inset-0 bg-[#F8F3EB]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_72%_56%_at_100%_0%,#FFFFFF_0%,rgba(255,255,255,0.80)_30%,transparent_60%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_95%_80%_at_0%_0%,#FFF286_0%,rgba(255,242,134,0.60)_40%,rgba(255,242,134,0.25)_64%,transparent_80%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_62%_72%_at_100%_36%,rgba(241,218,162,0.62)_0%,transparent_64%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_92%_36%_at_48%_53%,rgba(210,188,130,0.22)_0%,transparent_72%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_98%_74%_at_50%_88%,rgba(105,170,255,0.60)_0%,transparent_74%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_54%_at_54%_60%,rgba(165,205,255,0.38)_0%,transparent_66%)]" />
-        </>
-      )}
+      <div className="absolute inset-0 bg-popover dark:bg-background" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_180%_123%_at_78%_83%,rgba(255,193,193,0.8)_0%,transparent_69%)] dark:opacity-[0.08]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_2%_2%,#d0f8ff_5%,transparent_30%)] dark:opacity-[0.08]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_96%_80%_at_49%_51%,rgba(203,203,241,0.8)_0%,transparent_66%)] dark:opacity-[0.08]" />
 
       {/* ── Header ── */}
       <div className="shrink-0">
-        <div className="relative px-4 pt-6 pb-10 space-y-3">
+        <div className="relative px-4 pt-6 pb-4 md:pb-10 space-y-3">
 
           {/* Row 1: Toolbar */}
-          <div className="flex items-center gap-1 flex-wrap">
-            {toolbarPrefix}
-
-            {isEditing ? (
-              <>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium bg-brand-blue text-white hover:opacity-90 transition-opacity disabled:opacity-50"
-                >
-                  {saving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
-                  {saving ? "Saving…" : "Save"}
-                </button>
-                <button
-                  onClick={cancelEdit}
-                  disabled={saving}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 transition-colors"
-                >
-                  <X className="h-3 w-3" />
-                  Cancel
-                </button>
-              </>
-            ) : (
+          <div className="flex items-center gap-1">
+            {onBack && (
               <button
-                onClick={startEdit}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 transition-colors"
+                onClick={onBack}
+                className="md:hidden h-9 w-9 rounded-full border border-black/[0.125] bg-background grid place-items-center shrink-0 mr-2"
               >
-                <Pencil className="h-3 w-3" />
-                Edit
+                <ChevronLeft className="h-4 w-4" />
               </button>
             )}
+            {toolbarPrefix}
 
-            <button
-              onClick={handlePDF}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 transition-colors"
-            >
-              <FileDown className="h-3 w-3" />
-              PDF
-            </button>
-            <button
-              onClick={handleDelete}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium border transition-colors",
-                deleteConfirm
-                  ? "border-red-400/60 text-red-600 bg-red-50/50 hover:bg-red-50/70"
-                  : "border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50"
+            <div className="flex-1 min-w-0" />
+
+            {/* Edit / Save / Cancel + PDF + Delete — far right */}
+            <div className="flex items-center gap-1 shrink-0">
+              {isEditing ? (
+                <>
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[80px] border-brand-indigo text-brand-indigo disabled:opacity-50"
+                  >
+                    {saving ? <RefreshCw className="h-4 w-4 shrink-0 animate-spin" /> : <Check className="h-4 w-4 shrink-0" />}
+                    <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                      {saving ? "Saving…" : "Save"}
+                    </span>
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    disabled={saving}
+                    className="group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[100px] border-black/[0.125] text-foreground/60 hover:text-foreground"
+                  >
+                    <X className="h-4 w-4 shrink-0" />
+                    <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">Cancel</span>
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={startEdit}
+                  className="group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[80px] border-black/[0.125] text-foreground/60 hover:text-foreground"
+                >
+                  <Pencil className="h-4 w-4 shrink-0" />
+                  <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">Edit</span>
+                </button>
               )}
-            >
-              <Trash2 className="h-3 w-3" />
-              {deleteConfirm ? "Confirm?" : "Delete"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setGradientTesterOpen(prev => !prev)}
-              className={`inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border transition-colors ${gradientTesterOpen ? "bg-indigo-100 text-indigo-600 border-indigo-200" : "border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50"}`}
-              title="Gradient Tester"
-            >
-              <Paintbrush className="h-4 w-4" />
-            </button>
+
+              <button
+                onClick={handlePDF}
+                className="group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[80px] border-black/[0.125] text-foreground/60 hover:text-foreground"
+              >
+                <FileDown className="h-4 w-4 shrink-0" />
+                <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">PDF</span>
+              </button>
+              <button
+                onClick={handleDelete}
+                className={cn(
+                  "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[100px]",
+                  deleteConfirm
+                    ? "border-red-400/60 text-red-600"
+                    : "border-black/[0.125] text-foreground/60 hover:text-foreground"
+                )}
+              >
+                <Trash2 className="h-4 w-4 shrink-0" />
+                <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                  {deleteConfirm ? "Confirm?" : "Delete"}
+                </span>
+              </button>
+            </div>
           </div>
 
           {/* Row 2: Avatar + Name + badges */}
@@ -1066,7 +1400,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
                 <button
                   onClick={(e) => { e.stopPropagation(); handleRemoveLogo(); }}
                   title="Remove logo"
-                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-white border border-black/[0.125] flex items-center justify-center text-foreground/50 hover:text-red-500 hover:border-red-300 transition-colors z-10 opacity-0 group-hover:opacity-100"
+                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-white dark:bg-card border border-black/[0.125] flex items-center justify-center text-foreground/50 hover:text-red-500 hover:border-red-300 transition-colors z-10 opacity-0 group-hover:opacity-100"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -1085,13 +1419,13 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
                 <input
                   value={draft.name}
                   onChange={(e) => set("name", e.target.value)}
-                  className="text-[27px] font-semibold font-heading bg-transparent border-b-2 border-brand-blue outline-none w-full leading-tight"
+                  className="text-[20px] md:text-[27px] font-semibold font-heading bg-transparent border-b-2 border-brand-blue outline-none w-full leading-tight"
                   placeholder="Account name"
                   data-testid="account-detail-name-input"
                 />
               ) : (
                 <h2
-                  className="text-[27px] font-semibold font-heading text-foreground leading-tight truncate"
+                  className="text-[20px] md:text-[27px] font-semibold font-heading text-foreground leading-tight truncate"
                   data-testid="account-detail-name"
                 >
                   {account.name || "Unnamed Account"}
@@ -1137,12 +1471,15 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
       <div className="relative flex-1 overflow-y-auto min-h-0 p-[3px] flex flex-col gap-[3px]">
 
         {/* Top row: Overview | Campaigns & Contracts | Users */}
-        <div className="grid gap-[3px]" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
+        <div
+          className={cn("grid gap-[3px]", isMobile ? "grid-cols-1" : "grid-cols-3")}
+          style={isMobile ? undefined : { gridTemplateColumns: "1fr 1fr 1fr" }}
+        >
 
           {/* Column 1: Overview */}
-          <div className="overflow-y-auto rounded-xl" style={{ height: "48vh" }}>
-            <div className="bg-white/60 rounded-xl p-4 flex flex-col min-h-full" data-testid="account-widget-basic">
-              <p className="text-[16px] font-semibold font-heading text-foreground mb-3">Overview</p>
+          <div className={cn("overflow-y-auto rounded-xl", isMobile ? "min-h-[300px]" : "h-[720px]")} style={isMobile ? undefined : { height: 720 }}>
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 flex flex-col min-h-full" data-testid="account-widget-basic">
+              <p className="text-[18px] font-semibold font-heading text-foreground mb-3">Overview</p>
 
               <InfoRow
                 label="Status"
@@ -1219,17 +1556,17 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
           </div>
 
           {/* Column 2: Campaigns & Contracts */}
-          <div className="overflow-y-auto rounded-xl" style={{ height: "48vh" }}>
-            <div className="bg-white/60 rounded-xl p-4 min-h-full" data-testid="account-widget-campaigns">
-              <p className="text-[16px] font-semibold font-heading text-foreground mb-3">Campaigns & Contracts</p>
+          <div className={cn("overflow-y-auto rounded-xl", isMobile ? "min-h-[300px]" : "h-[720px]")} style={isMobile ? undefined : { height: 720 }}>
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 min-h-full" data-testid="account-widget-campaigns">
+              <p className="text-[18px] font-semibold font-heading text-foreground mb-3">Campaigns & Contracts</p>
               <AccountCampaignsPanel accountId={accountId} routePrefix={routePrefix} />
             </div>
           </div>
 
           {/* Column 3: Users */}
-          <div className="overflow-y-auto rounded-xl" style={{ height: "48vh" }}>
-            <div className="bg-white/60 rounded-xl p-4 min-h-full" data-testid="account-widget-users">
-              <p className="text-[16px] font-semibold font-heading text-foreground mb-3">Users</p>
+          <div className={cn("overflow-y-auto rounded-xl", isMobile ? "min-h-[300px]" : "h-[720px]")} style={isMobile ? undefined : { height: 720 }}>
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 min-h-full" data-testid="account-widget-users">
+              <p className="text-[18px] font-semibold font-heading text-foreground mb-3">Users</p>
               <AccountUsersPanel accountId={accountId} routePrefix={routePrefix} />
             </div>
           </div>
@@ -1237,12 +1574,15 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
         </div>
 
         {/* Bottom row: AI & Schedule | Twilio | Placeholder */}
-        <div className="grid gap-[3px]" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
+        <div
+          className={cn("grid gap-[3px]", isMobile ? "grid-cols-1" : "grid-cols-3")}
+          style={isMobile ? undefined : { gridTemplateColumns: "1fr 1fr 1fr" }}
+        >
 
           {/* Bottom Col 1: AI & Schedule */}
-          <div className="overflow-y-auto rounded-xl" style={{ height: "48vh" }}>
-            <div className="bg-white/60 rounded-xl p-4 flex flex-col min-h-full" data-testid="account-widget-ai">
-              <p className="text-[16px] font-semibold font-heading text-foreground mb-3">AI & Schedule</p>
+          <div className={cn("overflow-y-auto rounded-xl", isMobile ? "min-h-[300px]" : "h-[720px]")} style={isMobile ? undefined : { height: 720 }}>
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 flex flex-col min-h-full" data-testid="account-widget-ai">
+              <p className="text-[18px] font-semibold font-heading text-foreground mb-3">AI & Schedule</p>
 
               <SectionHeader label="AI Config" icon={Bot} />
 
@@ -1302,12 +1642,12 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
             </div>
           </div>
 
-          {/* Bottom Col 2: Twilio */}
-          <div className="overflow-y-auto rounded-xl" style={{ height: "48vh" }}>
-            <div className="bg-white/60 rounded-xl p-4 flex flex-col min-h-full" data-testid="account-widget-twilio">
-              <p className="text-[16px] font-semibold font-heading text-foreground mb-3">Twilio</p>
+          {/* Bottom Col 2: Integrations */}
+          <div className={cn("overflow-y-auto rounded-xl", isMobile ? "min-h-[300px]" : "h-[720px]")} style={isMobile ? undefined : { height: 720 }}>
+            <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-4 flex flex-col min-h-full" data-testid="account-widget-twilio">
+              <p className="text-[18px] font-semibold font-heading text-foreground mb-3">Integrations</p>
 
-              <SectionHeader label="Integration" icon={Globe} />
+              <SectionHeader label="Twilio" icon={Globe} />
 
               <InfoRow
                 label="Account SID"
@@ -1343,17 +1683,62 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
                 label="Intake URL"
                 value={<MonoValue value="https://webhooks.leadawaker.com/api/leads/intake" />}
               />
+
+              <SectionHeader label="Instagram" icon={Globe} />
+              <InfoRow
+                label="User ID"
+                value={<MonoValue value={val("instagram_user_id")} />}
+                editChild={isEditing ? <EditText value={val("instagram_user_id")} onChange={(v) => set("instagram_user_id", v)} placeholder="IG Business Account User ID" /> : undefined}
+              />
+              <InfoRow
+                label="Access Token"
+                value={<SecretDisplay value={val("instagram_access_token")} />}
+                editChild={isEditing ? <EditText value={val("instagram_access_token")} onChange={(v) => set("instagram_access_token", v)} type="password" placeholder="Long-lived Page access token" /> : undefined}
+              />
+              {/* Instagram Sync */}
+              {!isEditing && val("instagram_user_id") && val("instagram_access_token") && (
+                <div className="mt-3 space-y-2">
+                  <button
+                    onClick={handleSyncInstagram}
+                    disabled={syncing}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-brand-indigo text-white text-xs font-medium hover:bg-brand-indigo/90 transition-colors disabled:opacity-50"
+                  >
+                    <RefreshCw className={cn("h-3.5 w-3.5", syncing && "animate-spin")} />
+                    {syncing ? "Syncing contacts..." : "Sync Instagram Contacts"}
+                  </button>
+                  {syncResult && (
+                    <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs text-emerald-800 space-y-1">
+                      <p className="font-medium">{syncResult.synced} contacts synced</p>
+                      {syncResult.skipped_duplicates > 0 && (
+                        <p className="text-emerald-600">{syncResult.skipped_duplicates} already existed</p>
+                      )}
+                      {syncResult.failed > 0 && (
+                        <p className="text-amber-600">{syncResult.failed} failed</p>
+                      )}
+                      {syncResult.rate_limited && (
+                        <p className="text-amber-600">Rate limited — run again later for remaining contacts</p>
+                      )}
+                      <p className="text-emerald-600/70">{syncResult.total_conversations} conversations scanned</p>
+                    </div>
+                  )}
+                  {syncError && (
+                    <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700">
+                      {syncError}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Bottom Col 3: Placeholder */}
-          <div className="overflow-y-auto rounded-xl" style={{ height: "48vh" }}>
-            <div className="bg-white/60 rounded-xl p-4 min-h-full" data-testid="account-widget-placeholder">
-              <p className="text-[16px] font-semibold font-heading text-foreground mb-3">Activity</p>
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <p className="text-[12px] text-foreground/30 italic">Coming soon</p>
-              </div>
-            </div>
+          {/* Bottom Col 3: Voice Clone */}
+          <div className={cn("overflow-y-auto rounded-xl", isMobile ? "min-h-[300px]" : "h-[720px]")} style={isMobile ? undefined : { height: 720 }}>
+            <VoiceCloneWidget
+              voiceFileData={(account as any).voice_file_data ?? null}
+              voiceFileName={(account as any).voice_file_name ?? null}
+              accountId={(account as any).Id ?? (account as any).id ?? 0}
+              onSave={onSave}
+            />
           </div>
 
         </div>
@@ -1369,15 +1754,6 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
         />
       )}
 
-      <GradientTester
-        open={gradientTesterOpen}
-        onClose={() => setGradientTesterOpen(false)}
-        layers={gradientLayers}
-        onUpdateLayer={updateGradientLayer}
-        onResetLayers={resetGradientLayers}
-        dragMode={gradientDragMode}
-        onToggleDragMode={() => setGradientDragMode(prev => !prev)}
-      />
     </div>
   );
 }

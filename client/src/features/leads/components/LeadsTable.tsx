@@ -28,8 +28,9 @@ import {
   Search, X, SlidersHorizontal, Flame, Phone, Mail, Columns3, Tag,
 } from "lucide-react";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
-import { ToolbarPill } from "@/components/ui/toolbar-pill";
+import { SearchPill } from "@/components/ui/search-pill";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -171,10 +172,18 @@ export function LeadsTable() {
   const { leads, loading, error, handleRefresh } = useLeadsData(filterAccountId);
 
   /* ── Toolbar button constants ───────────────────────────────────────────── */
-  const tbBase = "h-10 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
+  const tbBase = "h-9 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
+
+  /* ── Expand-on-hover icon-circle button helpers ─────────────────────────── */
+  const xBase = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
+  const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
+  const xActive  = "border-brand-indigo text-brand-indigo";
+  const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
   const tbDefault = "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:bg-card";
 
   /* ── View mode (persisted) ─────────────────────────────────────────────── */
+  const [mobileView, setMobileView] = useState<"list" | "detail">("list");
+
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     try {
       const stored = localStorage.getItem(VIEW_MODE_KEY);
@@ -194,8 +203,6 @@ export function LeadsTable() {
   const [leadFilters]    = useState<LeadFilterState>({ ...EMPTY_FILTERS });
 
   /* ── Tag data ────────────────────────────────────────────────────────────── */
-  const [leadTagMap,   setLeadTagMap]   = useState<Map<number, number[]>>(new Map());
-  const [leadTagsInfo, setLeadTagsInfo] = useState<Map<number, { name: string; color: string }[]>>(new Map());
   const [allTagsById,  setAllTagsById]  = useState<Map<number, { name: string; color: string }>>(new Map());
 
   /* ── Pipeline-specific state ────────────────────────────────────────────── */
@@ -203,7 +210,7 @@ export function LeadsTable() {
     try { return localStorage.getItem("kanban_tags_always_show") === "true"; } catch { /* noop */ } return false;
   });
   const [kanbanSearchQuery, setKanbanSearchQuery] = useState("");
-  const [kanbanSearchOpen, setKanbanSearchOpen] = useState(false);
+  const [kanbanSearchOpen, setKanbanSearchOpen] = useState(true);
   const [showHighScore, setShowHighScore] = useState(false);
   const [filterHasPhone, setFilterHasPhone] = useState(false);
   const [filterHasEmail, setFilterHasEmail] = useState(false);
@@ -300,56 +307,26 @@ export function LeadsTable() {
     fetchAccountData();
   }, [isAgencyView]);
 
-  /* ── Fetch lead-tag mappings ────────────────────────────────────────────── */
-  useEffect(() => {
-    let cancelled = false;
-    const fetchLeadTags = async () => {
-      if (leads.length === 0) return;
-      try {
-        const batchSize = 10;
-        const tagMap = new Map<number, number[]>();
-        // Process batches sequentially to avoid flooding the browser with
-        // hundreds of concurrent requests (which triggers Chrome's
-        // "multiple file download" permission prompt).
-        for (let i = 0; i < leads.length; i += batchSize) {
-          if (cancelled) return;
-          const batch = leads.slice(i, i + batchSize);
-          const results = await Promise.allSettled(
-            batch.map(async (lead) => {
-              const leadId = lead.Id || lead.id;
-              const res = await apiFetch(`/api/leads/${leadId}/tags`);
-              if (res.ok) {
-                const data = await res.json();
-                const tagIds = Array.isArray(data)
-                  ? data.map((t: any) => t.Tags_id || t.tags_id || t.id)
-                  : [];
-                return { leadId, tagIds };
-              }
-              return { leadId, tagIds: [] as number[] };
-            })
-          );
-          results
-            .filter((r): r is PromiseFulfilledResult<{ leadId: number; tagIds: number[] }> => r.status === "fulfilled")
-            .forEach((r) => tagMap.set(r.value.leadId, r.value.tagIds));
-        }
-        if (!cancelled) setLeadTagMap(tagMap);
-      } catch (err) { console.error("Failed to fetch lead tags for filtering", err); }
-    };
-    fetchLeadTags();
-    return () => { cancelled = true; };
+  /* ── Derive leadTagMap from tag_ids embedded in lead objects ────────────── */
+  const leadTagMap = useMemo((): Map<number, number[]> => {
+    const m = new Map<number, number[]>();
+    leads.forEach((l: any) => {
+      const ids: number[] = Array.isArray(l.tag_ids) ? l.tag_ids : [];
+      if (ids.length > 0) m.set(l.Id ?? l.id, ids);
+    });
+    return m;
   }, [leads]);
 
-  /* ── Build leadTagsInfo ─────────────────────────────────────────────────── */
-  useEffect(() => {
-    if (allTagsById.size === 0) return;
+  /* ── Derive leadTagsInfo from leadTagMap + allTagsById ───────────────────── */
+  const leadTagsInfo = useMemo((): Map<number, { name: string; color: string }[]> => {
     const info = new Map<number, { name: string; color: string }[]>();
     leadTagMap.forEach((tagIds, leadId) => {
       const tagDetails = tagIds
         .map((id) => allTagsById.get(id))
         .filter((t): t is { name: string; color: string } => !!t);
-      info.set(leadId, tagDetails);
+      if (tagDetails.length > 0) info.set(leadId, tagDetails);
     });
-    setLeadTagsInfo(info);
+    return info;
   }, [leadTagMap, allTagsById]);
 
   /* ── Filtered leads (applies list-view structured filters) ──────────────── */
@@ -529,6 +506,7 @@ export function LeadsTable() {
   const handleViewSwitch = useCallback((mode: ViewMode) => {
     setViewMode(mode);
     setSelectedLead(null);
+    setMobileView("list");
   }, []);
 
   const handleClosePanel = useCallback(() => { setSelectedLead(null); }, []);
@@ -548,6 +526,13 @@ export function LeadsTable() {
       }
     }
   }, [filteredLeads, selectedLead, viewMode]);
+
+  /* ── Breadcrumb ─────────────────────────────────────────────────────────── */
+  const { setCrumb } = useBreadcrumb();
+  useEffect(() => {
+    setCrumb(selectedLead ? getFullNameHelper(selectedLead) : null);
+    return () => setCrumb(null);
+  }, [selectedLead, setCrumb]);
 
   /* ── List-view helpers ──────────────────────────────────────────────────── */
   const allTags = useMemo(() => {
@@ -680,28 +665,27 @@ export function LeadsTable() {
   const tableToolbar = (
     <>
       {/* +Add */}
-      <ToolbarPill icon={Plus} label="Add" onClick={handleAddLead} />
+      <button onClick={handleAddLead} className={cn(xBase, "hover:max-w-[90px]", xDefault)}>
+        <Plus className="h-4 w-4 shrink-0" />
+        <span className={xSpan}>Add</span>
+      </button>
 
-      {/* Search — always visible */}
-      <div className="h-10 flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card px-3 shrink-0">
-        <Search className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-        <input
-          className="h-full bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/40 w-32 min-w-0"
-          placeholder="Search leads…"
-          value={tableSearch}
-          onChange={(e) => setTableSearch(e.target.value)}
-        />
-        {tableSearch && (
-          <button onClick={() => setTableSearch("")} className="text-muted-foreground/40 hover:text-muted-foreground shrink-0">
-            <X className="h-3 w-3" />
-          </button>
-        )}
-      </div>
+      {/* Search — always extended, no fill */}
+      <SearchPill
+        value={tableSearch}
+        onChange={setTableSearch}
+        open={true}
+        onOpenChange={() => {}}
+        placeholder="Search leads…"
+      />
 
       {/* Group */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill icon={Layers} label="Group" active={tableGroupBy !== "status"} activeValue={tableGroupBy !== "status" ? TABLE_GROUP_LABELS[tableGroupBy] : undefined} />
+          <button className={cn(xBase, "hover:max-w-[115px]", tableGroupBy !== "status" ? xActive : xDefault)}>
+            <Layers className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Group</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           {(["status", "campaign", "account", "none"] as TableGroupByOption[]).map((opt) => (
@@ -716,7 +700,10 @@ export function LeadsTable() {
       {/* Sort */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill icon={ArrowUpDown} label="Sort" active={tableSortBy !== "recent"} activeValue={tableSortBy !== "recent" ? TABLE_SORT_LABELS[tableSortBy].split(" ")[0] : undefined} />
+          <button className={cn(xBase, "hover:max-w-[100px]", tableSortBy !== "recent" ? xActive : xDefault)}>
+            <ArrowUpDown className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Sort</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Sort by</DropdownMenuLabel>
@@ -733,7 +720,10 @@ export function LeadsTable() {
       {/* Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill icon={Filter} label="Filter" active={isTableFilterActive} activeValue={isTableFilterActive ? tableActiveFilterCount : undefined} />
+          <button className={cn(xBase, "hover:max-w-[110px]", isTableFilterActive ? xActive : xDefault)}>
+            <Filter className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Filter</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Status</DropdownMenuLabel>
@@ -792,7 +782,10 @@ export function LeadsTable() {
       {/* Fields (Visibility) */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill icon={Eye} label="Fields" active={visibleCols.size !== DEFAULT_VISIBLE_COLS.length} />
+          <button className={cn(xBase, "hover:max-w-[115px]", visibleCols.size !== DEFAULT_VISIBLE_COLS.length ? xActive : xDefault)}>
+            <Eye className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>Fields</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Show / Hide Columns</DropdownMenuLabel>
@@ -836,7 +829,10 @@ export function LeadsTable() {
       {/* CSV */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill icon={FileSpreadsheet} label="CSV" />
+          <button className={cn(xBase, "hover:max-w-[90px]", xDefault)}>
+            <FileSpreadsheet className="h-4 w-4 shrink-0" />
+            <span className={xSpan}>CSV</span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           <DropdownMenuItem onClick={() => setImportWizardOpen(true)} className="text-[12px]">
@@ -933,6 +929,8 @@ export function LeadsTable() {
             isSortNonDefault={isSortNonDefault}
             onResetControls={handleResetControls}
             onCreateLead={handleAddLead}
+            mobileView={mobileView}
+            onMobileViewChange={setMobileView}
           />
         </div>
       )}
@@ -945,13 +943,22 @@ export function LeadsTable() {
           <div className="flex flex-col bg-muted rounded-lg overflow-hidden flex-1 min-w-0">
 
             {/* Title + controls row */}
-            <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
-              <div className="flex items-center justify-between w-[309px] shrink-0">
+            <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-1 md:pb-3 shrink-0 flex flex-col md:flex-row md:items-center md:gap-3 md:overflow-x-auto md:[scrollbar-width:none]">
+              {/* Title row: title left, tabs right (desktop only inline) */}
+              <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
                 <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">My Leads</h2>
-                <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as ViewMode)} />
+                <span className="hidden md:block">
+                  <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as ViewMode)} variant="segment" />
+                </span>
               </div>
-              <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
-              {tableToolbar}
+              {/* Second row on mobile: tabs + divider + toolbar */}
+              <div className="flex items-center gap-3 overflow-x-auto [scrollbar-width:none] pb-2 md:pb-0 md:contents">
+                <div className="md:hidden">
+                  <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as ViewMode)} variant="segment" />
+                </div>
+                <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
+                {tableToolbar}
+              </div>
             </div>
 
             {/* Table content */}
@@ -980,39 +987,37 @@ export function LeadsTable() {
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden bg-muted rounded-lg">
 
           {/* Pipeline title + controls row */}
-          <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
-            <div className="flex items-center justify-between w-[309px] shrink-0">
+          <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-1 md:pb-3 shrink-0 flex flex-col md:flex-row md:items-center md:gap-3 md:overflow-x-auto md:[scrollbar-width:none]">
+            {/* Title row */}
+            <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
               <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">My Leads</h2>
-              <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as ViewMode)} />
+              <span className="hidden md:block">
+                <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as ViewMode)} variant="segment" />
+              </span>
             </div>
-            <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
-
-            {/* Search — toggle pill */}
-            {kanbanSearchOpen ? (
-              <div className="h-9 flex items-center gap-1.5 px-3 rounded-full border border-brand-indigo/50 bg-brand-indigo/5">
-                <Search className="h-3.5 w-3.5 text-brand-indigo shrink-0" />
-                <input
-                  type="text"
-                  value={kanbanSearchQuery}
-                  onChange={(e) => setKanbanSearchQuery(e.target.value)}
-                  placeholder="Search…"
-                  autoFocus
-                  onBlur={() => { if (!kanbanSearchQuery) setKanbanSearchOpen(false); }}
-                  onKeyDown={(e) => { if (e.key === "Escape") { setKanbanSearchQuery(""); setKanbanSearchOpen(false); } }}
-                  className="bg-transparent border-none outline-none text-[12px] text-foreground placeholder:text-muted-foreground/60 w-[120px]"
-                />
-                <button onClick={() => { setKanbanSearchQuery(""); setKanbanSearchOpen(false); }} className="text-muted-foreground/60 hover:text-foreground">
-                  <X className="h-3 w-3" />
-                </button>
+            {/* Second row on mobile: tabs + divider + toolbar */}
+            <div className="flex items-center gap-3 overflow-x-auto [scrollbar-width:none] pb-2 md:pb-0 md:contents">
+              <div className="md:hidden">
+                <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as ViewMode)} variant="segment" />
               </div>
-            ) : (
-              <ToolbarPill icon={Search} label="Search" active={!!kanbanSearchQuery} onClick={() => setKanbanSearchOpen(true)} />
-            )}
+              <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
+
+            {/* Search — always extended, no fill */}
+            <SearchPill
+              value={kanbanSearchQuery}
+              onChange={setKanbanSearchQuery}
+              open={kanbanSearchOpen}
+              onOpenChange={setKanbanSearchOpen}
+              placeholder="Search leads…"
+            />
 
             {/* Filter button */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <ToolbarPill icon={Filter} label="Filter" active={isPipelineFilterActive} activeValue={isPipelineFilterActive ? pipelineActiveFilterCount : undefined} />
+                <button className={cn(xBase, "hover:max-w-[110px]", isPipelineFilterActive ? xActive : xDefault)}>
+                  <Filter className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>Filter</span>
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-60 rounded-2xl">
                 <DropdownMenuItem onClick={() => setShowHighScore((v) => !v)} className="flex items-center gap-2 cursor-pointer rounded-xl">
@@ -1044,7 +1049,10 @@ export function LeadsTable() {
             {/* Sort button */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <ToolbarPill icon={ArrowUpDown} label="Sort" active={isPipelineSortActive} />
+                <button className={cn(xBase, "hover:max-w-[100px]", isPipelineSortActive ? xActive : xDefault)}>
+                  <ArrowUpDown className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>Sort</span>
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56 rounded-2xl">
                 <DropdownMenuItem onClick={() => setPipelineSortBy(null)} className="flex items-center gap-2 cursor-pointer rounded-xl">
@@ -1066,36 +1074,42 @@ export function LeadsTable() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Fold / Unfold button */}
-            {hasAnyCollapsed ? (
-              <button onClick={() => setFoldAction((prev) => ({ type: "expand-all", seq: prev.seq + 1 }))} className="h-9 px-3 rounded-full flex items-center gap-1.5 text-[12px] font-medium bg-white text-foreground border border-black/[0.125] hover:bg-muted/50 transition-colors">
-                <Columns3 className="h-4 w-4 shrink-0" /><span>Unfold</span>
-              </button>
-            ) : (
-              <Popover open={foldPopoverOpen} onOpenChange={setFoldPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <button className={cn("h-9 px-3 rounded-full flex items-center gap-1.5 text-[12px] font-medium transition-colors", foldPopoverOpen ? "bg-white text-foreground border border-black/[0.125]" : "border border-black/[0.125] text-muted-foreground hover:bg-card hover:text-foreground")}>
-                    <Columns3 className="h-4 w-4 shrink-0" /><span>Fold</span>
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="w-72 rounded-2xl p-4">
-                  <p className="text-sm font-semibold mb-1">Fold columns</p>
-                  <p className="text-xs text-muted-foreground mb-3">Fold columns with this many leads or fewer.</p>
-                  <div className="flex items-center gap-2">
-                    <input type="number" value={foldThresholdInput} onChange={(e) => setFoldThresholdInput(e.target.value)} min="0" autoFocus onKeyDown={(e) => { if (e.key === "Enter") applyFold(); }} className="h-9 w-20 rounded-xl border border-border bg-input-bg px-3 text-sm text-center font-semibold focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
-                    <span className="text-sm text-muted-foreground flex-1">leads</span>
-                    <button onClick={applyFold} className="h-9 px-4 rounded-xl bg-brand-indigo text-white text-sm font-semibold hover:bg-brand-indigo/90 transition-colors">Apply</button>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            )}
+            {/* Fold / Unfold button — hidden on mobile (snap-scroll makes fold irrelevant) */}
+            <span className="hidden md:contents">
+              {hasAnyCollapsed ? (
+                <button onClick={() => setFoldAction((prev) => ({ type: "expand-all", seq: prev.seq + 1 }))} className={cn(xBase, "hover:max-w-[115px]", xDefault)}>
+                  <Columns3 className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>Unfold</span>
+                </button>
+              ) : (
+                <Popover open={foldPopoverOpen} onOpenChange={setFoldPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <button className={cn(xBase, "hover:max-w-[105px]", foldPopoverOpen ? xActive : xDefault)}>
+                      <Columns3 className="h-4 w-4 shrink-0" />
+                      <span className={xSpan}>Fold</span>
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" className="w-72 rounded-2xl p-4">
+                    <p className="text-sm font-semibold mb-1">Fold columns</p>
+                    <p className="text-xs text-muted-foreground mb-3">Fold columns with this many leads or fewer.</p>
+                    <div className="flex items-center gap-2">
+                      <input type="number" value={foldThresholdInput} onChange={(e) => setFoldThresholdInput(e.target.value)} min="0" autoFocus onKeyDown={(e) => { if (e.key === "Enter") applyFold(); }} className="h-9 w-20 rounded-xl border border-border bg-input-bg px-3 text-sm text-center font-semibold focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
+                      <span className="text-sm text-muted-foreground flex-1">leads</span>
+                      <button onClick={applyFold} className="h-9 px-4 rounded-xl bg-brand-indigo text-white text-sm font-semibold hover:bg-brand-indigo/90 transition-colors">Apply</button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
+            </span>
 
-            {/* Tags always-show toggle */}
-            <button onClick={() => setShowTagsAlways((v) => !v)} title={showTagsAlways ? "Tags always visible -- click to hover-only" : "Show tags on hover only -- click to always show"} className={cn("h-9 w-9 rounded-full flex items-center justify-center shrink-0 transition-colors", showTagsAlways ? "bg-white text-foreground border border-black/[0.125] hover:bg-muted/50" : "border border-black/[0.125] text-muted-foreground hover:bg-card hover:text-foreground")}>
-              <Tag className="h-4 w-4" />
+            {/* Tags always-show toggle — hidden on mobile */}
+            <button onClick={() => setShowTagsAlways((v) => !v)} title={showTagsAlways ? "Tags always visible — click to hover-only" : "Show tags on hover only — click to always show"} className={cn(xBase, "hidden md:inline-flex hover:max-w-[100px]", showTagsAlways ? xActive : xDefault)}>
+              <Tag className="h-4 w-4 shrink-0" />
+              <span className={xSpan}>Tags</span>
             </button>
 
-          </div>
+            </div>{/* end second row wrapper */}
+          </div>{/* end pipeline header */}
 
           {/* Kanban board + detail panel */}
           <div className="flex-1 min-h-0 flex gap-[3px] overflow-hidden">
