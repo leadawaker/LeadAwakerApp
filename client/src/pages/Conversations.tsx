@@ -244,6 +244,7 @@ export default function ConversationsPage() {
               mobileView === "chat" ? "flex-col md:flex-row" : "flex-col md:flex-row"
             )}
             data-testid="layout-conversations"
+            data-onboarding="conversations-inbox"
           >
             <InboxPanel
               threads={threads}
@@ -294,10 +295,13 @@ export default function ConversationsPage() {
 
             {/* Normal chat area */}
             {!isSupport && (
-              <div className={cn(
-                "flex-1 min-w-0 flex flex-col",
-                mobileView === "inbox" ? "hidden md:flex" : "flex"
-              )}>
+              <div
+                className={cn(
+                  "flex-1 min-w-0 flex flex-col",
+                  mobileView === "inbox" ? "hidden md:flex" : "flex"
+                )}
+                data-onboarding="conversations-chat"
+              >
                 <ChatPanel
                   selected={selected}
                   loading={loading}

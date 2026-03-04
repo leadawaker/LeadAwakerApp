@@ -1,0 +1,80 @@
+{
+  "welcome": {
+    "title": "Bem-vindo ao LeadAwaker!",
+    "subtitle": "Vamos configurar tudo em poucos minutos",
+    "startButton": "Iniciar Tutorial",
+    "skipButton": "Pular por agora",
+    "skipConfirmTitle": "Pular o tutorial?",
+    "skipConfirmBody": "Você pode reiniciá-lo a qualquer momento nas Configurações.",
+    "skipConfirmBack": "Voltar",
+    "skipConfirmYes": "Sim, pular"
+  },
+  "stages": {
+    "1": {
+      "label": "Configuração do Perfil",
+      "desc": "Defina seu nome, fuso horário e preferências"
+    },
+    "2": {
+      "label": "Explorar Campanhas",
+      "desc": "Veja suas campanhas de alcance"
+    },
+    "3": {
+      "label": "Seus Leads",
+      "desc": "Visualize e importe seus contatos"
+    },
+    "4": {
+      "label": "Conversas",
+      "desc": "Monitore respostas e gerencie chats"
+    }
+  },
+  "steps": {
+    "profileSetup": "Complete seu perfil",
+    "profileSetupDesc": "Vamos começar configurando seu perfil — nome, fuso horário e preferências de notificação.",
+    "profileName": "Seu Nome",
+    "profileNameDesc": "Digite seu nome completo. É assim que você aparecerá na plataforma.",
+    "profileTimezone": "Fuso Horário",
+    "profileTimezoneDesc": "Selecione seu fuso horário para que notificações e mensagens agendadas estejam alinhadas com seu horário comercial.",
+    "saveProfile": "Salvar Perfil",
+    "saveProfileDesc": "Clique em Salvar para aplicar suas alterações. Você pode atualizar a qualquer momento.",
+    "yourCampaigns": "Suas Campanhas",
+    "yourCampaignsDesc": "Campanhas são sequências de alcance que engajam seus leads. Vamos ver o que foi configurado para você.",
+    "campaignOverview": "Visão Geral das Campanhas",
+    "campaignOverviewDesc": "Aqui estão suas campanhas. Cada uma tem um status, canal (SMS/WhatsApp) e templates de mensagem. Clique em qualquer campanha para ver os detalhes.",
+    "campaignDetails": "Detalhes da Campanha",
+    "campaignDetailsDesc": "Este painel mostra a configuração da campanha — templates de mensagem, cronograma de follow-up, configurações de IA e métricas de desempenho.",
+    "yourLeads": "Seus Leads",
+    "yourLeadsDesc": "Leads são os contatos que suas campanhas alcançam. Vamos ver como adicioná-los.",
+    "leadsTable": "Tabela de Leads",
+    "leadsTableDesc": "Esta tabela mostra todos os seus leads com status, campanha atribuída e dados de engajamento. Você pode pesquisar, filtrar e ordenar.",
+    "importCsv": "Importar Leads via CSV",
+    "importCsvDesc": "Clique no botão CSV para importar leads de uma planilha. Você mapeará colunas para campos e visualizará antes de importar.",
+    "conversations": "Conversas",
+    "conversationsDesc": "Aqui você monitora todas as interações com leads — respostas recebidas, respostas da IA e intervenções manuais.",
+    "inbox": "Sua Caixa de Entrada",
+    "inboxDesc": "A caixa de entrada mostra todas as conversas ativas ordenadas por recência. Mensagens não lidas aparecem no topo.",
+    "chatView": "Visualização do Chat",
+    "chatViewDesc": "Clique em uma conversa para ver o histórico completo de mensagens. Você pode responder manualmente ou deixar a IA cuidar.",
+    "calendar": "Calendário",
+    "calendarDesc": "Quando leads agendam chamadas, elas aparecem aqui. Este é o fim do tour — você está pronto!"
+  },
+  "tooltip": {
+    "back": "Voltar",
+    "next": "Próximo",
+    "skip": "Pular",
+    "finish": "Finalizar",
+    "stage": "Etapa"
+  },
+  "completion": {
+    "title": "Tudo pronto!",
+    "body": "Sua conta está configurada e sua campanha está pronta. Os leads começarão a receber mensagens durante seu horário comercial.",
+    "cta": "Ir para Campanhas"
+  },
+  "progress": {
+    "resume": "Retomar Tutorial"
+  },
+  "settings": {
+    "title": "Tutorial de Onboarding",
+    "description": "Reiniciar o tutorial guiado de configuração",
+    "restartButton": "Reiniciar Tutorial"
+  }
+}

@@ -756,7 +756,7 @@ function CampaignsContent() {
 
   return (
     <>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full" data-onboarding="campaigns-list">
         <div className="flex-1 overflow-hidden">
           {viewMode === "list" ? (
             <CampaignListView
@@ -836,7 +836,7 @@ function CampaignsContent() {
 
               {/* Right panel: campaign detail view (single-column layout) */}
               {rightPanelOpen && (
-                <div className="w-[480px] shrink-0 overflow-hidden rounded-lg">
+                <div className="w-[480px] shrink-0 overflow-hidden rounded-lg" data-onboarding="campaign-detail">
                   {selectedCampaign ? (
                     <CampaignDetailView
                       campaign={selectedCampaign}

@@ -252,6 +252,8 @@ export function LeadsTable() {
 
   /* ── Accounts (agency view) ──────────────────────────────────────────────── */
   const [accountsById, setAccountsById] = useState<Map<number, string>>(new Map());
+  /* ── Campaigns (id → { name, accountId }) ──────────────────────────────── */
+  const [campaignsById, setCampaignsById] = useState<Map<number, { name: string; accountId: number | null }>>(new Map());
 
   /* ── Persist view mode ───────────────────────────────────────────────────── */
   useEffect(() => {
@@ -306,6 +308,29 @@ export function LeadsTable() {
     };
     fetchAccountData();
   }, [isAgencyView]);
+
+  /* ── Fetch campaigns ─────────────────────────────────────────────────────── */
+  useEffect(() => {
+    const fetchCampaignData = async () => {
+      try {
+        const res = await apiFetch("/api/campaigns");
+        if (res.ok) {
+          const data = await res.json();
+          const list = Array.isArray(data) ? data : data?.list || [];
+          const byId = new Map<number, { name: string; accountId: number | null }>();
+          list.forEach((c: any) => {
+            const id = c.id ?? c.Id;
+            byId.set(Number(id), {
+              name: c.name || c.Name || c.campaign_name || `Campaign ${id}`,
+              accountId: c.Accounts_id ?? c.accounts_id ?? c.accountsId ?? null,
+            });
+          });
+          setCampaignsById(byId);
+        }
+      } catch (err) { console.error("Failed to fetch campaigns", err); }
+    };
+    fetchCampaignData();
+  }, []);
 
   /* ── Derive leadTagMap from tag_ids embedded in lead objects ────────────── */
   const leadTagMap = useMemo((): Map<number, number[]> => {
@@ -404,19 +429,10 @@ export function LeadsTable() {
   const handleCloseKanbanPanel = useCallback(() => { setSelectedKanbanLead(null); }, []);
 
   /* ── Derived data for table filter dropdowns ─────────────────────────────── */
-  const availableCampaigns = useMemo(() => {
-    const set = new Set<string>();
-    filteredLeads.forEach((l) => {
-      const c = l.Campaign || l.campaign || l.campaign_name || "";
-      if (c) set.add(c);
-    });
-    return Array.from(set).sort();
-  }, [filteredLeads]);
-
   const availableAccounts = useMemo(() => {
     if (!isAgencyView) return [];
-    const result: { id: string; name: string }[] = [];
     const seen = new Set<string>();
+    const result: { id: string; name: string }[] = [];
     filteredLeads.forEach((l) => {
       const accountId = String(l.Accounts_id || l.account_id || "");
       if (accountId && !seen.has(accountId)) {
@@ -428,6 +444,22 @@ export function LeadsTable() {
     return result.sort((a, b) => a.name.localeCompare(b.name));
   }, [filteredLeads, isAgencyView, accountsById]);
 
+  const availableCampaigns = useMemo(() => {
+    // Collect campaign IDs present in leads (optionally scoped to selected account)
+    const campaignIds = new Set<number>();
+    filteredLeads.forEach((l) => {
+      if (tableFilterAccount && String(l.Accounts_id || l.account_id || "") !== tableFilterAccount) return;
+      const cId = Number(l.Campaigns_id || l.campaigns_id || l.campaignsId || 0);
+      if (cId) campaignIds.add(cId);
+    });
+    const result: { id: string; name: string }[] = [];
+    campaignIds.forEach((cId) => {
+      const info = campaignsById.get(cId);
+      result.push({ id: String(cId), name: info?.name || `Campaign ${cId}` });
+    });
+    return result.sort((a, b) => a.name.localeCompare(b.name));
+  }, [filteredLeads, campaignsById, tableFilterAccount]);
+
   /* ── Table flat items — filtered, sorted, grouped ───────────────────────── */
   const tableFlatItems = useMemo((): VirtualListItem[] => {
     let source = filteredLeads;
@@ -437,14 +469,14 @@ export function LeadsTable() {
         tableFilterStatus.includes(l.conversion_status || l.Conversion_Status || "")
       );
     }
-    if (tableFilterCampaign) {
-      source = source.filter((l) =>
-        (l.Campaign || l.campaign || l.campaign_name || "") === tableFilterCampaign
-      );
-    }
     if (tableFilterAccount) {
       source = source.filter((l) =>
         String(l.Accounts_id || l.account_id || "") === tableFilterAccount
+      );
+    }
+    if (tableFilterCampaign) {
+      source = source.filter((l) =>
+        String(l.Campaigns_id || l.campaigns_id || l.campaignsId || "") === tableFilterCampaign
       );
     }
     if (tableSortBy !== "recent") {
@@ -471,8 +503,10 @@ export function LeadsTable() {
     source.forEach((l) => {
       let groupKey: string;
       switch (tableGroupBy) {
-        case "campaign":
-          groupKey = l.Campaign || l.campaign || l.campaign_name || "No Campaign";
+        case "campaign": {
+          const cId = Number(l.Campaigns_id || l.campaigns_id || l.campaignsId || 0);
+          groupKey = (cId && campaignsById.get(cId)?.name) || l.Campaign || l.campaign || l.campaign_name || "No Campaign";
+        }
           break;
         case "account":
           groupKey = accountsById.get(Number(l.Accounts_id || l.account_id)) ||
@@ -501,7 +535,7 @@ export function LeadsTable() {
       );
     });
     return result;
-  }, [filteredLeads, leadTagsInfo, tableFilterStatus, tableFilterCampaign, tableFilterAccount, tableSortBy, tableGroupBy, accountsById]);
+  }, [filteredLeads, leadTagsInfo, tableFilterStatus, tableFilterCampaign, tableFilterAccount, tableSortBy, tableGroupBy, accountsById, campaignsById]);
 
   const handleViewSwitch = useCallback((mode: ViewMode) => {
     setViewMode(mode);
@@ -736,33 +770,33 @@ export function LeadsTable() {
             </DropdownMenuItem>
           ))}
 
-          {availableCampaigns.length > 0 && (
+          {availableAccounts.length > 0 && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Campaign</DropdownMenuLabel>
-              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterCampaign(""); }} className={cn("text-[12px]", !tableFilterCampaign && "font-semibold text-brand-indigo")}>
-                All Campaigns {!tableFilterCampaign && <Check className="h-3 w-3 ml-auto" />}
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Account</DropdownMenuLabel>
+              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterAccount(""); setTableFilterCampaign(""); }} className={cn("text-[12px]", !tableFilterAccount && "font-semibold text-brand-indigo")}>
+                All Accounts {!tableFilterAccount && <Check className="h-3 w-3 ml-auto" />}
               </DropdownMenuItem>
-              {availableCampaigns.map((c) => (
-                <DropdownMenuItem key={c} onClick={(e) => { e.preventDefault(); setTableFilterCampaign((p) => p === c ? "" : c); }} className={cn("text-[12px]", tableFilterCampaign === c && "font-semibold text-brand-indigo")}>
-                  <span className="flex-1 truncate">{c}</span>
-                  {tableFilterCampaign === c && <Check className="h-3 w-3 ml-1 shrink-0" />}
+              {availableAccounts.map((a) => (
+                <DropdownMenuItem key={a.id} onClick={(e) => { e.preventDefault(); if (tableFilterAccount === a.id) { setTableFilterAccount(""); } else { setTableFilterAccount(a.id); setTableFilterCampaign(""); } }} className={cn("text-[12px]", tableFilterAccount === a.id && "font-semibold text-brand-indigo")}>
+                  <span className="flex-1 truncate">{a.name}</span>
+                  {tableFilterAccount === a.id && <Check className="h-3 w-3 ml-1 shrink-0" />}
                 </DropdownMenuItem>
               ))}
             </>
           )}
 
-          {availableAccounts.length > 0 && (
+          {availableCampaigns.length > 0 && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Account</DropdownMenuLabel>
-              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterAccount(""); }} className={cn("text-[12px]", !tableFilterAccount && "font-semibold text-brand-indigo")}>
-                All Accounts {!tableFilterAccount && <Check className="h-3 w-3 ml-auto" />}
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Campaign{tableFilterAccount ? ` (${accountsById.get(Number(tableFilterAccount)) || "Account"})` : ""}</DropdownMenuLabel>
+              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterCampaign(""); }} className={cn("text-[12px]", !tableFilterCampaign && "font-semibold text-brand-indigo")}>
+                All Campaigns {!tableFilterCampaign && <Check className="h-3 w-3 ml-auto" />}
               </DropdownMenuItem>
-              {availableAccounts.map((a) => (
-                <DropdownMenuItem key={a.id} onClick={(e) => { e.preventDefault(); setTableFilterAccount((p) => p === a.id ? "" : a.id); }} className={cn("text-[12px]", tableFilterAccount === a.id && "font-semibold text-brand-indigo")}>
-                  <span className="flex-1 truncate">{a.name}</span>
-                  {tableFilterAccount === a.id && <Check className="h-3 w-3 ml-1 shrink-0" />}
+              {availableCampaigns.map((c) => (
+                <DropdownMenuItem key={c.id} onClick={(e) => { e.preventDefault(); setTableFilterCampaign((p) => p === c.id ? "" : c.id); }} className={cn("text-[12px]", tableFilterCampaign === c.id && "font-semibold text-brand-indigo")}>
+                  <span className="flex-1 truncate">{c.name}</span>
+                  {tableFilterCampaign === c.id && <Check className="h-3 w-3 ml-1 shrink-0" />}
                 </DropdownMenuItem>
               ))}
             </>
@@ -829,7 +863,7 @@ export function LeadsTable() {
       {/* CSV */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[90px]", xDefault)}>
+          <button className={cn(xBase, "hover:max-w-[90px]", xDefault)} data-onboarding="import-leads-btn">
             <FileSpreadsheet className="h-4 w-4 shrink-0" />
             <span className={xSpan}>CSV</span>
           </button>
@@ -896,7 +930,7 @@ export function LeadsTable() {
   );
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" data-onboarding="leads-table">
 
       {/* ── List view ── */}
       {viewMode === "list" && (
@@ -931,6 +965,8 @@ export function LeadsTable() {
             onCreateLead={handleAddLead}
             mobileView={mobileView}
             onMobileViewChange={setMobileView}
+            accountsById={accountsById}
+            campaignsById={campaignsById}
           />
         </div>
       )}

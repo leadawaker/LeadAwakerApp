@@ -15,6 +15,7 @@ import enWorkflowVisualization from "./locales/en/workflowVisualization.json";
 import enLogin from "./locales/en/login.json";
 import enTermsOfService from "./locales/en/termsOfService.json";
 import enPrivacyPolicy from "./locales/en/privacyPolicy.json";
+import enOnboarding from "./locales/en/onboarding.json";
 
 import ptCommon from "./locales/pt/common.json";
 import ptHome from "./locales/pt/home.json";
@@ -28,6 +29,7 @@ import ptWorkflowVisualization from "./locales/pt/workflowVisualization.json";
 import ptLogin from "./locales/pt/login.json";
 import ptTermsOfService from "./locales/pt/termsOfService.json";
 import ptPrivacyPolicy from "./locales/pt/privacyPolicy.json";
+import ptOnboarding from "./locales/pt/onboarding.json";
 
 import nlCommon from "./locales/nl/common.json";
 import nlHome from "./locales/nl/home.json";
@@ -41,6 +43,7 @@ import nlWorkflowVisualization from "./locales/nl/workflowVisualization.json";
 import nlLogin from "./locales/nl/login.json";
 import nlTermsOfService from "./locales/nl/termsOfService.json";
 import nlPrivacyPolicy from "./locales/nl/privacyPolicy.json";
+import nlOnboarding from "./locales/nl/onboarding.json";
 
 const resources = {
   en: {
@@ -56,6 +59,7 @@ const resources = {
     login: enLogin,
     termsOfService: enTermsOfService,
     privacyPolicy: enPrivacyPolicy,
+    onboarding: enOnboarding,
   },
   pt: {
     common: ptCommon,
@@ -70,6 +74,7 @@ const resources = {
     login: ptLogin,
     termsOfService: ptTermsOfService,
     privacyPolicy: ptPrivacyPolicy,
+    onboarding: ptOnboarding,
   },
   nl: {
     common: nlCommon,
@@ -84,6 +89,7 @@ const resources = {
     login: nlLogin,
     termsOfService: nlTermsOfService,
     privacyPolicy: nlPrivacyPolicy,
+    onboarding: nlOnboarding,
   },
 };
 
@@ -109,6 +115,7 @@ i18n
       "login",
       "termsOfService",
       "privacyPolicy",
+      "onboarding",
     ],
 
     interpolation: {

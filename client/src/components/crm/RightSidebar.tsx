@@ -215,6 +215,7 @@ export function RightSidebar({
                 : "text-foreground/70 hover:bg-card hover:text-foreground"
             )}
             data-testid={`link-${it.testId}`}
+            data-onboarding={it.testId}
             data-active={active || undefined}
           >
             <div className={cn(

@@ -559,7 +559,7 @@ function SettingsContent() {
           </div>
 
           {/* Form fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-onboarding="profile-name">
             <Field
               label="Full Name"
               value={name}
@@ -586,7 +586,7 @@ function SettingsContent() {
               type="tel"
               icon={Phone}
             />
-            <div data-testid="input-profile-timezone-wrap">
+            <div data-testid="input-profile-timezone-wrap" data-onboarding="profile-timezone">
               <label
                 htmlFor="profile-timezone-select"
                 className="text-xs font-medium text-muted-foreground flex items-center gap-1.5"
@@ -633,11 +633,40 @@ function SettingsContent() {
               type="button"
               className="h-10 px-6 rounded-full bg-brand-indigo text-white text-sm font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-150"
               data-testid="button-save-profile"
+              data-onboarding="save-profile"
               onClick={handleSaveProfile}
               disabled={isSaving}
             >
               {isSaving ? "Saving..." : "Save Changes"}
             </button>
+          </div>
+
+          {/* Tutorial restart */}
+          <div className="pt-4 mt-4 border-t border-border/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-foreground">Onboarding Tutorial</p>
+                <p className="text-xs text-muted-foreground">Restart the guided setup walkthrough</p>
+              </div>
+              <button
+                type="button"
+                className="text-xs font-medium px-3 py-1.5 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                data-testid="button-restart-tutorial"
+                onClick={async () => {
+                  try {
+                    const res = await apiFetch("/api/onboarding/restart", { method: "POST" });
+                    if (res.ok) {
+                      toast({ title: "Tutorial restarted", description: "The onboarding walkthrough will start on your next page load." });
+                      window.location.reload();
+                    }
+                  } catch {
+                    toast({ title: "Error", description: "Failed to restart tutorial", variant: "destructive" });
+                  }
+                }}
+              >
+                Restart Tutorial
+              </button>
+            </div>
           </div>
         </>
       )}
