@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import { useLocation } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
@@ -66,10 +67,18 @@ export default function ConversationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(true); // starts expanded
 
-  // Group / Sort / Filter state
-  const [groupBy, setGroupBy] = useState<ChatGroupBy>("date");
-  const [sortBy, setSortBy] = useState<ChatSortBy>("newest");
-  const [filterStatus, setFilterStatus] = useState<string[]>([]);
+  // Group / Sort / Filter state (persisted)
+  const [convoPrefs, setConvoPrefs] = usePersistedState("conversations-prefs", {
+    groupBy: "date" as ChatGroupBy,
+    sortBy: "newest" as ChatSortBy,
+    filterStatus: [] as string[],
+  });
+  const groupBy = convoPrefs.groupBy;
+  const sortBy = convoPrefs.sortBy;
+  const filterStatus = convoPrefs.filterStatus;
+  const setGroupBy = useCallback((v: ChatGroupBy) => setConvoPrefs(p => ({ ...p, groupBy: v })), [setConvoPrefs]);
+  const setSortBy = useCallback((v: ChatSortBy) => setConvoPrefs(p => ({ ...p, sortBy: v })), [setConvoPrefs]);
+  const setFilterStatus = useCallback((v: string[] | ((p: string[]) => string[])) => setConvoPrefs(p => ({ ...p, filterStatus: typeof v === "function" ? v(p.filterStatus) : v })), [setConvoPrefs]);
   const [filterOpen, setFilterOpen] = useState(false);
 
   // Track when each lead was last read — persisted across refreshes

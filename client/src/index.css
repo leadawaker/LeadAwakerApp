@@ -175,31 +175,31 @@
 
 /* DARK MODE — Deep navy-indigo surfaces with proper elevation hierarchy */
 .dark {
-  /* Base surfaces — #121B2B background, stepped elevation via lightness */
-  --background: 218 41% 12%;       /* #121B2B — main page bg */
-  --foreground: 223 20% 93%;       /* #EAECF1 — primary text */
-  --bg-main: 218 41% 12%;          /* Match background */
+  /* Base surfaces — #131E30 background, stepped elevation via lightness */
+  --background: 217 43% 13%;       /* #131E30 — main page bg */
+  --foreground: 0 0% 100%;         /* #FFFFFF — primary text */
+  --bg-main: 217 43% 13%;          /* Match background */
 
-  /* Cards — #2D354B elevated surface */
-  --card: 224 25% 24%;             /* #2D354B — floating cards */
-  --card-foreground: 223 20% 93%;
-  --card-hover: 224 24% 39%;       /* #4C597D — hover tint on cards */
+  /* Cards — #243249 elevated surface */
+  --card: 217 34% 21%;             /* #243249 — floating cards */
+  --card-foreground: 0 0% 100%;
+  --card-hover: 225 26% 32%;       /* #3D4868 — hover tint on cards */
 
-  /* Popovers — #111126 deeper than background */
-  --popover: 240 38% 11%;          /* #111126 — dropdowns, popovers */
-  --popover-foreground: 223 20% 93%;
+  /* Popovers — #232B38 slightly above background */
+  --popover: 217 23% 18%;          /* #232B38 — dropdowns, popovers */
+  --popover-foreground: 0 0% 100%;
 
   /* Primary: Brand Indigo — brighter for dark bg legibility */
   --primary: 243 85% 68%;
   --primary-foreground: 0 0% 100%;
 
-  /* Secondary: subtle indigo-tinted surface */
-  --secondary: 240 31% 20%;
-  --secondary-foreground: 223 20% 90%;
+  /* Secondary: subtle navy surface */
+  --secondary: 215 44% 17%;
+  --secondary-foreground: 0 0% 95%;
 
-  /* Muted — #232343 indigo-tinted dark surface */
-  --muted: 240 31% 20%;            /* #232343 */
-  --muted-foreground: 226 23% 59%; /* #808BAF */
+  /* Muted — #18283E navy dark surface */
+  --muted: 215 44% 17%;            /* #18283E */
+  --muted-foreground: 225 23% 59%; /* #7E8AAE */
 
   /* Accent: warmer gold adjusted for dark */
   --accent: 38 90% 58%;
@@ -215,9 +215,9 @@
   --info: 243 85% 68%;
   --info-foreground: 0 0% 100%;
 
-  /* Borders: subtle on dark surfaces */
-  --border: 224 20% 28%;
-  --input: 224 20% 28%;
+  /* Borders: visible on dark surfaces */
+  --border: 237 21% 59%;           /* #8183AC */
+  --input: 237 21% 59%;
   --ring: 243 85% 68%;
 
   /* Chart colors adjusted for dark */
@@ -230,7 +230,7 @@
   /* ── Brand Tokens (Dark Mode) ── */
   --brand-blue: 243 85% 68%;
   --brand-blue-foreground: 0 0% 100%;
-  --brand-deep-blue: 218 41% 12%;
+  --brand-deep-blue: 217 43% 13%;
   --brand-deep-blue-foreground: 223 20% 93%;
   --brand-yellow: 44 98% 55%;
   --brand-yellow-foreground: 218 41% 12%;
@@ -247,12 +247,12 @@
   --highlight-active: 40 50% 24%;   /* Deep warm amber — active pill/tab */
   --highlight-selected: 40 55% 30%; /* 25% brighter amber — selected card/row */
   --highlight-hover: 243 40% 36%;   /* Indigo-tinted — hover on highlighted */
-  /* Input field background — #242449 */
-  --input-bg: 240 34% 21%;
+  /* Input field background — #232E4D */
+  --input-bg: 224 38% 22%;
 
   /* Sidebar tokens (dark mode) — deeper than background */
-  --sidebar-bg: 220 42% 9%;
-  --sidebar-foreground: 223 20% 85%;
+  --sidebar-bg: 217 45% 9%;
+  --sidebar-foreground: 0 0% 90%;
   --sidebar-active: 243 85% 68%;
   --sidebar-active-foreground: 0 0% 100%;
 }

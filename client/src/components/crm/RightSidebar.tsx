@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   Building2,
+  ClipboardList,
   LogOut,
   Receipt,
   Settings,
@@ -105,7 +106,7 @@ export function RightSidebar({
       : location.replace(/^\/(agency|subaccount)/, "");
 
     // Agency-only pages don't exist in subaccount view — always go to campaigns
-    const agencyOnlyPaths = ["/accounts", "/prompt-library", "/automation-logs", "/expenses", "/contracts"];
+    const agencyOnlyPaths = ["/accounts", "/tasks", "/prompt-library", "/automation-logs", "/expenses", "/contracts"];
     const isAgencyOnlyPage = agencyOnlyPaths.some((p) => tail.startsWith(p));
     const safeTail = (!nextIsAgency && isAgencyOnlyPage) ? "/campaigns" : tail;
 
@@ -149,6 +150,13 @@ export function RightSidebar({
     },
     { href: `${prefix}/invoices`, label: "Billing", icon: Receipt, testId: "nav-billing" },
     {
+      href: `${prefix}/tasks`,
+      label: "Tasks",
+      icon: ClipboardList,
+      testId: "nav-tasks",
+      agencyOnly: true,
+    },
+    {
       href: `${prefix}/automation-logs`,
       label: "Automations",
       icon: ScrollText,
@@ -175,6 +183,7 @@ export function RightSidebar({
     expenses: "Billing",
     contracts: "Billing",
     "prompt-library": "Prompt Library",
+    tasks: "Tasks",
     "automation-logs": "Automations",
     settings: "Settings",
     docs: "Docs",
@@ -242,7 +251,9 @@ export function RightSidebar({
             side="right"
             className={cn(
               "rounded-lg px-3 h-10 flex items-center text-sm font-semibold shadow-md border-0 ml-1",
-              isActive(it.href) ? "bg-highlight-active text-foreground" : "bg-card text-foreground"
+              isActive(it.href)
+                ? "bg-highlight-active text-foreground"
+                : "bg-card text-foreground"
             )}
           >
             {it.label}
@@ -564,7 +575,7 @@ export function RightSidebar({
               {/* Section: Admin (agency only) + Billing */}
               {(() => {
                 const adminItems = visibleNavItems.filter(it =>
-                  ["Accounts", "Billing"].includes(it.label)
+                  ["Accounts", "Tasks", "Billing"].includes(it.label)
                 );
                 if (adminItems.length === 0) return null;
                 return (

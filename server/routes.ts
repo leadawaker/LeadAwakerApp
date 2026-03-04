@@ -37,6 +37,7 @@ import {
   insertNotificationsSchema,
   insertSupportSessionSchema,
   insertSupportMessageSchema,
+  insertTaskSchema,
 } from "@shared/schema";
 import crypto from "crypto";
 import fs from "fs";
@@ -90,7 +91,12 @@ function wrapAsync(
 
 /** Derive the automation engine base URL from the support chat webhook URL. */
 function getEngineUrl(): string {
-  return process.env.SUPPORT_CHAT_WEBHOOK_URL?.replace(/\/[^/]+$/, "") ?? "http://192.168.1.107:8100";
+  const raw = process.env.SUPPORT_CHAT_WEBHOOK_URL;
+  if (raw) {
+    const u = new URL(raw);
+    return u.origin;
+  }
+  return "http://192.168.1.107:8100";
 }
 
 /**
@@ -1416,6 +1422,39 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     const id = Number(req.params.id);
     const deleted = await storage.deletePrompt(id);
     if (!deleted) return res.status(404).json({ error: "Prompt not found" });
+    res.json({ success: true });
+  }));
+
+  // ─── Tasks ─────────────────────────────────────────────────────────
+
+  app.get("/api/tasks", requireAgency, wrapAsync(async (req, res) => {
+    const accountId = req.query.accountId ? Number(req.query.accountId) : undefined;
+    const data = accountId
+      ? await storage.getTasksByAccountId(accountId)
+      : await storage.getTasks();
+    res.json(data);
+  }));
+
+  app.post("/api/tasks", requireAgency, wrapAsync(async (req, res) => {
+    const parsed = insertTaskSchema.safeParse(req.body);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const task = await storage.createTask(parsed.data);
+    res.status(201).json(task);
+  }));
+
+  app.patch("/api/tasks/:id", requireAgency, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const parsed = insertTaskSchema.partial().safeParse(req.body);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const updated = await storage.updateTask(id, parsed.data);
+    if (!updated) return res.status(404).json({ error: "Task not found" });
+    res.json(updated);
+  }));
+
+  app.delete("/api/tasks/:id", requireAgency, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const deleted = await storage.deleteTask(id);
+    if (!deleted) return res.status(404).json({ error: "Task not found" });
     res.json({ success: true });
   }));
 

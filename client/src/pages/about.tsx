@@ -59,7 +59,7 @@ export default function About() {
       {/* SEO / hreflang hook */}
       <Seo />
 
-      <div className="min-h-screen pt-[126px] pb-20 text-center overflow-x-hidden bg-slate-50">
+      <div className="min-h-screen pt-[126px] pb-20 text-center overflow-x-hidden bg-slate-50 dark:bg-muted">
         <div className="container mx-auto px-6 md:px-12 lg:px-16 xl:px-20 2xl:px-24">
 
           {/* Intro Section */}

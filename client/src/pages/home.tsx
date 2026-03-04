@@ -25,6 +25,7 @@ import AnimatedRangeCounter from "@/components/AnimatedRangeCounter";
 import SalesRepSteps from "@/components/SalesRepSteps";
 import WorkflowVisualization from "@/components/WorkflowVisualization";
 import { FloatingPaths } from "@/components/ui/background-paths";
+import { DottedSurface } from "@/components/ui/dotted-surface";
 
 export default function Home() {
   const { t, i18n } = useTranslation("home");
@@ -34,9 +35,9 @@ export default function Home() {
   const [isFinished, setIsFinished] = useState(false);
 
   return (
-    <div className="min-h-screen pt-32 overflow-x-hidden md:overflow-visible bg-white">
+    <div className="min-h-screen pt-32 overflow-x-hidden md:overflow-visible bg-[#F9FAFC] dark:bg-background">
       {/* Hero Section */}
-      <section className="relative overflow-hidden pb-20 md:pb-32">
+      <section className="relative overflow-hidden pb-20 md:pb-32 bg-[#F9FAFC]">
         <div className="absolute top-0 right-0 -z-10 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent blur-3xl opacity-50" />
 
         <div className="container mx-auto px-4 md:px-6">
@@ -137,7 +138,7 @@ export default function Home() {
       <SalesRepSteps />
 
       {/* Conversion Pipeline */}
-      <section className="py-48 bg-white">
+      <section className="py-48 bg-[#F4F5F9] dark:bg-background">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
@@ -151,7 +152,7 @@ export default function Home() {
       </section>
 
       {/* Results/Metrics Section */}
-      <section className="pb-48 pt-16 bg-white">
+      <section className="pb-48 pt-16 bg-[#F4F5F9] dark:bg-background">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -206,7 +207,7 @@ export default function Home() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.1 * i }}
-                  className="bg-white p-6 rounded-2xl border border-border text-center flex flex-col justify-center flex-1 min-w-[280px]"
+                  className="bg-white dark:bg-card p-6 rounded-2xl border border-border text-center flex flex-col justify-center flex-1 min-w-[280px]"
                 >
                   <div className={`font-bold text-primary mb-1 font-heading ${result.isRange ? 'text-4xl' : 'text-[48px]'}`}>
                     {result.isRange ? (
@@ -313,7 +314,7 @@ export default function Home() {
       </section>
 
       {/* Security & AI Guardrails Section */}
-      <section className="py-48">
+      <section className="py-48 bg-[#F6F5FA]">
         <div className="container mx-auto px-4 md:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -337,20 +338,20 @@ export default function Home() {
           >
             <div className="grid md:grid-cols-2 gap-8 text-left mt-12 p-8">
               <div className="space-y-3">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2 text-[18px]">
+                <h3 className="font-bold text-foreground flex items-center gap-2 text-[18px]">
                   <div className="w-2 h-2 rounded-full bg-emerald-500" />
                   {t("compliance.gdpr.title")}
                 </h3>
-                <p className="text-gray-600 text-[16px]">
+                <p className="text-muted-foreground text-[16px]">
                   {t("compliance.gdpr.description")}
                 </p>
               </div>
               <div className="space-y-3 md:pl-8 pt-8 md:pt-0">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2 text-[18px]">
+                <h3 className="font-bold text-foreground flex items-center gap-2 text-[18px]">
                   <div className="w-2 h-2 rounded-full bg-blue-500" />
                   {t("compliance.brand.title")}
                 </h3>
-                <p className="text-gray-600 text-[16px]">
+                <p className="text-muted-foreground text-[16px]">
                   {t("compliance.brand.description")}
                 </p>
               </div>
@@ -361,9 +362,8 @@ export default function Home() {
 
       {/* Bottom Demo CTA Section */}
       <section className="py-32 bg-primary text-primary-foreground relative overflow-hidden">
-        {/* Animated background paths — fade out after 20s, 12 paths on mobile / 36 on desktop */}
-        <FloatingPaths position={1} color="rgba(255,255,255,0.35)" />
-        <FloatingPaths position={-1} color="rgba(255,255,255,0.18)" />
+        {/* Dotted surface animation (white dots on dark bg) */}
+        <DottedSurface className="opacity-60" />
         <div className="container mx-auto px-4 md:px-6 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

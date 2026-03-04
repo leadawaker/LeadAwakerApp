@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import { List, Table2 } from "lucide-react";
 
 import { CrmShell } from "@/components/crm/CrmShell";
@@ -59,9 +60,9 @@ export default function PromptsPage() {
   const [modelFilter, setModelFilter] = useState<string>("all");
   const [campaignFilter, setCampaignFilter] = useState<string>("");
 
-  /* ── Sort & Group ───────────────────────────────────────────────────────── */
-  const [sortBy, setSortBy] = useState<PromptSortOption>("recent");
-  const [groupBy, setGroupBy] = useState<PromptGroupOption>("none");
+  /* ── Sort & Group (persisted) ───────────────────────────────────────────── */
+  const [sortBy, setSortBy] = usePersistedState<PromptSortOption>("prompts-sort", "recent");
+  const [groupBy, setGroupBy] = usePersistedState<PromptGroupOption>("prompts-group", "none");
 
   /* ── Column visibility (persisted) ──────────────────────────────────────── */
   const [visibleCols, setVisibleCols] = useState<Set<PromptColKey>>(() => {

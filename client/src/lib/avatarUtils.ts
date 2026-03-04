@@ -331,6 +331,92 @@ export function getPromptAvatarColor(status: string): { bg: string; text: string
   };
 }
 
+// ── Automation type avatar colors ────────────────────────────────────────────
+export const AUTOMATION_AVATAR_BG: Record<string, string> = {
+  ai_conversation: "#DBEAFE",   // blue-100 wash
+  messaging:       "#D1FAE5",   // green-100 wash
+  error_handler:   "#FFE4E6",   // rose-100 wash
+  scoring:         "#FEF3C7",   // amber-100 wash
+  generic:         "#F3F4F6",   // gray-100 wash
+};
+export const AUTOMATION_AVATAR_TEXT: Record<string, string> = {
+  ai_conversation: "#1E40AF",   // blue-800
+  messaging:       "#065F46",   // green-800
+  error_handler:   "#9F1239",   // rose-800
+  scoring:         "#92400E",   // amber-800
+  generic:         "#374151",   // gray-700
+};
+
+export const AUTOMATION_AVATAR_BG_DARK: Record<string, string> = {
+  ai_conversation: "#0C1A2E",
+  messaging:       "#0A2E1F",
+  error_handler:   "#2E0A14",
+  scoring:         "#2E1F0A",
+  generic:         "#1F2937",
+};
+export const AUTOMATION_AVATAR_TEXT_DARK: Record<string, string> = {
+  ai_conversation: "#93C5FD",   // blue-300
+  messaging:       "#6EE7B7",   // green-300
+  error_handler:   "#FDA4AF",   // rose-300
+  scoring:         "#FCD34D",   // amber-300
+  generic:         "#9CA3AF",   // gray-400
+};
+
+export function getAutomationTypeAvatarColor(typeId: string): { bg: string; text: string } {
+  if (isDarkMode()) {
+    return {
+      bg:   AUTOMATION_AVATAR_BG_DARK[typeId]   ?? AUTOMATION_AVATAR_BG_DARK.generic,
+      text: AUTOMATION_AVATAR_TEXT_DARK[typeId]  ?? AUTOMATION_AVATAR_TEXT_DARK.generic,
+    };
+  }
+  return {
+    bg:   AUTOMATION_AVATAR_BG[typeId]   ?? AUTOMATION_AVATAR_BG.generic,
+    text: AUTOMATION_AVATAR_TEXT[typeId]  ?? AUTOMATION_AVATAR_TEXT.generic,
+  };
+}
+
+// ─── Task Type Avatar Colors ────────────────────────────────────────
+
+const TASK_TYPE_AVATAR_BG: Record<string, string> = {
+  follow_up: "#DBEAFE",
+  call: "#D1FAE5",
+  review: "#FEF3C7",
+  admin: "#F3E8FF",
+  custom: "#F3F4F6",
+};
+
+const TASK_TYPE_AVATAR_TEXT: Record<string, string> = {
+  follow_up: "#1E40AF",
+  call: "#065F46",
+  review: "#92400E",
+  admin: "#6B21A8",
+  custom: "#374151",
+};
+
+const TASK_TYPE_AVATAR_BG_DARK: Record<string, string> = {
+  follow_up: "#1E3A5F",
+  call: "#064E3B",
+  review: "#78350F",
+  admin: "#4C1D95",
+  custom: "#374151",
+};
+
+const TASK_TYPE_AVATAR_TEXT_DARK: Record<string, string> = {
+  follow_up: "#93C5FD",
+  call: "#6EE7B7",
+  review: "#FCD34D",
+  admin: "#C4B5FD",
+  custom: "#D1D5DB",
+};
+
+export function getTaskTypeAvatarColor(typeId: string): { bg: string; text: string } {
+  const dark = isDarkMode();
+  return {
+    bg: (dark ? TASK_TYPE_AVATAR_BG_DARK : TASK_TYPE_AVATAR_BG)[typeId] ?? (dark ? "#374151" : "#F3F4F6"),
+    text: (dark ? TASK_TYPE_AVATAR_TEXT_DARK : TASK_TYPE_AVATAR_TEXT)[typeId] ?? (dark ? "#D1D5DB" : "#374151"),
+  };
+}
+
 // ── Prompt icon colors — deterministic per-name, gray circle + colored icon ──
 const PROMPT_ICON_PALETTE = [
   { icon: "#6366F1", bg: "#EEF2FF", bgDark: "#1E1B4B" }, // indigo

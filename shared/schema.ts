@@ -765,3 +765,48 @@ export const insertSupportMessageSchema = createInsertSchema(supportMessages).om
 });
 export type SupportMessage = typeof supportMessages.$inferSelect;
 export type InsertSupportMessage = z.infer<typeof insertSupportMessageSchema>;
+
+
+// ─── Tasks ──────────────────────────────────────────────────────────────────
+
+export const tasks = nocodb.table("Tasks", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("Accounts_id").notNull().references(() => accounts.id),
+  campaignsId: integer("Campaigns_id").references(() => campaigns.id),
+  leadsId: integer("Leads_id").references(() => leads.id),
+  assignedToUserId: integer("assigned_to_user_id").references(() => users.id),
+  createdByUserId: integer("created_by_user_id").references(() => users.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: text("status").notNull().default("todo"), // "todo" | "in_progress" | "done" | "cancelled"
+  priority: text("priority").notNull().default("medium"), // "low" | "medium" | "high" | "urgent"
+  taskType: text("task_type").notNull().default("admin"), // "follow_up" | "call" | "review" | "admin" | "custom"
+  dueDate: timestamp("due_date", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  reminderAt: timestamp("reminder_at", { withTimezone: true }),
+  accountName: text("account_name"),
+  campaignName: text("campaign_name"),
+  leadName: text("lead_name"),
+  assigneeName: text("assignee_name"),
+  tags: text("tags"), // JSON string array e.g. '["Frontend","Bug"]'
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  index("tasks_account_id_idx").on(t.accountsId),
+  index("tasks_assignee_idx").on(t.assignedToUserId),
+  index("tasks_status_idx").on(t.status),
+  index("tasks_due_date_idx").on(t.dueDate),
+]);
+
+export const insertTaskSchema = createInsertSchema(tasks, {
+  // JSON body-parser sends dates as ISO strings — coerce back to Date
+  dueDate: z.coerce.date().nullish(),
+  completedAt: z.coerce.date().nullish(),
+  reminderAt: z.coerce.date().nullish(),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type Task = typeof tasks.$inferSelect;
+export type InsertTask = z.infer<typeof insertTaskSchema>;

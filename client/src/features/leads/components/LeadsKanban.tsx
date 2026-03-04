@@ -512,7 +512,7 @@ function KanbanColumn({
       <div
         className={cn(
           "flex flex-col items-center rounded-lg w-10 min-w-[40px] flex-shrink-0 cursor-pointer select-none h-full overflow-hidden",
-          isDarkColumn ? "bg-[#C5C5C5]" : "bg-muted"
+          isDarkColumn ? "bg-[#C5C5C5] dark:bg-[#1A1520]" : "bg-muted"
         )}
         data-testid={`kanban-column-${stage}`}
         data-collapsed="true"
@@ -561,7 +561,7 @@ function KanbanColumn({
     <div
       className={cn(
         "flex flex-col rounded-lg flex-shrink-0 overflow-hidden h-full",
-        isDarkColumn ? "bg-[#C5C5C5]" : isBookedStage ? "bg-[#FFFBEB]" : "bg-card",
+        isDarkColumn ? "bg-[#C5C5C5] dark:bg-[#1A1520]" : isBookedStage ? "bg-[#FFFBEB] dark:bg-[#1E1A0E]" : "bg-card",
         isBookedStage
           ? "w-[calc(100vw-24px)] md:w-[300px] min-w-[calc(100vw-24px)] md:min-w-[280px] md:max-w-[320px] border-l-2 border-[#FCB803]/50 snap-start snap-always"
           : "w-[calc(100vw-24px)] md:w-[280px] min-w-[calc(100vw-24px)] md:min-w-[260px] md:max-w-[300px] snap-start snap-always",
@@ -577,7 +577,7 @@ function KanbanColumn({
       <div
         className={cn(
           "flex items-center gap-2 px-3 py-2.5 shrink-0 transition-shadow duration-150",
-          isBookedStage && "bg-[#FCB803]/10",
+          isBookedStage && "bg-[#FCB803]/10 dark:bg-[#FCB803]/[0.06]",
           isBodyScrolled && "shadow-[0_2px_6px_-1px_rgba(0,0,0,0.08)]"
         )}
         data-testid={`kanban-column-header-${stage}`}

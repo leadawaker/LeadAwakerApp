@@ -11,11 +11,18 @@
     "demo": {
       "title": "Live Demo",
       "description": "See exactly how the AI conversations work and handle objections."
+    },
+    "noCommitment": {
+      "title": "No Commitment",
+      "description": "No strings attached, just a 15-minute conversation to explore what's possible."
     }
   },
-  "quickCheck": {
-    "title": "Quick Check:",
-    "question": "Do you already have a booking link?",
-    "buttonText": "Yes, take me to calendar"
+  "calendar": {
+    "title": "Pick a time"
+  },
+  "trust": {
+    "duration": "15-minute call",
+    "free": "No commitment",
+    "results": "See real results"
   }
 }

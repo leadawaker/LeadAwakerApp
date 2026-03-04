@@ -11,11 +11,18 @@
     "demo": {
       "title": "Live Demo",
       "description": "Zie precies hoe de AI-gesprekken werken en bezwaren afhandelen."
+    },
+    "noCommitment": {
+      "title": "Vrijblijvend",
+      "description": "Geen verplichtingen, gewoon een gesprek van 15 minuten om de mogelijkheden te verkennen."
     }
   },
-  "quickCheck": {
-    "title": "Snelle Check:",
-    "question": "Heeft je al een boekingslink?",
-    "buttonText": "Ja, breng me naar de kalender"
+  "calendar": {
+    "title": "Kies een tijdstip"
+  },
+  "trust": {
+    "duration": "15 minuten",
+    "free": "Vrijblijvend",
+    "results": "Echte resultaten"
   }
 }

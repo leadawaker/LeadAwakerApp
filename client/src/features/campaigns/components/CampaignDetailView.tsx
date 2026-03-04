@@ -1026,15 +1026,19 @@ function AISummaryWidget({ campaign, summary, generatedAt, onRefreshed }: {
 
 // ── Empty state ──────────────────────────────────────────────────────────────
 
-export function CampaignDetailViewEmpty() {
+export function CampaignDetailViewEmpty({ compact = false }: { compact?: boolean }) {
   return (
     <div className="relative h-full flex flex-col items-center justify-center gap-5 p-8 text-center overflow-hidden">
-      {/* ── Full-height gradient ── */}
+      {/* ── Background ── */}
       <div className="absolute inset-0 bg-popover dark:bg-background" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_6%_5%,#fff8c6_0%,transparent_30%)] dark:opacity-[0.08]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_103%_130%_at_35%_85%,rgba(255,134,134,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_52%_48%_at_0%_0%,#fff6ba_5%,transparent_30%)] dark:opacity-[0.08]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_102%_at_78%_50%,rgba(255,194,165,0.6)_0%,transparent_66%)] dark:opacity-[0.08]" />
+      {!compact && (
+        <>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_6%_5%,#fff8c6_0%,transparent_30%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_103%_130%_at_35%_85%,rgba(255,134,134,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_52%_48%_at_0%_0%,#fff6ba_5%,transparent_30%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_102%_at_78%_50%,rgba(255,194,165,0.6)_0%,transparent_66%)] dark:opacity-[0.08]" />
+        </>
+      )}
 
       <div className="relative z-10">
         <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/40 flex items-center justify-center ring-1 ring-amber-200/50 dark:ring-amber-700/30">
@@ -1325,15 +1329,19 @@ export function CampaignDetailView({
   return (
     <div className="relative flex flex-col h-full overflow-hidden" data-testid="campaign-detail-view">
 
-      {/* ── Full-height gradient ── */}
+      {/* ── Background ── */}
       <div className="absolute inset-0 bg-popover dark:bg-background" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_6%_5%,#fff8c6_0%,transparent_30%)] dark:opacity-[0.08]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_103%_130%_at_35%_85%,rgba(255,134,134,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_52%_48%_at_0%_0%,#fff6ba_5%,transparent_30%)] dark:opacity-[0.08]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_102%_at_78%_50%,rgba(255,194,165,0.6)_0%,transparent_66%)] dark:opacity-[0.08]" />
+      {!compact && (
+        <>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_6%_5%,#fff8c6_0%,transparent_30%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_103%_130%_at_35%_85%,rgba(255,134,134,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_52%_48%_at_0%_0%,#fff6ba_5%,transparent_30%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_102%_at_78%_50%,rgba(255,194,165,0.6)_0%,transparent_66%)] dark:opacity-[0.08]" />
+        </>
+      )}
 
       {/* ── Header content ── */}
-      <div className="shrink-0">
+      <div className="shrink-0 relative z-10">
         <div className="relative px-4 pt-6 pb-5 space-y-3">
 
           {/* Row 1: CRM action toolbar */}
@@ -1727,15 +1735,8 @@ export function CampaignDetailView({
                 {campaign.name || "Unnamed Campaign"}
               </h2>
 
-              {/* Subtitle: date + status */}
+              {/* Subtitle: status */}
               <div className="mt-1 flex flex-col gap-1" data-testid="campaign-detail-view-status">
-                {campaignCreatedAt && (
-                  <span className="inline-flex items-center gap-1 text-[11px] text-foreground/50">
-                    <Clock className="w-3 h-3 shrink-0" />
-                    Started {formatDate(campaignCreatedAt)}
-                    {durationLabel && <span className="text-foreground/35">· {durationLabel}</span>}
-                  </span>
-                )}
                 {status && (
                   <span
                     className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold self-start"
@@ -1748,70 +1749,78 @@ export function CampaignDetailView({
               </div>
             </div>
 
-            {/* Meta chips — centered on right edge of col 2 (≈66.7% of panel minus px-4 correction), aligned with "Started" date */}
-            {/* Desktop only: absolutely positioned overlay */}
-            <div className="absolute -translate-x-1/2 bottom-[45px] hidden md:flex items-center gap-6 pointer-events-auto z-10" style={{ left: "calc(66.67% - 5px)" }}>
-              {campaign.account_name && (
-                <div className="flex items-center gap-1.5">
-                  <div
-                    className="h-[30px] w-[30px] rounded-full flex items-center justify-center shrink-0 overflow-hidden"
-                    style={(campaign as any).account_logo_url ? {} : { backgroundColor: "rgba(0,0,0,0.08)", color: "#374151" }}
-                  >
-                    {(campaign as any).account_logo_url
-                      ? <img src={(campaign as any).account_logo_url} alt="account" className="h-full w-full object-cover" />
-                      : <span className="text-[10px] font-bold">{getInitials(campaign.account_name)}</span>
-                    }
+            {/* Meta chips — absolute overlay when wide (list view), hidden when compact (table view) */}
+            {!compact && (
+              <div className="absolute -translate-x-1/2 bottom-[45px] hidden md:flex items-center gap-6 pointer-events-auto z-10" style={{ left: "calc(66.67% - 5px)" }}>
+                {campaign.account_name && (
+                  <div className="flex items-center gap-1.5">
+                    <div
+                      className="h-[30px] w-[30px] rounded-full flex items-center justify-center shrink-0 overflow-hidden"
+                      style={(campaign as any).account_logo_url ? {} : { backgroundColor: "rgba(0,0,0,0.08)", color: "#374151" }}
+                    >
+                      {(campaign as any).account_logo_url
+                        ? <img src={(campaign as any).account_logo_url} alt="account" className="h-full w-full object-cover" />
+                        : <span className="text-[10px] font-bold">{getInitials(campaign.account_name)}</span>
+                      }
+                    </div>
+                    <div>
+                      <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Owner</div>
+                      <div className="text-[11px] font-bold text-foreground leading-none">{campaign.account_name}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Owner</div>
-                    <div className="text-[11px] font-bold text-foreground leading-none">{campaign.account_name}</div>
-                  </div>
-                </div>
-              )}
-              {(campaign as any).channel && (
-                <div className="flex items-center gap-1.5">
-                  <div className="h-[30px] w-[30px] rounded-full flex items-center justify-center shrink-0 overflow-hidden bg-foreground/[0.06]">
+                )}
+                {(campaign as any).channel && (
+                  <div className="flex items-center gap-1.5">
                     <img
                       src={`/logos/${(
                         ({ whatsapp: "whatsapp-svgrepo-com", instagram: "instagram-svgrepo-com", email: "email-address-svgrepo-com", sms: "sms-svgrepo-com", phone: "phone-call-svgrepo-com" } as Record<string, string>)[(campaign as any).channel?.toLowerCase()] ?? "sms-svgrepo-com"
                       )}.svg`}
                       alt={(campaign as any).channel}
-                      className="h-[16px] w-[16px] object-contain"
+                      className="h-[26px] w-[26px] object-contain shrink-0"
                     />
+                    <div>
+                      <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Channel</div>
+                      <div className="text-[11px] font-bold text-foreground leading-none capitalize">{(campaign as any).channel}</div>
+                    </div>
                   </div>
+                )}
+                {campaignCreatedAt && (
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-[26px] w-[26px] text-foreground/25 shrink-0" />
+                    <div>
+                      <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Started</div>
+                      <div className="text-[11px] font-bold text-foreground leading-none">{formatDate(campaignCreatedAt)}</div>
+                    </div>
+                  </div>
+                )}
+                {campaign.type && (
                   <div>
-                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Channel</div>
-                    <div className="text-[11px] font-bold text-foreground leading-none capitalize">{(campaign as any).channel}</div>
+                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Type</div>
+                    <div className="text-[11px] font-bold text-foreground leading-none">{campaign.type}</div>
                   </div>
-                </div>
-              )}
-              {campaign.type && (
-                <div>
-                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Type</div>
-                  <div className="text-[11px] font-bold text-foreground leading-none">{campaign.type}</div>
-                </div>
-              )}
-              {campaign.daily_lead_limit != null && (
-                <div>
-                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Daily Limit</div>
-                  <div className="text-[11px] font-bold text-foreground leading-none">{campaign.daily_lead_limit} leads</div>
-                </div>
-              )}
-              {(campaign.active_hours_start || (campaign as any).activeHoursStart) && (
-                <div>
-                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Active Hours</div>
-                  <div className="text-[11px] font-bold text-foreground leading-none">
-                    {((campaign.active_hours_start || (campaign as any).activeHoursStart) as string).slice(0, 5)}
-                    {" – "}
-                    {((campaign.active_hours_end || (campaign as any).activeHoursEnd) as string)?.slice(0, 5) ?? "—"}
+                )}
+                {campaign.daily_lead_limit != null && (
+                  <div>
+                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Daily Limit</div>
+                    <div className="text-[11px] font-bold text-foreground leading-none">{campaign.daily_lead_limit} leads</div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+                {(campaign.active_hours_start || (campaign as any).activeHoursStart) && (
+                  <div>
+                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Active Hours</div>
+                    <div className="text-[11px] font-bold text-foreground leading-none">
+                      {((campaign.active_hours_start || (campaign as any).activeHoursStart) as string).slice(0, 5)}
+                      {" – "}
+                      {((campaign.active_hours_end || (campaign as any).activeHoursEnd) as string)?.slice(0, 5) ?? "—"}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Mobile only: meta chips row below title */}
-          <div className="flex md:hidden flex-wrap items-center gap-3 pt-1">
+          {/* Mobile meta chips (always) + compact/table-view meta chips (flow below title) */}
+          <div className={cn("flex flex-wrap items-center gap-4", compact ? "flex" : "flex md:hidden")}>
             {campaign.account_name && (
               <div className="flex items-center gap-1.5">
                 <div
@@ -1831,18 +1840,25 @@ export function CampaignDetailView({
             )}
             {(campaign as any).channel && (
               <div className="flex items-center gap-1.5">
-                <div className="h-[24px] w-[24px] rounded-full flex items-center justify-center shrink-0 overflow-hidden bg-foreground/[0.06]">
-                  <img
-                    src={`/logos/${(
-                      ({ whatsapp: "whatsapp-svgrepo-com", instagram: "instagram-svgrepo-com", email: "email-address-svgrepo-com", sms: "sms-svgrepo-com", phone: "phone-call-svgrepo-com" } as Record<string, string>)[(campaign as any).channel?.toLowerCase()] ?? "sms-svgrepo-com"
-                    )}.svg`}
-                    alt={(campaign as any).channel}
-                    className="h-[14px] w-[14px] object-contain"
-                  />
-                </div>
+                <img
+                  src={`/logos/${(
+                    ({ whatsapp: "whatsapp-svgrepo-com", instagram: "instagram-svgrepo-com", email: "email-address-svgrepo-com", sms: "sms-svgrepo-com", phone: "phone-call-svgrepo-com" } as Record<string, string>)[(campaign as any).channel?.toLowerCase()] ?? "sms-svgrepo-com"
+                  )}.svg`}
+                  alt={(campaign as any).channel}
+                  className="h-[24px] w-[24px] object-contain shrink-0"
+                />
                 <div>
                   <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Channel</div>
                   <div className="text-[11px] font-bold text-foreground leading-none capitalize">{(campaign as any).channel}</div>
+                </div>
+              </div>
+            )}
+            {campaignCreatedAt && (
+              <div className="flex items-center gap-1.5">
+                <Clock className="h-[24px] w-[24px] text-foreground/25 shrink-0" />
+                <div>
+                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Started</div>
+                  <div className="text-[11px] font-bold text-foreground leading-none">{formatDate(campaignCreatedAt)}</div>
                 </div>
               </div>
             )}
@@ -1858,13 +1874,23 @@ export function CampaignDetailView({
                 <div className="text-[11px] font-bold text-foreground leading-none">{campaign.daily_lead_limit} leads</div>
               </div>
             )}
+            {(campaign.active_hours_start || (campaign as any).activeHoursStart) && (
+              <div>
+                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Active Hours</div>
+                <div className="text-[11px] font-bold text-foreground leading-none">
+                  {((campaign.active_hours_start || (campaign as any).activeHoursStart) as string).slice(0, 5)}
+                  {" – "}
+                  {((campaign.active_hours_end || (campaign as any).activeHoursEnd) as string)?.slice(0, 5) ?? "—"}
+                </div>
+              </div>
+            )}
           </div>
 
         </div>
       </div>
 
       {/* Tab row: Summary / DateRange / Configurations */}
-      <div className="relative shrink-0 px-4 pt-4 md:pt-6 pb-[3px] flex items-center flex-wrap gap-2">
+      <div className="relative z-10 shrink-0 px-4 pt-0 md:pt-0 pb-0 flex items-center flex-wrap gap-2">
         <button
           onClick={() => setActiveTab("summary")}
           className={cn(
@@ -1882,7 +1908,7 @@ export function CampaignDetailView({
             "h-9 px-5 rounded-full text-[12px] font-semibold transition-colors",
             activeTab === "configurations"
               ? "bg-foreground text-background"
-              : "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:border-black/[0.175]"
+              : "bg-[#FFF0CF] border border-black/[0.125] text-foreground/60 hover:text-foreground hover:border-black/[0.175]"
           )}
         >
           Configurations
@@ -1894,7 +1920,7 @@ export function CampaignDetailView({
               "h-9 px-5 rounded-full text-[12px] font-semibold transition-colors",
               activeTab === "tags"
                 ? "bg-foreground text-background"
-                : "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:border-black/[0.175]"
+                : "bg-[#FFEED0] border border-black/[0.125] text-foreground/60 hover:text-foreground hover:border-black/[0.175]"
             )}
           >
             Tags
@@ -1902,8 +1928,13 @@ export function CampaignDetailView({
         )}
       </div>
 
-      {/* ── Body ── */}
-      <div className={cn("relative flex-1 p-[3px] overflow-y-auto")}>
+      {/* ── Body — overlaps header; mask fades content as it slides under ── */}
+      <div className={cn("relative flex-1 -mt-[80px] pt-[83px] px-[3px] pb-[3px] overflow-y-auto")}
+        style={{
+          maskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
+        }}
+      >
 
         {/* ── Summary tab — 3-col grid, rows auto-match heights ── */}
         {activeTab === "summary" && (

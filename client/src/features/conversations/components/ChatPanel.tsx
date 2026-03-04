@@ -1770,11 +1770,11 @@ function ChatBubble({
           "max-w-[46%] px-3 pt-2 pb-1.5 text-[15px]",
           bubbleRadius,
           // Inbound (lead): neutral gray glow
-          inbound && "bg-white dark:bg-card text-gray-900 dark:text-foreground shadow-[0_0_1.5px_rgba(0,0,0,0.3)] dark:shadow-[0_0_1.5px_rgba(255,255,255,0.1)]",
+          inbound && "bg-white dark:bg-card text-gray-900 dark:text-foreground shadow-[0_2px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_2px_rgba(255,255,255,0.04)]",
           // AI outbound: blue
-          aiMsg && "bg-[#f2f5ff] dark:bg-[#1e2340] text-gray-900 dark:text-foreground shadow-[0_0_1.5px_rgba(0,0,200,0.5)] dark:shadow-[0_0_1.5px_rgba(255,255,255,0.1)]",
-          // Human agent outbound: green glow
-          humanAgentMsg && "bg-[#f1fff5] dark:bg-[#1a2e1f] text-gray-900 dark:text-foreground shadow-[0_0_1.5px_rgba(0,122,0,0.4)] dark:shadow-[0_0_1.5px_rgba(255,255,255,0.1)]",
+          aiMsg && "bg-[#f2f5ff] dark:bg-[#1e2340] text-gray-900 dark:text-foreground shadow-[0_2px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_2px_rgba(255,255,255,0.04)]",
+          // Human agent outbound
+          humanAgentMsg && "bg-[#f1fff5] dark:bg-[#1a2e1f] text-gray-900 dark:text-foreground shadow-[0_2px_2px_rgba(0,0,0,0.08)] dark:shadow-[0_2px_2px_rgba(255,255,255,0.04)]",
           isFailed && "opacity-80",
         )}
         data-message-type={inbound ? "lead" : aiMsg ? "ai" : "agent"}

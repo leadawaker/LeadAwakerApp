@@ -22,6 +22,7 @@ export const PAGE_ACCENTS: Record<string, { active: string; selected: string }> 
   contracts:          { active: "214 100% 83%", selected: "215 100% 92%" }, // #A8CEFF / #D6E7FF
   users:              { active: "230 78% 84%",  selected: "230 78% 93%"  }, // indigo
   "prompt-library":   { active: "257 100% 85%", selected: "259 100% 94%" }, // #C9B3FF / #EAE0FF
+  tasks:              { active: "245 100% 83%", selected: "244 100% 94%" }, // #B0ABFF / #E1DFFF
   "automation-logs":  { active: "286 100% 83%", selected: "294 100% 96%" }, // #EAA8FF / #FDEAFF
 };
 
@@ -40,5 +41,6 @@ export const PAGE_ACCENTS_DARK: Record<string, { active: string; selected: strin
   contracts:          { active: "214 40% 24%",  selected: "214 45% 30%"  }, // deep blue
   users:              { active: "230 35% 24%",  selected: "230 40% 30%"  }, // deep indigo
   "prompt-library":   { active: "257 40% 24%",  selected: "257 45% 30%"  }, // deep violet
+  tasks:              { active: "220 40% 24%",  selected: "220 45% 30%"  }, // deep blue
   "automation-logs":  { active: "286 40% 24%",  selected: "286 45% 30%"  }, // deep magenta
 };

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import {
   List, Table2, Plus, Trash2, Copy, Filter, Layers, Eye, Check, X, Pencil,
   PanelRightClose, PanelRightOpen, ArrowUpDown,
@@ -36,6 +37,8 @@ export type CampaignSortBy = "recent" | "name_asc" | "name_desc" | "leads_desc" 
 
 const VIEW_MODE_KEY = "campaigns-view-mode";
 const VISIBLE_COLS_KEY = "campaigns-table-visible-cols";
+const LIST_PREFS_KEY = "campaigns-list-prefs";
+const TABLE_PREFS_KEY = "campaigns-table-prefs";
 
 /* ── Table column metadata for Fields dropdown ── */
 const TABLE_COL_META = [
@@ -180,26 +183,48 @@ function CampaignsContent() {
     try { localStorage.setItem("campaigns-right-panel-open", String(rightPanelOpen)); } catch {}
   }, [rightPanelOpen]);
 
-  // ── Lifted list-view controls ──────────────────────────────────────────────
+  // ── Lifted list-view controls (persisted) ──────────────────────────────────
   const [listSearch, setListSearch]           = useState("");
   const [searchOpen, setSearchOpen]           = useState(false);
-  const [groupBy, setGroupBy]                 = useState<CampaignGroupBy>("status");
-  const [sortBy, setSortBy]                   = useState<CampaignSortBy>("recent");
-  const [filterStatus, setFilterStatus]       = useState<string[]>([]);
-  const [listFilterAccount, setListFilterAccount] = useState("");
+  const [listPrefs, setListPrefs] = usePersistedState(LIST_PREFS_KEY, {
+    groupBy: "status" as CampaignGroupBy,
+    sortBy: "recent" as CampaignSortBy,
+    filterStatus: [] as string[],
+    filterAccount: "",
+  });
+  const groupBy = listPrefs.groupBy;
+  const sortBy = listPrefs.sortBy;
+  const filterStatus = listPrefs.filterStatus;
+  const listFilterAccount = listPrefs.filterAccount;
+  const setGroupBy = useCallback((v: CampaignGroupBy) => setListPrefs(p => ({ ...p, groupBy: v })), [setListPrefs]);
+  const setSortBy = useCallback((v: CampaignSortBy) => setListPrefs(p => ({ ...p, sortBy: v })), [setListPrefs]);
+  const setFilterStatus = useCallback((v: string[] | ((p: string[]) => string[])) => setListPrefs(p => ({ ...p, filterStatus: typeof v === "function" ? v(p.filterStatus) : v })), [setListPrefs]);
+  const setListFilterAccount = useCallback((v: string) => setListPrefs(p => ({ ...p, filterAccount: v })), [setListPrefs]);
 
   const [editPanelOpen, setEditPanelOpen] = useState(false);
   const [editCampaign, setEditCampaign] = useState<Campaign | null>(null);
 
   const [filterAccountId] = useState<number | "all">("all");
 
-  // ── Table toolbar state ────────────────────────────────────────────────────
+  // ── Table toolbar state (persisted) ────────────────────────────────────────
   const [tableSearch,        setTableSearch]        = useState("");
-  const [tableSortCol,       setTableSortCol]       = useState<string>("lastModified");
-  const [tableSortDir,       setTableSortDir]       = useState<"asc" | "desc">("desc");
-  const [tableGroupBy,       setTableGroupBy]       = useState<TableGroupByOption>("status");
-  const [tableFilterStatus,  setTableFilterStatus]  = useState<string[]>([]);
-  const [tableFilterAccount, setTableFilterAccount] = useState<string>("");
+  const [tablePrefs, setTablePrefs] = usePersistedState(TABLE_PREFS_KEY, {
+    sortCol: "lastModified",
+    sortDir: "desc" as "asc" | "desc",
+    groupBy: "status" as TableGroupByOption,
+    filterStatus: [] as string[],
+    filterAccount: "",
+  });
+  const tableSortCol = tablePrefs.sortCol;
+  const tableSortDir = tablePrefs.sortDir;
+  const tableGroupBy = tablePrefs.groupBy;
+  const tableFilterStatus = tablePrefs.filterStatus;
+  const tableFilterAccount = tablePrefs.filterAccount;
+  const setTableSortCol = useCallback((v: string) => setTablePrefs(p => ({ ...p, sortCol: v })), [setTablePrefs]);
+  const setTableSortDir = useCallback((v: "asc" | "desc") => setTablePrefs(p => ({ ...p, sortDir: v })), [setTablePrefs]);
+  const setTableGroupBy = useCallback((v: TableGroupByOption) => setTablePrefs(p => ({ ...p, groupBy: v })), [setTablePrefs]);
+  const setTableFilterStatus = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterStatus: typeof v === "function" ? v(p.filterStatus) : v })), [setTablePrefs]);
+  const setTableFilterAccount = useCallback((v: string) => setTablePrefs(p => ({ ...p, filterAccount: v })), [setTablePrefs]);
 
   // ── Column visibility (persisted) ──────────────────────────────────────────
   const [visibleCols, setVisibleCols] = useState<Set<string>>(() => {
@@ -335,15 +360,13 @@ function CampaignsContent() {
     setTableFilterAccount("");
   }, []);
   const handleTableSortChange = useCallback((col: string) => {
-    setTableSortCol((prev) => {
-      if (prev === col) {
-        setTableSortDir((d) => d === "asc" ? "desc" : "asc");
-        return col;
+    setTablePrefs(p => {
+      if (p.sortCol === col) {
+        return { ...p, sortDir: p.sortDir === "asc" ? "desc" as const : "asc" as const };
       }
-      setTableSortDir("asc");
-      return col;
+      return { ...p, sortCol: col, sortDir: "asc" as const };
     });
-  }, []);
+  }, [setTablePrefs]);
 
   const isTableFilterActive    = tableFilterStatus.length > 0 || !!tableFilterAccount;
   const tableActiveFilterCount = tableFilterStatus.length + (tableFilterAccount ? 1 : 0);
@@ -629,7 +652,7 @@ function CampaignsContent() {
                 All Accounts {!tableFilterAccount && <Check className="h-3 w-3 ml-auto" />}
               </DropdownMenuItem>
               {availableAccounts.map((a) => (
-                <DropdownMenuItem key={a} onClick={(e) => { e.preventDefault(); setTableFilterAccount((p) => p === a ? "" : a); }} className={cn("text-[12px]", tableFilterAccount === a && "font-semibold text-brand-indigo")}>
+                <DropdownMenuItem key={a} onClick={(e) => { e.preventDefault(); setTableFilterAccount(tableFilterAccount === a ? "" : a); }} className={cn("text-[12px]", tableFilterAccount === a && "font-semibold text-brand-indigo")}>
                   <span className="flex-1 truncate">{a}</span>
                   {tableFilterAccount === a && <Check className="h-3 w-3 ml-1 shrink-0" />}
                 </DropdownMenuItem>
@@ -849,7 +872,7 @@ function CampaignsContent() {
                       compact
                     />
                   ) : (
-                    <CampaignDetailViewEmpty />
+                    <CampaignDetailViewEmpty compact />
                   )}
                 </div>
               )}

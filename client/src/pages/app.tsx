@@ -16,6 +16,7 @@ import PromptsPage from "@/features/prompts/pages/PromptsPage";
 import BillingPage from "@/pages/Billing";
 import SettingsPage from "@/pages/Settings";
 import DocsPage from "@/pages/Docs";
+import TasksPage from "@/features/tasks/pages/TasksPage";
 // OpportunitiesPage merged into Leads as "Pipeline" tab — route redirects below
 
 function isAuthed() {
@@ -91,6 +92,9 @@ export default function AppArea() {
           <Route path="/agency/tags">
             <Redirect to="/agency/campaigns" />
           </Route>
+          <Route path="/agency/tasks">
+            <AgencyOnly prefix="/agency"><TasksPage /></AgencyOnly>
+          </Route>
           <Route path="/agency/automation-logs">
             <AgencyOnly prefix="/agency"><AutomationLogsPage /></AgencyOnly>
           </Route>
@@ -130,6 +134,9 @@ export default function AppArea() {
           </Route>
           <Route path="/subaccount/tags">
             <Redirect to="/subaccount/campaigns" />
+          </Route>
+          <Route path="/subaccount/tasks">
+            <AgencyOnly prefix="/subaccount"><TasksPage /></AgencyOnly>
           </Route>
           <Route path="/subaccount/automation-logs">
             <AgencyOnly prefix="/subaccount"><AutomationLogsPage /></AgencyOnly>

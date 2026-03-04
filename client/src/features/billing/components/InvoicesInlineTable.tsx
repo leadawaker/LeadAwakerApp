@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useMemo, Fragment } from "react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/hooks/useTheme";
 import { Check, ChevronRight, ChevronUp, ChevronDown, X } from "lucide-react";
 import type { InvoiceRow } from "../types";
 import { INVOICE_STATUS_COLORS, isOverdue } from "../types";
@@ -148,6 +149,7 @@ export function InvoicesInlineTable({
   visibleColumns,
   groupBy,
 }: InvoicesInlineTableProps) {
+  const { isDark } = useTheme();
   const show = (col: string) => !visibleColumns || visibleColumns.has(col);
   const CURRENT_YEAR = new Date().getFullYear();
   const orderedCols = INVOICE_FIELD_DEFS.filter(c => show(c.key)).map(c => c.key);
@@ -399,7 +401,7 @@ export function InvoicesInlineTable({
   }
 
   const thBase =
-    "px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/40 whitespace-nowrap select-none bg-[#E3E3E3] border-b border-border/20 cursor-pointer hover:text-foreground/70";
+    "px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/40 whitespace-nowrap select-none bg-[#E3E3E3] dark:bg-muted border-b border-border/20 cursor-pointer hover:text-foreground/70";
 
   // ── Row renderer (shared between flat and grouped views) ──────────────────
   function renderInvoiceRow(invoice: InvoiceRow, index: number) {
@@ -671,7 +673,7 @@ export function InvoicesInlineTable({
       {loading ? (
         <TableSkeleton />
       ) : (
-        <div className="flex-1 min-h-0 overflow-auto bg-[#E3E3E3]">
+        <div className="flex-1 min-h-0 overflow-auto bg-[#E3E3E3] dark:bg-muted">
           <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: "0 3px", minWidth: 400 }}>
 
             {/* Sticky header */}
@@ -802,7 +804,9 @@ export function InvoicesInlineTable({
                     <Fragment key={year}>
                       {/* Year header */}
                       {(() => {
-                        const yearBg = year >= CURRENT_YEAR ? "#DBEAFE" : "#EEF2FF";
+                        const yearBg = isDark
+                          ? (year >= CURRENT_YEAR ? "#1A2744" : "#1E2338")
+                          : (year >= CURRENT_YEAR ? "#DBEAFE" : "#EEF2FF");
                         const labelColSpan = totalIdx >= 0 ? totalIdx : orderedCols.length;
                         const afterTotal = totalIdx >= 0 ? orderedCols.slice(totalIdx + 1) : [];
                         return (
@@ -862,7 +866,7 @@ export function InvoicesInlineTable({
                           <Fragment key={q}>
                             {/* Quarter sub-header */}
                             {(() => {
-                              const qBg = "#E3E3E3";
+                              const qBg = isDark ? "#18283E" : "#E3E3E3";
                               const labelColSpan = totalIdx >= 0 ? totalIdx : orderedCols.length;
                               const afterTotal = totalIdx >= 0 ? orderedCols.slice(totalIdx + 1) : [];
                               return (

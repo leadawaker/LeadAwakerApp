@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import { useLeadsData } from "../hooks/useLeadsData";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
@@ -54,6 +55,9 @@ type TableGroupByOption = "status" | "campaign" | "account" | "none";
 
 const VIEW_MODE_KEY    = "leads-view-mode";
 const VISIBLE_COLS_KEY = "leads-table-visible-cols";
+const LIST_PREFS_KEY   = "leads-list-prefs";
+const TABLE_PREFS_KEY  = "leads-table-prefs";
+const PIPE_PREFS_KEY   = "leads-pipe-prefs";
 
 /* ── Column metadata for the visibility dropdown ── */
 const TABLE_COL_META = [
@@ -211,10 +215,20 @@ export function LeadsTable() {
   });
   const [kanbanSearchQuery, setKanbanSearchQuery] = useState("");
   const [kanbanSearchOpen, setKanbanSearchOpen] = useState(true);
-  const [showHighScore, setShowHighScore] = useState(false);
-  const [filterHasPhone, setFilterHasPhone] = useState(false);
-  const [filterHasEmail, setFilterHasEmail] = useState(false);
-  const [pipelineSortBy, setPipelineSortBy] = useState<"score-desc" | "recency" | "alpha" | null>(null);
+  const [pipePrefs, setPipePrefs] = usePersistedState(PIPE_PREFS_KEY, {
+    showHighScore: false,
+    filterHasPhone: false,
+    filterHasEmail: false,
+    sortBy: null as "score-desc" | "recency" | "alpha" | null,
+  });
+  const showHighScore = pipePrefs.showHighScore;
+  const filterHasPhone = pipePrefs.filterHasPhone;
+  const filterHasEmail = pipePrefs.filterHasEmail;
+  const pipelineSortBy = pipePrefs.sortBy;
+  const setShowHighScore = useCallback((v: boolean) => setPipePrefs(p => ({ ...p, showHighScore: v })), [setPipePrefs]);
+  const setFilterHasPhone = useCallback((v: boolean) => setPipePrefs(p => ({ ...p, filterHasPhone: v })), [setPipePrefs]);
+  const setFilterHasEmail = useCallback((v: boolean) => setPipePrefs(p => ({ ...p, filterHasEmail: v })), [setPipePrefs]);
+  const setPipelineSortBy = useCallback((v: "score-desc" | "recency" | "alpha" | null) => setPipePrefs(p => ({ ...p, sortBy: v })), [setPipePrefs]);
   const [foldAction, setFoldAction] = useState<{ type: "expand-all" | "fold-threshold"; threshold?: number; seq: number }>({ type: "expand-all", seq: 0 });
   const [hasAnyCollapsed, setHasAnyCollapsed] = useState(false);
   const [foldThresholdInput, setFoldThresholdInput] = useState("0");
@@ -222,21 +236,43 @@ export function LeadsTable() {
   const [selectedKanbanLead, setSelectedKanbanLead] = useState<Record<string, any> | null>(null);
   const [fullProfileLead, setFullProfileLead] = useState<Record<string, any> | null>(null);
 
-  /* ── Lifted list-view controls ───────────────────────────────────────────── */
+  /* ── Lifted list-view controls (persisted) ───────────────────────────────── */
   const [listSearch,   setListSearch]   = useState("");
   const [searchOpen,   setSearchOpen]   = useState(false);
-  const [groupBy,      setGroupBy]      = useState<GroupByOption>("date");
-  const [sortBy,       setSortBy]       = useState<SortByOption>("recent");
-  const [filterStatus, setFilterStatus] = useState<string[]>([]);
-  const [filterTags,   setFilterTags]   = useState<string[]>([]);
+  const [listPrefs, setListPrefs]       = usePersistedState(LIST_PREFS_KEY, {
+    groupBy: "date" as GroupByOption,
+    sortBy: "recent" as SortByOption,
+    filterStatus: [] as string[],
+    filterTags: [] as string[],
+  });
+  const groupBy = listPrefs.groupBy;
+  const sortBy = listPrefs.sortBy;
+  const filterStatus = listPrefs.filterStatus;
+  const filterTags = listPrefs.filterTags;
+  const setGroupBy = useCallback((v: GroupByOption) => setListPrefs(p => ({ ...p, groupBy: v })), [setListPrefs]);
+  const setSortBy = useCallback((v: SortByOption) => setListPrefs(p => ({ ...p, sortBy: v })), [setListPrefs]);
+  const setFilterStatus = useCallback((v: string[] | ((p: string[]) => string[])) => setListPrefs(p => ({ ...p, filterStatus: typeof v === "function" ? v(p.filterStatus) : v })), [setListPrefs]);
+  const setFilterTags = useCallback((v: string[] | ((p: string[]) => string[])) => setListPrefs(p => ({ ...p, filterTags: typeof v === "function" ? v(p.filterTags) : v })), [setListPrefs]);
 
-  /* ── Table toolbar state ─────────────────────────────────────────────────── */
+  /* ── Table toolbar state (persisted) ─────────────────────────────────────── */
   const [tableSearch,         setTableSearch]         = useState("");
-  const [tableSortBy,         setTableSortBy]         = useState<TableSortByOption>("recent");
-  const [tableFilterStatus,   setTableFilterStatus]   = useState<string[]>([]);
-  const [tableFilterCampaign, setTableFilterCampaign] = useState<string>("");
-  const [tableFilterAccount,  setTableFilterAccount]  = useState<string>("");
-  const [tableGroupBy,        setTableGroupBy]        = useState<TableGroupByOption>("status");
+  const [tablePrefs, setTablePrefs] = usePersistedState(TABLE_PREFS_KEY, {
+    sortBy: "recent" as TableSortByOption,
+    filterStatus: [] as string[],
+    filterCampaign: "",
+    filterAccount: "",
+    groupBy: "status" as TableGroupByOption,
+  });
+  const tableSortBy = tablePrefs.sortBy;
+  const tableFilterStatus = tablePrefs.filterStatus;
+  const tableFilterCampaign = tablePrefs.filterCampaign;
+  const tableFilterAccount = tablePrefs.filterAccount;
+  const tableGroupBy = tablePrefs.groupBy;
+  const setTableSortBy = useCallback((v: TableSortByOption) => setTablePrefs(p => ({ ...p, sortBy: v })), [setTablePrefs]);
+  const setTableFilterStatus = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterStatus: typeof v === "function" ? v(p.filterStatus) : v })), [setTablePrefs]);
+  const setTableFilterCampaign = useCallback((v: string) => setTablePrefs(p => ({ ...p, filterCampaign: v })), [setTablePrefs]);
+  const setTableFilterAccount = useCallback((v: string) => setTablePrefs(p => ({ ...p, filterAccount: v })), [setTablePrefs]);
+  const setTableGroupBy = useCallback((v: TableGroupByOption) => setTablePrefs(p => ({ ...p, groupBy: v })), [setTablePrefs]);
 
   /* ── Column visibility (persisted) ──────────────────────────────────────── */
   const [visibleCols, setVisibleCols] = useState<Set<string>>(() => {
@@ -794,7 +830,7 @@ export function LeadsTable() {
                 All Campaigns {!tableFilterCampaign && <Check className="h-3 w-3 ml-auto" />}
               </DropdownMenuItem>
               {availableCampaigns.map((c) => (
-                <DropdownMenuItem key={c.id} onClick={(e) => { e.preventDefault(); setTableFilterCampaign((p) => p === c.id ? "" : c.id); }} className={cn("text-[12px]", tableFilterCampaign === c.id && "font-semibold text-brand-indigo")}>
+                <DropdownMenuItem key={c.id} onClick={(e) => { e.preventDefault(); setTableFilterCampaign(tableFilterCampaign === c.id ? "" : c.id); }} className={cn("text-[12px]", tableFilterCampaign === c.id && "font-semibold text-brand-indigo")}>
                   <span className="flex-1 truncate">{c.name}</span>
                   {tableFilterCampaign === c.id && <Check className="h-3 w-3 ml-1 shrink-0" />}
                 </DropdownMenuItem>
@@ -1056,17 +1092,17 @@ export function LeadsTable() {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-60 rounded-2xl">
-                <DropdownMenuItem onClick={() => setShowHighScore((v) => !v)} className="flex items-center gap-2 cursor-pointer rounded-xl">
+                <DropdownMenuItem onClick={() => setShowHighScore(!showHighScore)} className="flex items-center gap-2 cursor-pointer rounded-xl">
                   <Flame className={cn("h-4 w-4 shrink-0", showHighScore ? "text-[#FCB803]" : "text-muted-foreground")} />
                   <span className={cn("text-sm flex-1", showHighScore && "font-semibold")}>High Score (70+)</span>
                   {showHighScore && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilterHasPhone((v) => !v)} className="flex items-center gap-2 cursor-pointer rounded-xl">
+                <DropdownMenuItem onClick={() => setFilterHasPhone(!filterHasPhone)} className="flex items-center gap-2 cursor-pointer rounded-xl">
                   <Phone className={cn("h-4 w-4 shrink-0", filterHasPhone ? "text-brand-indigo" : "text-muted-foreground")} />
                   <span className={cn("text-sm flex-1", filterHasPhone && "font-semibold")}>Has Phone</span>
                   {filterHasPhone && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilterHasEmail((v) => !v)} className="flex items-center gap-2 cursor-pointer rounded-xl">
+                <DropdownMenuItem onClick={() => setFilterHasEmail(!filterHasEmail)} className="flex items-center gap-2 cursor-pointer rounded-xl">
                   <Mail className={cn("h-4 w-4 shrink-0", filterHasEmail ? "text-brand-indigo" : "text-muted-foreground")} />
                   <span className={cn("text-sm flex-1", filterHasEmail && "font-semibold")}>Has Email</span>
                   {filterHasEmail && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}

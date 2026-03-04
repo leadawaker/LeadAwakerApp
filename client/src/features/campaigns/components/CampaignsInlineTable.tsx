@@ -8,8 +8,9 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { updateCampaign } from "../api/campaignsApi";
-import { getCampaignAvatarColor, CAMPAIGN_STATUS_HEX } from "@/lib/avatarUtils";
+import { getCampaignAvatarColor, CAMPAIGN_STATUS_HEX, getInitials } from "@/lib/avatarUtils";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
+import { CAMPAIGN_STICKERS } from "@/assets/campaign-stickers";
 import type { Campaign } from "@/types/models";
 
 // ── Column definitions ─────────────────────────────────────────────────────────
@@ -586,7 +587,7 @@ export function CampaignsInlineTable({
                       key={cid}
                       className={cn(
                         "group/row cursor-pointer h-[52px] animate-card-enter",
-                        isHighlighted ? "bg-[#FFF7DB]" : "bg-card hover:bg-card-hover",
+                        isHighlighted ? "bg-[#FFF7DB] dark:bg-highlight-selected" : "bg-card hover:bg-card-hover",
                       )}
                       style={{ animationDelay: `${Math.min(currentRowIdx, 15) * 30}ms` }}
                       onClick={(e) => handleRowClick(campaign, e)}
@@ -615,15 +616,35 @@ export function CampaignsInlineTable({
 
                       // ── Name (no checkbox — moved to dedicated column) ──
                       if (col.key === "name") {
+                        const stickerSlug = campaign.campaign_sticker ?? null;
+                        const sticker = stickerSlug ? CAMPAIGN_STICKERS.find(s => s.slug === stickerSlug) ?? null : null;
+                        const isGrayscale = status === "Inactive";
+                        const isDraft = status === "Draft";
+                        const isPaused = status === "Paused";
                         return (
                           <td key="name" className={cn("px-2.5", tdClass)} style={{ width: 200, minWidth: 200 }}>
                             <div className="flex items-center gap-2 min-w-0">
-                              <EntityAvatar
-                                name={name}
-                                photoUrl={(campaign as any).account_logo_url}
-                                bgColor={avatarColor.bg}
-                                textColor={avatarColor.text}
-                              />
+                              {sticker ? (
+                                <div className="flex items-center justify-center shrink-0" style={{ width: 36, height: 36 }}>
+                                  <img
+                                    src={sticker.url}
+                                    alt=""
+                                    className="object-contain w-full h-full"
+                                    style={{ filter:
+                                      isGrayscale ? "grayscale(1) opacity(0.45)"
+                                      : isDraft ? "grayscale(1) sepia(1) hue-rotate(185deg) saturate(4) brightness(0.9) opacity(0.6)"
+                                      : isPaused ? "sepia(1) saturate(2) hue-rotate(-5deg) brightness(0.85) opacity(0.6)"
+                                      : `hue-rotate(${(campaign as any).campaign_hue ?? 0}deg)`
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <EntityAvatar
+                                  name={name}
+                                  bgColor={avatarColor.bg}
+                                  textColor={avatarColor.text}
+                                />
+                              )}
                               <span className="text-[12px] font-medium truncate text-foreground">{name}</span>
                             </div>
                           </td>

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   ArrowUpDown, Filter, Eye, Check, Search, X,
@@ -265,12 +266,22 @@ export function SettingsTeamSection() {
   const currentUserRole  = localStorage.getItem("leadawaker_user_role") || "Viewer";
   const isAdmin = currentUserRole === "Admin" || currentUserEmail === "leadawaker@gmail.com";
 
-  // ── Table state ────────────────────────────────────────────────────────────
+  // ── Table state (persisted) ────────────────────────────────────────────────
   const [search, setSearch]       = useState("");
-  const [sortBy, setSortBy]       = useState<SortBy>("name_asc");
-  const [groupBy, setGroupBy]     = useState<GroupBy>("role");
-  const [filterRole, setFilterRole]     = useState<string[]>([]);
-  const [filterStatus, setFilterStatus] = useState<string[]>([]);
+  const [teamPrefs, setTeamPrefs] = usePersistedState("team-prefs", {
+    sortBy: "name_asc" as SortBy,
+    groupBy: "role" as GroupBy,
+    filterRole: [] as string[],
+    filterStatus: [] as string[],
+  });
+  const sortBy = teamPrefs.sortBy;
+  const groupBy = teamPrefs.groupBy;
+  const filterRole = teamPrefs.filterRole;
+  const filterStatus = teamPrefs.filterStatus;
+  const setSortBy = useCallback((v: SortBy) => setTeamPrefs(p => ({ ...p, sortBy: v })), [setTeamPrefs]);
+  const setGroupBy = useCallback((v: GroupBy) => setTeamPrefs(p => ({ ...p, groupBy: v })), [setTeamPrefs]);
+  const setFilterRole = useCallback((v: string[] | ((p: string[]) => string[])) => setTeamPrefs(p => ({ ...p, filterRole: typeof v === "function" ? v(p.filterRole) : v })), [setTeamPrefs]);
+  const setFilterStatus = useCallback((v: string[] | ((p: string[]) => string[])) => setTeamPrefs(p => ({ ...p, filterStatus: typeof v === "function" ? v(p.filterStatus) : v })), [setTeamPrefs]);
   const [selectedIds, setSelectedIds]   = useState<Set<number>>(new Set());
 
   const isFilterActive    = filterRole.length > 0 || filterStatus.length > 0;

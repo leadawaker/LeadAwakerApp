@@ -1,5 +1,6 @@
 // src/features/accounts/pages/AccountsPage.tsx
 import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import {
   List, Table2, Plus, Trash2, Copy, ArrowUpDown, Filter, Layers, Eye, Check, Pencil, X,
 } from "lucide-react";
@@ -32,6 +33,8 @@ export type AccountSortBy   = "recent" | "name_asc" | "name_desc";
 
 const VIEW_MODE_KEY    = "accounts-view-mode";
 const VISIBLE_COLS_KEY = "accounts-table-visible-cols";
+const LIST_PREFS_KEY   = "accounts-list-prefs";
+const TABLE_PREFS_KEY  = "accounts-table-prefs";
 
 /* ── Table column metadata for Fields dropdown ── */
 const TABLE_COL_META = [
@@ -149,19 +152,37 @@ export default function AccountsPage() {
   const { clearTopbarActions } = useTopbarActions();
   useEffect(() => { clearTopbarActions(); }, [clearTopbarActions]);
 
-  /* ── Lifted list-view controls ─────────────────────────────────────────── */
+  /* ── Lifted list-view controls (persisted) ─────────────────────────────── */
   const [listSearch,   setListSearch]   = useState("");
   const [searchOpen,   setSearchOpen]   = useState(false);
-  const [groupBy,      setGroupBy]      = useState<AccountGroupBy>("status");
-  const [sortBy,       setSortBy]       = useState<AccountSortBy>("recent");
-  const [filterStatus, setFilterStatus] = useState<string[]>([]);
+  const [listPrefs, setListPrefs] = usePersistedState(LIST_PREFS_KEY, {
+    groupBy: "status" as AccountGroupBy,
+    sortBy: "recent" as AccountSortBy,
+    filterStatus: [] as string[],
+  });
+  const groupBy = listPrefs.groupBy;
+  const sortBy = listPrefs.sortBy;
+  const filterStatus = listPrefs.filterStatus;
+  const setGroupBy = useCallback((v: AccountGroupBy) => setListPrefs(p => ({ ...p, groupBy: v })), [setListPrefs]);
+  const setSortBy = useCallback((v: AccountSortBy) => setListPrefs(p => ({ ...p, sortBy: v })), [setListPrefs]);
+  const setFilterStatus = useCallback((v: string[] | ((p: string[]) => string[])) => setListPrefs(p => ({ ...p, filterStatus: typeof v === "function" ? v(p.filterStatus) : v })), [setListPrefs]);
 
-  /* ── Table toolbar state ────────────────────────────────────────────────── */
+  /* ── Table toolbar state (persisted) ────────────────────────────────────── */
   const [tableSearch,       setTableSearch]       = useState("");
-  const [tableSortBy,       setTableSortBy]       = useState<TableSortByOption>("recent");
-  const [tableGroupBy,      setTableGroupBy]      = useState<TableGroupByOption>("status");
-  const [tableFilterStatus, setTableFilterStatus] = useState<string[]>([]);
-  const [tableFilterType,   setTableFilterType]   = useState<string>("");
+  const [tablePrefs, setTablePrefs] = usePersistedState(TABLE_PREFS_KEY, {
+    sortBy: "recent" as TableSortByOption,
+    groupBy: "status" as TableGroupByOption,
+    filterStatus: [] as string[],
+    filterType: "",
+  });
+  const tableSortBy = tablePrefs.sortBy;
+  const tableGroupBy = tablePrefs.groupBy;
+  const tableFilterStatus = tablePrefs.filterStatus;
+  const tableFilterType = tablePrefs.filterType;
+  const setTableSortBy = useCallback((v: TableSortByOption) => setTablePrefs(p => ({ ...p, sortBy: v })), [setTablePrefs]);
+  const setTableGroupBy = useCallback((v: TableGroupByOption) => setTablePrefs(p => ({ ...p, groupBy: v })), [setTablePrefs]);
+  const setTableFilterStatus = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterStatus: typeof v === "function" ? v(p.filterStatus) : v })), [setTablePrefs]);
+  const setTableFilterType = useCallback((v: string) => setTablePrefs(p => ({ ...p, filterType: v })), [setTablePrefs]);
   const [tableSelectedIds,  setTableSelectedIds]  = useState<Set<number>>(new Set());
 
   /* ── Column visibility (persisted) ─────────────────────────────────────── */
@@ -457,7 +478,7 @@ export default function AccountsPage() {
               {availableTypes.map((t) => (
                 <DropdownMenuItem
                   key={t}
-                  onClick={(e) => { e.preventDefault(); setTableFilterType((p) => p === t ? "" : t); }}
+                  onClick={(e) => { e.preventDefault(); setTableFilterType(tableFilterType === t ? "" : t); }}
                   className={cn("text-[12px]", tableFilterType === t && "font-semibold text-brand-indigo")}
                 >
                   <span className="flex-1 truncate">{t}</span>

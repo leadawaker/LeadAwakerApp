@@ -1299,7 +1299,7 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_96%_80%_at_49%_51%,rgba(203,203,241,0.8)_0%,transparent_66%)] dark:opacity-[0.08]" />
 
       {/* ── Header ── */}
-      <div className="shrink-0">
+      <div className="shrink-0 relative z-10">
         <div className="relative px-4 pt-6 pb-4 md:pb-10 space-y-3">
 
           {/* Row 1: Toolbar */}
@@ -1467,8 +1467,14 @@ export function AccountDetailView({ account, onSave, onAddAccount, onDelete, onT
         </div>
       </div>
 
-      {/* ── Body: scrollable ── */}
-      <div className="relative flex-1 overflow-y-auto min-h-0 p-[3px] flex flex-col gap-[3px]">
+      {/* ── Body: scrollable with fade ── */}
+      <div
+        className="relative flex-1 overflow-y-auto min-h-0 -mt-[80px] pt-[83px] px-[3px] pb-[3px] flex flex-col gap-[3px]"
+        style={{
+          maskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
+        }}
+      >
 
         {/* Top row: Overview | Campaigns & Contracts | Users */}
         <div

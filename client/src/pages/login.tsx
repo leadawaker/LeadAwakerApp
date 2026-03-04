@@ -6,8 +6,17 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 
+const HERO_IMAGES = ["/login-hero.png", "/login-hero-2.png"] as const;
+
 export default function Login() {
   const { t } = useTranslation("login");
+  const [heroSrc] = useState(() => {
+    const prev = Number(localStorage.getItem("leadawaker_hero_idx") || "0");
+    const next = (prev + 1) % HERO_IMAGES.length;
+    localStorage.setItem("leadawaker_hero_idx", String(next));
+    return HERO_IMAGES[next];
+  });
+  const isLady = heroSrc === "/login-hero.png";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -78,7 +87,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-20 bg-slate-50">
+    <div className="min-h-screen flex items-center bg-slate-50 dark:bg-background py-12">
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <motion.div
@@ -87,22 +96,32 @@ export default function Login() {
             transition={{ duration: 0.6 }}
             className="flex flex-col items-center text-center"
           >
-            <p className="text-lg text-muted-foreground mb-6 font-medium tracking-tight">
-              Every lead gets a second chance.
-            </p>
-            <img
-              src="/login-hero.png"
-              alt="Lead reactivation — qualifying leads, closing deals"
-              className="w-full max-w-md"
-              draggable={false}
-            />
+            <h1 className="text-3xl md:text-4xl font-bold mb-6 mt-6">
+              Every lead gets a{" "}
+              <span className={isLady ? "text-[#FAB301]" : "text-[#496FFC]"}>
+                second chance
+              </span>
+              .
+            </h1>
+            <div className="relative w-full max-w-[30rem] mt-8">
+              <img
+                src={heroSrc}
+                alt="Lead reactivation — qualifying leads, closing deals"
+                className="w-full"
+                draggable={false}
+              />
+              {/* Translated text overlaid on the empty chat bubble */}
+              <span className="absolute bottom-[3.4%] left-[calc(27%)] right-[27%] text-white text-[0.5rem] sm:text-[0.8rem] leading-tight text-left pointer-events-none">
+                {t(isLady ? "heroBubbleMaria" : "heroBubbleJohn")}
+              </span>
+            </div>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8"
+            className="bg-white dark:bg-card rounded-2xl shadow-xl border border-slate-200 dark:border-white/[0.08] p-8"
           >
             <h2 className="text-2xl font-bold mb-6">{t("form.heading")}</h2>
 

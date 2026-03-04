@@ -50,6 +50,10 @@ import {
   type InsertSupportSession,
   type SupportMessage,
   type InsertSupportMessage,
+  tasks,
+  type Task,
+  type InsertTask,
+  insertTaskSchema,
 } from "@shared/schema";
 
 
@@ -171,6 +175,14 @@ export interface IStorage {
   createNotification(data: InsertNotifications): Promise<Notifications>;
   updateNotification(id: number, data: Partial<InsertNotifications>): Promise<Notifications | undefined>;
   markAllNotificationsRead(userId: number): Promise<number>;
+
+  // Tasks
+  getTasks(): Promise<Task[]>;
+  getTasksByAccountId(accountId: number): Promise<Task[]>;
+  getTaskById(id: number): Promise<Task | undefined>;
+  createTask(data: InsertTask): Promise<Task>;
+  updateTask(id: number, data: Partial<InsertTask>): Promise<Task | undefined>;
+  deleteTask(id: number): Promise<boolean>;
 
   // Support Chat
   createSupportSession(data: InsertSupportSession): Promise<SupportSession>;
@@ -738,6 +750,36 @@ export class DatabaseStorage implements IStorage {
       .from(supportMessages)
       .where(eq(supportMessages.sessionId, sessionId))
       .orderBy(asc(supportMessages.createdAt));
+  }
+
+  // ─── Tasks ────────────────────────────────────────────────────────────
+
+  async getTasks(): Promise<Task[]> {
+    return db.select().from(tasks).orderBy(desc(tasks.createdAt));
+  }
+
+  async getTasksByAccountId(accountId: number): Promise<Task[]> {
+    return db.select().from(tasks).where(eq(tasks.accountsId, accountId)).orderBy(desc(tasks.createdAt));
+  }
+
+  async getTaskById(id: number): Promise<Task | undefined> {
+    const [row] = await db.select().from(tasks).where(eq(tasks.id, id));
+    return row;
+  }
+
+  async createTask(data: InsertTask): Promise<Task> {
+    const [row] = await db.insert(tasks).values(data as any).returning();
+    return row;
+  }
+
+  async updateTask(id: number, data: Partial<InsertTask>): Promise<Task | undefined> {
+    const [row] = await db.update(tasks).set({ ...data as any, updatedAt: new Date() }).where(eq(tasks.id, id)).returning();
+    return row;
+  }
+
+  async deleteTask(id: number): Promise<boolean> {
+    const rows = await db.delete(tasks).where(eq(tasks.id, id)).returning();
+    return rows.length > 0;
   }
 
   async cleanupOldSupportData(olderThanDays: number): Promise<{ sessions: number; messages: number }> {

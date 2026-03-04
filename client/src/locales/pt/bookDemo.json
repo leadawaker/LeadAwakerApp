@@ -11,11 +11,18 @@
     "demo": {
       "title": "Demonstração Ao Vivo",
       "description": "Veja exatamente como as conversas com IA funcionam e lidam com objeções."
+    },
+    "noCommitment": {
+      "title": "Sem Compromisso",
+      "description": "Sem obrigações, apenas uma conversa de 15 minutos para explorar o que é possível."
     }
   },
-  "quickCheck": {
-    "title": "Verificação Rápida:",
-    "question": "Você já tem um link de agendamento?",
-    "buttonText": "Sim, me leve ao calendário"
+  "calendar": {
+    "title": "Escolha um horário"
+  },
+  "trust": {
+    "duration": "Chamada de 15 min",
+    "free": "Sem compromisso",
+    "results": "Resultados reais"
   }
 }

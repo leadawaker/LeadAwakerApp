@@ -13,6 +13,7 @@ import {
   ROLE_AVATAR,
 } from "@/lib/avatarUtils";
 import { INVOICE_STATUS_COLORS, CONTRACT_STATUS_COLORS } from "@/features/billing/types";
+import { STATUS_COLORS as TASK_STATUS_COLORS, PRIORITY_COLORS as TASK_PRIORITY_COLORS } from "@/features/tasks/types";
 import { PAGE_ACCENTS } from "@/lib/pageAccents";
 
 /* ── Color math ── */
@@ -385,7 +386,26 @@ function COLOR_GROUPS(): { title: string; subtitle?: string; entries: ColorEntry
       ],
     },
 
-    /* 13 ─ Billing — Invoices ───────────────────────────── */
+    /* 13 ─ Tasks ────────────────────────────────────────── */
+    {
+      title: "Tasks",
+      subtitle: "Kanban column & card accent colors",
+      entries: [
+        { label: "Active pill / tab",  id: "tk-pill",    type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "tasks",          hslField: "active" },
+        { label: "Selected card",      id: "tk-sel",     type: "hslVar", hslRef: PAGE_ACCENTS, hslKey: "tasks",          hslField: "selected" },
+        { label: "Card bg",            id: "tk-card",    type: "css", cssVars: ["--card"] },
+        { label: "To Do — dot",       id: "tk-todo",    type: "map", mapRef: TASK_STATUS_COLORS,   mapKey: "todo" },
+        { label: "In Progress — dot", id: "tk-prog",    type: "map", mapRef: TASK_STATUS_COLORS,   mapKey: "in_progress" },
+        { label: "Done — dot",        id: "tk-done",    type: "map", mapRef: TASK_STATUS_COLORS,   mapKey: "done" },
+        { label: "Cancelled — dot",   id: "tk-canc",    type: "map", mapRef: TASK_STATUS_COLORS,   mapKey: "cancelled" },
+        { label: "Low — priority",    id: "tk-low",     type: "map", mapRef: TASK_PRIORITY_COLORS, mapKey: "low" },
+        { label: "Medium — priority", id: "tk-med",     type: "map", mapRef: TASK_PRIORITY_COLORS, mapKey: "medium" },
+        { label: "High — priority",   id: "tk-hi",      type: "map", mapRef: TASK_PRIORITY_COLORS, mapKey: "high" },
+        { label: "Urgent — priority", id: "tk-urg",     type: "map", mapRef: TASK_PRIORITY_COLORS, mapKey: "urgent" },
+      ],
+    },
+
+    /* 14 ─ Billing — Invoices ───────────────────────────── */
     {
       title: "Billing — Invoices",
       subtitle: "Invoice status badge dots & backgrounds",
@@ -406,7 +426,7 @@ function COLOR_GROUPS(): { title: string; subtitle?: string; entries: ColorEntry
       ],
     },
 
-    /* 14 ─ Billing — Contracts ──────────────────────────── */
+    /* 15 ─ Billing — Contracts ──────────────────────────── */
     {
       title: "Billing — Contracts",
       subtitle: "Contract status badge dots & backgrounds",
@@ -425,7 +445,7 @@ function COLOR_GROUPS(): { title: string; subtitle?: string; entries: ColorEntry
       ],
     },
 
-    /* 15 ─ Library ───────────────────────────────────────── */
+    /* 16 ─ Library ───────────────────────────────────────── */
     {
       title: "Library",
       subtitle: "Prompt status & avatar colors",
@@ -440,7 +460,7 @@ function COLOR_GROUPS(): { title: string; subtitle?: string; entries: ColorEntry
       ],
     },
 
-    /* 16 ─ Automations ───────────────────────────────────── */
+    /* 17 ─ Automations ───────────────────────────────────── */
     {
       title: "Automations",
       subtitle: "Log status colors (from semantic palette)",
@@ -457,7 +477,7 @@ function COLOR_GROUPS(): { title: string; subtitle?: string; entries: ColorEntry
       ],
     },
 
-    /* 17 ─ Settings — Roles ──────────────────────────────── */
+    /* 18 ─ Settings — Roles ──────────────────────────────── */
     {
       title: "Settings — Roles",
       subtitle: "User role avatar badge colors",

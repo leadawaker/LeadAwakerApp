@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/hooks/useTheme";
 import { ChevronUp, ChevronDown, ChevronRight, ReceiptText, AlertCircle, FileText, Check } from "lucide-react";
 import type { ExpenseRow } from "../types";
 import { fetchExpenses } from "../api/expensesApi";
@@ -179,6 +180,7 @@ export function ExpensesView({
   groupBy = "none",
   exportTrigger,
 }: ExpensesViewProps) {
+  const { isDark } = useTheme();
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
@@ -553,11 +555,11 @@ export function ExpensesView({
             <p className="text-sm font-medium text-foreground/40">No expenses found</p>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto bg-[#E3E3E3]">
+          <div className="flex-1 overflow-y-auto bg-[#E3E3E3] dark:bg-muted">
             <table className="w-full text-[12px]" style={{ borderCollapse: "separate", borderSpacing: "0 3px" }}>
 
               {/* Header */}
-              <thead className="sticky top-0 z-10 bg-[#E3E3E3] border-b border-border/30">
+              <thead className="sticky top-0 z-10 bg-[#E3E3E3] dark:bg-muted border-b border-border/30">
                 <tr>
                   {hasSelection && (
                     <th className="w-10 px-3 py-2.5">
@@ -610,7 +612,9 @@ export function ExpensesView({
                       <>
                         {/* Year header */}
                         {(() => {
-                          const yearBg = year >= CURRENT_YEAR ? "#DBEAFE" : "#EEF2FF";
+                          const yearBg = isDark
+                            ? (year >= CURRENT_YEAR ? "#1A2744" : "#1E2338")
+                            : (year >= CURRENT_YEAR ? "#DBEAFE" : "#EEF2FF");
                           return (
                             <tr key={`year-${year}`} className="cursor-pointer select-none h-[44px]">
                               {hasSelection && (
@@ -694,7 +698,7 @@ export function ExpensesView({
                                 <>
                                   {/* Quarter sub-header */}
                                   {(() => {
-                                    const qBg = "#E3E3E3";
+                                    const qBg = isDark ? "#18283E" : "#E3E3E3";
                                     return (
                                       <tr key={`qhdr-${year}-${q}`} className="cursor-pointer select-none h-[38px]">
                                         {hasSelection && (

@@ -133,6 +133,8 @@ interface LeadsCardViewProps {
   onCreateLead?: () => void;
   mobileView?: "list" | "detail";
   onMobileViewChange?: (v: "list" | "detail") => void;
+  accountsById?: Map<number, string>;
+  campaignsById?: Map<number, { name: string; accountId: number | null }>;
 }
 
 // ── Pipeline stages ────────────────────────────────────────────────────────────
@@ -1266,18 +1268,13 @@ function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppressAvatar
           humanAgentMsg && "bg-[#f1fff5] dark:bg-[#1a2e1f] text-gray-900 dark:text-foreground",
         )}
       >
-        {/* Hard-light outline overlay — only the shadow uses hard-light, text is unaffected */}
+        {/* Light drop shadow */}
         <div
           className={cn("absolute inset-0 pointer-events-none", bubbleRadius)}
           style={{
-            boxShadow: inbound
-              ? "0 0 2px rgba(0,0,0,0.175)"
-              : aiMsg
-                ? "0 0 2px rgba(0,0,200,0.55)"
-                : humanAgentMsg
-                  ? "0 0 2px rgba(0,122,0,0.45)"
-                  : "none",
-            mixBlendMode: "hard-light",
+            boxShadow: (inbound || aiMsg || humanAgentMsg)
+              ? "0 2px 2px rgba(0,0,0,0.08)"
+              : "none",
           }}
         />
         <div className="whitespace-pre-wrap leading-relaxed break-words">{item.content || item.Content || ""}</div>
@@ -1510,7 +1507,7 @@ function ConversationWidget({ lead, showHeader = false }: { lead: Record<string,
     <div className="flex flex-col h-full min-h-0">
       {/* Header with refresh + open-in-chats */}
       {showHeader && (
-        <div className="px-[21px] pt-[21px] pb-2 flex items-center justify-between shrink-0">
+        <div className="px-[21px] pt-[21px] pb-2 flex items-center justify-between shrink-0 relative z-10">
           <p className="text-[18px] font-semibold font-heading text-foreground">Chat</p>
           <div className="flex items-center gap-1">
             {/* Let AI continue — only when human has taken over */}
@@ -1578,8 +1575,12 @@ function ConversationWidget({ lead, showHeader = false }: { lead: Record<string,
       {/* Messages scroll area */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-3 pt-3 pb-2 min-h-0"
+        className="flex-1 overflow-y-auto px-3 pb-2 min-h-0 -mt-[12px] pt-[15px]"
         data-testid="list-interactions"
+        style={{
+          maskImage: "linear-gradient(to bottom, transparent 0px, black 15px)",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent 0px, black 15px)",
+        }}
       >
         {loading ? (
           <div className="flex flex-col gap-2 py-4">
@@ -2430,11 +2431,8 @@ export function LeadDetailView({
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_73%_92%_at_69%_50%,rgba(255,191,135,0.38)_0%,transparent_66%)] dark:opacity-[0.08]" />
       </>
 
-      {/* ── Scrollable content ── */}
-      <div className="relative flex-1 overflow-y-auto">
-
-        {/* ── Header ── */}
-        <div className="shrink-0 px-4 pt-5 pb-3 space-y-6">
+      {/* ── Fixed header (stays in place) ── */}
+      <div className="relative shrink-0 z-10 px-4 pt-5 pb-3 space-y-6">
 
           {/* Toolbar */}
           <div className="flex items-center gap-1 flex-wrap">
@@ -2554,7 +2552,6 @@ export function LeadDetailView({
                 ) : (
                   <EntityAvatar
                     name={lead.Campaign || lead.campaign || lead.campaign_name || "?"}
-                    photoUrl={accountLogo || undefined}
                     bgColor={getCampaignAvatarColor("Active").bg}
                     textColor={getCampaignAvatarColor("Active").text}
                     size={45}
@@ -2662,6 +2659,14 @@ export function LeadDetailView({
           )}
         </div>
 
+      {/* ── Scrollable body with small fade ── */}
+      <div
+        className="relative flex-1 -mt-[80px] pt-[83px] overflow-y-auto"
+        style={{
+          maskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
+        }}
+      >
         {/* ── Body — 3x2 widget grid matching Accounts page (each 48vh) ── */}
         <div ref={containerRef} className="p-[3px] flex flex-col gap-[3px]">
 
@@ -3129,6 +3134,8 @@ export function LeadsCardView({
   onCreateLead,
   mobileView = "list",
   onMobileViewChange,
+  accountsById,
+  campaignsById,
 }: LeadsCardViewProps) {
   const [currentPage, setCurrentPage]   = useState(0);
   const PAGE_SIZE = 50;
@@ -3206,27 +3213,37 @@ export function LeadsCardView({
   const [filterCampaign, setFilterCampaign] = useState<string>("");
   const [tagSearchInput, setTagSearchInput] = useState<string>("");
 
-  // Derive available accounts + campaigns from leads data
+  // Derive available accounts from leads + accountsById map
   const availableAccounts = useMemo(() => {
-    const map = new Map<string, string>();
+    if (!accountsById || accountsById.size === 0) return [];
+    const seen = new Set<string>();
+    const result: { id: string; name: string }[] = [];
     leads.forEach((l) => {
       const id = String(l.Accounts_id || l.account_id || l.accounts_id || "");
-      const name = l.Account || l.account_name || "";
-      if (id && name) map.set(id, name);
+      if (id && !seen.has(id)) {
+        seen.add(id);
+        const name = accountsById.get(Number(id)) || `Account ${id}`;
+        result.push({ id, name });
+      }
     });
-    return Array.from(map.entries())
-      .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [leads]);
+    return result.sort((a, b) => a.name.localeCompare(b.name));
+  }, [leads, accountsById]);
 
+  // Derive available campaigns from leads + campaignsById map, cascading with account filter
   const availableCampaigns = useMemo(() => {
-    const set = new Set<string>();
+    const campaignIds = new Set<number>();
     leads.forEach((l) => {
-      const c = l.Campaign || l.campaign || l.campaign_name || "";
-      if (c) set.add(c);
+      if (filterAccount && String(l.Accounts_id || l.account_id || l.accounts_id || "") !== filterAccount) return;
+      const cId = Number(l.Campaigns_id || l.campaigns_id || l.campaignsId || 0);
+      if (cId) campaignIds.add(cId);
     });
-    return Array.from(set).sort();
-  }, [leads]);
+    const result: { id: string; name: string }[] = [];
+    campaignIds.forEach((cId) => {
+      const info = campaignsById?.get(cId);
+      result.push({ id: String(cId), name: info?.name || `Campaign ${cId}` });
+    });
+    return result.sort((a, b) => a.name.localeCompare(b.name));
+  }, [leads, campaignsById, filterAccount]);
 
   const flatItems = useMemo((): VirtualListItem[] => {
     // 1. Text search
@@ -3262,10 +3279,10 @@ export function LeadsCardView({
       );
     }
 
-    // 3c. Campaign filter
+    // 3c. Campaign filter (by ID)
     if (filterCampaign) {
       filtered = filtered.filter((l) =>
-        (l.Campaign || l.campaign || l.campaign_name || "") === filterCampaign
+        String(l.Campaigns_id || l.campaigns_id || l.campaignsId || "") === filterCampaign
       );
     }
 
@@ -3299,7 +3316,8 @@ export function LeadsCardView({
       } else if (groupBy === "status") {
         key = getStatus(l) || "Unknown";
       } else if (groupBy === "campaign") {
-        key = l.Campaign || l.campaign || l.campaign_name || "No Campaign";
+        const cId = Number(l.Campaigns_id || l.campaigns_id || l.campaignsId || 0);
+        key = (cId && campaignsById?.get(cId)?.name) || l.Campaign || l.campaign || l.campaign_name || "No Campaign";
       } else {
         const tags = leadTagsInfo.get(getLeadId(l)) || [];
         key = tags[0]?.name || "Untagged";
@@ -3325,7 +3343,7 @@ export function LeadsCardView({
     });
 
     return result;
-  }, [leads, listSearch, groupBy, sortBy, filterStatus, filterTags, filterAccount, filterCampaign, leadTagsInfo]);
+  }, [leads, listSearch, groupBy, sortBy, filterStatus, filterTags, filterAccount, filterCampaign, leadTagsInfo, campaignsById]);
 
   // Reset to page 0 whenever the filtered/sorted list changes
   useEffect(() => { setCurrentPage(0); }, [flatItems]);
@@ -3547,7 +3565,7 @@ export function LeadsCardView({
                           </DropdownMenuSubTrigger>
                           <DropdownMenuSubContent className="w-48">
                             <DropdownMenuItem
-                              onClick={(e) => { e.preventDefault(); setFilterAccount(""); }}
+                              onClick={(e) => { e.preventDefault(); setFilterAccount(""); setFilterCampaign(""); }}
                               className={cn("text-[12px]", !filterAccount && "font-semibold text-brand-indigo")}
                             >
                               All Accounts
@@ -3557,7 +3575,7 @@ export function LeadsCardView({
                             {availableAccounts.map((a) => (
                               <DropdownMenuItem
                                 key={a.id}
-                                onClick={(e) => { e.preventDefault(); setFilterAccount(filterAccount === a.id ? "" : a.id); }}
+                                onClick={(e) => { e.preventDefault(); if (filterAccount === a.id) { setFilterAccount(""); } else { setFilterAccount(a.id); setFilterCampaign(""); } }}
                                 className={cn("text-[12px]", filterAccount === a.id && "font-semibold text-brand-indigo")}
                               >
                                 <span className="flex-1 truncate">{a.name}</span>
@@ -3568,7 +3586,7 @@ export function LeadsCardView({
                         </DropdownMenuSub>
                       )}
 
-                      {/* Campaign — submenu */}
+                      {/* Campaign — submenu (cascading: scoped to selected account) */}
                       {availableCampaigns.length > 0 && (
                         <DropdownMenuSub>
                           <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
@@ -3586,12 +3604,12 @@ export function LeadsCardView({
                             <DropdownMenuSeparator />
                             {availableCampaigns.map((c) => (
                               <DropdownMenuItem
-                                key={c}
-                                onClick={(e) => { e.preventDefault(); setFilterCampaign(filterCampaign === c ? "" : c); }}
-                                className={cn("text-[12px]", filterCampaign === c && "font-semibold text-brand-indigo")}
+                                key={c.id}
+                                onClick={(e) => { e.preventDefault(); setFilterCampaign(filterCampaign === c.id ? "" : c.id); }}
+                                className={cn("text-[12px]", filterCampaign === c.id && "font-semibold text-brand-indigo")}
                               >
-                                <span className="flex-1 truncate">{c}</span>
-                                {filterCampaign === c && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
+                                <span className="flex-1 truncate">{c.name}</span>
+                                {filterCampaign === c.id && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
                               </DropdownMenuItem>
                             ))}
                           </DropdownMenuSubContent>

@@ -19,11 +19,20 @@ import {
   Megaphone,
   RefreshCw,
   Check,
+  Table2,
+  GitBranch,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { SearchPill } from "@/components/ui/search-pill";
 import { IconBtn } from "@/components/ui/icon-btn";
+import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
+import { EntityAvatar } from "@/components/ui/entity-avatar";
+import { getAutomationTypeAvatarColor } from "@/lib/avatarUtils";
+import { resolveAutomationType } from "@/features/automation/automationRegistry";
+import { useExecutionGroups } from "@/features/automation/hooks/useExecutionGroups";
+import { ExecutionProgressBar } from "@/features/automation/components/ExecutionProgressBar";
+import { PipelineView } from "@/features/automation/components/PipelineView";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,8 +69,9 @@ interface LogColumn { key: string; label: string; width: number; align?: "left" 
 
 const COLUMNS: LogColumn[] = [
   { key: "expand",    label: "",           width: 36  },
-  { key: "workflow",  label: "Workflow",    width: 160 },
+  { key: "workflow",  label: "Workflow",    width: 200 },
   { key: "step",      label: "Step",       width: 130 },
+  { key: "pipeline",  label: "Pipeline",   width: 120 },
   { key: "status",    label: "Status",     width: 125 },
   { key: "lead",      label: "Lead",       width: 140 },
   { key: "account",   label: "Account",    width: 130 },
@@ -69,6 +79,11 @@ const COLUMNS: LogColumn[] = [
   { key: "execTime",  label: "Exec Time",  width: 95,  align: "right" },
   { key: "duration",  label: "Duration",   width: 85,  align: "right" },
   { key: "createdAt", label: "Created At", width: 140, align: "right" },
+];
+
+const VIEW_TABS: TabDef[] = [
+  { id: "table", label: "Table", icon: Table2 },
+  { id: "pipeline", label: "Pipeline", icon: GitBranch },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -129,6 +144,7 @@ export default function AutomationLogsPage() {
   const [dateTo, setDateTo] = useState<string>("");
   const [page, setPage] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"table" | "pipeline">("table");
 
   // ── Data state ───────────────────────────────────────────────────────────
   const [automationLogs, setAutomationLogs] = useState<any[]>([]);
@@ -231,6 +247,20 @@ export default function AutomationLogsPage() {
   const paginatedRows = rows.slice(page * pageSize, (page + 1) * pageSize);
   const totalPages = Math.ceil(rows.length / pageSize);
 
+  // ── Execution groups (for progress bars + pipeline view) ───────────────
+  const executionGroups = useExecutionGroups(rows);
+
+  // ── Execution lookup for table progress bars ───────────────────────────
+  const executionByRow = useMemo(() => {
+    const map = new Map<string | number, typeof executionGroups[0]>();
+    for (const group of executionGroups) {
+      for (const step of group.steps) {
+        map.set(step.id, group);
+      }
+    }
+    return map;
+  }, [executionGroups]);
+
   // ── Active filter count (for badge) ──────────────────────────────────────
   const activeFilterCount = [
     campaignId !== "all",
@@ -266,6 +296,15 @@ export default function AutomationLogsPage() {
                   </span>
                 )}
               </div>
+
+              <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
+
+              {/* View tabs */}
+              <ViewTabBar
+                tabs={VIEW_TABS}
+                activeId={viewMode}
+                onTabChange={(id) => setViewMode(id as "table" | "pipeline")}
+              />
 
               <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
 
@@ -399,10 +438,14 @@ export default function AutomationLogsPage() {
               </div>
             ) : loading ? (
               <LogsTableSkeleton />
+            ) : viewMode === "pipeline" ? (
+              <div className="flex-1 min-h-0 overflow-hidden p-[3px]">
+                <PipelineView executions={executionGroups} />
+              </div>
             ) : (
               <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
                 <div className="flex-1 min-h-0 overflow-auto" data-testid="table-logs">
-                  <table className="w-full" style={{ borderCollapse: "collapse", minWidth: 1100 }}>
+                  <table className="w-full" style={{ borderCollapse: "collapse", minWidth: 1260 }}>
 
                     {/* ── Sticky header ── */}
                     <thead className="sticky top-0 z-20">
@@ -476,22 +519,40 @@ export default function AutomationLogsPage() {
                               </td>
 
                               {/* Workflow */}
-                              <td className="px-3" style={{ width: 160, minWidth: 160 }}>
-                                <div className="flex items-center gap-1.5 min-w-0">
-                                  {isCritical && (
-                                    <AlertTriangle
-                                      className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0"
-                                      data-testid="icon-critical-error"
-                                      aria-label="Critical error"
-                                    />
-                                  )}
-                                  <span
-                                    className="text-[13px] font-medium text-foreground truncate"
-                                    title={r.workflowName || r.workflow_name || "N/A"}
-                                  >
-                                    {r.workflowName || r.workflow_name || "N/A"}
-                                  </span>
-                                </div>
+                              <td className="px-3" style={{ width: 200, minWidth: 200 }}>
+                                {(() => {
+                                  const wfName = r.workflowName || r.workflow_name || "N/A";
+                                  const autoType = resolveAutomationType(wfName);
+                                  const avatarColor = getAutomationTypeAvatarColor(autoType.id);
+                                  return (
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      {isCritical && (
+                                        <AlertTriangle
+                                          className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0"
+                                          data-testid="icon-critical-error"
+                                          aria-label="Critical error"
+                                        />
+                                      )}
+                                      <EntityAvatar
+                                        name={autoType.label}
+                                        bgColor={avatarColor.bg}
+                                        textColor={avatarColor.text}
+                                        size={36}
+                                      />
+                                      <div className="min-w-0">
+                                        <span
+                                          className="text-[13px] font-medium text-foreground truncate block"
+                                          title={wfName}
+                                        >
+                                          {wfName}
+                                        </span>
+                                        <span className="text-[10px] text-muted-foreground truncate block">
+                                          {autoType.label}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
                               </td>
 
                               {/* Step */}
@@ -502,6 +563,15 @@ export default function AutomationLogsPage() {
                                 >
                                   {r.stepName || r.step_name || "N/A"}
                                 </span>
+                              </td>
+
+                              {/* Pipeline (progress bar) */}
+                              <td className="px-3" style={{ width: 120, minWidth: 120 }}>
+                                {(() => {
+                                  const group = executionByRow.get(r.id);
+                                  if (!group) return <span className="text-muted-foreground/30">—</span>;
+                                  return <ExecutionProgressBar steps={group.steps} compact />;
+                                })()}
                               </td>
 
                               {/* Status badge */}

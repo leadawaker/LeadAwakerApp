@@ -21,12 +21,12 @@ Dark mode uses Tailwind CSS v4's `@custom-variant dark (&:is(.dark *))` directiv
 
 | Token | Light | Dark | Hex (Dark) |
 |-------|-------|------|------------|
-| `--background` | `0 0% 87%` | `218 41% 12%` | `#121B2B` |
-| `--muted` | `0 0% 93%` | `240 31% 20%` | `#232343` |
-| `--card` | `0 0% 97%` | `224 25% 24%` | `#2D354B` |
-| `--card-hover` | `0 0% 100%` | `224 24% 39%` | `#4C597D` |
-| `--popover` | `0 0% 100%` | `240 38% 11%` | `#111126` |
-| `--input-bg` | `0 0% 100%` | `240 34% 21%` | `#242449` |
+| `--background` | `0 0% 87%` | `217 43% 13%` | `#131E30` |
+| `--muted` | `0 0% 93%` | `215 44% 17%` | `#18283E` |
+| `--card` | `0 0% 97%` | `217 34% 21%` | `#243249` |
+| `--card-hover` | `0 0% 100%` | `225 26% 32%` | `#3D4868` |
+| `--popover` | `0 0% 100%` | `217 23% 18%` | `#232B38` |
+| `--input-bg` | `0 0% 100%` | `224 38% 22%` | `#232E4D` |
 
 **Light:** stone-gray stepping (bg → muted → card → popover = white)
 **Dark:** navy-indigo stepping (bg → muted → card → popover = deep indigo)
@@ -35,8 +35,8 @@ Dark mode uses Tailwind CSS v4's `@custom-variant dark (&:is(.dark *))` directiv
 
 | Token | Light | Dark | Hex (Dark) |
 |-------|-------|------|------------|
-| `--foreground` | `0 0% 3.9%` | `223 20% 93%` | `#EAECF1` |
-| `--muted-foreground` | `0 0% 45.1%` | `226 23% 59%` | `#808BAF` |
+| `--foreground` | `0 0% 3.9%` | `0 0% 100%` | `#FFFFFF` |
+| `--muted-foreground` | `0 0% 45.1%` | `225 23% 59%` | `#7E8AAE` |
 
 ---
 
