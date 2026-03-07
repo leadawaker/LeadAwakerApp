@@ -48,16 +48,8 @@ interface AccountsTableProps {
 const STATUS_OPTIONS = ["Active", "Inactive", "Trial", "Suspended", "Unknown"];
 const TYPE_OPTIONS = ["Agency", "Client"];
 const TIMEZONE_OPTIONS = [
-  "UTC",
-  "Europe/London",
-  "Europe/Paris",
-  "Europe/Berlin",
-  "Europe/Amsterdam",
-  "America/New_York",
-  "America/Los_Angeles",
   "America/Sao_Paulo",
-  "Asia/Tokyo",
-  "Asia/Dubai",
+  "Europe/Amsterdam",
 ];
 
 const HIDDEN_FIELDS: string[] = [];

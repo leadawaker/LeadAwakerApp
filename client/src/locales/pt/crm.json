@@ -1,0 +1,112 @@
+{
+  "sidebar": {
+    "menu": "Menu",
+    "campaigns": "Campanhas",
+    "accounts": "Contas",
+    "leads": "Leads",
+    "chats": "Conversas",
+    "calendar": "Calendário",
+    "promptLibrary": "Biblioteca de Prompts",
+    "billing": "Faturamento",
+    "tasks": "Tarefas",
+    "automations": "Automações",
+    "settings": "Configurações",
+    "support": "Suporte",
+    "help": "Ajuda",
+    "docs": "Docs"
+  },
+  "sidebarSections": {
+    "engage": "Engajar",
+    "admin": "Admin",
+    "backend": "Backend",
+    "agency": "Agência"
+  },
+  "topbar": {
+    "search": "Buscar",
+    "searchPlaceholder": "Buscar leads por nome, telefone, email…",
+    "startTyping": "Comece a digitar para buscar…",
+    "noResults": "Nenhum resultado encontrado.",
+    "darkMode": "Modo escuro",
+    "lightMode": "Modo claro",
+    "toggleDarkMode": "Alternar modo escuro",
+    "customerSupport": "Suporte ao Cliente",
+    "notifications": "Notificações",
+    "help": "Ajuda",
+    "documentation": "Documentação",
+    "social": "Redes Sociais",
+    "agencyView": "Visão da Agência",
+    "allAccounts": "Todas as Contas",
+    "switchAccount": "Trocar Conta",
+    "myProfile": "Meu Perfil",
+    "logout": "Sair"
+  },
+  "search": {
+    "leads": "Leads",
+    "accounts": "Contas",
+    "users": "Usuários"
+  },
+  "actions": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "create": "Criar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "import": "Importar",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "apply": "Aplicar",
+    "reset": "Redefinir",
+    "refresh": "Atualizar",
+    "viewAll": "Ver Tudo",
+    "showMore": "Mostrar Mais",
+    "showLess": "Mostrar Menos",
+    "selectAll": "Selecionar Tudo",
+    "deselectAll": "Desmarcar Tudo",
+    "loading": "Carregando…",
+    "saving": "Salvando…"
+  },
+  "status": {
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "pending": "Pendente",
+    "completed": "Concluído",
+    "paused": "Pausado",
+    "draft": "Rascunho",
+    "scheduled": "Agendado",
+    "running": "Em execução",
+    "failed": "Falhou",
+    "success": "Sucesso",
+    "error": "Erro",
+    "delivered": "Entregue",
+    "read": "Lido",
+    "replied": "Respondido",
+    "optedOut": "Optou por sair"
+  },
+  "time": {
+    "today": "Hoje",
+    "yesterday": "Ontem",
+    "thisWeek": "Esta Semana",
+    "lastWeek": "Semana Passada",
+    "thisMonth": "Este Mês",
+    "lastMonth": "Mês Passado",
+    "daysAgo": "{{count}} dias atrás",
+    "hoursAgo": "{{count}} horas atrás",
+    "minutesAgo": "{{count}} minutos atrás",
+    "justNow": "Agora mesmo"
+  },
+  "empty": {
+    "noData": "Nenhum dado disponível",
+    "noResults": "Nenhum resultado encontrado",
+    "noItems": "Nenhum item ainda"
+  },
+  "confirm": {
+    "areYouSure": "Tem certeza?",
+    "cannotUndo": "Esta ação não pode ser desfeita.",
+    "deleteConfirm": "Tem certeza que deseja excluir isto?"
+  }
+}

@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Search,
   X,
@@ -47,11 +48,11 @@ export interface PipelineToolbarProps {
   activeFilterCount: number;
 }
 
-const SORT_OPTIONS: { value: "score-desc" | "recency" | "alpha" | null; label: string }[] = [
-  { value: null, label: "Default" },
-  { value: "score-desc", label: "Score (High \u2192 Low)" },
-  { value: "recency", label: "Recency (Newest first)" },
-  { value: "alpha", label: "Alphabetical (A \u2192 Z)" },
+const SORT_OPTIONS: { value: "score-desc" | "recency" | "alpha" | null; tKey: string }[] = [
+  { value: null, tKey: "sort.default" },
+  { value: "score-desc", tKey: "sort.scoreDesc" },
+  { value: "recency", tKey: "sort.recency" },
+  { value: "alpha", tKey: "sort.alpha" },
 ];
 
 export default function PipelineToolbar({
@@ -72,6 +73,7 @@ export default function PipelineToolbar({
   onFoldThreshold,
   activeFilterCount,
 }: PipelineToolbarProps) {
+  const { t } = useTranslation("leads");
   /* ── Local state ── */
   const [searchOpen, setSearchOpen] = useState(false);
   const [foldPopoverOpen, setFoldPopoverOpen] = useState(false);
@@ -106,7 +108,7 @@ export default function PipelineToolbar({
             autoFocus
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search leads..."
+            placeholder={t("toolbar.searchPlaceholder")}
             onBlur={() => {
               if (!searchQuery) setSearchOpen(false);
             }}
@@ -126,7 +128,7 @@ export default function PipelineToolbar({
         <IconBtn
           onClick={() => setSearchOpen(true)}
           active={!!searchQuery}
-          title="Search leads"
+          title={t("toolbar.searchLeads")}
         >
           <Search className="h-4 w-4" />
         </IconBtn>
@@ -142,7 +144,7 @@ export default function PipelineToolbar({
             )}
           >
             <SlidersHorizontal className="h-4 w-4 shrink-0" />
-            Filter
+            {t("toolbar.filter")}
             {isFilterActive && (
               <span className="h-4 w-4 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center shrink-0 ml-0.5">
                 {activeFilterCount}
@@ -162,7 +164,7 @@ export default function PipelineToolbar({
               )}
             />
             <span className={cn("text-sm flex-1", showHighScore && "font-semibold")}>
-              High Score (70+)
+              {t("filters.highScore")}
             </span>
             {showHighScore && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
           </DropdownMenuItem>
@@ -177,7 +179,7 @@ export default function PipelineToolbar({
               )}
             />
             <span className={cn("text-sm flex-1", filterHasPhone && "font-semibold")}>
-              Has Phone
+              {t("filters.hasPhone")}
             </span>
             {filterHasPhone && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
           </DropdownMenuItem>
@@ -192,7 +194,7 @@ export default function PipelineToolbar({
               )}
             />
             <span className={cn("text-sm flex-1", filterHasEmail && "font-semibold")}>
-              Has Email
+              {t("filters.hasEmail")}
             </span>
             {filterHasEmail && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
           </DropdownMenuItem>
@@ -205,7 +207,7 @@ export default function PipelineToolbar({
                 className="flex items-center gap-2 cursor-pointer rounded-xl text-muted-foreground"
               >
                 <X className="h-4 w-4 shrink-0" />
-                <span className="text-sm">Clear all</span>
+                <span className="text-sm">{t("toolbar.clearAll")}</span>
               </DropdownMenuItem>
             </>
           )}
@@ -217,11 +219,11 @@ export default function PipelineToolbar({
         <DropdownMenuTrigger asChild>
           <ToolbarPill
             icon={ArrowUpDown}
-            label="Sort"
+            label={t("toolbar.sort")}
             active={isSortActive}
             activeValue={
               isSortActive
-                ? SORT_OPTIONS.find((o) => o.value === sortBy)?.label.split(" ")[0]
+                ? t(SORT_OPTIONS.find((o) => o.value === sortBy)?.tKey ?? "").split(" ")[0]
                 : undefined
             }
           />
@@ -236,7 +238,7 @@ export default function PipelineToolbar({
               <span
                 className={cn("text-sm flex-1", sortBy === opt.value && "font-semibold")}
               >
-                {opt.label}
+                {t(opt.tKey)}
               </span>
               {sortBy === opt.value && (
                 <Check className="h-4 w-4 text-brand-indigo shrink-0" />
@@ -253,7 +255,7 @@ export default function PipelineToolbar({
           className="h-10 px-4 rounded-full flex items-center gap-2 text-sm font-medium bg-black text-[#FFE35B] border border-black hover:opacity-85 transition-opacity"
         >
           <Columns3 className="h-4 w-4 shrink-0" />
-          <span>Unfold</span>
+          <span>{t("toolbar.unfold")}</span>
         </button>
       ) : (
         <Popover open={foldPopoverOpen} onOpenChange={setFoldPopoverOpen}>
@@ -265,13 +267,13 @@ export default function PipelineToolbar({
               )}
             >
               <Columns3 className="h-4 w-4 shrink-0" />
-              Fold
+              {t("toolbar.fold")}
             </button>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-72 rounded-2xl p-4">
-            <p className="text-sm font-semibold mb-1">Fold columns</p>
+            <p className="text-sm font-semibold mb-1">{t("fold.foldColumns")}</p>
             <p className="text-xs text-muted-foreground mb-3">
-              Fold columns with this many leads or fewer.
+              {t("fold.foldDescription")}
             </p>
             <div className="flex items-center gap-2">
               <input
@@ -285,7 +287,7 @@ export default function PipelineToolbar({
                 }}
                 className="h-9 w-20 rounded-xl border border-border bg-input-bg px-3 text-sm text-center font-semibold focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
               />
-              <span className="text-sm text-muted-foreground flex-1">leads</span>
+              <span className="text-sm text-muted-foreground flex-1">{t("fold.leads")}</span>
               <button
                 onClick={applyFold}
                 className="h-9 px-4 rounded-xl bg-brand-indigo text-white text-sm font-semibold hover:bg-brand-indigo/90 transition-colors"
@@ -303,8 +305,8 @@ export default function PipelineToolbar({
         active={showTagsAlways}
         title={
           showTagsAlways
-            ? "Tags always visible \u2014 click to hover-only"
-            : "Show tags on hover only \u2014 click to always show"
+            ? t("tagsToggle.alwaysVisible")
+            : t("tagsToggle.hoverOnly")
         }
       >
         <Tag className="h-4 w-4" />

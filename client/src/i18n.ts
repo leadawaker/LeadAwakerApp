@@ -2,7 +2,7 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 
-// Import translation files
+// Import translation files — marketing pages
 import enCommon from "./locales/en/common.json";
 import enHome from "./locales/en/home.json";
 import enServices from "./locales/en/services.json";
@@ -16,6 +16,20 @@ import enLogin from "./locales/en/login.json";
 import enTermsOfService from "./locales/en/termsOfService.json";
 import enPrivacyPolicy from "./locales/en/privacyPolicy.json";
 import enOnboarding from "./locales/en/onboarding.json";
+
+// Import translation files — CRM pages
+import enCrm from "./locales/en/crm.json";
+import enSettings from "./locales/en/settings.json";
+import enLeads from "./locales/en/leads.json";
+import enCampaigns from "./locales/en/campaigns.json";
+import enConversations from "./locales/en/conversations.json";
+import enBilling from "./locales/en/billing.json";
+import enAccounts from "./locales/en/accounts.json";
+import enTasks from "./locales/en/tasks.json";
+import enAutomation from "./locales/en/automation.json";
+import enPrompts from "./locales/en/prompts.json";
+import enUsers from "./locales/en/users.json";
+import enCalendar from "./locales/en/calendar.json";
 
 import ptCommon from "./locales/pt/common.json";
 import ptHome from "./locales/pt/home.json";
@@ -31,6 +45,19 @@ import ptTermsOfService from "./locales/pt/termsOfService.json";
 import ptPrivacyPolicy from "./locales/pt/privacyPolicy.json";
 import ptOnboarding from "./locales/pt/onboarding.json";
 
+import ptCrm from "./locales/pt/crm.json";
+import ptSettings from "./locales/pt/settings.json";
+import ptLeads from "./locales/pt/leads.json";
+import ptCampaigns from "./locales/pt/campaigns.json";
+import ptConversations from "./locales/pt/conversations.json";
+import ptBilling from "./locales/pt/billing.json";
+import ptAccounts from "./locales/pt/accounts.json";
+import ptTasks from "./locales/pt/tasks.json";
+import ptAutomation from "./locales/pt/automation.json";
+import ptPrompts from "./locales/pt/prompts.json";
+import ptUsers from "./locales/pt/users.json";
+import ptCalendar from "./locales/pt/calendar.json";
+
 import nlCommon from "./locales/nl/common.json";
 import nlHome from "./locales/nl/home.json";
 import nlServices from "./locales/nl/services.json";
@@ -44,6 +71,19 @@ import nlLogin from "./locales/nl/login.json";
 import nlTermsOfService from "./locales/nl/termsOfService.json";
 import nlPrivacyPolicy from "./locales/nl/privacyPolicy.json";
 import nlOnboarding from "./locales/nl/onboarding.json";
+
+import nlCrm from "./locales/nl/crm.json";
+import nlSettings from "./locales/nl/settings.json";
+import nlLeads from "./locales/nl/leads.json";
+import nlCampaigns from "./locales/nl/campaigns.json";
+import nlConversations from "./locales/nl/conversations.json";
+import nlBilling from "./locales/nl/billing.json";
+import nlAccounts from "./locales/nl/accounts.json";
+import nlTasks from "./locales/nl/tasks.json";
+import nlAutomation from "./locales/nl/automation.json";
+import nlPrompts from "./locales/nl/prompts.json";
+import nlUsers from "./locales/nl/users.json";
+import nlCalendar from "./locales/nl/calendar.json";
 
 const resources = {
   en: {
@@ -60,6 +100,18 @@ const resources = {
     termsOfService: enTermsOfService,
     privacyPolicy: enPrivacyPolicy,
     onboarding: enOnboarding,
+    crm: enCrm,
+    settings: enSettings,
+    leads: enLeads,
+    campaigns: enCampaigns,
+    conversations: enConversations,
+    billing: enBilling,
+    accounts: enAccounts,
+    tasks: enTasks,
+    automation: enAutomation,
+    prompts: enPrompts,
+    users: enUsers,
+    calendar: enCalendar,
   },
   pt: {
     common: ptCommon,
@@ -75,6 +127,18 @@ const resources = {
     termsOfService: ptTermsOfService,
     privacyPolicy: ptPrivacyPolicy,
     onboarding: ptOnboarding,
+    crm: ptCrm,
+    settings: ptSettings,
+    leads: ptLeads,
+    campaigns: ptCampaigns,
+    conversations: ptConversations,
+    billing: ptBilling,
+    accounts: ptAccounts,
+    tasks: ptTasks,
+    automation: ptAutomation,
+    prompts: ptPrompts,
+    users: ptUsers,
+    calendar: ptCalendar,
   },
   nl: {
     common: nlCommon,
@@ -90,6 +154,18 @@ const resources = {
     termsOfService: nlTermsOfService,
     privacyPolicy: nlPrivacyPolicy,
     onboarding: nlOnboarding,
+    crm: nlCrm,
+    settings: nlSettings,
+    leads: nlLeads,
+    campaigns: nlCampaigns,
+    conversations: nlConversations,
+    billing: nlBilling,
+    accounts: nlAccounts,
+    tasks: nlTasks,
+    automation: nlAutomation,
+    prompts: nlPrompts,
+    users: nlUsers,
+    calendar: nlCalendar,
   },
 };
 
@@ -116,6 +192,18 @@ i18n
       "termsOfService",
       "privacyPolicy",
       "onboarding",
+      "crm",
+      "settings",
+      "leads",
+      "campaigns",
+      "conversations",
+      "billing",
+      "accounts",
+      "tasks",
+      "automation",
+      "prompts",
+      "users",
+      "calendar",
     ],
 
     interpolation: {
@@ -123,15 +211,17 @@ i18n
     },
 
     /**
-     * IMPORTANT:
-     * URL is the source of truth.
-     * We disable localStorage to avoid language desync
-     * when using /pt and /nl routing.
+     * Language detection strategy:
+     * 1. localStorage (leadawaker_lang) — set by CRM language toggle
+     * 2. path — for marketing pages with /pt and /nl URL prefixes
+     * localStorage is checked first so CRM users keep their preference.
      */
     detection: {
-      order: ["path"],
+      order: ["localStorage", "path"],
+      lookupLocalStorage: "leadawaker_lang",
       lookupFromPathIndex: 0,
-      caches: [],
+      caches: ["localStorage"],
+      lookupFromSubdomainIndex: undefined,
     },
   });
 

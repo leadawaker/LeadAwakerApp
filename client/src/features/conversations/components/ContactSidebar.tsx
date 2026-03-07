@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   X, Phone, Mail, Tag, TrendingUp, Calendar, User, ClipboardList, FileText,
   Plus, Loader2, Check, ChevronDown, ChevronRight, ExternalLink, MessageSquare, Maximize2,
@@ -108,6 +109,7 @@ function getGrade(score: number): string {
 
 // ── Score Arc — half-circle gauge using stroke-dasharray ─────────────────────
 function ScoreArc({ score, status }: { score: number; status?: string }) {
+  const { t } = useTranslation("conversations");
   const fillColor = (status && PIPELINE_HEX[status]) || "#4F46E5";
   const grade = getGrade(score);
   const pct = Math.max(0, Math.min(100, score)) / 100;
@@ -140,7 +142,7 @@ function ScoreArc({ score, status }: { score: number; status?: string }) {
       {/* Grade label */}
       <text x={cx} y={cy - 2} textAnchor="middle" dominantBaseline="central"
         style={{ fontSize: 10, fontWeight: 700, fill: "#9CA3AF", letterSpacing: 2 }}>
-        GRADE {grade}
+        {t("contact.grade", { grade })}
       </text>
     </svg>
   );
@@ -251,6 +253,7 @@ interface ContactSidebarProps {
 }
 
 export function ContactSidebar({ selected, loading = false, onClose, onUpdateLead, onNavigateToLead, className, recentMessages, recentMessagesLoading, onViewConversation, headerActions }: ContactSidebarProps) {
+  const { t } = useTranslation("conversations");
   const [collapsedSections, setCollapsedSections] = useState<Set<SectionId>>(new Set());
   const toggleSection = (id: SectionId) => {
     setCollapsedSections((prev) => {
@@ -310,7 +313,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
       await addLeadTag(lead.id, tag.id);
     } catch {
       setLeadTags((prev) => prev.filter((t) => t.id !== tag.id));
-      toast({ variant: "destructive", title: "Failed to add tag" });
+      toast({ variant: "destructive", title: t("contact.tags.failedToAdd") });
     }
   };
 
@@ -322,7 +325,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
       await removeLeadTag(lead.id, tagId);
     } catch {
       setLeadTags(prevTags);
-      toast({ variant: "destructive", title: "Failed to remove tag" });
+      toast({ variant: "destructive", title: t("contact.tags.failedToRemove") });
     }
   };
 
@@ -354,7 +357,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
               data-testid="btn-close-contact-panel"
             >
               <ChevronRight className="h-4 w-4 shrink-0" />
-              <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">Fold</span>
+              <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("contact.fold")}</span>
             </button>
           )}
 
@@ -368,7 +371,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
               className="group inline-flex items-center h-9 pl-[9px] rounded-full border border-black/[0.125] text-foreground/60 hover:text-foreground text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[100px] ml-auto"
             >
               <Maximize2 className="h-4 w-4 shrink-0" />
-              <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">Details</span>
+              <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("contact.details")}</span>
             </button>
           )}
         </div>
@@ -382,21 +385,21 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
           </div>
         ) : !selected ? (
           <div className="text-sm text-muted-foreground py-8 text-center px-4">
-            Select a conversation to see lead context.
+            {t("contact.selectConversation")}
           </div>
         ) : (
           <div className="flex flex-col">
             {/* ── Contact ── */}
-            <SectionHeader id="contact" label="Contact" icon={User} collapsed={collapsedSections.has("contact")} onToggle={toggleSection} />
+            <SectionHeader id="contact" label={t("contact.sections.contact")} icon={User} collapsed={collapsedSections.has("contact")} onToggle={toggleSection} />
             {!collapsedSections.has("contact") && (
               <div className="px-4 pb-5">
                 <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5 flex flex-col gap-2.5">
                   {[
-                    selected.lead.phone && { icon: <Phone className="h-4 w-4" />, label: "Phone", value: selected.lead.phone, mono: true },
-                    (selected.lead.Email ?? selected.lead.email) && { icon: <Mail className="h-4 w-4" />, label: "Email", value: selected.lead.Email ?? selected.lead.email },
+                    selected.lead.phone && { icon: <Phone className="h-4 w-4" />, label: t("contact.fields.phone"), value: selected.lead.phone, mono: true },
+                    (selected.lead.Email ?? selected.lead.email) && { icon: <Mail className="h-4 w-4" />, label: t("contact.fields.email"), value: selected.lead.Email ?? selected.lead.email },
                     (selected.lead.booked_call_date ?? selected.lead.bookedCallDate) && {
                       icon: <Calendar className="h-4 w-4" />,
-                      label: "Booked Call",
+                      label: t("contact.fields.bookedCall"),
                       value: new Date(selected.lead.booked_call_date ?? selected.lead.bookedCallDate)
                         .toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }),
                     },
@@ -420,7 +423,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             <div className="border-t border-border/20" />
             <SectionHeader
               id="score"
-              label="Score"
+              label={t("contact.sections.score")}
               icon={TrendingUp}
               collapsed={collapsedSections.has("score")}
               onToggle={toggleSection}
@@ -442,7 +445,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             <div className="border-t border-border/20" />
             <SectionHeader
               id="status"
-              label="Conversion Status"
+              label={t("contact.sections.conversionStatus")}
               icon={ClipboardList}
               collapsed={collapsedSections.has("status")}
               onToggle={toggleSection}
@@ -468,7 +471,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             <div className="border-t border-border/20" />
             <SectionHeader
               id="tags"
-              label="Tags"
+              label={t("contact.sections.tags")}
               icon={Tag}
               collapsed={collapsedSections.has("tags")}
               onToggle={toggleSection}
@@ -479,7 +482,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                       <button
                         onClick={(e) => e.stopPropagation()}
                         className="text-muted-foreground hover:text-foreground"
-                        title="Add tag"
+                        title={t("contact.tags.addTag")}
                         data-testid="btn-add-tag"
                       >
                         <Plus className="h-4 w-4" />
@@ -491,11 +494,11 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                       sideOffset={4}
                     >
                       <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide mb-1.5 px-1">
-                        Available Tags
+                        {t("contact.tags.availableTags")}
                       </div>
                       {availableTags.length === 0 ? (
                         <div className="text-[11px] text-muted-foreground/60 italic px-1 py-2">
-                          No more tags available
+                          {t("contact.tags.noMoreTags")}
                         </div>
                       ) : (
                         <div className="flex flex-col gap-0.5 max-h-[200px] overflow-y-auto">
@@ -534,22 +537,22 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                   </div>
                 ) : leadTags.length > 0 ? (
                   <div className="flex flex-wrap gap-1.5">
-                    {leadTags.map((t) => (
+                    {leadTags.map((tag) => (
                       <span
-                        key={t.id}
+                        key={tag.id}
                         className={cn(
                           "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold group",
-                          tagColorClass(t.color),
+                          tagColorClass(tag.color),
                         )}
-                        title={t.category ? `${t.category}: ${t.name}` : t.name}
+                        title={tag.category ? `${tag.category}: ${tag.name}` : tag.name}
                       >
-                        {t.name}
+                        {tag.name}
                         {lead && (
                           <button
-                            onClick={() => handleRemoveTag(t.id)}
+                            onClick={() => handleRemoveTag(tag.id)}
                             className="ml-0.5 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity"
-                            title={`Remove ${t.name}`}
-                            data-testid={`btn-remove-tag-${t.id}`}
+                            title={t("contact.tags.removeTag", { name: tag.name })}
+                            data-testid={`btn-remove-tag-${tag.id}`}
                           >
                             <X className="h-2.5 w-2.5" />
                           </button>
@@ -558,7 +561,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                     ))}
                   </div>
                 ) : (
-                  <div className="text-xs text-muted-foreground/60 italic">No tags assigned.</div>
+                  <div className="text-xs text-muted-foreground/60 italic">{t("contact.tags.noTagsAssigned")}</div>
                 )}
               </div>
             </div>
@@ -566,15 +569,15 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
 
             {/* ── Activity ── */}
             <div className="border-t border-border/20" />
-            <SectionHeader id="activity" label="Activity" icon={ClipboardList} collapsed={collapsedSections.has("activity")} onToggle={toggleSection} />
+            <SectionHeader id="activity" label={t("contact.sections.activity")} icon={ClipboardList} collapsed={collapsedSections.has("activity")} onToggle={toggleSection} />
             {!collapsedSections.has("activity") && (
               <div className="px-4 pb-5">
                 <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-3.5 flex flex-col gap-2">
                   {[
-                    { label: "Messages sent",      value: String(selected.lead.message_count_sent ?? selected.lead.messageCountSent ?? "\u2014") },
-                    { label: "Messages received",  value: String(selected.lead.message_count_received ?? selected.lead.messageCountReceived ?? "\u2014") },
-                    { label: "Total interactions", value: String(selected.lead.interaction_count ?? selected.lead.interactionCount ?? "\u2014") },
-                    { label: "Last active",        value: formatRelativeTime(selected.lead.last_interaction_at || selected.lead.last_message_received_at) || "\u2014" },
+                    { label: t("contact.activity.messagesSent"),      value: String(selected.lead.message_count_sent ?? selected.lead.messageCountSent ?? "\u2014") },
+                    { label: t("contact.activity.messagesReceived"),  value: String(selected.lead.message_count_received ?? selected.lead.messageCountReceived ?? "\u2014") },
+                    { label: t("contact.activity.totalInteractions"), value: String(selected.lead.interaction_count ?? selected.lead.interactionCount ?? "\u2014") },
+                    { label: t("contact.activity.lastActive"),        value: formatRelativeTime(selected.lead.last_interaction_at || selected.lead.last_message_received_at) || "\u2014" },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex items-center justify-between gap-2">
                       <span className="text-[11px] text-muted-foreground">{label}</span>
@@ -589,7 +592,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             <div className="border-t border-border/20" />
             <SectionHeader
               id="notes"
-              label="Notes"
+              label={t("contact.sections.notes")}
               icon={FileText}
               collapsed={collapsedSections.has("notes")}
               onToggle={toggleSection}
@@ -606,7 +609,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                   {onUpdateLead ? (
                     <textarea
                       className="w-full text-[12px] text-foreground/80 leading-relaxed bg-transparent resize-none focus:outline-none min-h-[80px] placeholder:text-muted-foreground/40"
-                      placeholder="Add notes about this lead..."
+                      placeholder={t("contact.notes.placeholder")}
                       value={localNotes}
                       onChange={(e) => { setLocalNotes(e.target.value); setNotesDirty(true); }}
                       onBlur={handleNotesSave}
@@ -618,7 +621,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                         {selected.lead.notes || selected.lead.Notes}
                       </p>
                     ) : (
-                      <p className="text-[12px] text-muted-foreground/50 italic">No notes yet</p>
+                      <p className="text-[12px] text-muted-foreground/50 italic">{t("contact.notes.noNotesYet")}</p>
                     )
                   )}
                 </div>
@@ -629,7 +632,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
             {recentMessages !== undefined && (
               <>
                 <div className="border-t border-border/20" />
-                <SectionHeader id="messages" label="Recent Messages" icon={MessageSquare} collapsed={collapsedSections.has("messages")} onToggle={toggleSection} />
+                <SectionHeader id="messages" label={t("contact.sections.recentMessages")} icon={MessageSquare} collapsed={collapsedSections.has("messages")} onToggle={toggleSection} />
                 {!collapsedSections.has("messages") && (
                   <div className="px-4 pb-5">
                     <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl overflow-hidden">
@@ -640,7 +643,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                           </div>
                         ) : recentMessages.length === 0 ? (
                           <div className="flex items-center justify-center h-full text-[11px] text-muted-foreground/60 italic">
-                            No messages yet
+                            {t("contact.messages.noMessages")}
                           </div>
                         ) : (
                           recentMessages.map((msg) => {
@@ -674,7 +677,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
                             className="w-full h-9 rounded-full bg-brand-indigo text-white text-[11px] font-semibold hover:opacity-90 flex items-center justify-center gap-1.5"
                           >
                             <ExternalLink className="h-3.5 w-3.5" />
-                            View full conversation
+                            {t("contact.messages.viewFullConversation")}
                           </button>
                         </div>
                       )}

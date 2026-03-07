@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { MODEL_OPTIONS } from "@/features/prompts/types";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -99,6 +100,7 @@ interface PromptFormDialogProps {
 }
 
 function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogProps) {
+  const { t } = useTranslation("prompts");
   const { toast } = useToast();
   const isEdit = prompt !== null;
 
@@ -135,12 +137,12 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
 
   function validate(): boolean {
     const newErrors: Partial<PromptFormData> = {};
-    if (!form.name.trim()) newErrors.name = "Name is required";
-    if (!form.promptText.trim()) newErrors.promptText = "Prompt text is required";
+    if (!form.name.trim()) newErrors.name = t("form.nameRequired");
+    if (!form.promptText.trim()) newErrors.promptText = t("form.promptTextRequired");
     const temp = parseFloat(form.temperature);
-    if (isNaN(temp) || temp < 0 || temp > 2) newErrors.temperature = "Must be 0\u20132";
+    if (isNaN(temp) || temp < 0 || temp > 2) newErrors.temperature = t("form.temperatureError");
     const tokens = parseInt(form.maxTokens, 10);
-    if (isNaN(tokens) || tokens < 1) newErrors.maxTokens = "Must be a positive integer";
+    if (isNaN(tokens) || tokens < 1) newErrors.maxTokens = t("form.maxTokensError");
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
@@ -184,16 +186,16 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
       const saved = await res.json();
       onSaved(saved);
       toast({
-        title: isEdit ? "Prompt updated" : "Prompt created",
+        title: isEdit ? t("toast.updated") : t("toast.created"),
         description: isEdit
-          ? `"${form.name}" was updated successfully.`
-          : `"${form.name}" was created successfully.`,
+          ? t("toast.updatedDescription", { name: form.name })
+          : t("toast.createdDescription", { name: form.name }),
       });
       onClose();
     } catch (err: any) {
       toast({
-        title: isEdit ? "Failed to update prompt" : "Failed to create prompt",
-        description: err.message || "Unknown error",
+        title: isEdit ? t("toast.updateFailed") : t("toast.createFailed"),
+        description: err.message || t("status.unknown"),
         variant: "destructive",
       });
     } finally {
@@ -208,11 +210,11 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
         data-testid={isEdit ? "dialog-edit-prompt" : "dialog-create-prompt"}
       >
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Prompt" : "Create Prompt"}</DialogTitle>
+          <DialogTitle>{isEdit ? t("form.editTitle") : t("form.createTitle")}</DialogTitle>
           <DialogDescription>
             {isEdit
-              ? "Edit the prompt details below and save your changes."
-              : "Fill in the fields below to create a new prompt."}
+              ? t("form.editDescription")
+              : t("form.createDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -220,12 +222,12 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
           {/* Name */}
           <div className="space-y-1">
             <label className="text-sm font-medium text-foreground" htmlFor="prompt-name">
-              Name <span className="text-red-500">*</span>
+              {t("form.name")} <span className="text-red-500">*</span>
             </label>
             <input
               id="prompt-name"
               className={`w-full h-10 rounded-lg border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 ${errors.name ? "border-red-400" : "border-border"}`}
-              placeholder="e.g. Lead Reactivation v1"
+              placeholder={t("form.namePlaceholder")}
               value={form.name}
               onChange={(e) => setField("name", e.target.value)}
               data-testid="input-prompt-name"
@@ -236,12 +238,12 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
           {/* Use Case */}
           <div className="space-y-1">
             <label className="text-sm font-medium text-foreground" htmlFor="prompt-use-case">
-              Use Case
+              {t("form.useCase")}
             </label>
             <input
               id="prompt-use-case"
               className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-              placeholder="e.g. WhatsApp lead reactivation"
+              placeholder={t("form.useCasePlaceholder")}
               value={form.useCase}
               onChange={(e) => setField("useCase", e.target.value)}
               data-testid="input-prompt-use-case"
@@ -251,12 +253,12 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
           {/* Prompt Text */}
           <div className="space-y-1">
             <label className="text-sm font-medium text-foreground" htmlFor="prompt-text">
-              Prompt Text <span className="text-red-500">*</span>
+              {t("form.promptText")} <span className="text-red-500">*</span>
             </label>
             <textarea
               id="prompt-text"
               className={`w-full min-h-[120px] rounded-lg border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30 resize-y ${errors.promptText ? "border-red-400" : "border-border"}`}
-              placeholder="Enter the main prompt text\u2026"
+              placeholder={t("form.promptTextPlaceholder")}
               value={form.promptText}
               onChange={(e) => setField("promptText", e.target.value)}
               data-testid="textarea-prompt-text"
@@ -267,12 +269,12 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
           {/* System Message */}
           <div className="space-y-1">
             <label className="text-sm font-medium text-foreground" htmlFor="prompt-system-message">
-              System Message
+              {t("form.systemMessage")}
             </label>
             <textarea
               id="prompt-system-message"
               className="w-full min-h-[80px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30 resize-y"
-              placeholder="System instructions for the AI model (optional)\u2026"
+              placeholder={t("form.systemMessagePlaceholder")}
               value={form.systemMessage}
               onChange={(e) => setField("systemMessage", e.target.value)}
               data-testid="textarea-system-message"
@@ -282,12 +284,12 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
           {/* Notes */}
           <div className="space-y-1">
             <label className="text-sm font-medium text-foreground" htmlFor="prompt-notes">
-              Notes
+              {t("form.notes")}
             </label>
             <textarea
               id="prompt-notes"
               className="w-full min-h-[80px] rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30 resize-y"
-              placeholder="Additional notes or context about this prompt (optional)\u2026"
+              placeholder={t("form.notesPlaceholder")}
               value={form.notes}
               onChange={(e) => setField("notes", e.target.value)}
               data-testid="textarea-prompt-notes"
@@ -299,14 +301,14 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
             {/* Model */}
             <div className="space-y-1">
               <label className="text-sm font-medium text-foreground" htmlFor="prompt-model">
-                Model
+                {t("detail.model")}
               </label>
               <Select value={form.model} onValueChange={(v) => setField("model", v)}>
                 <SelectTrigger
                   className="w-full h-10 rounded-lg bg-card"
                   data-testid="select-prompt-model"
                 >
-                  <SelectValue placeholder="Select model" />
+                  <SelectValue placeholder={t("form.selectModel")} />
                 </SelectTrigger>
                 <SelectContent>
                   {MODEL_OPTIONS.map((m) => (
@@ -319,18 +321,18 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
             {/* Status */}
             <div className="space-y-1">
               <label className="text-sm font-medium text-foreground" htmlFor="prompt-status">
-                Status
+                {t("labels.status")}
               </label>
               <Select value={form.status} onValueChange={(v) => setField("status", v)}>
                 <SelectTrigger
                   className="w-full h-10 rounded-lg bg-card"
                   data-testid="select-prompt-status"
                 >
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder={t("form.selectStatus")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
+                  <SelectItem value="active">{t("status.active")}</SelectItem>
+                  <SelectItem value="archived">{t("status.archived")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -341,7 +343,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
             {/* Temperature */}
             <div className="space-y-1">
               <label className="text-sm font-medium text-foreground" htmlFor="prompt-temperature">
-                Temperature <span className="text-muted-foreground text-xs">(0\u20132)</span>
+                {t("form.temperature")} <span className="text-muted-foreground text-xs">{t("form.temperatureRange")}</span>
               </label>
               <input
                 id="prompt-temperature"
@@ -360,7 +362,7 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
             {/* Max Tokens */}
             <div className="space-y-1">
               <label className="text-sm font-medium text-foreground" htmlFor="prompt-max-tokens">
-                Max Tokens
+                {t("form.maxTokens")}
               </label>
               <input
                 id="prompt-max-tokens"
@@ -383,14 +385,14 @@ function PromptFormDialog({ open, onClose, prompt, onSaved }: PromptFormDialogPr
             disabled={saving}
             data-testid="button-cancel-prompt"
           >
-            Cancel
+            {t("actions.cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={saving}
             data-testid="button-save-prompt"
           >
-            {saving ? (isEdit ? "Saving\u2026" : "Creating\u2026") : (isEdit ? "Save Changes" : "Create Prompt")}
+            {saving ? (isEdit ? t("actions.saving") : t("actions.creating")) : (isEdit ? t("actions.saveChanges") : t("actions.createPrompt"))}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -408,6 +410,7 @@ interface DeletePromptDialogProps {
 }
 
 function DeletePromptDialog({ open, onClose, prompt, onDeleted }: DeletePromptDialogProps) {
+  const { t } = useTranslation("prompts");
   const { toast } = useToast();
   const [deleting, setDeleting] = useState(false);
 
@@ -420,14 +423,14 @@ function DeletePromptDialog({ open, onClose, prompt, onDeleted }: DeletePromptDi
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       onDeleted(id);
       toast({
-        title: "Prompt deleted",
-        description: `"${prompt.name}" was deleted successfully.`,
+        title: t("toast.deleted"),
+        description: t("toast.deletedDescription", { name: prompt.name }),
       });
       onClose();
     } catch (err: any) {
       toast({
-        title: "Failed to delete prompt",
-        description: err.message || "Unknown error",
+        title: t("toast.deleteFailed"),
+        description: err.message || t("status.unknown"),
         variant: "destructive",
       });
     } finally {
@@ -441,12 +444,12 @@ function DeletePromptDialog({ open, onClose, prompt, onDeleted }: DeletePromptDi
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600">
             <AlertTriangle className="h-5 w-5" />
-            Delete Prompt
+            {t("deleteDialog.title")}
           </DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete{" "}
+            {t("deleteDialog.message")}{" "}
             <span className="font-semibold text-foreground">"{prompt?.name}"</span>?
-            This action cannot be undone.
+            {" "}{t("deleteDialog.cannotUndo")}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -456,7 +459,7 @@ function DeletePromptDialog({ open, onClose, prompt, onDeleted }: DeletePromptDi
             disabled={deleting}
             data-testid="button-cancel-delete-prompt"
           >
-            Cancel
+            {t("actions.cancel")}
           </Button>
           <Button
             variant="destructive"
@@ -464,7 +467,7 @@ function DeletePromptDialog({ open, onClose, prompt, onDeleted }: DeletePromptDi
             disabled={deleting}
             data-testid="button-confirm-delete-prompt"
           >
-            {deleting ? "Deleting\u2026" : "Delete Prompt"}
+            {deleting ? t("deleteDialog.deleting") : t("deleteDialog.deletePrompt")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -487,6 +490,7 @@ function SettingsDropdown({
   onModelFilterChange: (v: string) => void;
   availableModels: string[];
 }) {
+  const { t } = useTranslation("prompts");
   const [open, setOpen] = useState(false);
   const isActive = statusFilter !== "all" || modelFilter !== "all";
   const filterCount = (statusFilter !== "all" ? 1 : 0) + (modelFilter !== "all" ? 1 : 0);
@@ -496,7 +500,7 @@ function SettingsDropdown({
       <IconBtn
         onClick={() => setOpen((o) => !o)}
         active={isActive}
-        title="Filter settings"
+        title={t("toolbar.filterSettings")}
       >
         <Settings className="h-4 w-4" />
       </IconBtn>
@@ -511,26 +515,26 @@ function SettingsDropdown({
           <div className="absolute right-0 top-full mt-1.5 z-50 w-[220px] bg-white rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] ring-1 ring-black/[0.06] border border-border/30 overflow-hidden">
             <div className="p-2.5 space-y-3">
               <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("labels.status")}</span>
                 <Select value={statusFilter} onValueChange={onStatusFilterChange}>
                   <SelectTrigger className="w-full h-8 rounded-lg bg-card text-[12px]">
-                    <SelectValue placeholder="All Statuses" />
+                    <SelectValue placeholder={t("toolbar.allStatuses")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
+                    <SelectItem value="all">{t("toolbar.allStatuses")}</SelectItem>
+                    <SelectItem value="active">{t("status.active")}</SelectItem>
+                    <SelectItem value="archived">{t("status.archived")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Model</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("labels.model")}</span>
                 <Select value={modelFilter} onValueChange={onModelFilterChange}>
                   <SelectTrigger className="w-full h-8 rounded-lg bg-card text-[12px]">
-                    <SelectValue placeholder="All Models" />
+                    <SelectValue placeholder={t("toolbar.allModels")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Models</SelectItem>
+                    <SelectItem value="all">{t("toolbar.allModels")}</SelectItem>
                     {availableModels.map((m) => (
                       <SelectItem key={m} value={m}>{m}</SelectItem>
                     ))}
@@ -545,7 +549,7 @@ function SettingsDropdown({
                   }}
                   className="w-full text-center text-[11px] text-primary font-medium hover:underline"
                 >
-                  Clear all filters
+                  {t("toolbar.clearAllFilters")}
                 </button>
               )}
             </div>
@@ -567,6 +571,7 @@ function PromptCard({
   selected: boolean;
   onClick: () => void;
 }) {
+  const { t } = useTranslation("prompts");
   const statusNorm = ((prompt.status || "") as string).toLowerCase().trim();
 
   return (
@@ -583,7 +588,7 @@ function PromptCard({
       {/* Row 1: name + status */}
       <div className="flex items-start justify-between gap-2">
         <span className="text-[13px] font-semibold text-foreground leading-snug truncate flex-1">
-          {prompt.name || "Untitled"}
+          {prompt.name || t("labels.untitled")}
         </span>
         <span className={cn(
           "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold shrink-0",
@@ -642,6 +647,7 @@ function PromptDetailPanel({
   gradientTesterOpen: boolean;
   onToggleGradientTester: () => void;
 }) {
+  const { t } = useTranslation("prompts");
   const statusNorm = ((prompt.status || "") as string).toLowerCase().trim();
   const promptText = prompt.promptText || prompt.prompt_text || "";
   const systemMessage = prompt.systemMessage || prompt.system_message || "";
@@ -652,14 +658,14 @@ function PromptDetailPanel({
       {/* Header */}
       <div className="shrink-0 px-4 py-2.5 border-b border-border/60 flex items-center justify-between">
         <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-          Prompt Detail
+          {t("detail.promptDetail")}
         </span>
         <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={onToggleGradientTester}
             className={`inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border transition-colors ${gradientTesterOpen ? "bg-indigo-100 text-indigo-600 border-indigo-200" : "border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50"}`}
-            title="Gradient Tester"
+            title={t("detail.gradientTester")}
           >
             <Paintbrush className="h-4 w-4" />
           </button>
@@ -669,7 +675,7 @@ function PromptDetailPanel({
             data-testid="button-edit-selected-prompt"
           >
             <Pencil className="w-3.5 h-3.5" />
-            Edit
+            {t("actions.edit")}
           </button>
           <button
             onClick={onDelete}
@@ -677,7 +683,7 @@ function PromptDetailPanel({
             data-testid="button-delete-selected-prompt"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            Delete
+            {t("actions.delete")}
           </button>
         </div>
       </div>
@@ -687,7 +693,7 @@ function PromptDetailPanel({
         {/* Name + status */}
         <div>
           <h2 className="text-lg font-bold text-foreground leading-tight">
-            {prompt.name || "Untitled"}
+            {prompt.name || t("labels.untitled")}
           </h2>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             <button
@@ -698,7 +704,7 @@ function PromptDetailPanel({
                 getStatusBadgeClasses(prompt.status),
                 isToggling && "opacity-50 cursor-not-allowed"
               )}
-              title={`Click to ${statusNorm === "active" ? "archive" : "activate"}`}
+              title={statusNorm === "active" ? t("detail.clickToArchive") : t("detail.clickToActivate")}
             >
               {isToggling ? (
                 <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
@@ -728,7 +734,7 @@ function PromptDetailPanel({
           {prompt.model && (
             <div className="flex items-center justify-between gap-2">
               <span className="text-muted-foreground flex items-center gap-1">
-                <Bot className="h-3 w-3" /> Model
+                <Bot className="h-3 w-3" /> {t("detail.model")}
               </span>
               <span className="font-mono font-medium">{prompt.model}</span>
             </div>
@@ -736,7 +742,7 @@ function PromptDetailPanel({
           {prompt.temperature != null && (
             <div className="flex items-center justify-between gap-2">
               <span className="text-muted-foreground flex items-center gap-1">
-                <Thermometer className="h-3 w-3" /> Temperature
+                <Thermometer className="h-3 w-3" /> {t("detail.temperature")}
               </span>
               <span className="font-mono font-medium">{prompt.temperature}</span>
             </div>
@@ -744,7 +750,7 @@ function PromptDetailPanel({
           {prompt.maxTokens != null && (
             <div className="flex items-center justify-between gap-2">
               <span className="text-muted-foreground flex items-center gap-1">
-                <Hash className="h-3 w-3" /> Max Tokens
+                <Hash className="h-3 w-3" /> {t("detail.maxTokens")}
               </span>
               <span className="font-mono font-medium">{prompt.maxTokens}</span>
             </div>
@@ -752,7 +758,7 @@ function PromptDetailPanel({
           {useCase && (
             <div className="flex items-center justify-between gap-2">
               <span className="text-muted-foreground flex items-center gap-1">
-                <FileText className="h-3 w-3" /> Use Case
+                <FileText className="h-3 w-3" /> {t("detail.useCase")}
               </span>
               <span className="font-medium truncate max-w-[200px]">{useCase}</span>
             </div>
@@ -760,7 +766,7 @@ function PromptDetailPanel({
           {(prompt.createdAt || prompt.created_at) && (
             <div className="flex items-center justify-between gap-2">
               <span className="text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3" /> Created
+                <Clock className="h-3 w-3" /> {t("detail.created")}
               </span>
               <span className="font-mono text-[11px]">
                 {new Date(prompt.createdAt || prompt.created_at).toLocaleDateString()}
@@ -770,7 +776,7 @@ function PromptDetailPanel({
           {(prompt.updatedAt || prompt.updated_at) && (
             <div className="flex items-center justify-between gap-2">
               <span className="text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3" /> Updated
+                <Clock className="h-3 w-3" /> {t("detail.updated")}
               </span>
               <span className="font-mono text-[11px]">
                 {new Date(prompt.updatedAt || prompt.updated_at).toLocaleDateString()}
@@ -783,7 +789,7 @@ function PromptDetailPanel({
         {promptText && (
           <div className="rounded-lg border border-border/40 bg-muted/20 px-2.5 py-2">
             <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
-              Prompt Text
+              {t("detail.promptText")}
             </div>
             <p className="text-[12px] text-foreground/80 leading-relaxed whitespace-pre-wrap">{promptText}</p>
           </div>
@@ -793,7 +799,7 @@ function PromptDetailPanel({
         {systemMessage && (
           <div className="rounded-lg border border-border/40 bg-muted/20 px-2.5 py-2">
             <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
-              System Message
+              {t("detail.systemMessage")}
             </div>
             <p className="text-[12px] text-foreground/80 leading-relaxed whitespace-pre-wrap">{systemMessage}</p>
           </div>
@@ -803,7 +809,7 @@ function PromptDetailPanel({
         {prompt.notes && (
           <div className="rounded-lg border border-border/40 bg-muted/20 px-2.5 py-2">
             <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
-              Notes
+              {t("detail.notes")}
             </div>
             <p className="text-[12px] text-foreground/80 leading-relaxed whitespace-pre-wrap">{prompt.notes}</p>
           </div>
@@ -814,14 +820,15 @@ function PromptDetailPanel({
 }
 
 function PromptDetailEmpty() {
+  const { t } = useTranslation("prompts");
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-8">
       <div className="w-14 h-14 rounded-2xl bg-muted/60 flex items-center justify-center">
         <BookOpen className="w-7 h-7 text-muted-foreground/40" />
       </div>
       <div>
-        <p className="text-sm font-semibold text-foreground/70">Select a prompt</p>
-        <p className="text-xs text-muted-foreground mt-1">Click any prompt on the left to view its details</p>
+        <p className="text-sm font-semibold text-foreground/70">{t("empty.selectPrompt")}</p>
+        <p className="text-xs text-muted-foreground mt-1">{t("empty.selectPromptDesc")}</p>
       </div>
     </div>
   );
@@ -830,6 +837,7 @@ function PromptDetailEmpty() {
 // ─── Main Page ───────────────────────────────────────────────────────────
 
 export default function PromptLibraryPage() {
+  const { t } = useTranslation("prompts");
   const { isAgencyView } = useWorkspace();
   const { toast } = useToast();
   const { clearTopbarActions } = useTopbarActions();
@@ -996,8 +1004,8 @@ export default function PromptLibraryPage() {
         prev.map((p) => (p.id || p.Id) === id ? updated : p)
       );
       toast({
-        title: "Status updated",
-        description: `"${prompt.name}" is now ${newStatus}.`,
+        title: t("toast.statusUpdated"),
+        description: t("toast.statusUpdatedDescription", { name: prompt.name, status: newStatus }),
       });
     } catch (err: any) {
       // Revert optimistic update on error
@@ -1005,8 +1013,8 @@ export default function PromptLibraryPage() {
         prev.map((p) => (p.id || p.Id) === id ? { ...p, status: currentStatus } : p)
       );
       toast({
-        title: "Failed to update status",
-        description: err.message || "Unknown error",
+        title: t("toast.statusFailed"),
+        description: err.message || t("status.unknown"),
         variant: "destructive",
       });
     } finally {
@@ -1030,10 +1038,10 @@ export default function PromptLibraryPage() {
             <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center">
               <div className="flex items-center justify-between w-[309px] shrink-0">
                 <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
-                  Library
+                  {t("page.library")}
                 </h2>
                 <div className="flex items-center gap-1.5">
-                  <IconBtn onClick={openCreate} title="Create prompt">
+                  <IconBtn onClick={openCreate} title={t("toolbar.createPrompt")}>
                     <Plus className="h-4 w-4" />
                   </IconBtn>
                   <SearchPill
@@ -1041,7 +1049,7 @@ export default function PromptLibraryPage() {
                     onChange={setQ}
                     open={searchOpen}
                     onOpenChange={setSearchOpen}
-                    placeholder="Search prompts..."
+                    placeholder={t("toolbar.searchPlaceholder")}
                   />
                   <SettingsDropdown
                     statusFilter={statusFilter}
@@ -1075,15 +1083,15 @@ export default function PromptLibraryPage() {
                   <BookOpen className="h-8 w-8 text-muted-foreground/30 mb-2" />
                   <p className="text-sm font-medium text-muted-foreground">
                     {q || statusFilter !== "all" || modelFilter !== "all"
-                      ? "No prompts match your filters"
-                      : "No prompts yet"}
+                      ? t("empty.noPromptsMatch")
+                      : t("empty.noPromptsYet")}
                   </p>
                   {!q && statusFilter === "all" && modelFilter === "all" && (
                     <button
                       onClick={openCreate}
                       className="mt-2 text-[12px] text-primary font-medium hover:underline"
                     >
-                      Create your first prompt
+                      {t("empty.createFirstPrompt")}
                     </button>
                   )}
                 </div>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
-import { Bell, Search, Settings, Moon, Sun, Menu, X, LogOut, Check, BookOpen, User, Headphones, Instagram, Facebook, Mail, Phone } from "lucide-react";
+import { Bell, Search, Moon, Sun, Menu, X, LogOut, Check, BookOpen, User, Headphones, Instagram, Facebook, Mail, Phone, ChevronDown, Sparkles, Tag, BarChart3 } from "lucide-react";
 import { IconBtn } from "@/components/ui/icon-btn";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -23,6 +24,12 @@ import { SupportChatWidget } from "@/components/crm/SupportChatWidget";
 import { useSupportChat } from "@/hooks/useSupportChat";
 import { useQuery } from "@tanstack/react-query";
 
+const TOPBAR_HELP_UPDATES = [
+  { id: "update-pipeline-donut", Icon: BarChart3, iconColor: "text-amber-600", title: "Pipeline Donut Chart", description: "Interactive funnel visualization with click-to-filter stages.", date: "Mar 2026" },
+  { id: "update-ai-analysis", Icon: Sparkles, iconColor: "text-violet-600", title: "AI Campaign Analysis", description: "AI-generated summaries of campaign performance.", date: "Feb 2026" },
+  { id: "update-campaign-tags", Icon: Tag, iconColor: "text-indigo-500", title: "Campaign Tags", description: "Organize campaigns with custom tag categories and colors.", date: "Feb 2026" },
+];
+
 export function Topbar({
   onOpenPanel,
   collapsed: _collapsed,
@@ -36,6 +43,7 @@ export function Topbar({
   onToggleMobileMenu?: () => void;
   onLogout?: () => void;
 }) {
+  const { t } = useTranslation("crm");
   const [location, setLocation] = useLocation();
   const { isAgencyView, isAgencyUser, currentAccountId, accounts, setCurrentAccountId, currentAccount } = useWorkspace();
   const { isDark, toggleTheme } = useTheme();
@@ -59,6 +67,8 @@ export function Topbar({
   } = useSupportChat();
 
   const [supportOpen, setSupportOpen] = useState(false);
+  const [helpSocialOpen, setHelpSocialOpen] = useState(false);
+  const [helpWhatsNewOpen, setHelpWhatsNewOpen] = useState(false);
 
   // Determine admin status from localStorage role (stored as "Admin" with capital A)
   const currentUserRole = localStorage.getItem("leadawaker_user_role") || "";
@@ -175,12 +185,15 @@ export function Topbar({
   };
 
   // ── Account switch ───────────────────────────────────────────────────────────
+  // id=0 means "All Accounts" (agency-wide, no scoping)
   const handleAccountSelect = (id: number) => {
-    const prevIsAgency = currentAccountId === 1;
-    const prevBase = prevIsAgency ? "/agency" : "/subaccount";
     setCurrentAccountId(id);
-    const nextIsAgency = id === 1;
+    // Admin stays in agency view regardless of which account is selected
+    if (isAdmin && isAgencyView) return;
+    const prevBase = isAgencyView ? "/agency" : "/subaccount";
+    const nextIsAgency = id === 0 || id === 1;
     const nextBase = nextIsAgency ? "/agency" : "/subaccount";
+    if (prevBase === nextBase) return;
     const tail = location.startsWith(prevBase)
       ? location.slice(prevBase.length)
       : location.replace(/^\/(agency|subaccount)/, "");
@@ -210,7 +223,9 @@ export function Topbar({
 
   const { topbarActions } = useTopbarActions();
 
-  const accountLabel = isAgencyView ? "Agency View" : (currentAccount?.name || "");
+  const accountLabel = isAgencyView
+    ? (currentAccountId === 0 ? t("topbar.agencyView") : currentAccount?.name || t("topbar.agencyView"))
+    : (currentAccount?.name || "");
 
   return (
     <>
@@ -228,9 +243,56 @@ export function Topbar({
           Lead Awaker
         </span>
         <span className="text-muted-foreground/30 text-xl leading-none select-none">|</span>
-        <span className="text-xl font-heading text-foreground tracking-tight whitespace-nowrap">
-          {accountLabel}
-        </span>
+        {isAdmin ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="inline-flex items-center gap-1 text-xl font-heading text-foreground tracking-tight whitespace-nowrap hover:opacity-70 transition-opacity focus:outline-none">
+                {currentAccountId !== 0 && currentAccount?.logo_url ? (
+                  <img src={currentAccount.logo_url} alt="" className="h-5 w-5 rounded-md object-cover shrink-0" />
+                ) : null}
+                {accountLabel}
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-52 rounded-2xl shadow-xl border-border bg-background mt-2">
+              <DropdownMenuItem
+                onClick={() => handleAccountSelect(0)}
+                className={cn("flex items-center gap-2 cursor-pointer py-2 rounded-xl mx-1", currentAccountId === 0 && "font-semibold")}
+              >
+                <div className="h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 bg-brand-yellow text-brand-yellow-foreground">
+                  <img src="/6. Favicon.svg" alt="" className="h-3.5 w-3.5" />
+                </div>
+                <span className="text-sm truncate flex-1">{t("topbar.allAccounts")}</span>
+                {currentAccountId === 0 && <Check className="h-3 w-3 text-muted-foreground shrink-0" />}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="mx-2" />
+              {[...accounts].sort((a, b) => a.name.localeCompare(b.name)).map((acc) => (
+                <DropdownMenuItem
+                  key={acc.id}
+                  onClick={() => handleAccountSelect(acc.id)}
+                  className={cn("flex items-center gap-2 cursor-pointer py-2 rounded-xl mx-1", currentAccountId === acc.id && "font-semibold")}
+                >
+                  {acc.logo_url ? (
+                    <img src={acc.logo_url} alt="" className="h-5 w-5 rounded-md object-cover shrink-0" />
+                  ) : (
+                    <div className={cn(
+                      "h-5 w-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0",
+                      acc.id === 1 ? "bg-brand-yellow text-brand-yellow-foreground" : "bg-brand-indigo text-brand-indigo-foreground"
+                    )}>
+                      {acc.name?.[0] || "?"}
+                    </div>
+                  )}
+                  <span className="text-sm truncate flex-1">{acc.name}</span>
+                  {currentAccountId === acc.id && <Check className="h-3 w-3 text-muted-foreground shrink-0" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <span className="text-xl font-heading text-foreground tracking-tight whitespace-nowrap">
+            {accountLabel}
+          </span>
+        )}
       </div>
 
       <div className="flex-1 flex items-center justify-start gap-3 min-w-0">
@@ -256,7 +318,7 @@ export function Topbar({
           {/* ── Booked Calls KPI (compact) ── */}
           <BookedCallsKpi
             variant="compact"
-            accountId={currentAccountId !== 1 ? currentAccountId : undefined}
+            accountId={currentAccountId > 0 ? currentAccountId : undefined}
           />
 
           {/* ── Search Popover ── */}
@@ -274,7 +336,7 @@ export function Topbar({
                 </PopoverTrigger>
               </TooltipTrigger>
               <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
-                Search
+                {t("topbar.search")}
               </TooltipContent>
             </Tooltip>
             <PopoverContent
@@ -288,21 +350,21 @@ export function Topbar({
                   autoFocus
                   value={searchQ}
                   onChange={(e) => setSearchQ(e.target.value)}
-                  placeholder="Search leads by name, phone, email…"
+                  placeholder={t("topbar.searchPlaceholder")}
                   className="h-9 w-full rounded-xl bg-muted/40 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
                   data-testid="input-search"
                 />
               </div>
               {!searchQ.trim() ? (
-                <div className="px-4 py-3 text-xs text-muted-foreground">Start typing to search…</div>
+                <div className="px-4 py-3 text-xs text-muted-foreground">{t("topbar.startTyping")}</div>
               ) : (searchResults.length === 0 && accountResults.length === 0 && userResults.length === 0) ? (
-                <div className="px-4 py-3 text-sm text-muted-foreground">No results found.</div>
+                <div className="px-4 py-3 text-sm text-muted-foreground">{t("topbar.noResults")}</div>
               ) : (
                 <div className="max-h-64 overflow-y-auto divide-y divide-border/10" data-testid="list-search-results">
                   {/* Leads section */}
                   {searchResults.length > 0 && (
                     <div>
-                      <div className="px-4 pt-2 pb-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Leads</div>
+                      <div className="px-4 pt-2 pb-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("search.leads")}</div>
                       {searchResults.map((r) => (
                         <button
                           key={r.id}
@@ -323,7 +385,7 @@ export function Topbar({
                   {/* Accounts section */}
                   {accountResults.length > 0 && (
                     <div>
-                      <div className="px-4 pt-2 pb-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Accounts</div>
+                      <div className="px-4 pt-2 pb-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("search.accounts")}</div>
                       {accountResults.map(a => (
                         <button key={`acc-${a.id}`} onClick={handleAccountClick} className="w-full text-left px-4 py-2.5 hover:bg-muted/40 flex flex-col gap-0.5">
                           <span className="text-sm font-medium text-foreground">{a.name}</span>
@@ -334,7 +396,7 @@ export function Topbar({
                   {/* Users section */}
                   {userResults.length > 0 && (
                     <div>
-                      <div className="px-4 pt-2 pb-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Users</div>
+                      <div className="px-4 pt-2 pb-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("search.users")}</div>
                       {userResults.map(u => (
                         <button key={`usr-${u.id}`} onClick={handleUserClick} className="w-full text-left px-4 py-2.5 hover:bg-muted/40 flex flex-col gap-0.5">
                           <span className="text-sm font-medium text-foreground">{u.name}</span>
@@ -361,7 +423,7 @@ export function Topbar({
                 </IconBtn>
               </TooltipTrigger>
               <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
-                {isDark ? "Light mode" : "Dark mode"}
+                {isDark ? t("topbar.lightMode") : t("topbar.darkMode")}
               </TooltipContent>
             </Tooltip>
           </span>
@@ -386,7 +448,7 @@ export function Topbar({
                 </div>
               </TooltipTrigger>
               <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
-                Customer Support
+                {t("topbar.customerSupport")}
               </TooltipContent>
             </Tooltip>
           </span>
@@ -403,97 +465,128 @@ export function Topbar({
                   </DropdownMenuTrigger>
                 </TooltipTrigger>
                 <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
-                  Help
+                  {t("topbar.help")}
                 </TooltipContent>
               </Tooltip>
-              <DropdownMenuContent align="end" className="w-44 rounded-2xl shadow-xl border-black/[0.08] bg-white dark:bg-popover mt-2">
+              <DropdownMenuContent align="end" className="w-64 rounded-2xl shadow-xl border-black/[0.08] bg-white dark:bg-popover mt-2">
                 <DropdownMenuItem
-                  className="flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1"
+                  className="flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1 focus:bg-transparent focus:text-blue-500 transition-colors"
                   onClick={() => setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/docs`)}
                 >
                   <BookOpen className="h-4 w-4" />
-                  Documentation
+                  {t("topbar.documentation")}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <div className="px-3 pt-1.5 pb-1">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Social</span>
-                </div>
-                <DropdownMenuItem asChild className="flex items-center gap-2 cursor-pointer py-2 rounded-xl mx-1">
-                  <a href="https://www.instagram.com/leadawaker/" target="_blank" rel="noopener noreferrer">
-                    <Instagram className="h-4 w-4 text-pink-600" />
-                    Instagram
-                  </a>
+
+                {/* Social Media — collapsible */}
+                <DropdownMenuItem
+                  onSelect={(e) => e.preventDefault()}
+                  onClick={() => setHelpSocialOpen((v) => !v)}
+                  className="flex items-center justify-between cursor-pointer py-2.5 rounded-xl mx-1 focus:bg-transparent focus:text-blue-500 transition-colors"
+                >
+                  Social Media
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", helpSocialOpen && "rotate-180")} />
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild className="flex items-center gap-2 cursor-pointer py-2 rounded-xl mx-1">
-                  <a href="https://www.facebook.com/profile.php?id=61552291063345" target="_blank" rel="noopener noreferrer">
-                    <Facebook className="h-4 w-4 text-blue-600" />
-                    Facebook
-                  </a>
+                {helpSocialOpen && (
+                  <div className="mx-1 mb-1">
+                    <DropdownMenuItem asChild className="flex items-center gap-2 cursor-pointer py-2 rounded-xl ml-3 focus:bg-transparent focus:text-blue-500 transition-colors">
+                      <a href="https://www.instagram.com/leadawaker/" target="_blank" rel="noopener noreferrer">
+                        <Instagram className="h-4 w-4 text-pink-600" />
+                        Instagram
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="flex items-center gap-2 cursor-pointer py-2 rounded-xl ml-3 focus:bg-transparent focus:text-blue-500 transition-colors">
+                      <a href="https://www.facebook.com/profile.php?id=61552291063345" target="_blank" rel="noopener noreferrer">
+                        <Facebook className="h-4 w-4 text-blue-600" />
+                        Facebook
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="flex items-center gap-2 cursor-pointer py-2 rounded-xl ml-3 focus:bg-transparent focus:text-blue-500 transition-colors">
+                      <a href="mailto:gabriel@leadawaker.com">
+                        <Mail className="h-4 w-4 text-foreground/60" />
+                        Email
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="flex items-center gap-2 cursor-pointer py-2 rounded-xl ml-3 focus:bg-transparent focus:text-blue-500 transition-colors">
+                      <a href="https://wa.me/5547974002162" target="_blank" rel="noopener noreferrer">
+                        <Phone className="h-4 w-4 text-emerald-600" />
+                        WhatsApp
+                      </a>
+                    </DropdownMenuItem>
+                  </div>
+                )}
+                <DropdownMenuSeparator />
+
+                {/* What's New — collapsible */}
+                <DropdownMenuItem
+                  onSelect={(e) => e.preventDefault()}
+                  onClick={() => setHelpWhatsNewOpen((v) => !v)}
+                  className="flex items-center justify-between cursor-pointer py-2.5 rounded-xl mx-1 focus:bg-transparent focus:text-blue-500 transition-colors"
+                >
+                  What's New
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", helpWhatsNewOpen && "rotate-180")} />
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild className="flex items-center gap-2 cursor-pointer py-2 rounded-xl mx-1">
-                  <a href="mailto:gabriel@leadawaker.com">
-                    <Mail className="h-4 w-4 text-foreground/60" />
-                    Email
-                  </a>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="flex items-center gap-2 cursor-pointer py-2 rounded-xl mx-1">
-                  <a href="https://wa.me/5547974002162" target="_blank" rel="noopener noreferrer">
-                    <Phone className="h-4 w-4 text-emerald-600" />
-                    WhatsApp
-                  </a>
-                </DropdownMenuItem>
+                {helpWhatsNewOpen && (
+                  <div className="mx-1 mb-1 space-y-0.5">
+                    {TOPBAR_HELP_UPDATES.map((update) => (
+                      <div key={update.id} className="flex items-start gap-2.5 px-2 py-2 rounded-xl">
+                        <div className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center border border-black/[0.125] bg-transparent mt-0.5">
+                          <update.Icon className={cn("h-3.5 w-3.5", update.iconColor)} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="font-medium text-foreground text-[12px]">{update.title}</span>
+                            <span className="text-[10px] text-muted-foreground shrink-0">{update.date}</span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{update.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </span>
 
-          {/* Settings — hidden on mobile */}
-          <span className="hidden md:contents">
+          {/* ── Notifications ── */}
+          <Popover open={notifOpen} onOpenChange={(v) => { if (!v) setNotifOpen(false); else setNotifOpen(true); }}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <IconBtn
-                  onClick={() => setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/settings`)}
-                  data-testid="button-settings-top"
-                  aria-label="Settings"
-                >
-                  <Settings className="h-4 w-4" />
-                </IconBtn>
+                <PopoverTrigger asChild>
+                  <IconBtn
+                    className="relative"
+                    data-testid="button-notifications"
+                    aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
+                  >
+                    <Bell className="h-4 w-4" />
+                    {unreadCount > 0 && (
+                      <div
+                        className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-brand-indigo rounded-full flex items-center justify-center border-2 border-background"
+                        data-testid="badge-notifications-count"
+                        aria-hidden="true"
+                      >
+                        <span className="text-[9px] font-bold text-white">{unreadCount > 9 ? "9+" : unreadCount}</span>
+                      </div>
+                    )}
+                  </IconBtn>
+                </PopoverTrigger>
               </TooltipTrigger>
               <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
-                Settings
+                {t("topbar.notifications")}
               </TooltipContent>
             </Tooltip>
-          </span>
-
-          {/* ── Notifications ── */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <IconBtn
-                className="relative"
-                onClick={() => setNotifOpen(true)}
-                data-testid="button-notifications"
-                aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
-              >
-                <Bell className="h-4 w-4" />
-                {unreadCount > 0 && (
-                  <div
-                    className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-brand-indigo rounded-full flex items-center justify-center border-2 border-background"
-                    data-testid="badge-notifications-count"
-                    aria-hidden="true"
-                  >
-                    <span className="text-[9px] font-bold text-white">{unreadCount > 9 ? "9+" : unreadCount}</span>
-                  </div>
-                )}
-              </IconBtn>
-            </TooltipTrigger>
-            <TooltipContent className="bg-popover text-popover-foreground border border-border/40 shadow-sm rounded-lg text-xs font-medium">
-              Notifications
-            </TooltipContent>
-          </Tooltip>
-          <NotificationCenter
-            open={notifOpen}
-            onClose={() => setNotifOpen(false)}
-            onUnreadCountChange={handleUnreadCountChange}
-          />
+            <PopoverContent
+              align="end"
+              sideOffset={8}
+              className="w-80 p-0 rounded-2xl shadow-xl border-border/60 bg-popover overflow-hidden"
+            >
+              <NotificationCenter
+                open={notifOpen}
+                onClose={() => setNotifOpen(false)}
+                onUnreadCountChange={handleUnreadCountChange}
+              />
+            </PopoverContent>
+          </Popover>
 
           {/* User avatar dropdown */}
           <DropdownMenu>
@@ -507,7 +600,7 @@ export function Topbar({
                   <AvatarImage src={currentUserAvatar} alt={currentUserName} />
                   <AvatarFallback className={cn(
                     "text-xs font-bold",
-                    isAgencyUser && currentAccountId === 1
+                    isAgencyUser && (currentAccountId === 0 || currentAccountId === 1)
                       ? "bg-brand-yellow text-brand-yellow-foreground"
                       : isAgencyUser
                       ? "bg-brand-indigo text-brand-indigo-foreground"
@@ -518,7 +611,7 @@ export function Topbar({
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 rounded-2xl shadow-xl border-border bg-background mt-2">
+            <DropdownMenuContent align="end" className="w-56 rounded-2xl shadow-xl border-black/[0.08] bg-white dark:bg-popover mt-2">
               <div className="px-3 py-2.5 border-b border-border/40">
                 <div className="text-sm font-semibold truncate">{currentUserName}</div>
                 {currentUserEmail && <div className="text-xs text-muted-foreground truncate">{currentUserEmail}</div>}
@@ -532,7 +625,7 @@ export function Topbar({
                   data-testid="button-dark-mode-toggle-mobile"
                 >
                   {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                  Toggle dark mode
+                  {t("topbar.toggleDarkMode")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setSupportOpen((v) => !v)}
@@ -540,49 +633,23 @@ export function Topbar({
                   data-testid="button-support-chat-mobile"
                 >
                   <Headphones className="h-4 w-4" />
-                  Customer support
+                  {t("topbar.customerSupport")}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="mx-2" />
               </div>
 
-              {isAgencyUser && (
-                <>
-                  <div className="px-3 pt-2 pb-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                    Switch Account
-                  </div>
-                  {[...accounts].sort((a, b) => a.id === 1 ? -1 : b.id === 1 ? 1 : 0).map((acc) => (
-                    <DropdownMenuItem
-                      key={acc.id}
-                      onClick={() => handleAccountSelect(acc.id)}
-                      className={cn(
-                        "flex items-center gap-2 cursor-pointer py-2 rounded-xl mx-1",
-                        currentAccountId === acc.id && "font-semibold"
-                      )}
-                      data-testid={`topbar-account-option-${acc.id}`}
-                    >
-                      <div className={cn(
-                        "h-4 w-4 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0",
-                        acc.id === 1 ? "bg-brand-yellow text-brand-yellow-foreground" : "bg-brand-indigo text-brand-indigo-foreground"
-                      )}>
-                        {acc.name?.[0] || "?"}
-                      </div>
-                      <span className="text-sm truncate flex-1">{acc.name}</span>
-                      {currentAccountId === acc.id && (
-                        <Check className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      )}
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator className="mx-2" />
-                </>
-              )}
+              {/* Account switcher moved to title dropdown for agency admins */}
 
               <DropdownMenuItem
-                onClick={() => setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/settings`)}
+                onClick={() => {
+                  sessionStorage.setItem("pendingSettingsSection", "profile");
+                  setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/settings`);
+                }}
                 className="flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1 mt-1"
                 data-testid="button-view-my-profile"
               >
                 <User className="h-4 w-4" />
-                My Profile & Settings
+                {t("topbar.myProfile")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={onLogout}
@@ -590,7 +657,7 @@ export function Topbar({
                 data-testid="button-user-logout"
               >
                 <LogOut className="h-4 w-4" />
-                Logout
+                {t("topbar.logout")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

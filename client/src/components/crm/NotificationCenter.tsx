@@ -4,7 +4,6 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 import { apiRequest } from "@/lib/queryClient";
 import {
-  X,
   Bell,
   MessageSquare,
   AlertTriangle,
@@ -16,13 +15,6 @@ import {
   BellOff,
   Headphones,
 } from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
@@ -188,161 +180,156 @@ export function NotificationCenter({
   const grouped = useMemo(() => groupNotifications(items), [items]);
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <SheetContent
-        side="right"
-        className="w-[400px] sm:max-w-[400px] p-0 flex flex-col gap-0 bg-popover"
-      >
-        <SheetHeader className="px-5 pt-5 pb-3 space-y-0 border-b border-border/30">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="text-base font-semibold" data-testid="text-notifications-title">
-              Notifications
-            </SheetTitle>
-            {unreadCount > 0 && (
-              <button
-                onClick={() => markAllReadMutation.mutate()}
-                disabled={markAllReadMutation.isPending}
-                className="text-xs text-brand-indigo hover:text-brand-indigo/80 font-medium transition-colors disabled:opacity-50"
-                data-testid="button-mark-all-read"
-              >
-                <div className="flex items-center gap-1">
-                  <Check className="h-3 w-3" />
-                  Mark all read
-                </div>
-              </button>
-            )}
-          </div>
-          <SheetDescription className="sr-only">Notification center</SheetDescription>
-
-          {/* Filter tabs */}
-          <div className="flex items-center gap-1 pt-2.5">
+    <div className="flex flex-col">
+      {/* ── Header ── */}
+      <div className="px-4 pt-4 pb-3 border-b border-border/30">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold" data-testid="text-notifications-title">
+            Notifications
+          </span>
+          {unreadCount > 0 && (
             <button
-              onClick={() => setFilter("all")}
-              className={cn(
-                "h-7 px-3 rounded-full text-xs font-medium transition-colors",
-                filter === "all"
-                  ? "bg-card border border-border/55 text-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-              )}
+              onClick={() => markAllReadMutation.mutate()}
+              disabled={markAllReadMutation.isPending}
+              className="text-xs text-brand-indigo hover:text-brand-indigo/80 font-medium transition-colors disabled:opacity-50"
+              data-testid="button-mark-all-read"
             >
-              All
-            </button>
-            <button
-              onClick={() => setFilter("unread")}
-              className={cn(
-                "h-7 px-3 rounded-full text-xs font-medium transition-colors",
-                filter === "unread"
-                  ? "bg-card border border-border/55 text-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-              )}
-            >
-              Unread
-              {unreadCount > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-brand-indigo text-white text-[10px] font-bold">
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-              )}
-            </button>
-          </div>
-        </SheetHeader>
-
-        {/* ── List ── */}
-        <div className="flex-1 overflow-y-auto" data-testid="list-notifications">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="h-5 w-5 border-2 border-brand-indigo/30 border-t-brand-indigo rounded-full animate-spin" />
-            </div>
-          ) : items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-              <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
-                <BellOff className="h-5 w-5 text-muted-foreground/50" />
+              <div className="flex items-center gap-1">
+                <Check className="h-3 w-3" />
+                Mark all read
               </div>
-              <p className="text-sm font-medium text-foreground/80">All caught up!</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {filter === "unread" ? "No unread notifications." : "No notifications yet."}
-              </p>
-            </div>
-          ) : (
-            <div className="py-1">
-              {grouped.map(({ group, items: groupItems }) => (
-                <div key={group}>
-                  {/* Group header */}
-                  <div className="px-5 pt-3 pb-1.5">
-                    <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider">
-                      {group}
-                    </span>
-                  </div>
-
-                  {/* Items */}
-                  {groupItems.map((n) => {
-                    const config = TYPE_CONFIG[n.type] || TYPE_CONFIG.system;
-                    const Icon = config.icon;
-                    const isClickable = !!(n.link || n.lead_id);
-
-                    return (
-                      <button
-                        key={n.id}
-                        onClick={() => handleNotificationClick(n)}
-                        className={cn(
-                          "w-full text-left px-5 py-3 flex items-start gap-3 transition-colors",
-                          isClickable
-                            ? "hover:bg-muted/30 cursor-pointer"
-                            : "cursor-default",
-                          !n.read && "bg-brand-indigo/[0.03]"
-                        )}
-                        data-testid={`card-notification-${n.id}`}
-                      >
-                        {/* Icon */}
-                        <div className={cn(
-                          "h-8 w-8 rounded-full flex items-center justify-center shrink-0 mt-0.5",
-                          config.bgColor
-                        )}>
-                          <Icon className={cn("h-4 w-4", config.color)} />
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start gap-2">
-                            <span
-                              className={cn(
-                                "text-sm leading-snug line-clamp-1",
-                                !n.read ? "font-semibold text-foreground" : "font-medium text-foreground/80"
-                              )}
-                              data-testid={`text-notification-title-${n.id}`}
-                            >
-                              {n.title}
-                            </span>
-                            {!n.read && (
-                              <span
-                                className="h-2 w-2 rounded-full bg-brand-indigo shrink-0 mt-1.5"
-                                aria-label="Unread"
-                              />
-                            )}
-                          </div>
-                          {n.body && (
-                            <p
-                              className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed"
-                              data-testid={`text-notification-desc-${n.id}`}
-                            >
-                              {n.body}
-                            </p>
-                          )}
-                          <span
-                            className="text-[11px] text-muted-foreground/60 mt-1 block"
-                            data-testid={`text-notification-at-${n.id}`}
-                          >
-                            {timeAgo(n.created_at)}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
+            </button>
           )}
         </div>
-      </SheetContent>
-    </Sheet>
+
+        {/* Filter tabs */}
+        <div className="flex items-center gap-1 pt-2.5">
+          <button
+            onClick={() => setFilter("all")}
+            className={cn(
+              "h-7 px-3 rounded-full text-xs font-medium transition-colors",
+              filter === "all"
+                ? "bg-card border border-border/55 text-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+            )}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setFilter("unread")}
+            className={cn(
+              "h-7 px-3 rounded-full text-xs font-medium transition-colors",
+              filter === "unread"
+                ? "bg-card border border-border/55 text-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+            )}
+          >
+            Unread
+            {unreadCount > 0 && (
+              <span className="ml-1 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-brand-indigo text-white text-[10px] font-bold">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* ── List ── */}
+      <div className="max-h-[640px] overflow-y-auto" data-testid="list-notifications">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-10">
+            <div className="h-5 w-5 border-2 border-brand-indigo/30 border-t-brand-indigo rounded-full animate-spin" />
+          </div>
+        ) : items.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
+            <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+              <BellOff className="h-4 w-4 text-muted-foreground/50" />
+            </div>
+            <p className="text-sm font-medium text-foreground/80">All caught up!</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {filter === "unread" ? "No unread notifications." : "No notifications yet."}
+            </p>
+          </div>
+        ) : (
+          <div className="py-1">
+            {grouped.map(({ group, items: groupItems }) => (
+              <div key={group}>
+                {/* Group header */}
+                <div className="px-4 pt-3 pb-1.5">
+                  <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider">
+                    {group}
+                  </span>
+                </div>
+
+                {/* Items */}
+                {groupItems.map((n) => {
+                  const config = TYPE_CONFIG[n.type] || TYPE_CONFIG.system;
+                  const Icon = config.icon;
+                  const isClickable = !!(n.link || n.lead_id);
+
+                  return (
+                    <button
+                      key={n.id}
+                      onClick={() => handleNotificationClick(n)}
+                      className={cn(
+                        "w-full text-left px-4 py-3 flex items-start gap-3 transition-colors",
+                        isClickable
+                          ? "hover:bg-muted/30 cursor-pointer"
+                          : "cursor-default",
+                        !n.read && "bg-brand-indigo/[0.03]"
+                      )}
+                      data-testid={`card-notification-${n.id}`}
+                    >
+                      {/* Icon */}
+                      <div className={cn(
+                        "h-8 w-8 rounded-full flex items-center justify-center shrink-0 mt-0.5",
+                        config.bgColor
+                      )}>
+                        <Icon className={cn("h-4 w-4", config.color)} />
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start gap-2">
+                          <span
+                            className={cn(
+                              "text-sm leading-snug line-clamp-1",
+                              !n.read ? "font-semibold text-foreground" : "font-medium text-foreground/80"
+                            )}
+                            data-testid={`text-notification-title-${n.id}`}
+                          >
+                            {n.title}
+                          </span>
+                          {!n.read && (
+                            <span
+                              className="h-2 w-2 rounded-full bg-brand-indigo shrink-0 mt-1.5"
+                              aria-label="Unread"
+                            />
+                          )}
+                        </div>
+                        {n.body && (
+                          <p
+                            className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed"
+                            data-testid={`text-notification-desc-${n.id}`}
+                          >
+                            {n.body}
+                          </p>
+                        )}
+                        <span
+                          className="text-[11px] text-muted-foreground/60 mt-1 block"
+                          data-testid={`text-notification-at-${n.id}`}
+                        >
+                          {timeAgo(n.created_at)}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

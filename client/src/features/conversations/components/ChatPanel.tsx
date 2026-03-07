@@ -680,7 +680,7 @@ export function ChatPanel({
                     // tok.kind === "msg" — collect a run of consecutive same-sender messages,
                     // skipping over non-msg tokens between them (date/thread separators don't break a run)
                     const firstMsg = allMsgs[tok.msgIdx];
-                    const senderType: SenderKey = firstMsg.direction !== "Outbound"
+                    const senderType: SenderKey = firstMsg.direction?.toLowerCase() !== "outbound"
                       ? "inbound"
                       : isAiMessage(firstMsg) ? "ai" : "human";
 
@@ -709,7 +709,7 @@ export function ChatPanel({
                       }
                       // It's a msg token
                       const m = allMsgs[lt.msgIdx];
-                      const sk: SenderKey = m.direction !== "Outbound"
+                      const sk: SenderKey = m.direction?.toLowerCase() !== "outbound"
                         ? "inbound"
                         : isAiMessage(m) ? "ai" : "human";
                       if (sk !== senderType) break; // different sender → end of run
@@ -1005,14 +1005,14 @@ function computeMsgMeta(msgs: Interaction[]): MsgMeta[] {
   const result: MsgMeta[] = [];
   for (let i = 0; i < msgs.length; i++) {
     const m = msgs[i];
-    const sk: SenderKey = m.direction !== "Outbound"
+    const sk: SenderKey = m.direction?.toLowerCase() !== "outbound"
       ? "inbound"
       : isAiMessage(m) ? "ai" : "human";
     const prevSk: SenderKey | "" = i > 0
-      ? (msgs[i - 1].direction !== "Outbound" ? "inbound" : isAiMessage(msgs[i - 1]) ? "ai" : "human")
+      ? (msgs[i - 1].direction?.toLowerCase() !== "outbound" ? "inbound" : isAiMessage(msgs[i - 1]) ? "ai" : "human")
       : "";
     const nextSk: SenderKey | "" = i < msgs.length - 1
-      ? (msgs[i + 1].direction !== "Outbound" ? "inbound" : isAiMessage(msgs[i + 1]) ? "ai" : "human")
+      ? (msgs[i + 1].direction?.toLowerCase() !== "outbound" ? "inbound" : isAiMessage(msgs[i + 1]) ? "ai" : "human")
       : "";
     result.push({
       senderKey: sk,
@@ -1278,8 +1278,8 @@ function MessageStatusIcon({ isSending, isSent, isDelivered, isRead, isFailed }:
 
 /** Returns true if this interaction was generated/sent by the AI/automation system */
 function isAiMessage(item: Interaction): boolean {
-  if (item.ai_generated === true) return true;
-  if (item.is_bump === true) return true;
+  if ((item.ai_generated ?? item.aiGenerated) === true) return true;
+  if ((item.is_bump ?? item.isBump) === true) return true;
   if ((item.triggered_by ?? item.triggeredBy) === "Automation") return true;
   const who = (item.Who ?? item.who ?? "").toLowerCase();
   if (who === "ai" || who === "bot" || who === "automation") return true;
@@ -1290,7 +1290,7 @@ function isAiMessage(item: Interaction): boolean {
 
 /** Returns true if this interaction was sent manually by a human agent */
 function isHumanAgentMessage(item: Interaction): boolean {
-  if (item.direction !== "Outbound") return false;
+  if (item.direction?.toLowerCase() !== "outbound") return false;
   if (isAiMessage(item)) return false;
   return true;
 }
@@ -1302,7 +1302,7 @@ function getSenderLabel(item: Interaction, inbound: boolean, aiMsg: boolean, lea
     const who = (item.Who ?? item.who ?? "").trim();
     const genericWho = /^(ai|bot|automation|start|bump\s*\d*)$/i;
     if (who && !genericWho.test(who)) return `AI ${who}`;
-    if (item.ai_model) return `AI ${item.ai_model}`;
+    if (item.ai_model ?? item.aiModel) return `AI ${item.ai_model ?? item.aiModel}`;
     return "AI";
   }
   const who = (item.Who ?? item.who ?? "").trim();
@@ -1330,8 +1330,8 @@ function groupMessagesByThread(msgs: Interaction[]): ThreadGroup[] {
   function getThreadKey(m: Interaction): string | null {
     const tid = m.conversation_thread_id ?? m.conversationThreadId;
     if (tid) return `thread-${tid}`;
-    if (m.bump_number != null) return `bump-${m.bump_number}`;
-    if (m.is_bump && m.Who) return `bump-who-${m.Who.toLowerCase().replace(/\s+/g, "-")}`;
+    if ((m.bump_number ?? m.bumpNumber) != null) return `bump-${m.bump_number ?? m.bumpNumber}`;
+    if ((m.is_bump ?? m.isBump) && m.Who) return `bump-who-${m.Who.toLowerCase().replace(/\s+/g, "-")}`;
     return null;
   }
 
@@ -1724,7 +1724,7 @@ function ChatBubble({
   /** When true, skip rendering avatar/spacer (handled by parent AgentRunWrapper) */
   suppressAvatar?: boolean;
 }) {
-  const outbound = item.direction === "Outbound";
+  const outbound = item.direction?.toLowerCase() === "outbound";
   const inbound = !outbound;
   const statusNorm = (item.status ?? "").toLowerCase();
   const isFailed = statusNorm === "failed";

@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { cn, relativeTime } from "@/lib/utils";
 import {
   Phone,
@@ -195,17 +196,17 @@ function getGrade(score: number): string {
 }
 
 // ── Date group label ───────────────────────────────────────────────────────────
-function getDateGroupLabel(dateStr: string | null | undefined): string {
-  if (!dateStr) return "No Activity";
+function getDateGroupLabel(dateStr: string | null | undefined, t: (key: string) => string): string {
+  if (!dateStr) return t("time.noActivity");
   try {
     const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86_400_000);
-    if (diff <= 0)  return "Today";
-    if (diff === 1) return "Yesterday";
-    if (diff < 7)   return "This Week";
-    if (diff < 30)  return "This Month";
-    if (diff < 90)  return "Last 3 Months";
-    return "Older";
-  } catch { return "No Activity"; }
+    if (diff <= 0)  return t("time.today");
+    if (diff === 1) return t("time.yesterday");
+    if (diff < 7)   return t("time.thisWeek");
+    if (diff < 30)  return t("time.thisMonth");
+    if (diff < 90)  return t("time.last3Months");
+    return t("time.older");
+  } catch { return t("time.noActivity"); }
 }
 
 // ── Virtual list item union type ───────────────────────────────────────────────
@@ -262,7 +263,7 @@ function getLastMessageSender(lead: Record<string, any>): string {
   if (sent || last) return "AI";
   return "";
 }
-function formatRelativeTime(dateStr: string | null | undefined): string {
+function formatRelativeTime(dateStr: string | null | undefined, t: (key: string, opts?: Record<string, any>) => string): string {
   if (!dateStr) return "";
   try {
     const date = new Date(dateStr);
@@ -271,12 +272,12 @@ function formatRelativeTime(dateStr: string | null | undefined): string {
     const diffDays = Math.floor(diffMs / 86_400_000);
     if (diffDays === 0) {
       const h = Math.floor(diffMs / 3_600_000);
-      return h === 0 ? "Just now" : `${h}h ago`;
+      return h === 0 ? t("relativeTime.justNow") : t("relativeTime.hoursAgo", { count: h });
     }
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7) return `${diffDays}d ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-    return `${Math.floor(diffDays / 30)}mo ago`;
+    if (diffDays === 1) return t("relativeTime.yesterday");
+    if (diffDays < 7) return t("relativeTime.daysAgo", { count: diffDays });
+    if (diffDays < 30) return t("relativeTime.weeksAgo", { count: Math.floor(diffDays / 7) });
+    return t("relativeTime.monthsAgo", { count: Math.floor(diffDays / 30) });
   } catch { return ""; }
 }
 // ── Date helpers (matching ChatPanel) ─────────────────────────────────────────
@@ -286,15 +287,15 @@ function getDateKey(ts: string | null | undefined): string {
   if (isNaN(d.getTime())) return "";
   return d.toDateString();
 }
-function formatDateLabel(ts: string): string {
+function formatDateLabel(ts: string, t: (key: string) => string): string {
   const d = new Date(ts);
   if (isNaN(d.getTime())) return "";
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const msgDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const diff = Math.round((today.getTime() - msgDay.getTime()) / 86_400_000);
-  if (diff === 0) return "Today";
-  if (diff === 1) return "Yesterday";
+  if (diff === 0) return t("time.today");
+  if (diff === 1) return t("time.yesterday");
   return d.toLocaleDateString([], { month: "long", day: "numeric" });
 }
 function formatBubbleTime(ts: string | null | undefined): string {
@@ -426,6 +427,7 @@ const TERMINAL_DEFAULT_ANCHOR: Record<string, number> = {
 
 // ── Pipeline progress — monochrome tube, icons+labels at left of each segment ─
 function PipelineProgress({ status }: { status: string }) {
+  const { t } = useTranslation("leads");
   const currentIndex = PIPELINE_STAGES.findIndex((s) => s.key === status);
   const isTerminal = LOST_STAGES.includes(status);
   const tubeHeight = 46;
@@ -508,7 +510,9 @@ function PipelineProgress({ status }: { status: string }) {
           const innerSz = isCurrent ? innerIconCurrent : innerIconBase;
 
           // Terminal slot label shows "DND" or "Lost" instead of the stage name
-          const label = isTerminalSlot ? status : stage.short;
+          const label = isTerminalSlot
+            ? t(`kanban.stageLabels.${status}`, status)
+            : t(`kanban.stageLabels.${stage.key.replace(/ /g, "")}`, stage.short);
 
           return (
             <div
@@ -562,6 +566,7 @@ function PipelineProgress({ status }: { status: string }) {
 
 // ── Pipeline progress — compact version for mobile ─────────────────────────
 function PipelineProgressCompact({ status }: { status: string }) {
+  const { t } = useTranslation("leads");
   const currentIndex = PIPELINE_STAGES.findIndex((s) => s.key === status);
   const isTerminal = LOST_STAGES.includes(status);
   const anchorIndex = isTerminal ? (TERMINAL_DEFAULT_ANCHOR[status] ?? 3) : currentIndex;
@@ -570,7 +575,8 @@ function PipelineProgressCompact({ status }: { status: string }) {
   const locksToShow = Math.min(futureCount, 2);
   const activeHex = PIPELINE_HEX[status] || "#6B7280";
   const barHex = `${activeHex}B0`;
-  const currentStage = isTerminal ? status : (PIPELINE_STAGES[effectiveIndex]?.short ?? status);
+  const currentStageKey = isTerminal ? status : (PIPELINE_STAGES[effectiveIndex]?.key ?? status);
+  const currentStage = t(`kanban.stageLabels.${currentStageKey.replace(/ /g, "")}`, currentStageKey);
   const CurrentIcon = isTerminal
     ? (status === "DND" ? Ban : AlertTriangle)
     : (STAGE_ICON[PIPELINE_STAGES[effectiveIndex]?.key] || CircleDot);
@@ -688,6 +694,7 @@ function InlineEditField({ value, field, leadId, onSaved, type = "text" }: {
 }
 
 function ContactWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefresh?: () => void }) {
+  const { t } = useTranslation("leads");
   const leadId      = getLeadId(lead);
   const phone       = lead.phone || lead.Phone || "";
   const email       = lead.email || lead.Email || "";
@@ -698,17 +705,15 @@ function ContactWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefre
   const createdAt   = lead.created_at || lead.CreatedAt || lead.createdAt || "";
 
   const editableRows: { label: string; value: string; field: string; copy?: boolean; type?: string }[] = [
-    { label: "First Name",  value: firstName, field: "first_name" },
-    { label: "Last Name",   value: lastName,  field: "last_name" },
-    { label: "Phone",       value: phone,     field: "phone", copy: true, type: "tel" },
-    { label: "Email",       value: email,     field: "email", copy: true, type: "email" },
-    { label: "Job Title",   value: jobTitle,  field: "job_title" },
-    { label: "Company",     value: company,   field: "company" },
+    { label: t("contact.firstName"),  value: firstName, field: "first_name" },
+    { label: t("contact.lastName"),   value: lastName,  field: "last_name" },
+    { label: t("contact.phone"),      value: phone,     field: "phone", copy: true, type: "tel" },
+    { label: t("contact.email"),      value: email,     field: "email", copy: true, type: "email" },
   ];
 
   return (
     <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-[21px] flex flex-col h-full overflow-y-auto">
-      <p className="text-[18px] font-semibold font-heading text-foreground mb-3">Contact</p>
+      <p className="text-[18px] font-semibold font-heading text-foreground mb-3">{t("contact.title")}</p>
       <div className="flex flex-col">
         {editableRows.map((row) => (
           <div key={row.label} className="py-2.5 border-b border-border/20 last:border-0 last:pb-0">
@@ -733,11 +738,11 @@ function ContactWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefre
         {createdAt && (
           <div className="py-2.5 border-b border-border/20 last:border-0 last:pb-0">
             <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block leading-none mb-1">
-              Created
+              {t("contact.created")}
             </span>
             <div className="min-h-[1.125rem]">
               <span className="text-[12px] font-semibold text-foreground leading-snug">
-                {formatRelativeTime(createdAt)}
+                {formatRelativeTime(createdAt, t)}
               </span>
             </div>
           </div>
@@ -748,35 +753,40 @@ function ContactWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefre
 }
 
 // ── Score insights builder ─────────────────────────────────────────────────────
-function buildInsights(lead: Record<string, any>, score: number): { text: string; value: string }[] {
+function buildInsights(lead: Record<string, any>, score: number, t?: (key: string) => string): { text: string; value: string }[] {
   const out: { text: string; value: string }[] = [];
+  const _t = (key: string, fallback: string) => t ? t(key) : fallback;
 
   const status = getStatus(lead);
-  if (status) out.push({ text: "Pipeline stage is", value: status });
+  if (status) out.push({ text: _t("score.insights.pipelineStageIs", "Pipeline stage is"), value: status });
 
   const lastActivity = lead.last_interaction_at || lead.last_message_received_at || lead.created_at;
   if (lastActivity) {
     try {
       const days = Math.floor((Date.now() - new Date(lastActivity).getTime()) / 86_400_000);
       const label = days === 0 ? "today" : days === 1 ? "yesterday" : days < 7 ? "this week" : days < 30 ? "this month" : "over a month ago";
-      out.push({ text: "Last interaction was", value: label });
+      out.push({ text: _t("score.insights.lastInteractionWas", "Last interaction was"), value: label });
     } catch {}
   }
 
   const source = lead.source || lead.Source;
-  if (source) out.push({ text: "Lead source is", value: source });
+  if (source) out.push({ text: _t("score.insights.leadSourceIs", "Lead source is"), value: source });
 
   const campaign = lead.Campaign || lead.campaign || lead.campaign_name;
-  if (campaign && campaign !== "—") out.push({ text: "Active campaign is", value: campaign });
+  if (campaign && campaign !== "—") out.push({ text: _t("score.insights.activeCampaignIs", "Active campaign is"), value: campaign });
 
   const bump = lead.bump_stage;
   if (bump !== undefined && bump !== null && Number(bump) > 0) {
-    out.push({ text: "Bump sequence at stage", value: String(bump) });
+    out.push({ text: _t("score.insights.bumpSequenceAtStage", "Bump sequence at stage"), value: String(bump) });
   }
 
   if (out.length < 3) {
-    const potential = score >= 70 ? "high potential" : score >= 40 ? "moderate" : "needs nurturing";
-    out.push({ text: "Lead potential is", value: potential });
+    const potential = score >= 70
+      ? _t("score.insights.highPotential", "high potential")
+      : score >= 40
+        ? _t("score.insights.moderate", "moderate")
+        : _t("score.insights.needsNurturing", "needs nurturing");
+    out.push({ text: _t("score.insights.leadPotentialIs", "Lead potential is"), value: potential });
   }
 
   return out.slice(0, 4);
@@ -784,7 +794,7 @@ function buildInsights(lead: Record<string, any>, score: number): { text: string
 
 // ── Score insights — scripted rules tied to the real scoring formula ──────────
 // Formula: Lead Score = 40% Funnel + 30% Engagement + 30% Activity
-function buildScoreInsights(lead: Record<string, any>): ScoreInsight[] {
+function buildScoreInsights(lead: Record<string, any>, t?: (key: string) => string): ScoreInsight[] {
   const out: ScoreInsight[] = [];
 
   const status = (lead.conversion_status || lead.Conversion_Status || "").toString();
@@ -801,66 +811,68 @@ function buildScoreInsights(lead: Record<string, any>): ScoreInsight[] {
   const lastReceivedDays = lastReceivedMs !== null ? (now - lastReceivedMs) / 86_400_000 : null;
 
   // ── Positive factors (funnel stage — 40% weight) ─────────────────────────
+  const _t = (key: string, fallback: string) => t ? t(key) : fallback;
+
   if (bookingConfirmed || status === "Booked") {
-    out.push({ direction: "up", label: "Call successfully booked" });
+    out.push({ direction: "up", label: _t("score.insights.callBooked", "Call successfully booked") });
   } else if (status === "Qualified") {
-    out.push({ direction: "up", label: "Lead is qualified" });
+    out.push({ direction: "up", label: _t("score.insights.leadQualified", "Lead is qualified") });
   } else if (status === "Multiple Responses") {
-    out.push({ direction: "up", label: "Multiple responses received" });
+    out.push({ direction: "up", label: _t("score.insights.multipleResponses", "Multiple responses received") });
   } else if (status === "Responded") {
-    out.push({ direction: "up", label: "Lead has responded" });
+    out.push({ direction: "up", label: _t("score.insights.leadResponded", "Lead has responded") });
   }
 
   // ── Negative factors (funnel stage) ──────────────────────────────────────
   if (optedOut) {
-    out.push({ direction: "down", label: "Lead opted out" });
+    out.push({ direction: "down", label: _t("score.insights.leadOptedOut", "Lead opted out") });
   } else if (status === "DND") {
-    out.push({ direction: "down", label: "Do-not-disturb status" });
+    out.push({ direction: "down", label: _t("score.insights.dndStatus", "Do-not-disturb status") });
   } else if (status === "Lost") {
-    out.push({ direction: "down", label: "Lead marked as lost" });
+    out.push({ direction: "down", label: _t("score.insights.leadLost", "Lead marked as lost") });
   }
 
   // ── Sentiment (engagement score ±10) ─────────────────────────────────────
   if (sentimentRaw === "positive") {
-    out.push({ direction: "up", label: "Positive sentiment detected" });
+    out.push({ direction: "up", label: _t("score.insights.positiveSentiment", "Positive sentiment detected") });
   } else if (sentimentRaw === "negative") {
-    out.push({ direction: "down", label: "Negative sentiment detected" });
+    out.push({ direction: "down", label: _t("score.insights.negativeSentiment", "Negative sentiment detected") });
   } else if (sentimentRaw === "neutral") {
-    out.push({ direction: "down", label: "Neutral sentiment detected" });
+    out.push({ direction: "down", label: _t("score.insights.neutralSentiment", "Neutral sentiment detected") });
   }
 
   // ── Recency tiers (engagement score +5/+10/+20, exclusive) ───────────────
   if (lastReceivedDays !== null) {
     if (lastReceivedDays < 1) {
-      out.push({ direction: "up", label: "Replied in last 24h" });
+      out.push({ direction: "up", label: _t("score.insights.repliedLast24h", "Replied in last 24h") });
     } else if (lastReceivedDays < 2) {
-      out.push({ direction: "up", label: "Replied within 48h" });
+      out.push({ direction: "up", label: _t("score.insights.repliedWithin48h", "Replied within 48h") });
     } else if (lastReceivedDays < 7) {
-      out.push({ direction: "up", label: "Replied this week" });
+      out.push({ direction: "up", label: _t("score.insights.repliedThisWeek", "Replied this week") });
     } else if (lastReceivedDays > 30) {
-      out.push({ direction: "down", label: "No reply in 30+ days" });
+      out.push({ direction: "down", label: _t("score.insights.noReply30Days", "No reply in 30+ days") });
     } else if (lastReceivedDays > 14) {
-      out.push({ direction: "down", label: "Quiet for 2+ weeks" });
+      out.push({ direction: "down", label: _t("score.insights.quiet2Weeks", "Quiet for 2+ weeks") });
     }
   }
 
   // ── Message count / activity score ───────────────────────────────────────
   if (received === 0 && sent > 0) {
-    out.push({ direction: "down", label: "Lead hasn't replied yet" });
+    out.push({ direction: "down", label: _t("score.insights.noReplyYet", "Lead hasn't replied yet") });
   } else if (received >= 4) {
-    out.push({ direction: "up", label: "High message activity" });
+    out.push({ direction: "up", label: _t("score.insights.highActivity", "High message activity") });
   } else if (received >= 2) {
-    out.push({ direction: "up", label: "Replied multiple times" });
+    out.push({ direction: "up", label: _t("score.insights.repliedMultiple", "Replied multiple times") });
   }
 
   // Reply ratio >= 1.0 (activity score +30)
   if (received > 0 && sent > 0 && received / sent >= 1.0) {
-    out.push({ direction: "up", label: "Replies more than pinged" });
+    out.push({ direction: "up", label: _t("score.insights.repliesMoreThanPinged", "Replies more than pinged") });
   }
 
   // ── Bump stage (many follow-ups = diminishing returns) ───────────────────
   if (bumps >= 3) {
-    out.push({ direction: "down", label: "Many follow-ups sent" });
+    out.push({ direction: "down", label: _t("score.insights.manyFollowUps", "Many follow-ups sent") });
   }
 
   return out.slice(0, 4);
@@ -908,6 +920,7 @@ function ScoreInsightTag({ insight }: { insight: ScoreInsight }) {
 
 // ── Score widget with AI summary ──────────────────────────────────────────────
 function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<string, any>; status?: string }) {
+  const { t } = useTranslation("leads");
   const aiSummary = lead?.ai_summary || lead?.aiSummary || "";
   // Fall back to ai_memory parsed summary if no ai_summary
   const memoryStr = lead?.ai_memory || lead?.aiMemory || "";
@@ -921,13 +934,13 @@ function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<str
   const summaryText = aiSummary || parsedSummary;
 
   if (score === 0) {
-    const zeroInsights = lead ? buildScoreInsights(lead) : [];
+    const zeroInsights = lead ? buildScoreInsights(lead, t) : [];
     return (
       <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-[21px] flex flex-col gap-3 h-full overflow-y-auto">
-        <p className="text-[18px] font-semibold font-heading text-foreground">Lead Score</p>
+        <p className="text-[18px] font-semibold font-heading text-foreground">{t("score.title")}</p>
         <div className="flex flex-col items-center gap-[3px] shrink-0">
           <p className="text-2xl font-black text-muted-foreground/25">—</p>
-          <p className="text-[10px] text-muted-foreground/50">Not scored</p>
+          <p className="text-[10px] text-muted-foreground/50">{t("score.notScored")}</p>
         </div>
         {zeroInsights.length > 0 && (
           <div className="flex flex-col gap-2 shrink-0">
@@ -938,7 +951,7 @@ function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<str
         )}
         {summaryText && status === "Booked" && (
           <div className="border-t border-border/20 pt-3">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 mb-1.5">AI Summary</p>
+            <p className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 mb-1.5">{t("detail.aiSummary")}</p>
             <p className="text-[12px] text-foreground/75 leading-relaxed">{summaryText}</p>
           </div>
         )}
@@ -946,11 +959,11 @@ function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<str
     );
   }
 
-  const insights = lead ? buildScoreInsights(lead) : [];
+  const insights = lead ? buildScoreInsights(lead, t) : [];
 
   return (
     <div className="bg-white/50 dark:bg-white/[0.10] rounded-xl p-[21px] flex flex-col gap-2 h-full overflow-y-auto">
-      <p className="text-[18px] font-semibold font-heading text-foreground shrink-0">Lead Score</p>
+      <p className="text-[18px] font-semibold font-heading text-foreground shrink-0">{t("score.title")}</p>
 
       {/* Arc gauge */}
       <div className="flex flex-col items-center shrink-0">
@@ -971,14 +984,14 @@ function ScoreWidget({ score, lead, status }: { score: number; lead?: Record<str
         <div className="border-t border-border/20 pt-3 mt-1 flex-1 min-h-0">
           <div className="flex items-center gap-1.5 mb-1.5">
             <Bot className="h-3 w-3 text-brand-indigo/60" />
-            <p className="text-[10px] font-medium uppercase tracking-wider text-foreground/40">AI Summary</p>
+            <p className="text-[10px] font-medium uppercase tracking-wider text-foreground/40">{t("detail.aiSummary")}</p>
           </div>
           <p className="text-[12px] text-foreground/75 leading-relaxed">{summaryText}</p>
         </div>
       ) : status === "Booked" ? (
         <div className="border-t border-border/20 pt-3 mt-1 flex-1 min-h-0">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 mb-1.5">AI Summary</p>
-          <p className="text-[11px] text-muted-foreground/50 italic">No AI summary generated yet</p>
+          <p className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 mb-1.5">{t("detail.aiSummary")}</p>
+          <p className="text-[11px] text-muted-foreground/50 italic">{t("detail.noAiSummary")}</p>
         </div>
       ) : null}
     </div>
@@ -998,7 +1011,7 @@ function isAiMsg(item: Interaction): boolean {
 }
 
 function isHumanAgentMsg(item: Interaction): boolean {
-  if (item.direction !== "Outbound") return false;
+  if (String(item.direction || "").toLowerCase() !== "outbound") return false;
   return !isAiMsg(item);
 }
 
@@ -1015,14 +1028,14 @@ function computeMiniMsgMeta(msgs: Interaction[]): MiniMsgMeta[] {
   const result: MiniMsgMeta[] = [];
   for (let i = 0; i < msgs.length; i++) {
     const m = msgs[i];
-    const sk: MiniSenderKey = m.direction !== "Outbound"
+    const sk: MiniSenderKey = String(m.direction || "").toLowerCase() !== "outbound"
       ? "inbound"
       : isAiMsg(m) ? "ai" : "human";
     const prevSk: MiniSenderKey | "" = i > 0
-      ? (msgs[i - 1].direction !== "Outbound" ? "inbound" : isAiMsg(msgs[i - 1]) ? "ai" : "human")
+      ? (String(msgs[i - 1].direction || "").toLowerCase() !== "outbound" ? "inbound" : isAiMsg(msgs[i - 1]) ? "ai" : "human")
       : "";
     const nextSk: MiniSenderKey | "" = i < msgs.length - 1
-      ? (msgs[i + 1].direction !== "Outbound" ? "inbound" : isAiMsg(msgs[i + 1]) ? "ai" : "human")
+      ? (String(msgs[i + 1].direction || "").toLowerCase() !== "outbound" ? "inbound" : isAiMsg(msgs[i + 1]) ? "ai" : "human")
       : "";
     result.push({
       senderKey: sk,
@@ -1234,7 +1247,7 @@ function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppressAvatar
   leadAvatarColors: { bgColor: string; textColor: string };
   suppressAvatar?: boolean;
 }) {
-  const outbound = item.direction === "Outbound";
+  const outbound = String(item.direction || "").toLowerCase() === "outbound";
   const inbound = !outbound;
   const aiMsg = outbound && isAiMsg(item);
   const humanAgentMsg = outbound && isHumanAgentMsg(item);
@@ -1297,6 +1310,7 @@ function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppressAvatar
 
 // ── Conversation widget (ChatPanel-style with run wrappers + separators) ─────
 function ConversationWidget({ lead, showHeader = false }: { lead: Record<string, any>; showHeader?: boolean }) {
+  const { t } = useTranslation("leads");
   const leadId = getLeadId(lead);
   const { interactions, loading, refresh } = useInteractions(undefined, leadId);
   const { isAgencyView } = useWorkspace();
@@ -1316,7 +1330,7 @@ function ConversationWidget({ lead, showHeader = false }: { lead: Record<string,
     [interactions]
   );
 
-  const leadName = lead.full_name || `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() || "Lead";
+  const leadName = lead.full_name || `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() || t("detailView.newLead");
   const leadAvatarColors = useMemo(() => {
     const status = lead.Conversion_Status || lead.conversion_status || "";
     const colors = getLeadStatusAvatarColor(status);
@@ -1399,7 +1413,7 @@ function ConversationWidget({ lead, showHeader = false }: { lead: Record<string,
           if (mi === 0 && isMeaningfulThread) {
             tokens.push({ kind: "thread", group, total: threadGroups.length, key: group.threadId });
           }
-          if (ts) tokens.push({ kind: "date", label: formatDateLabel(ts), key: `date-${gi}-${mi}` });
+          if (ts) tokens.push({ kind: "date", label: formatDateLabel(ts, t), key: `date-${gi}-${mi}` });
           lastDateKey = dk;
         } else if (mi === 0 && isMeaningfulThread) {
           tokens.push({ kind: "thread", group, total: threadGroups.length, key: group.threadId });
@@ -1429,7 +1443,7 @@ function ConversationWidget({ lead, showHeader = false }: { lead: Record<string,
       }
 
       const firstMsg = sorted[tok.msgIdx];
-      const senderType: MiniSenderKey = firstMsg.direction !== "Outbound"
+      const senderType: MiniSenderKey = String(firstMsg.direction || "").toLowerCase() !== "outbound"
         ? "inbound"
         : isAiMsg(firstMsg) ? "ai" : "human";
 
@@ -1451,7 +1465,7 @@ function ConversationWidget({ lead, showHeader = false }: { lead: Record<string,
           continue;
         }
         const m = sorted[lt.msgIdx];
-        const sk: MiniSenderKey = m.direction !== "Outbound"
+        const sk: MiniSenderKey = String(m.direction || "").toLowerCase() !== "outbound"
           ? "inbound"
           : isAiMsg(m) ? "ai" : "human";
         if (sk !== senderType) break;
@@ -1508,7 +1522,7 @@ function ConversationWidget({ lead, showHeader = false }: { lead: Record<string,
       {/* Header with refresh + open-in-chats */}
       {showHeader && (
         <div className="px-[21px] pt-[21px] pb-2 flex items-center justify-between shrink-0 relative z-10">
-          <p className="text-[18px] font-semibold font-heading text-foreground">Chat</p>
+          <p className="text-[18px] font-semibold font-heading text-foreground">{t("chat.title")}</p>
           <div className="flex items-center gap-1">
             {/* Let AI continue — only when human has taken over */}
             {isHumanTakeover && <Popover open={showAiResumeConfirm} onOpenChange={setShowAiResumeConfirm}>
@@ -1516,11 +1530,11 @@ function ConversationWidget({ lead, showHeader = false }: { lead: Record<string,
                 <button
                   type="button"
                   className="group relative inline-flex items-center justify-center h-[34px] w-[34px] rounded-full border border-black/[0.125] hover:border-brand-indigo shrink-0 overflow-hidden transition-[width,border-color] duration-200 hover:w-[130px]"
-                  aria-label="Let AI continue"
+                  aria-label={t("chat.letAiContinue")}
                 >
                   <img src="/6. Favicon.svg" alt="AI" className="h-5 w-5 shrink-0 absolute left-[6px]" />
                   <span className="whitespace-nowrap pl-7 pr-2 text-[11px] font-medium text-brand-indigo opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                    Let AI continue
+                    {t("chat.letAiContinue")}
                   </span>
                 </button>
               </PopoverTrigger>
@@ -1557,7 +1571,7 @@ function ConversationWidget({ lead, showHeader = false }: { lead: Record<string,
                 setLocation(`${isAgencyView ? "/agency" : "/subaccount"}/conversations`);
               }}
               className="h-[34px] w-[34px] rounded-full border border-black/[0.125] flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-              title="Open in Chats"
+              title={t("chat.openInChats")}
             >
               <Maximize2 className="h-3.5 w-3.5" />
             </button>
@@ -1596,8 +1610,8 @@ function ConversationWidget({ lead, showHeader = false }: { lead: Record<string,
         ) : sorted.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
             <MessageSquare className="h-8 w-8 text-muted-foreground/30" />
-            <p className="text-xs text-muted-foreground">No messages yet</p>
-            <p className="text-[11px] text-muted-foreground/60">Messages will appear here once outreach begins</p>
+            <p className="text-xs text-muted-foreground">{t("chat.noMessages")}</p>
+            <p className="text-[11px] text-muted-foreground/60">{t("chat.noMessagesHint")}</p>
           </div>
         ) : chatItems}
       </div>
@@ -1628,7 +1642,7 @@ function ConversationWidget({ lead, showHeader = false }: { lead: Record<string,
                 if (draft.trim()) setShowBypassConfirm(true);
               }
             }}
-            placeholder="Type a message…"
+            placeholder={t("chat.typePlaceholder")}
             rows={1}
             className="flex-1 text-[13px] bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/50 leading-5"
             style={{ minHeight: "28px", maxHeight: "80px" }}
@@ -1696,6 +1710,7 @@ function ConversationWidget({ lead, showHeader = false }: { lead: Record<string,
 
 // ── Team widget — users managing this lead's account ─────────────────────────
 function TeamWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefresh?: () => void }) {
+  const { t } = useTranslation("leads");
   const accountId = lead.Accounts_id || lead.account_id || lead.accounts_id;
   const leadId = lead.Id ?? lead.id ?? 0;
   const [users, setUsers] = useState<any[]>([]);
@@ -1771,7 +1786,7 @@ function TeamWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefresh?
   return (
     <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-[21px] flex flex-col h-full overflow-y-auto">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[18px] font-semibold font-heading text-foreground">Team</p>
+        <p className="text-[18px] font-semibold font-heading text-foreground">{t("team.title")}</p>
         <Popover open={addOpen} onOpenChange={setAddOpen}>
           <PopoverTrigger asChild>
             <button className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
@@ -1779,9 +1794,9 @@ function TeamWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefresh?
             </button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-56 p-2" sideOffset={4}>
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50 px-2 py-1">Add team member</p>
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50 px-2 py-1">{t("team.addTeamMember")}</p>
             {availableToAdd.length === 0 ? (
-              <p className="text-[11px] text-muted-foreground/50 px-2 py-2">No more users available</p>
+              <p className="text-[11px] text-muted-foreground/50 px-2 py-2">{t("team.noMoreUsers")}</p>
             ) : (
               <div className="flex flex-col gap-0.5 max-h-40 overflow-y-auto">
                 {availableToAdd.map((u: any) => {
@@ -1863,6 +1878,7 @@ function TeamWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefresh?
 
 // ── Notes widget (click-to-edit + voice memo + AI notes) ─────────────────────
 function NotesWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefresh?: () => void }) {
+  const { t } = useTranslation("leads");
   const leadId = lead.Id ?? lead.id ?? 0;
   const currentNotes = lead.notes || lead.Notes || "";
   const [editing, setEditing] = useState(false);
@@ -1975,18 +1991,18 @@ function NotesWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefresh
     <div className="bg-white/60 dark:bg-white/[0.10] rounded-xl p-[21px] flex flex-col gap-3 min-h-full">
       {/* Header row: title + voice memo button */}
       <div className="flex items-center justify-between">
-        <p className="text-[18px] font-semibold font-heading text-foreground">Notes</p>
+        <p className="text-[18px] font-semibold font-heading text-foreground">{t("detail.sections.notes")}</p>
         <div className="flex items-center gap-1.5">
           {transcribing ? (
             <div className="flex items-center gap-1.5 text-[10px] text-brand-indigo">
               <Loader2 className="h-3 w-3 animate-spin" />
-              Transcribing…
+              {t("chat.transcribing")}
             </div>
           ) : isRecordingVoice ? (
             <button
               onClick={stopVoiceRecording}
               className="flex items-center gap-1.5 h-9 px-3 rounded-full bg-red-500/15 text-red-600 text-[12px] font-medium border border-red-300/60 hover:bg-red-500/25 transition-colors"
-              title="Stop recording"
+              title={t("notes.stopRecording")}
             >
               <Square className="h-3 w-3 fill-current" />
               {recordingSeconds}s
@@ -2029,7 +2045,7 @@ function NotesWidget({ lead, onRefresh }: { lead: Record<string, any>; onRefresh
           className="text-[12px] text-muted-foreground/50 italic mt-1 cursor-text hover:bg-muted/30 rounded-lg px-1 py-0.5 -mx-1 transition-colors"
           onClick={() => setEditing(true)}
         >
-          Click to add notes...
+          {t("activity.clickToAddNotes")}
         </p>
       )}
 
@@ -2056,6 +2072,7 @@ function ActivityTimeline({ lead, tagEvents }: {
   lead: Record<string, any>;
   tagEvents: { name: string; color?: string; appliedAt?: string }[];
 }) {
+  const { t } = useTranslation("leads");
   const leadId = getLeadId(lead);
   const { interactions, total, totalPages, page, loading, error, nextPage, prevPage } =
     useInteractionsPaginated(leadId, 15);
@@ -2071,7 +2088,7 @@ function ActivityTimeline({ lead, tagEvents }: {
         events.push({
           ts: evt.appliedAt || "",
           styleKey: "tag",
-          label: `Tag "${evt.name}" applied`,
+          label: t("activity.tagApplied", { name: evt.name }),
         });
       });
 
@@ -2080,8 +2097,8 @@ function ActivityTimeline({ lead, tagEvents }: {
         events.push({
           ts: bookedDate || lead.updated_at || "",
           styleKey: "booked",
-          label: "Call Booked",
-          detail: bookedDate ? `Scheduled for ${formatMsgTime(bookedDate)}` : undefined,
+          label: t("activity.callBooked"),
+          detail: bookedDate ? t("activity.scheduledFor", { date: formatMsgTime(bookedDate) }) : undefined,
         });
       }
 
@@ -2089,8 +2106,8 @@ function ActivityTimeline({ lead, tagEvents }: {
         events.push({
           ts: lead.updated_at || "",
           styleKey: "dnd",
-          label: "Do Not Disturb",
-          detail: lead.dnc_reason || "Lead requested no contact",
+          label: t("activity.doNotDisturb"),
+          detail: lead.dnc_reason || t("activity.leadRequestedNoContact"),
         });
       }
 
@@ -2098,7 +2115,7 @@ function ActivityTimeline({ lead, tagEvents }: {
         events.push({
           ts: lead.updated_at || "",
           styleKey: "optout",
-          label: "Opted Out",
+          label: t("activity.optedOut"),
           detail: lead.dnc_reason || undefined,
         });
       }
@@ -2107,7 +2124,7 @@ function ActivityTimeline({ lead, tagEvents }: {
     // Interaction events (already paginated & sorted by server)
     interactions.forEach((item) => {
       const isAi = isAiMsg(item);
-      const outbound = item.direction === "Outbound";
+      const outbound = String(item.direction || "").toLowerCase() === "outbound";
       const raw = item.content || item.Content || "";
       const content = raw.substring(0, 120);
       const ellipsis = raw.length > 120 ? "…" : "";
@@ -2135,7 +2152,7 @@ function ActivityTimeline({ lead, tagEvents }: {
 
   return (
     <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col h-full overflow-y-auto gap-6">
-      <span className="text-[18px] font-semibold font-heading leading-tight text-foreground shrink-0">Activity</span>
+      <span className="text-[18px] font-semibold font-heading leading-tight text-foreground shrink-0">{t("activity.title")}</span>
 
       {loading ? (
         <div className="space-y-1">
@@ -2152,16 +2169,16 @@ function ActivityTimeline({ lead, tagEvents }: {
         </div>
       ) : error ? (
         <div className="flex items-center justify-center py-8 px-4 flex-1">
-          <p className="text-xs text-muted-foreground">Could not load activity timeline.</p>
+          <p className="text-xs text-muted-foreground">{t("activity.loadError")}</p>
         </div>
       ) : timeline.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center py-8 px-4 flex-1">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted mb-2">
             <Activity className="h-4 w-4 text-muted-foreground" />
           </div>
-          <p className="text-sm font-medium text-foreground">No recent activity</p>
+          <p className="text-sm font-medium text-foreground">{t("activity.noRecentActivity")}</p>
           <p className="text-xs text-muted-foreground max-w-[240px] mt-1">
-            Activity will appear here as this lead interacts with your campaigns.
+            {t("activity.emptyHint")}
           </p>
         </div>
       ) : (
@@ -2202,7 +2219,7 @@ function ActivityTimeline({ lead, tagEvents }: {
             onClick={prevPage}
             disabled={page <= 1}
             className="icon-circle-lg icon-circle-base disabled:opacity-30 disabled:pointer-events-none"
-            aria-label="Previous page"
+            aria-label={t("detailView.previousPage")}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -2215,7 +2232,7 @@ function ActivityTimeline({ lead, tagEvents }: {
             onClick={nextPage}
             disabled={page >= totalPages}
             className="icon-circle-lg icon-circle-base disabled:opacity-30 disabled:pointer-events-none"
-            aria-label="Next page"
+            aria-label={t("detailView.nextPage")}
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -2263,6 +2280,7 @@ export function LeadDetailView({
   onRefresh?: () => void;
   toolbarPrefix?: (opts: { isNarrow: boolean }) => React.ReactNode;
 }) {
+  const { t } = useTranslation("leads");
   const name        = getFullName(lead);
   const initials    = getInitials(name);
   const status      = getStatus(lead);
@@ -2271,7 +2289,8 @@ export function LeadDetailView({
   const leadId      = getLeadId(lead);
   const lastActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
   const bookedDate   = lead.booked_call_date || lead.bookedCallDate || "";
-  const ratingLabel  = score >= 70 ? "Hot" : score >= 40 ? "Warm" : "Cold";
+  const ratingKey    = score >= 70 ? "hot" : score >= 40 ? "warm" : "cold";
+  const ratingLabel  = score >= 70 ? t("detailView.hot") : score >= 40 ? t("detailView.warm") : t("detailView.cold");
 
   const [, navigate] = useLocation();
 
@@ -2446,20 +2465,20 @@ export function LeadDetailView({
                   <FileText className="h-4 w-4" />
                   <span className="absolute bottom-[1px] left-0 right-0 flex justify-center text-[5px] font-black leading-none">PDF</span>
                 </span>
-                <span className={xSpan}>To PDF</span>
+                <span className={xSpan}>{t("detailView.toPdf")}</span>
               </button>
 
               {/* Delete */}
               {deleteConfirm ? (
                 <div className="inline-flex items-center gap-1 px-2 py-1.5 rounded-full border border-red-200 bg-red-50">
-                  <span className="text-[11px] text-red-600 font-medium">Delete lead?</span>
-                  <button onClick={handleDelete} disabled={deleting} className="text-[11px] font-bold text-red-600 hover:text-red-700 px-1">{deleting ? "…" : "Yes"}</button>
-                  <button onClick={() => setDeleteConfirm(false)} className="text-[11px] text-muted-foreground hover:text-foreground px-1">No</button>
+                  <span className="text-[11px] text-red-600 font-medium">{t("detailView.deleteLead")}</span>
+                  <button onClick={handleDelete} disabled={deleting} className="text-[11px] font-bold text-red-600 hover:text-red-700 px-1">{deleting ? "…" : t("confirm.yes")}</button>
+                  <button onClick={() => setDeleteConfirm(false)} className="text-[11px] text-muted-foreground hover:text-foreground px-1">{t("confirm.no")}</button>
                 </div>
               ) : (
                 <button onClick={() => setDeleteConfirm(true)} className={cn(xBtn, "hover:max-w-[110px] border-red-300/60 text-red-400 hover:border-red-400 hover:text-red-600")}>
                   <Trash2 className="h-4 w-4 shrink-0" />
-                  <span className={xSpan}>Delete</span>
+                  <span className={xSpan}>{t("detailView.delete")}</span>
                 </button>
               )}
             </div>
@@ -2518,7 +2537,7 @@ export function LeadDetailView({
             <div className="hidden md:flex items-center gap-10 pointer-events-auto z-10 absolute -translate-x-1/2 bottom-[15px]" style={{ left: "calc(66.67% - 5px)" }}>
               {bookedDate && (
                 <div className="whitespace-nowrap">
-                  <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Booked</div>
+                  <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">{t("detailView.booked")}</div>
                   <button
                     onClick={handleBookedClick}
                     className="text-[12px] font-bold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1"
@@ -2528,7 +2547,7 @@ export function LeadDetailView({
                 </div>
               )}
               <div>
-                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Source</div>
+                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">{t("detailView.source")}</div>
                 {isEditing ? (
                   <input
                     value={editFields.source ?? ""}
@@ -2540,9 +2559,9 @@ export function LeadDetailView({
                 )}
               </div>
               <div>
-                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Rating</div>
+                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">{t("detailView.rating")}</div>
                 <div className="flex items-center gap-1">
-                  <Star className="h-3 w-3" style={{ color: ratingLabel === "Hot" ? "#EF4444" : ratingLabel === "Warm" ? "#F59E0B" : "#6B7280" }} />
+                  <Star className="h-3 w-3" style={{ color: ratingKey === "hot" ? "#EF4444" : ratingKey === "warm" ? "#F59E0B" : "#6B7280" }} />
                   <span className="text-[11px] font-bold text-foreground">{ratingLabel}</span>
                 </div>
               </div>
@@ -2559,7 +2578,7 @@ export function LeadDetailView({
                   />
                 )}
                 <div>
-                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Campaign</div>
+                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">{t("detailView.campaign")}</div>
                   <div className="text-[11px] font-bold text-foreground truncate max-w-[120px]">
                     {lead.Campaign || lead.campaign || lead.campaign_name || "—"}
                   </div>
@@ -2571,11 +2590,11 @@ export function LeadDetailView({
                   style={accountLogo ? {} : { backgroundColor: "rgba(0,0,0,0.08)", color: "#374151" }}
                 >
                   {accountLogo
-                    ? <img src={accountLogo} alt="account" className="h-full w-full object-cover" />
+                    ? <img src={accountLogo} alt={t("detail.fields.account")} className="h-full w-full object-cover" />
                     : <Building2 className="h-4 w-4" />}
                 </div>
                 <div>
-                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Owner</div>
+                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("detailView.owner")}</div>
                   <span className="text-[11px] font-bold text-foreground truncate max-w-[90px]">{lead.Account || lead.account_name || "—"}</span>
                 </div>
               </div>
@@ -2586,7 +2605,7 @@ export function LeadDetailView({
           <div className="md:hidden flex items-center gap-5 flex-wrap">
             {bookedDate && (
               <div className="whitespace-nowrap">
-                <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Booked</div>
+                <div className="text-[9px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">{t("detailView.booked")}</div>
                 <button
                   onClick={handleBookedClick}
                   className="text-[12px] font-bold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1"
@@ -2596,7 +2615,7 @@ export function LeadDetailView({
               </div>
             )}
             <div>
-              <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Source</div>
+              <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">{t("detailView.source")}</div>
               {isEditing ? (
                 <input
                   value={editFields.source ?? ""}
@@ -2608,9 +2627,9 @@ export function LeadDetailView({
               )}
             </div>
             <div>
-              <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Rating</div>
+              <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">{t("detailView.rating")}</div>
               <div className="flex items-center gap-1">
-                <Star className="h-3 w-3" style={{ color: ratingLabel === "Hot" ? "#EF4444" : ratingLabel === "Warm" ? "#F59E0B" : "#6B7280" }} />
+                <Star className="h-3 w-3" style={{ color: ratingKey === "hot" ? "#EF4444" : ratingKey === "warm" ? "#F59E0B" : "#6B7280" }} />
                 <span className="text-[11px] font-bold text-foreground">{ratingLabel}</span>
               </div>
             </div>
@@ -2628,7 +2647,7 @@ export function LeadDetailView({
                 />
               )}
               <div>
-                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">Campaign</div>
+                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-1">{t("detailView.campaign")}</div>
                 <div className="text-[11px] font-bold text-foreground truncate max-w-[120px]">
                   {lead.Campaign || lead.campaign || lead.campaign_name || "—"}
                 </div>
@@ -2640,11 +2659,11 @@ export function LeadDetailView({
                 style={accountLogo ? {} : { backgroundColor: "rgba(0,0,0,0.08)", color: "#374151" }}
               >
                 {accountLogo
-                  ? <img src={accountLogo} alt="account" className="h-full w-full object-cover" />
+                  ? <img src={accountLogo} alt={t("detail.fields.account")} className="h-full w-full object-cover" />
                   : <Building2 className="h-4 w-4" />}
               </div>
               <div>
-                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Owner</div>
+                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("detailView.owner")}</div>
                 <span className="text-[11px] font-bold text-foreground truncate max-w-[90px]">{lead.Account || lead.account_name || "—"}</span>
               </div>
             </div>
@@ -2758,6 +2777,7 @@ function LeadListCard({
   tagsColorful?: boolean;
   hideTags?: boolean;
 }) {
+  const { t } = useTranslation("leads");
   const name        = getFullName(lead);
   const status      = getStatus(lead);
   const score       = getScore(lead);
@@ -2798,7 +2818,7 @@ function LeadListCard({
             </p>
             <div className="flex items-center gap-1 mt-0.5">
               <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: statusHex }} />
-              <span className="text-[10px] text-muted-foreground/65 truncate">{status}</span>
+              <span className="text-[10px] text-muted-foreground/65 truncate">{t(`kanban.stageLabels.${status.replace(/ /g, "")}`, status)}</span>
             </div>
 
             {/* Tags + contact — collapses when hideTags, expands on hover */}
@@ -2858,7 +2878,7 @@ function LeadListCard({
             <div className="shrink-0 flex flex-col items-end justify-between">
               {lastActivity && (
                 <span className="text-[10px] tabular-nums leading-none text-muted-foreground/60 pt-0.5">
-                  {formatRelativeTime(lastActivity)}
+                  {formatRelativeTime(lastActivity, t)}
                 </span>
               )}
               {score > 0 && (
@@ -2917,32 +2937,12 @@ function ListSkeleton() {
 export type GroupByOption = "date" | "status" | "campaign" | "tag" | "none";
 export type SortByOption  = "recent" | "name_asc" | "name_desc" | "score_desc" | "score_asc";
 
-export const GROUP_LABELS: Record<GroupByOption, string> = {
-  date:     "Date",
-  status:   "Status",
-  campaign: "Campaign",
-  tag:      "Tag",
-  none:     "None",
-};
-export const SORT_LABELS: Record<SortByOption, string> = {
-  recent:     "Most Recent",
-  name_asc:   "Name A → Z",
-  name_desc:  "Name Z → A",
-  score_desc: "Score ↓",
-  score_asc:  "Score ↑",
-};
+// GROUP_LABELS and SORT_LABELS are now computed inside LeadsCardView with t()
 const STATUS_GROUP_ORDER = ["New", "Contacted", "Responded", "Multiple Responses", "Qualified", "Booked", "Lost", "DND"];
-const DATE_GROUP_ORDER   = ["Today", "Yesterday", "This Week", "This Month", "Last 3 Months", "Older", "No Activity"];
+// DATE_GROUP_ORDER is now computed inside LeadsCardView with t() as dateGroupOrder
 
 // ── Kanban detail panel (tabbed, compact) ─────────────────────────────────────
-const KANBAN_TABS = [
-  { id: "chat",     label: "Chat",     icon: MessageSquare },
-  { id: "contact",  label: "Contact",  icon: Phone },
-  { id: "score",    label: "Score",    icon: TrendingUp },
-  { id: "activity", label: "Activity", icon: ClipboardList },
-  { id: "notes",    label: "Notes",    icon: FileText },
-] as const;
-type KanbanTab = (typeof KANBAN_TABS)[number]["id"];
+type KanbanTab = "chat" | "contact" | "score" | "activity" | "notes";
 
 export function KanbanDetailPanel({
   lead,
@@ -2955,14 +2955,23 @@ export function KanbanDetailPanel({
   leadTags: { name: string; color: string }[];
   onOpenFullProfile?: () => void;
 }) {
+  const { t } = useTranslation("leads");
   const [activeTab, setActiveTab] = useState<KanbanTab>("chat");
+
+  const kanbanTabs: { id: KanbanTab; label: string; icon: typeof MessageSquare }[] = [
+    { id: "chat",     label: t("conversations.title"), icon: MessageSquare },
+    { id: "contact",  label: t("contact.title"),       icon: Phone },
+    { id: "score",    label: t("score.title"),          icon: TrendingUp },
+    { id: "activity", label: t("detail.sections.activity"), icon: ClipboardList },
+    { id: "notes",    label: t("detail.sections.notes"),    icon: FileText },
+  ];
 
   const name       = getFullName(lead);
   const initials   = getInitials(name);
   const status     = getStatus(lead);
   const score      = getScore(lead);
   const avatarColor = getStatusAvatarColor(status);
-  const ratingLabel = score >= 70 ? "Hot" : score >= 40 ? "Warm" : "Cold";
+  const ratingLabel = score >= 70 ? t("detailView.hot") : score >= 40 ? t("detailView.warm") : t("detailView.cold");
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-card rounded-lg">
@@ -3004,15 +3013,15 @@ export function KanbanDetailPanel({
         {/* Meta: Source / Rating / Campaign / Owner — all left-aligned */}
         <div className="flex items-start gap-5 flex-wrap">
           <div>
-            <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Source</div>
+            <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("detailView.source")}</div>
             <div className="text-[12px] font-bold text-foreground">{lead.source || lead.Source || "API"}</div>
           </div>
           <div>
-            <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Rating</div>
+            <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("detailView.rating")}</div>
             <div className="text-[12px] font-bold text-foreground">{ratingLabel}</div>
           </div>
           <div>
-            <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Campaign</div>
+            <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("detailView.campaign")}</div>
             <div className="text-[12px] font-bold text-foreground truncate max-w-[90px]">{lead.Campaign || lead.campaign || "—"}</div>
           </div>
           <div className="flex items-center gap-1.5">
@@ -3023,7 +3032,7 @@ export function KanbanDetailPanel({
               <Building2 className="h-3.5 w-3.5" />
             </div>
             <div>
-              <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Owner</div>
+              <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("detailView.owner")}</div>
               <div className="text-[12px] font-bold text-foreground truncate max-w-[80px]">{lead.Account || lead.account_name || "—"}</div>
             </div>
           </div>
@@ -3032,7 +3041,7 @@ export function KanbanDetailPanel({
 
       {/* ── Tabs ── */}
       <div className="shrink-0 px-2 pt-2 pb-1 flex items-center gap-1">
-        {KANBAN_TABS.map(({ id, label, icon: Icon }) => (
+        {kanbanTabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
@@ -3063,32 +3072,19 @@ export function KanbanDetailPanel({
           </div>
         )}
         {activeTab === "activity" && (
-          <div className="h-full overflow-y-auto p-4">
-            <p className="text-[18px] font-semibold font-heading text-foreground mb-3">Activity</p>
-            <div className="flex flex-col gap-2">
-              {[
-                { label: "Messages sent",      value: String(lead.message_count_sent ?? lead.messageCountSent ?? "—") },
-                { label: "Messages received",  value: String(lead.message_count_received ?? lead.messageCountReceived ?? "—") },
-                { label: "Total interactions", value: String(lead.interaction_count ?? lead.interactionCount ?? "—") },
-                { label: "Last active",        value: formatRelativeTime(lead.last_interaction_at || lead.last_message_received_at) || "—" },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] text-muted-foreground">{label}</span>
-                  <span className="text-[12px] font-semibold text-foreground tabular-nums">{value}</span>
-                </div>
-              ))}
-            </div>
+          <div className="h-full overflow-hidden">
+            <ActivityTimeline lead={lead} tagEvents={leadTags} />
           </div>
         )}
         {activeTab === "notes" && (
           <div className="h-full overflow-y-auto p-4">
-            <p className="text-[18px] font-semibold font-heading text-foreground mb-3">Notes</p>
+            <p className="text-[18px] font-semibold font-heading text-foreground mb-3">{t("detail.sections.notes")}</p>
             {lead.notes || lead.Notes ? (
               <p className="text-[12px] text-foreground/80 leading-relaxed">
                 {renderRichText(lead.notes || lead.Notes || "")}
               </p>
             ) : (
-              <p className="text-[12px] text-muted-foreground/50 italic">No notes yet</p>
+              <p className="text-[12px] text-muted-foreground/50 italic">{t("activity.clickToAddNotes")}</p>
             )}
           </div>
         )}
@@ -3098,11 +3094,6 @@ export function KanbanDetailPanel({
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
-const VIEW_TABS: TabDef[] = [
-  { id: "list",     label: "List",     icon: List   },
-  { id: "table",    label: "Table",    icon: Table2 },
-  { id: "pipeline", label: "Pipeline", icon: Kanban },
-];
 
 export function LeadsCardView({
   leads,
@@ -3137,6 +3128,30 @@ export function LeadsCardView({
   accountsById,
   campaignsById,
 }: LeadsCardViewProps) {
+  const { t } = useTranslation("leads");
+
+  const viewTabs: TabDef[] = [
+    { id: "list",     label: t("viewTabs.list"),     icon: List   },
+    { id: "table",    label: t("viewTabs.table"),    icon: Table2 },
+    { id: "pipeline", label: t("viewTabs.pipeline"), icon: Kanban },
+  ];
+
+  const groupLabels: Record<GroupByOption, string> = {
+    date:     t("sort.mostRecent"),
+    status:   t("group.status"),
+    campaign: t("group.campaign"),
+    tag:      t("detail.sections.tags"),
+    none:     t("group.none"),
+  };
+  const sortLabels: Record<SortByOption, string> = {
+    recent:     t("sort.mostRecent"),
+    name_asc:   t("sort.nameAZ"),
+    name_desc:  t("sort.nameZA"),
+    score_desc: t("sort.scoreDown"),
+    score_asc:  t("sort.scoreUp"),
+  };
+  const dateGroupOrder = [t("time.today"), t("time.yesterday"), t("time.thisWeek"), t("time.thisMonth"), t("time.last3Months"), t("time.older"), t("time.noActivity")];
+
   const [currentPage, setCurrentPage]   = useState(0);
   const PAGE_SIZE = 50;
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -3312,15 +3327,15 @@ export function LeadsCardView({
       let key: string;
       if (groupBy === "date") {
         const d = l.last_interaction_at || l.last_message_received_at || l.last_message_sent_at || null;
-        key = getDateGroupLabel(d);
+        key = getDateGroupLabel(d, t);
       } else if (groupBy === "status") {
         key = getStatus(l) || "Unknown";
       } else if (groupBy === "campaign") {
         const cId = Number(l.Campaigns_id || l.campaigns_id || l.campaignsId || 0);
-        key = (cId && campaignsById?.get(cId)?.name) || l.Campaign || l.campaign || l.campaign_name || "No Campaign";
+        key = (cId && campaignsById?.get(cId)?.name) || l.Campaign || l.campaign || l.campaign_name || t("group.noCampaign");
       } else {
         const tags = leadTagsInfo.get(getLeadId(l)) || [];
-        key = tags[0]?.name || "Untagged";
+        key = tags[0]?.name || t("group.untagged");
       }
       if (!buckets.has(key)) buckets.set(key, []);
       buckets.get(key)!.push(l);
@@ -3331,14 +3346,17 @@ export function LeadsCardView({
     const orderedKeys = groupBy === "status"
       ? STATUS_GROUP_ORDER.filter((k) => buckets.has(k)).concat(allBucketKeys.filter((k) => !STATUS_GROUP_ORDER.includes(k)))
       : groupBy === "date"
-      ? DATE_GROUP_ORDER.filter((k) => buckets.has(k))
+      ? dateGroupOrder.filter((k) => buckets.has(k))
       : allBucketKeys.sort();
 
     const result: VirtualListItem[] = [];
     orderedKeys.forEach((key) => {
       const group = buckets.get(key);
       if (!group || group.length === 0) return;
-      result.push({ kind: "header", label: key, count: group.length });
+      const headerLabel = groupBy === "status"
+        ? t(`kanban.stageLabels.${key.replace(/ /g, "")}`, key)
+        : key;
+      result.push({ kind: "header", label: headerLabel, count: group.length });
       group.forEach((l) => result.push({ kind: "lead", lead: l, tags: leadTagsInfo.get(getLeadId(l)) || [] }));
     });
 
@@ -3363,14 +3381,14 @@ export function LeadsCardView({
         {/* ── Panel header: title + ViewTabBar ── */}
         <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-1 md:pb-3 shrink-0 flex flex-col gap-2 md:flex-row md:items-center md:gap-0">
           <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
-            <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">My Leads</h2>
+            <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
             <span className="hidden md:block">
-              <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as ViewMode)} variant="segment" />
+              <ViewTabBar tabs={viewTabs} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as ViewMode)} variant="segment" />
             </span>
           </div>
           {/* ViewTabBar below title on mobile */}
           <div className="md:hidden">
-            <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as ViewMode)} variant="segment" />
+            <ViewTabBar tabs={viewTabs} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as ViewMode)} variant="segment" />
           </div>
         </div>
 
@@ -3424,19 +3442,19 @@ export function LeadsCardView({
                     onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
                     disabled={currentPage === 0}
                     className="icon-circle-lg icon-circle-base disabled:opacity-30"
-                    title="Previous page"
+                    title={t("detailView.previousPage")}
                   >
                     <ChevronLeft className="h-3.5 w-3.5" />
                   </button>
                   <span className="text-[10px] text-muted-foreground tabular-nums text-center leading-tight">
                     {currentPage * PAGE_SIZE + 1}–{Math.min((currentPage + 1) * PAGE_SIZE, flatItems.length)}
-                    {" "}<span className="text-muted-foreground/50">of {flatItems.length}</span>
+                    {" "}<span className="text-muted-foreground/50">{t("detailView.of")} {flatItems.length}</span>
                   </span>
                   <button
                     onClick={() => setCurrentPage((p) => p + 1)}
                     disabled={(currentPage + 1) * PAGE_SIZE >= flatItems.length}
                     className="icon-circle-lg icon-circle-base disabled:opacity-30"
-                    title="Next page"
+                    title={t("detailView.nextPage")}
                   >
                     <ChevronRight className="h-3.5 w-3.5" />
                   </button>
@@ -3478,9 +3496,9 @@ export function LeadsCardView({
                   </button>
 
                   {/* +Add */}
-                  <button onClick={onCreateLead} className={xBtn(false, "hover:max-w-[90px]")} title="New lead">
+                  <button onClick={onCreateLead} className={xBtn(false, "hover:max-w-[90px]")} title={t("detailView.newLead")}>
                     <Plus className="h-4 w-4 shrink-0" />
-                    <span className={xSpan}>Add</span>
+                    <span className={xSpan}>{t("toolbar.add")}</span>
                   </button>
 
                   {/* Search — always extended, no fill */}
@@ -3489,21 +3507,21 @@ export function LeadsCardView({
                     onChange={onListSearchChange}
                     open={searchOpen}
                     onOpenChange={onSearchOpenChange}
-                    placeholder="Search leads…"
+                    placeholder={t("toolbar.searchPlaceholder")}
                   />
 
                   {/* Group */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className={xBtn(isGroupNonDefault, "hover:max-w-[115px]")} title="Group">
+                      <button className={xBtn(isGroupNonDefault, "hover:max-w-[115px]")} title={t("toolbar.group")}>
                         <Layers className="h-4 w-4 shrink-0" />
-                        <span className={xSpan}>Group</span>
+                        <span className={xSpan}>{t("toolbar.group")}</span>
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-40">
                       {(["date", "status", "campaign", "tag", "none"] as GroupByOption[]).map((opt) => (
                         <DropdownMenuItem key={opt} onClick={() => onGroupByChange(opt)} className={cn("text-[12px]", groupBy === opt && "font-semibold text-brand-indigo")}>
-                          {GROUP_LABELS[opt]}
+                          {groupLabels[opt]}
                           {groupBy === opt && <Check className="h-3 w-3 ml-auto" />}
                         </DropdownMenuItem>
                       ))}
@@ -3513,15 +3531,15 @@ export function LeadsCardView({
                   {/* Sort */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className={xBtn(isSortNonDefault, "hover:max-w-[100px]")} title="Sort">
+                      <button className={xBtn(isSortNonDefault, "hover:max-w-[100px]")} title={t("toolbar.sort")}>
                         <ArrowUpDown className="h-4 w-4 shrink-0" />
-                        <span className={xSpan}>Sort</span>
+                        <span className={xSpan}>{t("toolbar.sort")}</span>
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-44">
                       {(["recent", "name_asc", "name_desc", "score_desc", "score_asc"] as SortByOption[]).map((opt) => (
                         <DropdownMenuItem key={opt} onClick={() => onSortByChange(opt)} className={cn("text-[12px]", sortBy === opt && "font-semibold text-brand-indigo")}>
-                          {SORT_LABELS[opt]}
+                          {sortLabels[opt]}
                           {sortBy === opt && <Check className="h-3 w-3 ml-auto" />}
                         </DropdownMenuItem>
                       ))}
@@ -3531,16 +3549,16 @@ export function LeadsCardView({
                   {/* Filter */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className={xBtn(isFilterActive, "hover:max-w-[110px]")} title="Filter">
+                      <button className={xBtn(isFilterActive, "hover:max-w-[110px]")} title={t("toolbar.filter")}>
                         <Filter className="h-4 w-4 shrink-0" />
-                        <span className={xSpan}>Filter</span>
+                        <span className={xSpan}>{t("toolbar.filter")}</span>
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-52">
                       {/* Status — submenu */}
                       <DropdownMenuSub>
                         <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
-                          <span className="flex-1">Status</span>
+                          <span className="flex-1">{t("group.status")}</span>
                           {filterStatus.length > 0 && (
                             <span className="text-[10px] tabular-nums text-brand-indigo font-semibold">{filterStatus.length}</span>
                           )}
@@ -3549,7 +3567,7 @@ export function LeadsCardView({
                           {STATUS_GROUP_ORDER.map((s) => (
                             <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
                               <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PIPELINE_HEX[s] ?? "#6B7280" }} />
-                              <span className="flex-1">{s}</span>
+                              <span className="flex-1">{t("kanban.stageLabels." + s.replace(/ /g, ""))}</span>
                               {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                             </DropdownMenuItem>
                           ))}
@@ -3560,7 +3578,7 @@ export function LeadsCardView({
                       {availableAccounts.length > 0 && (
                         <DropdownMenuSub>
                           <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
-                            <span className="flex-1">Account</span>
+                            <span className="flex-1">{t("detail.fields.account")}</span>
                             {filterAccount && <span className="text-[10px] text-brand-indigo font-semibold">1</span>}
                           </DropdownMenuSubTrigger>
                           <DropdownMenuSubContent className="w-48">
@@ -3568,7 +3586,7 @@ export function LeadsCardView({
                               onClick={(e) => { e.preventDefault(); setFilterAccount(""); setFilterCampaign(""); }}
                               className={cn("text-[12px]", !filterAccount && "font-semibold text-brand-indigo")}
                             >
-                              All Accounts
+                              {t("filters.allAccounts")}
                               {!filterAccount && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
@@ -3590,7 +3608,7 @@ export function LeadsCardView({
                       {availableCampaigns.length > 0 && (
                         <DropdownMenuSub>
                           <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
-                            <span className="flex-1">Campaign</span>
+                            <span className="flex-1">{t("detailView.campaign")}</span>
                             {filterCampaign && <span className="text-[10px] text-brand-indigo font-semibold">1</span>}
                           </DropdownMenuSubTrigger>
                           <DropdownMenuSubContent className="w-52 max-h-64 overflow-y-auto">
@@ -3598,7 +3616,7 @@ export function LeadsCardView({
                               onClick={(e) => { e.preventDefault(); setFilterCampaign(""); }}
                               className={cn("text-[12px]", !filterCampaign && "font-semibold text-brand-indigo")}
                             >
-                              All Campaigns
+                              {t("filters.allCampaigns")}
                               {!filterCampaign && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
@@ -3618,7 +3636,7 @@ export function LeadsCardView({
 
                       {/* Tags — search-based */}
                       <DropdownMenuSeparator />
-                      <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Tags</div>
+                      <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("toolbar.tags")}</div>
                       <div className="px-2 pb-1.5" onClick={(e) => e.stopPropagation()}>
                         <input
                           type="text"
@@ -3631,7 +3649,7 @@ export function LeadsCardView({
                               if (match) { onToggleFilterTag(match.name); setTagSearchInput(""); }
                             }
                           }}
-                          placeholder="Search tag name…"
+                          placeholder={t("detailView.searchTagName")}
                           className="w-full h-7 px-2 rounded-md border border-black/[0.1] bg-muted/30 text-[11px] placeholder:text-muted-foreground/50 outline-none focus:border-brand-indigo/40"
                         />
                       </div>
@@ -3671,9 +3689,9 @@ export function LeadsCardView({
                   {/* Tags display settings */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className={xBtn(tagsColorful || hideTags || showContactAlways, "hover:max-w-[100px]")} title="Tags">
+                      <button className={xBtn(tagsColorful || hideTags || showContactAlways, "hover:max-w-[100px]")} title={t("toolbar.tags")}>
                         <TagIcon className="h-4 w-4 shrink-0" />
-                        <span className={xSpan}>Tags</span>
+                        <span className={xSpan}>{t("toolbar.tags")}</span>
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">

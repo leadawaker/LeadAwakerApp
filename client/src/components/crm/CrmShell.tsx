@@ -11,7 +11,7 @@ import { ConnectionBanner } from "@/components/crm/ConnectionBanner";
 import { SettingsPanel } from "@/components/crm/SettingsPanel";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
-import { X, Search, Bell, HelpCircle, Headphones, Moon, Sun, Instagram, Facebook, Mail, Phone, ChevronDown } from "lucide-react";
+import { X, Search, Bell, HelpCircle, Headphones, Moon, Sun, Instagram, Facebook, Mail, Phone, ChevronDown, Sparkles, Tag, BarChart3 } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 import { logout } from "@/hooks/useSession";
 import { TopbarActionsProvider } from "@/contexts/TopbarActionsContext";
@@ -179,7 +179,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         id="main-content"
         className={cn(
           "h-screen flex flex-col bg-background transition-[padding-left] duration-200 overflow-hidden",
-          collapsed ? "md:pl-[78px]" : "md:pl-[225px]"
+          collapsed ? "md:pl-[56px]" : "md:pl-[225px]"
         )}
         style={{ paddingTop: "var(--topbar-h)", paddingBottom: "var(--bottombar-h)" }}
         data-testid="main-crm"
@@ -211,8 +211,36 @@ const SOCIAL_LINKS = [
   { label: "WhatsApp", handle: "+(55) 47 9740-02162", href: "https://wa.me/5547974002162", icon: Phone, color: "text-emerald-600" },
 ];
 
+const HELP_UPDATES = [
+  {
+    id: "update-pipeline-donut",
+    Icon: BarChart3,
+    iconColor: "text-amber-600",
+    title: "Pipeline Donut Chart",
+    description: "Interactive funnel visualization with click-to-filter stages.",
+    date: "Mar 2026",
+  },
+  {
+    id: "update-ai-analysis",
+    Icon: Sparkles,
+    iconColor: "text-violet-600",
+    title: "AI Campaign Analysis",
+    description: "Get instant AI-generated summaries of campaign performance.",
+    date: "Feb 2026",
+  },
+  {
+    id: "update-campaign-tags",
+    Icon: Tag,
+    iconColor: "text-indigo-500",
+    title: "Campaign Tags",
+    description: "Organize campaigns with custom tag categories and colors.",
+    date: "Feb 2026",
+  },
+];
+
 function HelpPanelContent({ onNavigate, prefix }: { onNavigate: (path: string) => void; prefix: string }) {
   const [socialOpen, setSocialOpen] = useState(false);
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
 
   return (
     <div className="p-4 space-y-2 overflow-auto h-full">
@@ -249,6 +277,36 @@ function HelpPanelContent({ onNavigate, prefix }: { onNavigate: (path: string) =
                   <span className="block text-[12px] text-muted-foreground truncate">{link.handle}</span>
                 </div>
               </a>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* What's New — expandable */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setWhatsNewOpen((v) => !v)}
+          className="w-full rounded-xl px-4 py-3 text-sm hover:bg-muted/30 transition-colors font-medium border border-transparent hover:border-border flex items-center justify-between"
+        >
+          What's New
+          <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", whatsNewOpen && "rotate-180")} />
+        </button>
+        {whatsNewOpen && (
+          <div className="mt-1 ml-2 space-y-0.5">
+            {HELP_UPDATES.map((update) => (
+              <div key={update.id} className="flex items-start gap-3 rounded-lg px-3 py-2.5">
+                <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center border border-black/[0.125] bg-transparent mt-0.5">
+                  <update.Icon className={cn("h-4 w-4", update.iconColor)} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="font-medium text-foreground text-sm">{update.title}</span>
+                    <span className="text-[11px] text-muted-foreground shrink-0">{update.date}</span>
+                  </div>
+                  <p className="text-[12px] text-muted-foreground mt-0.5 leading-snug">{update.description}</p>
+                </div>
+              </div>
             ))}
           </div>
         )}

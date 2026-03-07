@@ -30,8 +30,9 @@ export default function Login() {
     const isAuthed = Boolean(localStorage.getItem("leadawaker_auth"));
     const remembered = localStorage.getItem("leadawaker_remember_me") === "true";
     if (isAuthed && remembered) {
-      const accountId = localStorage.getItem("leadawaker_current_account_id");
-      setLocation(accountId === "1" ? "/agency/campaigns" : "/subaccount/campaigns");
+      const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
+      const isAgency = role === "Admin" || role === "Operator";
+      setLocation(isAgency ? "/agency/campaigns" : "/subaccount/campaigns");
     }
   }, []);
 
@@ -76,8 +77,8 @@ export default function Login() {
         localStorage.removeItem("leadawaker_remember_me");
       }
 
-      // Route to appropriate area based on account
-      const isAgency = user.accountsId === 1;
+      // Route to appropriate area based on role (not account ID)
+      const isAgency = user.role === "Admin" || user.role === "Operator";
       setLocation(isAgency ? "/agency/campaigns" : "/subaccount/campaigns");
     } catch {
       setError("Network error — please try again");

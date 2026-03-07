@@ -1,10 +1,12 @@
 // src/features/accounts/pages/AccountsPage.tsx
 import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import {
   List, Table2, Plus, Trash2, Copy, ArrowUpDown, Filter, Layers, Eye, Check, Pencil, X,
 } from "lucide-react";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { AccountListView } from "../components/AccountListView";
 import { AccountsInlineTable } from "../components/AccountsInlineTable";
 import type { AccountTableItem } from "../components/AccountsInlineTable";
@@ -37,35 +39,35 @@ const LIST_PREFS_KEY   = "accounts-list-prefs";
 const TABLE_PREFS_KEY  = "accounts-table-prefs";
 
 /* ── Table column metadata for Fields dropdown ── */
-const TABLE_COL_META = [
-  { key: "name",            label: "Name",          defaultVisible: true  },
-  { key: "status",          label: "Status",        defaultVisible: true  },
-  { key: "type",            label: "Type",          defaultVisible: true  },
-  { key: "owner_email",     label: "Owner Email",   defaultVisible: true  },
-  { key: "phone",           label: "Phone",         defaultVisible: true  },
-  { key: "business_niche",  label: "Niche",         defaultVisible: true  },
-  { key: "website",         label: "Website",       defaultVisible: false },
-  { key: "timezone",        label: "Timezone",      defaultVisible: false },
-  { key: "max_daily_sends", label: "Daily Sends",   defaultVisible: false },
-  { key: "notes",           label: "Notes",         defaultVisible: false },
+const TABLE_COL_META_KEYS = [
+  { key: "name",            labelKey: "columns.name",          defaultVisible: true  },
+  { key: "status",          labelKey: "columns.status",        defaultVisible: true  },
+  { key: "type",            labelKey: "columns.type",          defaultVisible: true  },
+  { key: "owner_email",     labelKey: "columns.ownerEmail",    defaultVisible: true  },
+  { key: "phone",           labelKey: "columns.phone",         defaultVisible: true  },
+  { key: "business_niche",  labelKey: "columns.niche",         defaultVisible: true  },
+  { key: "website",         labelKey: "columns.website",       defaultVisible: false },
+  { key: "timezone",        labelKey: "columns.timezone",      defaultVisible: false },
+  { key: "max_daily_sends", labelKey: "columns.dailySends",    defaultVisible: false },
+  { key: "notes",           labelKey: "columns.notes",         defaultVisible: false },
 ];
 
-const DEFAULT_VISIBLE = TABLE_COL_META.filter((c) => c.defaultVisible).map((c) => c.key);
+const DEFAULT_VISIBLE = TABLE_COL_META_KEYS.filter((c) => c.defaultVisible).map((c) => c.key);
 
 /* ── Table sort / group types ── */
 type TableSortByOption  = "recent" | "name_asc" | "name_desc";
 type TableGroupByOption = "status" | "type" | "none";
 
-const TABLE_SORT_LABELS: Record<TableSortByOption, string> = {
-  recent:    "Most Recent",
-  name_asc:  "Name A → Z",
-  name_desc: "Name Z → A",
+const TABLE_SORT_KEYS: Record<TableSortByOption, string> = {
+  recent:    "sort.mostRecent",
+  name_asc:  "sort.nameAZ",
+  name_desc: "sort.nameZA",
 };
 
-const TABLE_GROUP_LABELS: Record<TableGroupByOption, string> = {
-  status: "Status",
-  type:   "Type",
-  none:   "None",
+const TABLE_GROUP_KEYS: Record<TableGroupByOption, string> = {
+  status: "group.status",
+  type:   "group.type",
+  none:   "group.none",
 };
 
 const STATUS_OPTIONS = ["Active", "Trial", "Inactive", "Suspended"];
@@ -85,18 +87,16 @@ const xActive  = "border-brand-indigo text-brand-indigo";
 const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
 /* ── Tab definitions ── */
-const VIEW_TABS: TabDef[] = [
-  { id: "list",  label: "List",  icon: List   },
-  { id: "table", label: "Table", icon: Table2 },
-];
+// VIEW_TABS labels are set inside component via t()
 
 // ── Inline confirmation button ────────────────────────────────────────────────
 function ConfirmToolbarButton({
-  icon: Icon, label, onConfirm, variant = "default",
+  icon: Icon, label, onConfirm, variant = "default", confirmYes = "Yes", confirmNo = "No",
 }: {
   icon: React.ElementType; label: string;
   onConfirm: () => Promise<void> | void;
   variant?: "default" | "danger";
+  confirmYes?: string; confirmNo?: string;
 }) {
   const [confirming, setConfirming] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -109,9 +109,9 @@ function ConfirmToolbarButton({
           onClick={async () => { setLoading(true); try { await onConfirm(); } finally { setLoading(false); setConfirming(false); } }}
           disabled={loading}
         >
-          {loading ? "…" : "Yes"}
+          {loading ? "…" : confirmYes}
         </button>
-        <button className="px-2 py-0.5 rounded-full text-muted-foreground text-[11px] hover:text-foreground" onClick={() => setConfirming(false)}>No</button>
+        <button className="px-2 py-0.5 rounded-full text-muted-foreground text-[11px] hover:text-foreground" onClick={() => setConfirming(false)}>{confirmNo}</button>
       </div>
     );
   }
@@ -135,6 +135,19 @@ function ConfirmToolbarButton({
 }
 
 export default function AccountsPage() {
+  const { t } = useTranslation("accounts");
+  const { currentAccountId } = useWorkspace();
+
+  const VIEW_TABS: TabDef[] = [
+    { id: "list",  label: t("views.list"),  icon: List   },
+    { id: "table", label: t("views.table"), icon: Table2 },
+  ];
+
+  const TABLE_COL_META = TABLE_COL_META_KEYS.map((c) => ({
+    ...c,
+    label: t(c.labelKey),
+  }));
+
   /* ── View mode (persisted) ─────────────────────────────────────────────── */
   const [viewMode, setViewMode] = useState<AccountViewMode>(() => {
     try {
@@ -202,7 +215,12 @@ export default function AccountsPage() {
   }, [visibleCols]);
 
   /* ── Data ───────────────────────────────────────────────────────────────── */
-  const { rows, loading, fetchData, handleInlineUpdate, handleCreateRow } = useAccountsData(undefined);
+  const { rows: allRows, loading, fetchData, handleInlineUpdate, handleCreateRow } = useAccountsData(undefined);
+  // When admin has selected a specific subaccount, show only that account
+  const rows = useMemo(
+    () => currentAccountId > 0 ? allRows.filter(r => (r.id ?? r.Id) === currentAccountId) : allRows,
+    [allRows, currentAccountId],
+  );
 
   /* ── Persisted selection (after data hook) ───────────────────────────────── */
   const [selectedAccount, setSelectedAccount] = usePersistedSelection<AccountRow>(
@@ -420,26 +438,26 @@ export default function AccountsPage() {
         onChange={setTableSearch}
         open={!!tableSearch}
         onOpenChange={() => {}}
-        placeholder="Search accounts…"
+        placeholder={t("page.searchPlaceholder")}
       />
 
       {/* +Add */}
-      <ConfirmToolbarButton icon={Plus} label="Add" onConfirm={handleAddAccount} />
+      <ConfirmToolbarButton icon={Plus} label={t("toolbar.add")} onConfirm={handleAddAccount} confirmYes={t("toolbar.yes")} confirmNo={t("toolbar.no")} />
 
       {/* Sort */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button className={cn(xBase, tableSortBy !== "recent" ? xActive : xDefault, "hover:max-w-[100px]")}>
             <ArrowUpDown className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>Sort</span>
+            <span className={xSpan}>{t("toolbar.sort")}</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Sort by</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.sortBy")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {(Object.keys(TABLE_SORT_LABELS) as TableSortByOption[]).map((opt) => (
+          {(Object.keys(TABLE_SORT_KEYS) as TableSortByOption[]).map((opt) => (
             <DropdownMenuItem key={opt} onClick={() => setTableSortBy(opt)} className={cn("text-[12px]", tableSortBy === opt && "font-semibold text-brand-indigo")}>
-              {TABLE_SORT_LABELS[opt]}
+              {t(TABLE_SORT_KEYS[opt])}
               {tableSortBy === opt && <Check className="h-3 w-3 ml-auto" />}
             </DropdownMenuItem>
           ))}
@@ -451,11 +469,11 @@ export default function AccountsPage() {
         <DropdownMenuTrigger asChild>
           <button className={cn(xBase, isTableFilterActive ? xActive : xDefault, "hover:max-w-[100px]")}>
             <Filter className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>Filter</span>
+            <span className={xSpan}>{t("toolbar.filter")}</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Status</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("filter.status")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {STATUS_OPTIONS.map((s) => (
             <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleTableFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
@@ -468,12 +486,12 @@ export default function AccountsPage() {
           {availableTypes.length > 0 && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Type</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.type")}</DropdownMenuLabel>
               <DropdownMenuItem
                 onClick={(e) => { e.preventDefault(); setTableFilterType(""); }}
                 className={cn("text-[12px]", !tableFilterType && "font-semibold text-brand-indigo")}
               >
-                All Types {!tableFilterType && <Check className="h-3 w-3 ml-auto" />}
+                {t("filter.allTypes")} {!tableFilterType && <Check className="h-3 w-3 ml-auto" />}
               </DropdownMenuItem>
               {availableTypes.map((t) => (
                 <DropdownMenuItem
@@ -491,7 +509,7 @@ export default function AccountsPage() {
           {isTableFilterActive && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={clearTableFilters} className="text-[12px] text-destructive">Clear all filters</DropdownMenuItem>
+              <DropdownMenuItem onClick={clearTableFilters} className="text-[12px] text-destructive">{t("toolbar.clearAllFilters")}</DropdownMenuItem>
             </>
           )}
         </DropdownMenuContent>
@@ -502,13 +520,13 @@ export default function AccountsPage() {
         <DropdownMenuTrigger asChild>
           <button className={cn(xBase, tableGroupBy !== "status" ? xActive : xDefault, "hover:max-w-[100px]")}>
             <Layers className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>Group</span>
+            <span className={xSpan}>{t("toolbar.group")}</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
-          {(Object.keys(TABLE_GROUP_LABELS) as TableGroupByOption[]).map((opt) => (
+          {(Object.keys(TABLE_GROUP_KEYS) as TableGroupByOption[]).map((opt) => (
             <DropdownMenuItem key={opt} onClick={() => setTableGroupBy(opt)} className={cn("text-[12px]", tableGroupBy === opt && "font-semibold text-brand-indigo")}>
-              {TABLE_GROUP_LABELS[opt]}
+              {t(TABLE_GROUP_KEYS[opt])}
               {tableGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
             </DropdownMenuItem>
           ))}
@@ -520,11 +538,11 @@ export default function AccountsPage() {
         <DropdownMenuTrigger asChild>
           <button className={cn(xBase, visibleCols.size !== DEFAULT_VISIBLE.length ? xActive : xDefault, "hover:max-w-[100px]")}>
             <Eye className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>Fields</span>
+            <span className={xSpan}>{t("toolbar.fields")}</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Show / Hide Columns</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.showHideColumns")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {TABLE_COL_META.map((col) => {
             const isVisible = visibleCols.has(col.key);
@@ -557,7 +575,7 @@ export default function AccountsPage() {
           })}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setVisibleCols(new Set(DEFAULT_VISIBLE))} className="text-[12px] text-muted-foreground">
-            Reset to default
+            {t("toolbar.resetToDefault")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -572,7 +590,7 @@ export default function AccountsPage() {
               <DropdownMenuTrigger asChild>
                 <button className={cn(xBase, xDefault, "hover:max-w-[140px]")}>
                   <Pencil className="h-4 w-4 shrink-0" />
-                  <span className={xSpan}>Change Status</span>
+                  <span className={xSpan}>{t("toolbar.changeStatus")}</span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
@@ -584,8 +602,8 @@ export default function AccountsPage() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <ConfirmToolbarButton icon={Copy} label="Duplicate" onConfirm={handleDuplicateAccounts} />
-            <ConfirmToolbarButton icon={Trash2} label="Delete" onConfirm={handleBulkDeleteAccounts} variant="danger" />
+            <ConfirmToolbarButton icon={Copy} label={t("toolbar.duplicate")} onConfirm={handleDuplicateAccounts} confirmYes={t("toolbar.yes")} confirmNo={t("toolbar.no")} />
+            <ConfirmToolbarButton icon={Trash2} label={t("toolbar.delete")} onConfirm={handleBulkDeleteAccounts} variant="danger" confirmYes={t("toolbar.yes")} confirmNo={t("toolbar.no")} />
 
             {/* Count badge with dismiss */}
             <button
@@ -646,7 +664,7 @@ export default function AccountsPage() {
                 {/* Title + 309px wrapper with ViewTabBar + toolbar */}
                 <div className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
                   <div className="flex items-center justify-between w-[309px] shrink-0">
-                    <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Accounts</h2>
+                    <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
                     <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as AccountViewMode)} variant="segment" />
                   </div>
                   <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />

@@ -1,0 +1,178 @@
+{
+  "page": {
+    "title": "Contas",
+    "searchPlaceholder": "Buscar contas...",
+    "noAccountsFound": "Nenhuma conta encontrada",
+    "noAccountsMatch": "Nenhuma conta corresponde a sua busca",
+    "tryDifferentSearch": "Tente uma busca diferente"
+  },
+  "views": {
+    "list": "Lista",
+    "table": "Tabela"
+  },
+  "toolbar": {
+    "add": "Adicionar",
+    "sort": "Ordenar",
+    "filter": "Filtrar",
+    "group": "Agrupar",
+    "fields": "Campos",
+    "sortBy": "Ordenar por",
+    "changeStatus": "Alterar Status",
+    "duplicate": "Duplicar",
+    "delete": "Excluir",
+    "yes": "Sim",
+    "no": "Nao",
+    "clearAllFilters": "Limpar todos os filtros",
+    "showHideColumns": "Mostrar / Ocultar Colunas",
+    "resetToDefault": "Restaurar padrao",
+    "previous": "Anterior",
+    "next": "Proximo",
+    "of": "de"
+  },
+  "sort": {
+    "mostRecent": "Mais Recente",
+    "nameAZ": "Nome A -> Z",
+    "nameZA": "Nome Z -> A"
+  },
+  "group": {
+    "status": "Status",
+    "type": "Tipo",
+    "none": "Nenhum"
+  },
+  "filter": {
+    "status": "Status",
+    "allTypes": "Todos os Tipos"
+  },
+  "columns": {
+    "name": "Nome",
+    "accountName": "Nome da Conta",
+    "status": "Status",
+    "type": "Tipo",
+    "ownerEmail": "Email do Proprietario",
+    "phone": "Telefone",
+    "niche": "Nicho",
+    "website": "Website",
+    "timezone": "Fuso Horario",
+    "dailySends": "Envios Diarios",
+    "notes": "Notas"
+  },
+  "table": {
+    "saveFailed": "Falha ao salvar - clique para tentar novamente",
+    "workspaceViews": {
+      "defaultView": "Visao Padrao",
+      "salesPipeline": "Pipeline de Vendas",
+      "customerSuccess": "Sucesso do Cliente",
+      "adminDashboard": "Painel Admin"
+    }
+  },
+  "create": {
+    "title": "Criar Nova Conta",
+    "subtitle": "Preencha os dados para adicionar uma nova conta",
+    "panelTitle": "Nova Conta",
+    "panelSubtitle": "Preencha os dados abaixo",
+    "nameRequired": "Nome da conta e obrigatorio",
+    "nameRequiredDot": "Nome da conta e obrigatorio.",
+    "createAccount": "Criar Conta",
+    "creating": "Criando..."
+  },
+  "sections": {
+    "basicInfo": "Informacoes Basicas",
+    "contact": "Contato",
+    "scheduleTimezone": "Agenda e Fuso Horario",
+    "notes": "Notas",
+    "aiConfig": "Configuracao IA",
+    "aiMessaging": "IA e Mensagens",
+    "descriptionNotes": "Descricao e Notas",
+    "twilioIntegration": "Integracao Twilio",
+    "instagramIntegration": "Integracao Instagram",
+    "schedule": "Agenda"
+  },
+  "fields": {
+    "name": "Nome",
+    "accountName": "Nome da Conta",
+    "status": "Status",
+    "type": "Tipo",
+    "businessNiche": "Nicho de Negocio",
+    "ownerEmail": "Email do Proprietario",
+    "phone": "Telefone",
+    "website": "Website",
+    "timezone": "Fuso Horario",
+    "businessHoursOpen": "Horario de Abertura",
+    "businessHoursClose": "Horario de Fechamento",
+    "maxDailySends": "Envios Diarios Maximos",
+    "aiName": "Nome da IA",
+    "aiRole": "Funcao da IA",
+    "aiStyle": "Estilo da IA",
+    "typoFrequency": "Frequencia de Erros",
+    "optOutKeyword": "Palavra-chave de Saida",
+    "preferredTerminology": "Terminologia Preferida",
+    "disclosureText": "Texto de Divulgacao",
+    "businessDescription": "Descricao do Negocio",
+    "serviceCategories": "Categorias de Servico",
+    "serviceCategoriesHint": "Insira como array JSON ou valores separados por virgula",
+    "accountSid": "SID da Conta",
+    "authToken": "Token de Autenticacao",
+    "messagingServiceSid": "SID do Servico de Mensagens",
+    "serviceSid": "SID do Servico",
+    "fromNumber": "Numero de Origem",
+    "webhookUrl": "URL do Webhook",
+    "apiKeyIntake": "Chave API (Intake)",
+    "intakeUrl": "URL de Intake",
+    "instagramUserId": "ID do Usuario Instagram",
+    "accessToken": "Token de Acesso",
+    "address": "Endereco",
+    "taxId": "CNPJ / CPF",
+    "description": "Descricao",
+    "hoursOpen": "Hora Abertura",
+    "hoursClose": "Hora Fechamento",
+    "dailySends": "Envios Diarios",
+    "terminology": "Terminologia",
+    "email": "Email"
+  },
+  "detail": {
+    "unnamedAccount": "Conta sem Nome",
+    "saveChanges": "Salvar Alteracoes",
+    "edit": "Editar",
+    "updating": "Atualizando...",
+    "activated": "Conta ativada",
+    "deactivated": "Conta desativada",
+    "statusUpdateFailed": "Falha ao atualizar status",
+    "statusUpdateFailedDesc": "Nao foi possivel atualizar o status da conta. Tente novamente.",
+    "isNow": "agora esta",
+    "clickToDeactivate": "Clique para desativar",
+    "clickToActivate": "Clique para ativar",
+    "saving": "Salvando...",
+    "save": "Salvar",
+    "confirm": "Confirmar?",
+    "clickToUploadLogo": "Clique para enviar logo",
+    "removeLogo": "Remover logo",
+    "removeVoice": "Remover voz",
+    "voiceFile": "Arquivo de voz",
+    "pleaseUploadAudio": "Envie um arquivo de audio (M4A, WAV, MP3, OGG, FLAC).",
+    "fileSizeLimit": "O arquivo deve ter menos de 10 MB.",
+    "syncInstagram": "Sincronizar Contatos Instagram",
+    "syncingContacts": "Sincronizando contatos...",
+    "syncFailed": "Falha na sincronizacao",
+    "selectExecution": "Selecione uma execucao para ver seu pipeline"
+  },
+  "related": {
+    "campaigns": "Campanhas",
+    "users": "Usuarios",
+    "contracts": "Contratos",
+    "searchCampaigns": "Buscar campanhas...",
+    "searchUsers": "Buscar usuarios...",
+    "addCampaign": "Adicionar campanha",
+    "addUser": "Adicionar usuario",
+    "unnamed": "Sem nome",
+    "unknown": "Desconhecido",
+    "more": "+{{count}} mais",
+    "copy": "(Copia)"
+  },
+  "pagination": {
+    "previous": "Anterior",
+    "next": "Proximo"
+  },
+  "empty": {
+    "selectAccount": "Selecione uma conta para ver detalhes"
+  }
+}

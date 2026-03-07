@@ -9,6 +9,7 @@ import { updateLead } from "../api/leadsApi";
 import { apiFetch } from "@/lib/apiUtils";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import {
   Building2,
   Megaphone,
@@ -40,11 +41,14 @@ import {
 type SortBy = "score-desc" | "recency" | "alpha" | null;
 
 export function OpportunitiesPage() {
+  const { t } = useTranslation("leads");
   const { currentAccountId, isAgencyView, isAgencyUser } = useWorkspace();
   const { accounts } = useAccounts();
 
   /* ── Account / Campaign filtering (persisted) ──────────────────────────── */
   const [selectedAccountId, setSelectedAccountId] = useState<number | "all">(() => {
+    // A specific account is selected in the workspace — always honour it, ignore stale localStorage
+    if (currentAccountId > 0) return currentAccountId;
     try {
       const stored = localStorage.getItem("opp_account_id");
       if (stored) {
@@ -52,8 +56,14 @@ export function OpportunitiesPage() {
         if (parsed === "all" || typeof parsed === "number") return parsed;
       }
     } catch {}
-    return isAgencyView && currentAccountId === 1 ? "all" : (currentAccountId ?? "all");
+    return "all";
   });
+
+  // Keep in sync when the workspace account changes (e.g. user picks a different account in Topbar)
+  useEffect(() => {
+    if (currentAccountId > 0) setSelectedAccountId(currentAccountId);
+    else setSelectedAccountId("all");
+  }, [currentAccountId]);
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | "all">(() => {
     try {
       const stored = localStorage.getItem("opp_campaign_id");
@@ -345,7 +355,7 @@ export function OpportunitiesPage() {
 
             {/* Title + lead count */}
             <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight mr-6">
-              Opportunities
+              {t("page.opportunities")}
             </h2>
             <span className="h-10 w-10 rounded-full border border-black/[0.125] flex items-center justify-center text-[10px] font-semibold text-foreground tabular-nums shrink-0">
               {totalLeads}
@@ -366,8 +376,8 @@ export function OpportunitiesPage() {
                     <Building2 className="h-4 w-4 shrink-0" />
                     <span className="truncate max-w-[120px]">
                       {selectedAccountId === "all"
-                        ? "All Accounts"
-                        : selectedAccount?.name || "Account"}
+                        ? t("filters.allAccounts")
+                        : selectedAccount?.name || t("group.account")}
                     </span>
                     <ChevronsUpDown className="h-3 w-3 shrink-0 opacity-50" />
                   </button>
@@ -380,7 +390,7 @@ export function OpportunitiesPage() {
                       selectedAccountId === "all" && "font-bold bg-muted"
                     )}
                   >
-                    <span className="text-sm flex-1">All Accounts</span>
+                    <span className="text-sm flex-1">{t("filters.allAccounts")}</span>
                     {selectedAccountId === "all" && (
                       <Check className="h-4 w-4 text-brand-indigo shrink-0" />
                     )}
@@ -421,8 +431,8 @@ export function OpportunitiesPage() {
                     <Megaphone className="h-4 w-4 shrink-0" />
                     <span className="truncate max-w-[120px]">
                       {selectedCampaignId === "all"
-                        ? "All Campaigns"
-                        : selectedCampaign?.name || "Campaign"}
+                        ? t("filters.allCampaigns")
+                        : selectedCampaign?.name || t("group.campaign")}
                     </span>
                     <ChevronsUpDown className="h-3 w-3 shrink-0 opacity-50" />
                   </button>
@@ -435,7 +445,7 @@ export function OpportunitiesPage() {
                       selectedCampaignId === "all" && "font-bold bg-muted"
                     )}
                   >
-                    <span className="text-sm flex-1">All Campaigns</span>
+                    <span className="text-sm flex-1">{t("filters.allCampaigns")}</span>
                     {selectedCampaignId === "all" && (
                       <Check className="h-4 w-4 text-brand-indigo shrink-0" />
                     )}
@@ -473,7 +483,7 @@ export function OpportunitiesPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search leads…"
+                placeholder={t("toolbar.searchPlaceholder")}
                 className="bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground/60 w-[140px]"
               />
               {searchQuery && (
@@ -498,7 +508,7 @@ export function OpportunitiesPage() {
                   )}
                 >
                   <SlidersHorizontal className="h-4 w-4 shrink-0" />
-                  <span>Filter</span>
+                  <span>{t("toolbar.filter")}</span>
                   {isFilterActive && (
                     <span className="h-4 w-4 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center shrink-0">
                       {activeFilterCount}
@@ -518,7 +528,7 @@ export function OpportunitiesPage() {
                     )}
                   />
                   <span className={cn("text-sm flex-1", showHighScore && "font-semibold")}>
-                    High Score (70+)
+                    {t("filters.highScore")}
                   </span>
                   {showHighScore && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
@@ -533,7 +543,7 @@ export function OpportunitiesPage() {
                     )}
                   />
                   <span className={cn("text-sm flex-1", filterHasPhone && "font-semibold")}>
-                    Has Phone
+                    {t("filters.hasPhone")}
                   </span>
                   {filterHasPhone && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
@@ -548,7 +558,7 @@ export function OpportunitiesPage() {
                     )}
                   />
                   <span className={cn("text-sm flex-1", filterHasEmail && "font-semibold")}>
-                    Has Email
+                    {t("filters.hasEmail")}
                   </span>
                   {filterHasEmail && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
@@ -561,7 +571,7 @@ export function OpportunitiesPage() {
                       className="flex items-center gap-2 cursor-pointer rounded-xl text-muted-foreground"
                     >
                       <X className="h-4 w-4 shrink-0" />
-                      <span className="text-sm">Clear all</span>
+                      <span className="text-sm">{t("toolbar.clearAll")}</span>
                     </DropdownMenuItem>
                   </>
                 )}
@@ -580,7 +590,7 @@ export function OpportunitiesPage() {
                   )}
                 >
                   <ArrowUpDown className="h-4 w-4 shrink-0" />
-                  <span>Sort</span>
+                  <span>{t("toolbar.sort")}</span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56 rounded-2xl">
@@ -589,7 +599,7 @@ export function OpportunitiesPage() {
                   className="flex items-center gap-2 cursor-pointer rounded-xl"
                 >
                   <span className={cn("text-sm flex-1", sortBy === null && "font-semibold")}>
-                    Default
+                    {t("sort.default")}
                   </span>
                   {sortBy === null && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
@@ -600,7 +610,7 @@ export function OpportunitiesPage() {
                   <span
                     className={cn("text-sm flex-1", sortBy === "score-desc" && "font-semibold")}
                   >
-                    Score (High → Low)
+                    {t("sort.scoreDesc")}
                   </span>
                   {sortBy === "score-desc" && (
                     <Check className="h-4 w-4 text-brand-indigo shrink-0" />
@@ -613,7 +623,7 @@ export function OpportunitiesPage() {
                   <span
                     className={cn("text-sm flex-1", sortBy === "recency" && "font-semibold")}
                   >
-                    Recency (Newest first)
+                    {t("sort.recency")}
                   </span>
                   {sortBy === "recency" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
@@ -622,7 +632,7 @@ export function OpportunitiesPage() {
                   className="flex items-center gap-2 cursor-pointer rounded-xl"
                 >
                   <span className={cn("text-sm flex-1", sortBy === "alpha" && "font-semibold")}>
-                    Alphabetical (A → Z)
+                    {t("sort.alpha")}
                   </span>
                   {sortBy === "alpha" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
@@ -638,7 +648,7 @@ export function OpportunitiesPage() {
                 className="h-10 px-4 rounded-full flex items-center gap-2 text-sm font-medium bg-black text-[#FFE35B] border border-black hover:opacity-85 transition-opacity"
               >
                 <Columns3 className="h-4 w-4 shrink-0" />
-                <span>Unfold</span>
+                <span>{t("toolbar.unfold")}</span>
               </button>
             ) : (
               <Popover open={foldPopoverOpen} onOpenChange={setFoldPopoverOpen}>
@@ -652,13 +662,13 @@ export function OpportunitiesPage() {
                     )}
                   >
                     <Columns3 className="h-4 w-4 shrink-0" />
-                    <span>Fold</span>
+                    <span>{t("toolbar.fold")}</span>
                   </button>
                 </PopoverTrigger>
                 <PopoverContent align="start" className="w-72 rounded-2xl p-4">
-                  <p className="text-sm font-semibold mb-1">Fold columns</p>
+                  <p className="text-sm font-semibold mb-1">{t("fold.foldColumns")}</p>
                   <p className="text-xs text-muted-foreground mb-3">
-                    Fold columns with this many leads or fewer.
+                    {t("fold.foldDescription")}
                   </p>
                   <div className="flex items-center gap-2">
                     <input
@@ -672,12 +682,12 @@ export function OpportunitiesPage() {
                       }}
                       className="h-9 w-20 rounded-xl border border-border bg-input-bg px-3 text-sm text-center font-semibold focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
                     />
-                    <span className="text-sm text-muted-foreground flex-1">leads</span>
+                    <span className="text-sm text-muted-foreground flex-1">{t("fold.leads")}</span>
                     <button
                       onClick={applyFold}
                       className="h-9 px-4 rounded-xl bg-brand-indigo text-white text-sm font-semibold hover:bg-brand-indigo/90 transition-colors"
                     >
-                      Apply
+                      {t("fold.apply")}
                     </button>
                   </div>
                 </PopoverContent>
@@ -687,7 +697,7 @@ export function OpportunitiesPage() {
             {/* Tags always-show toggle — next to Fold/Unfold */}
             <button
               onClick={() => setShowTagsAlways((v) => !v)}
-              title={showTagsAlways ? "Tags always visible — click to hover-only" : "Show tags on hover only — click to always show"}
+              title={showTagsAlways ? t("tagsToggle.alwaysVisible") : t("tagsToggle.hoverOnly")}
               className={cn(
                 "h-10 w-10 rounded-full flex items-center justify-center shrink-0 transition-colors",
                 showTagsAlways

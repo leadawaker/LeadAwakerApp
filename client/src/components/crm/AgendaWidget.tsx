@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import {
   CalendarCheck, Phone, Check, Calendar, Mail,
-  X, Sparkles, Tag, BarChart3, AlertTriangle,
+  X, AlertTriangle,
 } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
 import { cn } from "@/lib/utils";
@@ -28,13 +28,6 @@ type AgendaItem = {
   score?: number;
   lastMessage?: string;
   conversionStatus?: string;
-};
-
-type AppUpdate = {
-  id: string;
-  icon: "sparkles" | "tag" | "chart";
-  title: string;
-  description: string;
 };
 
 /* ─── Helpers ─────────────────────────────────────────────────────────────── */
@@ -118,48 +111,6 @@ function relativeTime(isoString: string | null): string {
   return new Date(isoString).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-/* ─── Dismiss store (localStorage) ──────────────────────────────────────── */
-const DISMISS_KEY = "agenda_dismissed_updates";
-
-function getDismissed(): Set<string> {
-  try {
-    const raw = localStorage.getItem(DISMISS_KEY);
-    return new Set(raw ? JSON.parse(raw) : []);
-  } catch {
-    return new Set();
-  }
-}
-
-function saveDismissed(set: Set<string>) {
-  try {
-    // Prune to last 200 entries to avoid unbounded growth
-    const arr = Array.from(set).slice(-200);
-    localStorage.setItem(DISMISS_KEY, JSON.stringify(arr));
-  } catch { /* ignore */ }
-}
-
-/* ─── Static app updates (feature announcements) ─────────────────────────── */
-const APP_UPDATES: AppUpdate[] = [
-  {
-    id: "update-campaign-tags",
-    icon: "tag",
-    title: "Campaign Tags",
-    description: "Organize campaigns with custom tag categories and colors.",
-  },
-  {
-    id: "update-ai-analysis",
-    icon: "sparkles",
-    title: "AI Campaign Analysis",
-    description: "Get instant AI-generated summaries of campaign performance.",
-  },
-  {
-    id: "update-pipeline-donut",
-    icon: "chart",
-    title: "Pipeline Donut Chart",
-    description: "Interactive funnel visualization with click-to-filter stages.",
-  },
-];
-
 /* ─── Component ───────────────────────────────────────────────────────────── */
 
 export interface AgendaWidgetProps {
@@ -172,8 +123,6 @@ export function AgendaWidget({ accountId, className, hideHeader }: AgendaWidgetP
   const [, setLocation] = useLocation();
   const { isAgencyUser } = useWorkspace();
   const prefix = isAgencyUser ? "/agency" : "/subaccount";
-
-  const [dismissed, setDismissed] = useState<Set<string>>(getDismissed);
 
   // ── Leads query ──────────────────────────────────────────────────────────
   const params = new URLSearchParams();
@@ -248,30 +197,6 @@ export function AgendaWidget({ accountId, className, hideHeader }: AgendaWidgetP
     return { upcomingCalls: calls, takeoverLeads: takeovers };
   }, [allLeads]);
 
-  // ── Filter static app updates (dismissible) ────────────────────────────
-  const appUpdates = useMemo(
-    () => APP_UPDATES.filter((u) => !dismissed.has(u.id)),
-    [dismissed],
-  );
-
-  const dismissUpdate = useCallback((id: string) => {
-    setDismissed((prev) => {
-      const next = new Set(prev);
-      next.add(id);
-      saveDismissed(next);
-      return next;
-    });
-  }, []);
-
-  const dismissAllUpdates = useCallback(() => {
-    setDismissed((prev) => {
-      const next = new Set(prev);
-      APP_UPDATES.forEach((u) => next.add(u.id));
-      saveDismissed(next);
-      return next;
-    });
-  }, []);
-
   // ── Takeover dismiss (optimistic local + API) ──────────────────────────
   const [dismissedTakeovers, setDismissedTakeovers] = useState<Set<number>>(new Set);
 
@@ -327,13 +252,11 @@ export function AgendaWidget({ accountId, className, hideHeader }: AgendaWidgetP
         <AgendaContent
           upcomingCalls={upcomingCalls}
           takeoverLeads={visibleTakeovers}
-          appUpdates={appUpdates}
           isLoading={leadsLoading}
           onClickLead={goToLead}
           onClickCalendar={goToCalendar}
           onClickChat={goToChat}
           onDismissTakeover={dismissTakeover}
-          onDismissAllUpdates={dismissAllUpdates}
         />
       </div>
     </div>
@@ -343,18 +266,16 @@ export function AgendaWidget({ accountId, className, hideHeader }: AgendaWidgetP
 /* ─── Agenda Content ──────────────────────────────────────────────────────── */
 
 function AgendaContent({
-  upcomingCalls, takeoverLeads, appUpdates, isLoading,
-  onClickLead, onClickCalendar, onClickChat, onDismissTakeover, onDismissAllUpdates,
+  upcomingCalls, takeoverLeads, isLoading,
+  onClickLead, onClickCalendar, onClickChat, onDismissTakeover,
 }: {
   upcomingCalls: AgendaItem[];
   takeoverLeads: AgendaItem[];
-  appUpdates: AppUpdate[];
   isLoading: boolean;
   onClickLead: (id: number) => void;
   onClickCalendar: () => void;
   onClickChat: (id: number) => void;
   onDismissTakeover: (id: number) => void;
-  onDismissAllUpdates: () => void;
 }) {
   if (isLoading) {
     return (
@@ -366,7 +287,7 @@ function AgendaContent({
     );
   }
 
-  const hasAnything = upcomingCalls.length > 0 || takeoverLeads.length > 0 || appUpdates.length > 0;
+  const hasAnything = upcomingCalls.length > 0 || takeoverLeads.length > 0;
 
   if (!hasAnything) {
     return (
@@ -407,9 +328,12 @@ function AgendaContent({
       {/* ── AI Takeover — single container card ── */}
       {takeoverLeads.length > 0 && (
         <div className="rounded-xl bg-white dark:bg-card px-4 pt-3.5 pb-3.5 flex flex-col gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-orange-500/80">
-            AI Flagged
-          </span>
+          <div className="flex items-center gap-1.5">
+            <AlertTriangle className="h-3 w-3 text-orange-500/80" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-orange-500/80">
+              AI Flagged
+            </span>
+          </div>
           {takeoverLeads.map((item) => (
             <TakeoverCard
               key={item.id}
@@ -422,27 +346,6 @@ function AgendaContent({
         </div>
       )}
 
-      {/* ── What's New — single container card ── */}
-      {appUpdates.length > 0 && (
-        <div className="rounded-xl bg-white dark:bg-card px-4 pt-3.5 pb-3.5 flex flex-col gap-2 group/whats-new">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-foreground">
-              What's New
-            </span>
-            <button
-              type="button"
-              onClick={onDismissAllUpdates}
-              className="shrink-0 w-[22px] h-[22px] rounded-full flex items-center justify-center text-foreground/25 hover:text-foreground/60 hover:bg-foreground/8 transition-colors opacity-0 group-hover/whats-new:opacity-100"
-              title="Dismiss all"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </div>
-          {appUpdates.map((update) => (
-            <AppUpdateCard key={update.id} update={update} />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -629,7 +532,7 @@ function TakeoverCard({
 }) {
   return (
     <div className="flex items-start gap-2.5 group/takeover py-1">
-      <LeadAvatar name={item.name} status={item.conversionStatus} size={34} onClick={onClickLead} showAlert />
+      <LeadAvatar name={item.name} status={item.conversionStatus} size={34} onClick={onClickLead} />
 
       <div className="flex-1 min-w-0">
         <button
@@ -641,7 +544,7 @@ function TakeoverCard({
         </button>
         <div className="flex items-center gap-1.5 mt-px">
           <span className="inline-flex text-[9px] font-bold uppercase tracking-wide text-orange-500 bg-orange-50 rounded-full px-1.5 py-px shrink-0">
-            Manual Takeover Needed
+            Takeover needed
           </span>
           {item.dateStr && (
             <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
@@ -680,38 +583,4 @@ function TakeoverCard({
   );
 }
 
-/* ─── App Update Card ── feature announcements (no per-card dismiss) ───── */
 
-const APP_UPDATE_ICON: Record<AppUpdate["icon"], React.ComponentType<{ className?: string }>> = {
-  sparkles: Sparkles,
-  tag: Tag,
-  chart: BarChart3,
-};
-
-const APP_UPDATE_ICON_COLOR: Record<AppUpdate["icon"], string> = {
-  sparkles: "text-violet-600",
-  tag:      "text-brand-indigo",
-  chart:    "text-amber-600",
-};
-
-function AppUpdateCard({ update }: { update: AppUpdate }) {
-  const Icon = APP_UPDATE_ICON[update.icon];
-  const iconColor = APP_UPDATE_ICON_COLOR[update.icon];
-
-  return (
-    <div className="bg-white dark:bg-card px-1 py-1.5 flex items-start gap-2.5">
-      <div className="shrink-0 w-[34px] h-[34px] rounded-full flex items-center justify-center mt-0.5 border border-black/[0.125] bg-transparent">
-        <Icon className={cn("h-4 w-4", iconColor)} />
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <p className="text-[12px] font-medium text-foreground leading-snug line-clamp-1">
-          {update.title}
-        </p>
-        <p className="text-[11px] text-foreground/45 mt-0.5 line-clamp-2 leading-snug">
-          {update.description}
-        </p>
-      </div>
-    </div>
-  );
-}

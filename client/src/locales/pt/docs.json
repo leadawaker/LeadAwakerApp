@@ -1,0 +1,173 @@
+{
+  "title": "Documentacao",
+  "searchPlaceholder": "Pesquisar...",
+  "whatsNew": "Novidades",
+  "operatorManual": "Manual do Operador",
+  "clientGuide": "Guia do Cliente",
+  "noResults": "Nenhuma secao corresponde a \"{{query}}\"",
+  "copy": "Copiar",
+  "toc": {
+    "setup": "Configuracao",
+    "campaign": "Campanha",
+    "lifecycle": "Ciclo de Vida",
+    "webhooks": "Webhooks",
+    "instagram": "Instagram",
+    "analytics": "Analises",
+    "troubleshoot": "Solucao de Problemas",
+    "whatIsIt": "O que e?",
+    "yourLeads": "Seus Leads",
+    "conversations": "Conversas",
+    "leadScore": "Pontuacao do Lead",
+    "bookings": "Agendamentos",
+    "faq": "FAQ"
+  },
+  "operator": {
+    "setup": {
+      "title": "1 - Configuracao da Conta",
+      "step1": "Va para <settingsLink>Configuracoes - Integracoes</settingsLink>. Insira seu <strong>Twilio Account SID</strong>, <strong>Auth Token</strong> e o <strong>Numero de Origem</strong> (ou Messaging Service SID) para esta conta.",
+      "step2": "Defina seu <strong>horario comercial</strong> (inicio/fim) e <strong>fuso horario</strong>. O motor nunca enviara mensagens fora desses horarios.",
+      "step3": "Defina um <strong>Limite Diario de Envio</strong> (padrao 500). Este e o maximo de mensagens que a conta pode enviar por dia em todas as campanhas.",
+      "step4": "Copie a <strong>Chave API</strong> (webhook_secret) de <settingsLink>Configuracoes</settingsLink>. Cole-a nas integracoes do seu CRM para autorizar leads de entrada.",
+      "tip": "A chave API e mostrada apenas uma vez ao ser gerada. Se perdida, regenere-a - a chave antiga parara de funcionar imediatamente."
+    },
+    "campaign": {
+      "title": "2 - Criando uma Campanha",
+      "step1": "Va para <strong>Campanhas - Nova Campanha</strong>. De um nome e selecione o <strong>canal</strong> (SMS ou WhatsApp).",
+      "step2": "Escreva seu modelo de <strong>Primeira Mensagem</strong>. Use tags de mesclagem: {{first_name}}, {{agent_name}}, {{service}}.",
+      "step3": "Adicione ate 3 <strong>Follow-up bumps</strong>. Defina o atraso em horas para cada (ex: 24h, 48h, 72h). Bumps sao enviados apenas se o lead nao respondeu.",
+      "step4": "Defina <strong>Horarios Ativos</strong>, <strong>Limite Diario de Leads</strong> e opcionalmente vincule uma <strong>entrada da Biblioteca de Prompts</strong> para personalizar a persona da IA.",
+      "step5": "Defina o status da campanha como <strong>Ativo</strong> quando estiver pronto para comecar a enviar.",
+      "tip": "Mantenha a primeira mensagem curta e pessoal. Evite links na primeira mensagem - muitos filtros de SMS os bloqueiam."
+    },
+    "lifecycle": {
+      "title": "3 - Ciclo de Vida do Lead e Status",
+      "description": "Leads passam por estes status de automacao automaticamente:",
+      "paused": "Criado mas ainda nao atribuido a uma campanha. Seguro - nenhuma mensagem enviada.",
+      "queued": "Atribuido a uma campanha ativa. Campaign_launcher processa isso em 60 segundos.",
+      "active": "Primeira mensagem enviada. Elegivel para bumps e respostas de conversa IA.",
+      "completed": "Todos os bumps enviados, agendamento confirmado ou lead esgotado. Sem mais mensagens.",
+      "dnd": "Lead optou por sair (respondeu com STOP ou similar). Nunca mais contactado.",
+      "tip": "Para pausar um lead especifico manualmente, defina o automation_status para \"paused\" no painel de detalhes do lead. Para pausar uma campanha inteira, defina o status da campanha como \"Inativo\"."
+    },
+    "webhooks": {
+      "title": "4 - Adaptadores de Origem (Webhooks CRM)",
+      "description": "Cada CRM tem uma URL de intake dedicada. Cole a URL nas configuracoes de webhook do seu CRM. Leads sao automaticamente criados e enfileirados.",
+      "tip": "Substitua YOUR_KEY pela chave API de <settingsLink>Configuracoes</settingsLink>. Substitua ID pelo ID da campanha na pagina de detalhes da campanha."
+    },
+    "instagram": {
+      "title": "5 - Integracao Instagram",
+      "description": "Conecte uma conta Instagram Business para sincronizar contatos de DM existentes e receber mensagens.",
+      "step1": "Va para <settingsLink>Configuracoes - Conta</settingsLink>. Insira seu <strong>Instagram User ID</strong> (ID numerico da sua conta IG Business) e <strong>Token de Acesso</strong> (um token de acesso de pagina de longa duracao da Meta).",
+      "step2": "Clique em <strong>Sincronizar Contatos do Instagram</strong> para puxar todos os contatos de conversas DM existentes da API da Meta. Cada contato unico e criado como lead com status pausado.",
+      "step3": "Atribua leads sincronizados a uma campanha para iniciar alcance automatizado, ou use-os para acompanhamento manual na caixa de entrada de Conversas.",
+      "tip": "A Meta permite ~200 chamadas de API por hora por token. Para contas com 200+ contatos, a sincronizacao pode parar cedo devido a limitacao de taxa - basta executa-la novamente apos uma hora. Duplicatas sao automaticamente ignoradas."
+    },
+    "analytics": {
+      "title": "6 - Analises e Relatorios",
+      "step1": "<strong>Pontuacoes de Lead</strong> (0-100) sao recalculadas a cada 30 minutos. Combinam estagio do funil (40%), engajamento (30%) e recencia de atividade (30%).",
+      "step2": "<strong>Metricas de Campanha</strong> (taxa de resposta, taxa de agendamento, custo por lead) sao registradas diariamente a meia-noite. Confira em Relatorios.",
+      "step3": "<strong>Logs de Automacao</strong> mostram cada passo que o motor tomou para cada lead - util para depurar envios perdidos ou comportamento inesperado.",
+      "tip": "Uma pontuacao de lead acima de 70 = alta intencao. Priorize acompanhamento manual nestes."
+    },
+    "troubleshoot": {
+      "title": "7 - Solucao de Problemas",
+      "notReceiving": "Lead nao recebe mensagens",
+      "notReceivingSolution": "Verifique: status da campanha = Ativo, automation_status do lead = queued, horario comercial nao bloqueando, limite diario nao atingido. Verifique os Logs de Automacao do lead.",
+      "wrongLanguage": "Idioma errado nas respostas",
+      "wrongLanguageSolution": "Certifique-se de que o campo de idioma do lead esta definido. A IA usa isso para responder no idioma correto.",
+      "stuckSending": "Lead preso no status 'sending'",
+      "stuckSendingSolution": "Isso significa que o Twilio falhou ao enviar a primeira mensagem. Redefina manualmente para 'queued' no BD e verifique as credenciais do Twilio.",
+      "duplicateLeads": "Leads duplicados",
+      "duplicateLeadsSolution": "A deduplicacao por telefone e por conta. O mesmo telefone nao pode estar na mesma conta duas vezes. Contas diferentes podem ter o mesmo telefone.",
+      "aiStopped": "Respostas da IA pararam",
+      "aiStoppedSolution": "Verifique os Logs de Automacao para erros de ai_conversation. Geralmente significa problema com chave da API OpenAI ou limite de taxa."
+    }
+  },
+  "client": {
+    "what": {
+      "title": "O que e o LeadAwaker?",
+      "p1": "LeadAwaker e um sistema de acompanhamento de leads com IA. Quando alguem expressa interesse no seu servico (preenche um formulario, clica em um anuncio, etc.), o LeadAwaker automaticamente entra em contato via SMS ou WhatsApp, nutre a conversa e agenda ligacoes - tudo no piloto automatico.",
+      "p2": "O agente IA responde aos leads em tempo real, lida com objecoes e sabe quando parar e deixar um humano assumir."
+    },
+    "leads": {
+      "title": "Entendendo Seus Leads",
+      "description": "Cada lead percorre uma jornada do primeiro contato ao agendamento. Veja o que os indicadores de status significam:",
+      "new": "Lead acabou de chegar, ainda nao contactado.",
+      "contacted": "Primeira mensagem enviada. Aguardando resposta.",
+      "responded": "Lead respondeu pelo menos uma vez. IA em conversa.",
+      "qualified": "Lead demonstrou interesse e esta sendo guiado para agendar uma ligacao.",
+      "callBooked": "Consulta confirmada!",
+      "notInterested": "Lead optou por sair ou nao era adequado.",
+      "statusNew": "Novo",
+      "statusContacted": "Contactado",
+      "statusResponded": "Respondeu",
+      "statusQualified": "Qualificado",
+      "statusCallBooked": "Ligacao Agendada",
+      "statusNotInterested": "Nao Interessado"
+    },
+    "conversations": {
+      "title": "Lendo Conversas",
+      "step1": "Abra a pagina de <strong>Leads</strong> e clique em qualquer lead para ver o historico completo da conversa.",
+      "step2": "Mensagens mostradas no <strong>lado direito</strong> sao de saida (enviadas pela IA ou sua equipe). Mensagens na <strong>esquerda</strong> sao de entrada (do lead).",
+      "step3": "Procure pelo <strong>rotulo IA</strong> nas mensagens - estas foram geradas automaticamente. Mensagens sem este rotulo foram enviadas manualmente.",
+      "step4": "Se quiser assumir a conversa manualmente, ative <strong>Controle Manual</strong> no detalhe do lead. A IA parara de responder e voce pode enviar mensagens livremente."
+    },
+    "score": {
+      "title": "Pontuacao do Lead",
+      "description": "Cada lead tem uma <strong>Pontuacao</strong> de 0 a 100 que estima a probabilidade de agendamento. E calculada a partir de:",
+      "factor1": "Estagio atual no funil (40%)",
+      "factor2": "Quantas vezes responderam e quao recentemente (30%)",
+      "factor3": "Recencia da ultima atividade (30%)",
+      "tip": "Leads com pontuacao acima de 70 sao seus prospects mais quentes. Priorize-os para alcance manual."
+    },
+    "bookings": {
+      "title": "Agendamentos",
+      "p1": "Quando a IA detecta uma confirmacao de agendamento na conversa, o lead e automaticamente movido para o status <strong>Ligacao Agendada</strong>. A data e hora do agendamento sao salvos no registro do lead.",
+      "p2": "Voce pode visualizar todos os agendamentos proximos na pagina de <strong>Calendario</strong>.",
+      "tip": "Se um agendamento parecer incorreto ou foi detectado automaticamente por engano, atualize manualmente o status do lead no painel de detalhes."
+    },
+    "faq": {
+      "title": "Perguntas Frequentes",
+      "q1": "Os leads percebem que estao conversando com uma IA?",
+      "a1": "A IA e treinada para soar natural e humana. Ela nao se anuncia como bot a menos que seja perguntado diretamente ou que o script da campanha diga para fazer isso.",
+      "q2": "O que acontece se um lead disser STOP?",
+      "a2": "Ele e imediatamente adicionado a lista de Nao Contactar e nunca mais sera contactado por nenhuma campanha da sua conta.",
+      "q3": "Quao rapido a IA responde?",
+      "a3": "Em segundos a poucos minutos, dependendo do volume de mensagens. Um pequeno atraso e adicionado para simular digitacao humana natural.",
+      "q4": "Posso enviar mensagem para um lead manualmente?",
+      "a4": "Sim - ative o Controle Manual no lead. A IA pausa e voce envia mensagens diretamente da pagina de Conversas.",
+      "q5": "E se um lead nao responder?",
+      "a5": "O sistema envia ate 3 mensagens de acompanhamento (bumps) em intervalos programados. Apos todos os bumps serem esgotados, o lead e marcado como Concluido e a automacao para."
+    }
+  },
+  "changelog": {
+    "v14": {
+      "date": "Marco 2026",
+      "items": [
+        "Pagina de documentacao com Manual do Operador e Guia do Cliente",
+        "Aba de Tags de Campanha - agrupe e organize tags por categoria",
+        "Pagina de gerenciamento de Usuarios - funcoes, avatares e permissoes",
+        "Integracao de chat de suporte na barra de navegacao",
+        "Sincronizacao de contatos Instagram - puxe contatos de DM existentes da API da Meta"
+      ]
+    },
+    "v13": {
+      "date": "Fevereiro 2026",
+      "items": [
+        "Reforma completa do sistema de design - nova paleta de cores e sistema de avatares",
+        "Redesign da pagina de Leads - painel dividido com visualizacoes Lista, Tabela e Kanban",
+        "Pagina de Calendario - visualizacoes mensal, semanal e diaria de agendamentos",
+        "Caixa de entrada de Conversas - interface de chat WhatsApp em tempo real"
+      ]
+    },
+    "v12": {
+      "date": "Janeiro 2026",
+      "items": [
+        "Pagina de Campanhas - crie, gerencie e monitore campanhas",
+        "Biblioteca de Prompts - gerenciamento de persona e scripts de IA",
+        "Logs de Automacao - trilha de auditoria completa para cada acao de lead",
+        "Faturamento e Despesas - gerenciamento de faturas BTW/IVA com upload de PDF"
+      ]
+    }
+  }
+}

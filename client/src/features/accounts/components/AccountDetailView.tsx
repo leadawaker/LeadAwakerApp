@@ -913,7 +913,6 @@ const TYPE_OPTIONS     = ["Agency", "Client"];
 const TIMEZONE_OPTIONS = [
   "America/Sao_Paulo",
   "Europe/Amsterdam",
-  "Europe/London",
 ];
 
 // ── Draft type ────────────────────────────────────────────────────────────────

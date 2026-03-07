@@ -1,0 +1,459 @@
+{
+  "title": "Campaigns",
+
+  "views": {
+    "list": "List",
+    "table": "Table"
+  },
+
+  "toolbar": {
+    "add": "Add",
+    "sort": "Sort",
+    "sortBy": "Sort by",
+    "filter": "Filter",
+    "group": "Group",
+    "fields": "Fields",
+    "showHideColumns": "Show / Hide Columns",
+    "resetToDefault": "Reset to default",
+    "searchPlaceholder": "Search campaigns\u2026",
+    "changeStatus": "Change Status",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "edit": "Edit",
+    "pause": "Pause",
+    "activate": "Activate",
+    "refresh": "Refresh",
+    "save": "Save",
+    "saving": "Saving\u2026",
+    "cancel": "Cancel"
+  },
+
+  "columns": {
+    "name": "Name",
+    "status": "Status",
+    "account": "Account",
+    "type": "Type",
+    "leads": "Leads",
+    "responseRate": "Response %",
+    "bookingRate": "Booking %",
+    "description": "Description",
+    "cost": "Cost",
+    "roi": "ROI %",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "start": "Start",
+    "end": "End",
+    "lastModified": "Last Modified"
+  },
+
+  "groupBy": {
+    "status": "Status",
+    "account": "Account",
+    "type": "Type",
+    "none": "None"
+  },
+
+  "sortOptions": {
+    "recent": "Most Recent",
+    "nameAsc": "Name A \u2192 Z",
+    "nameDesc": "Name Z \u2192 A",
+    "leadsDesc": "Most Leads",
+    "responseDesc": "Best Response"
+  },
+
+  "filter": {
+    "status": "Status",
+    "account": "Account",
+    "allAccounts": "All Accounts",
+    "clearAllFilters": "Clear all filters"
+  },
+
+  "statusLabels": {
+    "Active": "Active",
+    "Paused": "Paused",
+    "Completed": "Completed",
+    "Finished": "Completed",
+    "Inactive": "Inactive",
+    "Archived": "Archived",
+    "Draft": "Draft",
+    "Unknown": "Unknown"
+  },
+
+  "confirm": {
+    "yes": "Yes",
+    "no": "No",
+    "deleteConfirm": "Delete?"
+  },
+
+  "empty": {
+    "noCampaignsFound": "No campaigns found",
+    "tryDifferentSearch": "Try a different search",
+    "noMatchSearch": "No campaigns match your search",
+    "selectCampaign": "Select a campaign",
+    "selectCampaignDesc": "Click any campaign on the left to see its performance, configuration, and message templates.",
+    "chooseFromList": "\u2190 Choose from the list"
+  },
+
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "rangeOf": "{{start}}\u2013{{end}} of {{total}}"
+  },
+
+  "card": {
+    "leads": "Leads",
+    "response": "Response",
+    "booked": "Booked",
+    "started": "Started {{date}}"
+  },
+
+  "detail": {
+    "panelHide": "Hide detail panel",
+    "panelShow": "Show detail panel",
+    "unnamed": "Unnamed Campaign",
+    "campaignNumber": "#{{number}}"
+  },
+
+  "tabs": {
+    "summary": "Summary",
+    "configurations": "Configurations",
+    "tags": "Tags"
+  },
+
+  "summary": {
+    "keyMetrics": "Key Metrics",
+    "leadsTargeted": "Leads Targeted",
+    "messagesSent": "Messages Sent",
+    "responsePercent": "Response %",
+    "bookingPercent": "Booking %",
+    "performanceTrends": "Performance Trends",
+    "upNext": "Up Next",
+    "pipeline": "Pipeline",
+    "totalLeads": "Total Leads",
+    "noPipelineData": "No pipeline data yet",
+    "noConversionData": "No conversion data",
+    "aiAnalysis": "AI Analysis",
+    "noAiAnalysis": "No AI analysis yet",
+    "aiRunsNightly": "Runs nightly or click Generate",
+    "lastRun": "Last run: {{date}}",
+    "noAnalysisYet": "No analysis yet",
+    "generate": "Generate",
+    "regenerate": "Regenerate",
+    "generating": "Generating\u2026",
+    "groqApiKeyMissing": "Groq API key not configured. Add GROQ_API_KEY to .env.",
+    "generateFailed": "Failed to generate summary. Try again.",
+    "networkError": "Network error. Try again.",
+    "activity": "Activity",
+    "financials": "Financials",
+    "roiTrend": "ROI Trend"
+  },
+
+  "financials": {
+    "dealType": "Deal Type",
+    "totalSpend": "Total Spend",
+    "costPerBooking": "Cost / Booking",
+    "valuePerBooking": "Value / Booking",
+    "paymentTrigger": "Payment Trigger",
+    "projectedRevenue": "Projected Revenue",
+    "returnOnInvestment": "Return on Investment",
+    "linkContractPrompt": "Link a contract in Config \u2192",
+    "est": "est.",
+    "dealTypes": {
+      "retainer": "Retainer",
+      "per_booking": "Per Booking",
+      "fixed": "Fixed Fee",
+      "retainer_plus": "Retainer +",
+      "sale_closed": "Sale Closed"
+    },
+    "paymentTriggers": {
+      "booked_call": "Booked Call",
+      "sale_closed": "Closed Sale",
+      "meeting_held": "Meeting Held"
+    }
+  },
+
+  "config": {
+    "configuration": "Configuration",
+    "schedule": "Schedule",
+    "behavior": "Behavior",
+    "contract": "Contract",
+    "aiSettings": "AI Settings",
+    "messageTemplates": "Message Templates",
+    "type": "Type",
+    "description": "Description",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "activeHours": "Active hours",
+    "dailyLimit": "Daily limit",
+    "interval": "Interval",
+    "channel": "Channel",
+    "stopOnResponse": "Stop on response",
+    "useAiBumps": "Use AI bumps",
+    "maxBumps": "Max bumps",
+    "deal": "Deal",
+    "noneLinked": "\u2014 None linked",
+    "valuePerBooking": "Value / Booking",
+    "model": "Model",
+    "temperature": "Temperature",
+    "agent": "Agent",
+    "service": "Service",
+    "promptTemplate": "Prompt Template",
+    "firstMessage": "First Message",
+    "noTemplateSet": "No template set",
+    "delayLabel": "Delay: {{value}}",
+    "delayHours": "Delay (h):",
+    "voiceNotes": "Voice Notes",
+    "firstMessageVoiceNote": "First message as voice note",
+    "bump1VoiceNote": "Bump 1 as voice note",
+    "bump2VoiceNote": "Bump 2 as voice note",
+    "bump3VoiceNote": "Bump 3 as voice note",
+    "aiReplyVoiceNote": "AI replies as voice notes",
+    "voiceId": "Voice ID"
+  },
+
+  "meta": {
+    "owner": "Owner",
+    "channel": "Channel",
+    "started": "Started",
+    "type": "Type",
+    "dailyLimit": "Daily Limit",
+    "leadsUnit": "leads",
+    "activeHours": "Active Hours",
+    "duration": "{{count}} day",
+    "duration_plural": "{{count}} days"
+  },
+
+  "panel": {
+    "performance": "Performance",
+    "trends": "Trends",
+    "settings": "Settings",
+    "aiConfiguration": "AI Configuration",
+    "messageTemplates": "Message Templates",
+    "costAndRoi": "Cost & ROI",
+    "integrations": "Integrations",
+    "qualificationCriteria": "Qualification Criteria",
+    "audienceTargeting": "Audience & Targeting",
+    "noQualificationCriteria": "No qualification criteria defined",
+    "noPerformanceData": "No performance data yet",
+    "descriptionLabel": "Description",
+    "typeLabel": "Type",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "activeHours": "Active hours",
+    "dailyLeadLimit": "Daily lead limit",
+    "messageInterval": "Message interval",
+    "stopOnResponse": "Stop on response",
+    "useAiBumps": "Use AI bumps",
+    "maxBumps": "Max bumps",
+    "aiModel": "AI model",
+    "aiTemperature": "AI temperature",
+    "agentName": "Agent name",
+    "serviceName": "Service name",
+    "aiPromptTemplate": "AI Prompt Template",
+    "firstMessage": "First Message",
+    "totalCost": "Total cost",
+    "costPerLead": "Cost per lead",
+    "costPerBooking": "Cost per booking",
+    "roi": "ROI",
+    "n8nWorkflowId": "n8n workflow ID",
+    "calendarLink": "Calendar link",
+    "webhookUrl": "Webhook URL",
+    "targetAudience": "Target audience",
+    "niche": "Niche",
+    "serviceLabel": "Service",
+    "usp": "USP",
+    "inquiryTimeframe": "Inquiry timeframe",
+    "metrics": {
+      "leads": "Leads",
+      "messages": "Messages",
+      "responses": "Responses",
+      "bookings": "Bookings",
+      "responseRate": "Response %",
+      "bookingRate": "Booking %",
+      "totalCost": "Total Cost",
+      "costPerLead": "Cost/Lead",
+      "costPerBooking": "Cost/Booking",
+      "roi": "ROI"
+    }
+  },
+
+  "tags": {
+    "loadingTags": "Loading tags...",
+    "failedToLoadTags": "Failed to load tags",
+    "noTagsYet": "No tags yet",
+    "createTagsDesc": "Create tags to organize leads in this campaign.",
+    "createTag": "Create Tag",
+    "newTag": "New Tag",
+    "tagNamePlaceholder": "Tag name",
+    "categoryPlaceholder": "Category (optional)",
+    "searchTags": "Search tags...",
+    "sorting": "Sorting",
+    "filter": "Filter",
+    "group": "Group",
+    "tagCount": "{{count}} tag",
+    "tagCount_plural": "{{count}} tags",
+    "selected": "{{count}} selected",
+    "clearSelection": "Clear selection",
+    "autoApplied": "Auto-Applied",
+    "all": "All",
+    "yes": "Yes",
+    "no": "No",
+    "category": "Category",
+    "allCategories": "All Categories",
+    "clearAllFilters": "Clear all filters",
+
+    "pageTitle": "Tags",
+    "viewList": "List",
+    "viewCards": "Cards",
+    "searchPlaceholder": "Search tags...",
+    "add": "Add",
+    "account": "Account",
+    "campaign": "Campaign",
+    "sort": "Sort",
+    "sortBy": "Sort by",
+    "groupBy": "Group by",
+    "fields": "Fields",
+    "columns": "Columns",
+    "duplicate": "Duplicate",
+    "tagCountLabel": "{{count}} tag",
+    "tagCountLabel_other": "{{count}} tags",
+    "allAccounts": "All Accounts",
+    "allCampaigns": "All Campaigns",
+    "clear": "Clear",
+    "selectedCount": "{{count}} selected",
+    "categoryFilter": "Category",
+    "autoAppliedFilter": "Auto-Applied",
+    "createTitle": "New Tag",
+    "createNamePlaceholder": "Tag name",
+    "createCategoryPlaceholder": "Category",
+    "creating": "Creating...",
+    "create": "Create",
+    "deleteTag": "Delete Tag",
+    "deleteTags": "Delete Tags",
+    "deleteConfirmSingle": "Are you sure you want to delete the tag",
+    "deleteConfirmBulk": "Are you sure you want to delete {{count}} tags?",
+    "deleteCannotUndoSingle": "This action cannot be undone. Leads that currently have this tag will not lose it — only the tag definition will be removed.",
+    "deleteCannotUndoBulk": "This action cannot be undone. Leads that currently have these tags will not lose them — only the tag definitions will be removed.",
+    "deleting": "Deleting...",
+    "deleteCountTags": "Delete {{count}} Tags",
+    "none": "None",
+    "auto": "Auto",
+    "leadCount": "{{count}} lead",
+    "leadCount_other": "{{count}} leads",
+    "chooseColor": "Choose a color",
+    "noMatchSearch": "No tags match your search",
+    "noMatchSearchDescription": "No tags found matching \"{{query}}\". Try a different search term.",
+    "noMatchFilters": "No tags match the current filters",
+    "noMatchFiltersDescription": "Try adjusting or clearing your filters to see more tags.",
+    "noTags": "No tags available",
+    "noTagsDescription": "No tags available. Create one to get started.",
+    "confirmYes": "Yes",
+    "confirmNo": "No"
+  },
+
+  "photo": {
+    "dialogTitle": "Campaign Photo",
+    "hue": "Hue",
+    "uploadLogo": "Upload logo image",
+    "chooseSticker": "Choose sticker",
+    "noSticker": "No sticker",
+    "removeLogo": "Remove logo",
+    "clickToChange": "Click to change photo"
+  },
+
+  "relativeTime": {
+    "justNow": "Just now",
+    "hoursAgo": "{{count}}h ago",
+    "yesterday": "Yesterday",
+    "daysAgo": "{{count}}d ago",
+    "weeksAgo": "{{count}}w ago",
+    "monthsAgo": "{{count}}mo ago"
+  },
+
+  "funnelStages": {
+    "new": "New",
+    "contacted": "Contacted",
+    "responded": "Responded",
+    "multipleResponses": "Multiple Responses",
+    "qualified": "Qualified",
+    "callBooked": "Call Booked",
+    "closed": "Closed",
+    "lost": "Lost",
+    "dnd": "DND"
+  },
+
+  "copy": "Copy",
+
+  "tagsPage": {
+    "title": "Tags",
+    "searchPlaceholder": "Search tags\u2026",
+    "allCategories": "All Categories",
+    "tagsInCategories": "{{tagCount}} tags in {{catCount}} categories",
+    "createTag": "Create Tag",
+    "uncategorized": "Uncategorized",
+    "auto": "Auto",
+    "chooseColor": "Choose a color",
+    "createDialog": {
+      "title": "Create New Tag",
+      "name": "Name",
+      "namePlaceholder": "e.g. hot-lead",
+      "color": "Color",
+      "category": "Category",
+      "categoryPlaceholder": "e.g. Status, Behavior, Source",
+      "description": "Description",
+      "descriptionPlaceholder": "Brief description of this tag\u2026",
+      "cancel": "Cancel",
+      "creating": "Creating\u2026",
+      "create": "Create Tag"
+    },
+    "editDialog": {
+      "title": "Edit Tag",
+      "name": "Name",
+      "namePlaceholder": "e.g. hot-lead",
+      "color": "Color",
+      "category": "Category",
+      "categoryPlaceholder": "e.g. Status, Behavior, Source",
+      "description": "Description",
+      "descriptionPlaceholder": "Brief description of this tag\u2026",
+      "cancel": "Cancel",
+      "saving": "Saving\u2026",
+      "saveChanges": "Save Changes"
+    },
+    "deleteDialog": {
+      "title": "Delete Tag",
+      "confirmMessage": "Are you sure you want to delete the tag",
+      "warningMessage": "This action cannot be undone. Leads that currently have this tag will not lose it \u2014 only the tag definition will be removed.",
+      "cancel": "Cancel",
+      "deleting": "Deleting\u2026",
+      "delete": "Delete Tag"
+    },
+    "sidePanel": {
+      "leadsWithTag": "Leads: {{name}}",
+      "tagInsights": "Tag Insights",
+      "tagInsightsDesc": "Click a tag to see associated leads and their details.",
+      "noLeadsFound": "No leads found",
+      "noLeadsDesc": "No leads are associated with this tag yet.",
+      "lastMessage": "Last message:",
+      "noMessages": "No messages yet"
+    },
+    "empty": {
+      "noTagsFound": "No tags found",
+      "noMatchSearchAndCategory": "No tags match \"{{query}}\" in category \"{{category}}\"",
+      "noMatchSearch": "No tags match \"{{query}}\"",
+      "noMatchCategory": "No tags in category \"{{category}}\"",
+      "noTagsAvailable": "No tags available."
+    },
+    "toast": {
+      "tagCreated": "Tag created",
+      "tagCreatedDesc": "\"{{name}}\" was added successfully.",
+      "tagUpdated": "Tag updated",
+      "tagUpdatedDesc": "\"{{name}}\" was updated successfully.",
+      "tagDeleted": "Tag deleted",
+      "tagDeletedDesc": "\"{{name}}\" was deleted successfully.",
+      "error": "Error",
+      "createFailed": "Failed to create tag: {{error}}",
+      "updateFailed": "Failed to update tag: {{error}}",
+      "deleteFailed": "Failed to delete tag: {{error}}"
+    }
+  }
+}

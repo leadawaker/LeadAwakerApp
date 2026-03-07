@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { useLeadsData } from "../hooks/useLeadsData";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -82,11 +83,11 @@ const DEFAULT_VISIBLE_COLS = TABLE_COL_META
   .filter((c) => c.defaultVisible)
   .map((c) => c.key);
 
-/* ── Tab definitions ── */
-const VIEW_TABS: TabDef[] = [
-  { id: "list",     label: "List",     icon: List   },
-  { id: "table",    label: "Table",    icon: Table2 },
-  { id: "pipeline", label: "Pipeline", icon: Kanban },
+/* ── Tab definitions (labels resolved via t() inside component) ── */
+const VIEW_TAB_KEYS: { id: string; tKey: string; icon: typeof List }[] = [
+  { id: "list",     tKey: "viewTabs.list",     icon: List   },
+  { id: "table",    tKey: "viewTabs.table",    icon: Table2 },
+  { id: "pipeline", tKey: "viewTabs.pipeline", icon: Kanban },
 ];
 
 /* ── Status group ordering ── */
@@ -109,19 +110,19 @@ const STATUS_DOT: Record<string, string> = {
   DND:                  "bg-zinc-500",
 };
 
-const TABLE_SORT_LABELS: Record<TableSortByOption, string> = {
-  recent:     "Most Recent",
-  name_asc:   "Name A → Z",
-  name_desc:  "Name Z → A",
-  score_desc: "Score ↓",
-  score_asc:  "Score ↑",
+const TABLE_SORT_TKEYS: Record<TableSortByOption, string> = {
+  recent:     "sort.mostRecent",
+  name_asc:   "sort.nameAZ",
+  name_desc:  "sort.nameZA",
+  score_desc: "sort.scoreDown",
+  score_asc:  "sort.scoreUp",
 };
 
-const TABLE_GROUP_LABELS: Record<TableGroupByOption, string> = {
-  status:   "Status",
-  campaign: "Campaign",
-  account:  "Account",
-  none:     "None",
+const TABLE_GROUP_TKEYS: Record<TableGroupByOption, string> = {
+  status:   "group.status",
+  campaign: "group.campaign",
+  account:  "group.account",
+  none:     "group.none",
 };
 
 // ── Inline confirmation button ────────────────────────────────────────────────
@@ -171,8 +172,10 @@ function ConfirmToolbarButton({
 }
 
 export function LeadsTable() {
+  const { t } = useTranslation("leads");
+  const VIEW_TABS: TabDef[] = useMemo(() => VIEW_TAB_KEYS.map((k) => ({ id: k.id, label: t(k.tKey), icon: k.icon })), [t]);
   const { currentAccountId, isAgencyView } = useWorkspace();
-  const filterAccountId = (isAgencyView && currentAccountId === 1) ? undefined : currentAccountId;
+  const filterAccountId = (isAgencyView && currentAccountId === 0) ? undefined : currentAccountId || undefined;
   const { leads, loading, error, handleRefresh } = useLeadsData(filterAccountId);
 
   /* ── Toolbar button constants ───────────────────────────────────────────── */
@@ -565,7 +568,10 @@ export function LeadsTable() {
     orderedKeys.forEach((key) => {
       const group = buckets.get(key);
       if (!group || group.length === 0) return;
-      result.push({ kind: "header", label: key, count: group.length });
+      const headerLabel = tableGroupBy === "status"
+        ? t(`kanban.stageLabels.${key.replace(/ /g, "")}`, key)
+        : key;
+      result.push({ kind: "header", label: headerLabel, count: group.length });
       group.forEach((l) =>
         result.push({ kind: "lead", lead: l, tags: leadTagsInfo.get(l.Id || l.id) || [] })
       );
@@ -683,7 +689,7 @@ export function LeadsTable() {
   }, [tableSelectedIds, handleRefresh]);
 
   const handleExportCsv = useCallback(() => {
-    const headers = ["Name", "Status", "Score", "Phone", "Email", "Campaign", "Tags", "Last Activity", "Notes"];
+    const headers = [t("table.columns.name"), t("table.columns.status"), t("table.columns.score"), t("table.columns.phone"), t("table.columns.email"), t("table.columns.campaign"), t("table.columns.tags"), t("table.columns.lastActivity"), t("table.columns.notes")];
     const rows = tableFlatItems
       .filter((i): i is Extract<VirtualListItem, { kind: "lead" }> => i.kind === "lead")
       .map((item) => {
@@ -695,10 +701,10 @@ export function LeadsTable() {
         if (d) {
           try {
             const diffDays = Math.floor((Date.now() - new Date(d).getTime()) / 86_400_000);
-            if (diffDays === 0) lastActivity = "Today";
-            else if (diffDays === 1) lastActivity = "Yesterday";
-            else if (diffDays < 7)  lastActivity = `${diffDays}d ago`;
-            else                    lastActivity = `${Math.floor(diffDays / 7)}w ago`;
+            if (diffDays === 0) lastActivity = t("time.today");
+            else if (diffDays === 1) lastActivity = t("relativeTime.yesterday");
+            else if (diffDays < 7)  lastActivity = t("relativeTime.daysAgo", { count: diffDays });
+            else                    lastActivity = t("relativeTime.weeksAgo", { count: Math.floor(diffDays / 7) });
           } catch {}
         }
         const row = [
@@ -737,7 +743,7 @@ export function LeadsTable() {
       {/* +Add */}
       <button onClick={handleAddLead} className={cn(xBase, "hover:max-w-[90px]", xDefault)}>
         <Plus className="h-4 w-4 shrink-0" />
-        <span className={xSpan}>Add</span>
+        <span className={xSpan}>{t("toolbar.add")}</span>
       </button>
 
       {/* Search — always extended, no fill */}
@@ -746,7 +752,7 @@ export function LeadsTable() {
         onChange={setTableSearch}
         open={true}
         onOpenChange={() => {}}
-        placeholder="Search leads…"
+        placeholder={t("toolbar.searchPlaceholder")}
       />
 
       {/* Group */}
@@ -754,13 +760,13 @@ export function LeadsTable() {
         <DropdownMenuTrigger asChild>
           <button className={cn(xBase, "hover:max-w-[115px]", tableGroupBy !== "status" ? xActive : xDefault)}>
             <Layers className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>Group</span>
+            <span className={xSpan}>{t("toolbar.group")}</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           {(["status", "campaign", "account", "none"] as TableGroupByOption[]).map((opt) => (
             <DropdownMenuItem key={opt} onClick={() => setTableGroupBy(opt)} className={cn("text-[12px]", tableGroupBy === opt && "font-semibold text-brand-indigo")}>
-              {TABLE_GROUP_LABELS[opt]}
+              {t(TABLE_GROUP_TKEYS[opt])}
               {tableGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
             </DropdownMenuItem>
           ))}
@@ -772,15 +778,15 @@ export function LeadsTable() {
         <DropdownMenuTrigger asChild>
           <button className={cn(xBase, "hover:max-w-[100px]", tableSortBy !== "recent" ? xActive : xDefault)}>
             <ArrowUpDown className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>Sort</span>
+            <span className={xSpan}>{t("toolbar.sort")}</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Sort by</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("sort.sortBy")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {(["recent", "name_asc", "name_desc", "score_desc", "score_asc"] as TableSortByOption[]).map((opt) => (
             <DropdownMenuItem key={opt} onClick={() => setTableSortBy(opt)} className={cn("text-[12px]", tableSortBy === opt && "font-semibold text-brand-indigo")}>
-              {TABLE_SORT_LABELS[opt]}
+              {t(TABLE_SORT_TKEYS[opt])}
               {tableSortBy === opt && <Check className="h-3 w-3 ml-auto" />}
             </DropdownMenuItem>
           ))}
@@ -792,16 +798,16 @@ export function LeadsTable() {
         <DropdownMenuTrigger asChild>
           <button className={cn(xBase, "hover:max-w-[110px]", isTableFilterActive ? xActive : xDefault)}>
             <Filter className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>Filter</span>
+            <span className={xSpan}>{t("toolbar.filter")}</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Status</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.status")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {STATUS_OPTIONS.map((s) => (
             <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleTableFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
               <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", STATUS_DOT[s] ?? "bg-zinc-400")} />
-              <span className="flex-1">{s}</span>
+              <span className="flex-1">{t(`kanban.stageLabels.${s.replace(/ /g, "")}`, s)}</span>
               {tableFilterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
             </DropdownMenuItem>
           ))}
@@ -809,9 +815,9 @@ export function LeadsTable() {
           {availableAccounts.length > 0 && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Account</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.account")}</DropdownMenuLabel>
               <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterAccount(""); setTableFilterCampaign(""); }} className={cn("text-[12px]", !tableFilterAccount && "font-semibold text-brand-indigo")}>
-                All Accounts {!tableFilterAccount && <Check className="h-3 w-3 ml-auto" />}
+                {t("filters.allAccounts")} {!tableFilterAccount && <Check className="h-3 w-3 ml-auto" />}
               </DropdownMenuItem>
               {availableAccounts.map((a) => (
                 <DropdownMenuItem key={a.id} onClick={(e) => { e.preventDefault(); if (tableFilterAccount === a.id) { setTableFilterAccount(""); } else { setTableFilterAccount(a.id); setTableFilterCampaign(""); } }} className={cn("text-[12px]", tableFilterAccount === a.id && "font-semibold text-brand-indigo")}>
@@ -825,9 +831,9 @@ export function LeadsTable() {
           {availableCampaigns.length > 0 && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Campaign{tableFilterAccount ? ` (${accountsById.get(Number(tableFilterAccount)) || "Account"})` : ""}</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.campaign")}{tableFilterAccount ? ` (${accountsById.get(Number(tableFilterAccount)) || t("group.account")})` : ""}</DropdownMenuLabel>
               <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterCampaign(""); }} className={cn("text-[12px]", !tableFilterCampaign && "font-semibold text-brand-indigo")}>
-                All Campaigns {!tableFilterCampaign && <Check className="h-3 w-3 ml-auto" />}
+                {t("filters.allCampaigns")} {!tableFilterCampaign && <Check className="h-3 w-3 ml-auto" />}
               </DropdownMenuItem>
               {availableCampaigns.map((c) => (
                 <DropdownMenuItem key={c.id} onClick={(e) => { e.preventDefault(); setTableFilterCampaign(tableFilterCampaign === c.id ? "" : c.id); }} className={cn("text-[12px]", tableFilterCampaign === c.id && "font-semibold text-brand-indigo")}>
@@ -841,7 +847,7 @@ export function LeadsTable() {
           {isTableFilterActive && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={clearTableFilters} className="text-[12px] text-destructive">Clear all filters</DropdownMenuItem>
+              <DropdownMenuItem onClick={clearTableFilters} className="text-[12px] text-destructive">{t("toolbar.clearAllFilters")}</DropdownMenuItem>
             </>
           )}
         </DropdownMenuContent>
@@ -854,11 +860,11 @@ export function LeadsTable() {
         <DropdownMenuTrigger asChild>
           <button className={cn(xBase, "hover:max-w-[115px]", visibleCols.size !== DEFAULT_VISIBLE_COLS.length ? xActive : xDefault)}>
             <Eye className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>Fields</span>
+            <span className={xSpan}>{t("toolbar.fields")}</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Show / Hide Columns</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.showHideColumns")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {TABLE_COL_META.map((col) => {
             const isVisible = visibleCols.has(col.key);
@@ -882,7 +888,7 @@ export function LeadsTable() {
                 )}>
                   {isVisible && <Check className="h-2 w-2 text-white" />}
                 </div>
-                <span className="flex-1">{col.label}</span>
+                <span className="flex-1">{t(`table.columns.${col.key}`)}</span>
                 {!col.defaultVisible && (
                   <span className="text-[9px] text-muted-foreground/40 px-1 bg-muted rounded font-medium">+</span>
                 )}
@@ -891,7 +897,7 @@ export function LeadsTable() {
           })}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setVisibleCols(new Set(DEFAULT_VISIBLE_COLS))} className="text-[12px] text-muted-foreground">
-            Reset to default
+            {t("toolbar.resetToDefault")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -901,15 +907,15 @@ export function LeadsTable() {
         <DropdownMenuTrigger asChild>
           <button className={cn(xBase, "hover:max-w-[90px]", xDefault)} data-onboarding="import-leads-btn">
             <FileSpreadsheet className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>CSV</span>
+            <span className={xSpan}>{t("toolbar.csv")}</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
           <DropdownMenuItem onClick={() => setImportWizardOpen(true)} className="text-[12px]">
-            <Upload className="h-3.5 w-3.5 mr-2" /> Import CSV
+            <Upload className="h-3.5 w-3.5 mr-2" /> {t("toolbar.importCsv")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleExportCsv} className="text-[12px]">
-            <Download className="h-3.5 w-3.5 mr-2" /> Export CSV
+            <Download className="h-3.5 w-3.5 mr-2" /> {t("toolbar.exportCsv")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -924,16 +930,16 @@ export function LeadsTable() {
               <DropdownMenuTrigger asChild>
                 <button className={cn(tbBase, tbDefault)}>
                   <Pencil className="h-4 w-4" />
-                  Change Stage
+                  {t("toolbar.changeStage")}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Move to</DropdownMenuLabel>
+                <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("filters.moveTo")}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {STATUS_OPTIONS.map((s) => (
                   <DropdownMenuItem key={s} onClick={() => handleBulkStageChange(s)} className="text-[12px]">
                     <span className={cn("w-1.5 h-1.5 rounded-full shrink-0 mr-2", STATUS_DOT[s] ?? "bg-zinc-400")} />
-                    {s}
+                    {t(`kanban.stageLabels.${s.replace(/ /g, "")}`, s)}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -941,7 +947,7 @@ export function LeadsTable() {
 
             <ConfirmToolbarButton
               icon={Copy}
-              label="Duplicate"
+              label={t("toolbar.duplicate")}
               onConfirm={handleDuplicateLeads}
             />
             <ConfirmToolbarButton
@@ -1018,7 +1024,7 @@ export function LeadsTable() {
             <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-1 md:pb-3 shrink-0 flex flex-col md:flex-row md:items-center md:gap-3 md:overflow-x-auto md:[scrollbar-width:none]">
               {/* Title row: title left, tabs right (desktop only inline) */}
               <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
-                <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">My Leads</h2>
+                <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
                 <span className="hidden md:block">
                   <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as ViewMode)} variant="segment" />
                 </span>
@@ -1062,7 +1068,7 @@ export function LeadsTable() {
           <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-1 md:pb-3 shrink-0 flex flex-col md:flex-row md:items-center md:gap-3 md:overflow-x-auto md:[scrollbar-width:none]">
             {/* Title row */}
             <div className="flex items-center justify-between w-full md:w-[309px] md:shrink-0">
-              <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">My Leads</h2>
+              <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
               <span className="hidden md:block">
                 <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as ViewMode)} variant="segment" />
               </span>
@@ -1080,7 +1086,7 @@ export function LeadsTable() {
               onChange={setKanbanSearchQuery}
               open={kanbanSearchOpen}
               onOpenChange={setKanbanSearchOpen}
-              placeholder="Search leads…"
+              placeholder={t("toolbar.searchPlaceholder")}
             />
 
             {/* Filter button */}
@@ -1088,30 +1094,30 @@ export function LeadsTable() {
               <DropdownMenuTrigger asChild>
                 <button className={cn(xBase, "hover:max-w-[110px]", isPipelineFilterActive ? xActive : xDefault)}>
                   <Filter className="h-4 w-4 shrink-0" />
-                  <span className={xSpan}>Filter</span>
+                  <span className={xSpan}>{t("toolbar.filter")}</span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-60 rounded-2xl">
                 <DropdownMenuItem onClick={() => setShowHighScore(!showHighScore)} className="flex items-center gap-2 cursor-pointer rounded-xl">
                   <Flame className={cn("h-4 w-4 shrink-0", showHighScore ? "text-[#FCB803]" : "text-muted-foreground")} />
-                  <span className={cn("text-sm flex-1", showHighScore && "font-semibold")}>High Score (70+)</span>
+                  <span className={cn("text-sm flex-1", showHighScore && "font-semibold")}>{t("filters.highScore")}</span>
                   {showHighScore && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setFilterHasPhone(!filterHasPhone)} className="flex items-center gap-2 cursor-pointer rounded-xl">
                   <Phone className={cn("h-4 w-4 shrink-0", filterHasPhone ? "text-brand-indigo" : "text-muted-foreground")} />
-                  <span className={cn("text-sm flex-1", filterHasPhone && "font-semibold")}>Has Phone</span>
+                  <span className={cn("text-sm flex-1", filterHasPhone && "font-semibold")}>{t("filters.hasPhone")}</span>
                   {filterHasPhone && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setFilterHasEmail(!filterHasEmail)} className="flex items-center gap-2 cursor-pointer rounded-xl">
                   <Mail className={cn("h-4 w-4 shrink-0", filterHasEmail ? "text-brand-indigo" : "text-muted-foreground")} />
-                  <span className={cn("text-sm flex-1", filterHasEmail && "font-semibold")}>Has Email</span>
+                  <span className={cn("text-sm flex-1", filterHasEmail && "font-semibold")}>{t("filters.hasEmail")}</span>
                   {filterHasEmail && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
                 {isPipelineFilterActive && (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={clearPipelineFilters} className="flex items-center gap-2 cursor-pointer rounded-xl text-muted-foreground">
-                      <X className="h-4 w-4 shrink-0" /><span className="text-sm">Clear all</span>
+                      <X className="h-4 w-4 shrink-0" /><span className="text-sm">{t("toolbar.clearAll")}</span>
                     </DropdownMenuItem>
                   </>
                 )}
@@ -1123,24 +1129,24 @@ export function LeadsTable() {
               <DropdownMenuTrigger asChild>
                 <button className={cn(xBase, "hover:max-w-[100px]", isPipelineSortActive ? xActive : xDefault)}>
                   <ArrowUpDown className="h-4 w-4 shrink-0" />
-                  <span className={xSpan}>Sort</span>
+                  <span className={xSpan}>{t("toolbar.sort")}</span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56 rounded-2xl">
                 <DropdownMenuItem onClick={() => setPipelineSortBy(null)} className="flex items-center gap-2 cursor-pointer rounded-xl">
-                  <span className={cn("text-sm flex-1", pipelineSortBy === null && "font-semibold")}>Default</span>
+                  <span className={cn("text-sm flex-1", pipelineSortBy === null && "font-semibold")}>{t("sort.default")}</span>
                   {pipelineSortBy === null && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setPipelineSortBy("score-desc")} className="flex items-center gap-2 cursor-pointer rounded-xl">
-                  <span className={cn("text-sm flex-1", pipelineSortBy === "score-desc" && "font-semibold")}>Score (High to Low)</span>
+                  <span className={cn("text-sm flex-1", pipelineSortBy === "score-desc" && "font-semibold")}>{t("sort.scoreHighToLow")}</span>
                   {pipelineSortBy === "score-desc" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setPipelineSortBy("recency")} className="flex items-center gap-2 cursor-pointer rounded-xl">
-                  <span className={cn("text-sm flex-1", pipelineSortBy === "recency" && "font-semibold")}>Recency (Newest first)</span>
+                  <span className={cn("text-sm flex-1", pipelineSortBy === "recency" && "font-semibold")}>{t("sort.recency")}</span>
                   {pipelineSortBy === "recency" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setPipelineSortBy("alpha")} className="flex items-center gap-2 cursor-pointer rounded-xl">
-                  <span className={cn("text-sm flex-1", pipelineSortBy === "alpha" && "font-semibold")}>Alphabetical (A to Z)</span>
+                  <span className={cn("text-sm flex-1", pipelineSortBy === "alpha" && "font-semibold")}>{t("sort.alphaAZ")}</span>
                   {pipelineSortBy === "alpha" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -1151,22 +1157,22 @@ export function LeadsTable() {
               {hasAnyCollapsed ? (
                 <button onClick={() => setFoldAction((prev) => ({ type: "expand-all", seq: prev.seq + 1 }))} className={cn(xBase, "hover:max-w-[115px]", xDefault)}>
                   <Columns3 className="h-4 w-4 shrink-0" />
-                  <span className={xSpan}>Unfold</span>
+                  <span className={xSpan}>{t("toolbar.unfold")}</span>
                 </button>
               ) : (
                 <Popover open={foldPopoverOpen} onOpenChange={setFoldPopoverOpen}>
                   <PopoverTrigger asChild>
                     <button className={cn(xBase, "hover:max-w-[105px]", foldPopoverOpen ? xActive : xDefault)}>
                       <Columns3 className="h-4 w-4 shrink-0" />
-                      <span className={xSpan}>Fold</span>
+                      <span className={xSpan}>{t("toolbar.fold")}</span>
                     </button>
                   </PopoverTrigger>
                   <PopoverContent align="start" className="w-72 rounded-2xl p-4">
-                    <p className="text-sm font-semibold mb-1">Fold columns</p>
-                    <p className="text-xs text-muted-foreground mb-3">Fold columns with this many leads or fewer.</p>
+                    <p className="text-sm font-semibold mb-1">{t("fold.foldColumns")}</p>
+                    <p className="text-xs text-muted-foreground mb-3">{t("fold.foldDescription")}</p>
                     <div className="flex items-center gap-2">
                       <input type="number" value={foldThresholdInput} onChange={(e) => setFoldThresholdInput(e.target.value)} min="0" autoFocus onKeyDown={(e) => { if (e.key === "Enter") applyFold(); }} className="h-9 w-20 rounded-xl border border-border bg-input-bg px-3 text-sm text-center font-semibold focus:outline-none focus:ring-2 focus:ring-brand-indigo/30" />
-                      <span className="text-sm text-muted-foreground flex-1">leads</span>
+                      <span className="text-sm text-muted-foreground flex-1">{t("fold.leads")}</span>
                       <button onClick={applyFold} className="h-9 px-4 rounded-xl bg-brand-indigo text-white text-sm font-semibold hover:bg-brand-indigo/90 transition-colors">Apply</button>
                     </div>
                   </PopoverContent>
@@ -1175,9 +1181,9 @@ export function LeadsTable() {
             </span>
 
             {/* Tags always-show toggle — hidden on mobile */}
-            <button onClick={() => setShowTagsAlways((v) => !v)} title={showTagsAlways ? "Tags always visible — click to hover-only" : "Show tags on hover only — click to always show"} className={cn(xBase, "hidden md:inline-flex hover:max-w-[100px]", showTagsAlways ? xActive : xDefault)}>
+            <button onClick={() => setShowTagsAlways((v) => !v)} title={showTagsAlways ? t("tagsToggle.alwaysVisible") : t("tagsToggle.hoverOnly")} className={cn(xBase, "hidden md:inline-flex hover:max-w-[100px]", showTagsAlways ? xActive : xDefault)}>
               <Tag className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>Tags</span>
+              <span className={xSpan}>{t("toolbar.tags")}</span>
             </button>
 
             </div>{/* end second row wrapper */}

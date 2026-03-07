@@ -11,6 +11,7 @@ import { UsersInlineTable } from "./UsersInlineTable";
 import type { UserTableItem, UserColKey } from "./UsersInlineTable";
 import type { AppUser, AccountMap } from "../types";
 import { apiFetch } from "@/lib/apiUtils";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -214,6 +215,7 @@ function isInviteExpired(u: AppUser): boolean {
 export function SettingsTeamSection() {
   const [, setLocation] = useLocation();
   const isMobile = useIsMobile();
+  const { currentAccountId } = useWorkspace();
 
   // ── Data fetching ──────────────────────────────────────────────────────────
   const [users, setUsers] = useState<AppUser[]>([]);
@@ -304,6 +306,10 @@ export function SettingsTeamSection() {
   // ── Flat items (filtered + sorted + grouped) ──────────────────────────────
   const flatItems = useMemo((): UserTableItem[] => {
     let source = [...users];
+    // When a specific subaccount is selected, show only users belonging to it
+    if (currentAccountId > 0) {
+      source = source.filter(u => u.accountsId === currentAccountId);
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       source = source.filter(u =>
@@ -991,7 +997,13 @@ export function SettingsTeamSection() {
               </div>
               <div className="space-y-2">
                 <Label>Timezone</Label>
-                <Input value={editingUser.timezone || ""} onChange={e => setEditingUser({ ...editingUser, timezone: e.target.value })} />
+                <Select value={editingUser.timezone || ""} onValueChange={(val: any) => setEditingUser({ ...editingUser, timezone: val })}>
+                  <SelectTrigger><SelectValue placeholder="Select timezone" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="America/Sao_Paulo">America/Sao Paulo</SelectItem>
+                    <SelectItem value="Europe/Amsterdam">Europe/Amsterdam</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>Role</Label>

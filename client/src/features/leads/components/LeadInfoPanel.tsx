@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { IconBtn } from "@/components/ui/icon-btn";
 import { getLeadStatusAvatarColor, PIPELINE_HEX } from "@/lib/avatarUtils";
@@ -52,7 +53,7 @@ function scoreTextColor(score: number): string {
   return "text-red-600 dark:text-red-400";
 }
 
-function formatRelativeTime(dateStr: string | null | undefined): string {
+function formatRelativeTime(dateStr: string | null | undefined, t: (key: string, opts?: Record<string, any>) => string): string {
   if (!dateStr) return "";
   try {
     const date = new Date(dateStr);
@@ -60,11 +61,11 @@ function formatRelativeTime(dateStr: string | null | undefined): string {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return "Today";
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7) return `${diffDays}d ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-    return `${Math.floor(diffDays / 30)}mo ago`;
+    if (diffDays === 0) return t("time.today");
+    if (diffDays === 1) return t("relativeTime.yesterday");
+    if (diffDays < 7) return t("relativeTime.daysAgo", { count: diffDays });
+    if (diffDays < 30) return t("relativeTime.weeksAgo", { count: Math.floor(diffDays / 7) });
+    return t("relativeTime.monthsAgo", { count: Math.floor(diffDays / 30) });
   } catch {
     return "";
   }
@@ -93,26 +94,26 @@ function CopyButton({ value }: { value: string }) {
   );
 }
 
-function SentimentBadge({ value }: { value: string }) {
+function SentimentBadge({ value, t }: { value: string; t: (key: string) => string }) {
   const lower = (value || "").toLowerCase();
   if (lower.includes("positive") || lower === "positive") {
     return (
       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-        <Smile className="h-2.5 w-2.5" /> Positive
+        <Smile className="h-2.5 w-2.5" /> {t("detail.sentiment.positive")}
       </span>
     );
   }
   if (lower.includes("negative") || lower === "negative") {
     return (
       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-500/15 text-red-600 dark:text-red-400">
-        <Frown className="h-2.5 w-2.5" /> Negative
+        <Frown className="h-2.5 w-2.5" /> {t("detail.sentiment.negative")}
       </span>
     );
   }
   if (lower) {
     return (
       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-500/15 text-zinc-600 dark:text-zinc-400">
-        <Meh className="h-2.5 w-2.5" /> Neutral
+        <Meh className="h-2.5 w-2.5" /> {t("detail.sentiment.neutral")}
       </span>
     );
   }
@@ -131,6 +132,7 @@ function StatusBadge({ label }: { label: string }) {
 }
 
 export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPanelProps) {
+  const { t } = useTranslation("leads");
   const [collapsed, setCollapsed] = useState(false);
 
   const fullName = lead
@@ -148,7 +150,7 @@ export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPane
       <div className="flex-shrink-0 w-9 flex flex-col items-center pt-2 border-l border-border bg-card rounded-xl">
         <IconBtn
           onClick={() => setCollapsed(false)}
-          title="Expand panel"
+          title={t("detail.expandPanel")}
         >
           <ChevronLeft className="h-4 w-4" />
         </IconBtn>
@@ -172,20 +174,20 @@ export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPane
       {/* Panel header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border/60 shrink-0">
         <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-          {lead ? "Lead Detail" : "Leads Overview"}
+          {lead ? t("detail.title") : t("detail.leadsOverview")}
         </span>
         <div className="flex items-center gap-1">
           {lead && (
             <IconBtn
               onClick={onClose}
-              title="Deselect lead"
+              title={t("detail.deselectLead")}
             >
               <X className="h-4 w-4" />
             </IconBtn>
           )}
           <IconBtn
             onClick={() => setCollapsed(true)}
-            title="Collapse panel"
+            title={t("detail.collapsePanel")}
           >
             <ChevronRight className="h-4 w-4" />
           </IconBtn>
@@ -199,10 +201,10 @@ export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPane
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Users className="h-4 w-4 shrink-0" />
-              <span className="text-sm font-medium text-foreground">{totalLeads} leads</span>
+              <span className="text-sm font-medium text-foreground">{t("detail.leadsCount", { count: totalLeads })}</span>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Click a row to view lead details here.
+              {t("detail.clickRowToView")}
             </p>
             {/* Status breakdown */}
             {Object.keys(STATUS_COLORS).filter(s => statusCounts[s] > 0).map((status) => (
@@ -236,26 +238,28 @@ export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPane
                 </div>
                 <div className="flex items-center gap-1 mt-1 flex-wrap">
                   {status && <StatusBadge label={status} />}
-                  {sentiment && <SentimentBadge value={sentiment} />}
+                  {sentiment && <SentimentBadge value={sentiment} t={t} />}
                 </div>
               </div>
             </div>
 
-            {/* Score bar */}
-            {score > 0 && (
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Lead Score</span>
+            {/* Score bar — always show; dim when 0 (not yet scored) */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("score.title")}</span>
+                {score > 0 ? (
                   <span className={cn("text-xs font-bold tabular-nums", scoreTextColor(score))}>{score}</span>
-                </div>
-                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className={cn("h-full rounded-full transition-[width]", scoreBarColor(score))}
-                    style={{ width: `${score}%` }}
-                  />
-                </div>
+                ) : (
+                  <span className="text-xs font-medium tabular-nums text-muted-foreground/50">{t("score.notScored", "—")}</span>
+                )}
               </div>
-            )}
+              <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                <div
+                  className={cn("h-full rounded-full transition-[width]", score > 0 ? scoreBarColor(score) : "bg-muted-foreground/20")}
+                  style={{ width: score > 0 ? `${score}%` : "0%" }}
+                />
+              </div>
+            </div>
 
             {/* Contact info */}
             <div className="space-y-1.5">
@@ -280,7 +284,7 @@ export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPane
               {lead.priority && (
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-muted-foreground flex items-center gap-1">
-                    <Activity className="h-3 w-3" /> Priority
+                    <Activity className="h-3 w-3" /> {t("detail.fields.priority")}
                   </span>
                   <span className="font-medium capitalize">{lead.priority}</span>
                 </div>
@@ -288,7 +292,7 @@ export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPane
               {lead.Account && (
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-muted-foreground flex items-center gap-1">
-                    <User className="h-3 w-3" /> Account
+                    <User className="h-3 w-3" /> {t("detail.fields.account")}
                   </span>
                   <span className="font-medium truncate max-w-[120px]">{lead.Account}</span>
                 </div>
@@ -296,7 +300,7 @@ export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPane
               {lead.Campaign && (
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-muted-foreground flex items-center gap-1">
-                    <Tag className="h-3 w-3" /> Campaign
+                    <Tag className="h-3 w-3" /> {t("group.campaign")}
                   </span>
                   <span className="font-medium truncate max-w-[120px]">{lead.Campaign}</span>
                 </div>
@@ -304,9 +308,9 @@ export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPane
               {lastActivity && (
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3 w-3" /> Last active
+                    <Clock className="h-3 w-3" /> {t("detail.fields.lastActive")}
                   </span>
-                  <span className="font-mono text-[10px]">{formatRelativeTime(lastActivity)}</span>
+                  <span className="font-mono text-[10px]">{formatRelativeTime(lastActivity, t)}</span>
                 </div>
               )}
             </div>
@@ -314,7 +318,7 @@ export function LeadInfoPanel({ lead, onClose, totalLeads, leads }: LeadInfoPane
             {/* Notes preview */}
             {lead.notes && (
               <div className="rounded-lg border border-border/40 bg-muted/20 px-2.5 py-2">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Notes</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{t("detail.sections.notes")}</div>
                 <p className="text-[12px] text-foreground/80 leading-relaxed line-clamp-4">{lead.notes}</p>
               </div>
             )}

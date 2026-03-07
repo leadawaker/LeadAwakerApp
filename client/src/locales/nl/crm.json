@@ -1,0 +1,112 @@
+{
+  "sidebar": {
+    "menu": "Menu",
+    "campaigns": "Campagnes",
+    "accounts": "Accounts",
+    "leads": "Leads",
+    "chats": "Chats",
+    "calendar": "Kalender",
+    "promptLibrary": "Promptbibliotheek",
+    "billing": "Facturatie",
+    "tasks": "Taken",
+    "automations": "Automatiseringen",
+    "settings": "Instellingen",
+    "support": "Ondersteuning",
+    "help": "Help",
+    "docs": "Docs"
+  },
+  "sidebarSections": {
+    "engage": "Betrekken",
+    "admin": "Admin",
+    "backend": "Backend",
+    "agency": "Agentuur"
+  },
+  "topbar": {
+    "search": "Zoeken",
+    "searchPlaceholder": "Zoek leads op naam, telefoon, e-mail…",
+    "startTyping": "Begin te typen om te zoeken…",
+    "noResults": "Geen resultaten gevonden.",
+    "darkMode": "Donkere modus",
+    "lightMode": "Lichte modus",
+    "toggleDarkMode": "Donkere modus wisselen",
+    "customerSupport": "Klantenservice",
+    "notifications": "Meldingen",
+    "help": "Help",
+    "documentation": "Documentatie",
+    "social": "Sociaal",
+    "agencyView": "Agentuurweergave",
+    "allAccounts": "Alle Accounts",
+    "switchAccount": "Account Wisselen",
+    "myProfile": "Mijn Profiel",
+    "logout": "Uitloggen"
+  },
+  "search": {
+    "leads": "Leads",
+    "accounts": "Accounts",
+    "users": "Gebruikers"
+  },
+  "actions": {
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "create": "Aanmaken",
+    "search": "Zoeken",
+    "filter": "Filteren",
+    "export": "Exporteren",
+    "import": "Importeren",
+    "close": "Sluiten",
+    "confirm": "Bevestigen",
+    "back": "Terug",
+    "next": "Volgende",
+    "apply": "Toepassen",
+    "reset": "Herstellen",
+    "refresh": "Vernieuwen",
+    "viewAll": "Alles Bekijken",
+    "showMore": "Meer Tonen",
+    "showLess": "Minder Tonen",
+    "selectAll": "Alles Selecteren",
+    "deselectAll": "Alles Deselecteren",
+    "loading": "Laden…",
+    "saving": "Opslaan…"
+  },
+  "status": {
+    "active": "Actief",
+    "inactive": "Inactief",
+    "pending": "In afwachting",
+    "completed": "Voltooid",
+    "paused": "Gepauzeerd",
+    "draft": "Concept",
+    "scheduled": "Gepland",
+    "running": "Actief",
+    "failed": "Mislukt",
+    "success": "Geslaagd",
+    "error": "Fout",
+    "delivered": "Afgeleverd",
+    "read": "Gelezen",
+    "replied": "Beantwoord",
+    "optedOut": "Afgemeld"
+  },
+  "time": {
+    "today": "Vandaag",
+    "yesterday": "Gisteren",
+    "thisWeek": "Deze Week",
+    "lastWeek": "Vorige Week",
+    "thisMonth": "Deze Maand",
+    "lastMonth": "Vorige Maand",
+    "daysAgo": "{{count}} dagen geleden",
+    "hoursAgo": "{{count}} uur geleden",
+    "minutesAgo": "{{count}} minuten geleden",
+    "justNow": "Zojuist"
+  },
+  "empty": {
+    "noData": "Geen gegevens beschikbaar",
+    "noResults": "Geen resultaten gevonden",
+    "noItems": "Nog geen items"
+  },
+  "confirm": {
+    "areYouSure": "Weet je het zeker?",
+    "cannotUndo": "Deze actie kan niet ongedaan worden gemaakt.",
+    "deleteConfirm": "Weet je zeker dat je dit wilt verwijderen?"
+  }
+}

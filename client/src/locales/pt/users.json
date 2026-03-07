@@ -1,0 +1,137 @@
+{
+  "toolbar": {
+    "invite": "Convidar",
+    "search": "Buscar",
+    "searchPlaceholder": "Buscar usu\u00e1rios\u2026",
+    "sort": "Ordenar",
+    "sortBy": "Ordenar por",
+    "filter": "Filtrar",
+    "group": "Agrupar",
+    "fields": "Campos",
+    "showHideColumns": "Mostrar / Ocultar Colunas",
+    "resetToDefault": "Restaurar padr\u00e3o",
+    "clearAllFilters": "Limpar todos os filtros",
+    "deactivate": "Desativar"
+  },
+  "sort": {
+    "nameAsc": "Nome A \u2192 Z",
+    "nameDesc": "Nome Z \u2192 A",
+    "recent": "Mais Recente"
+  },
+  "group": {
+    "role": "Fun\u00e7\u00e3o",
+    "status": "Status",
+    "account": "Conta",
+    "none": "Nenhum"
+  },
+  "columns": {
+    "name": "Nome",
+    "role": "Fun\u00e7\u00e3o",
+    "account": "Conta",
+    "email": "E-mail",
+    "phone": "Telefone",
+    "status": "Status",
+    "lastLogin": "\u00daltimo Login",
+    "memberSince": "Membro Desde",
+    "timezone": "Fuso Hor\u00e1rio"
+  },
+  "filter": {
+    "role": "Fun\u00e7\u00e3o",
+    "status": "Status"
+  },
+  "table": {
+    "noUsersMatch": "Nenhum usu\u00e1rio corresponde \u00e0 sua busca",
+    "noUsersFound": "Nenhum usu\u00e1rio encontrado",
+    "noName": "Sem nome",
+    "campaigns": "Campanhas",
+    "noCampaigns": "Sem campanhas",
+    "more": "+{{count}} mais",
+    "memberSince": "Membro desde",
+    "lastSeen": "\u00daltimo acesso",
+    "noAccountAssigned": "Nenhuma conta atribu\u00edda"
+  },
+  "invite": {
+    "title": "Convidar Novo Usu\u00e1rio",
+    "email": "E-mail",
+    "emailRequired": "E-mail *",
+    "emailPlaceholder": "usuario@exemplo.com",
+    "role": "Fun\u00e7\u00e3o",
+    "roleRequired": "Fun\u00e7\u00e3o *",
+    "rolePlaceholder": "Selecionar fun\u00e7\u00e3o\u2026",
+    "account": "Conta",
+    "noAccount": "Sem conta",
+    "sendInvite": "Enviar Convite",
+    "sending": "Enviando\u2026",
+    "emailRequired_error": "E-mail obrigat\u00f3rio",
+    "inviteCreated": "Convite criado para {{email}}",
+    "shareToken": "Compartilhe este token de convite com o usu\u00e1rio:",
+    "inviteToken": "Token de Convite",
+    "done": "Conclu\u00eddo",
+    "inviteSent": "Convite enviado",
+    "inviteSentDescription": "Convite criado para {{email}} como {{role}}",
+    "inviteFailed": "Convite falhou"
+  },
+  "pendingInvites": {
+    "title": "Convites Pendentes",
+    "expired": "Expirado",
+    "resent": "Reenviado",
+    "resend": "Reenviar",
+    "sending": "Enviando\u2026",
+    "revoke": "Revogar",
+    "revoking": "Revogando\u2026",
+    "inviteResent": "Convite reenviado",
+    "resendFailed": "Falha ao reenviar convite",
+    "inviteRevoked": "Convite revogado",
+    "revokeFailed": "Falha ao revogar convite"
+  },
+  "viewDialog": {
+    "title": "Perfil do Usu\u00e1rio",
+    "description": "Detalhes completos do perfil deste usu\u00e1rio.",
+    "email": "E-mail",
+    "phone": "Telefone",
+    "lastLogin": "\u00daltimo Login",
+    "neverLoggedIn": "Nunca fez login",
+    "timezone": "Fuso Hor\u00e1rio",
+    "memberSince": "Membro Desde",
+    "account": "Conta",
+    "humanTakeovers": "Interven\u00e7\u00f5es Humanas",
+    "manualMessagesSent": "mensagens manuais enviadas",
+    "campaigns": "Campanhas",
+    "noCampaignsForAccount": "Sem campanhas para esta conta",
+    "notSet": "N\u00e3o definido",
+    "noNameSet": "Sem nome definido",
+    "editProfile": "Editar Perfil"
+  },
+  "editDialog": {
+    "title": "Editar Usu\u00e1rio: {{name}}",
+    "fullName": "Nome Completo",
+    "email": "E-mail",
+    "phone": "Telefone",
+    "timezone": "Fuso Hor\u00e1rio",
+    "role": "Fun\u00e7\u00e3o",
+    "status": "Status",
+    "password": "Senha",
+    "passwordPlaceholder": "Digite nova senha",
+    "emailNotifications": "Notifica\u00e7\u00f5es por E-mail",
+    "smsNotifications": "Notifica\u00e7\u00f5es por SMS",
+    "saveChanges": "Salvar Altera\u00e7\u00f5es",
+    "userUpdated": "Usu\u00e1rio atualizado",
+    "userUpdatedDescription": "{{name}} atualizado com sucesso",
+    "updateFailed": "Atualiza\u00e7\u00e3o falhou"
+  },
+  "confirm": {
+    "yes": "Sim",
+    "no": "N\u00e3o"
+  },
+  "toast": {
+    "loadFailed": "Falha ao carregar usu\u00e1rios",
+    "fieldUpdateFailed": "Falha ao atualizar campo",
+    "bulkDeactivateFailed": "Desativa\u00e7\u00e3o em massa falhou"
+  },
+  "time": {
+    "today": "Hoje",
+    "yesterday": "Ontem",
+    "daysAgo": "{{count}}d atr\u00e1s",
+    "weeksAgo": "{{count}}sem atr\u00e1s"
+  }
+}

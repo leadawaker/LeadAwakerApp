@@ -1,0 +1,67 @@
+{
+  "page": {
+    "title": "Logs de Automação"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Buscar workflows...",
+    "refreshLogs": "Atualizar logs",
+    "filterCount": "{{count}} filtro",
+    "filterCount_other": "{{count}} filtros"
+  },
+  "views": {
+    "table": "Tabela",
+    "pipeline": "Pipeline"
+  },
+  "columns": {
+    "workflow": "Workflow",
+    "step": "Etapa",
+    "pipeline": "Pipeline",
+    "status": "Status",
+    "lead": "Lead",
+    "account": "Conta",
+    "campaign": "Campanha",
+    "execTime": "Tempo Exec.",
+    "duration": "Duração",
+    "createdAt": "Criado em"
+  },
+  "filters": {
+    "campaign": "Campanha",
+    "allCampaigns": "Todas as Campanhas",
+    "status": "Status",
+    "allStatuses": "Todos os Status",
+    "success": "Sucesso",
+    "failed": "Falha",
+    "date": "Data",
+    "dateRange": "Período",
+    "from": "De",
+    "to": "Até",
+    "clearDateFilter": "Limpar filtro de data"
+  },
+  "detail": {
+    "errorDetails": "Detalhes do Erro",
+    "errorCode": "Código do Erro",
+    "inputData": "Dados de Entrada",
+    "outputData": "Dados de Saída",
+    "noErrorDetails": "Nenhum detalhe de erro disponível para este registro.",
+    "collapseError": "Recolher detalhes do erro",
+    "expandError": "Expandir detalhes do erro",
+    "criticalError": "Erro crítico"
+  },
+  "fallback": {
+    "unknown": "Desconhecido",
+    "na": "N/D"
+  },
+  "pipeline": {
+    "executions": "Execucoes",
+    "selectExecution": "Selecione uma execucao para ver seu pipeline",
+    "step": "etapa",
+    "steps": "etapas",
+    "retry": "tentativa",
+    "retries": "tentativas",
+    "showErrorDetails": "Mostrar detalhes do erro",
+    "hideErrorDetails": "Ocultar detalhes do erro",
+    "errorCode": "Codigo do Erro",
+    "inputData": "Dados de Entrada",
+    "outputData": "Dados de Saida"
+  }
+}

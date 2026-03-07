@@ -153,13 +153,13 @@ export function ExpenseDetailView({
       {/* Warm gradient bloom background */}
       {!noBackground && (
         <>
-          <div className="absolute inset-0 bg-popover dark:bg-background" />
+          <div className="absolute inset-0 bg-[#ffffff]" />
           {/* Layer 1: White bloom — disabled */}
           {/* Layer 2: Yellow — disabled */}
           {/* Layer 3: Peach — disabled */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_150%_101%_at_40%_91%,rgba(208,218,0,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_2%_2%,#c7e0ff_5%,transparent_30%)] dark:opacity-[0.08]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_102%_at_53%_59%,rgba(195,146,25,0.38)_0%,transparent_66%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_150%_140%_at_40%_91%,rgba(255,204,204,0.4)_0%,transparent_69%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_2%_2%,#C7E0FF_5%,transparent_30%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_136%_152%_at_53%_59%,rgba(255,216,116,0.4)_0%,transparent_66%)]" />
         </>
       )}
 

@@ -37,6 +37,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 // ─── Lead Target Fields ───────────────────────────────────────────────────────
 // DB column names (in the format the API accepts for POST /api/leads)
@@ -143,11 +144,12 @@ interface Props {
 
 // ─── Step Indicator ───────────────────────────────────────────────────────────
 function StepIndicator({ current }: { current: Step }) {
+  const { t } = useTranslation("leads");
   const steps: { key: Step; label: string }[] = [
-    { key: "upload", label: "Upload" },
-    { key: "mapping", label: "Map Fields" },
-    { key: "preview", label: "Preview" },
-    { key: "results", label: "Results" },
+    { key: "upload", label: t("csvImport.steps.upload") },
+    { key: "mapping", label: t("csvImport.steps.mapFields") },
+    { key: "preview", label: t("csvImport.steps.preview") },
+    { key: "results", label: t("csvImport.steps.results") },
   ];
   const currentIdx = steps.findIndex((s) => s.key === current);
 
@@ -188,6 +190,27 @@ function StepIndicator({ current }: { current: Step }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccountId }: Props) {
+  const { t } = useTranslation("leads");
+
+  const fieldLabel: Record<string, string> = {
+    __skip__: t("csvImport.targetFields.skip"),
+    first_name: t("csvImport.targetFields.firstName"),
+    last_name: t("csvImport.targetFields.lastName"),
+    phone: t("csvImport.targetFields.phone"),
+    Email: t("csvImport.targetFields.email"),
+    Conversion_Status: t("csvImport.targetFields.pipelineStage"),
+    priority: t("csvImport.targetFields.priority"),
+    automation_status: t("csvImport.targetFields.automationStatus"),
+    Accounts_id: t("csvImport.targetFields.accountId"),
+    Campaigns_id: t("csvImport.targetFields.campaignId"),
+    Source: t("csvImport.targetFields.leadSource"),
+    notes: t("csvImport.targetFields.notes"),
+    language: t("csvImport.targetFields.language"),
+    time_zone: t("csvImport.targetFields.timezone"),
+    ai_sentiment: t("csvImport.targetFields.aiSentiment"),
+    dnc_reason: t("csvImport.targetFields.dncReason"),
+  };
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<Step>("upload");
 
@@ -221,11 +244,11 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
   // ── Step 1: File selection ─────────────────────────────────────────────────
   const processFile = useCallback((file: File) => {
     if (!file.name.endsWith(".csv")) {
-      setParseError("Please select a CSV (.csv) file.");
+      setParseError(t("csvImport.upload.csvOnly"));
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      setParseError("File is too large. Maximum size is 10 MB.");
+      setParseError(t("csvImport.upload.tooLarge"));
       return;
     }
     setParseError("");
@@ -236,7 +259,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
       try {
         const { headers, rows } = parseCsv(text);
         if (headers.length === 0) {
-          setParseError("CSV appears empty or has no headers.");
+          setParseError(t("csvImport.upload.emptyFile"));
           return;
         }
         setCsvHeaders(headers);
@@ -249,7 +272,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
         setFieldMapping(initial);
         setStep("mapping");
       } catch (err) {
-        setParseError("Failed to parse CSV. Please check the file format.");
+        setParseError(t("csvImport.upload.parseFailed"));
       }
     };
     reader.readAsText(file, "UTF-8");
@@ -365,10 +388,10 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
           <DialogTitle className="flex items-center gap-2 text-lg">
             <FileText className="h-4 w-4 text-brand-indigo" />
-            Import Leads from CSV
+            {t("csvImport.title")}
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            Upload a CSV file and map its columns to lead fields.
+            {t("csvImport.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -393,11 +416,11 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
               >
                 <Upload className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
                 <p className="text-sm font-medium">
-                  Drag & drop a CSV file here, or{" "}
-                  <span className="text-brand-indigo underline">browse</span>
+                  {t("csvImport.upload.dragAndDrop")}{" "}
+                  <span className="text-brand-indigo underline">{t("csvImport.upload.browse")}</span>
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Supports .csv files up to 10 MB · Max 5,000 leads per import
+                  {t("csvImport.upload.fileInfo")}
                 </p>
                 <input
                   ref={fileInputRef}
@@ -417,12 +440,12 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
               )}
 
               <div className="rounded-xl border border-border bg-muted/30 p-4 text-sm space-y-1">
-                <p className="font-semibold text-foreground">CSV Format Tips</p>
+                <p className="font-semibold text-foreground">{t("csvImport.upload.formatTips")}</p>
                 <ul className="list-disc list-inside text-muted-foreground space-y-0.5 text-xs">
-                  <li>First row must contain column headers</li>
-                  <li>Recommended columns: First Name, Last Name, Phone, Email</li>
-                  <li>Phone numbers should include country code (e.g. +1 555 123 4567)</li>
-                  <li>Comma-separated; quoted fields supported</li>
+                  <li>{t("csvImport.upload.tip1")}</li>
+                  <li>{t("csvImport.upload.tip2")}</li>
+                  <li>{t("csvImport.upload.tip3")}</li>
+                  <li>{t("csvImport.upload.tip4")}</li>
                 </ul>
               </div>
             </div>
@@ -434,19 +457,19 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium">
-                    File: <span className="text-brand-indigo">{fileName}</span>
+                    {t("csvImport.mapping.file")}: <span className="text-brand-indigo">{fileName}</span>
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {csvRows.length} data row{csvRows.length !== 1 ? "s" : ""} · {csvHeaders.length} columns detected
+                    {t("csvImport.mapping.dataRows", { count: csvRows.length })} · {t("csvImport.mapping.columnsDetected", { count: csvHeaders.length })}
                   </p>
                 </div>
                 <div className="flex gap-2">
                   {hasDuplicates && (
-                    <Badge variant="destructive" className="text-xs">Duplicate mappings</Badge>
+                    <Badge variant="destructive" className="text-xs">{t("csvImport.mapping.duplicateMappings")}</Badge>
                   )}
                   {!hasPhoneMapping && (
                     <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
-                      Phone not mapped
+                      {t("csvImport.mapping.phoneNotMapped")}
                     </Badge>
                   )}
                 </div>
@@ -456,9 +479,9 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
                 <div className="space-y-2">
                   {/* Header row */}
                   <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-3 py-1.5 bg-muted/50 rounded-lg text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    <span>CSV Column</span>
+                    <span>{t("csvImport.mapping.csvColumn")}</span>
                     <span className="text-center w-6" />
-                    <span>Maps to Lead Field</span>
+                    <span>{t("csvImport.mapping.mapsToField")}</span>
                   </div>
 
                   {csvHeaders.map((header) => {
@@ -500,12 +523,12 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
                           data-testid={`mapping-select-${header}`}
                         >
                           <SelectTrigger className="h-10 text-sm">
-                            <SelectValue placeholder="Select field..." />
+                            <SelectValue placeholder={t("csvImport.mapping.selectField")} />
                           </SelectTrigger>
                           <SelectContent>
                             {LEAD_TARGET_FIELDS.map((f) => (
                               <SelectItem key={f.value} value={f.value}>
-                                {f.label}
+                                {fieldLabel[f.value] || f.label}
                                 {f.required && <span className="text-red-500 ml-1">*</span>}
                               </SelectItem>
                             ))}
@@ -518,7 +541,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
               </ScrollArea>
 
               <p className="text-xs text-muted-foreground">
-                {mappedCount} of {csvHeaders.length} column{csvHeaders.length !== 1 ? "s" : ""} mapped
+                {t("csvImport.mapping.columnsMapped", { mapped: mappedCount, total: csvHeaders.length, count: csvHeaders.length })}
               </p>
             </div>
           )}
@@ -527,10 +550,10 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
           {step === "preview" && (
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium">Import preview</p>
+                <p className="text-sm font-medium">{t("csvImport.preview.title")}</p>
                 <p className="text-xs text-muted-foreground">
-                  Showing first {Math.min(5, csvRows.length)} of {csvRows.length} row{csvRows.length !== 1 ? "s" : ""}
-                  {" "}· {mappedCount} field{mappedCount !== 1 ? "s" : ""} mapped
+                  {t("csvImport.preview.showing", { shown: Math.min(5, csvRows.length), total: csvRows.length, count: csvRows.length })}
+                  {" "}· {t("csvImport.preview.fieldsMapped", { count: mappedCount })}
                 </p>
               </div>
 
@@ -543,7 +566,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
                       </th>
                       {mappedHeaders.map((h) => (
                         <th key={h} className="px-3 py-2 text-left font-semibold text-muted-foreground uppercase tracking-wide border-b border-border">
-                          {FIELD_LABEL[fieldMapping[h]] || fieldMapping[h]}
+                          {fieldLabel[fieldMapping[h]] || FIELD_LABEL[fieldMapping[h]] || fieldMapping[h]}
                         </th>
                       ))}
                     </tr>
@@ -571,12 +594,12 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
               </div>
 
               <div className="rounded-xl border border-border bg-muted/30 p-3 text-sm">
-                <p className="font-medium mb-1">Ready to import</p>
+                <p className="font-medium mb-1">{t("csvImport.preview.readyToImport")}</p>
                 <ul className="text-xs text-muted-foreground space-y-0.5">
-                  <li>• <strong>{csvRows.length}</strong> lead{csvRows.length !== 1 ? "s" : ""} will be created</li>
-                  <li>• <strong>{mappedCount}</strong> field{mappedCount !== 1 ? "s" : ""} mapped per lead</li>
+                  <li>• {t("csvImport.preview.leadsWillBeCreated", { count: csvRows.length })}</li>
+                  <li>• {t("csvImport.preview.fieldsPerLead", { count: mappedCount })}</li>
                   {defaultAccountId && (
-                    <li>• Leads will be assigned to account <strong>#{defaultAccountId}</strong></li>
+                    <li>• {t("csvImport.preview.assignedToAccount", { id: defaultAccountId })}</li>
                   )}
                 </ul>
               </div>
@@ -594,7 +617,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
                     {importResults.created}
                   </p>
                   <p className="text-sm text-green-600 dark:text-green-500 mt-0.5">
-                    Lead{importResults.created !== 1 ? "s" : ""} imported
+                    {t("csvImport.results.leadsImported", { count: importResults.created })}
                   </p>
                 </div>
                 <div
@@ -628,7 +651,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
                         : "text-muted-foreground",
                     )}
                   >
-                    Row{importResults.errors !== 1 ? "s" : ""} failed
+                    {t("csvImport.results.rowsFailed", { count: importResults.errors })}
                   </p>
                 </div>
               </div>
@@ -636,7 +659,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
               {/* Error details */}
               {importResults.errorDetails.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-red-600">Error details:</p>
+                  <p className="text-sm font-medium text-red-600">{t("csvImport.results.errorDetails")}</p>
                   <ScrollArea className="h-40">
                     <div className="space-y-1.5">
                       {importResults.errorDetails.map((e, i) => (
@@ -644,7 +667,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
                           key={i}
                           className="flex items-start gap-2 px-3 py-2 rounded-lg bg-red-50 dark:bg-red-900/10 text-xs"
                         >
-                          <span className="shrink-0 font-semibold text-red-600">Row {e.row}:</span>
+                          <span className="shrink-0 font-semibold text-red-600">{t("csvImport.results.row", { number: e.row })}</span>
                           <span className="text-red-700 dark:text-red-400">{e.message}</span>
                         </div>
                       ))}
@@ -656,7 +679,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
               {importResults.created > 0 && (
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-green-50 dark:bg-green-900/10 text-green-700 dark:text-green-400 text-sm">
                   <CheckCircle2 className="h-4 w-4 shrink-0" />
-                  Leads table has been refreshed with the new records.
+                  {t("csvImport.results.refreshed")}
                 </div>
               )}
             </div>
@@ -698,7 +721,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
               disabled={mappedCount === 0 || hasDuplicates}
               data-testid="csv-mapping-next"
             >
-              Preview Import
+              {t("csvImport.preview.previewImport")}
               <ArrowRight className="h-4 w-4" />
             </Button>
           )}
@@ -713,11 +736,11 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
               {importing ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Importing…
+                  {t("csvImport.importing")}
                 </>
               ) : (
                 <>
-                  Import {csvRows.length} Lead{csvRows.length !== 1 ? "s" : ""}
+                  {t("csvImport.importButton", { count: csvRows.length })}
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -731,7 +754,7 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
               className="gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              Fix Mapping
+              {t("csvImport.results.fixMapping")}
             </Button>
           )}
         </DialogFooter>

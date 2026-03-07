@@ -54,6 +54,7 @@ import {
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -474,6 +475,7 @@ function ScoreGauge({
 // ── Main Component ────────────────────────────────────────────────────────
 
 export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
+  const { t } = useTranslation("leads");
   const [, setLocation] = useLocation();
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [loadingInteractions, setLoadingInteractions] = useState(false);
@@ -772,10 +774,10 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
             if (!httpRes.ok || res.error) {
               const desc = res.error === "NO_GROQ_API_KEY"
                 ? "Groq API key not configured."
-                : res.detail || res.error || "Could not transcribe audio. Try again.";
+                : res.detail || res.error || t("toast.networkError");
               console.error("[voice] Transcription error:", res);
               toast({
-                title: "Transcription failed",
+                title: t("toast.transcriptionFailed"),
                 description: String(desc).slice(0, 200),
                 variant: "destructive",
               });
@@ -792,8 +794,8 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
             }
           } catch {
             toast({
-              title: "Transcription failed",
-              description: "Network error. Try again.",
+              title: t("toast.transcriptionFailed"),
+              description: t("toast.networkError"),
               variant: "destructive",
             });
           } finally {
@@ -809,8 +811,8 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
       recordingTimerRef.current = setInterval(() => setRecordingSeconds((s) => s + 1), 1000);
     } catch {
       toast({
-        title: "Microphone access denied",
-        description: "Allow microphone access to record voice memos.",
+        title: t("toast.microphoneDenied"),
+        description: t("toast.microphoneDescription"),
         variant: "destructive",
       });
     }
@@ -948,14 +950,10 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
           className="px-4 pt-4 pb-4 border-b border-border shrink-0 md:px-5 md:pt-5"
           data-testid="lead-info-header"
         >
-          {/* Row 1: label + status badge */}
+          {/* Row 1: label */}
           <div className="flex items-center justify-between gap-2 mb-0.5">
             <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              Lead Detail
-            </div>
-            <div className="flex items-center gap-1.5 flex-wrap justify-end">
-              {convStatus && <StatusBadge label={convStatus} />}
-              {priority && <PriorityBadge priority={priority} />}
+              {t("detail.title")}
             </div>
           </div>
 
@@ -967,51 +965,11 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
             {fullName}
           </SheetTitle>
 
-          {/* Row 3: contact meta — phone, email, source */}
-          <div className="mt-2 flex flex-col gap-1" data-testid="lead-header-meta">
-            {lead.phone && (
-              <div
-                className="flex items-center gap-1.5 text-[12px] text-muted-foreground"
-                data-testid="lead-detail-panel-phone"
-              >
-                <Phone className="h-3 w-3 shrink-0 text-muted-foreground/60" />
-                <span className="font-mono">{lead.phone}</span>
-              </div>
-            )}
-            {email && (
-              <div
-                className="flex items-center gap-1.5 text-[12px] text-muted-foreground"
-                data-testid="lead-detail-panel-email"
-              >
-                <Mail className="h-3 w-3 shrink-0 text-muted-foreground/60" />
-                <span className="truncate">{email}</span>
-              </div>
-            )}
-            {source && (
-              <div
-                className="flex items-center gap-1.5 text-[12px] text-muted-foreground"
-                data-testid="lead-detail-panel-source"
-              >
-                <Globe className="h-3 w-3 shrink-0 text-muted-foreground/60" />
-                <span>Source: <span className="text-foreground/80">{source}</span></span>
-              </div>
-            )}
-            {(lead.account_name || lead.campaign_name) && (
-              <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                <Layers className="h-3 w-3 shrink-0 text-muted-foreground/60" />
-                <span>
-                  {lead.account_name && <span className="text-foreground/80">{lead.account_name}</span>}
-                  {lead.account_name && lead.campaign_name && <span className="mx-1 text-muted-foreground/40">·</span>}
-                  {lead.campaign_name && <span className="text-foreground/80">{lead.campaign_name}</span>}
-                </span>
-              </div>
-            )}
-            {autoStatus && (
-              <SheetDescription className="text-[11px] mt-0.5">
-                {autoStatus}
-              </SheetDescription>
-            )}
-          </div>
+          {autoStatus && (
+            <SheetDescription className="text-[11px] mt-1.5">
+              {autoStatus}
+            </SheetDescription>
+          )}
 
           {/* Row 4: View full page */}
           <button
@@ -1020,7 +978,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
             data-testid="lead-detail-panel-view-full"
           >
             <ExternalLink className="h-3 w-3" />
-            Open full contact page
+            {t("detail.openFullPage")}
           </button>
         </SheetHeader>
 
@@ -1028,20 +986,20 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
         <div className="flex-1 overflow-y-auto px-4 py-4 md:px-5" data-testid="lead-detail-panel-body">
 
           {/* Contact Info — with inline editing */}
-          <SectionTitle icon={<User className="h-3.5 w-3.5" />} title="Contact" />
+          <SectionTitle icon={<User className="h-3.5 w-3.5" />} title={t("detail.sections.contact")} />
           <div
             className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5"
             data-testid="contact-info-section"
           >
             <InlineEditField
-              label="Name"
+              label={t("detail.fields.name")}
               value={fullName}
               icon={<User className="h-3 w-3" />}
               onSave={(v) => handleInlineFieldSave("full_name", v)}
               testId="inline-edit-name"
             />
             <InlineEditField
-              label="Phone"
+              label={t("detail.fields.phone")}
               value={lead.phone || ""}
               icon={<Phone className="h-3 w-3" />}
               type="tel"
@@ -1049,7 +1007,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
               testId="inline-edit-phone"
             />
             <InlineEditField
-              label="Email"
+              label={t("detail.fields.email")}
               value={lead.email || ""}
               icon={<Mail className="h-3 w-3" />}
               type="email"
@@ -1057,7 +1015,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
               testId="inline-edit-email"
             />
             <InlineEditField
-              label="Priority"
+              label={t("detail.fields.priority")}
               value={lead.priority || ""}
               icon={<Activity className="h-3 w-3" />}
               onSave={(v) => handleInlineFieldSave("priority", v)}
@@ -1065,31 +1023,47 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
               testId="inline-edit-priority"
             />
             <InfoRow
-              label="Language"
+              label={t("detail.fields.language")}
               value={lead.language}
+            />
+            <InfoRow
+              label={t("detail.fields.source")}
+              value={source}
+            />
+            <InfoRow
+              label={t("detail.fields.campaign")}
+              value={
+                lead.account_name || lead.campaign_name ? (
+                  <span>
+                    {lead.account_name && <span>{lead.account_name}</span>}
+                    {lead.account_name && lead.campaign_name && <span className="mx-1 text-muted-foreground/40">·</span>}
+                    {lead.campaign_name && <span>{lead.campaign_name}</span>}
+                  </span>
+                ) : null
+              }
             />
           </div>
 
           {/* Lead Scores */}
           {(lead.lead_score != null || lead.engagement_score != null || lead.activity_score != null) && (
             <>
-              <SectionTitle icon={<BarChart2 className="h-3.5 w-3.5" />} title="Scores" />
+              <SectionTitle icon={<BarChart2 className="h-3.5 w-3.5" />} title={t("detail.sections.scores")} />
               <div
                 className="rounded-xl border border-border/40 bg-muted/20 px-3 py-3 flex flex-col gap-3"
                 data-testid="lead-score-gauges"
               >
                 <ScoreGauge
-                  label="Lead Score"
+                  label={t("detail.fields.leadScore")}
                   value={lead.lead_score}
                   testId="lead-score-gauge-overall"
                 />
                 <ScoreGauge
-                  label="Engagement"
+                  label={t("detail.fields.engagement")}
                   value={lead.engagement_score}
                   testId="lead-score-gauge-engagement"
                 />
                 <ScoreGauge
-                  label="Activity"
+                  label={t("detail.fields.activityScore")}
                   value={lead.activity_score}
                   testId="lead-score-gauge-activity"
                 />
@@ -1098,7 +1072,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
           )}
 
           {/* Status */}
-          <SectionTitle icon={<Activity className="h-3.5 w-3.5" />} title="Status" />
+          <SectionTitle icon={<Activity className="h-3.5 w-3.5" />} title={t("detail.sections.status")} />
           <div className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5">
             {/* Pipeline Stage — interactive dropdown */}
             <div
@@ -1106,7 +1080,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
               data-testid="pipeline-stage-row"
             >
               <div className="flex items-center gap-1.5 shrink-0">
-                <span className="text-[11px] text-muted-foreground">Pipeline Stage</span>
+                <span className="text-[11px] text-muted-foreground">{t("detail.fields.pipelineStage")}</span>
               </div>
               <div className="flex items-center gap-1.5 flex-wrap justify-end">
                 {/* Current stage badge (visual indicator) */}
@@ -1121,9 +1095,9 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                   <SelectTrigger
                     className="h-6 w-auto min-w-[70px] text-[11px] px-2 py-0 border-dashed border-border/60 bg-transparent hover:bg-muted/40 transition-colors"
                     data-testid="pipeline-stage-trigger"
-                    aria-label="Change pipeline stage"
+                    aria-label={t("detail.fields.pipelineStage")}
                   >
-                    <SelectValue placeholder="Change…" />
+                    <SelectValue placeholder={t("detail.fields.changePlaceholder")} />
                   </SelectTrigger>
                   <SelectContent data-testid="pipeline-stage-dropdown">
                     {PIPELINE_STAGES.map((stage) => {
@@ -1166,7 +1140,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
               </div>
             </div>
 
-            <InfoRow label="Automation" value={autoStatus} />
+            <InfoRow label={t("detail.fields.automation")} value={autoStatus} />
 
             {/* Manual Takeover — toggle switch */}
             <div
@@ -1177,10 +1151,10 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 <span className="text-muted-foreground/60">
                   {localManualTakeover ? <UserX className="h-3 w-3" /> : <UserCheck className="h-3 w-3" />}
                 </span>
-                <span className="text-[11px] text-muted-foreground">Manual Takeover</span>
+                <span className="text-[11px] text-muted-foreground">{t("detail.fields.manualTakeover")}</span>
                 {localManualTakeover && (
                   <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-400/15 px-1.5 py-px rounded-full">
-                    AI paused
+                    {t("detail.fields.aiPaused")}
                   </span>
                 )}
               </div>
@@ -1191,14 +1165,14 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                   onCheckedChange={handleManualTakeoverChange}
                   disabled={savingManualTakeover}
                   data-testid="manual-takeover-toggle"
-                  aria-label="Toggle manual takeover"
+                  aria-label={t("detail.fields.manualTakeover")}
                 />
               </div>
             </div>
           </div>
 
           {/* DNC / Opted-out Section */}
-          <SectionTitle icon={<Ban className="h-3.5 w-3.5" />} title="Do Not Contact" />
+          <SectionTitle icon={<Ban className="h-3.5 w-3.5" />} title={t("detail.sections.doNotContact")} />
           <div
             className="rounded-xl border border-border/40 bg-muted/20 px-3 py-2"
             data-testid="dnc-section"
@@ -1210,10 +1184,10 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
             >
               <div className="flex items-center gap-1.5">
                 <Ban className="h-3 w-3 text-muted-foreground/60" />
-                <span className="text-[11px] text-muted-foreground">Opted Out / DNC</span>
+                <span className="text-[11px] text-muted-foreground">{t("detail.fields.optedOutDnc")}</span>
                 {localOptedOut && (
                   <span className="text-[10px] font-semibold text-red-600 dark:text-red-400 bg-red-500/15 px-1.5 py-px rounded-full">
-                    DNC active
+                    {t("detail.fields.dncActive")}
                   </span>
                 )}
               </div>
@@ -1225,7 +1199,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                   onCheckedChange={handleDncChange}
                   disabled={savingDnc}
                   data-testid="dnc-toggle"
-                  aria-label="Toggle DNC / opted-out status"
+                  aria-label={t("detail.fields.optedOutDnc")}
                 />
               </div>
             </div>
@@ -1233,7 +1207,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
             {/* DNC reason input — shows when opted out */}
             {showDncReason && (
               <div className="mt-1.5 pt-1.5 border-t border-border/30" data-testid="dnc-reason-container">
-                <label className="text-[11px] text-muted-foreground mb-1 block">Reason (optional)</label>
+                <label className="text-[11px] text-muted-foreground mb-1 block">{t("detail.fields.dncReason")}</label>
                 <div className="flex gap-1.5">
                   <input
                     type="text"
@@ -1241,7 +1215,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                     onChange={(e) => setLocalDncReason(e.target.value)}
                     onBlur={handleDncReasonSave}
                     onKeyDown={(e) => { if (e.key === "Enter") handleDncReasonSave(); }}
-                    placeholder="Enter DNC reason…"
+                    placeholder={t("detail.fields.dncReasonPlaceholder")}
                     className="flex-1 text-[12px] bg-background border border-border/60 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-indigo/50"
                     data-testid="dnc-reason-input"
                     disabled={savingDnc}
@@ -1249,7 +1223,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 </div>
                 {localDncReason && (
                   <p className="mt-1 text-[11px] text-muted-foreground" data-testid="dnc-reason-display">
-                    Reason: <span className="text-foreground/80">{localDncReason}</span>
+                    {t("detail.fields.dncReasonLabel")}: <span className="text-foreground/80">{localDncReason}</span>
                   </p>
                 )}
               </div>
@@ -1259,7 +1233,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
           {/* Bump Stage Indicator */}
           {(lead.current_bump_stage != null || lead.bump_1_sent_at || lead.bump_2_sent_at || lead.bump_3_sent_at) && (
             <>
-              <SectionTitle icon={<Layers className="h-3.5 w-3.5" />} title="Bump Progress" />
+              <SectionTitle icon={<Layers className="h-3.5 w-3.5" />} title={t("detail.sections.bumpProgress")} />
               <div
                 className="rounded-xl border border-border/40 bg-muted/20 px-3 py-3"
                 data-testid="bump-stage-section"
@@ -1285,7 +1259,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
 
                 {/* Current stage label */}
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] text-muted-foreground">Current Stage</span>
+                  <span className="text-[11px] text-muted-foreground">{t("detail.fields.currentStage")}</span>
                   <span
                     className="text-[12px] font-semibold text-foreground tabular-nums"
                     data-testid="bump-current-stage"
@@ -1297,7 +1271,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 {/* Bump timestamps */}
                 {lead.bump_1_sent_at && (
                   <div className="flex items-center justify-between py-0.5">
-                    <span className="text-[11px] text-muted-foreground">Bump 1</span>
+                    <span className="text-[11px] text-muted-foreground">{t("detail.fields.bump", { n: 1 })}</span>
                     <span className="text-[11px] text-foreground/80 tabular-nums" data-testid="bump-1-sent-at">
                       {fmtDateTime(lead.bump_1_sent_at)}
                     </span>
@@ -1305,7 +1279,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 )}
                 {lead.bump_2_sent_at && (
                   <div className="flex items-center justify-between py-0.5">
-                    <span className="text-[11px] text-muted-foreground">Bump 2</span>
+                    <span className="text-[11px] text-muted-foreground">{t("detail.fields.bump", { n: 2 })}</span>
                     <span className="text-[11px] text-foreground/80 tabular-nums" data-testid="bump-2-sent-at">
                       {fmtDateTime(lead.bump_2_sent_at)}
                     </span>
@@ -1313,7 +1287,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 )}
                 {lead.bump_3_sent_at && (
                   <div className="flex items-center justify-between py-0.5">
-                    <span className="text-[11px] text-muted-foreground">Bump 3</span>
+                    <span className="text-[11px] text-muted-foreground">{t("detail.fields.bump", { n: 3 })}</span>
                     <span className="text-[11px] text-foreground/80 tabular-nums" data-testid="bump-3-sent-at">
                       {fmtDateTime(lead.bump_3_sent_at)}
                     </span>
@@ -1324,44 +1298,44 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
           )}
 
           {/* Activity */}
-          <SectionTitle icon={<MessageSquare className="h-3.5 w-3.5" />} title="Activity" />
+          <SectionTitle icon={<MessageSquare className="h-3.5 w-3.5" />} title={t("detail.sections.activity")} />
           <div className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5">
-            <InfoRow label="Lead Created" value={fmtDate(lead.created_at)} />
-            <InfoRow label="Last Updated" value={fmtDateTime(lead.updated_at)} />
-            <InfoRow label="Last Interaction" value={fmtDateTime(lead.last_interaction_at)} />
-            <InfoRow label="Last Sent" value={fmtDateTime(lead.last_message_sent_at)} />
-            <InfoRow label="Last Received" value={fmtDateTime(lead.last_message_received_at)} />
-            <InfoRow label="Sent Count" value={lead.message_count_sent} />
-            <InfoRow label="Received Count" value={lead.message_count_received} />
-            <InfoRow label="Response Rate" value={responseRate} />
-            <InfoRow label="Days Inactive" value={daysInactive} />
-            <InfoRow label="First Contacted" value={fmtDate(lead.first_message_sent_at)} />
-            <InfoRow label="Next Action" value={fmtDateTime(lead.next_action_at)} />
+            <InfoRow label={t("detail.fields.leadCreated")} value={fmtDate(lead.created_at)} />
+            <InfoRow label={t("detail.fields.lastUpdated")} value={fmtDateTime(lead.updated_at)} />
+            <InfoRow label={t("detail.fields.lastInteraction")} value={fmtDateTime(lead.last_interaction_at)} />
+            <InfoRow label={t("detail.fields.lastSent")} value={fmtDateTime(lead.last_message_sent_at)} />
+            <InfoRow label={t("detail.fields.lastReceived")} value={fmtDateTime(lead.last_message_received_at)} />
+            <InfoRow label={t("detail.fields.sentCount")} value={lead.message_count_sent} />
+            <InfoRow label={t("detail.fields.receivedCount")} value={lead.message_count_received} />
+            <InfoRow label={t("detail.fields.responseRate")} value={responseRate} />
+            <InfoRow label={t("detail.fields.daysInactive")} value={daysInactive} />
+            <InfoRow label={t("detail.fields.firstContacted")} value={fmtDate(lead.first_message_sent_at)} />
+            <InfoRow label={t("detail.fields.nextAction")} value={fmtDateTime(lead.next_action_at)} />
             {lead.what_has_the_lead_done && (
-              <InfoRow label="What They Did" value={lead.what_has_the_lead_done} />
+              <InfoRow label={t("detail.fields.whatTheyDid")} value={lead.what_has_the_lead_done} />
             )}
           </div>
 
           {/* Booking */}
           {(lead.booked_call_date || lead.booking_confirmed_at) && (
             <>
-              <SectionTitle icon={<PhoneCall className="h-3.5 w-3.5" />} title="Booking" />
+              <SectionTitle icon={<PhoneCall className="h-3.5 w-3.5" />} title={t("detail.sections.booking")} />
               <div
                 className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5"
                 data-testid="booked-call-section"
               >
-                <InfoRow label="Call Date" value={fmtDate(lead.booked_call_date)} />
-                <InfoRow label="Confirmed At" value={fmtDateTime(lead.booking_confirmed_at)} />
+                <InfoRow label={t("detail.fields.callDate")} value={fmtDate(lead.booked_call_date)} />
+                <InfoRow label={t("detail.fields.confirmedAt")} value={fmtDateTime(lead.booking_confirmed_at)} />
                 {/* No-show indicator */}
                 <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
-                  <span className="text-[11px] text-muted-foreground shrink-0">No Show</span>
+                  <span className="text-[11px] text-muted-foreground shrink-0">{t("detail.fields.noShow")}</span>
                   {lead.no_show ? (
                     <span
                       className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-500/15 text-red-600 dark:text-red-400"
                       data-testid="no-show-badge"
                     >
                       <X className="h-3 w-3" />
-                      No Show
+                      {t("detail.fields.noShow")}
                     </span>
                   ) : (
                     <span className="text-[12px] text-muted-foreground">—</span>
@@ -1372,7 +1346,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                   <div className="flex items-center justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
                     <div className="flex items-center gap-1.5 shrink-0">
                       <RefreshCw className="h-3 w-3 text-muted-foreground/60" />
-                      <span className="text-[11px] text-muted-foreground">Rescheduled</span>
+                      <span className="text-[11px] text-muted-foreground">{t("detail.fields.rescheduled")}</span>
                     </div>
                     <span
                       className="text-[12px] font-semibold text-amber-600 dark:text-amber-400 tabular-nums"
@@ -1383,7 +1357,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                   </div>
                 )}
                 {lead.call_duration_minutes != null && (
-                  <InfoRow label="Duration" value={`${lead.call_duration_minutes} min`} />
+                  <InfoRow label={t("detail.fields.duration")} value={t("detail.fields.durationMinutes", { minutes: lead.call_duration_minutes })} />
                 )}
               </div>
             </>
@@ -1392,7 +1366,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
           {/* AI Insights */}
           {(lead.ai_sentiment || lead.ai_memory || lead.ai_summary) && (
             <>
-              <SectionTitle icon={<Bot className="h-3.5 w-3.5" />} title="AI Insights" />
+              <SectionTitle icon={<Bot className="h-3.5 w-3.5" />} title={t("detail.sections.aiInsights")} />
               <div
                 className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5"
                 data-testid="ai-insights-section"
@@ -1400,21 +1374,21 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 {/* AI summary */}
                 {lead.ai_summary && (
                   <div className="py-1.5 border-b border-border/30">
-                    <div className="text-[11px] text-muted-foreground mb-1">Summary</div>
+                    <div className="text-[11px] text-muted-foreground mb-1">{t("detail.fields.aiSummary")}</div>
                     <p className="text-[12px] text-foreground/80 leading-relaxed">{lead.ai_summary}</p>
                   </div>
                 )}
                 {/* Sentiment badge — color coded */}
                 {lead.ai_sentiment && (
                   <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/30 last:border-0">
-                    <span className="text-[11px] text-muted-foreground shrink-0">Sentiment</span>
+                    <span className="text-[11px] text-muted-foreground shrink-0">{t("detail.fields.aiSentiment")}</span>
                     <SentimentBadge sentiment={lead.ai_sentiment} />
                   </div>
                 )}
                 {/* AI memory — formatted readably */}
                 {lead.ai_memory && (
                   <div className="py-1.5" data-testid="ai-memory-display">
-                    <div className="text-[11px] text-muted-foreground mb-1.5">AI Memory</div>
+                    <div className="text-[11px] text-muted-foreground mb-1.5">{t("detail.fields.aiMemory")}</div>
                     <pre className="text-[11px] text-foreground/80 leading-relaxed whitespace-pre-wrap font-sans break-words">
                       {formatAiMemory(lead.ai_memory)}
                     </pre>
@@ -1429,20 +1403,20 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
             <div className="flex items-center justify-between mb-2 mt-4">
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground"><StickyNote className="h-3.5 w-3.5" /></span>
-                <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Notes</h3>
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("detail.sections.notes")}</h3>
               </div>
               <div className="flex items-center gap-1.5">
                 {/* Voice memo recording button */}
                 {transcribing ? (
                   <div className="flex items-center gap-1.5 text-[10px] text-brand-indigo">
                     <Loader2 className="h-3 w-3 animate-spin" />
-                    Transcribing…
+                    {t("notes.transcribing")}
                   </div>
                 ) : isRecordingVoice ? (
                   <button
                     onClick={stopVoiceRecording}
                     className="flex items-center gap-1.5 h-9 px-3 rounded-full bg-red-500/15 text-red-600 text-[12px] font-medium border border-red-300/60 hover:bg-red-500/25 transition-colors"
-                    title="Stop recording"
+                    title={t("notes.stopRecording")}
                   >
                     <Square className="h-3 w-3 fill-current" />
                     {recordingSeconds}s
@@ -1452,7 +1426,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                     onClick={startVoiceRecording}
                     disabled={savingNotes || transcribing}
                     className="inline-flex items-center justify-center h-9 w-9 rounded-full border border-black/[0.125] text-muted-foreground hover:text-foreground hover:border-black/[0.175] transition-colors disabled:opacity-50"
-                    title="Record voice memo (transcribe to text)"
+                    title={t("notes.recordVoiceMemo")}
                   >
                     <Mic className="h-4 w-4" />
                   </button>
@@ -1467,7 +1441,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 {notesSaved && !savingNotes && (
                   <span className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400" data-testid="notes-saved-indicator">
                     <CheckCircle2 className="h-3 w-3" />
-                    Saved
+                    {t("notes.saved")}
                   </span>
                 )}
                 {notesDirty && !savingNotes && (
@@ -1477,10 +1451,10 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                     onClick={handleNotesSave}
                     className="h-6 px-2 text-[11px] gap-1"
                     data-testid="notes-save-button"
-                    aria-label="Save notes"
+                    aria-label={t("notes.saveNotes")}
                   >
                     <Save className="h-3 w-3" />
-                    Save
+                    {t("notes.save")}
                   </Button>
                 )}
               </div>
@@ -1494,7 +1468,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                   setNotesSaved(false);
                 }}
                 onBlur={handleNotesSave}
-                placeholder="Add notes about this lead…"
+                placeholder={t("notes.placeholder")}
                 className="min-h-[80px] resize-none text-[12px] bg-transparent border-0 shadow-none focus-visible:ring-0 p-1 leading-relaxed"
                 data-testid="lead-notes-textarea"
                 disabled={savingNotes || transcribing}
@@ -1504,7 +1478,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
           </div>
 
           {/* Tags */}
-          <SectionTitle icon={<Tag className="h-3.5 w-3.5" />} title="Tags" />
+          <SectionTitle icon={<Tag className="h-3.5 w-3.5" />} title={t("detail.sections.tags")} />
           <div
             className="rounded-xl border border-border/40 bg-muted/20 px-3 py-3"
             data-testid="lead-detail-tags-section"
@@ -1512,7 +1486,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
             {loadingTags ? (
               <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Loading tags…
+                {t("tags.loadingTags")}
               </div>
             ) : (
               <div className="flex flex-wrap gap-1.5" data-testid="lead-tags-chips">
@@ -1532,7 +1506,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                       onClick={() => handleRemoveTag(tag.id)}
                       disabled={removingTagId === tag.id}
                       className="ml-0.5 rounded-full hover:bg-violet-500/20 transition-colors disabled:opacity-50"
-                      aria-label={`Remove tag ${tag.name}`}
+                      aria-label={t("tags.removeTag", { name: tag.name })}
                       data-testid={`lead-tag-remove-${tag.id}`}
                     >
                       {removingTagId === tag.id
@@ -1551,13 +1525,13 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                     disabled={addingTag}
                     className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border border-dashed border-black/[0.125] text-muted-foreground hover:text-foreground hover:border-black/[0.175] transition-colors disabled:opacity-50"
                     data-testid="lead-tag-add-button"
-                    aria-label="Add tag"
+                    aria-label={t("tags.addTag")}
                   >
                     {addingTag
                       ? <Loader2 className="h-2.5 w-2.5 animate-spin" />
                       : <Plus className="h-2.5 w-2.5" />
                     }
-                    Add tag
+                    {t("tags.addTag")}
                   </button>
 
                   {/* Tag selection dropdown */}
@@ -1568,7 +1542,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                     >
                       {unassignedTags.length === 0 ? (
                         <div className="px-3 py-2 text-[12px] text-muted-foreground">
-                          {availableTags.length === 0 ? "No tags available" : "All tags already assigned"}
+                          {availableTags.length === 0 ? t("tags.noTagsAvailable") : t("tags.allTagsAssigned")}
                         </div>
                       ) : (
                         unassignedTags.map((tag) => (
@@ -1592,7 +1566,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 </div>
 
                 {leadTags.length === 0 && !showTagDropdown && (
-                  <span className="text-[12px] text-muted-foreground italic">No tags assigned</span>
+                  <span className="text-[12px] text-muted-foreground italic">{t("tags.noTagsAssigned")}</span>
                 )}
               </div>
             )}
@@ -1601,7 +1575,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
           {/* Interaction Timeline */}
           <SectionTitle
             icon={<MessageSquare className="h-3.5 w-3.5" />}
-            title={interactions.length > 0 ? `Timeline (${interactions.length})` : "Timeline"}
+            title={interactions.length > 0 ? t("timeline.titleWithCount", { count: interactions.length }) : t("timeline.title")}
           />
           <div
             data-testid="lead-detail-panel-interactions"
@@ -1623,9 +1597,9 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted mb-2">
                   <MessageSquare className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <p className="text-sm font-medium text-foreground">No interactions yet</p>
+                <p className="text-sm font-medium text-foreground">{t("timeline.noInteractions")}</p>
                 <p className="text-xs text-muted-foreground max-w-[240px] mt-1">
-                  Messages will appear here as the lead interacts with your campaigns.
+                  {t("timeline.noInteractionsHint")}
                 </p>
               </div>
             ) : (
@@ -1669,8 +1643,8 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <p className="text-[12px] font-medium text-foreground leading-snug truncate">
-                            {outbound ? (isAI ? "AI sent" : isHuman ? "Agent sent" : "Sent") : "Received"}
-                            {isBump && <span className="text-amber-600 dark:text-amber-400 ml-1">· Bump</span>}
+                            {outbound ? (isAI ? t("timeline.aiSent") : isHuman ? t("timeline.agentSent") : t("timeline.sent")) : t("timeline.received")}
+                            {isBump && <span className="text-amber-600 dark:text-amber-400 ml-1">· {t("timeline.bump")}</span>}
                             {m.type && m.type !== "SMS" && (
                               <span className="text-muted-foreground/70 ml-1">· {m.type}</span>
                             )}
@@ -1680,7 +1654,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                           {msgContent || <span className="italic">—</span>}
                         </p>
                         {who && (
-                          <p className="text-[10px] text-muted-foreground/60 mt-0.5">via {who}</p>
+                          <p className="text-[10px] text-muted-foreground/60 mt-0.5">{t("timeline.via", { who })}</p>
                         )}
                       </div>
 
@@ -1699,11 +1673,11 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
           </div>
 
           {/* Campaign / Account */}
-          <SectionTitle icon={<Tag className="h-3.5 w-3.5" />} title="Assignment" />
+          <SectionTitle icon={<Tag className="h-3.5 w-3.5" />} title={t("detailView.assignment")} />
           <div className="rounded-xl border border-border/40 bg-muted/20 px-3 py-1.5 mb-6">
-            <InfoRow label="Account" value={lead.Account || lead.account_id} />
-            <InfoRow label="Campaign" value={lead.Campaign || lead.campaign_id} />
-            <InfoRow label="Created" value={fmtDate(lead.created_at)} />
+            <InfoRow label={t("detail.fields.account")} value={lead.Account || lead.account_id} />
+            <InfoRow label={t("detailView.campaign")} value={lead.Campaign || lead.campaign_id} />
+            <InfoRow label={t("contact.created")} value={fmtDate(lead.created_at)} />
           </div>
         </div>
       </SheetContent>

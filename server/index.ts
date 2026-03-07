@@ -36,6 +36,14 @@ app.use(
 
 app.use(express.urlencoded({ extended: false }));
 
+// Allow embedding in code-server Simple Browser (iframe)
+// CSP frame-ancestors overrides X-Frame-Options (even if Cloudflare adds it)
+app.use((_req, res, next) => {
+  res.setHeader("Content-Security-Policy", "frame-ancestors *");
+  res.removeHeader("X-Frame-Options");
+  next();
+});
+
 // Auth: sessions + passport (must come before routes)
 setupAuth(app);
 

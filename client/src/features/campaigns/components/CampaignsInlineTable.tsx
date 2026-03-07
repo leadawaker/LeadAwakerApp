@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   Check,
@@ -21,26 +22,26 @@ type ColKey =
 
 interface ColumnDef {
   key: ColKey;
-  label: string;
+  labelKey: string;
   width: number;
   editable: boolean;
   type: "text" | "select";
 }
 
 const ALL_TABLE_COLUMNS: ColumnDef[] = [
-  { key: "name",         label: "Name",          width: 200, editable: false, type: "text"   },
-  { key: "status",       label: "Status",        width: 150, editable: true,  type: "select" },
-  { key: "account",      label: "Account",       width: 130, editable: false, type: "text"   },
-  { key: "type",         label: "Type",          width: 130, editable: false, type: "text"   },
-  { key: "leads",        label: "Leads",         width: 80,  editable: false, type: "text"   },
-  { key: "responseRate", label: "Response %",    width: 100, editable: false, type: "text"   },
-  { key: "bookingRate",  label: "Booking %",     width: 100, editable: false, type: "text"   },
-  { key: "cost",         label: "Cost",          width: 90,  editable: false, type: "text"   },
-  { key: "roi",          label: "ROI %",         width: 80,  editable: false, type: "text"   },
-  { key: "description",  label: "Description",   width: 200, editable: true,  type: "text"   },
-  { key: "startDate",    label: "Start",         width: 110, editable: false, type: "text"   },
-  { key: "endDate",      label: "End",           width: 110, editable: false, type: "text"   },
-  { key: "lastModified", label: "Last Modified", width: 110, editable: false, type: "text"   },
+  { key: "name",         labelKey: "columns.name",         width: 200, editable: false, type: "text"   },
+  { key: "status",       labelKey: "columns.status",       width: 150, editable: true,  type: "select" },
+  { key: "account",      labelKey: "columns.account",      width: 130, editable: false, type: "text"   },
+  { key: "type",         labelKey: "columns.type",         width: 130, editable: false, type: "text"   },
+  { key: "leads",        labelKey: "columns.leads",        width: 80,  editable: false, type: "text"   },
+  { key: "responseRate", labelKey: "columns.responseRate",  width: 100, editable: false, type: "text"   },
+  { key: "bookingRate",  labelKey: "columns.bookingRate",   width: 100, editable: false, type: "text"   },
+  { key: "cost",         labelKey: "columns.cost",         width: 90,  editable: false, type: "text"   },
+  { key: "roi",          labelKey: "columns.roi",          width: 80,  editable: false, type: "text"   },
+  { key: "description",  labelKey: "columns.description",  width: 200, editable: true,  type: "text"   },
+  { key: "startDate",    labelKey: "columns.start",        width: 110, editable: false, type: "text"   },
+  { key: "endDate",      labelKey: "columns.end",          width: 110, editable: false, type: "text"   },
+  { key: "lastModified", labelKey: "columns.lastModified", width: 110, editable: false, type: "text"   },
 ];
 
 export const DEFAULT_CAMPAIGN_COLS = [
@@ -80,22 +81,25 @@ function formatDate(s: string | null | undefined): string {
   catch { return ""; }
 }
 
-function formatRelativeTime(dateStr: string | null | undefined): string {
-  if (!dateStr) return "";
+/** Returns a { key, params } object for relative time translation */
+function formatRelativeTimeKey(dateStr: string | null | undefined): { key: string; params?: Record<string, number> } | null {
+  if (!dateStr) return null;
   try {
     const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return "";
+    if (isNaN(date.getTime())) return null;
     const diffMs = Date.now() - date.getTime();
     const diffDays = Math.floor(diffMs / 86_400_000);
     if (diffDays === 0) {
       const h = Math.floor(diffMs / 3_600_000);
-      return h === 0 ? "Just now" : `${h}h ago`;
+      return h === 0
+        ? { key: "relativeTime.justNow" }
+        : { key: "relativeTime.hoursAgo", params: { count: h } };
     }
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7) return `${diffDays}d ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-    return `${Math.floor(diffDays / 30)}mo ago`;
-  } catch { return ""; }
+    if (diffDays === 1) return { key: "relativeTime.yesterday" };
+    if (diffDays < 7) return { key: "relativeTime.daysAgo", params: { count: diffDays } };
+    if (diffDays < 30) return { key: "relativeTime.weeksAgo", params: { count: Math.floor(diffDays / 7) } };
+    return { key: "relativeTime.monthsAgo", params: { count: Math.floor(diffDays / 30) } };
+  } catch { return null; }
 }
 
 // ── Sort icon ────────────────────────────────────────────────────────────────
@@ -140,6 +144,7 @@ function EditableCell({
   value, type, isEditing, editValue, isSaving, hasError,
   onStartEdit, onEditChange, onSave, onCancel,
 }: EditableCellProps) {
+  const { t } = useTranslation("campaigns");
   if (isEditing && type === "select") {
     return (
       <select
@@ -151,7 +156,7 @@ function EditableCell({
         className="w-full h-[28px] text-[11px] bg-white dark:bg-popover rounded px-1.5 ring-1 ring-brand-indigo/40 outline-none cursor-pointer"
       >
         {STATUS_OPTIONS.map((s) => (
-          <option key={s} value={s}>{s}</option>
+          <option key={s} value={s}>{t(`statusLabels.${s}`, s)}</option>
         ))}
       </select>
     );
@@ -185,7 +190,9 @@ function EditableCell({
       title={hasError ? "Save failed — click to retry" : value}
     >
       <span className="truncate flex-1">
-        {value || <span className="text-muted-foreground/35 italic not-italic">—</span>}
+        {value
+          ? (type === "select" ? t(`statusLabels.${value}`, value) : value)
+          : <span className="text-muted-foreground/35 italic not-italic">—</span>}
       </span>
       {isSaving && (
         <div className="h-2.5 w-2.5 border border-brand-indigo/40 border-t-brand-indigo rounded-full animate-spin ml-1 shrink-0" />
@@ -232,6 +239,7 @@ export function CampaignsInlineTable({
   sortDir,
   onSortChange,
 }: CampaignsInlineTableProps) {
+  const { t } = useTranslation("campaigns");
 
   // ── Editing state ─────────────────────────────────────────────────────────
   const [editingCell,    setEditingCell]    = useState<{ cid: number; field: ColKey } | null>(null);
@@ -330,7 +338,10 @@ export function CampaignsInlineTable({
       case "description":  return String(campaign.description || "");
       case "startDate":    return formatDate(campaign.start_date);
       case "endDate":      return formatDate(campaign.end_date);
-      case "lastModified": return formatRelativeTime((campaign as any).updated_at || (campaign as any).nc_updated_at);
+      case "lastModified": {
+        const rtk = formatRelativeTimeKey((campaign as any).updated_at || (campaign as any).nc_updated_at);
+        return rtk ? t(rtk.key, rtk.params) : "";
+      }
       default:             return "";
     }
   }
@@ -491,7 +502,7 @@ export function CampaignsInlineTable({
                     onClick={() => onSortChange(col.key)}
                   >
                     <span className="inline-flex items-center">
-                      {col.label}
+                      {t(col.labelKey)}
                       <SortIcon col={col.key} sortCol={sortCol} sortDir={sortDir} />
                     </span>
                   </th>
@@ -504,7 +515,7 @@ export function CampaignsInlineTable({
               {campaignCount === 0 && (
                 <tr>
                   <td colSpan={colSpan + 1} className="py-12 text-center text-xs text-muted-foreground">
-                    {tableSearch ? "No campaigns match your search" : "No campaigns found"}
+                    {tableSearch ? t("empty.noMatchSearch") : t("empty.noCampaignsFound")}
                   </td>
                 </tr>
               )}
@@ -577,7 +588,7 @@ export function CampaignsInlineTable({
                   const isDetailSelected = selectedCampaignId === cid;
                   const isMultiSelected = selectedIds.has(cid);
                   const isHighlighted = isMultiSelected || isDetailSelected;
-                  const name = String(campaign.name || "Unnamed");
+                  const name = String(campaign.name || t("detail.unnamed"));
                   const status = String(campaign.status || "");
                   const avatarColor = getCampaignAvatarColor(status);
 

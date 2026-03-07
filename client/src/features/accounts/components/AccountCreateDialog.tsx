@@ -1,5 +1,6 @@
 // src/features/accounts/components/AccountCreateDialog.tsx
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -53,19 +54,8 @@ interface AccountCreateDialogProps {
 const STATUS_OPTIONS = ["Active", "Trial", "Inactive", "Suspended"];
 const TYPE_OPTIONS = ["Agency", "Client"];
 const TIMEZONE_OPTIONS = [
-  "UTC",
-  "Europe/London",
-  "Europe/Paris",
-  "Europe/Berlin",
-  "Europe/Amsterdam",
-  "America/New_York",
-  "America/Chicago",
-  "America/Los_Angeles",
   "America/Sao_Paulo",
-  "Asia/Tokyo",
-  "Asia/Dubai",
-  "Asia/Singapore",
-  "Australia/Sydney",
+  "Europe/Amsterdam",
 ];
 
 const DEFAULT_FORM: NewAccountForm = {
@@ -75,7 +65,7 @@ const DEFAULT_FORM: NewAccountForm = {
   owner_email: "",
   phone: "",
   website: "",
-  timezone: "UTC",
+  timezone: "Europe/Amsterdam",
   business_niche: "",
   notes: "",
 };

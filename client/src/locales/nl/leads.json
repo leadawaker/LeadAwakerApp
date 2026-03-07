@@ -1,0 +1,508 @@
+{
+  "page": {
+    "title": "Mijn Leads",
+    "opportunities": "Kansen"
+  },
+  "viewTabs": {
+    "list": "Lijst",
+    "table": "Tabel",
+    "pipeline": "Pipeline"
+  },
+  "toolbar": {
+    "add": "Toevoegen",
+    "searchPlaceholder": "Leads zoeken...",
+    "searchLeads": "Leads zoeken",
+    "group": "Groeperen",
+    "sort": "Sorteren",
+    "filter": "Filteren",
+    "fields": "Velden",
+    "csv": "CSV",
+    "importCsv": "CSV importeren",
+    "exportCsv": "CSV exporteren",
+    "fold": "Inklappen",
+    "unfold": "Uitklappen",
+    "tags": "Tags",
+    "changeStage": "Fase wijzigen",
+    "duplicate": "Dupliceren",
+    "clearAll": "Alles wissen",
+    "clearAllFilters": "Alle filters wissen",
+    "resetToDefault": "Standaard herstellen",
+    "showHideColumns": "Kolommen tonen / verbergen"
+  },
+  "sort": {
+    "sortBy": "Sorteren op",
+    "default": "Standaard",
+    "scoreHighToLow": "Score (Hoog naar Laag)",
+    "scoreDesc": "Score (Hoog \u2192 Laag)",
+    "recency": "Recent (Nieuwste eerst)",
+    "alphaAZ": "Alfabetisch (A tot Z)",
+    "alpha": "Alfabetisch (A \u2192 Z)",
+    "mostRecent": "Meest Recent",
+    "nameAZ": "Naam A \u2192 Z",
+    "nameZA": "Naam Z \u2192 A",
+    "scoreDown": "Score \u2193",
+    "scoreUp": "Score \u2191"
+  },
+  "group": {
+    "status": "Status",
+    "campaign": "Campagne",
+    "account": "Account",
+    "none": "Geen",
+    "noCampaign": "Geen Campagne",
+    "untagged": "Zonder Tag"
+  },
+  "filters": {
+    "title": "Leadfilters",
+    "pipelineStage": "Pipelinefase",
+    "allStages": "Alle fases",
+    "campaign": "Campagne",
+    "allCampaigns": "Alle campagnes",
+    "tags": "Tags",
+    "selectTags": "Tags selecteren...",
+    "tagsSelected_one": "{{count}} tag geselecteerd",
+    "tagsSelected_other": "{{count}} tags geselecteerd",
+    "scoreRange": "Lead Score Bereik",
+    "priority": "Prioriteit",
+    "allPriorities": "Alle prioriteiten",
+    "createdDateRange": "Aanmaakdatum Bereik",
+    "from": "Van",
+    "to": "Tot",
+    "clearDates": "Datums wissen",
+    "filtersActive_one": "{{count}} filter actief",
+    "filtersActive_other": "{{count}} filters actief",
+    "highScore": "Hoge Score (70+)",
+    "hasPhone": "Heeft Telefoon",
+    "hasEmail": "Heeft E-mail",
+    "allAccounts": "Alle Accounts",
+    "moveTo": "Verplaatsen naar"
+  },
+  "fold": {
+    "foldColumns": "Kolommen inklappen",
+    "foldDescription": "Kolommen inklappen met dit aantal leads of minder.",
+    "leads": "leads",
+    "apply": "Toepassen"
+  },
+  "tagsToggle": {
+    "alwaysVisible": "Tags altijd zichtbaar \u2014 klik voor alleen bij hover",
+    "hoverOnly": "Tags alleen bij hover tonen \u2014 klik om altijd te tonen"
+  },
+  "table": {
+    "columns": {
+      "name": "Naam",
+      "status": "Status",
+      "score": "Score",
+      "phone": "Telefoon",
+      "email": "E-mail",
+      "campaign": "Campagne",
+      "tags": "Tags",
+      "lastActivity": "Laatste Activiteit",
+      "notes": "Notities",
+      "account": "Account",
+      "source": "Bron",
+      "company": "Bedrijf",
+      "bumpStage": "Bump Fase",
+      "created": "Aangemaakt",
+      "assignedTo": "Toegewezen aan"
+    },
+    "empty": {
+      "noResults": "Geen leads gevonden voor uw zoekopdracht",
+      "noLeads": "Geen leads gevonden"
+    },
+    "pagination": {
+      "prev": "Vorige",
+      "next": "Volgende"
+    },
+    "saveFailed": "Opslaan mislukt \u2014 klik om opnieuw te proberen",
+    "selectAll": "Alles selecteren",
+    "deselectAll": "Alles deselecteren"
+  },
+  "kanban": {
+    "stageLabels": {
+      "New": "Nieuw",
+      "Contacted": "Gecontacteerd",
+      "Responded": "Gereageerd",
+      "MultipleResponses": "Meerdere Reacties",
+      "Qualified": "Gekwalificeerd",
+      "Booked": "Gesprek Gepland",
+      "Closed": "Gesloten",
+      "Lost": "Verloren",
+      "DND": "Niet Storen",
+      "Unknown": "Onbekend"
+    },
+    "emptyStates": {
+      "New": {
+        "message": "Nog geen nieuwe leads",
+        "hint": "Importeer contacten of voeg een lead toe om te beginnen"
+      },
+      "Contacted": {
+        "message": "Geen gecontacteerde leads",
+        "hint": "Neem contact op met nieuwe leads om ze hier te plaatsen"
+      },
+      "Responded": {
+        "message": "Geen leads hebben gereageerd",
+        "hint": "Blijf opvolgen \u2014 reacties verschijnen hier"
+      },
+      "MultipleResponses": {
+        "message": "Geen actieve gesprekken",
+        "hint": "Ga in gesprek met uw gecontacteerde leads"
+      },
+      "Qualified": {
+        "message": "Nog geen gekwalificeerde leads",
+        "hint": "Kwalificeer veelbelovende gesprekken om deze fase te vullen"
+      },
+      "Booked": {
+        "message": "Nog geen gesprekken gepland",
+        "hint": "Dit is uw hoofddoel \u2014 blijf doorgaan!"
+      },
+      "Closed": {
+        "message": "Nog geen afgesloten deals",
+        "hint": "Afgeronde afspraken verschijnen hier"
+      },
+      "Lost": {
+        "message": "Geen verloren leads",
+        "hint": "Geweldig! Al uw leads zitten nog in de pipeline"
+      },
+      "DND": {
+        "message": "Geen leads op Niet Storen",
+        "hint": "Leads die zich afmelden verschijnen hier"
+      },
+      "default": {
+        "message": "Geen leads in deze fase",
+        "hint": "Sleep leads hierheen om ze naar deze fase te verplaatsen"
+      }
+    },
+    "dropHere": "Hier neerzetten",
+    "moveLeadTo": "Lead verplaatsen naar {{stage}}",
+    "loadMore": "{{count}} meer laden",
+    "leadMoved": "Lead verplaatst",
+    "movedTo": "Verplaatst naar {{stage}}",
+    "undo": "Ongedaan maken",
+    "moveFailed": "Kon lead niet verplaatsen",
+    "moveFailedDescription": "Status teruggedraaid \u2014 controleer uw verbinding",
+    "leadScore": "Lead score: {{score}}"
+  },
+  "detail": {
+    "title": "Lead Detail",
+    "leadsOverview": "Leads Overzicht",
+    "leadsCount": "{{count}} leads",
+    "clickRowToView": "Klik op een rij om leaddetails hier te bekijken.",
+    "expandPanel": "Paneel uitklappen",
+    "collapsePanel": "Paneel inklappen",
+    "deselectLead": "Lead deselecteren",
+    "openFullPage": "Volledige contactpagina openen",
+    "sections": {
+      "contact": "Contact",
+      "scores": "Scores",
+      "status": "Status",
+      "doNotContact": "Niet Contacteren",
+      "bumpProgress": "Bump Voortgang",
+      "activity": "Activiteit",
+      "booking": "Afspraak",
+      "aiInsights": "AI Inzichten",
+      "tags": "Tags",
+      "notes": "Notities",
+      "conversations": "Gesprekken"
+    },
+    "fields": {
+      "name": "Naam",
+      "phone": "Telefoon",
+      "email": "E-mail",
+      "priority": "Prioriteit",
+      "language": "Taal",
+      "leadScore": "Lead Score",
+      "engagement": "Betrokkenheid",
+      "activityScore": "Activiteit",
+      "pipelineStage": "Pipelinefase",
+      "automation": "Automatisering",
+      "manualTakeover": "Handmatige Overname",
+      "aiPaused": "AI gepauzeerd",
+      "optedOutDnc": "Afgemeld / Niet Contacteren",
+      "dncActive": "Niet Contacteren actief",
+      "dncReason": "Reden (optioneel)",
+      "dncReasonPlaceholder": "Voer reden in...",
+      "dncReasonLabel": "Reden",
+      "currentStage": "Huidige Fase",
+      "leadCreated": "Lead Aangemaakt",
+      "lastUpdated": "Laatst Bijgewerkt",
+      "lastInteraction": "Laatste Interactie",
+      "lastSent": "Laatst Verzonden",
+      "lastReceived": "Laatst Ontvangen",
+      "sentCount": "Aantal Verzonden",
+      "receivedCount": "Aantal Ontvangen",
+      "responseRate": "Responspercentage",
+      "daysInactive": "Dagen Inactief",
+      "firstContacted": "Eerste Contact",
+      "nextAction": "Volgende Actie",
+      "whatTheyDid": "Wat Ze Deden",
+      "callDate": "Gespreksdatum",
+      "confirmedAt": "Bevestigd Op",
+      "noShow": "Niet Verschenen",
+      "rescheduled": "Verplaatst",
+      "duration": "Duur",
+      "durationMinutes": "{{minutes}} min",
+      "source": "Bron",
+      "lastActive": "Laatst actief",
+      "account": "Account",
+      "changePlaceholder": "Wijzigen...",
+      "bump": "Bump {{n}}",
+      "aiSentiment": "Sentiment",
+      "aiMemory": "AI Geheugen",
+      "aiSummary": "Samenvatting"
+    },
+    "sentiment": {
+      "positive": "Positief",
+      "negative": "Negatief",
+      "neutral": "Neutraal"
+    },
+    "notScored": "Niet gescoord",
+    "aiSummary": "AI Samenvatting",
+    "noAiSummary": "Nog geen AI-samenvatting gegenereerd"
+  },
+  "contact": {
+    "title": "Contact",
+    "firstName": "Voornaam",
+    "lastName": "Achternaam",
+    "phone": "Telefoon",
+    "email": "E-mail",
+    "jobTitle": "Functie",
+    "company": "Bedrijf",
+    "created": "Aangemaakt"
+  },
+  "score": {
+    "title": "Lead Score",
+    "notScored": "Niet gescoord",
+    "insights": {
+      "callBooked": "Gesprek succesvol gepland",
+      "leadQualified": "Lead is gekwalificeerd",
+      "multipleResponses": "Meerdere reacties ontvangen",
+      "leadResponded": "Lead heeft gereageerd",
+      "leadOptedOut": "Lead heeft zich afgemeld",
+      "dndStatus": "Niet-storen status",
+      "leadLost": "Lead gemarkeerd als verloren",
+      "positiveSentiment": "Positief sentiment gedetecteerd",
+      "negativeSentiment": "Negatief sentiment gedetecteerd",
+      "neutralSentiment": "Neutraal sentiment gedetecteerd",
+      "repliedLast24h": "Gereageerd in afgelopen 24u",
+      "repliedWithin48h": "Gereageerd binnen 48u",
+      "repliedThisWeek": "Gereageerd deze week",
+      "noReply30Days": "Geen reactie in 30+ dagen",
+      "quiet2Weeks": "Stil voor 2+ weken",
+      "noReplyYet": "Lead heeft nog niet gereageerd",
+      "highActivity": "Hoge berichtactiviteit",
+      "repliedMultiple": "Meerdere keren gereageerd",
+      "repliesMoreThanPinged": "Meer reacties dan berichten",
+      "manyFollowUps": "Veel opvolgberichten verzonden",
+      "pipelineStageIs": "Pipelinefase is",
+      "lastInteractionWas": "Laatste interactie was",
+      "leadSourceIs": "Leadbron is",
+      "activeCampaignIs": "Actieve campagne is",
+      "bumpSequenceAtStage": "Bump-reeks bij fase",
+      "leadPotentialIs": "Leadpotentieel is",
+      "highPotential": "hoog potentieel",
+      "moderate": "matig",
+      "needsNurturing": "moet gekoesterd worden"
+    }
+  },
+  "csvImport": {
+    "title": "Leads importeren uit CSV",
+    "description": "Upload een CSV-bestand en koppel de kolommen aan leadvelden.",
+    "steps": {
+      "upload": "Uploaden",
+      "mapFields": "Velden Koppelen",
+      "preview": "Voorbeeld",
+      "results": "Resultaten"
+    },
+    "upload": {
+      "dragAndDrop": "Sleep een CSV-bestand hierheen, of",
+      "browse": "bladeren",
+      "fileInfo": "Ondersteunt .csv-bestanden tot 10 MB \u00b7 Max 5.000 leads per import",
+      "formatTips": "CSV Opmaaktips",
+      "tip1": "Eerste rij moet kolomkoppen bevatten",
+      "tip2": "Aanbevolen kolommen: Voornaam, Achternaam, Telefoon, E-mail",
+      "tip3": "Telefoonnummers moeten landcode bevatten (bijv. +31 6 12345678)",
+      "tip4": "Kommagescheiden; velden tussen aanhalingstekens ondersteund",
+      "csvOnly": "Selecteer een CSV (.csv) bestand.",
+      "tooLarge": "Bestand is te groot. Maximale grootte is 10 MB.",
+      "emptyFile": "CSV lijkt leeg of heeft geen koppen.",
+      "parseFailed": "CSV kon niet worden verwerkt. Controleer het bestandsformaat."
+    },
+    "mapping": {
+      "file": "Bestand",
+      "dataRows_one": "{{count}} datarij",
+      "dataRows_other": "{{count}} datarijen",
+      "columnsDetected": "{{count}} kolommen gedetecteerd",
+      "duplicateMappings": "Dubbele koppelingen",
+      "phoneNotMapped": "Telefoon niet gekoppeld",
+      "csvColumn": "CSV Kolom",
+      "mapsToField": "Koppelt aan Leadveld",
+      "columnsMapped_one": "{{mapped}} van {{total}} kolom gekoppeld",
+      "columnsMapped_other": "{{mapped}} van {{total}} kolommen gekoppeld",
+      "selectField": "Veld selecteren...",
+      "skipColumn": "\u2014 Deze kolom overslaan \u2014"
+    },
+    "targetFields": {
+      "firstName": "Voornaam",
+      "lastName": "Achternaam",
+      "phone": "Telefoon",
+      "email": "E-mail",
+      "pipelineStage": "Pipelinefase",
+      "priority": "Prioriteit",
+      "automationStatus": "Automatiseringsstatus",
+      "accountId": "Account ID",
+      "campaignId": "Campagne ID",
+      "leadSource": "Leadbron",
+      "notes": "Notities",
+      "language": "Taal",
+      "timezone": "Tijdzone",
+      "aiSentiment": "AI Sentiment",
+      "dncReason": "Niet Contacteren Reden"
+    },
+    "preview": {
+      "title": "Importvoorbeeld",
+      "showing_one": "Eerste {{shown}} van {{total}} rij weergegeven",
+      "showing_other": "Eerste {{shown}} van {{total}} rijen weergegeven",
+      "fieldsMapped_one": "{{count}} veld gekoppeld",
+      "fieldsMapped_other": "{{count}} velden gekoppeld",
+      "readyToImport": "Klaar om te importeren",
+      "leadsWillBeCreated_one": "{{count}} lead wordt aangemaakt",
+      "leadsWillBeCreated_other": "{{count}} leads worden aangemaakt",
+      "fieldsPerLead_one": "{{count}} veld gekoppeld per lead",
+      "fieldsPerLead_other": "{{count}} velden gekoppeld per lead",
+      "assignedToAccount": "Leads worden toegewezen aan account #{{id}}",
+      "previewImport": "Importvoorbeeld"
+    },
+    "importing": "Importeren...",
+    "importButton_one": "{{count}} Lead Importeren",
+    "importButton_other": "{{count}} Leads Importeren",
+    "results": {
+      "leadsImported_one": "Lead ge\u00efmporteerd",
+      "leadsImported_other": "Leads ge\u00efmporteerd",
+      "rowsFailed_one": "Rij mislukt",
+      "rowsFailed_other": "Rijen mislukt",
+      "errorDetails": "Foutdetails:",
+      "row": "Rij {{number}}:",
+      "refreshed": "Leadstabel is vernieuwd met de nieuwe records.",
+      "fixMapping": "Koppeling Herstellen"
+    }
+  },
+  "conversations": {
+    "title": "Gesprekken",
+    "noMessages": "Nog geen berichten",
+    "messagePlaceholder": "Typ een bericht...",
+    "thread": "Thread",
+    "conversation": "Gesprek",
+    "conversationNumber": "Gesprek {{number}}"
+  },
+  "toast": {
+    "transcriptionFailed": "Transcriptie mislukt",
+    "networkError": "Netwerkfout. Probeer opnieuw.",
+    "microphoneDenied": "Microfoontoegang geweigerd",
+    "microphoneDescription": "Sta microfoontoegang toe om spraakmemo's op te nemen."
+  },
+  "time": {
+    "justNow": "Zojuist",
+    "now": "Nu",
+    "today": "Vandaag",
+    "yesterday": "Gisteren",
+    "thisWeek": "Deze Week",
+    "thisMonth": "Deze Maand",
+    "last3Months": "Afgelopen 3 Maanden",
+    "older": "Ouder",
+    "noActivity": "Geen Activiteit"
+  },
+  "confirm": {
+    "yes": "Ja",
+    "no": "Nee"
+  },
+  "tags": {
+    "addTag": "Tag toevoegen",
+    "noTagsAvailable": "Geen tags beschikbaar",
+    "allTagsAssigned": "Alle tags al toegewezen",
+    "noTagsAssigned": "Geen tags toegewezen",
+    "loadingTags": "Tags laden…",
+    "removeTag": "Tag {{name}} verwijderen"
+  },
+  "timeline": {
+    "title": "Tijdlijn",
+    "titleWithCount": "Tijdlijn ({{count}})",
+    "noInteractions": "Nog geen interacties",
+    "noInteractionsHint": "Berichten verschijnen hier zodra de lead met uw campagnes interacteert.",
+    "aiSent": "AI verzonden",
+    "agentSent": "Agent verzonden",
+    "sent": "Verzonden",
+    "received": "Ontvangen",
+    "bump": "Opvolging",
+    "via": "via {{who}}"
+  },
+  "notes": {
+    "placeholder": "Notities over deze lead toevoegen…",
+    "saveNotes": "Notities opslaan",
+    "stopRecording": "Opname stoppen",
+    "recordVoiceMemo": "Spraakmemo opnemen (naar tekst transcriberen)",
+    "transcribing": "Transcriberen\u2026",
+    "saved": "Opgeslagen",
+    "save": "Opslaan"
+  },
+  "relativeTime": {
+    "justNow": "Zojuist",
+    "hoursAgo": "{{count}}u geleden",
+    "yesterday": "Gisteren",
+    "daysAgo": "{{count}}d geleden",
+    "weeksAgo": "{{count}}w geleden",
+    "monthsAgo": "{{count}}ma geleden"
+  },
+  "detailView": {
+    "source": "Bron",
+    "rating": "Beoordeling",
+    "campaign": "Campagne",
+    "owner": "Eigenaar",
+    "booked": "Gepland",
+    "hot": "Heet",
+    "warm": "Warm",
+    "cold": "Koud",
+    "toPdf": "Naar PDF",
+    "delete": "Verwijderen",
+    "deleteLead": "Lead verwijderen?",
+    "newLead": "Nieuwe lead",
+    "searchLeads": "Leads zoeken\u2026",
+    "searchTagName": "Tagnaam zoeken\u2026",
+    "previousPage": "Vorige pagina",
+    "nextPage": "Volgende pagina",
+    "of": "van",
+    "assignment": "Toewijzing"
+  },
+  "chat": {
+    "title": "Chat",
+    "noMessages": "Nog geen berichten",
+    "noMessagesHint": "Berichten verschijnen hier zodra het contact begint",
+    "typePlaceholder": "Typ een bericht\u2026",
+    "letAiContinue": "AI laten doorgaan",
+    "openInChats": "Openen in Chats",
+    "transcribing": "Transcriberen\u2026"
+  },
+  "team": {
+    "title": "Team",
+    "addTeamMember": "Teamlid toevoegen",
+    "noMoreUsers": "Geen gebruikers meer beschikbaar"
+  },
+  "activity": {
+    "title": "Activiteit",
+    "callBooked": "Gesprek Gepland",
+    "scheduledFor": "Gepland voor {{date}}",
+    "doNotDisturb": "Niet Storen",
+    "leadRequestedNoContact": "Lead heeft geen contact verzocht",
+    "optedOut": "Afgemeld",
+    "tagApplied": "Tag \"{{name}}\" toegepast",
+    "clickToAddNotes": "Klik om notities toe te voegen...",
+    "noRecentActivity": "Geen recente activiteit",
+    "emptyHint": "Activiteit verschijnt hier zodra deze lead met uw campagnes interacteert.",
+    "loadError": "Kon activiteitstijdlijn niet laden."
+  },
+  "kanbanDetail": {
+    "chat": "Chat",
+    "contact": "Contact",
+    "score": "Score",
+    "activity": "Activiteit",
+    "notes": "Notities"
+  }
+}

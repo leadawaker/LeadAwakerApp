@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   X,
   Clock,
@@ -112,6 +113,7 @@ function BoolRow({ label, value }: { label: string; value: boolean | null | unde
 
 /** Renders qualification criteria in a structured, readable format */
 function QualificationCriteriaDisplay({ raw }: { raw: string | null | undefined }) {
+  const { t } = useTranslation("campaigns");
   if (!raw) {
     return (
       <div
@@ -119,7 +121,7 @@ function QualificationCriteriaDisplay({ raw }: { raw: string | null | undefined 
         data-testid="campaign-detail-qualification-empty"
       >
         <ListChecks className="w-6 h-6 text-muted-foreground/30 mb-2" />
-        <p className="text-[12px] text-muted-foreground italic">No qualification criteria defined</p>
+        <p className="text-[12px] text-muted-foreground italic">{t("panel.noQualificationCriteria")}</p>
       </div>
     );
   }
@@ -149,12 +151,12 @@ function QualificationCriteriaDisplay({ raw }: { raw: string | null | undefined 
             displayValue = value ? (
               <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                Yes
+                {t("confirm.yes")}
               </span>
             ) : (
               <span className="flex items-center gap-1 text-slate-500">
                 <XCircle className="w-3.5 h-3.5" />
-                No
+                {t("confirm.no")}
               </span>
             );
           } else if (Array.isArray(value)) {
@@ -221,6 +223,7 @@ function BumpCard({
   template: string | null | undefined;
   delayHours: number | null | undefined;
 }) {
+  const { t } = useTranslation("campaigns");
   return (
     <div
       className="rounded-xl border border-border bg-muted/30 p-3 space-y-2"
@@ -235,7 +238,7 @@ function BumpCard({
         </div>
         <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
           <Clock className="w-3 h-3" />
-          <span>Delay: {formatHours(delayHours)}</span>
+          <span>{t("config.delayLabel", { value: formatHours(delayHours) })}</span>
         </div>
       </div>
       {template ? (
@@ -243,7 +246,7 @@ function BumpCard({
           {template}
         </p>
       ) : (
-        <p className="text-[11px] text-muted-foreground italic">No template set</p>
+        <p className="text-[11px] text-muted-foreground italic">{t("config.noTemplateSet")}</p>
       )}
     </div>
   );
@@ -251,6 +254,7 @@ function BumpCard({
 
 /** Performance chart using Recharts */
 function PerformanceChart({ metrics }: { metrics: CampaignMetricsHistory[] }) {
+  const { t } = useTranslation("campaigns");
   const chartData = useMemo(() => {
     return [...metrics]
       .sort((a, b) => (a.metric_date || "").localeCompare(b.metric_date || ""))
@@ -268,7 +272,7 @@ function PerformanceChart({ metrics }: { metrics: CampaignMetricsHistory[] }) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
         <BarChart2 className="w-8 h-8 text-muted-foreground/30 mb-2" />
-        <p className="text-[12px] text-muted-foreground">No performance data yet</p>
+        <p className="text-[12px] text-muted-foreground">{t("panel.noPerformanceData")}</p>
       </div>
     );
   }
@@ -347,6 +351,7 @@ function MetricSummaryRow({
 }: {
   metrics: CampaignMetricsHistory[];
 }) {
+  const { t } = useTranslation("campaigns");
   const latest = useMemo(() => {
     if (metrics.length === 0) return null;
     return [...metrics].sort((a, b) =>
@@ -374,34 +379,34 @@ function MetricSummaryRow({
   const costPerBooking = Number(latest.cost_per_booking) || 0;
 
   const pills: { label: string; value: string; color: string; testId?: string }[] = [
-    { label: "Leads", value: totals.leadsTargeted.toLocaleString(), color: "text-violet-600 dark:text-violet-400" },
-    { label: "Messages", value: totals.messagesSent.toLocaleString(), color: "text-blue-600 dark:text-blue-400" },
-    { label: "Responses", value: totals.responses.toLocaleString(), color: "text-cyan-600 dark:text-cyan-400" },
-    { label: "Bookings", value: totals.bookings.toLocaleString(), color: "text-amber-600 dark:text-amber-400" },
+    { label: t("panel.metrics.leads"), value: totals.leadsTargeted.toLocaleString(), color: "text-violet-600 dark:text-violet-400" },
+    { label: t("panel.metrics.messages"), value: totals.messagesSent.toLocaleString(), color: "text-blue-600 dark:text-blue-400" },
+    { label: t("panel.metrics.responses"), value: totals.responses.toLocaleString(), color: "text-cyan-600 dark:text-cyan-400" },
+    { label: t("panel.metrics.bookings"), value: totals.bookings.toLocaleString(), color: "text-amber-600 dark:text-amber-400" },
     {
-      label: "Response %",
+      label: t("panel.metrics.responseRate"),
       value: `${Number(latest.response_rate_percent) || 0}%`,
       color: "text-indigo-600 dark:text-indigo-400",
     },
     {
-      label: "Booking %",
+      label: t("panel.metrics.bookingRate"),
       value: `${Number(latest.booking_rate_percent) || 0}%`,
       color: "text-orange-600 dark:text-orange-400",
     },
     {
-      label: "Total Cost",
+      label: t("panel.metrics.totalCost"),
       value: `$${totals.cost.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
       color: "text-rose-600 dark:text-rose-400",
       testId: "campaign-detail-total-cost",
     },
     {
-      label: "Cost/Lead",
+      label: t("panel.metrics.costPerLead"),
       value: `$${costPerLead.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`,
       color: "text-orange-600 dark:text-orange-400",
       testId: "campaign-detail-cost-per-lead",
     },
     {
-      label: "Cost/Booking",
+      label: t("panel.metrics.costPerBooking"),
       value: costPerBooking > 0
         ? `$${costPerBooking.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
         : "—",
@@ -409,7 +414,7 @@ function MetricSummaryRow({
       testId: "campaign-detail-cost-per-booking",
     },
     {
-      label: "ROI",
+      label: t("panel.metrics.roi"),
       value: `${roiValue >= 0 ? "+" : ""}${roiValue}%`,
       color: getRoiColor(roiValue),
       testId: "campaign-detail-roi-percent",
@@ -449,6 +454,7 @@ export function CampaignDetailPanel({
   open,
   onClose,
 }: CampaignDetailPanelProps) {
+  const { t } = useTranslation("campaigns");
   // Filter metrics to just this campaign
   const campaignMetrics = useMemo(() => {
     if (!campaign) return [];
@@ -516,7 +522,7 @@ export function CampaignDetailPanel({
               className="text-base font-bold text-foreground truncate leading-tight"
               data-testid="campaign-detail-name"
             >
-              {campaign.name || "Unnamed Campaign"}
+              {campaign.name || t("detail.unnamed")}
             </h2>
             <div className="flex items-center gap-2 mt-1">
               <span
@@ -528,7 +534,7 @@ export function CampaignDetailPanel({
                 data-testid="campaign-detail-status"
               >
                 <span className={cn("w-1.5 h-1.5 rounded-full inline-block", statusColors.dot)} />
-                {campaign.status || "Unknown"}
+                {t(`statusLabels.${campaign.status}`, campaign.status as string) || t("statusLabels.Unknown")}
               </span>
               {campaign.account_name && (
                 <span className="text-[11px] text-muted-foreground truncate">
@@ -554,7 +560,7 @@ export function CampaignDetailPanel({
           {/* PERFORMANCE METRICS ─────────────────────────────── */}
           {campaignMetrics.length > 0 && (
             <section data-testid="campaign-detail-section-metrics">
-              <SectionHeader icon={<TrendingUp className="w-3.5 h-3.5" />} title="Performance" />
+              <SectionHeader icon={<TrendingUp className="w-3.5 h-3.5" />} title={t("panel.performance")} />
               <MetricSummaryRow metrics={campaignMetrics} />
             </section>
           )}
@@ -562,7 +568,7 @@ export function CampaignDetailPanel({
           {/* PERFORMANCE CHART ───────────────────────────────── */}
           {campaignMetrics.length > 0 && (
             <section data-testid="campaign-detail-section-chart">
-              <SectionHeader icon={<BarChart2 className="w-3.5 h-3.5" />} title="Trends" />
+              <SectionHeader icon={<BarChart2 className="w-3.5 h-3.5" />} title={t("panel.trends")} />
               <div className="rounded-xl border border-border bg-card p-3">
                 <PerformanceChart metrics={campaignMetrics} />
               </div>
@@ -571,20 +577,20 @@ export function CampaignDetailPanel({
 
           {/* CAMPAIGN SETTINGS ───────────────────────────────── */}
           <section data-testid="campaign-detail-section-settings">
-            <SectionHeader icon={<Settings className="w-3.5 h-3.5" />} title="Settings" />
+            <SectionHeader icon={<Settings className="w-3.5 h-3.5" />} title={t("panel.settings")} />
             <div className="rounded-xl border border-border bg-card p-3 space-y-0">
-              <InfoRow label="Description" value={campaign.description || "—"} />
-              <InfoRow label="Type" value={campaign.type} />
+              <InfoRow label={t("panel.descriptionLabel")} value={campaign.description || "—"} />
+              <InfoRow label={t("panel.typeLabel")} value={campaign.type} />
               <InfoRow
-                label="Start date"
+                label={t("panel.startDate")}
                 value={formatDate(campaign.start_date)}
               />
               <InfoRow
-                label="End date"
+                label={t("panel.endDate")}
                 value={formatDate(campaign.end_date)}
               />
               <InfoRow
-                label="Active hours"
+                label={t("panel.activeHours")}
                 value={
                   campaign.active_hours_start || campaign.active_hours_end
                     ? `${campaign.active_hours_start || "—"} → ${campaign.active_hours_end || "—"}`
@@ -592,17 +598,17 @@ export function CampaignDetailPanel({
                 }
               />
               <InfoRow
-                label="Daily lead limit"
+                label={t("panel.dailyLeadLimit")}
                 value={campaign.daily_lead_limit?.toLocaleString() || "—"}
               />
               <InfoRow
-                label="Message interval"
+                label={t("panel.messageInterval")}
                 value={campaign.message_interval_minutes ? `${campaign.message_interval_minutes} min` : "—"}
               />
-              <BoolRow label="Stop on response" value={campaign.stop_on_response} />
-              <BoolRow label="Use AI bumps" value={campaign.use_ai_bumps} />
+              <BoolRow label={t("panel.stopOnResponse")} value={campaign.stop_on_response} />
+              <BoolRow label={t("panel.useAiBumps")} value={campaign.use_ai_bumps} />
               <InfoRow
-                label="Max bumps"
+                label={t("panel.maxBumps")}
                 value={campaign.max_bumps}
               />
             </div>
@@ -610,19 +616,19 @@ export function CampaignDetailPanel({
 
           {/* AI SETTINGS ─────────────────────────────────────── */}
           <section data-testid="campaign-detail-section-ai">
-            <SectionHeader icon={<Bot className="w-3.5 h-3.5" />} title="AI Configuration" />
+            <SectionHeader icon={<Bot className="w-3.5 h-3.5" />} title={t("panel.aiConfiguration")} />
             <div className="rounded-xl border border-border bg-card p-3 space-y-0">
-              <InfoRow label="AI model" value={campaign.ai_model || "Default"} />
+              <InfoRow label={t("panel.aiModel")} value={campaign.ai_model || "Default"} />
               <InfoRow
-                label="AI temperature"
+                label={t("panel.aiTemperature")}
                 value={campaign.ai_temperature != null ? String(campaign.ai_temperature) : "—"}
               />
-              <InfoRow label="Agent name" value={campaign.agent_name} />
-              <InfoRow label="Service name" value={campaign.service_name} />
+              <InfoRow label={t("panel.agentName")} value={campaign.agent_name} />
+              <InfoRow label={t("panel.serviceName")} value={campaign.service_name} />
               {campaign.ai_prompt_template && (
                 <div className="pt-2">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                    AI Prompt Template
+                    {t("panel.aiPromptTemplate")}
                   </p>
                   <p className="text-[11px] text-foreground leading-relaxed whitespace-pre-wrap bg-muted/30 rounded-lg p-2 break-words">
                     {campaign.ai_prompt_template}
@@ -634,7 +640,7 @@ export function CampaignDetailPanel({
 
           {/* MESSAGE TEMPLATES ───────────────────────────────── */}
           <section data-testid="campaign-detail-section-templates">
-            <SectionHeader icon={<Layers className="w-3.5 h-3.5" />} title="Message Templates" />
+            <SectionHeader icon={<Layers className="w-3.5 h-3.5" />} title={t("panel.messageTemplates")} />
             <div className="space-y-3">
               {/* First message */}
               <div
@@ -643,7 +649,7 @@ export function CampaignDetailPanel({
               >
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    First Message
+                    {t("panel.firstMessage")}
                   </span>
                 </div>
                 {campaign.first_message_template || campaign.First_Message ? (
@@ -651,7 +657,7 @@ export function CampaignDetailPanel({
                     {campaign.first_message_template || campaign.First_Message}
                   </p>
                 ) : (
-                  <p className="text-[11px] text-muted-foreground italic">No template set</p>
+                  <p className="text-[11px] text-muted-foreground italic">{t("config.noTemplateSet")}</p>
                 )}
               </div>
 
@@ -676,10 +682,10 @@ export function CampaignDetailPanel({
 
           {/* COST & ROI ─────────────────────────────────────────── */}
           <section data-testid="campaign-detail-section-cost-metrics">
-            <SectionHeader icon={<DollarSign className="w-3.5 h-3.5" />} title="Cost & ROI" />
+            <SectionHeader icon={<DollarSign className="w-3.5 h-3.5" />} title={t("panel.costAndRoi")} />
             <div className="rounded-xl border border-border bg-card p-3 space-y-0">
               <InfoRow
-                label="Total cost"
+                label={t("panel.totalCost")}
                 value={
                   <span data-testid="campaign-detail-direct-total-cost">
                     ${Number(campaign.total_cost ?? 0).toFixed(2)}
@@ -687,7 +693,7 @@ export function CampaignDetailPanel({
                 }
               />
               <InfoRow
-                label="Cost per lead"
+                label={t("panel.costPerLead")}
                 value={
                   <span data-testid="campaign-detail-direct-cost-per-lead">
                     ${Number(campaign.cost_per_lead ?? 0).toFixed(2)}
@@ -695,7 +701,7 @@ export function CampaignDetailPanel({
                 }
               />
               <InfoRow
-                label="Cost per booking"
+                label={t("panel.costPerBooking")}
                 value={
                   <span data-testid="campaign-detail-direct-cost-per-booking">
                     ${Number(campaign.cost_per_booking ?? 0).toFixed(2)}
@@ -703,7 +709,7 @@ export function CampaignDetailPanel({
                 }
               />
               <div className="flex items-start justify-between gap-3 py-1.5 border-b border-border/40 last:border-0">
-                <span className="text-[11px] text-muted-foreground shrink-0 pt-0.5">ROI</span>
+                <span className="text-[11px] text-muted-foreground shrink-0 pt-0.5">{t("panel.roi")}</span>
                 <span
                   className={cn(
                     "text-[12px] font-bold text-right",
@@ -721,15 +727,15 @@ export function CampaignDetailPanel({
 
           {/* INTEGRATIONS ────────────────────────────────────── */}
           <section data-testid="campaign-detail-section-integrations">
-            <SectionHeader icon={<Link2 className="w-3.5 h-3.5" />} title="Integrations" />
+            <SectionHeader icon={<Link2 className="w-3.5 h-3.5" />} title={t("panel.integrations")} />
             <div className="rounded-xl border border-border bg-card p-3 space-y-0">
               <InfoRow
-                label="n8n workflow ID"
+                label={t("panel.n8nWorkflowId")}
                 value={campaign.n8n_workflow_id || "—"}
                 mono
               />
               <InfoRow
-                label="Calendar link"
+                label={t("panel.calendarLink")}
                 value={
                   campaign.calendar_link || campaign.calendar_link_override ? (
                     <a
@@ -746,7 +752,7 @@ export function CampaignDetailPanel({
                 }
               />
               <InfoRow
-                label="Webhook URL"
+                label={t("panel.webhookUrl")}
                 value={campaign.webhook_url || "—"}
                 mono
               />
@@ -755,7 +761,7 @@ export function CampaignDetailPanel({
 
           {/* QUALIFICATION CRITERIA ─────────────────────────── */}
           <section data-testid="campaign-detail-section-qualification">
-            <SectionHeader icon={<ListChecks className="w-3.5 h-3.5" />} title="Qualification Criteria" />
+            <SectionHeader icon={<ListChecks className="w-3.5 h-3.5" />} title={t("panel.qualificationCriteria")} />
             <div className="rounded-xl border border-border bg-card p-3">
               <QualificationCriteriaDisplay raw={campaign.qualification_criteria} />
             </div>
@@ -764,13 +770,13 @@ export function CampaignDetailPanel({
           {/* AUDIENCE ────────────────────────────────────────── */}
           {(campaign.target_audience || campaign.campaign_niche_override || campaign.campaign_service) && (
             <section data-testid="campaign-detail-section-audience">
-              <SectionHeader icon={<Users className="w-3.5 h-3.5" />} title="Audience & Targeting" />
+              <SectionHeader icon={<Users className="w-3.5 h-3.5" />} title={t("panel.audienceTargeting")} />
               <div className="rounded-xl border border-border bg-card p-3 space-y-0">
-                <InfoRow label="Target audience" value={campaign.target_audience} />
-                <InfoRow label="Niche" value={campaign.campaign_niche_override} />
-                <InfoRow label="Service" value={campaign.campaign_service} />
-                <InfoRow label="USP" value={campaign.campaign_usp} />
-                <InfoRow label="Inquiry timeframe" value={campaign.inquiry_timeframe} />
+                <InfoRow label={t("panel.targetAudience")} value={campaign.target_audience} />
+                <InfoRow label={t("panel.niche")} value={campaign.campaign_niche_override} />
+                <InfoRow label={t("panel.serviceLabel")} value={campaign.campaign_service} />
+                <InfoRow label={t("panel.usp")} value={campaign.campaign_usp} />
+                <InfoRow label={t("panel.inquiryTimeframe")} value={campaign.inquiry_timeframe} />
               </div>
             </section>
           )}

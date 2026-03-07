@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import type { NewAccountForm } from "./AccountCreateDialog";
 
 const TIMEZONE_OPTIONS = [
-  "UTC", "America/New_York", "America/Chicago", "America/Denver",
-  "America/Los_Angeles", "America/Phoenix", "America/Anchorage", "Pacific/Honolulu",
+  "America/Sao_Paulo",
+  "Europe/Amsterdam",
 ];
 
 const STATUS_OPTIONS = ["Active", "Trial", "Inactive", "Suspended"];
@@ -23,7 +23,7 @@ const DEFAULT_FORM: NewAccountForm = {
   owner_email: "",
   phone: "",
   website: "",
-  timezone: "UTC",
+  timezone: "Europe/Amsterdam",
   business_niche: "",
   notes: "",
 };

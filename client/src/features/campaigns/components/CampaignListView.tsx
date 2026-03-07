@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   List,
   Table2,
@@ -33,10 +34,10 @@ function getResponseRate(c: Campaign): number {
 
 const STATUS_GROUP_ORDER = ["Active", "Paused", "Completed", "Finished", "Draft", "Inactive", "Archived"];
 
-// ── View tab definitions ────────────────────────────────────────────────────
-const VIEW_TABS: TabDef[] = [
-  { id: "list",  label: "List",  icon: List },
-  { id: "table", label: "Table", icon: Table2 },
+// ── View tab definitions (keys resolved at render time via t()) ─────────────
+const VIEW_TAB_DEFS = [
+  { id: "list",  labelKey: "views.list",  icon: List },
+  { id: "table", labelKey: "views.table", icon: Table2 },
 ];
 
 // ── Virtual list item types ──────────────────────────────────────────────────
@@ -54,7 +55,8 @@ function CampaignListCard({
   isActive: boolean;
   onClick: () => void;
 }) {
-  const name = String(campaign.name || "Unnamed Campaign");
+  const { t } = useTranslation("campaigns");
+  const name = String(campaign.name || t("detail.unnamed"));
   const initials = getInitials(name);
   const status = String(campaign.status || "");
   const avatarColor = getCampaignAvatarColor(status);
@@ -145,7 +147,7 @@ function CampaignListCard({
                 className="h-1.5 w-1.5 rounded-full shrink-0"
                 style={{ backgroundColor: statusHex }}
               />
-              <span className="text-[11px] text-muted-foreground leading-none">{status || "Unknown"}</span>
+              <span className="text-[11px] text-muted-foreground leading-none">{t(`statusLabels.${status}`, status) || t("statusLabels.Unknown")}</span>
             </div>
             {accountName && (
               <div className="flex items-center gap-1 mt-1">
@@ -168,9 +170,9 @@ function CampaignListCard({
             isActive ? "bg-[#EFE4A0]/60" : "bg-foreground/8"
           )}>
             {[
-              { label: "Leads",    value: leads > 0         ? leads.toLocaleString()  : "—" },
-              { label: "Response", value: responseRate > 0  ? `${responseRate}%`       : "—" },
-              { label: "Booked",   value: bookings > 0      ? bookings.toLocaleString(): "—" },
+              { label: t("card.leads"),    value: leads > 0         ? leads.toLocaleString()  : "—" },
+              { label: t("card.response"), value: responseRate > 0  ? `${responseRate}%`       : "—" },
+              { label: t("card.booked"),   value: bookings > 0      ? bookings.toLocaleString(): "—" },
             ].map((stat) => (
               <div
                 key={stat.label}
@@ -188,7 +190,7 @@ function CampaignListCard({
           {/* Date row */}
           {createdLabel && (
             <div className="flex items-center gap-1 px-1">
-              <span className="text-[10px] text-muted-foreground/50 tabular-nums">Started {createdLabel}</span>
+              <span className="text-[10px] text-muted-foreground/50 tabular-nums">{t("card.started", { date: createdLabel })}</span>
             </div>
           )}
         </div>
@@ -302,6 +304,12 @@ export function CampaignListView({
   onRefresh,
   onDelete,
 }: CampaignListViewProps) {
+  const { t } = useTranslation("campaigns");
+
+  const VIEW_TABS: TabDef[] = useMemo(() =>
+    VIEW_TAB_DEFS.map((tab) => ({ ...tab, label: t(tab.labelKey) })),
+  [t]);
+
   const [currentPage, setCurrentPage] = useState(0);
   const PAGE_SIZE = 20;
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
@@ -383,7 +391,8 @@ export function CampaignListView({
     orderedKeys.forEach((key) => {
       const group = buckets.get(key);
       if (!group || group.length === 0) return;
-      result.push({ kind: "header", label: key, count: group.length });
+      const headerLabel = groupBy === "status" ? t(`statusLabels.${key}`, key) : key;
+      result.push({ kind: "header", label: headerLabel, count: group.length });
       group.forEach((c) => result.push({ kind: "campaign", campaign: c }));
     });
 
@@ -480,7 +489,7 @@ export function CampaignListView({
         {/* Header: title + ViewTabBar */}
         <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-1 md:pb-3 shrink-0 flex flex-col gap-2 md:flex-row md:items-center md:gap-0">
           <div className="flex items-center justify-between w-full md:w-[309px]">
-            <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Campaigns</h2>
+            <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("title")}</h2>
             <span className="hidden md:block">
               <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => onViewModeChange(id as CampaignViewMode)} variant="segment" />
             </span>
@@ -498,8 +507,8 @@ export function CampaignListView({
           ) : paginatedItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center px-4">
               <Megaphone className="w-8 h-8 text-muted-foreground/30 mb-3" />
-              <p className="text-sm font-medium text-muted-foreground">No campaigns found</p>
-              {listSearch && <p className="text-xs text-muted-foreground/70 mt-1">Try a different search</p>}
+              <p className="text-sm font-medium text-muted-foreground">{t("empty.noCampaignsFound")}</p>
+              {listSearch && <p className="text-xs text-muted-foreground/70 mt-1">{t("empty.tryDifferentSearch")}</p>}
             </div>
           ) : (
             <div
@@ -543,17 +552,17 @@ export function CampaignListView({
               disabled={currentPage === 0}
               className="text-[10px] text-muted-foreground hover:text-foreground disabled:opacity-30"
             >
-              Previous
+              {t("pagination.previous")}
             </button>
             <span className="text-[10px] text-muted-foreground tabular-nums">
-              {currentPage * PAGE_SIZE + 1}–{Math.min((currentPage + 1) * PAGE_SIZE, totalCampaigns)} of {totalCampaigns}
+              {t("pagination.rangeOf", { start: currentPage * PAGE_SIZE + 1, end: Math.min((currentPage + 1) * PAGE_SIZE, totalCampaigns), total: totalCampaigns })}
             </span>
             <button
               onClick={() => setCurrentPage((p) => Math.min(maxPage, p + 1))}
               disabled={currentPage >= maxPage}
               className="text-[10px] text-muted-foreground hover:text-foreground disabled:opacity-30"
             >
-              Next
+              {t("pagination.next")}
             </button>
           </div>
         )}

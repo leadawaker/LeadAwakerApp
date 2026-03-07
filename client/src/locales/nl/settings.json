@@ -1,0 +1,122 @@
+{
+  "language": {
+    "label": "Taal",
+    "description": "Kies je voorkeurstaal"
+  },
+  "title": "Instellingen",
+  "sections": {
+    "profile": "Mijn Profiel",
+    "security": "Beveiliging",
+    "notifications": "Meldingen",
+    "dashboard": "Dashboard",
+    "team": "Team"
+  },
+  "profile": {
+    "description": "Werk je persoonlijke gegevens en voorkeuren bij.",
+    "noName": "Geen naam ingesteld",
+    "userFallback": "Gebruiker",
+    "uploadPhoto": "Foto uploaden",
+    "clickToUpload": "Klik om foto te uploaden",
+    "removePhoto": "Foto verwijderen",
+    "fullName": "Volledige Naam",
+    "fullNamePlaceholder": "Je volledige naam",
+    "email": "Email",
+    "phone": "Telefoon",
+    "timezone": "Tijdzone",
+    "selectTimezone": "-- Selecteer tijdzone --",
+    "currentTimezone": "Huidig:",
+    "avatarUrl": "Avatar URL",
+    "saveChanges": "Wijzigingen Opslaan",
+    "saving": "Opslaan...",
+    "profileSaved": "Profiel opgeslagen",
+    "profileSavedDescription": "Je wijzigingen zijn opgeslagen.",
+    "saveFailed": "Opslaan mislukt",
+    "saveFailedDescription": "Kon profiel niet opslaan.",
+    "onboardingTutorial": "Introductie Tutorial",
+    "onboardingDescription": "Herstart de begeleide installatiewizard",
+    "restartTutorial": "Tutorial Herstarten",
+    "tutorialRestarted": "Tutorial herstart",
+    "tutorialRestartedDescription": "De introductie tutorial begint bij het volgende laden van de pagina.",
+    "tutorialRestartFailed": "Kan tutorial niet herstarten"
+  },
+  "notifications": {
+    "title": "Meldingen",
+    "description": "Kies hoe en wanneer je meldingen ontvangt.",
+    "allNotifications": "Alle Meldingen",
+    "savingNotifs": "Opslaan...",
+    "channels": {
+      "app": "App",
+      "email": "Email",
+      "sms": "SMS"
+    },
+    "categories": {
+      "leadActivity": "Lead Activiteit",
+      "aiAutomation": "AI & Automatisering",
+      "campaigns": "Campagnes",
+      "billing": "Facturatie"
+    },
+    "events": {
+      "callBooked": "Gesprek Geboekt",
+      "leadResponded": "Lead Gereageerd",
+      "leadQualified": "Lead Gekwalificeerd",
+      "leadOptedOut": "Lead Afgemeld / DND",
+      "aiNeedsTakeover": "AI Heeft Overname Nodig",
+      "automationError": "Automatiseringsfout",
+      "campaignCompleted": "Campagne Voltooid",
+      "performanceAlert": "Prestatie-alert",
+      "invoiceReceived": "Nieuwe Factuur Ontvangen",
+      "contractReceived": "Nieuw Contract Ontvangen",
+      "invoicePaid": "Factuur Gemarkeerd als Betaald",
+      "contractSigned": "Contract Ondertekend"
+    },
+    "quietHours": {
+      "title": "Stille Uren",
+      "description": "Email en SMS worden vastgehouden. In-app blijft zichtbaar.",
+      "start": "Begin",
+      "end": "Einde"
+    },
+    "digest": {
+      "title": "Samenvatting",
+      "dailySummary": "Dagelijkse Samenvatting Email",
+      "weeklyReport": "Wekelijks Rapport Email"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "description": "Configureer dashboardgedrag en automatische vernieuwingsintervallen.",
+    "autoRefresh": "Automatisch Vernieuwingsinterval",
+    "current": "Huidig:",
+    "refreshUpdated": "Vernieuwingsinterval bijgewerkt",
+    "autoRefreshDisabled": "Automatisch vernieuwen uitgeschakeld.",
+    "refreshEvery": "Vernieuwt elke {{interval}}."
+  },
+  "security": {
+    "title": "Beveiliging",
+    "description": "Beheer je wachtwoord en accountbeveiliging.",
+    "password": "Wachtwoord",
+    "changePassword": "Wachtwoord Wijzigen",
+    "changePasswordDescription": "Werk je accountwachtwoord bij.",
+    "currentPassword": "Huidig wachtwoord",
+    "currentPasswordPlaceholder": "Huidig wachtwoord",
+    "newPassword": "Nieuw wachtwoord",
+    "newPasswordPlaceholder": "Nieuw wachtwoord (min. 6 tekens)",
+    "confirmPassword": "Bevestig nieuw wachtwoord",
+    "confirmPasswordPlaceholder": "Bevestig nieuw wachtwoord",
+    "updatePassword": "Wachtwoord Bijwerken",
+    "changing": "Wijzigen...",
+    "passwordChanged": "Wachtwoord gewijzigd",
+    "passwordUpdated": "Je wachtwoord is succesvol bijgewerkt.",
+    "forgotSendReset": "Vergeten? Reset-email verzenden",
+    "sendingReset": "Verzenden...",
+    "resetEmailSent": "Reset-email verzonden",
+    "checkInbox": "Controleer je inbox voor de resetlink.",
+    "notAvailable": "Niet beschikbaar",
+    "resetNotAvailable": "Wachtwoord resetten via email is nog niet beschikbaar.",
+    "allFieldsRequired": "Alle velden zijn verplicht.",
+    "minLength": "Nieuw wachtwoord moet minimaal 6 tekens zijn.",
+    "passwordsMismatch": "Nieuw wachtwoord en bevestiging komen niet overeen.",
+    "failedChangePassword": "Kan wachtwoord niet wijzigen.",
+    "failedSave": "Opslaan van meldingsvoorkeuren mislukt.",
+    "error": "Fout"
+  }
+}

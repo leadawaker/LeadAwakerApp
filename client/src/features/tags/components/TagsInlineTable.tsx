@@ -300,47 +300,62 @@ export function TagsInlineTable({
         </div>
       )}
 
-      {/* ── Table ─────────────────────────────────────────────────────────── */}
+      {/* ── Static column header (outside scroll container — never moves) ── */}
+      <table
+        className="w-full shrink-0"
+        style={{ tableLayout: "fixed", borderCollapse: "separate", borderSpacing: 0, minWidth: 600 }}
+      >
+        <colgroup>
+          {visCols.map((col) => (
+            <col key={col.key} style={{ width: col.width, minWidth: col.width }} />
+          ))}
+        </colgroup>
+        <thead>
+          <tr>
+            {visCols.map((col) => (
+              <th
+                key={col.key}
+                className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/50 whitespace-nowrap select-none bg-muted border-b border-border/20"
+              >
+                {col.key === "checkbox" ? (
+                  <div
+                    className={cn(
+                      "h-4 w-4 rounded border flex items-center justify-center cursor-pointer",
+                      allSelected
+                        ? "border-brand-indigo bg-brand-indigo"
+                        : someSelected
+                          ? "border-brand-indigo bg-brand-indigo/30"
+                          : "border-border/40",
+                    )}
+                    onClick={handleSelectAll}
+                  >
+                    {allSelected && (
+                      <Check className="h-2.5 w-2.5 text-white" />
+                    )}
+                    {someSelected && !allSelected && (
+                      <div className="h-1.5 w-1.5 bg-white rounded-sm" />
+                    )}
+                  </div>
+                ) : (
+                  col.label
+                )}
+              </th>
+            ))}
+          </tr>
+        </thead>
+      </table>
+
+      {/* ── Scrollable body ───────────────────────────────────────────────── */}
       <div className="flex-1 min-h-0 overflow-auto">
         <table
           className="w-full"
-          style={{ borderCollapse: "separate", borderSpacing: "0 3px", minWidth: 600 }}
+          style={{ tableLayout: "fixed", borderCollapse: "separate", borderSpacing: "0 3px", minWidth: 600 }}
         >
-          {/* ── Sticky header ─────────────────────────────────────────────── */}
-          <thead className="sticky top-0 z-20">
-            <tr>
-              {visCols.map((col) => (
-                <th
-                  key={col.key}
-                  className="px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/50 whitespace-nowrap select-none bg-muted border-b border-border/20"
-                  style={{ width: col.width, minWidth: col.width }}
-                >
-                  {col.key === "checkbox" ? (
-                    <div
-                      className={cn(
-                        "h-4 w-4 rounded border flex items-center justify-center cursor-pointer",
-                        allSelected
-                          ? "border-brand-indigo bg-brand-indigo"
-                          : someSelected
-                            ? "border-brand-indigo bg-brand-indigo/30"
-                            : "border-border/40",
-                      )}
-                      onClick={handleSelectAll}
-                    >
-                      {allSelected && (
-                        <Check className="h-2.5 w-2.5 text-white" />
-                      )}
-                      {someSelected && !allSelected && (
-                        <div className="h-1.5 w-1.5 bg-white rounded-sm" />
-                      )}
-                    </div>
-                  ) : (
-                    col.label
-                  )}
-                </th>
-              ))}
-            </tr>
-          </thead>
+          <colgroup>
+            {visCols.map((col) => (
+              <col key={col.key} style={{ width: col.width, minWidth: col.width }} />
+            ))}
+          </colgroup>
 
           <tbody>
             {(() => {

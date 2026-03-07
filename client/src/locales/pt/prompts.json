@@ -1,0 +1,148 @@
+{
+  "page": {
+    "title": "Biblioteca de Prompts",
+    "library": "Biblioteca"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Buscar prompts...",
+    "create": "Criar",
+    "createPrompt": "Criar prompt",
+    "sort": "Ordenar",
+    "sortBy": "Ordenar por",
+    "filter": "Filtrar",
+    "filterSettings": "Configurações de filtro",
+    "group": "Agrupar",
+    "fields": "Campos",
+    "showHideColumns": "Mostrar / Ocultar Colunas",
+    "resetToDefault": "Restaurar padrão",
+    "clearAllFilters": "Limpar todos os filtros",
+    "promptCount": "{{count}} prompt",
+    "promptCount_other": "{{count}} prompts",
+    "allStatuses": "Todos os Status",
+    "allModels": "Todos os Modelos",
+    "allCampaigns": "Todas as Campanhas"
+  },
+  "views": {
+    "list": "Lista",
+    "table": "Tabela"
+  },
+  "labels": {
+    "status": "Status",
+    "model": "Modelo",
+    "campaign": "Campanha",
+    "untitled": "Sem título",
+    "untitledPrompt": "Prompt sem título",
+    "noModel": "Sem Modelo",
+    "noCampaign": "Sem Campanha"
+  },
+  "form": {
+    "createTitle": "Criar Prompt",
+    "editTitle": "Editar Prompt",
+    "createDescription": "Preencha os campos abaixo para criar um novo prompt.",
+    "editDescription": "Edite os detalhes do prompt abaixo e salve suas alterações.",
+    "name": "Nome",
+    "nameRequired": "Nome é obrigatório",
+    "namePlaceholder": "ex. Reativação de Lead v1",
+    "namePlaceholderShort": "Nome do prompt",
+    "namePlaceholderAlt": "ex. Abertura de Reengajamento",
+    "useCase": "Caso de Uso",
+    "useCasePlaceholder": "ex. Reativação de lead por WhatsApp",
+    "promptText": "Texto do Prompt",
+    "promptTextRequired": "Texto do prompt é obrigatório",
+    "promptTextPlaceholder": "Digite o texto principal do prompt\u2026",
+    "promptContent": "Conteúdo do Prompt",
+    "mainPromptPlaceholder": "Texto principal do prompt\u2026",
+    "systemMessage": "Mensagem do Sistema",
+    "systemMessagePlaceholder": "Instruções do sistema para o modelo de IA (opcional)\u2026",
+    "systemMessagePlaceholderShort": "Instruções do sistema (opcional)\u2026",
+    "systemMessagePlaceholderAlt": "Instruções opcionais do sistema para a IA\u2026",
+    "notes": "Notas",
+    "notesPlaceholder": "Notas adicionais ou contexto sobre este prompt (opcional)\u2026",
+    "notesPlaceholderShort": "Notas adicionais (opcional)\u2026",
+    "notesPlaceholderAlt": "Notas internas sobre este prompt\u2026",
+    "temperature": "Temperatura",
+    "temperatureRange": "(0\u20132)",
+    "temperatureError": "Deve ser 0\u20132",
+    "maxTokens": "Máx. Tokens",
+    "maxTokensError": "Deve ser um número inteiro positivo",
+    "selectModel": "Selecionar modelo",
+    "selectStatus": "Selecionar status",
+    "noneOption": "\u2014 Nenhum \u2014",
+    "identity": "Identidade",
+    "configuration": "Configuração",
+    "required": "Obrigatório"
+  },
+  "status": {
+    "active": "Ativo",
+    "archived": "Arquivado",
+    "unknown": "Desconhecido"
+  },
+  "actions": {
+    "saveChanges": "Salvar Alterações",
+    "createPrompt": "Criar Prompt",
+    "saving": "Salvando\u2026",
+    "creating": "Criando\u2026",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Excluir"
+  },
+  "deleteDialog": {
+    "title": "Excluir Prompt",
+    "message": "Tem certeza que deseja excluir",
+    "cannotUndo": "Esta ação não pode ser desfeita.",
+    "deleting": "Excluindo\u2026",
+    "deletePrompt": "Excluir Prompt"
+  },
+  "toast": {
+    "deleted": "Prompt excluído",
+    "deletedDescription": "\"{{name}}\" foi excluído com sucesso.",
+    "deleteFailed": "Falha ao excluir prompt",
+    "updated": "Prompt atualizado",
+    "updatedDescription": "\"{{name}}\" foi atualizado com sucesso.",
+    "created": "Prompt criado",
+    "createdDescription": "\"{{name}}\" foi criado com sucesso.",
+    "updateFailed": "Falha ao atualizar prompt",
+    "createFailed": "Falha ao criar prompt",
+    "saved": "Salvo",
+    "savedDescription": "\"{{name}}\" atualizado.",
+    "saveFailed": "Falha ao salvar",
+    "statusUpdated": "Status atualizado",
+    "statusUpdatedDescription": "\"{{name}}\" agora está {{status}}.",
+    "statusFailed": "Falha ao atualizar status"
+  },
+  "detail": {
+    "promptDetail": "Detalhe do Prompt",
+    "gradientTester": "Testador de Gradiente",
+    "model": "Modelo",
+    "temperature": "Temperatura",
+    "maxTokens": "Máx. Tokens",
+    "useCase": "Caso de Uso",
+    "created": "Criado",
+    "updated": "Atualizado",
+    "promptText": "Texto do Prompt",
+    "systemMessage": "Mensagem do Sistema",
+    "notes": "Notas",
+    "clickToArchive": "Clique para arquivar",
+    "clickToActivate": "Clique para ativar"
+  },
+  "empty": {
+    "selectPrompt": "Selecione um prompt",
+    "selectPromptDesc": "Clique em qualquer prompt à esquerda para ver seus detalhes",
+    "noPromptsMatch": "Nenhum prompt corresponde aos seus filtros",
+    "noPromptsYet": "Nenhum prompt ainda",
+    "createFirstPrompt": "Crie seu primeiro prompt"
+  },
+  "table": {
+    "editPrompt": "Editar prompt",
+    "deletePrompt": "Excluir prompt",
+    "clickToToggle": "Clique para {{action}}"
+  },
+  "time": {
+    "justNow": "Agora",
+    "hoursAgo": "{{count}}h atrás",
+    "yesterday": "Ontem",
+    "daysAgo": "{{count}}d atrás",
+    "weeksAgo": "{{count}}sem atrás",
+    "monthsAgo": "{{count}}m atrás"
+  }
+}

@@ -41,10 +41,17 @@ export function useSession(): SessionState {
           }
           localStorage.setItem("leadawaker_user_avatar", user.avatarUrl ?? "");
           window.dispatchEvent(new Event("leadawaker-avatar-changed"));
-          localStorage.setItem(
-            "leadawaker_current_account_id",
-            String(user.accountsId ?? 1),
-          );
+          // Only set account ID if not already stored (preserve explicit user selections).
+          // For agency users (Admin/Operator), default to 0 (all-accounts view).
+          // For client users, default to their linked account.
+          if (!localStorage.getItem("leadawaker_current_account_id")) {
+            const role = user.role ?? "Viewer";
+            const isAgency = role === "Admin" || role === "Operator";
+            localStorage.setItem(
+              "leadawaker_current_account_id",
+              String(isAgency ? 0 : (user.accountsId ?? 1)),
+            );
+          }
         } else {
           localStorage.removeItem("leadawaker_auth");
           setState({ status: "unauthenticated" });
@@ -70,4 +77,5 @@ export async function logout(): Promise<void> {
   localStorage.removeItem("leadawaker_user_email");
   localStorage.removeItem("leadawaker_user_role");
   localStorage.removeItem("leadawaker_current_account_id");
+  localStorage.removeItem("leadawaker_account_explicitly_selected");
 }

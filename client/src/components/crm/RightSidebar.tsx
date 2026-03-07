@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
 import {
   HelpCircle,
@@ -68,6 +69,7 @@ export function RightSidebar({
   onLogout?: () => void;
   unreadChatCount?: number;
 }) {
+  const { t } = useTranslation("crm");
   const [location, setLocation] = useLocation();
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const { crumb } = useBreadcrumb();
@@ -93,12 +95,15 @@ export function RightSidebar({
 
   /** Handle account switch with route transition */
   const handleAccountSelect = (id: number) => {
-    const prevIsAgency = currentAccountId === 1;
+    const prevIsAgency = currentAccountId === 0 || currentAccountId === 1;
     const prevBase = prevIsAgency ? "/agency" : "/subaccount";
 
     setCurrentAccountId(id);
 
-    const nextIsAgency = id === 1;
+    // Admin always stays on /agency prefix — never redirected to /subaccount
+    if (isAgencyUser && location.startsWith("/agency")) return;
+
+    const nextIsAgency = id === 0 || id === 1;
     const nextBase = nextIsAgency ? "/agency" : "/subaccount";
 
     const tail = location.startsWith(prevBase)
@@ -123,42 +128,47 @@ export function RightSidebar({
   const navItems: {
     href: string;
     label: string;
+    labelKey: string;
     icon: any;
     testId: string;
     adminOnly?: boolean;
     agencyOnly?: boolean;
     agencyViewOnly?: boolean;
   }[] = [
-    { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
+    { href: `${prefix}/campaigns`, label: t("sidebar.campaigns"), labelKey: "Campaigns", icon: Megaphone, testId: "nav-campaigns" },
     {
       href: `${prefix}/accounts`,
-      label: "Accounts",
+      label: t("sidebar.accounts"),
+      labelKey: "Accounts",
       icon: Building2,
       testId: "nav-accounts",
       agencyOnly: true,
       agencyViewOnly: true,
     },
-    { href: `${prefix}/contacts`, label: "Leads", icon: BookUser, testId: "nav-contacts" },
-    { href: `${prefix}/conversations`, label: "Chats", icon: MessageSquare, testId: "nav-chats" },
-    { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, testId: "nav-calendar" },
+    { href: `${prefix}/contacts`, label: t("sidebar.leads"), labelKey: "Leads", icon: BookUser, testId: "nav-contacts" },
+    { href: `${prefix}/conversations`, label: t("sidebar.chats"), labelKey: "Chats", icon: MessageSquare, testId: "nav-chats" },
+    { href: `${prefix}/calendar`, label: t("sidebar.calendar"), labelKey: "Calendar", icon: Calendar, testId: "nav-calendar" },
     {
       href: `${prefix}/prompt-library`,
-      label: "Prompt Library",
+      label: t("sidebar.promptLibrary"),
+      labelKey: "Prompt Library",
       icon: BookOpen,
       testId: "nav-library",
       agencyOnly: true,
     },
-    { href: `${prefix}/invoices`, label: "Billing", icon: Receipt, testId: "nav-billing" },
+    { href: `${prefix}/invoices`, label: t("sidebar.billing"), labelKey: "Billing", icon: Receipt, testId: "nav-billing" },
     {
       href: `${prefix}/tasks`,
-      label: "Tasks",
+      label: t("sidebar.tasks"),
+      labelKey: "Tasks",
       icon: ClipboardList,
       testId: "nav-tasks",
       agencyOnly: true,
     },
     {
       href: `${prefix}/automation-logs`,
-      label: "Automations",
+      label: t("sidebar.automations"),
+      labelKey: "Automations",
       icon: ScrollText,
       testId: "nav-automations",
       agencyOnly: true,
@@ -174,19 +184,19 @@ export function RightSidebar({
   });
 
   const PAGE_LABELS: Record<string, string> = {
-    campaigns: "Campaigns",
-    contacts: "Leads",
-    conversations: "Chats",
-    calendar: "Calendar",
-    accounts: "Accounts",
-    invoices: "Billing",
-    expenses: "Billing",
-    contracts: "Billing",
-    "prompt-library": "Prompt Library",
-    tasks: "Tasks",
-    "automation-logs": "Automations",
-    settings: "Settings",
-    docs: "Docs",
+    campaigns: t("sidebar.campaigns"),
+    contacts: t("sidebar.leads"),
+    conversations: t("sidebar.chats"),
+    calendar: t("sidebar.calendar"),
+    accounts: t("sidebar.accounts"),
+    invoices: t("sidebar.billing"),
+    expenses: t("sidebar.billing"),
+    contracts: t("sidebar.billing"),
+    "prompt-library": t("sidebar.promptLibrary"),
+    tasks: t("sidebar.tasks"),
+    "automation-logs": t("sidebar.automations"),
+    settings: t("sidebar.settings"),
+    docs: t("sidebar.docs"),
   };
   const pageLabel = PAGE_LABELS[location.split("/").filter(Boolean)[1] ?? ""] ?? "";
 
@@ -215,22 +225,17 @@ export function RightSidebar({
             className={cn(
               "relative flex items-center rounded-full transition-colors mb-0.5",
               collapsed
-                ? "h-10 w-10 mx-auto justify-center"
+                ? "h-[44px] w-[44px] justify-center mx-auto"
                 : "h-[44px] pl-[1.5px] pr-2 gap-2.5",
               active
-                ? collapsed
-                  ? "text-foreground font-semibold"
-                  : "bg-highlight-active text-foreground font-semibold"
+                ? "bg-highlight-active text-foreground font-semibold"
                 : "text-foreground/70 hover:bg-card hover:text-foreground"
             )}
             data-testid={`link-${it.testId}`}
             data-onboarding={it.testId}
             data-active={active || undefined}
           >
-            <div className={cn(
-              "relative h-10 w-10 rounded-full flex items-center justify-center shrink-0 border border-black/[0.125]",
-              active && "bg-highlight-active"
-            )}>
+            <div className="relative h-10 w-10 rounded-full flex items-center justify-center shrink-0 border border-black/[0.125]">
               <Icon className="h-4 w-4" />
               {showUnreadDot && (
                 <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 border border-background" />
@@ -302,7 +307,7 @@ export function RightSidebar({
                     <button
                       className={cn(
                         "w-full rounded-xl border border-border/60 px-3 py-2.5 flex items-center gap-2 hover:bg-muted/60 transition-colors text-left",
-                        currentAccountId === 1
+                        currentAccountId === 0 || currentAccountId === 1
                           ? "bg-brand-yellow/10 dark:bg-brand-yellow/10"
                           : "bg-brand-indigo/10 dark:bg-brand-indigo/10"
                       )}
@@ -311,7 +316,7 @@ export function RightSidebar({
                       <div
                         className={cn(
                           "h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0",
-                          currentAccountId === 1
+                          currentAccountId === 0 || currentAccountId === 1
                             ? "bg-brand-yellow text-brand-yellow-foreground"
                             : "bg-brand-indigo text-brand-indigo-foreground"
                         )}
@@ -330,7 +335,7 @@ export function RightSidebar({
                     className="w-56 rounded-2xl shadow-xl border-border bg-background"
                   >
                     <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                      Switch Account
+                      {t("topbar.switchAccount")}
                     </div>
                     {[...accounts].sort((a, b) => a.id === 1 ? -1 : b.id === 1 ? 1 : 0).map((acc) => (
                       <DropdownMenuItem
@@ -358,7 +363,7 @@ export function RightSidebar({
                         )}
                         {acc.id === 1 && (
                           <span className="text-[9px] bg-brand-yellow/15 text-brand-yellow px-1 rounded uppercase font-bold tracking-tighter shrink-0">
-                            Agency
+                            {t("sidebarSections.agency")}
                           </span>
                         )}
                       </DropdownMenuItem>
@@ -406,21 +411,21 @@ export function RightSidebar({
                 data-testid="mobile-nav-settings"
               >
                 <Settings className="h-4 w-4" />
-                <span className="text-sm font-semibold">Settings</span>
+                <span className="text-sm font-semibold">{t("sidebar.settings")}</span>
               </Link>
               <button
                 onClick={() => { onOpenSupport(); onCloseMobileMenu?.(); }}
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-muted transition-colors"
               >
                 <Headphones className="h-4 w-4" />
-                <span className="text-sm font-semibold">Support</span>
+                <span className="text-sm font-semibold">{t("sidebar.support")}</span>
               </button>
               <button
                 onClick={() => { onToggleHelp(); onCloseMobileMenu?.(); }}
                 className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-muted transition-colors"
               >
                 <HelpCircle className="h-4 w-4" />
-                <span className="text-sm font-semibold">Help</span>
+                <span className="text-sm font-semibold">{t("sidebar.help")}</span>
               </button>
             </div>
 
@@ -465,7 +470,7 @@ export function RightSidebar({
           data-active={isActive(`${prefix}/campaigns`) || undefined}
         >
           <Megaphone className="h-4 w-4" />
-          <span className="text-[10px] font-semibold">Campaigns</span>
+          <span className="text-[10px] font-semibold">{t("sidebar.campaigns")}</span>
           {isActive(`${prefix}/campaigns`) && <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-indigo" />}
         </button>
         <button
@@ -480,7 +485,7 @@ export function RightSidebar({
           data-active={isActive(`${prefix}/contacts`) || undefined}
         >
           <BookUser className="h-4 w-4" />
-          <span className="text-[10px] font-semibold">Contacts</span>
+          <span className="text-[10px] font-semibold">{t("sidebar.leads")}</span>
           {isActive(`${prefix}/contacts`) && <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-indigo" />}
         </button>
         <button
@@ -495,7 +500,7 @@ export function RightSidebar({
           data-active={isActive(`${prefix}/conversations`) || undefined}
         >
           <MessageSquare className="h-4 w-4" />
-          <span className="text-[10px] font-semibold">Chats</span>
+          <span className="text-[10px] font-semibold">{t("sidebar.chats")}</span>
           {isActive(`${prefix}/conversations`) && <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-indigo" />}
         </button>
         <button
@@ -507,7 +512,7 @@ export function RightSidebar({
           data-testid="mobile-nav-menu"
         >
           {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          <span className="text-[10px] font-semibold">Menu</span>
+          <span className="text-[10px] font-semibold">{t("sidebar.menu")}</span>
           {isMobileMenuOpen && <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-brand-indigo" />}
         </button>
       </div>
@@ -516,7 +521,7 @@ export function RightSidebar({
       <aside
         className={cn(
           "fixed left-0 top-[62px] bottom-0 bg-background hidden md:flex flex-col overflow-hidden transition-[width] duration-200",
-          collapsed ? "w-[78px]" : "w-[225px]"
+          collapsed ? "w-[56px]" : "w-[225px]"
         )}
         data-sidebar-focus
       >
@@ -524,12 +529,13 @@ export function RightSidebar({
           {/* HEADER — "Menu" label + collapse button */}
           <div
             className={cn(
-              "flex items-center shrink-0 px-2.5 mt-[45px] mb-6 h-10",
+              "flex items-center shrink-0 mt-[45px] mb-6 h-10",
+              collapsed ? "px-1.5" : "px-2.5",
               collapsed ? "justify-center" : "justify-between"
             )}
           >
             {!collapsed && (
-              <span className="text-2xl font-semibold font-heading text-foreground pl-1">Menu</span>
+              <span className="text-2xl font-semibold font-heading text-foreground pl-1">{t("sidebar.menu")}</span>
             )}
             <button
               onClick={() => onCollapse(!collapsed)}
@@ -546,14 +552,14 @@ export function RightSidebar({
 
           {/* NAV — categorized sections */}
           <TooltipProvider delayDuration={300}>
-            <nav className="px-2.5 flex-1 overflow-y-auto min-h-0 pb-2">
+            <nav className={cn("flex-1 overflow-y-auto min-h-0 pb-2", collapsed ? "px-1.5" : "px-2.5")}>
               {/* Section: (top — Campaigns) */}
-              {visibleNavItems.filter(it => it.label === "Campaigns").map((it) => renderDesktopNavLink(it))}
+              {visibleNavItems.filter(it => it.labelKey === "Campaigns").map((it) => renderDesktopNavLink(it))}
 
               {/* Section: Engage */}
               {(() => {
                 const engageItems = visibleNavItems.filter(it =>
-                  ["Leads", "Chats", "Calendar"].includes(it.label)
+                  ["Leads", "Chats", "Calendar"].includes(it.labelKey)
                 );
                 if (engageItems.length === 0) return null;
                 return (
@@ -563,7 +569,7 @@ export function RightSidebar({
                     ) : (
                       <div className="px-1 pt-1.5 pb-3">
                         <span className="text-[11px] font-bold tracking-wide text-foreground">
-                          Engage
+                          {t("sidebarSections.engage")}
                         </span>
                       </div>
                     )}
@@ -575,7 +581,7 @@ export function RightSidebar({
               {/* Section: Admin (agency only) + Billing */}
               {(() => {
                 const adminItems = visibleNavItems.filter(it =>
-                  ["Accounts", "Tasks", "Billing"].includes(it.label)
+                  ["Accounts", "Tasks", "Billing"].includes(it.labelKey)
                 );
                 if (adminItems.length === 0) return null;
                 return (
@@ -585,7 +591,7 @@ export function RightSidebar({
                     ) : (
                       <div className="px-1 pt-1.5 pb-3">
                         <span className="text-[11px] font-bold tracking-wide text-foreground">
-                          Admin
+                          {t("sidebarSections.admin")}
                         </span>
                       </div>
                     )}
@@ -597,7 +603,7 @@ export function RightSidebar({
               {/* Section: Backend (agency only) */}
               {(() => {
                 const backendItems = visibleNavItems.filter(it =>
-                  ["Prompt Library", "Automations"].includes(it.label)
+                  ["Prompt Library", "Automations"].includes(it.labelKey)
                 );
                 if (backendItems.length === 0) return null;
                 return (
@@ -607,7 +613,7 @@ export function RightSidebar({
                     ) : (
                       <div className="px-1 pt-1.5 pb-3">
                         <span className="text-[11px] font-bold tracking-wide text-foreground">
-                          Backend
+                          {t("sidebarSections.backend")}
                         </span>
                       </div>
                     )}
@@ -620,7 +626,7 @@ export function RightSidebar({
           </TooltipProvider>
 
           {/* Color Picker toggle — round 40px button */}
-          <div className="shrink-0 px-2.5 pb-2">
+          <div className={cn("shrink-0 pb-2", collapsed ? "px-1.5" : "px-2.5")}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -657,10 +663,11 @@ export function RightSidebar({
 
           {/* Settings — pinned to bottom */}
           <TooltipProvider delayDuration={300}>
-            <div className="shrink-0 px-2.5 pb-4 pt-2 border-t border-border/30">
+            <div className={cn("shrink-0 pb-4 pt-2 border-t border-border/30", collapsed ? "px-1.5" : "px-2.5")}>
               {renderDesktopNavLink({
                 href: `${prefix}/settings`,
-                label: "Settings",
+                label: t("sidebar.settings"),
+                labelKey: "Settings",
                 icon: Settings,
                 testId: "nav-settings",
               })}

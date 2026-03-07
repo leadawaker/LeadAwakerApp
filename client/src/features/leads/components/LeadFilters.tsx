@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -94,6 +95,7 @@ interface LeadFiltersProps {
 }
 
 export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
+  const { t } = useTranslation("leads");
   const [isOpen, setIsOpen] = useState(false);
   const [campaigns, setCampaigns] = useState<{ id: number; name: string }[]>(
     []
@@ -177,7 +179,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
           data-testid="lead-filters-btn"
         >
           <Filter className="h-4 w-4" />
-          <span>Filter</span>
+          <span>{t("toolbar.filter")}</span>
           {activeCount > 0 && (
             <Badge className="absolute -top-2 -right-2 h-4 w-4 flex items-center justify-center p-0 bg-brand-indigo">
               {activeCount}
@@ -191,7 +193,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
         sideOffset={8}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <h4 className="font-semibold text-sm">Lead Filters</h4>
+          <h4 className="font-semibold text-sm">{t("filters.title")}</h4>
           <div className="flex items-center gap-2">
             {activeCount > 0 && (
               <Button
@@ -200,7 +202,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                 onClick={clearAll}
                 className="h-7 text-xs text-muted-foreground hover:text-red-600"
               >
-                Clear all
+                {t("toolbar.clearAll")}
               </Button>
             )}
           </div>
@@ -211,7 +213,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
             {/* ── Pipeline Stage ── */}
             <div className="space-y-1.5">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">
-                Pipeline Stage
+                {t("filters.pipelineStage")}
               </Label>
               <Select
                 value={filters.pipelineStage || "__all__"}
@@ -220,10 +222,10 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                 }
               >
                 <SelectTrigger className="h-10 text-sm bg-card border-border">
-                  <SelectValue placeholder="All stages" />
+                  <SelectValue placeholder={t("filters.allStages")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">All stages</SelectItem>
+                  <SelectItem value="__all__">{t("filters.allStages")}</SelectItem>
                   {PIPELINE_STAGES.map((s) => (
                     <SelectItem key={s} value={s}>
                       {s}
@@ -236,7 +238,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
             {/* ── Campaign ── */}
             <div className="space-y-1.5">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">
-                Campaign
+                {t("filters.campaign")}
               </Label>
               <Select
                 value={filters.campaignId || "__all__"}
@@ -245,10 +247,10 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                 }
               >
                 <SelectTrigger className="h-10 text-sm bg-card border-border">
-                  <SelectValue placeholder="All campaigns" />
+                  <SelectValue placeholder={t("filters.allCampaigns")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">All campaigns</SelectItem>
+                  <SelectItem value="__all__">{t("filters.allCampaigns")}</SelectItem>
                   {campaigns.map((c) => (
                     <SelectItem key={c.id} value={String(c.id)}>
                       {c.name}
@@ -261,7 +263,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
             {/* ── Tags ── */}
             <div className="space-y-1.5">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">
-                Tags{" "}
+                {t("filters.tags")}{" "}
                 {filters.tags.length > 0 && (
                   <span className="text-brand-indigo ml-1">
                     ({filters.tags.length})
@@ -276,8 +278,8 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                   >
                     <span className="truncate">
                       {filters.tags.length === 0
-                        ? "Select tags..."
-                        : `${filters.tags.length} tag${filters.tags.length > 1 ? "s" : ""} selected`}
+                        ? t("filters.selectTags")
+                        : t("filters.tagsSelected", { count: filters.tags.length })}
                     </span>
                     <ChevronDown className="h-3.5 w-3.5 opacity-50" />
                   </Button>
@@ -349,7 +351,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
             {/* ── Score Range ── */}
             <div className="space-y-2">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">
-                Lead Score Range
+                {t("filters.scoreRange")}
               </Label>
               <div className="flex items-center gap-3">
                 <Input
@@ -400,7 +402,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
             {/* ── Priority ── */}
             <div className="space-y-1.5">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">
-                Priority
+                {t("filters.priority")}
               </Label>
               <Select
                 value={filters.priority || "__all__"}
@@ -409,10 +411,10 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                 }
               >
                 <SelectTrigger className="h-10 text-sm bg-card border-border">
-                  <SelectValue placeholder="All priorities" />
+                  <SelectValue placeholder={t("filters.allPriorities")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">All priorities</SelectItem>
+                  <SelectItem value="__all__">{t("filters.allPriorities")}</SelectItem>
                   {PRIORITY_OPTIONS.map((p) => (
                     <SelectItem key={p} value={p}>
                       {p.charAt(0).toUpperCase() + p.slice(1)}
@@ -425,7 +427,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
             {/* ── Date Range ── */}
             <div className="space-y-1.5">
               <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">
-                Created Date Range
+                {t("filters.createdDateRange")}
               </Label>
               <div className="flex items-center gap-2">
                 <Popover>
@@ -440,7 +442,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                       <CalendarIcon className="mr-2 h-3.5 w-3.5" />
                       {filters.dateFrom
                         ? formatDate(filters.dateFrom)
-                        : "From"}
+                        : t("filters.from")}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -452,7 +454,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                     />
                   </PopoverContent>
                 </Popover>
-                <span className="text-muted-foreground text-xs">to</span>
+                <span className="text-muted-foreground text-xs">{t("filters.to")}</span>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -463,7 +465,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                       )}
                     >
                       <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                      {filters.dateTo ? formatDate(filters.dateTo) : "To"}
+                      {filters.dateTo ? formatDate(filters.dateTo) : t("filters.to")}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -485,7 +487,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
                     update({ dateFrom: undefined, dateTo: undefined })
                   }
                 >
-                  Clear dates
+                  {t("filters.clearDates")}
                 </Button>
               )}
             </div>
@@ -496,7 +498,7 @@ export function LeadFilters({ filters, onFiltersChange }: LeadFiltersProps) {
         {activeCount > 0 && (
           <div className="border-t border-border px-4 py-2.5 bg-muted/30">
             <div className="text-[10px] text-muted-foreground font-medium">
-              {activeCount} filter{activeCount > 1 ? "s" : ""} active
+              {t("filters.filtersActive", { count: activeCount })}
             </div>
           </div>
         )}

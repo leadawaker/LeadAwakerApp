@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { fetchLeads, updateLead } from "../api/leadsApi";
+import { apiFetch } from "@/lib/apiUtils";
 import { useToast } from "@/hooks/use-toast";
 
 export function useLeadsData(accountId?: number) {
@@ -14,7 +15,32 @@ export function useLeadsData(accountId?: number) {
     setError(null);
 
     try {
-      const leadsList = await fetchLeads(accountId);
+      // Fetch leads + lookup data in parallel for name resolution
+      // Always fetch all accounts/campaigns for lookup (leads may reference cross-account entities)
+      const [leadsList, accountsRaw, campaignsRaw] = await Promise.all([
+        fetchLeads(accountId),
+        apiFetch("/api/accounts")
+          .then((r) => r.ok ? r.json() : []).catch(() => []),
+        apiFetch("/api/campaigns")
+          .then((r) => r.ok ? r.json() : []).catch(() => []),
+      ]);
+
+      // Build lookup maps: id → name
+      const accountsMap = new Map<number, string>();
+      const acctArr = Array.isArray(accountsRaw) ? accountsRaw : [];
+      for (const a of acctArr) {
+        if (!a) continue;
+        const id = Number(a.id || a.Id);
+        if (id) accountsMap.set(id, a.name || a.Name || `Account ${id}`);
+      }
+
+      const campaignsMap = new Map<number, string>();
+      const campArr = Array.isArray(campaignsRaw) ? campaignsRaw : campaignsRaw?.data ? campaignsRaw.data : [];
+      for (const c of campArr) {
+        if (!c) continue;
+        const id = Number(c.id || c.Id);
+        if (id) campaignsMap.set(id, c.name || c.Name || c.campaign_name || `Campaign ${id}`);
+      }
 
       const normalized = leadsList.map((l: any) => {
         const rowId =
@@ -22,19 +48,21 @@ export function useLeadsData(accountId?: number) {
 
         /* ---------------- RELATIONS ---------------- */
 
+        const acctId = Number(l.Accounts_id || l.accounts_id || l.accountsId || 0);
         const accountName =
           l.account_name ||
           l.Account?.name ||
           l.Account?.Name ||
-          l.account_id ||
-          "Unknown Account";
+          accountsMap.get(acctId) ||
+          (acctId ? `Account ${acctId}` : "No Account");
 
+        const campId = Number(l.Campaigns_id || l.campaigns_id || l.campaignsId || 0);
         const campaignName =
           l.campaign_name ||
           l.Campaign?.name ||
           l.Campaign?.Name ||
-          l.campaign_id ||
-          "Unknown Campaign";
+          campaignsMap.get(campId) ||
+          (campId ? `Campaign ${campId}` : "No Campaign");
 
         /* ---------------- COUNTERS ---------------- */
 

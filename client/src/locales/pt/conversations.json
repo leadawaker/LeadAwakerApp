@@ -1,0 +1,201 @@
+{
+  "page": {
+    "title": "Conversas",
+    "searchPlaceholder": "Buscar chats...",
+    "group": "Agrupar",
+    "groupBy": "Agrupar por",
+    "sort": "Ordenar",
+    "filter": "Filtrar",
+    "status": "Status",
+    "account": "Conta",
+    "allAccounts": "Todas as Contas",
+    "allCampaigns": "Todas as Campanhas"
+  },
+  "inbox": {
+    "title": "Conversas",
+    "tabs": {
+      "all": "Caixa de Entrada",
+      "unread": "N\u00e3o Lidas",
+      "support": "Suporte"
+    },
+    "supportAssistant": "Assistente de Suporte",
+    "emptySearch": {
+      "title": "Nenhuma conversa encontrada",
+      "description": "Nenhuma conversa corresponde a \"{{query}}\"."
+    },
+    "emptyUnread": {
+      "title": "Tudo em dia!",
+      "description": "Voc\u00ea n\u00e3o tem conversas n\u00e3o lidas no momento."
+    },
+    "emptyFiltered": {
+      "title": "Sem resultados",
+      "description": "Nenhuma conversa corresponde aos filtros selecionados.",
+      "clearFilters": "Limpar filtros"
+    },
+    "unknownName": "Desconhecido",
+    "attachments": {
+      "image": "Imagem",
+      "video": "V\u00eddeo",
+      "audio": "\u00c1udio",
+      "file": "Arquivo"
+    },
+    "groupLabels": {
+      "date": "Data",
+      "status": "Status",
+      "campaign": "Campanha",
+      "ai_human": "IA / Humano",
+      "none": "Nenhum"
+    },
+    "sortLabels": {
+      "newest": "Mais Recente",
+      "oldest": "Mais Antigo",
+      "name_asc": "Nome A \u2192 Z",
+      "name_desc": "Nome Z \u2192 A"
+    },
+    "dateGroups": {
+      "today": "Hoje",
+      "yesterday": "Ontem",
+      "thisWeek": "Esta Semana",
+      "thisMonth": "Este M\u00eas",
+      "last3Months": "\u00daltimos 3 Meses",
+      "older": "Mais Antigo",
+      "noActivity": "Sem Atividade"
+    },
+    "statusGroups": {
+      "unknown": "Desconhecido",
+      "noCampaign": "Sem Campanha",
+      "human": "Humano",
+      "ai": "IA"
+    }
+  },
+  "chat": {
+    "emptyState": {
+      "title": "Suas conversas a um clique de dist\u00e2ncia",
+      "description": "Selecione um lead na caixa de entrada para ver o hist\u00f3rico completo de mensagens com a IA."
+    },
+    "noMessages": {
+      "title": "Nenhuma mensagem ainda",
+      "description": "Comece a conversa enviando uma mensagem abaixo."
+    },
+    "compose": {
+      "placeholderNoContact": "Selecione um contato primeiro",
+      "placeholderHuman": "Assumindo da IA \u2014 Enter para enviar",
+      "placeholderDefault": "Digite uma mensagem\u2026 (Enter para enviar)",
+      "sendMessage": "Enviar mensagem",
+      "recordVoice": "Gravar mensagem de voz",
+      "emoji": "Emoji",
+      "attachFile": "Anexar arquivo",
+      "attachmentsComingSoon": "Anexos em breve",
+      "attachmentsDescription": "O suporte para upload de arquivos est\u00e1 sendo configurado."
+    },
+    "recording": {
+      "label": "Gravando\u2026",
+      "stopAndSend": "Parar e enviar mensagem de voz"
+    },
+    "background": {
+      "title": "Fundo",
+      "crm": "CRM",
+      "social1": "Social 1",
+      "social2": "Social 2",
+      "doodleOverlay": "Sobreposi\u00e7\u00e3o de Doodle",
+      "pattern": "Padr\u00e3o",
+      "color": "Cor",
+      "colorBlack": "Preto",
+      "colorWhite": "Branco",
+      "opacity": "Opacidade",
+      "size": "Tamanho",
+      "blendMode": "Modo de mesclagem",
+      "chatBackgroundDoodle": "Doodle de fundo do chat",
+      "gradientTester": "Testador de Gradiente"
+    },
+    "aiResume": {
+      "label": "Deixar a IA continuar",
+      "description": "A IA vai retomar esta conversa. Voc\u00ea pode assumir novamente a qualquer momento.",
+      "confirm": "Confirmar",
+      "cancel": "Cancelar"
+    },
+    "takeover": {
+      "title": "Assumir esta conversa?",
+      "description": "Enviar esta mensagem vai mudar a conversa para modo humano. A IA vai parar de responder e voc\u00ea estar\u00e1 no controle. Voc\u00ea n\u00e3o ser\u00e1 perguntado novamente nesta sess\u00e3o.",
+      "cancel": "Cancelar",
+      "confirmSend": "Assumir e Enviar"
+    },
+    "showContactPanel": "Mostrar painel de contato",
+    "scrollToLatest": "Rolar para a mensagem mais recente",
+    "microphoneAccessDenied": "Acesso ao microfone negado",
+    "microphoneAccessDescription": "Permita o acesso ao microfone para gravar mensagens de voz.",
+    "retry": "Tentar novamente",
+    "messageStatus": {
+      "sending": "Enviando\u2026",
+      "failed": "Falha ao enviar mensagem",
+      "read": "Lida",
+      "delivered": "Entregue",
+      "sent": "Enviada"
+    },
+    "senderLabels": {
+      "lead": "Lead",
+      "ai": "IA",
+      "you": "Voc\u00ea"
+    },
+    "thread": {
+      "bump": "Bump {{number}}",
+      "thread": "Thread {{id}}",
+      "conversation": "Conversa",
+      "conversationNumber": "Conversa {{number}}"
+    },
+    "dateLabels": {
+      "today": "Hoje",
+      "yesterday": "Ontem"
+    },
+    "attachment": "Anexo",
+    "clickToOpenFullSize": "Clique para abrir em tamanho real",
+    "seek": "Buscar",
+    "playbackSpeed": "Velocidade de reprodu\u00e7\u00e3o",
+    "play": "Reproduzir",
+    "pause": "Pausar"
+  },
+  "contact": {
+    "fold": "Recolher",
+    "details": "Detalhes",
+    "selectConversation": "Selecione uma conversa para ver o contexto do lead.",
+    "sections": {
+      "contact": "Contato",
+      "score": "Pontua\u00e7\u00e3o",
+      "conversionStatus": "Status de Convers\u00e3o",
+      "tags": "Tags",
+      "activity": "Atividade",
+      "notes": "Notas",
+      "recentMessages": "Mensagens Recentes"
+    },
+    "fields": {
+      "phone": "Telefone",
+      "email": "E-mail",
+      "bookedCall": "Chamada Agendada"
+    },
+    "grade": "NOTA {{grade}}",
+    "tags": {
+      "addTag": "Adicionar tag",
+      "availableTags": "Tags Dispon\u00edveis",
+      "noMoreTags": "Nenhuma tag dispon\u00edvel",
+      "noTagsAssigned": "Nenhuma tag atribu\u00edda.",
+      "failedToAdd": "Falha ao adicionar tag",
+      "failedToRemove": "Falha ao remover tag",
+      "removeTag": "Remover {{name}}"
+    },
+    "activity": {
+      "messagesSent": "Mensagens enviadas",
+      "messagesReceived": "Mensagens recebidas",
+      "totalInteractions": "Total de intera\u00e7\u00f5es",
+      "lastActive": "\u00daltima atividade"
+    },
+    "notes": {
+      "placeholder": "Adicione notas sobre este lead...",
+      "noNotesYet": "Sem notas ainda",
+      "noNotesReadonly": "Sem notas ainda"
+    },
+    "messages": {
+      "noMessages": "Nenhuma mensagem ainda",
+      "viewFullConversation": "Ver conversa completa"
+    }
+  }
+}

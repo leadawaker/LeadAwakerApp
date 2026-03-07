@@ -1,0 +1,104 @@
+{
+  "page": {
+    "title": "Tasks",
+    "searchPlaceholder": "Search tasks...",
+    "noTasks": "No tasks",
+    "noTasksFound": "No tasks found",
+    "taskNotFound": "Task not found"
+  },
+  "toolbar": {
+    "add": "Add",
+    "sort": "Sort",
+    "filter": "Filter",
+    "clearFilters": "Clear filters"
+  },
+  "create": {
+    "title": "New Task",
+    "create": "Create",
+    "creating": "Creating...",
+    "taskTitle": "Task title"
+  },
+  "detail": {
+    "save": "Save",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this task?",
+    "created": "Created",
+    "updated": "Updated"
+  },
+  "fields": {
+    "description": "Description",
+    "descriptionPlaceholder": "Add a description...",
+    "addDescription": "Add description...",
+    "account": "Account",
+    "accountPlaceholder": "Account name",
+    "campaign": "Campaign",
+    "lead": "Lead",
+    "optional": "Optional",
+    "status": "Status",
+    "priority": "Priority",
+    "type": "Type",
+    "dueDate": "Due Date",
+    "due": "due",
+    "assignee": "Assignee",
+    "assigneePlaceholder": "Assignee name",
+    "linkedTo": "Linked To",
+    "tags": "Tags"
+  },
+  "linked": {
+    "account": "Account:",
+    "campaign": "Campaign:",
+    "lead": "Lead:"
+  },
+  "status": {
+    "todo": "To Do",
+    "inProgress": "In Progress",
+    "done": "Done",
+    "cancelled": "Cancelled"
+  },
+  "priority": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "urgent": "Urgent"
+  },
+  "taskType": {
+    "followUp": "Follow Up",
+    "call": "Call",
+    "review": "Review",
+    "admin": "Admin",
+    "custom": "Custom"
+  },
+  "sort": {
+    "dueDateAsc": "Due date (earliest)",
+    "dueDateDesc": "Due date (latest)",
+    "priorityDesc": "Priority (highest)",
+    "priorityAsc": "Priority (lowest)",
+    "createdDesc": "Newest first",
+    "createdAsc": "Oldest first",
+    "titleAsc": "Title A-Z",
+    "titleDesc": "Title Z-A"
+  },
+  "groupBy": {
+    "none": "No grouping",
+    "status": "Status",
+    "priority": "Priority",
+    "type": "Type",
+    "assignee": "Assignee",
+    "account": "Account"
+  },
+  "columns": {
+    "title": "Title",
+    "type": "Type",
+    "status": "Status",
+    "assignee": "Assignee",
+    "account": "Account",
+    "due": "Due",
+    "created": "Created"
+  },
+  "card": {
+    "newTask": "New Task",
+    "clickAgainToDelete": "Click again to delete",
+    "copy": "(copy)"
+  },
+  "clickToChangeStatus": "Click to change status"
+}

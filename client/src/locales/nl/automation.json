@@ -1,0 +1,67 @@
+{
+  "page": {
+    "title": "Automatiseringslogboek"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Workflows zoeken...",
+    "refreshLogs": "Logs vernieuwen",
+    "filterCount": "{{count}} filter",
+    "filterCount_other": "{{count}} filters"
+  },
+  "views": {
+    "table": "Tabel",
+    "pipeline": "Pipeline"
+  },
+  "columns": {
+    "workflow": "Workflow",
+    "step": "Stap",
+    "pipeline": "Pipeline",
+    "status": "Status",
+    "lead": "Lead",
+    "account": "Account",
+    "campaign": "Campagne",
+    "execTime": "Uitvoertijd",
+    "duration": "Duur",
+    "createdAt": "Aangemaakt op"
+  },
+  "filters": {
+    "campaign": "Campagne",
+    "allCampaigns": "Alle Campagnes",
+    "status": "Status",
+    "allStatuses": "Alle Statussen",
+    "success": "Geslaagd",
+    "failed": "Mislukt",
+    "date": "Datum",
+    "dateRange": "Datumbereik",
+    "from": "Van",
+    "to": "Tot",
+    "clearDateFilter": "Datumfilter wissen"
+  },
+  "detail": {
+    "errorDetails": "Foutdetails",
+    "errorCode": "Foutcode",
+    "inputData": "Invoergegevens",
+    "outputData": "Uitvoergegevens",
+    "noErrorDetails": "Geen foutdetails beschikbaar voor dit logboekitem.",
+    "collapseError": "Foutdetails inklappen",
+    "expandError": "Foutdetails uitklappen",
+    "criticalError": "Kritieke fout"
+  },
+  "fallback": {
+    "unknown": "Onbekend",
+    "na": "N.v.t."
+  },
+  "pipeline": {
+    "executions": "Uitvoeringen",
+    "selectExecution": "Selecteer een uitvoering om de pipeline te bekijken",
+    "step": "stap",
+    "steps": "stappen",
+    "retry": "poging",
+    "retries": "pogingen",
+    "showErrorDetails": "Foutdetails tonen",
+    "hideErrorDetails": "Foutdetails verbergen",
+    "errorCode": "Foutcode",
+    "inputData": "Invoergegevens",
+    "outputData": "Uitvoergegevens"
+  }
+}

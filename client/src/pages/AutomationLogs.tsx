@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { apiFetch } from "@/lib/apiUtils";
@@ -59,31 +60,31 @@ const STATUS_CONFIG: Record<string, { color: string; icon: any }> = {
 };
 
 const STATUS_OPTIONS = [
-  { value: "all", label: "All Statuses" },
-  { value: "success", label: "Success" },
-  { value: "failed", label: "Failed" },
+  { value: "all", labelKey: "filters.allStatuses" },
+  { value: "success", labelKey: "filters.success" },
+  { value: "failed", labelKey: "filters.failed" },
 ];
 
 // ── Column definitions ───────────────────────────────────────────────────────
 interface LogColumn { key: string; label: string; width: number; align?: "left" | "right" }
 
 const COLUMNS: LogColumn[] = [
-  { key: "expand",    label: "",           width: 36  },
-  { key: "workflow",  label: "Workflow",    width: 200 },
-  { key: "step",      label: "Step",       width: 130 },
-  { key: "pipeline",  label: "Pipeline",   width: 120 },
-  { key: "status",    label: "Status",     width: 125 },
-  { key: "lead",      label: "Lead",       width: 140 },
-  { key: "account",   label: "Account",    width: 130 },
-  { key: "campaign",  label: "Campaign",   width: 130 },
-  { key: "execTime",  label: "Exec Time",  width: 95,  align: "right" },
-  { key: "duration",  label: "Duration",   width: 85,  align: "right" },
-  { key: "createdAt", label: "Created At", width: 140, align: "right" },
+  { key: "expand",    label: "",                    width: 36  },
+  { key: "workflow",  label: "columns.workflow",    width: 200 },
+  { key: "step",      label: "columns.step",       width: 130 },
+  { key: "pipeline",  label: "columns.pipeline",   width: 120 },
+  { key: "status",    label: "columns.status",     width: 125 },
+  { key: "lead",      label: "columns.lead",       width: 140 },
+  { key: "account",   label: "columns.account",    width: 130 },
+  { key: "campaign",  label: "columns.campaign",   width: 130 },
+  { key: "execTime",  label: "columns.execTime",   width: 95,  align: "right" },
+  { key: "duration",  label: "columns.duration",   width: 85,  align: "right" },
+  { key: "createdAt", label: "columns.createdAt",  width: 140, align: "right" },
 ];
 
-const VIEW_TABS: TabDef[] = [
-  { id: "table", label: "Table", icon: Table2 },
-  { id: "pipeline", label: "Pipeline", icon: GitBranch },
+const VIEW_TAB_KEYS: { id: string; labelKey: string; icon: any }[] = [
+  { id: "table", labelKey: "views.table", icon: Table2 },
+  { id: "pipeline", labelKey: "views.pipeline", icon: GitBranch },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -126,7 +127,13 @@ function LogsTableSkeleton() {
 
 // ── Main page ────────────────────────────────────────────────────────────────
 export default function AutomationLogsPage() {
+  const { t } = useTranslation("automation");
   const { currentAccountId, isAgencyView } = useWorkspace();
+
+  const VIEW_TABS: TabDef[] = useMemo(() =>
+    VIEW_TAB_KEYS.map((tab) => ({ id: tab.id, label: t(tab.labelKey), icon: tab.icon })),
+    [t],
+  );
 
   // ── Expand-on-hover button constants ─────────────────────────────────────
   const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
@@ -285,14 +292,14 @@ export default function AutomationLogsPage() {
             <div ref={toolbarRef} className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
               <div className="flex items-center gap-2 shrink-0">
                 <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">
-                  Automation Logs
+                  {t("page.title")}
                 </h2>
                 <span className="h-5 px-1.5 rounded-full bg-foreground/10 flex items-center justify-center text-[10px] font-semibold tabular-nums text-muted-foreground shrink-0">
                   {rows.length}
                 </span>
                 {activeFilterCount > 0 && (
                   <span className="h-5 px-1.5 rounded-full bg-brand-indigo/15 flex items-center justify-center text-[10px] font-semibold text-brand-indigo shrink-0">
-                    {activeFilterCount} filter{activeFilterCount !== 1 && "s"}
+                    {t("toolbar.filterCount", { count: activeFilterCount })}
                   </span>
                 )}
               </div>
@@ -314,7 +321,7 @@ export default function AutomationLogsPage() {
                 onChange={(v) => { setWorkflowFilter(v); setPage(0); }}
                 open={searchOpen}
                 onOpenChange={setSearchOpen}
-                placeholder="Search workflows..."
+                placeholder={t("toolbar.searchPlaceholder")}
               />
 
               {/* Campaign filter */}
@@ -322,19 +329,19 @@ export default function AutomationLogsPage() {
                 <DropdownMenuTrigger asChild>
                   <button className={cn(xBase, "hover:max-w-[120px]", campaignId !== "all" ? xActive : xDefault)}>
                     <Megaphone className="h-4 w-4 shrink-0" />
-                    <span className={xSpan}>Campaign</span>
+                    <span className={xSpan}>{t("filters.campaign")}</span>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
                   <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Campaign
+                    {t("filters.campaign")}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => { setCampaignId("all"); setPage(0); }}
                     className={cn("text-[12px]", campaignId === "all" && "font-semibold text-brand-indigo")}
                   >
-                    All Campaigns
+                    {t("filters.allCampaigns")}
                     {campaignId === "all" && <Check className="h-3 w-3 ml-auto" />}
                   </DropdownMenuItem>
                   {allCampaigns.map((c: any) => {
@@ -358,12 +365,12 @@ export default function AutomationLogsPage() {
                 <DropdownMenuTrigger asChild>
                   <button className={cn(xBase, "hover:max-w-[100px]", statusFilter !== "all" ? xActive : xDefault)}>
                     <Filter className="h-4 w-4 shrink-0" />
-                    <span className={xSpan}>Status</span>
+                    <span className={xSpan}>{t("filters.status")}</span>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-44">
                   <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Status
+                    {t("filters.status")}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {STATUS_OPTIONS.map((opt) => (
@@ -372,7 +379,7 @@ export default function AutomationLogsPage() {
                       onClick={() => { setStatusFilter(opt.value); setPage(0); }}
                       className={cn("text-[12px]", statusFilter === opt.value && "font-semibold text-brand-indigo")}
                     >
-                      {opt.label}
+                      {t(opt.labelKey)}
                       {statusFilter === opt.value && <Check className="h-3 w-3 ml-auto" />}
                     </DropdownMenuItem>
                   ))}
@@ -384,16 +391,16 @@ export default function AutomationLogsPage() {
                 <PopoverTrigger asChild>
                   <button className={cn(xBase, "hover:max-w-[80px]", !!(dateFrom || dateTo) ? xActive : xDefault)}>
                     <CalendarDays className="h-4 w-4 shrink-0" />
-                    <span className={xSpan}>Date</span>
+                    <span className={xSpan}>{t("filters.date")}</span>
                   </button>
                 </PopoverTrigger>
                 <PopoverContent align="start" className="w-72 p-3 space-y-3">
                   <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    Date Range
+                    {t("filters.dateRange")}
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-medium text-muted-foreground">From</label>
+                      <label className="text-[11px] font-medium text-muted-foreground">{t("filters.from")}</label>
                       <input
                         type="date"
                         value={dateFrom}
@@ -402,7 +409,7 @@ export default function AutomationLogsPage() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] font-medium text-muted-foreground">To</label>
+                      <label className="text-[11px] font-medium text-muted-foreground">{t("filters.to")}</label>
                       <input
                         type="date"
                         value={dateTo}
@@ -416,7 +423,7 @@ export default function AutomationLogsPage() {
                       onClick={() => { setDateFrom(""); setDateTo(""); setPage(0); }}
                       className="text-[11px] font-medium text-destructive hover:underline"
                     >
-                      Clear date filter
+                      {t("filters.clearDateFilter")}
                     </button>
                   )}
                 </PopoverContent>
@@ -426,7 +433,7 @@ export default function AutomationLogsPage() {
               <div className="flex-1 min-w-0" />
 
               {/* Refresh */}
-              <IconBtn onClick={fetchData} title="Refresh logs">
+              <IconBtn onClick={fetchData} title={t("toolbar.refreshLogs")}>
                 <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
               </IconBtn>
             </div>
@@ -459,7 +466,7 @@ export default function AutomationLogsPage() {
                             )}
                             style={{ width: col.width, minWidth: col.width }}
                           >
-                            {col.label}
+                            {col.label ? t(col.label) : ""}
                           </th>
                         ))}
                       </tr>
@@ -508,7 +515,7 @@ export default function AutomationLogsPage() {
                                     onClick={() => toggleRow(rowId)}
                                     className="h-7 w-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                     data-testid="btn-expand-log"
-                                    aria-label={isExpanded ? "Collapse error details" : "Expand error details"}
+                                    aria-label={isExpanded ? t("detail.collapseError") : t("detail.expandError")}
                                     aria-expanded={isExpanded}
                                   >
                                     {isExpanded
@@ -530,7 +537,7 @@ export default function AutomationLogsPage() {
                                         <AlertTriangle
                                           className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0"
                                           data-testid="icon-critical-error"
-                                          aria-label="Critical error"
+                                          aria-label={t("detail.criticalError")}
                                         />
                                       )}
                                       <EntityAvatar
@@ -593,7 +600,7 @@ export default function AutomationLogsPage() {
                                   href={`${isAgencyView ? "/agency" : "/subaccount"}/contacts/${r.lead?.id || r.lead?.Id}`}
                                   className="text-[13px] font-semibold text-primary hover:underline truncate block"
                                 >
-                                  {r.lead?.full_name || r.lead?.name || "Unknown"}
+                                  {r.lead?.full_name || r.lead?.name || t("fallback.unknown")}
                                 </Link>
                               </td>
 
@@ -654,13 +661,13 @@ export default function AutomationLogsPage() {
                                 >
                                   <div className="px-8 py-4 space-y-3">
                                     <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                      Error Details
+                                      {t("detail.errorDetails")}
                                     </div>
 
                                     {errorCode && (
                                       <div>
                                         <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                                          Error Code
+                                          {t("detail.errorCode")}
                                         </div>
                                         <div
                                           data-testid="error-code"
@@ -675,7 +682,7 @@ export default function AutomationLogsPage() {
                                     {inputData && (
                                       <div>
                                         <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                                          Input Data
+                                          {t("detail.inputData")}
                                         </div>
                                         <pre
                                           data-testid="input-data"
@@ -689,7 +696,7 @@ export default function AutomationLogsPage() {
                                     {outputData && (
                                       <div>
                                         <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                                          Output Data
+                                          {t("detail.outputData")}
                                         </div>
                                         <pre
                                           data-testid="output-data"
@@ -702,7 +709,7 @@ export default function AutomationLogsPage() {
 
                                     {!errorCode && !inputData && !outputData && (
                                       <div className="text-sm text-muted-foreground italic">
-                                        No error details available for this log entry.
+                                        {t("detail.noErrorDetails")}
                                       </div>
                                     )}
                                   </div>

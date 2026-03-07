@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   Check,
@@ -84,7 +85,7 @@ function getScore(lead: Record<string, any>): number {
 function getStatus(lead: Record<string, any>): string {
   return lead.conversion_status || lead.Conversion_Status || "";
 }
-function formatRelativeTime(dateStr: string | null | undefined): string {
+function formatRelativeTime(dateStr: string | null | undefined, t: (key: string, opts?: Record<string, any>) => string): string {
   if (!dateStr) return "";
   try {
     const date = new Date(dateStr);
@@ -93,12 +94,12 @@ function formatRelativeTime(dateStr: string | null | undefined): string {
     const diffDays = Math.floor(diffMs / 86_400_000);
     if (diffDays === 0) {
       const h = Math.floor(diffMs / 3_600_000);
-      return h === 0 ? "Just now" : `${h}h ago`;
+      return h === 0 ? t("relativeTime.justNow") : t("relativeTime.hoursAgo", { count: h });
     }
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7)  return `${diffDays}d ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-    return `${Math.floor(diffDays / 30)}mo ago`;
+    if (diffDays === 1) return t("relativeTime.yesterday");
+    if (diffDays < 7)  return t("relativeTime.daysAgo", { count: diffDays });
+    if (diffDays < 30) return t("relativeTime.weeksAgo", { count: Math.floor(diffDays / 7) });
+    return t("relativeTime.monthsAgo", { count: Math.floor(diffDays / 30) });
   } catch { return ""; }
 }
 
@@ -136,6 +137,7 @@ function EditableCell({
   value, type, isEditing, editValue, isSaving, hasError,
   onStartEdit, onEditChange, onSave, onCancel,
 }: EditableCellProps) {
+  const { t } = useTranslation("leads");
   if (isEditing && type === "select") {
     return (
       <select
@@ -147,7 +149,7 @@ function EditableCell({
         className="w-full h-[28px] text-[11px] bg-white rounded px-1.5 ring-1 ring-brand-indigo/40 outline-none cursor-pointer"
       >
         {STATUS_OPTIONS.map((s) => (
-          <option key={s} value={s}>{s}</option>
+          <option key={s} value={s}>{t(`kanban.stageLabels.${s.replace(/ /g, "")}`, s)}</option>
         ))}
       </select>
     );
@@ -178,10 +180,12 @@ function EditableCell({
         isSaving && "opacity-50",
       )}
       onClick={(e) => { e.stopPropagation(); onStartEdit(); }}
-      title={hasError ? "Save failed — click to retry" : value}
+      title={hasError ? t("table.saveFailed") : value}
     >
       <span className="truncate flex-1">
-        {value || <span className="text-muted-foreground/35 italic not-italic">—</span>}
+        {value
+          ? (type === "select" ? t(`kanban.stageLabels.${value.replace(/ /g, "")}`, value) : value)
+          : <span className="text-muted-foreground/35 italic not-italic">—</span>}
       </span>
       {isSaving && (
         <div className="h-2.5 w-2.5 border border-brand-indigo/40 border-t-brand-indigo rounded-full animate-spin ml-1 shrink-0" />
@@ -221,6 +225,7 @@ export function LeadsInlineTable({
   selectedIds,
   onSelectionChange,
 }: LeadsInlineTableProps) {
+  const { t } = useTranslation("leads");
 
   // ── Editing state ─────────────────────────────────────────────────────────
   const [editingCell,    setEditingCell]    = useState<{ leadId: number; field: ColKey } | null>(null);
@@ -295,7 +300,7 @@ export function LeadsInlineTable({
       case "campaign":     return lead.Campaign || lead.campaign || lead.campaign_name || "";
       case "lastActivity": {
         const d = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at || "";
-        return formatRelativeTime(d);
+        return formatRelativeTime(d, t);
       }
       case "notes":        return lead.notes || lead.Notes || "";
       // Extended fields
@@ -484,7 +489,7 @@ export function LeadsInlineTable({
                           ? "bg-brand-indigo/30 border-brand-indigo/50"
                           : "border-border/50 hover:border-foreground/30"
                     )}
-                    title={allSelected ? "Deselect all" : "Select all"}
+                    title={allSelected ? t("table.deselectAll") : t("table.selectAll")}
                   >
                     {allSelected && <Check className="h-2.5 w-2.5" />}
                     {someSelected && !allSelected && <div className="h-1.5 w-1.5 bg-brand-indigo rounded-sm" />}
@@ -499,7 +504,7 @@ export function LeadsInlineTable({
                       minWidth: col.width,
                     }}
                   >
-                    {col.label}
+                    {t(`table.columns.${col.key}`)}
                   </th>
                 ))}
               </tr>
@@ -510,7 +515,7 @@ export function LeadsInlineTable({
               {leadCount === 0 && (
                 <tr>
                   <td colSpan={colSpan} className="py-12 text-center text-xs text-muted-foreground">
-                    {tableSearch ? "No leads match your search" : "No leads found"}
+                    {tableSearch ? t("table.empty.noResults") : t("table.empty.noLeads")}
                   </td>
                 </tr>
               )}
@@ -790,7 +795,7 @@ export function LeadsInlineTable({
             disabled={tablePage === 0}
             className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border border-black/[0.125] text-muted-foreground hover:text-foreground hover:bg-card disabled:opacity-30 disabled:pointer-events-none"
           >
-            <ChevronDown className="h-3 w-3 rotate-90" /> Prev
+            <ChevronDown className="h-3 w-3 rotate-90" /> {t("table.pagination.prev")}
           </button>
           <div className="flex items-center gap-1">
             {Array.from({ length: totalPages }, (_, i) => (
@@ -813,7 +818,7 @@ export function LeadsInlineTable({
             disabled={tablePage >= totalPages - 1}
             className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border border-black/[0.125] text-muted-foreground hover:text-foreground hover:bg-card disabled:opacity-30 disabled:pointer-events-none"
           >
-            Next <ChevronDown className="h-3 w-3 -rotate-90" />
+            {t("table.pagination.next")} <ChevronDown className="h-3 w-3 -rotate-90" />
           </button>
         </div>
       )}

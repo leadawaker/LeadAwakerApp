@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
@@ -42,12 +43,13 @@ import {
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useLocation } from "wouter";
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const FULL_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const MONTH_KEYS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+const FULL_MONTH_KEYS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
-function formatDate(date: Date) {
+function formatDate(date: Date, tFn: (key: string) => string) {
   const day = String(date.getDate()).padStart(2, '0');
-  const month = MONTHS[date.getMonth()];
+  const month = tFn(`months.short.${MONTH_KEYS[date.getMonth()]}`);
   const year = date.getFullYear();
   return `${day} ${month} - ${year}`;
 }
@@ -74,19 +76,22 @@ type Appointment = {
   rawLead: Record<string, any>;
 };
 
-// ── View mode tab config ──────────────────────────────────────────────────────
-const CALENDAR_TABS: TabDef[] = [
-  { id: "month", label: "Month", icon: Grid3X3 },
-  { id: "week",  label: "Week",  icon: Columns3 },
-  { id: "day",   label: "Day",   icon: CalendarDays },
-];
+// ── View mode tab config (labels resolved inside component via t()) ──────────
+const CALENDAR_TAB_DEFS = [
+  { id: "month", labelKey: "views.month", icon: Grid3X3 },
+  { id: "week",  labelKey: "views.week",  icon: Columns3 },
+  { id: "day",   labelKey: "views.day",   icon: CalendarDays },
+] as const;
 
-const MOBILE_CALENDAR_TABS: TabDef[] = [
-  { id: "day",   label: "Day",   icon: CalendarDays },
-];
+const MOBILE_CALENDAR_TAB_DEFS = [
+  { id: "day",   labelKey: "views.day",   icon: CalendarDays },
+] as const;
 
 // ── Appointment date grouping ─────────────────────────────────────────────────
-function getApptDateGroup(dateStr: string): string {
+// Returns a stable key (not translated) for grouping; translation happens at render time
+type DateGroupKey = "past" | "today" | "tomorrow" | "thisWeek" | "later";
+
+function getApptDateGroup(dateStr: string): DateGroupKey {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const tomorrow = new Date(today);
@@ -94,42 +99,41 @@ function getApptDateGroup(dateStr: string): string {
   const nextWeek = new Date(today);
   nextWeek.setDate(today.getDate() + 7);
 
-  // Parse the locale date string
   const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return "Later";
+  if (isNaN(d.getTime())) return "later";
   const dDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
-  if (dDay.getTime() < today.getTime()) return "Past";
-  if (dDay.getTime() === today.getTime()) return "Today";
-  if (dDay.getTime() === tomorrow.getTime()) return "Tomorrow";
-  if (dDay.getTime() < nextWeek.getTime()) return "This Week";
-  return "Later";
+  if (dDay.getTime() < today.getTime()) return "past";
+  if (dDay.getTime() === today.getTime()) return "today";
+  if (dDay.getTime() === tomorrow.getTime()) return "tomorrow";
+  if (dDay.getTime() < nextWeek.getTime()) return "thisWeek";
+  return "later";
 }
 
-const DATE_GROUP_ORDER = ["Today", "Tomorrow", "This Week", "Later", "Past"];
+const DATE_GROUP_ORDER: DateGroupKey[] = ["today", "tomorrow", "thisWeek", "later", "past"];
 
 type ApptSortBy = "time" | "name" | "campaign" | "status";
 type ApptGroupBy = "date" | "campaign" | "status" | "none";
 type ApptFilterStatus = "no_show" | "rescheduled" | "confirmed";
 
-const APPT_SORT_LABELS: Record<ApptSortBy, string> = {
-  time: "Time",
-  name: "Name A-Z",
-  campaign: "Campaign",
-  status: "Status",
+const APPT_SORT_KEYS: Record<ApptSortBy, string> = {
+  time: "sort.time",
+  name: "sort.nameAZ",
+  campaign: "sort.campaign",
+  status: "sort.status",
 };
 
-const APPT_GROUP_LABELS: Record<ApptGroupBy, string> = {
-  date: "Date",
-  campaign: "Campaign",
-  status: "Status",
-  none: "None",
+const APPT_GROUP_KEYS: Record<ApptGroupBy, string> = {
+  date: "group.date",
+  campaign: "group.campaign",
+  status: "group.status",
+  none: "group.none",
 };
 
-const APPT_FILTER_LABELS: Record<ApptFilterStatus, string> = {
-  no_show: "No-Show",
-  rescheduled: "Rescheduled",
-  confirmed: "Confirmed",
+const APPT_FILTER_KEYS: Record<ApptFilterStatus, string> = {
+  no_show: "filter.noShow",
+  rescheduled: "filter.rescheduled",
+  confirmed: "filter.confirmed",
 };
 
 
@@ -259,6 +263,7 @@ function AppointmentCard({
   onSelect: () => void;
   onSelectLead?: (lead: Record<string, any>) => void;
 }) {
+  const { t } = useTranslation("calendar");
   const [editingDuration, setEditingDuration] = useState(false);
   const statusKey = appt.no_show ? "Lost" : (appt.status || "Contacted");
   const { bg: avatarBg, text: avatarText } = getLeadStatusAvatarColor(statusKey);
@@ -342,7 +347,7 @@ function AppointmentCard({
             <span
               className="text-[10px] text-muted-foreground/60 cursor-pointer hover:text-foreground tabular-nums"
               onClick={(e) => { e.stopPropagation(); setEditingDuration(true); }}
-              title="Edit duration"
+              title={t("appointment.editDuration")}
               data-testid={`duration-${appt.id}`}
             >
               {appt.callDurationMinutes}m
@@ -373,7 +378,7 @@ function AppointmentCard({
                     data-testid={`reschedule-icon-${appt.id}`}
                   >
                     <RefreshCw className="h-3 w-3 shrink-0" />
-                    <span className="text-[10px] font-semibold">Rescheduled x{appt.re_scheduled_count}</span>
+                    <span className="text-[10px] font-semibold">{t("appointment.rescheduledCount", { count: appt.re_scheduled_count })}</span>
                   </span>
                 )}
                 {appt.no_show && (
@@ -382,7 +387,7 @@ function AppointmentCard({
                     data-testid={`no-show-icon-${appt.id}`}
                   >
                     <AlertCircle className="h-3 w-3 shrink-0" />
-                    <span className="text-[10px] font-semibold">No Show</span>
+                    <span className="text-[10px] font-semibold">{t("appointment.noShow")}</span>
                   </span>
                 )}
               </div>
@@ -396,11 +401,18 @@ function AppointmentCard({
 
 
 export default function CalendarPage() {
+  const { t } = useTranslation("calendar");
+
+  const CALENDAR_TABS = CALENDAR_TAB_DEFS.map((d) => ({ id: d.id, label: t(d.labelKey), icon: d.icon }));
+  const MOBILE_CALENDAR_TABS = MOBILE_CALENDAR_TAB_DEFS.map((d) => ({ id: d.id, label: t(d.labelKey), icon: d.icon }));
+
   const { currentAccountId, isAgencyUser, accounts } = useWorkspace();
-  const { leads, loading: leadsLoading, refresh: refetchLeads } = useLeads();
+  const { leads, loading: leadsLoading, refresh: refetchLeads } = useLeads(currentAccountId > 0 ? currentAccountId : undefined);
   const { campaigns } = useCampaigns();
   const [campaignId, setCampaignId] = useState<number | "all">("all");
-  const [calendarAccountFilter, setCalendarAccountFilter] = useState<number | "all">("all");
+  const [calendarAccountFilter, setCalendarAccountFilter] = useState<number | "all">(
+    isAgencyUser && currentAccountId > 0 ? currentAccountId : "all"
+  );
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Appointment | null>(null);
   const timeGridRef = useRef<HTMLDivElement>(null);
@@ -507,6 +519,13 @@ export default function CalendarPage() {
 
   const todayStr = new Date().toLocaleDateString();
 
+  // Sync local filter when global account switcher changes
+  useEffect(() => {
+    if (isAgencyUser) {
+      setCalendarAccountFilter(currentAccountId > 0 ? currentAccountId : "all");
+    }
+  }, [currentAccountId, isAgencyUser]);
+
   const effectiveAccountFilter = isAgencyUser ? calendarAccountFilter : currentAccountId;
 
   const appts = useMemo((): Appointment[] => {
@@ -525,13 +544,13 @@ export default function CalendarPage() {
         const d = new Date(l.booked_call_date as string);
         const firstName = l.first_name || "";
         const lastName = l.last_name || "";
-        const fullName = l.full_name || (firstName || lastName ? `${firstName} ${lastName}`.trim() : "Unknown Lead");
+        const fullName = l.full_name || (firstName || lastName ? `${firstName} ${lastName}`.trim() : t("appointment.unknownLead"));
         return {
           id: l.id,
           lead_name: fullName,
           campaign_name: l.campaign_name || null,
           date: d.toLocaleDateString(),
-          formattedDate: formatDate(d),
+          formattedDate: formatDate(d, t),
           time: d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           hour: d.getHours(),
           minutes: d.getMinutes(),
@@ -547,7 +566,7 @@ export default function CalendarPage() {
         };
       })
       .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
-  }, [leads, currentAccountId, isAgencyUser, effectiveAccountFilter, campaignId]);
+  }, [leads, currentAccountId, isAgencyUser, effectiveAccountFilter, campaignId, t]);
 
   const [anchorDate, setAnchorDate] = useState(() => {
     const d = new Date();
@@ -649,7 +668,7 @@ export default function CalendarPage() {
       case "campaign": {
         const buckets = new Map<string, Appointment[]>();
         for (const a of sortedAppts) {
-          const key = a.campaign_name || "No Campaign";
+          const key = a.campaign_name || t("filter.noCampaign");
           if (!buckets.has(key)) buckets.set(key, []);
           buckets.get(key)!.push(a);
         }
@@ -658,7 +677,7 @@ export default function CalendarPage() {
       case "status": {
         const buckets = new Map<string, Appointment[]>();
         for (const a of sortedAppts) {
-          const key = a.no_show ? "No Show" : (a.status || "Unknown");
+          const key = a.no_show ? t("appointment.noShow") : (a.status || "Unknown");
           if (!buckets.has(key)) buckets.set(key, []);
           buckets.get(key)!.push(a);
         }
@@ -675,7 +694,7 @@ export default function CalendarPage() {
         const result: { label: string | null; items: Appointment[] }[] = [];
         for (const key of DATE_GROUP_ORDER) {
           const items = buckets.get(key);
-          if (items && items.length > 0) result.push({ label: key, items });
+          if (items && items.length > 0) result.push({ label: t(`dateGroups.${key}`), items });
         }
         return result;
       }
@@ -729,17 +748,17 @@ export default function CalendarPage() {
   };
 
   const viewLabel = useMemo(() => {
-    if (viewMode === "month") return `${FULL_MONTHS[anchorDate.getMonth()]} ${anchorDate.getFullYear()}`;
+    if (viewMode === "month") return `${t(`months.full.${FULL_MONTH_KEYS[anchorDate.getMonth()]}`)} ${anchorDate.getFullYear()}`;
     if (viewMode === "week") {
       const start = weekDays[0];
       const end = weekDays[6];
       const sameMonth = start.getMonth() === end.getMonth();
       return sameMonth
-        ? `${MONTHS[start.getMonth()]} ${start.getDate()} - ${end.getDate()}, ${end.getFullYear()}`
-        : `${MONTHS[start.getMonth()]} ${start.getDate()} - ${MONTHS[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`;
+        ? `${t(`months.short.${MONTH_KEYS[start.getMonth()]}`)} ${start.getDate()} - ${end.getDate()}, ${end.getFullYear()}`
+        : `${t(`months.short.${MONTH_KEYS[start.getMonth()]}`)} ${start.getDate()} - ${t(`months.short.${MONTH_KEYS[end.getMonth()]}`)} ${end.getDate()}, ${end.getFullYear()}`;
     }
-    return `${FULL_MONTHS[anchorDate.getMonth()]} ${anchorDate.getDate()}, ${anchorDate.getFullYear()}`;
-  }, [viewMode, anchorDate, weekDays]);
+    return `${t(`months.full.${FULL_MONTH_KEYS[anchorDate.getMonth()]}`)} ${anchorDate.getDate()}, ${anchorDate.getFullYear()}`;
+  }, [viewMode, anchorDate, weekDays, t]);
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
@@ -791,7 +810,7 @@ export default function CalendarPage() {
   }, [campaignId, campaignOptions]);
 
   const selectedAccountName = useMemo((): string => {
-    if (calendarAccountFilter === "all") return "All Accounts";
+    if (calendarAccountFilter === "all") return t("filter.allAccounts");
     const acc = (accounts || []).find((a: any) => (a.id || a.Id) === calendarAccountFilter);
     return acc ? (String(acc.name || acc.Name || `Account ${calendarAccountFilter}`)) : `Account ${calendarAccountFilter}`;
   }, [calendarAccountFilter, accounts]);
@@ -936,16 +955,18 @@ export default function CalendarPage() {
         refetchLeads();
       }
 
-      const targetFormatted = isTimeSlotDrop
-        ? `${formatDate(newDate)} at ${newDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-        : formatDate(newDate);
-      setDragToast({ message: `${appt.lead_name} rescheduled to ${targetFormatted}`, type: "success" });
+      if (isTimeSlotDrop) {
+        const timeStr = newDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        setDragToast({ message: t("toast.rescheduledToWithTime", { name: appt.lead_name, date: formatDate(newDate, t), time: timeStr }), type: "success" });
+      } else {
+        setDragToast({ message: t("toast.rescheduledTo", { name: appt.lead_name, date: formatDate(newDate, t) }), type: "success" });
+      }
       setTimeout(() => setDragToast(null), 4000);
     } catch (err: any) {
-      setDragToast({ message: `Failed to reschedule: ${err.message}`, type: "error" });
+      setDragToast({ message: t("toast.failedToReschedule", { error: err.message }), type: "error" });
       setTimeout(() => setDragToast(null), 5000);
     }
-  }, [refetchLeads]);
+  }, [refetchLeads, t]);
 
   const handleDragCancel = useCallback(() => {
     setActiveAppt(null);
@@ -1038,7 +1059,7 @@ export default function CalendarPage() {
         )} data-testid="page-calendar">
           {/* Hidden legacy header */}
           <div className="flex items-center gap-4 mb-6 shrink-0 hidden">
-            <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">Calendar</h1>
+            <h1 className="text-2xl font-extrabold tracking-tight" data-testid="text-title">{t("title")}</h1>
             <FiltersBar selectedCampaignId={campaignId} setSelectedCampaignId={setCampaignId} />
           </div>
 
@@ -1071,7 +1092,7 @@ export default function CalendarPage() {
                   <button
                     className="h-9 w-9 rounded-full border border-black/[0.125] bg-transparent hover:bg-card inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
                     onClick={() => navigate(-1)}
-                    title="Previous"
+                    title={t("navigation.previous")}
                     data-testid="button-prev"
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -1082,7 +1103,7 @@ export default function CalendarPage() {
                   <button
                     className="h-9 w-9 rounded-full border border-black/[0.125] bg-transparent hover:bg-card inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
                     onClick={() => navigate(1)}
-                    title="Next"
+                    title={t("navigation.next")}
                     data-testid="button-next"
                   >
                     <ChevronRight className="h-4 w-4" />
@@ -1094,26 +1115,26 @@ export default function CalendarPage() {
                   className="h-9 px-3 rounded-full border border-black/[0.125] bg-transparent text-[12px] font-medium hover:bg-card"
                   onClick={() => setAnchorDate(new Date())}
                   data-testid="button-today"
-                  aria-label="Go to today"
+                  aria-label={t("navigation.goToToday")}
                 >
-                  Today
+                  {t("navigation.today")}
                 </button>
 
                 {/* + New appointment */}
                 <Popover open={bookPopoverOpen} onOpenChange={setBookPopoverOpen}>
                   <PopoverTrigger asChild>
-                    <IconBtn className="!h-9 !w-9" title="New appointment"><Plus className="h-4 w-4" /></IconBtn>
+                    <IconBtn className="!h-9 !w-9" title={t("book.newAppointment")}><Plus className="h-4 w-4" /></IconBtn>
                   </PopoverTrigger>
                   <PopoverContent className="w-72 p-0 overflow-hidden" align="end">
                     <div className="px-3 pt-3 pb-2 border-b border-border/30">
-                      <h3 className="text-[13px] font-semibold font-heading">Book a Lead</h3>
+                      <h3 className="text-[13px] font-semibold font-heading">{t("book.title")}</h3>
                     </div>
                     <div className="p-3 space-y-2.5">
                       {/* Lead search */}
                       <div className="relative">
                         <input
                           type="text"
-                          placeholder="Search lead by name..."
+                          placeholder={t("search.searchLeadPlaceholder")}
                           value={bookLeadSearch}
                           onChange={(e) => { setBookLeadSearch(e.target.value); setBookSelectedLead(null); }}
                           className="w-full h-9 px-3 rounded-lg border border-border/55 bg-muted text-[12px] placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"
@@ -1126,7 +1147,7 @@ export default function CalendarPage() {
                                 className="w-full px-3 py-2 text-left text-[12px] hover:bg-muted flex items-center gap-2"
                                 onClick={() => { setBookSelectedLead(l); setBookLeadSearch(l.full_name || `${l.first_name || ""} ${l.last_name || ""}`.trim()); }}
                               >
-                                <span className="truncate">{l.full_name || `${l.first_name || ""} ${l.last_name || ""}`.trim() || "Unknown"}</span>
+                                <span className="truncate">{l.full_name || `${l.first_name || ""} ${l.last_name || ""}`.trim() || t("appointment.unknownLead")}</span>
                               </button>
                             ))}
                           </div>
@@ -1142,7 +1163,7 @@ export default function CalendarPage() {
                       {/* Duration */}
                       <select value={bookDuration} onChange={(e) => setBookDuration(Number(e.target.value))}
                         className="w-full h-9 px-2 rounded-lg border border-border/55 bg-muted text-[12px] focus:outline-none cursor-pointer">
-                        {[30, 45, 60, 90, 120].map((m) => <option key={m} value={m}>{m} minutes</option>)}
+                        {[30, 45, 60, 90, 120].map((m) => <option key={m} value={m}>{t("appointment.minutes", { count: m })}</option>)}
                       </select>
                       {/* Submit */}
                       <button
@@ -1150,21 +1171,21 @@ export default function CalendarPage() {
                         disabled={!bookSelectedLead || !bookDate || bookSubmitting}
                         className="w-full h-9 rounded-full bg-brand-indigo text-white text-[12px] font-semibold hover:opacity-90 disabled:opacity-40 disabled:pointer-events-none"
                       >
-                        {bookSubmitting ? "Booking..." : "Book Appointment"}
+                        {bookSubmitting ? t("book.booking") : t("book.bookAppointment")}
                       </button>
                     </div>
                   </PopoverContent>
                 </Popover>
 
                 {/* Search */}
-                <IconBtn className="!h-9 !w-9" title="Search appointments" active={searchOpen} onClick={() => { setSearchOpen((p) => !p); if (searchOpen) setSearchQuery(""); }}>
+                <IconBtn className="!h-9 !w-9" title={t("search.searchAppointments")} active={searchOpen} onClick={() => { setSearchOpen((p) => !p); if (searchOpen) setSearchQuery(""); }}>
                   <Search className="h-4 w-4" />
                 </IconBtn>
 
                 {/* Settings */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <IconBtn className="!h-9 !w-9" active={apptSortBy !== "time" || apptGroupBy !== "date" || apptFilterStatuses.length > 0 || calendarAccountFilter !== "all" || campaignId !== "all"} title="Group, Sort & Filter">
+                    <IconBtn className="!h-9 !w-9" active={apptSortBy !== "time" || apptGroupBy !== "date" || apptFilterStatuses.length > 0 || calendarAccountFilter !== "all" || campaignId !== "all"} title={t("settings.groupSortFilter")}>
                       <SlidersHorizontal className="h-4 w-4" />
                     </IconBtn>
                   </DropdownMenuTrigger>
@@ -1175,7 +1196,7 @@ export default function CalendarPage() {
                         <DropdownMenuSub>
                           <DropdownMenuSubTrigger className="text-[12px]">
                             <Building2 className="h-3.5 w-3.5 mr-2" />
-                            Account
+                            {t("filter.account")}
                             {calendarAccountFilter !== "all" && <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[72px]">{selectedAccountName}</span>}
                           </DropdownMenuSubTrigger>
                           <DropdownMenuSubContent className="w-52 max-h-64 overflow-y-auto">
@@ -1184,7 +1205,7 @@ export default function CalendarPage() {
                               onClick={() => handleAccountFilterChange("all")}
                               data-testid="account-filter-option-all"
                             >
-                              All Accounts
+                              {t("filter.allAccounts")}
                               {calendarAccountFilter === "all" && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
                             </DropdownMenuItem>
                             {(accounts || []).filter((a: any) => (a.id || a.Id) !== 1).length > 0 && (
@@ -1217,7 +1238,7 @@ export default function CalendarPage() {
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger className="text-[12px]">
                         <Filter className="h-3.5 w-3.5 mr-2" />
-                        Campaign
+                        {t("filter.campaign")}
                         {campaignId !== "all" && <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[72px]">{selectedCampaignName ?? ""}</span>}
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent className="w-52 max-h-64 overflow-y-auto">
@@ -1226,7 +1247,7 @@ export default function CalendarPage() {
                           onClick={() => setCampaignId("all")}
                           data-testid="campaign-filter-all"
                         >
-                          All Campaigns
+                          {t("filter.allCampaigns")}
                           {campaignId === "all" && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
                         </DropdownMenuItem>
                         {campaignOptions.length > 0 && <DropdownMenuSeparator />}
@@ -1252,7 +1273,7 @@ export default function CalendarPage() {
                           </DropdownMenuItem>
                         ))}
                         {campaignOptions.length === 0 && (
-                          <div className="px-3 py-2 text-[12px] text-muted-foreground italic">No campaigns</div>
+                          <div className="px-3 py-2 text-[12px] text-muted-foreground italic">{t("filter.noCampaigns")}</div>
                         )}
                       </DropdownMenuSubContent>
                     </DropdownMenuSub>
@@ -1262,13 +1283,13 @@ export default function CalendarPage() {
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger className="text-[12px]">
                         <Layers className="h-3.5 w-3.5 mr-2" />
-                        Group
-                        {apptGroupBy !== "date" && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{APPT_GROUP_LABELS[apptGroupBy]}</span>}
+                        {t("group.label")}
+                        {apptGroupBy !== "date" && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{t(APPT_GROUP_KEYS[apptGroupBy])}</span>}
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent className="w-40">
                         {(["date", "campaign", "status", "none"] as ApptGroupBy[]).map((opt) => (
                           <DropdownMenuItem key={opt} onClick={() => setApptGroupBy(opt)} className={cn("text-[12px]", apptGroupBy === opt && "font-semibold text-brand-indigo")}>
-                            {APPT_GROUP_LABELS[opt]}
+                            {t(APPT_GROUP_KEYS[opt])}
                             {apptGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
                           </DropdownMenuItem>
                         ))}
@@ -1278,13 +1299,13 @@ export default function CalendarPage() {
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger className="text-[12px]">
                         <ArrowUpDown className="h-3.5 w-3.5 mr-2" />
-                        Sort
-                        {apptSortBy !== "time" && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{APPT_SORT_LABELS[apptSortBy]}</span>}
+                        {t("sort.label")}
+                        {apptSortBy !== "time" && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{t(APPT_SORT_KEYS[apptSortBy])}</span>}
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent className="w-44">
                         {(["time", "name", "campaign", "status"] as ApptSortBy[]).map((opt) => (
                           <DropdownMenuItem key={opt} onClick={() => setApptSortBy(opt)} className={cn("text-[12px]", apptSortBy === opt && "font-semibold text-brand-indigo")}>
-                            {APPT_SORT_LABELS[opt]}
+                            {t(APPT_SORT_KEYS[opt])}
                             {apptSortBy === opt && <Check className="h-3 w-3 ml-auto" />}
                           </DropdownMenuItem>
                         ))}
@@ -1296,7 +1317,7 @@ export default function CalendarPage() {
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger className="text-[12px]">
                         <Filter className="h-3.5 w-3.5 mr-2" />
-                        Filter
+                        {t("filter.label")}
                         {apptFilterStatuses.length > 0 && <span className="ml-auto text-[10px] text-brand-indigo font-medium">{apptFilterStatuses.length}</span>}
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent className="w-48">
@@ -1306,7 +1327,7 @@ export default function CalendarPage() {
                             onClick={(e) => { e.preventDefault(); setApptFilterStatuses((prev) => prev.includes(opt) ? prev.filter((s) => s !== opt) : [...prev, opt]); }}
                             className="flex items-center gap-2 text-[12px]"
                           >
-                            <span className="flex-1">{APPT_FILTER_LABELS[opt]}</span>
+                            <span className="flex-1">{t(APPT_FILTER_KEYS[opt])}</span>
                             {apptFilterStatuses.includes(opt) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                           </DropdownMenuItem>
                         ))}
@@ -1317,7 +1338,7 @@ export default function CalendarPage() {
                       <>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => { setApptSortBy("time"); setApptGroupBy("date"); setApptFilterStatuses([]); handleAccountFilterChange("all"); setCampaignId("all"); }} className="text-[12px] text-destructive">
-                          Reset all settings
+                          {t("settings.resetAll")}
                         </DropdownMenuItem>
                       </>
                     )}
@@ -1340,8 +1361,8 @@ export default function CalendarPage() {
                   <div className="grid grid-cols-7 text-xs text-center font-bold text-muted-foreground bg-muted/30 shrink-0" data-testid="row-dow">
                     {(() => {
                       const todayDow = new Date().getDay(); // 0=Sun
-                      return ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((d, i) => (
-                        <div key={i} className={cn("px-3 py-3", (i === 0 || i === 6) && "bg-muted/10 opacity-70", i === todayDow && "text-brand-indigo")} data-testid={`dow-${i}`}>{d}</div>
+                      return DAY_KEYS.map((dk, i) => (
+                        <div key={i} className={cn("px-3 py-3", (i === 0 || i === 6) && "bg-muted/10 opacity-70", i === todayDow && "text-brand-indigo")} data-testid={`dow-${i}`}>{t(`days.short.${dk}`)}</div>
                       ));
                     })()}
                   </div>
@@ -1358,7 +1379,7 @@ export default function CalendarPage() {
                           dateKey={dateKey}
                           onClick={() => handleDateClick(dateKey)}
                           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleDateClick(dateKey); } }}
-                          aria-label={`Select ${dateKey}`}
+                          aria-label={t("selectDate", { date: dateKey })}
                           className={cn(
                             "min-h-[100px] border-b border-r border-border/30 last:border-r-0 p-2 cursor-pointer hover:bg-muted/30 relative",
                             !inMonth && "bg-muted/5 opacity-40",
@@ -1413,7 +1434,7 @@ export default function CalendarPage() {
                                 );
                               })}
                               {d.count > 2 && (
-                                <div className="text-[8px] font-bold text-muted-foreground text-center">+{d.count - 2} more</div>
+                                <div className="text-[8px] font-bold text-muted-foreground text-center">{t("appointment.more", { count: d.count - 2 })}</div>
                               )}
                             </div>
                           )}
@@ -1447,7 +1468,7 @@ export default function CalendarPage() {
                             isWeekend && "bg-muted/50"
                           )}>
                             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                              {["SUN","MON","TUE","WED","THU","FRI","SAT"][d.getDay()]}
+                              {t(`days.short.${DAY_KEYS[d.getDay()]}`)}
                             </span>
                             <span className={cn("text-lg font-black leading-none", isToday ? "text-teal-600" : "text-foreground")}>
                               {d.getDate()}
@@ -1614,7 +1635,7 @@ export default function CalendarPage() {
               <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-3 shrink-0 flex items-center">
                 <div className="flex items-center justify-between w-full md:w-[309px] shrink-0">
                   <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight" data-testid="text-list-title">
-                    Calendar
+                    {t("title")}
                   </h2>
                   <ViewTabBar
                     tabs={isMobile ? MOBILE_CALENDAR_TABS : CALENDAR_TABS}
@@ -1634,7 +1655,7 @@ export default function CalendarPage() {
                   <button
                     onClick={() => setSelectedDate(null)}
                     className="h-4 w-4 rounded-full hover:bg-card flex items-center justify-center text-muted-foreground"
-                    title="Clear date filter"
+                    title={t("clearDateFilter")}
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -1648,7 +1669,7 @@ export default function CalendarPage() {
                   <input
                     type="text"
                     autoFocus
-                    placeholder="Search by name or campaign..."
+                    placeholder={t("search.placeholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full h-9 px-3 rounded-lg border border-border/55 bg-card text-[12px] placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-brand-indigo/30"

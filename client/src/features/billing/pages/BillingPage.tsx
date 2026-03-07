@@ -39,8 +39,15 @@ export function BillingPage() {
   // Year filter
   const [yearFilter, setYearFilter] = useState<number | null>(null);
 
-  // Account filter (agency only)
-  const [accountFilter, setAccountFilter] = useState<number | "all">("all");
+  // Account filter (agency only) — default to current workspace account
+  const [accountFilter, setAccountFilter] = useState<number | "all">(() =>
+    currentAccountId > 0 ? currentAccountId : "all"
+  );
+  // Keep in sync when workspace account changes
+  useEffect(() => {
+    setAccountFilter(currentAccountId > 0 ? currentAccountId : "all");
+  }, [currentAccountId]);
+
   const effectiveAccountId = useMemo(() => {
     if (!isAgencyUser) return currentAccountId;
     if (accountFilter === "all") return undefined;

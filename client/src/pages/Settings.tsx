@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useLocation } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useToast } from "@/hooks/use-toast";
@@ -9,41 +11,20 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import {
-  Mail, MessageSquare, Globe, Lock, Eye, EyeOff,
+  Mail, MessageSquare, Globe, Lock, Eye, EyeOff, Building2,
   User, Shield, Bell, Clock, Receipt, FileText, CheckCircle, PenLine,
   Phone, CalendarCheck, MessageSquareWarning, Bot, AlertTriangle,
   Megaphone, TrendingDown, Camera, X, Users,
 } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { SettingsTeamSection } from "@/features/users/components/SettingsTeamSection";
+import { AccountDetailView } from "@/features/accounts/components/AccountDetailView";
+import { updateAccount } from "@/features/accounts/api/accountsApi";
+import type { AccountRow } from "@/features/accounts/components/AccountDetailsDialog";
 import { SkeletonSettingsSection } from "@/components/ui/skeleton";
-
-// ── Timezone list ────────────────────────────────────────────────────
-const TIMEZONE_LIST: string[] = (() => {
-  try {
-    if (typeof Intl !== "undefined" && "supportedValuesOf" in Intl) {
-      return (Intl as any).supportedValuesOf("timeZone") as string[];
-    }
-  } catch {
-    // fall through to fallback
-  }
-  return [
-    "Africa/Abidjan", "Africa/Accra", "Africa/Cairo", "Africa/Johannesburg", "Africa/Lagos", "Africa/Nairobi",
-    "America/Anchorage", "America/Argentina/Buenos_Aires", "America/Bogota", "America/Chicago",
-    "America/Denver", "America/Halifax", "America/Lima", "America/Los_Angeles", "America/Mexico_City",
-    "America/New_York", "America/Phoenix", "America/Santiago", "America/Sao_Paulo", "America/Toronto",
-    "America/Vancouver", "Asia/Bangkok", "Asia/Colombo", "Asia/Dubai", "Asia/Hong_Kong", "Asia/Jakarta",
-    "Asia/Karachi", "Asia/Kolkata", "Asia/Kuala_Lumpur", "Asia/Manila", "Asia/Seoul", "Asia/Shanghai",
-    "Asia/Singapore", "Asia/Taipei", "Asia/Tehran", "Asia/Tokyo", "Atlantic/Reykjavik",
-    "Australia/Adelaide", "Australia/Brisbane", "Australia/Melbourne", "Australia/Perth", "Australia/Sydney",
-    "Europe/Amsterdam", "Europe/Athens", "Europe/Berlin", "Europe/Brussels", "Europe/Budapest",
-    "Europe/Copenhagen", "Europe/Dublin", "Europe/Helsinki", "Europe/Istanbul", "Europe/Kiev",
-    "Europe/Lisbon", "Europe/London", "Europe/Madrid", "Europe/Moscow", "Europe/Oslo",
-    "Europe/Paris", "Europe/Prague", "Europe/Rome", "Europe/Sofia", "Europe/Stockholm",
-    "Europe/Vienna", "Europe/Warsaw", "Europe/Zurich", "Pacific/Auckland", "Pacific/Fiji",
-    "Pacific/Guam", "Pacific/Honolulu", "Pacific/Midway", "UTC",
-  ];
-})();
+import { LanguageSelector } from "@/components/crm/LanguageSelector";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Slider } from "@/components/ui/slider";
 
 // ── User profile type ────────────────────────────────────────────────
 type UserProfile = {
@@ -127,9 +108,10 @@ function getDefaultNotifPrefs(): NotificationPreferences {
 }
 
 // ── Settings sections ────────────────────────────────────────────────
-type SettingsSection = "profile" | "security" | "notifications" | "dashboard" | "team";
+type SettingsSection = "profile" | "security" | "notifications" | "dashboard" | "team" | "account";
 
-const BASE_SECTIONS: { id: SettingsSection; label: string; icon: React.ElementType; agencyOnly?: boolean }[] = [
+const BASE_SECTIONS: { id: SettingsSection; label: string; icon: React.ElementType; agencyOnly?: boolean; scopedOnly?: boolean }[] = [
+  { id: "account", label: "My Account", icon: Building2, scopedOnly: true },
   { id: "profile", label: "My Profile", icon: User },
   { id: "security", label: "Security", icon: Shield },
   { id: "notifications", label: "Notifications", icon: Bell },
@@ -225,11 +207,28 @@ function SettingsContent() {
   const { toast } = useToast();
   const { intervalSeconds, setIntervalSeconds, labelForInterval } = useDashboardRefreshInterval();
   const session = useSession();
-  const { isAgencyUser } = useWorkspace();
+  const { isAgencyUser, currentAccountId } = useWorkspace();
+  const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const isMobile = useIsMobile();
-  const SECTIONS = BASE_SECTIONS.filter((s) => !s.agencyOnly || isAgencyUser);
+  const isScopedToAccount = currentAccountId > 0;
+  const SECTIONS = BASE_SECTIONS.filter((s) => {
+    if (s.agencyOnly && !isAgencyUser) return false;
+    // "My Account" is for subaccount users only; agency admins navigate via the Accounts page
+    if (s.scopedOnly && (!isScopedToAccount || isAgencyUser)) return false;
+    return true;
+  });
 
-  const [activeSection, setActiveSection] = useState<SettingsSection>("profile");
+  const [activeSection, setActiveSection] = useState<SettingsSection>(
+    isScopedToAccount && !isAgencyUser ? "account" : "profile"
+  );
+
+  // If account scope changes and current section is no longer valid, reset
+  useEffect(() => {
+    if (!isScopedToAccount && activeSection === "account") {
+      setActiveSection("profile");
+    }
+  }, [isScopedToAccount, activeSection]);
 
   // Deep-link: other pages can set sessionStorage to open a specific section
   useEffect(() => {
@@ -241,6 +240,28 @@ function SettingsContent() {
       }
     }
   }, []);
+
+  // ── Account detail state (when scoped to a specific account) ───────
+  const [accountData, setAccountData] = useState<AccountRow | null>(null);
+  const [accountLoading, setAccountLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isScopedToAccount) { setAccountData(null); return; }
+    setAccountLoading(true);
+    apiFetch(`/api/accounts/${currentAccountId}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => setAccountData(data))
+      .catch(() => setAccountData(null))
+      .finally(() => setAccountLoading(false));
+  }, [currentAccountId, isScopedToAccount]);
+
+  const handleAccountFieldSave = useCallback(async (field: string, value: string) => {
+    if (!accountData) return;
+    const aid = accountData.Id ?? accountData.id ?? 0;
+    await updateAccount(aid, { [field]: value });
+    setAccountData((prev) => prev ? { ...prev, [field]: value } : prev);
+    toast({ title: "Saved", description: `Account ${field} updated.` });
+  }, [accountData, toast]);
 
   // ── Profile state ──────────────────────────────────────────────────
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -256,18 +277,74 @@ function SettingsContent() {
 
   // ── Avatar upload ───────────────────────────────────────────────────
   const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Crop dialog state ─────────────────────────────────────────────
+  const [cropImage, setCropImage] = useState<string | null>(null);
+  const [cropZoom, setCropZoom] = useState(1);
+  const [cropPos, setCropPos] = useState({ x: 0, y: 0 });
+  const cropDragging = useRef(false);
+  const cropLastPointer = useRef({ x: 0, y: 0 });
+
   const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
-        setAvatarUrl(reader.result);
+        setCropImage(reader.result);
+        setCropZoom(1);
+        setCropPos({ x: 0, y: 0 });
       }
     };
     reader.readAsDataURL(file);
     if (avatarInputRef.current) avatarInputRef.current.value = "";
   };
+
+  const handleCropConfirm = useCallback(() => {
+    if (!cropImage) return;
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const size = 256;
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d")!;
+      const imgSize = Math.min(img.width, img.height);
+      const cropSize = imgSize / cropZoom;
+      const cx = (img.width - cropSize) / 2 - (cropPos.x / 100) * imgSize;
+      const cy = (img.height - cropSize) / 2 - (cropPos.y / 100) * imgSize;
+      ctx.drawImage(img, cx, cy, cropSize, cropSize, 0, 0, size, size);
+      setAvatarUrl(canvas.toDataURL("image/jpeg", 0.85));
+      setCropImage(null);
+    };
+    img.src = cropImage;
+  }, [cropImage, cropZoom, cropPos]);
+
+  const handleCropPointerDown = useCallback((e: React.PointerEvent) => {
+    cropDragging.current = true;
+    cropLastPointer.current = { x: e.clientX, y: e.clientY };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, []);
+
+  const handleCropPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!cropDragging.current) return;
+    const dx = e.clientX - cropLastPointer.current.x;
+    const dy = e.clientY - cropLastPointer.current.y;
+    cropLastPointer.current = { x: e.clientX, y: e.clientY };
+    // Convert pixel movement to percentage (relative to 200px preview area)
+    const sensitivity = 100 / 200;
+    setCropPos(prev => {
+      const maxOffset = (cropZoom - 1) * 50 / cropZoom;
+      return {
+        x: Math.max(-maxOffset, Math.min(maxOffset, prev.x + dx * sensitivity)),
+        y: Math.max(-maxOffset, Math.min(maxOffset, prev.y + dy * sensitivity)),
+      };
+    });
+  }, [cropZoom]);
+
+  const handleCropPointerUp = useCallback(() => {
+    cropDragging.current = false;
+  }, []);
 
   // ── Security state ─────────────────────────────────────────────────
   const [currentPassword, setCurrentPassword] = useState("");
@@ -483,6 +560,13 @@ function SettingsContent() {
   // ── Render sections ────────────────────────────────────────────────
   const renderProfile = () => (
     <div className="space-y-6" data-testid="section-profile">
+      {/* Language */}
+      <div className="flex items-center gap-3">
+        <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
+        <span className="text-sm font-medium text-foreground">Language</span>
+        <div className="ml-auto"><LanguageSelector /></div>
+      </div>
+
       <p className="text-sm text-muted-foreground">
         Update your personal information and preferences.
       </p>
@@ -545,6 +629,76 @@ function SettingsContent() {
               className="hidden"
               onChange={handleAvatarFileChange}
             />
+
+            {/* ── Crop/Zoom Dialog ──────────────────────────────── */}
+            <Dialog open={!!cropImage} onOpenChange={(open) => { if (!open) setCropImage(null); }}>
+              <DialogContent className="sm:max-w-[360px]">
+                <DialogHeader>
+                  <DialogTitle>Crop Photo</DialogTitle>
+                </DialogHeader>
+                <div className="flex flex-col items-center gap-4 py-2">
+                  {/* Circular crop preview */}
+                  <div
+                    className="relative w-[200px] h-[200px] rounded-full overflow-hidden border-2 border-border bg-muted cursor-grab active:cursor-grabbing select-none touch-none"
+                    onPointerDown={handleCropPointerDown}
+                    onPointerMove={handleCropPointerMove}
+                    onPointerUp={handleCropPointerUp}
+                    onPointerCancel={handleCropPointerUp}
+                  >
+                    {cropImage && (
+                      <img
+                        src={cropImage}
+                        alt="Crop preview"
+                        draggable={false}
+                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                        style={{
+                          transform: `scale(${cropZoom}) translate(${cropPos.x}%, ${cropPos.y}%)`,
+                          transformOrigin: "center center",
+                        }}
+                      />
+                    )}
+                  </div>
+                  {/* Zoom slider */}
+                  <div className="w-full flex items-center gap-3 px-2">
+                    <span className="text-xs text-muted-foreground shrink-0">1x</span>
+                    <Slider
+                      min={1}
+                      max={3}
+                      step={0.1}
+                      value={[cropZoom]}
+                      onValueChange={([v]) => {
+                        setCropZoom(v);
+                        // Clamp position when zoom decreases
+                        const maxOffset = (v - 1) * 50 / v;
+                        setCropPos(prev => ({
+                          x: Math.max(-maxOffset, Math.min(maxOffset, prev.x)),
+                          y: Math.max(-maxOffset, Math.min(maxOffset, prev.y)),
+                        }));
+                      }}
+                      className="flex-1"
+                    />
+                    <span className="text-xs text-muted-foreground shrink-0">3x</span>
+                  </div>
+                </div>
+                <DialogFooter className="gap-2 sm:gap-0">
+                  <button
+                    type="button"
+                    onClick={() => setCropImage(null)}
+                    className="px-4 py-2 text-sm font-medium rounded-md border border-border text-foreground hover:bg-muted transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCropConfirm}
+                    className="px-4 py-2 text-sm font-medium rounded-md bg-brand-indigo text-white hover:opacity-90 transition-opacity"
+                  >
+                    Confirm
+                  </button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
             <div>
               <div className="text-sm font-semibold text-foreground">{name || "No name set"}</div>
               <div className="text-xs text-muted-foreground">{profile?.role || "User"}</div>
@@ -604,11 +758,8 @@ function SettingsContent() {
                 aria-label="Select timezone"
               >
                 <option value="">-- Select timezone --</option>
-                {TIMEZONE_LIST.map((tz) => (
-                  <option key={tz} value={tz}>
-                    {tz.replace(/_/g, " ")}
-                  </option>
-                ))}
+                <option value="America/Sao_Paulo">America/Sao Paulo</option>
+                <option value="Europe/Amsterdam">Europe/Amsterdam</option>
               </select>
               {timezone && (
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -617,15 +768,6 @@ function SettingsContent() {
               )}
             </div>
           </div>
-
-          {/* Avatar URL */}
-          <Field
-            label="Avatar URL"
-            value={avatarUrl}
-            onChange={setAvatarUrl}
-            testId="input-profile-avatar-url"
-            placeholder="https://example.com/avatar.png"
-          />
 
           {/* Save button */}
           <div className="flex justify-end pt-2">
@@ -641,33 +783,41 @@ function SettingsContent() {
             </button>
           </div>
 
-          {/* Tutorial restart */}
-          <div className="pt-4 mt-4 border-t border-border/30">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-foreground">Onboarding Tutorial</p>
-                <p className="text-xs text-muted-foreground">Restart the guided setup walkthrough</p>
-              </div>
-              <button
-                type="button"
-                className="text-xs font-medium px-3 py-1.5 rounded-lg border border-border hover:bg-muted/50 transition-colors"
-                data-testid="button-restart-tutorial"
-                onClick={async () => {
-                  try {
-                    const res = await apiFetch("/api/onboarding/restart", { method: "POST" });
-                    if (res.ok) {
-                      toast({ title: "Tutorial restarted", description: "The onboarding walkthrough will start on your next page load." });
-                      window.location.reload();
+          {/* Tutorial restart — only for subaccount users */}
+          {!isAgencyUser && (
+            <div className="pt-4 mt-4 border-t border-border/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Onboarding Tutorial</p>
+                  <p className="text-xs text-muted-foreground">Restart the guided setup walkthrough</p>
+                </div>
+                <button
+                  type="button"
+                  className="text-xs font-medium px-3 py-1.5 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                  data-testid="button-restart-tutorial"
+                  onClick={async () => {
+                    try {
+                      const res = await apiFetch("/api/onboarding/restart", { method: "POST" });
+                      if (res.ok) {
+                        const data = await res.json();
+                        queryClient.setQueryData(["/api/onboarding/status"], data);
+                        toast({ title: "Tutorial restarted", description: "The onboarding walkthrough is starting." });
+                        // Navigate to campaigns — fresh OnboardingProvider mounts and
+                        // immediately shows the WelcomeModal since startedAt is null
+                        setTimeout(() => setLocation("/subaccount/campaigns"), 400);
+                      } else {
+                        toast({ title: "Error", description: "Failed to restart tutorial", variant: "destructive" });
+                      }
+                    } catch {
+                      toast({ title: "Error", description: "Failed to restart tutorial", variant: "destructive" });
                     }
-                  } catch {
-                    toast({ title: "Error", description: "Failed to restart tutorial", variant: "destructive" });
-                  }
-                }}
-              >
-                Restart Tutorial
-              </button>
+                  }}
+                >
+                  Restart Tutorial
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
     </div>
@@ -949,6 +1099,18 @@ function SettingsContent() {
 
   const renderActiveSection = () => {
     switch (activeSection) {
+      case "account":
+        if (accountLoading) return <SkeletonSettingsSection rows={6} />;
+        if (!accountData) return <div className="text-muted-foreground text-sm py-8 text-center">Account not found</div>;
+        return (
+          <AccountDetailView
+            account={accountData}
+            onSave={handleAccountFieldSave}
+            onAddAccount={() => {}}
+            onDelete={() => {}}
+            onToggleStatus={() => {}}
+          />
+        );
       case "profile": return renderProfile();
       case "security": return renderSecurity();
       case "notifications": return renderNotifications();
@@ -974,7 +1136,7 @@ function SettingsContent() {
           data-testid="settings-nav"
         >
           {!isMobile && (
-            <div className="px-3.5 pt-5 pb-1">
+            <div className="pl-[17px] pr-3.5 pt-10 pb-3">
               <h1 className="text-2xl font-semibold font-heading text-foreground leading-tight">Settings</h1>
             </div>
           )}
@@ -1019,18 +1181,18 @@ function SettingsContent() {
         <div className={cn(
           "flex-1 bg-card rounded-lg w-full",
           !isMobile && "ml-1.5",
-          activeSection === "team" ? "overflow-hidden flex flex-col" : "overflow-y-auto pb-8",
+          (activeSection === "team" || activeSection === "account") ? "overflow-hidden flex flex-col" : "overflow-y-auto pb-8",
         )} data-testid="settings-content">
-          {activeSection !== "team" && (
-            <div className="px-3.5 pt-5 pb-3">
+          {activeSection !== "team" && activeSection !== "account" && (
+            <div className="pl-[17px] pr-3.5 pt-10 pb-3">
               <h1 className="text-2xl font-semibold font-heading text-foreground leading-tight">
                 {SECTIONS.find(s => s.id === activeSection)?.label}
               </h1>
             </div>
           )}
           <div className={cn(
-            activeSection === "team"
-              ? "flex-1 flex flex-col min-h-0"
+            (activeSection === "team" || activeSection === "account")
+              ? "flex-1 flex flex-col min-h-0 overflow-y-auto"
               : "px-6 max-w-2xl",
           )}>
             {renderActiveSection()}

@@ -1,0 +1,118 @@
+{
+  "title": "Kalender",
+  "months": {
+    "short": {
+      "jan": "Jan",
+      "feb": "Feb",
+      "mar": "Mrt",
+      "apr": "Apr",
+      "may": "Mei",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Aug",
+      "sep": "Sep",
+      "oct": "Okt",
+      "nov": "Nov",
+      "dec": "Dec"
+    },
+    "full": {
+      "january": "Januari",
+      "february": "Februari",
+      "march": "Maart",
+      "april": "April",
+      "may": "Mei",
+      "june": "Juni",
+      "july": "Juli",
+      "august": "Augustus",
+      "september": "September",
+      "october": "Oktober",
+      "november": "November",
+      "december": "December"
+    }
+  },
+  "days": {
+    "short": {
+      "sun": "ZO",
+      "mon": "MA",
+      "tue": "DI",
+      "wed": "WO",
+      "thu": "DO",
+      "fri": "VR",
+      "sat": "ZA"
+    }
+  },
+  "views": {
+    "month": "Maand",
+    "week": "Week",
+    "day": "Dag"
+  },
+  "navigation": {
+    "previous": "Vorige",
+    "next": "Volgende",
+    "today": "Vandaag",
+    "goToToday": "Ga naar vandaag"
+  },
+  "dateGroups": {
+    "past": "Verleden",
+    "today": "Vandaag",
+    "tomorrow": "Morgen",
+    "thisWeek": "Deze Week",
+    "later": "Later"
+  },
+  "sort": {
+    "label": "Sorteren",
+    "time": "Tijd",
+    "nameAZ": "Naam A-Z",
+    "campaign": "Campagne",
+    "status": "Status"
+  },
+  "group": {
+    "label": "Groeperen",
+    "date": "Datum",
+    "campaign": "Campagne",
+    "status": "Status",
+    "none": "Geen"
+  },
+  "filter": {
+    "label": "Filteren",
+    "noShow": "Niet Verschenen",
+    "rescheduled": "Verplaatst",
+    "confirmed": "Bevestigd",
+    "account": "Account",
+    "allAccounts": "Alle Accounts",
+    "campaign": "Campagne",
+    "allCampaigns": "Alle Campagnes",
+    "noCampaigns": "Geen campagnes",
+    "noCampaign": "Geen Campagne"
+  },
+  "settings": {
+    "groupSortFilter": "Groeperen, Sorteren & Filteren",
+    "resetAll": "Alle instellingen resetten"
+  },
+  "search": {
+    "searchAppointments": "Afspraken zoeken",
+    "placeholder": "Zoek op naam of campagne...",
+    "searchLeadPlaceholder": "Zoek lead op naam..."
+  },
+  "appointment": {
+    "editDuration": "Duur bewerken",
+    "minutes": "{{count}} minuten",
+    "rescheduledCount": "Verplaatst x{{count}}",
+    "noShow": "Niet Verschenen",
+    "more": "+{{count}} meer",
+    "unknownLead": "Onbekende Lead"
+  },
+  "book": {
+    "newAppointment": "Nieuwe afspraak",
+    "title": "Een Lead Boeken",
+    "bookAppointment": "Afspraak Boeken",
+    "booking": "Boeken..."
+  },
+  "toast": {
+    "rescheduledTo": "{{name}} verplaatst naar {{date}}",
+    "rescheduledToWithTime": "{{name}} verplaatst naar {{date}} om {{time}}",
+    "failedToReschedule": "Verplaatsen mislukt: {{error}}"
+  },
+  "clearDateFilter": "Datumfilter wissen",
+  "selectDate": "Selecteer {{date}}"
+}

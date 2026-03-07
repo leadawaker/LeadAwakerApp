@@ -1,4 +1,5 @@
 import { useRef, useMemo, useEffect, useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/lib/utils";
 import { SkeletonList } from "@/components/ui/skeleton";

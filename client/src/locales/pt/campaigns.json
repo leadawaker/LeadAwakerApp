@@ -1,0 +1,459 @@
+{
+  "title": "Campanhas",
+
+  "views": {
+    "list": "Lista",
+    "table": "Tabela"
+  },
+
+  "toolbar": {
+    "add": "Adicionar",
+    "sort": "Ordenar",
+    "sortBy": "Ordenar por",
+    "filter": "Filtrar",
+    "group": "Agrupar",
+    "fields": "Campos",
+    "showHideColumns": "Mostrar / Ocultar Colunas",
+    "resetToDefault": "Restaurar padr\u00e3o",
+    "searchPlaceholder": "Buscar campanhas\u2026",
+    "changeStatus": "Alterar Status",
+    "duplicate": "Duplicar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "pause": "Pausar",
+    "activate": "Ativar",
+    "refresh": "Atualizar",
+    "save": "Salvar",
+    "saving": "Salvando\u2026",
+    "cancel": "Cancelar"
+  },
+
+  "columns": {
+    "name": "Nome",
+    "status": "Status",
+    "account": "Conta",
+    "type": "Tipo",
+    "leads": "Leads",
+    "responseRate": "Resposta %",
+    "bookingRate": "Agendamento %",
+    "description": "Descri\u00e7\u00e3o",
+    "cost": "Custo",
+    "roi": "ROI %",
+    "startDate": "Data In\u00edcio",
+    "endDate": "Data Fim",
+    "start": "In\u00edcio",
+    "end": "Fim",
+    "lastModified": "\u00daltima Modifica\u00e7\u00e3o"
+  },
+
+  "groupBy": {
+    "status": "Status",
+    "account": "Conta",
+    "type": "Tipo",
+    "none": "Nenhum"
+  },
+
+  "sortOptions": {
+    "recent": "Mais Recente",
+    "nameAsc": "Nome A \u2192 Z",
+    "nameDesc": "Nome Z \u2192 A",
+    "leadsDesc": "Mais Leads",
+    "responseDesc": "Melhor Resposta"
+  },
+
+  "filter": {
+    "status": "Status",
+    "account": "Conta",
+    "allAccounts": "Todas as Contas",
+    "clearAllFilters": "Limpar todos os filtros"
+  },
+
+  "statusLabels": {
+    "Active": "Ativa",
+    "Paused": "Pausada",
+    "Completed": "Conclu\u00edda",
+    "Finished": "Conclu\u00edda",
+    "Inactive": "Inativa",
+    "Archived": "Arquivada",
+    "Draft": "Rascunho",
+    "Unknown": "Desconhecido"
+  },
+
+  "confirm": {
+    "yes": "Sim",
+    "no": "N\u00e3o",
+    "deleteConfirm": "Excluir?"
+  },
+
+  "empty": {
+    "noCampaignsFound": "Nenhuma campanha encontrada",
+    "tryDifferentSearch": "Tente uma busca diferente",
+    "noMatchSearch": "Nenhuma campanha corresponde \u00e0 sua busca",
+    "selectCampaign": "Selecione uma campanha",
+    "selectCampaignDesc": "Clique em qualquer campanha \u00e0 esquerda para ver seu desempenho, configura\u00e7\u00e3o e modelos de mensagem.",
+    "chooseFromList": "\u2190 Escolha da lista"
+  },
+
+  "pagination": {
+    "previous": "Anterior",
+    "next": "Pr\u00f3ximo",
+    "rangeOf": "{{start}}\u2013{{end}} de {{total}}"
+  },
+
+  "card": {
+    "leads": "Leads",
+    "response": "Resposta",
+    "booked": "Agendados",
+    "started": "Iniciada em {{date}}"
+  },
+
+  "detail": {
+    "panelHide": "Ocultar painel de detalhes",
+    "panelShow": "Mostrar painel de detalhes",
+    "unnamed": "Campanha sem nome",
+    "campaignNumber": "#{{number}}"
+  },
+
+  "tabs": {
+    "summary": "Resumo",
+    "configurations": "Configura\u00e7\u00f5es",
+    "tags": "Tags"
+  },
+
+  "summary": {
+    "keyMetrics": "M\u00e9tricas Principais",
+    "leadsTargeted": "Leads Alcan\u00e7ados",
+    "messagesSent": "Mensagens Enviadas",
+    "responsePercent": "Resposta %",
+    "bookingPercent": "Agendamento %",
+    "performanceTrends": "Tend\u00eancias de Desempenho",
+    "upNext": "Pr\u00f3ximos",
+    "pipeline": "Pipeline",
+    "totalLeads": "Total de Leads",
+    "noPipelineData": "Sem dados de pipeline ainda",
+    "noConversionData": "Sem dados de convers\u00e3o",
+    "aiAnalysis": "An\u00e1lise IA",
+    "noAiAnalysis": "Sem an\u00e1lise de IA ainda",
+    "aiRunsNightly": "Executa toda noite ou clique em Gerar",
+    "lastRun": "\u00daltima execu\u00e7\u00e3o: {{date}}",
+    "noAnalysisYet": "Sem an\u00e1lise ainda",
+    "generate": "Gerar",
+    "regenerate": "Regenerar",
+    "generating": "Gerando\u2026",
+    "groqApiKeyMissing": "Chave da API Groq n\u00e3o configurada. Adicione GROQ_API_KEY ao .env.",
+    "generateFailed": "Falha ao gerar resumo. Tente novamente.",
+    "networkError": "Erro de rede. Tente novamente.",
+    "activity": "Atividade",
+    "financials": "Financeiro",
+    "roiTrend": "Tend\u00eancia de ROI"
+  },
+
+  "financials": {
+    "dealType": "Tipo de Neg\u00f3cio",
+    "totalSpend": "Gasto Total",
+    "costPerBooking": "Custo / Agendamento",
+    "valuePerBooking": "Valor / Agendamento",
+    "paymentTrigger": "Gatilho de Pagamento",
+    "projectedRevenue": "Receita Projetada",
+    "returnOnInvestment": "Retorno sobre Investimento",
+    "linkContractPrompt": "Vincular um contrato em Config \u2192",
+    "est": "est.",
+    "dealTypes": {
+      "retainer": "Retainer",
+      "per_booking": "Por Agendamento",
+      "fixed": "Taxa Fixa",
+      "retainer_plus": "Retainer +",
+      "sale_closed": "Venda Fechada"
+    },
+    "paymentTriggers": {
+      "booked_call": "Liga\u00e7\u00e3o Agendada",
+      "sale_closed": "Venda Fechada",
+      "meeting_held": "Reuni\u00e3o Realizada"
+    }
+  },
+
+  "config": {
+    "configuration": "Configura\u00e7\u00e3o",
+    "schedule": "Agenda",
+    "behavior": "Comportamento",
+    "contract": "Contrato",
+    "aiSettings": "Configura\u00e7\u00f5es de IA",
+    "messageTemplates": "Modelos de Mensagem",
+    "type": "Tipo",
+    "description": "Descri\u00e7\u00e3o",
+    "startDate": "Data de in\u00edcio",
+    "endDate": "Data de t\u00e9rmino",
+    "activeHours": "Hor\u00e1rio ativo",
+    "dailyLimit": "Limite di\u00e1rio",
+    "interval": "Intervalo",
+    "channel": "Canal",
+    "stopOnResponse": "Parar ao responder",
+    "useAiBumps": "Usar bumps de IA",
+    "maxBumps": "M\u00e1x. bumps",
+    "deal": "Neg\u00f3cio",
+    "noneLinked": "\u2014 Nenhum vinculado",
+    "valuePerBooking": "Valor / Agendamento",
+    "model": "Modelo",
+    "temperature": "Temperatura",
+    "agent": "Agente",
+    "service": "Servi\u00e7o",
+    "promptTemplate": "Template de Prompt",
+    "firstMessage": "Primeira Mensagem",
+    "noTemplateSet": "Nenhum template definido",
+    "delayLabel": "Atraso: {{value}}",
+    "delayHours": "Atraso (h):",
+    "voiceNotes": "Notas de Voz",
+    "firstMessageVoiceNote": "Primeira mensagem como nota de voz",
+    "bump1VoiceNote": "Bump 1 como nota de voz",
+    "bump2VoiceNote": "Bump 2 como nota de voz",
+    "bump3VoiceNote": "Bump 3 como nota de voz",
+    "aiReplyVoiceNote": "Respostas IA como notas de voz",
+    "voiceId": "ID da Voz"
+  },
+
+  "meta": {
+    "owner": "Propriet\u00e1rio",
+    "channel": "Canal",
+    "started": "Iniciada",
+    "type": "Tipo",
+    "dailyLimit": "Limite Di\u00e1rio",
+    "leadsUnit": "leads",
+    "activeHours": "Hor\u00e1rio Ativo",
+    "duration": "{{count}} dia",
+    "duration_plural": "{{count}} dias"
+  },
+
+  "panel": {
+    "performance": "Desempenho",
+    "trends": "Tend\u00eancias",
+    "settings": "Configura\u00e7\u00f5es",
+    "aiConfiguration": "Configura\u00e7\u00e3o de IA",
+    "messageTemplates": "Modelos de Mensagem",
+    "costAndRoi": "Custo & ROI",
+    "integrations": "Integra\u00e7\u00f5es",
+    "qualificationCriteria": "Crit\u00e9rios de Qualifica\u00e7\u00e3o",
+    "audienceTargeting": "P\u00fablico & Segmenta\u00e7\u00e3o",
+    "noQualificationCriteria": "Nenhum crit\u00e9rio de qualifica\u00e7\u00e3o definido",
+    "noPerformanceData": "Sem dados de desempenho ainda",
+    "descriptionLabel": "Descri\u00e7\u00e3o",
+    "typeLabel": "Tipo",
+    "startDate": "Data de in\u00edcio",
+    "endDate": "Data de t\u00e9rmino",
+    "activeHours": "Hor\u00e1rio ativo",
+    "dailyLeadLimit": "Limite di\u00e1rio de leads",
+    "messageInterval": "Intervalo de mensagens",
+    "stopOnResponse": "Parar ao responder",
+    "useAiBumps": "Usar bumps de IA",
+    "maxBumps": "M\u00e1x. bumps",
+    "aiModel": "Modelo de IA",
+    "aiTemperature": "Temperatura de IA",
+    "agentName": "Nome do agente",
+    "serviceName": "Nome do servi\u00e7o",
+    "aiPromptTemplate": "Template de Prompt IA",
+    "firstMessage": "Primeira Mensagem",
+    "totalCost": "Custo total",
+    "costPerLead": "Custo por lead",
+    "costPerBooking": "Custo por agendamento",
+    "roi": "ROI",
+    "n8nWorkflowId": "ID workflow n8n",
+    "calendarLink": "Link do calend\u00e1rio",
+    "webhookUrl": "URL do webhook",
+    "targetAudience": "P\u00fablico alvo",
+    "niche": "Nicho",
+    "serviceLabel": "Servi\u00e7o",
+    "usp": "USP",
+    "inquiryTimeframe": "Per\u00edodo de consulta",
+    "metrics": {
+      "leads": "Leads",
+      "messages": "Mensagens",
+      "responses": "Respostas",
+      "bookings": "Agendamentos",
+      "responseRate": "Resposta %",
+      "bookingRate": "Agendamento %",
+      "totalCost": "Custo Total",
+      "costPerLead": "Custo/Lead",
+      "costPerBooking": "Custo/Agendamento",
+      "roi": "ROI"
+    }
+  },
+
+  "tags": {
+    "loadingTags": "Carregando tags...",
+    "failedToLoadTags": "Falha ao carregar tags",
+    "noTagsYet": "Nenhuma tag ainda",
+    "createTagsDesc": "Crie tags para organizar leads nesta campanha.",
+    "createTag": "Criar Tag",
+    "newTag": "Nova Tag",
+    "tagNamePlaceholder": "Nome da tag",
+    "categoryPlaceholder": "Categoria (opcional)",
+    "searchTags": "Buscar tags...",
+    "sorting": "Ordenação",
+    "filter": "Filtrar",
+    "group": "Agrupar",
+    "tagCount": "{{count}} tag",
+    "tagCount_plural": "{{count}} tags",
+    "selected": "{{count}} selecionado(s)",
+    "clearSelection": "Limpar seleção",
+    "autoApplied": "Auto-Aplicado",
+    "all": "Todos",
+    "yes": "Sim",
+    "no": "Não",
+    "category": "Categoria",
+    "allCategories": "Todas as Categorias",
+    "clearAllFilters": "Limpar todos os filtros",
+
+    "pageTitle": "Tags",
+    "viewList": "Lista",
+    "viewCards": "Cartões",
+    "searchPlaceholder": "Buscar tags...",
+    "add": "Adicionar",
+    "account": "Conta",
+    "campaign": "Campanha",
+    "sort": "Ordenar",
+    "sortBy": "Ordenar por",
+    "groupBy": "Agrupar por",
+    "fields": "Campos",
+    "columns": "Colunas",
+    "duplicate": "Duplicar",
+    "tagCountLabel": "{{count}} tag",
+    "tagCountLabel_other": "{{count}} tags",
+    "allAccounts": "Todas as Contas",
+    "allCampaigns": "Todas as Campanhas",
+    "clear": "Limpar",
+    "selectedCount": "{{count}} selecionado(s)",
+    "categoryFilter": "Categoria",
+    "autoAppliedFilter": "Auto-Aplicado",
+    "createTitle": "Nova Tag",
+    "createNamePlaceholder": "Nome da tag",
+    "createCategoryPlaceholder": "Categoria",
+    "creating": "Criando...",
+    "create": "Criar",
+    "deleteTag": "Excluir Tag",
+    "deleteTags": "Excluir Tags",
+    "deleteConfirmSingle": "Tem certeza que deseja excluir a tag",
+    "deleteConfirmBulk": "Tem certeza que deseja excluir {{count}} tags?",
+    "deleteCannotUndoSingle": "Esta ação não pode ser desfeita. Leads que atualmente possuem esta tag não a perderão — apenas a definição da tag será removida.",
+    "deleteCannotUndoBulk": "Esta ação não pode ser desfeita. Leads que atualmente possuem estas tags não as perderão — apenas as definições das tags serão removidas.",
+    "deleting": "Excluindo...",
+    "deleteCountTags": "Excluir {{count}} Tags",
+    "none": "Nenhum",
+    "auto": "Auto",
+    "leadCount": "{{count}} lead",
+    "leadCount_other": "{{count}} leads",
+    "chooseColor": "Escolha uma cor",
+    "noMatchSearch": "Nenhuma tag corresponde à sua busca",
+    "noMatchSearchDescription": "Nenhuma tag encontrada para \"{{query}}\". Tente um termo diferente.",
+    "noMatchFilters": "Nenhuma tag corresponde aos filtros atuais",
+    "noMatchFiltersDescription": "Tente ajustar ou limpar seus filtros para ver mais tags.",
+    "noTags": "Nenhuma tag disponível",
+    "noTagsDescription": "Nenhuma tag disponível. Crie uma para começar.",
+    "confirmYes": "Sim",
+    "confirmNo": "Não"
+  },
+
+  "photo": {
+    "dialogTitle": "Foto da Campanha",
+    "hue": "Matiz",
+    "uploadLogo": "Enviar imagem do logo",
+    "chooseSticker": "Escolher adesivo",
+    "noSticker": "Sem adesivo",
+    "removeLogo": "Remover logo",
+    "clickToChange": "Clique para alterar foto"
+  },
+
+  "relativeTime": {
+    "justNow": "Agora mesmo",
+    "hoursAgo": "{{count}}h atr\u00e1s",
+    "yesterday": "Ontem",
+    "daysAgo": "{{count}}d atr\u00e1s",
+    "weeksAgo": "{{count}}sem atr\u00e1s",
+    "monthsAgo": "{{count}}m atr\u00e1s"
+  },
+
+  "funnelStages": {
+    "new": "Novo",
+    "contacted": "Contatado",
+    "responded": "Respondeu",
+    "multipleResponses": "M\u00faltiplas Respostas",
+    "qualified": "Qualificado",
+    "callBooked": "Liga\u00e7\u00e3o Agendada",
+    "closed": "Fechado",
+    "lost": "Perdido",
+    "dnd": "N\u00e3o Perturbe"
+  },
+
+  "copy": "Copiar",
+
+  "tagsPage": {
+    "title": "Tags",
+    "searchPlaceholder": "Buscar tags\u2026",
+    "allCategories": "Todas as Categorias",
+    "tagsInCategories": "{{tagCount}} tags em {{catCount}} categorias",
+    "createTag": "Criar Tag",
+    "uncategorized": "Sem categoria",
+    "auto": "Auto",
+    "chooseColor": "Escolha uma cor",
+    "createDialog": {
+      "title": "Criar Nova Tag",
+      "name": "Nome",
+      "namePlaceholder": "ex. lead-quente",
+      "color": "Cor",
+      "category": "Categoria",
+      "categoryPlaceholder": "ex. Status, Comportamento, Origem",
+      "description": "Descri\u00e7\u00e3o",
+      "descriptionPlaceholder": "Breve descri\u00e7\u00e3o desta tag\u2026",
+      "cancel": "Cancelar",
+      "creating": "Criando\u2026",
+      "create": "Criar Tag"
+    },
+    "editDialog": {
+      "title": "Editar Tag",
+      "name": "Nome",
+      "namePlaceholder": "ex. lead-quente",
+      "color": "Cor",
+      "category": "Categoria",
+      "categoryPlaceholder": "ex. Status, Comportamento, Origem",
+      "description": "Descri\u00e7\u00e3o",
+      "descriptionPlaceholder": "Breve descri\u00e7\u00e3o desta tag\u2026",
+      "cancel": "Cancelar",
+      "saving": "Salvando\u2026",
+      "saveChanges": "Salvar Altera\u00e7\u00f5es"
+    },
+    "deleteDialog": {
+      "title": "Excluir Tag",
+      "confirmMessage": "Tem certeza que deseja excluir a tag",
+      "warningMessage": "Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita. Leads que possuem esta tag n\u00e3o a perder\u00e3o \u2014 apenas a defini\u00e7\u00e3o da tag ser\u00e1 removida.",
+      "cancel": "Cancelar",
+      "deleting": "Excluindo\u2026",
+      "delete": "Excluir Tag"
+    },
+    "sidePanel": {
+      "leadsWithTag": "Leads: {{name}}",
+      "tagInsights": "Insights da Tag",
+      "tagInsightsDesc": "Clique em uma tag para ver os leads associados e seus detalhes.",
+      "noLeadsFound": "Nenhum lead encontrado",
+      "noLeadsDesc": "Nenhum lead est\u00e1 associado a esta tag ainda.",
+      "lastMessage": "\u00daltima mensagem:",
+      "noMessages": "Sem mensagens ainda"
+    },
+    "empty": {
+      "noTagsFound": "Nenhuma tag encontrada",
+      "noMatchSearchAndCategory": "Nenhuma tag corresponde a \"{{query}}\" na categoria \"{{category}}\"",
+      "noMatchSearch": "Nenhuma tag corresponde a \"{{query}}\"",
+      "noMatchCategory": "Nenhuma tag na categoria \"{{category}}\"",
+      "noTagsAvailable": "Nenhuma tag dispon\u00edvel."
+    },
+    "toast": {
+      "tagCreated": "Tag criada",
+      "tagCreatedDesc": "\"{{name}}\" foi adicionada com sucesso.",
+      "tagUpdated": "Tag atualizada",
+      "tagUpdatedDesc": "\"{{name}}\" foi atualizada com sucesso.",
+      "tagDeleted": "Tag exclu\u00edda",
+      "tagDeletedDesc": "\"{{name}}\" foi exclu\u00edda com sucesso.",
+      "error": "Erro",
+      "createFailed": "Falha ao criar tag: {{error}}",
+      "updateFailed": "Falha ao atualizar tag: {{error}}",
+      "deleteFailed": "Falha ao excluir tag: {{error}}"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { useDashboardRefreshInterval, REFRESH_INTERVAL_OPTIONS } from "@/hooks/useDashboardRefreshInterval";
 import { useSession } from "@/hooks/useSession";
@@ -10,8 +11,9 @@ import {
   Bell, Phone, CalendarCheck,
   MessageSquareWarning, Bot, AlertTriangle, Megaphone, TrendingDown,
   Clock, Receipt, FileText, CheckCircle, PenLine,
-  Lock, Shield, Eye, EyeOff, X as XIcon,
+  Lock, Shield, Eye, EyeOff, X as XIcon, Globe,
 } from "lucide-react";
+import { LanguageSelector } from "@/components/crm/LanguageSelector";
 
 // ── Types ──────────────────────────────────────────────────────────
 type NotificationChannel = { in_app: boolean; email: boolean; sms: boolean };
@@ -31,11 +33,34 @@ type NotifEventDef = {
   roles?: string[];
 };
 
-type NotifCategory = { label: string; events: NotifEventDef[] };
+type NotifCategory = { labelKey: string; events: NotifEventDef[] };
+
+// Translation keys for category and event labels
+const NOTIF_CAT_KEYS: Record<string, string> = {
+  "Lead Activity": "notifications.categories.leadActivity",
+  "AI & Automation": "notifications.categories.aiAutomation",
+  "Campaigns": "notifications.categories.campaigns",
+  "Billing": "notifications.categories.billing",
+};
+
+const NOTIF_EVENT_KEYS: Record<string, string> = {
+  call_booked: "notifications.events.callBooked",
+  lead_responded: "notifications.events.leadResponded",
+  lead_qualified: "notifications.events.leadQualified",
+  lead_opted_out: "notifications.events.leadOptedOut",
+  ai_needs_takeover: "notifications.events.aiNeedsTakeover",
+  automation_error: "notifications.events.automationError",
+  campaign_completed: "notifications.events.campaignCompleted",
+  performance_alert: "notifications.events.performanceAlert",
+  invoice_received: "notifications.events.invoiceReceived",
+  contract_received: "notifications.events.contractReceived",
+  invoice_paid: "notifications.events.invoicePaid",
+  contract_signed: "notifications.events.contractSigned",
+};
 
 const NOTIF_CATEGORIES: NotifCategory[] = [
   {
-    label: "Lead Activity",
+    labelKey: "Lead Activity",
     events: [
       { key: "call_booked",    label: "Call Booked",          icon: CalendarCheck,        defaults: { in_app: true,  email: true,  sms: true  } },
       { key: "lead_responded", label: "Lead Responded",       icon: MessageSquareWarning, defaults: { in_app: true,  email: true,  sms: false } },
@@ -44,21 +69,21 @@ const NOTIF_CATEGORIES: NotifCategory[] = [
     ],
   },
   {
-    label: "AI & Automation",
+    labelKey: "AI & Automation",
     events: [
       { key: "ai_needs_takeover", label: "AI Needs Takeover", icon: Bot,           defaults: { in_app: true, email: true, sms: true  }, roles: ["Admin","Operator","Manager"] },
       { key: "automation_error",  label: "Automation Error",  icon: AlertTriangle, defaults: { in_app: true, email: true, sms: false }, roles: ["Admin","Operator"] },
     ],
   },
   {
-    label: "Campaigns",
+    labelKey: "Campaigns",
     events: [
       { key: "campaign_completed", label: "Campaign Completed", icon: Megaphone,    defaults: { in_app: true, email: false, sms: false } },
       { key: "performance_alert",  label: "Performance Alert",  icon: TrendingDown, defaults: { in_app: true, email: true,  sms: false }, roles: ["Admin","Operator","Manager"] },
     ],
   },
   {
-    label: "Billing",
+    labelKey: "Billing",
     events: [
       { key: "invoice_received",  label: "New Invoice Received",  icon: Receipt,     defaults: { in_app: true, email: true, sms: false }, roles: ["Manager","Viewer"] },
       { key: "contract_received", label: "New Contract Received", icon: FileText,    defaults: { in_app: true, email: true, sms: false }, roles: ["Manager","Viewer"] },
@@ -127,6 +152,7 @@ function PasswordField({
 
 // ── SettingsPanel ──────────────────────────────────────────────────
 export function SettingsPanel() {
+  const { t } = useTranslation("settings");
   const { toast } = useToast();
   const { intervalSeconds, setIntervalSeconds, labelForInterval } = useDashboardRefreshInterval();
   const session = useSession();
@@ -196,7 +222,7 @@ export function SettingsPanel() {
         body: JSON.stringify({ preferences: JSON.stringify(merged) }),
       });
     } catch {
-      toast({ variant: "destructive", title: "Error", description: "Failed to save notification preferences." });
+      toast({ variant: "destructive", title: t("security.error"), description: t("security.failedSave") });
     } finally {
       setIsSavingNotifs(false);
     }
@@ -213,9 +239,9 @@ export function SettingsPanel() {
   // ── Change password ──────────────────────────────────────────────
   const handleChangePassword = async () => {
     setPwError(null);
-    if (!currentPassword || !newPassword || !confirmPassword) { setPwError("All fields are required."); return; }
-    if (newPassword.length < 6) { setPwError("New password must be at least 6 characters."); return; }
-    if (newPassword !== confirmPassword) { setPwError("Passwords do not match."); return; }
+    if (!currentPassword || !newPassword || !confirmPassword) { setPwError(t("security.allFieldsRequired")); return; }
+    if (newPassword.length < 6) { setPwError(t("security.minLength")); return; }
+    if (newPassword !== confirmPassword) { setPwError(t("security.passwordsMismatch")); return; }
     setIsChanging(true);
     try {
       const res = await apiFetch("/api/auth/change-password", {
@@ -227,7 +253,7 @@ export function SettingsPanel() {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.message || `Failed (${res.status})`);
       }
-      toast({ variant: "success", title: "Password changed", description: "Your password has been updated." });
+      toast({ variant: "success", title: t("security.passwordChanged"), description: t("security.passwordUpdated") });
       closePwCard();
     } catch (err: any) {
       setPwError(err.message || "Failed to change password.");
@@ -245,9 +271,9 @@ export function SettingsPanel() {
         body: JSON.stringify({ email }),
       });
       if (!res.ok) throw new Error();
-      toast({ variant: "success", title: "Reset email sent", description: "Check your inbox for a password reset link." });
+      toast({ variant: "success", title: t("security.resetEmailSent"), description: t("security.checkInbox") });
     } catch {
-      toast({ variant: "info", title: "Not available", description: "Password reset via email is not yet available." });
+      toast({ variant: "info", title: t("security.notAvailable"), description: t("security.resetNotAvailable") });
     } finally {
       setIsResetting(false);
     }
@@ -259,15 +285,23 @@ export function SettingsPanel() {
     <div className="flex flex-col h-full" data-testid="settings-panel">
       <div className="flex-1 overflow-y-auto scrollbar-visible px-5 pt-3 pb-8 space-y-6">
 
+        {/* ── LANGUAGE ─────────────────────────────────────────── */}
+        <section data-testid="card-language">
+          <SectionLabel icon={Globe} label={t("language.label")} />
+          <div className="mt-3">
+            <LanguageSelector />
+          </div>
+        </section>
+
         {/* ── NOTIFICATIONS ─────────────────────────────────────── */}
-        <section data-testid="card-notification-preferences">
-          <SectionLabel icon={Bell} label="Notifications" />
+        <section style={{ borderTop: "1px solid hsl(var(--foreground) / 0.06)" }} className="pt-5" data-testid="card-notification-preferences">
+          <SectionLabel icon={Bell} label={t("notifications.title")} />
 
           <div className="mt-3 space-y-5">
             {/* Master toggle */}
             <div className="flex items-center justify-between gap-4" data-testid="row-notification-master">
               <div>
-                <div className="text-sm font-semibold">All Notifications</div>
+                <div className="text-sm font-semibold">{t("notifications.allNotifications")}</div>
                 <div className="text-xs text-muted-foreground h-4">
                   {isSavingNotifs && <span className="italic">Saving…</span>}
                 </div>
@@ -284,18 +318,18 @@ export function SettingsPanel() {
             <div className={notifPrefs.master_enabled ? "" : "opacity-50 pointer-events-none"}>
               <div className="grid grid-cols-[1fr_3rem_3rem_3rem] gap-1 mb-1.5 px-1">
                 <div />
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-center">App</div>
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-center">Email</div>
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-center">SMS</div>
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-center">{t("notifications.channels.app")}</div>
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-center">{t("notifications.channels.email")}</div>
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-center">{t("notifications.channels.sms")}</div>
               </div>
 
               {NOTIF_CATEGORIES.map((cat) => {
                 const visibleEvents = cat.events.filter((ev) => !ev.roles || ev.roles.includes(userRole));
                 if (visibleEvents.length === 0) return null;
                 return (
-                  <div key={cat.label} className="mb-4">
+                  <div key={cat.labelKey} className="mb-4">
                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 px-1">
-                      {cat.label}
+                      {t(NOTIF_CAT_KEYS[cat.labelKey] ?? cat.labelKey)}
                     </div>
                     <div className="space-y-0.5">
                       {visibleEvents.map((ev) => {
@@ -309,7 +343,7 @@ export function SettingsPanel() {
                           >
                             <div className="flex items-center gap-2 min-w-0">
                               <Icon className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                              <span className="text-[13px] truncate">{ev.label}</span>
+                              <span className="text-[13px] truncate">{t(NOTIF_EVENT_KEYS[ev.key] ?? ev.label)}</span>
                             </div>
                             {(["in_app","email","sms"] as const).map((ch) => (
                               <div key={ch} className="flex justify-center">
@@ -340,8 +374,8 @@ export function SettingsPanel() {
                   <div className="flex items-center gap-2">
                     <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     <div>
-                      <div className="text-[13px] font-semibold">Quiet Hours</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">Email and SMS held. In-app still appears.</div>
+                      <div className="text-[13px] font-semibold">{t("notifications.quietHours.title")}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{t("notifications.quietHours.description")}</div>
                     </div>
                   </div>
                   <Switch
@@ -355,7 +389,7 @@ export function SettingsPanel() {
                 </div>
                 {notifPrefs.quiet_hours.enabled && (
                   <div className="flex items-center gap-3 pl-6">
-                    <label className="text-xs text-muted-foreground">Start</label>
+                    <label className="text-xs text-muted-foreground">{t("notifications.quietHours.start")}</label>
                     <input
                       type="time"
                       value={notifPrefs.quiet_hours.start}
@@ -365,7 +399,7 @@ export function SettingsPanel() {
                       className="h-10 rounded-xl border border-border/30 bg-input-bg px-3 text-sm"
                       data-testid="input-quiet-start"
                     />
-                    <label className="text-xs text-muted-foreground">End</label>
+                    <label className="text-xs text-muted-foreground">{t("notifications.quietHours.end")}</label>
                     <input
                       type="time"
                       value={notifPrefs.quiet_hours.end}
@@ -381,9 +415,9 @@ export function SettingsPanel() {
 
               {/* Digest */}
               <div className="pt-4 mt-4 space-y-3" style={{ borderTop: "1px solid hsl(var(--foreground) / 0.06)" }}>
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Digest</div>
+                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("notifications.digest.title")}</div>
                 <div className="flex items-center justify-between gap-4">
-                  <div className="text-[13px]">Daily Summary Email</div>
+                  <div className="text-[13px]">{t("notifications.digest.dailySummary")}</div>
                   <Switch
                     checked={notifPrefs.digest.daily_summary}
                     onCheckedChange={(checked) =>
@@ -394,7 +428,7 @@ export function SettingsPanel() {
                   />
                 </div>
                 <div className="flex items-center justify-between gap-4">
-                  <div className="text-[13px]">Weekly Report Email</div>
+                  <div className="text-[13px]">{t("notifications.digest.weeklyReport")}</div>
                   <Switch
                     checked={notifPrefs.digest.weekly_report}
                     onCheckedChange={(checked) =>
@@ -411,13 +445,13 @@ export function SettingsPanel() {
 
         {/* ── DASHBOARD ─────────────────────────────────────────── */}
         <section style={{ borderTop: "1px solid hsl(var(--foreground) / 0.06)" }} className="pt-5" data-testid="card-refresh-interval">
-          <SectionLabel icon={Clock} label="Dashboard" />
+          <SectionLabel icon={Clock} label={t("dashboard.title")} />
 
           <div className="mt-3 space-y-3">
             <div>
-              <div className="text-sm font-semibold" data-testid="text-refresh-title">Auto-Refresh</div>
+              <div className="text-sm font-semibold" data-testid="text-refresh-title">{t("dashboard.autoRefresh")}</div>
               <div className="text-xs text-muted-foreground mt-0.5">
-                Current: <span className="font-semibold text-foreground" data-testid="text-current-interval">{labelForInterval}</span>
+                {t("dashboard.current")}: <span className="font-semibold text-foreground" data-testid="text-current-interval">{labelForInterval}</span>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2" data-testid="refresh-interval-options">
@@ -429,8 +463,8 @@ export function SettingsPanel() {
                     setIntervalSeconds(option.value);
                     toast({
                       variant: "success",
-                      title: "Refresh interval updated",
-                      description: option.value === 0 ? "Auto-refresh disabled." : `Refreshes every ${option.label}.`,
+                      title: t("dashboard.refreshUpdated"),
+                      description: option.value === 0 ? t("dashboard.autoRefreshDisabled") : t("dashboard.refreshEvery", { interval: option.label }),
                     });
                   }}
                   className={cn(
@@ -450,7 +484,7 @@ export function SettingsPanel() {
 
         {/* ── SECURITY ──────────────────────────────────────────── */}
         <section style={{ borderTop: "1px solid hsl(var(--foreground) / 0.06)" }} className="pt-5" data-testid="card-security">
-          <SectionLabel icon={Shield} label="Security" />
+          <SectionLabel icon={Shield} label={t("security.title")} />
 
           <div className="mt-3">
             {/* Password card */}
@@ -462,7 +496,7 @@ export function SettingsPanel() {
                     <Lock className="h-3.5 w-3.5 text-muted-foreground" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[13px] font-semibold leading-tight">Password</div>
+                    <div className="text-[13px] font-semibold leading-tight">{t("security.password")}</div>
                     {email && (
                       <div className="text-[11px] text-muted-foreground truncate">{email}</div>
                     )}
@@ -484,7 +518,7 @@ export function SettingsPanel() {
                     className="h-9 px-4 rounded-full bg-background border border-black/[0.125] text-[12px] font-semibold text-foreground/80 hover:text-foreground hover:border-border/80 transition-colors duration-150 shrink-0"
                     data-testid="button-change-password"
                   >
-                    Change password
+                    {t("security.changePassword")}
                   </button>
                 )}
               </div>
@@ -502,33 +536,33 @@ export function SettingsPanel() {
                       </div>
                     )}
                     <PasswordField
-                      label="Current password"
+                      label={t("security.currentPassword")}
                       value={currentPassword}
                       onChange={setCurrentPassword}
                       show={showCurrent}
                       onToggleShow={() => setShowCurrent((p) => !p)}
                       testId="input-current-password"
-                      placeholder="Current password"
+                      placeholder={t("security.currentPassword")}
                       autoComplete="current-password"
                     />
                     <PasswordField
-                      label="New password"
+                      label={t("security.newPassword")}
                       value={newPassword}
                       onChange={setNewPassword}
                       show={showNew}
                       onToggleShow={() => setShowNew((p) => !p)}
                       testId="input-new-password"
-                      placeholder="New password (min 6 chars)"
+                      placeholder={t("security.newPasswordPlaceholder")}
                       autoComplete="new-password"
                     />
                     <PasswordField
-                      label="Confirm new password"
+                      label={t("security.confirmPassword")}
                       value={confirmPassword}
                       onChange={setConfirmPassword}
                       show={showConfirm}
                       onToggleShow={() => setShowConfirm((p) => !p)}
                       testId="input-confirm-password"
-                      placeholder="Confirm new password"
+                      placeholder={t("security.confirmPassword")}
                       autoComplete="new-password"
                     />
                   </div>
@@ -540,12 +574,12 @@ export function SettingsPanel() {
                     className="w-full h-10 rounded-full bg-brand-indigo text-white text-[13px] font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity duration-150"
                     data-testid="button-change-password-submit"
                   >
-                    {isChanging ? "Changing…" : "Update Password"}
+                    {isChanging ? t("security.changing") : t("security.updatePassword")}
                   </button>
 
                   {/* Reset via email */}
                   <div className="flex items-center gap-3 pt-1" style={{ borderTop: "1px solid hsl(var(--foreground) / 0.06)" }}>
-                    <span className="text-xs text-muted-foreground">Forgot current?</span>
+                    <span className="text-xs text-muted-foreground">{t("security.forgotCurrent")}</span>
                     <button
                       type="button"
                       onClick={handleResetEmail}
@@ -553,7 +587,7 @@ export function SettingsPanel() {
                       className="text-xs font-semibold text-brand-indigo hover:opacity-80 disabled:opacity-50 transition-opacity duration-150"
                       data-testid="button-reset-password"
                     >
-                      {isResetting ? "Sending…" : "Send reset email"}
+                      {isResetting ? t("security.sending") : t("security.sendResetEmail")}
                     </button>
                   </div>
                 </div>

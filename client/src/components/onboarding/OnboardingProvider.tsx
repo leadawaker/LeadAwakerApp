@@ -58,6 +58,17 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     }
   }, [isLoading, onboarding.completed, onboarding.skipped, onboarding.startedAt]);
 
+  // Listen for restart event dispatched from Settings page
+  useEffect(() => {
+    const handler = () => {
+      setRun(false);
+      setStepIndex(0);
+      setShowWelcome(true);
+    };
+    window.addEventListener("onboarding-restart", handler);
+    return () => window.removeEventListener("onboarding-restart", handler);
+  }, []);
+
   // Show completion when all stages are done
   useEffect(() => {
     if (onboarding.completed && !showCompletion) {
@@ -127,6 +138,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   // Start tutorial handler
   const handleStart = useCallback(() => {
     setShowWelcome(false);
+    setRun(false);
     startTutorial();
     setStepIndex(0);
     // Brief delay to let the modal close
@@ -189,7 +201,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
           spotlightClicks
           styles={{
             options: {
-              zIndex: 90,
+              zIndex: 10000,
               arrowColor: "var(--background, #fff)",
             },
             overlay: {

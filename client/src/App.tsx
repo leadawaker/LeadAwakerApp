@@ -59,15 +59,24 @@ function getBrowserLang(): Lang | null {
     : null;
 }
 /**
- * Keep i18n language in sync with URL
+ * Keep i18n language in sync.
+ * For marketing pages: uses the URL-based lang.
+ * For CRM pages (agency/subaccount): respects the user's stored preference.
  */
 function useSyncLanguage(lang: Lang) {
   useEffect(() => {
-    if (i18n.language !== lang) {
-      i18n.changeLanguage(lang);
+    // CRM pages: use stored preference instead of URL-derived lang
+    const isCrmPage = window.location.pathname.startsWith("/agency") || window.location.pathname.startsWith("/subaccount");
+    const effectiveLang = isCrmPage ? (getStoredLang() ?? lang) : lang;
+
+    if (i18n.language !== effectiveLang) {
+      i18n.changeLanguage(effectiveLang);
     }
 
-    storeLang(lang);
+    // Only store lang for non-CRM pages (CRM stores via the language toggle)
+    if (!isCrmPage) {
+      storeLang(effectiveLang);
+    }
   }, [lang]);
 }
 

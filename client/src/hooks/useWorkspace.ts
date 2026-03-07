@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 
 const KEY = "leadawaker_current_account_id";
+/** Set when an agency user explicitly picks an account from the dropdown. Cleared on logout. */
+const SELECTED_KEY = "leadawaker_account_explicitly_selected";
 
 export type Account = {
   id: number;
@@ -12,6 +14,7 @@ export type Account = {
   type?: string;
   status?: string;
   owner_email?: string;
+  logo_url?: string;
   [key: string]: unknown;
 };
 
@@ -49,8 +52,13 @@ export function useWorkspace(): WorkspaceState {
 
   const [currentAccountId, setCurrentAccountIdState] = useState<number>(() => {
     const raw = localStorage.getItem(KEY);
-    const n = raw ? Number(raw) : 1;
-    return Number.isFinite(n) && n > 0 ? n : 1;
+    const n = raw ? Number(raw) : NaN;
+    const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
+    const isAgency = role === "Admin" || role === "Operator";
+    // Agency users default to 0 (all-accounts view) unless they've explicitly picked an account.
+    // This prevents stale localStorage values (e.g. set by old code) from defaulting to a subaccount.
+    if (isAgency && !localStorage.getItem(SELECTED_KEY)) return 0;
+    return Number.isFinite(n) && n >= 0 ? n : 0;
   });
 
   // Fetch accounts from real API (only for agency users)
@@ -59,6 +67,14 @@ export function useWorkspace(): WorkspaceState {
     queryFn: getQueryFn({ on401: "returnNull" }),
     enabled: isAgencyUser,
     staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch own account for non-agency users (name resolution)
+  const { data: ownAccount } = useQuery<Account>({
+    queryKey: [`/api/accounts/${currentAccountId}`],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: !isAgencyUser && currentAccountId > 0,
+    staleTime: 10 * 60 * 1000,
   });
 
   const accountsList: Account[] = useMemo(() => {
@@ -83,15 +99,26 @@ export function useWorkspace(): WorkspaceState {
     if (isAgencyUser) {
       setCurrentAccountIdState(id);
       localStorage.setItem(KEY, String(id));
+      localStorage.setItem(SELECTED_KEY, "1");
     }
   };
 
+  // Force non-agency users away from 0 (all accounts)
+  useEffect(() => {
+    if (!isAgencyUser && currentAccountId === 0) {
+      const fallback = Number(localStorage.getItem(KEY)) || 1;
+      setCurrentAccountIdState(fallback > 0 ? fallback : 1);
+    }
+  }, [isAgencyUser, currentAccountId]);
+
   const currentAccount = useMemo(() => {
+    // 0 = "All Accounts" — no specific account selected
+    if (currentAccountId === 0) return null;
     if (accountsList.length > 0) {
       return accountsList.find((a) => a.id === currentAccountId) ?? accountsList[0];
     }
     // Fallback for non-agency users who don't fetch accounts
-    return {
+    return ownAccount ?? {
       id: currentAccountId,
       name: localStorage.getItem("leadawaker_account_name") || "My Account",
     };

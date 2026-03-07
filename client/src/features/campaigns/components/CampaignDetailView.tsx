@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Clock,
   Zap,
@@ -25,6 +26,7 @@ import {
   Layers,
   ImageIcon,
   Sparkles,
+  Search,
 } from "lucide-react";
 // Gradient tester removed — gradient is baked in
 import { CampaignTagsSection } from "./CampaignTagsSection";
@@ -66,6 +68,11 @@ import type { CampaignSortBy, CampaignGroupBy } from "../pages/CampaignsPage";
 import { SearchPill } from "@/components/ui/search-pill";
 import { CAMPAIGN_STICKERS } from "@/assets/campaign-stickers/index";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { ColorPicker } from "@/features/tags/components/ColorPicker";
+import type { TagSortOption, TagAutoAppliedFilter } from "@/features/tags/types";
+import type { TagGroupOption } from "@/features/tags/types";
 
 // ── Expand-on-hover toolbar button tokens ────────────────────────────────────
 const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
@@ -74,18 +81,18 @@ const xActive  = "border-brand-indigo text-brand-indigo";
 const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
 // ── Sort / Group / Filter labels ────────────────────────────────────────────
-const DETAIL_SORT_LABELS: Record<CampaignSortBy, string> = {
-  recent:        "Most Recent",
-  name_asc:      "Name A \u2192 Z",
-  name_desc:     "Name Z \u2192 A",
-  leads_desc:    "Most Leads",
-  response_desc: "Best Response",
+const DETAIL_SORT_LABEL_KEYS: Record<CampaignSortBy, string> = {
+  recent:        "sortOptions.recent",
+  name_asc:      "sortOptions.nameAsc",
+  name_desc:     "sortOptions.nameDesc",
+  leads_desc:    "sortOptions.leadsDesc",
+  response_desc: "sortOptions.responseDesc",
 };
-const DETAIL_GROUP_LABELS: Record<CampaignGroupBy, string> = {
-  none:    "None",
-  status:  "Status",
-  account: "Account",
-  type:    "Type",
+const DETAIL_GROUP_LABEL_KEYS: Record<CampaignGroupBy, string> = {
+  none:    "groupBy.none",
+  status:  "groupBy.status",
+  account: "groupBy.account",
+  type:    "groupBy.type",
 };
 const DETAIL_STATUS_FILTER_OPTIONS = ["Active", "Paused", "Completed", "Inactive", "Draft"];
 const DETAIL_STATUS_HEX: Record<string, string> = {
@@ -257,6 +264,7 @@ function BoolRow({ label, value, editChild }: {
 }
 
 function CopyButton({ value }: { value: string }) {
+  const { t } = useTranslation("campaigns");
   const [copied, setCopied] = useState(false);
   const handleCopy = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -269,7 +277,7 @@ function CopyButton({ value }: { value: string }) {
     <button
       onClick={handleCopy}
       className="p-1 rounded hover:bg-white/30 dark:hover:bg-white/[0.04] transition-colors text-foreground/40 hover:text-foreground shrink-0"
-      title="Copy"
+      title={t("copy")}
     >
       {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
     </button>
@@ -408,7 +416,7 @@ function ContractSelect({
       disabled={loading}
       className="w-full text-[12px] bg-white/60 dark:bg-white/[0.10] border border-brand-indigo/30 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-brand-indigo/40"
     >
-      <option value="">— None linked</option>
+      <option value="">—</option>
       {contracts.map((c) => (
         <option key={c.id} value={String(c.id)}>
           {c.title || `Contract #${c.id}`}
@@ -429,18 +437,19 @@ function tintColor(hex: string, amount: number): string {
 }
 
 const FUNNEL_STAGES = [
-  { key: "new",       label: "New",                dbValue: "New" },
-  { key: "contacted", label: "Contacted",          dbValue: "Contacted" },
-  { key: "responded", label: "Responded",          dbValue: "Responded" },
-  { key: "multi",     label: "Multiple Responses", dbValue: "Multiple Responses" },
-  { key: "qualified", label: "Qualified",          dbValue: "Qualified" },
-  { key: "booked",    label: "Call Booked",        dbValue: "Booked" },
-  { key: "closed",    label: "Closed",             dbValue: "Closed" },
-  { key: "lost",      label: "Lost",               dbValue: "Lost" },
-  { key: "dnd",       label: "DND",                dbValue: "DND" },
+  { key: "new",       labelKey: "funnelStages.new",               dbValue: "New" },
+  { key: "contacted", labelKey: "funnelStages.contacted",         dbValue: "Contacted" },
+  { key: "responded", labelKey: "funnelStages.responded",         dbValue: "Responded" },
+  { key: "multi",     labelKey: "funnelStages.multipleResponses", dbValue: "Multiple Responses" },
+  { key: "qualified", labelKey: "funnelStages.qualified",         dbValue: "Qualified" },
+  { key: "booked",    labelKey: "funnelStages.callBooked",        dbValue: "Booked" },
+  { key: "closed",    labelKey: "funnelStages.closed",            dbValue: "Closed" },
+  { key: "lost",      labelKey: "funnelStages.lost",              dbValue: "Lost" },
+  { key: "dnd",       labelKey: "funnelStages.dnd",               dbValue: "DND" },
 ] as const;
 
 function PipelineAndDonutWidget({ campaignId }: { campaignId: number }) {
+  const { t } = useTranslation("campaigns");
   const { leads, loading } = useLeads(undefined, campaignId);
   // hoveredKey: transient (mouse-over only), cleared on mouse-leave
   // lockedKey:  persists on click, cleared on click-away or re-click
@@ -459,10 +468,11 @@ function PipelineAndDonutWidget({ campaignId }: { campaignId: number }) {
   const stages = useMemo(() => {
     return FUNNEL_STAGES.map((s) => ({
       ...s,
+      label: t(s.labelKey),
       color: PIPELINE_HEX[s.dbValue] || "#6B7280",
       count: leads.filter((l: any) => l.conversion_status === s.dbValue).length,
     }));
-  }, [leads]);
+  }, [leads, t]);
 
   const total = stages.reduce((s, st) => s + st.count, 0);
   const maxCount = Math.max(...stages.map((s) => s.count), 1);
@@ -480,7 +490,7 @@ function PipelineAndDonutWidget({ campaignId }: { campaignId: number }) {
 
   const activeStage = activeKey ? stages.find((s) => s.key === activeKey) : null;
   const displayCount = activeStage ? activeStage.count : total;
-  const displayLabel = activeStage ? activeStage.label : "Total Leads";
+  const displayLabel = activeStage ? activeStage.label : t("summary.totalLeads");
 
   if (loading) {
     return (
@@ -504,7 +514,7 @@ function PipelineAndDonutWidget({ campaignId }: { campaignId: number }) {
   if (!hasData) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center gap-2 py-6">
-        <p className="text-[11px] text-foreground/40">No pipeline data yet</p>
+        <p className="text-[11px] text-foreground/40">{t("summary.noPipelineData")}</p>
       </div>
     );
   }
@@ -651,15 +661,16 @@ function AnimatedMetricCard({ numericValue, displayValue, label, animTrigger }: 
 // ── Conversion Pie Chart (standalone — used in non-compact contexts) ──────────
 
 function ConversionDoughnutWidget({ campaignId, compact = false }: { campaignId: number; compact?: boolean }) {
+  const { t } = useTranslation("campaigns");
   const { leads, loading } = useLeads(undefined, campaignId);
 
   const data = useMemo(() => {
     return FUNNEL_STAGES.map((s) => ({
-      name: s.label,
+      name: t(s.labelKey),
       value: leads.filter((l: any) => l.conversion_status === s.dbValue).length,
       color: PIPELINE_HEX[s.dbValue] || "#6B7280",
     }));
-  }, [leads]);
+  }, [leads, t]);
 
   const total = data.reduce((s, d) => s + d.value, 0);
   const hasData = data.some((d) => d.value > 0);
@@ -675,7 +686,7 @@ function ConversionDoughnutWidget({ campaignId, compact = false }: { campaignId:
   if (total === 0 || !hasData) {
     return (
       <div className={cn("flex flex-col items-center justify-center text-center", compact ? "h-[100px]" : "flex-1")}>
-        <p className="text-[11px] text-foreground/40">No conversion data</p>
+        <p className="text-[11px] text-foreground/40">{t("summary.noConversionData")}</p>
       </div>
     );
   }
@@ -753,6 +764,7 @@ function FinancialsWidget({
   isAgencyUser: boolean;
   onGoToConfig: () => void;
 }) {
+  const { t } = useTranslation("campaigns");
   // Resolve financial values: prefer contract fields, then campaign fallback
   const dealType = contract?.deal_type ?? null;
   const valuePB = Number(contract?.value_per_booking ?? campaign.value_per_booking ?? 0) || 0;
@@ -801,16 +813,16 @@ function FinancialsWidget({
   };
   const dtColors = dealType ? (dealTypeBadge[dealType] ?? { bg: "#F3F4F6", text: "#374151" }) : null;
   const dealTypeLabel: Record<string, string> = {
-    retainer:        "Retainer",
-    per_booking:     "Per Booking",
-    fixed:           "Fixed Fee",
-    retainer_plus:   "Retainer +",
-    sale_closed:     "Sale Closed",
+    retainer:        t("financials.dealTypes.retainer"),
+    per_booking:     t("financials.dealTypes.per_booking"),
+    fixed:           t("financials.dealTypes.fixed"),
+    retainer_plus:   t("financials.dealTypes.retainer_plus"),
+    sale_closed:     t("financials.dealTypes.sale_closed"),
   };
   const paymentTriggerLabel: Record<string, string> = {
-    booked_call:  "Booked Call",
-    sale_closed:  "Closed Sale",
-    meeting_held: "Meeting Held",
+    booked_call:  t("financials.paymentTriggers.booked_call"),
+    sale_closed:  t("financials.paymentTriggers.sale_closed"),
+    meeting_held: t("financials.paymentTriggers.meeting_held"),
   };
 
   if (contractLoading) {
@@ -827,7 +839,7 @@ function FinancialsWidget({
       {/* Deal type badge (if contract linked) */}
       {dtColors && (
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 min-w-[90px]">Deal Type</span>
+          <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 min-w-[90px]">{t("financials.dealType")}</span>
           <span
             className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
             style={{ backgroundColor: dtColors.bg, color: dtColors.text }}
@@ -847,11 +859,11 @@ function FinancialsWidget({
       {isAgencyUser && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] px-3 py-3">
-            <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Total Spend</div>
+            <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">{t("financials.totalSpend")}</div>
             <div className="text-[18px] font-bold tabular-nums text-foreground">{fmtCurrency(totalCost)}</div>
           </div>
           <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] px-3 py-3">
-            <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Cost / Booking</div>
+            <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">{t("financials.costPerBooking")}</div>
             <div className="text-[18px] font-bold tabular-nums text-foreground">{fmtCurrencyDecimals(costPerBooking)}</div>
           </div>
         </div>
@@ -860,13 +872,13 @@ function FinancialsWidget({
       {/* 2-up: Value / Booking + Payment Trigger */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] px-3 py-3">
-          <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Value / Booking</div>
+          <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">{t("financials.valuePerBooking")}</div>
           <div className="text-[18px] font-bold tabular-nums text-foreground">
             {valuePB > 0 ? fmtCurrency(valuePB) : "—"}
           </div>
         </div>
         <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] px-3 py-3">
-          <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Payment Trigger</div>
+          <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">{t("financials.paymentTrigger")}</div>
           <div className="text-[13px] font-semibold text-foreground leading-snug">
             {paymentTrigger ? (paymentTriggerLabel[paymentTrigger] ?? paymentTrigger) : "—"}
           </div>
@@ -877,9 +889,9 @@ function FinancialsWidget({
       {isAgencyUser && hasContractOrValue && (
         <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] px-3 py-3">
           <div className="flex items-center gap-2 mb-0.5">
-            <div className="text-[10px] text-foreground/40 uppercase tracking-wider">Projected Revenue</div>
+            <div className="text-[10px] text-foreground/40 uppercase tracking-wider">{t("financials.projectedRevenue")}</div>
             {paymentTrigger === "sale_closed" && (
-              <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">est.</span>
+              <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">{t("financials.est")}</span>
             )}
           </div>
           <div className="text-[22px] font-bold tabular-nums text-foreground">{fmtCurrency(projectedRevenue)}</div>
@@ -893,13 +905,13 @@ function FinancialsWidget({
           className="flex items-center gap-1.5 text-[11px] text-brand-indigo font-medium hover:underline mt-1"
         >
           <ArrowRight className="w-3 h-3" />
-          Link a contract in Config →
+          {t("financials.linkContractPrompt")}
         </button>
       )}
 
       {/* ROI — large display */}
       <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] px-3 py-3">
-        <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">Return on Investment</div>
+        <div className="text-[10px] text-foreground/40 uppercase tracking-wider mb-1">{t("financials.returnOnInvestment")}</div>
         <div className={cn("text-[28px] font-black tabular-nums leading-none", getRoiColor(roiValue))}>
           {roiValue != null ? `${roiValue >= 0 ? "+" : ""}${roiValue.toFixed(0)}%` : "—"}
         </div>
@@ -917,6 +929,7 @@ function AISummaryWidget({ campaign, summary, generatedAt, onRefreshed }: {
   generatedAt: string | null;
   onRefreshed: (summary: string, generatedAt: string) => void;
 }) {
+  const { t } = useTranslation("campaigns");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -939,16 +952,16 @@ function AISummaryWidget({ campaign, summary, generatedAt, onRefreshed }: {
       });
       const res = await httpRes.json() as any;
       if (res.error === "NO_GROQ_API_KEY") {
-        setError("Groq API key not configured. Add GROQ_API_KEY to .env.");
+        setError(t("summary.groqApiKeyMissing"));
         return;
       }
       if (res.error) {
-        setError("Failed to generate summary. Try again.");
+        setError(t("summary.generateFailed"));
         return;
       }
       onRefreshed(res.summary, res.generated_at);
     } catch {
-      setError("Network error. Try again.");
+      setError(t("summary.networkError"));
     } finally {
       setLoading(false);
     }
@@ -966,10 +979,10 @@ function AISummaryWidget({ campaign, summary, generatedAt, onRefreshed }: {
       <div className="flex items-center justify-between gap-2 shrink-0">
         {formattedAt ? (
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] text-foreground/35 tabular-nums">Last run: {formattedAt}</span>
+            <span className="text-[10px] text-foreground/35 tabular-nums">{t("summary.lastRun", { date: formattedAt })}</span>
           </div>
         ) : (
-          <span className="text-[10px] text-foreground/30 italic">No analysis yet</span>
+          <span className="text-[10px] text-foreground/30 italic">{t("summary.noAnalysisYet")}</span>
         )}
         <button
           onClick={handleGenerate}
@@ -980,7 +993,7 @@ function AISummaryWidget({ campaign, summary, generatedAt, onRefreshed }: {
               ? "border-brand-indigo/30 text-brand-indigo/50 cursor-not-allowed"
               : "border-brand-indigo/40 text-brand-indigo hover:text-brand-indigo hover:max-w-[140px]"
           )}
-          title={loading ? "Generating…" : summary ? "Regenerate" : "Generate"}
+          title={loading ? t("summary.generating") : summary ? t("summary.regenerate") : t("summary.generate")}
         >
           {loading ? (
             <div className="w-4 h-4 rounded-full border-2 border-brand-indigo/30 border-t-brand-indigo animate-spin shrink-0" />
@@ -988,7 +1001,7 @@ function AISummaryWidget({ campaign, summary, generatedAt, onRefreshed }: {
             <Sparkles className="h-4 w-4 shrink-0" />
           )}
           <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-            {summary ? "Regenerate" : "Generate"}
+            {summary ? t("summary.regenerate") : t("summary.generate")}
           </span>
         </button>
       </div>
@@ -1015,8 +1028,8 @@ function AISummaryWidget({ campaign, summary, generatedAt, onRefreshed }: {
             <Sparkles className="w-5 h-5 text-brand-indigo/50" />
           </div>
           <div>
-            <p className="text-[12px] font-medium text-foreground/50">No AI analysis yet</p>
-            <p className="text-[11px] text-foreground/35 mt-0.5">Runs nightly or click Generate</p>
+            <p className="text-[12px] font-medium text-foreground/50">{t("summary.noAiAnalysis")}</p>
+            <p className="text-[11px] text-foreground/35 mt-0.5">{t("summary.aiRunsNightly")}</p>
           </div>
         </div>
       )}
@@ -1027,6 +1040,7 @@ function AISummaryWidget({ campaign, summary, generatedAt, onRefreshed }: {
 // ── Empty state ──────────────────────────────────────────────────────────────
 
 export function CampaignDetailViewEmpty({ compact = false }: { compact?: boolean }) {
+  const { t } = useTranslation("campaigns");
   return (
     <div className="relative h-full flex flex-col items-center justify-center gap-5 p-8 text-center overflow-hidden">
       {/* ── Background ── */}
@@ -1046,13 +1060,13 @@ export function CampaignDetailViewEmpty({ compact = false }: { compact?: boolean
         </div>
       </div>
       <div className="relative z-10 space-y-1.5">
-        <p className="text-sm font-semibold text-foreground/70">Select a campaign</p>
+        <p className="text-sm font-semibold text-foreground/70">{t("empty.selectCampaign")}</p>
         <p className="text-xs text-muted-foreground max-w-[180px] leading-relaxed">
-          Click any campaign on the left to see its performance, configuration, and message templates.
+          {t("empty.selectCampaignDesc")}
         </p>
       </div>
       <div className="relative z-10 flex items-center gap-1.5 text-[11px] text-amber-500 font-medium">
-        <span>&larr; Choose from the list</span>
+        <span>{t("empty.chooseFromList")}</span>
       </div>
     </div>
   );
@@ -1097,6 +1111,7 @@ export function CampaignDetailView({
   filterAccount, onFilterAccountChange, isFilterActive, groupBy, onGroupByChange,
   isGroupNonDefault, availableAccounts, onResetControls, onBack,
 }: CampaignDetailViewProps) {
+  const { t } = useTranslation("campaigns");
   const { isAgencyUser, isAdmin } = useWorkspace();
 
   const campaignMetrics = useMemo(() => {
@@ -1111,12 +1126,59 @@ export function CampaignDetailView({
   const [activeTab, setActiveTab] = useState<"summary" | "configurations" | "tags">("summary");
   const [dateRange, setDateRange] = useState<DateRangeValue>(getDefaultDateRange());
 
+  // ── Tags toolbar state (rendered inline with tab bar) ──────────────────────
+  const [tagsSearch, setTagsSearch] = useState("");
+  const [tagsSortBy, setTagsSortBy] = useState<TagSortOption>("name_asc");
+  const [tagsGroupBy, setTagsGroupBy] = useState<TagGroupOption>("category");
+  const [tagsFilterAuto, setTagsFilterAuto] = useState<TagAutoAppliedFilter>("all");
+  const [tagsFilterCat, setTagsFilterCat] = useState("");
+  const [tagsCategories, setTagsCategories] = useState<string[]>([]);
+  const [tagsCreateOpen, setTagsCreateOpen] = useState(false);
+  const [tagsNewName, setTagsNewName] = useState("");
+  const [tagsNewColor, setTagsNewColor] = useState("blue");
+  const [tagsNewCategory, setTagsNewCategory] = useState("");
+  const tagsCreateRef = useRef<((data: { name: string; color: string; category?: string }) => Promise<void>) | null>(null);
+
+  const tagsIsFilterActive = tagsFilterAuto !== "all" || !!tagsFilterCat;
+  const tagsFilterCount = (tagsFilterAuto !== "all" ? 1 : 0) + (tagsFilterCat ? 1 : 0);
+  const tagsIsSortNonDefault = tagsSortBy !== "name_asc";
+
+  const submitTagCreate = useCallback(async () => {
+    if (!tagsNewName.trim()) return;
+    try {
+      await tagsCreateRef.current?.({
+        name: tagsNewName.trim(),
+        color: tagsNewColor,
+        category: tagsNewCategory.trim() || undefined,
+      });
+      setTagsNewName("");
+      setTagsNewColor("blue");
+      setTagsNewCategory("");
+      setTagsCreateOpen(false);
+    } catch { /* handled by hook */ }
+  }, [tagsNewName, tagsNewColor, tagsNewCategory]);
+
+  // ── pill styles (reused inside tab bar) ────────────────────────────────────
+  const tagPill = "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[11px] font-medium border border-black/[0.125] bg-transparent text-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors";
+  const tagPillActive = "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[11px] font-medium border border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo transition-colors";
+
   // ── Reset tab when campaign changes ─────────────────────────────────────────
   const [animTrigger, setAnimTrigger] = useState(0);
   useEffect(() => {
     setActiveTab("summary");
     setAnimTrigger((n) => n + 1);
   }, [campaign.id, campaign.Id]);
+
+  // ── Daily capacity stats ───────────────────────────────────────────────────
+  const [dailyStats, setDailyStats] = useState<{ sentToday: number; dailyLimit: number; channel: string } | null>(null);
+  useEffect(() => {
+    const id = campaign.id || (campaign as any).Id;
+    if (!id) return;
+    apiFetch(`/api/campaigns/${id}/daily-stats`)
+      .then((r) => r.json())
+      .then(setDailyStats)
+      .catch(() => {});
+  }, [campaign.id, (campaign as any).Id]);
 
   // ── Filter metrics by date range ───────────────────────────────────────────
   const filteredMetrics = useMemo(() => {
@@ -1160,7 +1222,7 @@ export function CampaignDetailView({
     return days;
   }, [campaignCreatedAt]);
   const durationLabel = durationDays !== null
-    ? `${durationDays} day${durationDays !== 1 ? "s" : ""}`
+    ? t("meta.duration", { count: durationDays })
     : null;
 
   // (Gradient tester removed — gradient is now baked in)
@@ -1362,7 +1424,7 @@ export function CampaignDetailView({
                   className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-[12px] font-medium bg-brand-indigo text-white hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   {saving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                  {saving ? "Saving\u2026" : "Save"}
+                  {saving ? t("toolbar.saving") : t("toolbar.save")}
                 </button>
                 <button
                   onClick={cancelEdit}
@@ -1370,7 +1432,7 @@ export function CampaignDetailView({
                   className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground hover:bg-muted/50 transition-colors"
                 >
                   <X className="h-4 w-4" />
-                  Cancel
+                  {t("toolbar.cancel")}
                 </button>
               </>
             ) : (
@@ -1381,7 +1443,7 @@ export function CampaignDetailView({
                     className={cn(xBase, "hover:max-w-[80px]", xDefault)}
                   >
                     <Pencil className="h-4 w-4 shrink-0" />
-                    <span className={xSpan}>Edit</span>
+                    <span className={xSpan}>{t("toolbar.edit")}</span>
                   </button>
                 )}
 
@@ -1389,7 +1451,7 @@ export function CampaignDetailView({
                   <>
                     <button onClick={onCreateCampaign} className={cn(xBase, "hover:max-w-[80px]", xDefault)} title="New campaign">
                       <Plus className="h-4 w-4 shrink-0" />
-                      <span className={xSpan}>Add</span>
+                      <span className={xSpan}>{t("toolbar.add")}</span>
                     </button>
 
                     <SearchPill
@@ -1404,17 +1466,17 @@ export function CampaignDetailView({
                       <DropdownMenuTrigger asChild>
                         <button className={cn(xBase, "hover:max-w-[100px]", isSortNonDefault ? xActive : xDefault)} title="Sort">
                           <ArrowUpDown className="h-4 w-4 shrink-0" />
-                          <span className={xSpan}>Sort</span>
+                          <span className={xSpan}>{t("toolbar.sort")}</span>
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="w-44">
-                        {(Object.keys(DETAIL_SORT_LABELS) as CampaignSortBy[]).map((s) => (
+                        {(Object.keys(DETAIL_SORT_LABEL_KEYS) as CampaignSortBy[]).map((s) => (
                           <DropdownMenuItem
                             key={s}
                             onClick={() => onSortByChange?.(s)}
                             className={cn("text-[12px]", sortBy === s && "font-semibold text-brand-indigo")}
                           >
-                            {DETAIL_SORT_LABELS[s]}
+                            {t(DETAIL_SORT_LABEL_KEYS[s])}
                             {sortBy === s && <Check className="h-3 w-3 ml-auto" />}
                           </DropdownMenuItem>
                         ))}
@@ -1425,11 +1487,11 @@ export function CampaignDetailView({
                       <DropdownMenuTrigger asChild>
                         <button className={cn(xBase, "hover:max-w-[100px]", isFilterActive ? xActive : xDefault)} title="Filter">
                           <Filter className="h-4 w-4 shrink-0" />
-                          <span className={xSpan}>Filter</span>
+                          <span className={xSpan}>{t("toolbar.filter")}</span>
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
-                        <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Status</div>
+                        <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("filter.status")}</div>
                         <DropdownMenuSeparator />
                         {DETAIL_STATUS_FILTER_OPTIONS.map((s) => (
                           <DropdownMenuItem
@@ -1441,19 +1503,19 @@ export function CampaignDetailView({
                               className="h-1.5 w-1.5 rounded-full shrink-0"
                               style={{ backgroundColor: DETAIL_STATUS_HEX[s] || "#6B7280" }}
                             />
-                            <span className={cn("flex-1", filterStatus?.includes(s) && "font-bold text-brand-indigo")}>{s}</span>
+                            <span className={cn("flex-1", filterStatus?.includes(s) && "font-bold text-brand-indigo")}>{t(`statusLabels.${s}`, s)}</span>
                             {filterStatus?.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                           </DropdownMenuItem>
                         ))}
                         {(availableAccounts?.length ?? 0) > 0 && (
                           <>
                             <DropdownMenuSeparator />
-                            <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Account</div>
+                            <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("filter.account")}</div>
                             <DropdownMenuItem
                               onClick={(e) => { e.preventDefault(); onFilterAccountChange?.(""); }}
                               className={cn("flex items-center gap-2 text-[12px]", !filterAccount && "font-bold text-brand-indigo")}
                             >
-                              <span className="flex-1">All Accounts</span>
+                              <span className="flex-1">{t("filter.allAccounts")}</span>
                               {!filterAccount && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
@@ -1473,7 +1535,7 @@ export function CampaignDetailView({
                           <>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={onResetControls} className="text-[12px] text-destructive">
-                              Clear all filters
+                              {t("filter.clearAllFilters")}
                             </DropdownMenuItem>
                           </>
                         )}
@@ -1484,17 +1546,17 @@ export function CampaignDetailView({
                       <DropdownMenuTrigger asChild>
                         <button className={cn(xBase, "hover:max-w-[100px]", isGroupNonDefault ? xActive : xDefault)} title="Group">
                           <Layers className="h-4 w-4 shrink-0" />
-                          <span className={xSpan}>Group</span>
+                          <span className={xSpan}>{t("toolbar.group")}</span>
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="w-40">
-                        {(Object.keys(DETAIL_GROUP_LABELS) as CampaignGroupBy[]).map((g) => (
+                        {(Object.keys(DETAIL_GROUP_LABEL_KEYS) as CampaignGroupBy[]).map((g) => (
                           <DropdownMenuItem
                             key={g}
                             onClick={() => onGroupByChange?.(g)}
                             className={cn("text-[12px]", groupBy === g && "font-semibold text-brand-indigo")}
                           >
-                            {DETAIL_GROUP_LABELS[g]}
+                            {t(DETAIL_GROUP_LABEL_KEYS[g])}
                             {groupBy === g && <Check className="h-3 w-3 ml-auto" />}
                           </DropdownMenuItem>
                         ))}
@@ -1510,31 +1572,31 @@ export function CampaignDetailView({
                     className={cn(xBase, isActive ? "hover:max-w-[100px]" : "hover:max-w-[110px]", xDefault)}
                   >
                     {isActive
-                      ? <><PauseCircle className="h-4 w-4 shrink-0" /><span className={xSpan}>Pause</span></>
-                      : <><PlayCircle className="h-4 w-4 shrink-0" /><span className={xSpan}>Activate</span></>
+                      ? <><PauseCircle className="h-4 w-4 shrink-0" /><span className={xSpan}>{t("toolbar.pause")}</span></>
+                      : <><PlayCircle className="h-4 w-4 shrink-0" /><span className={xSpan}>{t("toolbar.activate")}</span></>
                     }
                   </button>
                 )}
                 <button onClick={onRefresh} className={cn(xBase, "hover:max-w-[110px]", xDefault)}>
                   <RefreshCw className="h-4 w-4 shrink-0" />
-                  <span className={xSpan}>Refresh</span>
+                  <span className={xSpan}>{t("toolbar.refresh")}</span>
                 </button>
                 {onDelete && (deleteConfirm ? (
                   <div className="inline-flex items-center gap-1.5 h-9 rounded-full border border-red-300/50 bg-card px-4 text-[12px]">
-                    <span className="text-foreground/60">Delete?</span>
+                    <span className="text-foreground/60">{t("confirm.deleteConfirm")}</span>
                     <button
                       className="h-7 px-3 rounded-full bg-red-600 text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50 transition-opacity"
                       disabled={deleting}
                       onClick={async () => { setDeleting(true); try { await onDelete?.(campaign.id || campaign.Id); } finally { setDeleting(false); setDeleteConfirm(false); } }}
                     >
-                      {deleting ? "..." : "Yes"}
+                      {deleting ? "..." : t("confirm.yes")}
                     </button>
-                    <button className="h-7 px-3 rounded-full text-muted-foreground text-[11px] hover:text-foreground transition-colors" onClick={() => setDeleteConfirm(false)}>No</button>
+                    <button className="h-7 px-3 rounded-full text-muted-foreground text-[11px] hover:text-foreground transition-colors" onClick={() => setDeleteConfirm(false)}>{t("confirm.no")}</button>
                   </div>
                 ) : (
                   <button onClick={() => setDeleteConfirm(true)} className={cn(xBase, "hover:max-w-[100px]", "border-black/[0.125] text-red-500 hover:text-red-600")}>
                     <Trash2 className="h-4 w-4 shrink-0" />
-                    <span className={xSpan}>Delete</span>
+                    <span className={xSpan}>{t("toolbar.delete")}</span>
                   </button>
                 ))}
                 {/* Gradient button removed */}
@@ -1567,7 +1629,7 @@ export function CampaignDetailView({
                   setPendingHue(hueValue);
                   setPhotoDialogOpen(true);
                 }}
-                title={isAdmin ? "Click to change photo" : undefined}
+                title={isAdmin ? t("photo.clickToChange") : undefined}
               >
                 {selectedSticker ? (
                   <img
@@ -1607,7 +1669,7 @@ export function CampaignDetailView({
               {isAdmin && campaign.logo_url && (
                 <button
                   onClick={(e) => { e.stopPropagation(); handleRemoveLogo(); }}
-                  title="Remove logo"
+                  title={t("photo.removeLogo")}
                   className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-white dark:bg-card border border-black/[0.125] flex items-center justify-center text-foreground/50 hover:text-red-500 hover:border-red-300 transition-colors z-10 opacity-0 group-hover:opacity-100"
                 >
                   <X className="h-3 w-3" />
@@ -1627,7 +1689,7 @@ export function CampaignDetailView({
             <Dialog open={photoDialogOpen} onOpenChange={setPhotoDialogOpen}>
               <DialogContent className="max-w-sm">
                 <DialogHeader>
-                  <DialogTitle>Campaign Photo</DialogTitle>
+                  <DialogTitle>{t("photo.dialogTitle")}</DialogTitle>
                 </DialogHeader>
 
                 {/* Preview */}
@@ -1653,7 +1715,7 @@ export function CampaignDetailView({
                 {pendingSlug && (
                   <div className="space-y-1.5 px-1">
                     <div className="flex items-center justify-between">
-                      <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold">Hue</p>
+                      <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold">{t("photo.hue")}</p>
                       <p className="text-[11px] text-muted-foreground tabular-nums">{pendingHue}°</p>
                     </div>
                     <input
@@ -1674,12 +1736,12 @@ export function CampaignDetailView({
                   className="w-full h-9 rounded-lg border border-black/[0.125] text-[12px] font-medium text-foreground/60 hover:text-foreground hover:border-black/[0.175] transition-colors flex items-center justify-center gap-1.5"
                 >
                   <Camera className="h-4 w-4" />
-                  Upload logo image
+                  {t("photo.uploadLogo")}
                 </button>
 
                 {/* Sticker grid */}
                 <div className="space-y-2">
-                  <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold">Choose sticker</p>
+                  <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold">{t("photo.chooseSticker")}</p>
                   <div className="grid grid-cols-5 gap-1.5 max-h-[200px] overflow-y-auto pr-1">
                     <button
                       type="button"
@@ -1688,7 +1750,7 @@ export function CampaignDetailView({
                         !pendingSlug ? "border-brand-indigo bg-indigo-50" : "border-black/[0.125] hover:border-black/[0.175]"
                       )}
                       onClick={() => setPendingSlug(null)}
-                      title="No sticker"
+                      title={t("photo.noSticker")}
                     >
                       <X className="h-4 w-4 text-muted-foreground" />
                     </button>
@@ -1725,14 +1787,14 @@ export function CampaignDetailView({
                   }}
                   className="w-full h-9 rounded-lg bg-brand-indigo text-white text-[13px] font-semibold hover:bg-brand-indigo/90 transition-colors"
                 >
-                  Save
+                  {t("toolbar.save")}
                 </button>
               </DialogContent>
             </Dialog>
 
             <div className="flex-1 min-w-0">
               <h2 className="text-[18px] md:text-[27px] font-semibold font-heading text-foreground leading-tight truncate" data-testid="campaign-detail-view-name">
-                {campaign.name || "Unnamed Campaign"}
+                {campaign.name || t("detail.unnamed")}
               </h2>
 
               {/* Subtitle: status */}
@@ -1743,7 +1805,7 @@ export function CampaignDetailView({
                     style={{ backgroundColor: `${CAMPAIGN_STATUS_HEX[status]}20`, color: CAMPAIGN_STATUS_HEX[status] || "#6B7280" }}
                   >
                     <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: CAMPAIGN_STATUS_HEX[status] || "#6B7280" }} />
-                    {status}
+                    {t(`statusLabels.${status}`, status)}
                   </span>
                 )}
               </div>
@@ -1751,7 +1813,52 @@ export function CampaignDetailView({
 
             {/* Meta chips — absolute overlay when wide (list view), hidden when compact (table view) */}
             {!compact && (
-              <div className="absolute -translate-x-1/2 bottom-[45px] hidden md:flex items-center gap-6 pointer-events-auto z-10" style={{ left: "calc(66.67% - 5px)" }}>
+              <div className="absolute -translate-x-1/2 bottom-[45px] hidden md:flex items-center gap-10 whitespace-nowrap pointer-events-auto z-10" style={{ left: "calc(66.67% - 5px)" }}>
+                {(campaign as any).channel && (
+                  <div className="flex items-center gap-1.5">
+                    <img
+                      src={`/logos/${(
+                        ({ whatsapp: "whatsapp-svgrepo-com", instagram: "instagram-svgrepo-com", email: "email-address-svgrepo-com", sms: "sms-svgrepo-com", phone: "phone-call-svgrepo-com" } as Record<string, string>)[(campaign as any).channel?.toLowerCase()] ?? "sms-svgrepo-com"
+                      )}.svg`}
+                      alt={(campaign as any).channel}
+                      className="h-[26px] w-[26px] object-contain shrink-0"
+                    />
+                    <div>
+                      <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("meta.channel")}</div>
+                      <div className="text-[11px] font-bold text-foreground leading-none capitalize">{(campaign as any).channel}</div>
+                    </div>
+                  </div>
+                )}
+                {campaignCreatedAt && (
+                  <div className="ml-6">
+                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("meta.started")}</div>
+                    <div className="text-[11px] font-bold text-foreground leading-none">{formatDate(campaignCreatedAt)}</div>
+                  </div>
+                )}
+                {campaign.type && (
+                  <div>
+                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("meta.type")}</div>
+                    <div className="text-[11px] font-bold text-foreground leading-none">{campaign.type}</div>
+                  </div>
+                )}
+                {campaign.daily_lead_limit != null && (
+                  <div>
+                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("meta.dailyLimit")}</div>
+                    <div className="text-[11px] font-bold text-foreground leading-none tabular-nums">
+                      {dailyStats != null ? `${dailyStats.sentToday} / ${campaign.daily_lead_limit}` : `${campaign.daily_lead_limit}`}
+                    </div>
+                  </div>
+                )}
+                {(campaign.active_hours_start || (campaign as any).activeHoursStart) && (
+                  <div>
+                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("meta.activeHours")}</div>
+                    <div className="text-[11px] font-bold text-foreground leading-none">
+                      {((campaign.active_hours_start || (campaign as any).activeHoursStart) as string).slice(0, 5)}
+                      {" – "}
+                      {((campaign.active_hours_end || (campaign as any).activeHoursEnd) as string)?.slice(0, 5) ?? "—"}
+                    </div>
+                  </div>
+                )}
                 {campaign.account_name && (
                   <div className="flex items-center gap-1.5">
                     <div
@@ -1764,54 +1871,8 @@ export function CampaignDetailView({
                       }
                     </div>
                     <div>
-                      <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Owner</div>
+                      <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("meta.owner")}</div>
                       <div className="text-[11px] font-bold text-foreground leading-none">{campaign.account_name}</div>
-                    </div>
-                  </div>
-                )}
-                {(campaign as any).channel && (
-                  <div className="flex items-center gap-1.5">
-                    <img
-                      src={`/logos/${(
-                        ({ whatsapp: "whatsapp-svgrepo-com", instagram: "instagram-svgrepo-com", email: "email-address-svgrepo-com", sms: "sms-svgrepo-com", phone: "phone-call-svgrepo-com" } as Record<string, string>)[(campaign as any).channel?.toLowerCase()] ?? "sms-svgrepo-com"
-                      )}.svg`}
-                      alt={(campaign as any).channel}
-                      className="h-[26px] w-[26px] object-contain shrink-0"
-                    />
-                    <div>
-                      <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Channel</div>
-                      <div className="text-[11px] font-bold text-foreground leading-none capitalize">{(campaign as any).channel}</div>
-                    </div>
-                  </div>
-                )}
-                {campaignCreatedAt && (
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="h-[26px] w-[26px] text-foreground/25 shrink-0" />
-                    <div>
-                      <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Started</div>
-                      <div className="text-[11px] font-bold text-foreground leading-none">{formatDate(campaignCreatedAt)}</div>
-                    </div>
-                  </div>
-                )}
-                {campaign.type && (
-                  <div>
-                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Type</div>
-                    <div className="text-[11px] font-bold text-foreground leading-none">{campaign.type}</div>
-                  </div>
-                )}
-                {campaign.daily_lead_limit != null && (
-                  <div>
-                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Daily Limit</div>
-                    <div className="text-[11px] font-bold text-foreground leading-none">{campaign.daily_lead_limit} leads</div>
-                  </div>
-                )}
-                {(campaign.active_hours_start || (campaign as any).activeHoursStart) && (
-                  <div>
-                    <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Active Hours</div>
-                    <div className="text-[11px] font-bold text-foreground leading-none">
-                      {((campaign.active_hours_start || (campaign as any).activeHoursStart) as string).slice(0, 5)}
-                      {" – "}
-                      {((campaign.active_hours_end || (campaign as any).activeHoursEnd) as string)?.slice(0, 5) ?? "—"}
                     </div>
                   </div>
                 )}
@@ -1820,7 +1881,7 @@ export function CampaignDetailView({
           </div>
 
           {/* Mobile meta chips (always) + compact/table-view meta chips (flow below title) */}
-          <div className={cn("flex flex-wrap items-center gap-4", compact ? "flex" : "flex md:hidden")}>
+          <div className={cn("flex flex-wrap items-center gap-7", compact ? "flex" : "flex md:hidden")}>
             {campaign.account_name && (
               <div className="flex items-center gap-1.5">
                 <div
@@ -1833,7 +1894,7 @@ export function CampaignDetailView({
                   }
                 </div>
                 <div>
-                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Owner</div>
+                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("meta.owner")}</div>
                   <div className="text-[11px] font-bold text-foreground leading-none">{campaign.account_name}</div>
                 </div>
               </div>
@@ -1848,35 +1909,34 @@ export function CampaignDetailView({
                   className="h-[24px] w-[24px] object-contain shrink-0"
                 />
                 <div>
-                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Channel</div>
+                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("meta.channel")}</div>
                   <div className="text-[11px] font-bold text-foreground leading-none capitalize">{(campaign as any).channel}</div>
                 </div>
               </div>
             )}
             {campaignCreatedAt && (
-              <div className="flex items-center gap-1.5">
-                <Clock className="h-[24px] w-[24px] text-foreground/25 shrink-0" />
-                <div>
-                  <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Started</div>
-                  <div className="text-[11px] font-bold text-foreground leading-none">{formatDate(campaignCreatedAt)}</div>
-                </div>
+              <div>
+                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("meta.started")}</div>
+                <div className="text-[11px] font-bold text-foreground leading-none">{formatDate(campaignCreatedAt)}</div>
               </div>
             )}
             {campaign.type && (
               <div>
-                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Type</div>
+                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("meta.type")}</div>
                 <div className="text-[11px] font-bold text-foreground leading-none">{campaign.type}</div>
               </div>
             )}
             {campaign.daily_lead_limit != null && (
               <div>
-                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Daily Limit</div>
-                <div className="text-[11px] font-bold text-foreground leading-none">{campaign.daily_lead_limit} leads</div>
+                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("meta.dailyLimit")}</div>
+                <div className="text-[11px] font-bold text-foreground leading-none tabular-nums">
+                  {dailyStats != null ? `${dailyStats.sentToday} / ${campaign.daily_lead_limit}` : `${campaign.daily_lead_limit}`}
+                </div>
               </div>
             )}
             {(campaign.active_hours_start || (campaign as any).activeHoursStart) && (
               <div>
-                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">Active Hours</div>
+                <div className="text-[8px] uppercase tracking-widest text-muted-foreground/50 font-medium leading-none mb-0.5">{t("meta.activeHours")}</div>
                 <div className="text-[11px] font-bold text-foreground leading-none">
                   {((campaign.active_hours_start || (campaign as any).activeHoursStart) as string).slice(0, 5)}
                   {" – "}
@@ -1889,7 +1949,7 @@ export function CampaignDetailView({
         </div>
       </div>
 
-      {/* Tab row: Summary / DateRange / Configurations */}
+      {/* Tab row: Summary / Configurations / Tags + (inline toolbar when tags active) */}
       <div className="relative z-10 shrink-0 px-4 pt-0 md:pt-0 pb-0 flex items-center flex-wrap gap-2">
         <button
           onClick={() => setActiveTab("summary")}
@@ -1900,7 +1960,7 @@ export function CampaignDetailView({
               : "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:border-black/[0.175]"
           )}
         >
-          Summary
+          {t("tabs.summary")}
         </button>
         <button
           onClick={() => setActiveTab("configurations")}
@@ -1911,7 +1971,7 @@ export function CampaignDetailView({
               : "bg-[#FFF0CF] border border-black/[0.125] text-foreground/60 hover:text-foreground hover:border-black/[0.175]"
           )}
         >
-          Configurations
+          {t("tabs.configurations")}
         </button>
         {isAgencyUser && (
           <button
@@ -1923,27 +1983,180 @@ export function CampaignDetailView({
                 : "bg-[#FFEED0] border border-black/[0.125] text-foreground/60 hover:text-foreground hover:border-black/[0.175]"
             )}
           >
-            Tags
+            {t("tabs.tags")}
           </button>
+        )}
+
+        {/* ── Tags toolbar — inline with tab bar when tags tab is active ── */}
+        {isAgencyUser && activeTab === "tags" && (
+          <>
+            <div className="w-px h-5 bg-border/40 mx-0.5" />
+
+            {/* Search */}
+            <div className="relative flex items-center">
+              <Search className="absolute left-2.5 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <input
+                type="text"
+                placeholder={t("tags.searchTags")}
+                value={tagsSearch}
+                onChange={(e) => setTagsSearch(e.target.value)}
+                className="h-8 w-[160px] pl-8 pr-3 text-[11px] rounded-full border border-black/[0.125] bg-transparent outline-none focus:border-brand-indigo/50 transition-colors"
+              />
+            </div>
+
+            {/* Add tag */}
+            <Popover open={tagsCreateOpen} onOpenChange={setTagsCreateOpen}>
+              <PopoverTrigger asChild>
+                <button className={tagPill}>
+                  <Plus className="h-3.5 w-3.5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-72 p-4 space-y-3">
+                <p className="text-[12px] font-semibold text-foreground">{t("tags.newTag")}</p>
+                <input
+                  type="text"
+                  placeholder={t("tags.tagNamePlaceholder")}
+                  value={tagsNewName}
+                  onChange={(e) => setTagsNewName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") submitTagCreate(); }}
+                  className="w-full h-9 px-3 text-[12px] rounded-md border border-input bg-background outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                  autoFocus
+                />
+                <ColorPicker value={tagsNewColor} onChange={setTagsNewColor} />
+                <input
+                  type="text"
+                  placeholder={t("tags.categoryPlaceholder")}
+                  value={tagsNewCategory}
+                  onChange={(e) => setTagsNewCategory(e.target.value)}
+                  className="w-full h-9 px-3 text-[12px] rounded-md border border-input bg-background outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                />
+                <div className="flex justify-end gap-2 pt-1">
+                  <Button variant="ghost" size="sm" onClick={() => setTagsCreateOpen(false)}>
+                    {t("toolbar.cancel")}
+                  </Button>
+                  <Button size="sm" onClick={submitTagCreate} disabled={!tagsNewName.trim()}>
+                    {t("tags.create")}
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Sort */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className={tagsIsSortNonDefault ? tagPillActive : tagPill}>
+                  <ArrowUpDown className="h-3.5 w-3.5" />
+                  {t("tags.sorting")}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-44">
+                {([
+                  { value: "name_asc" as TagSortOption,     label: t("sortOptions.nameAsc") },
+                  { value: "name_desc" as TagSortOption,    label: t("sortOptions.nameDesc") },
+                  { value: "count_desc" as TagSortOption,   label: t("sortOptions.leadsDesc") },
+                  { value: "category_asc" as TagSortOption, label: t("tags.category") },
+                ]).map((opt) => (
+                  <DropdownMenuItem key={opt.value} onClick={() => setTagsSortBy(opt.value)} className="text-[12px] flex items-center justify-between">
+                    {opt.label}
+                    {tagsSortBy === opt.value && <Check className="h-4 w-4 text-brand-indigo" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Filter */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className={tagsIsFilterActive ? tagPillActive : tagPill}>
+                  <Filter className="h-3.5 w-3.5" />
+                  {t("tags.filter")}
+                  {tagsIsFilterActive && ` · ${tagsFilterCount}`}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-52">
+                <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("tags.autoApplied")}</div>
+                {(["all", "yes", "no"] as const).map((val) => (
+                  <DropdownMenuItem key={val} onClick={() => setTagsFilterAuto(val)} className="text-[12px] flex items-center justify-between">
+                    {val === "all" ? t("tags.all") : val === "yes" ? t("tags.yes") : t("tags.no")}
+                    {tagsFilterAuto === val && <Check className="h-4 w-4 text-brand-indigo" />}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("tags.category")}</div>
+                <DropdownMenuItem onClick={() => setTagsFilterCat("")} className="text-[12px] flex items-center justify-between">
+                  {t("tags.allCategories")}
+                  {!tagsFilterCat && <Check className="h-4 w-4 text-brand-indigo" />}
+                </DropdownMenuItem>
+                {tagsCategories.map((cat) => (
+                  <DropdownMenuItem key={cat} onClick={() => setTagsFilterCat(cat)} className="text-[12px] flex items-center justify-between">
+                    {cat}
+                    {tagsFilterCat.toLowerCase() === cat.toLowerCase() && <Check className="h-4 w-4 text-brand-indigo" />}
+                  </DropdownMenuItem>
+                ))}
+                {tagsIsFilterActive && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => { setTagsFilterAuto("all"); setTagsFilterCat(""); }} className="text-[12px] text-destructive">
+                      {t("tags.clearAllFilters")}
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Group */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className={tagsGroupBy !== "none" ? tagPillActive : tagPill}>
+                  <Layers className="h-3.5 w-3.5" />
+                  {t("tags.group")}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-40">
+                {([
+                  { value: "category" as TagGroupOption, label: t("tags.category") },
+                  { value: "color" as TagGroupOption,    label: t("tags.chooseColor") },
+                  { value: "none" as TagGroupOption,     label: t("tags.none") },
+                ]).map((opt) => (
+                  <DropdownMenuItem key={opt.value} onClick={() => setTagsGroupBy(opt.value)} className="text-[12px] flex items-center justify-between">
+                    {opt.label}
+                    {tagsGroupBy === opt.value && <Check className="h-4 w-4 text-brand-indigo" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
         )}
       </div>
 
       {/* ── Body — overlaps header; mask fades content as it slides under ── */}
-      <div className={cn("relative flex-1 -mt-[80px] pt-[83px] px-[3px] pb-[3px] overflow-y-auto")}
-        style={{
+      <div
+        className={cn(
+          "relative flex-1 px-[3px] pb-[3px]",
+          activeTab === "tags"
+            ? "overflow-hidden flex flex-col"
+            : "-mt-[80px] pt-[83px] overflow-y-auto",
+        )}
+        style={activeTab !== "tags" ? {
           maskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
           WebkitMaskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
-        }}
+        } : undefined}
       >
 
         {/* ── Summary tab — 3-col grid, rows auto-match heights ── */}
         {activeTab === "summary" && (
           <div className={cn(compact ? "flex flex-col gap-3" : "grid grid-cols-1 md:grid-cols-3 md:grid-rows-[680px_680px] gap-[3px]")}>
 
-            {/* ── Row 1, Col 1: Key Metrics + Performance Trends ── */}
+            {/* ── Row 1, Col 1: Pipeline + Donut ── */}
+            <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-5 overflow-hidden" data-testid="campaign-detail-view-funnel">
+              <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.pipeline")}</span>
+              <PipelineAndDonutWidget campaignId={campaign.id || (campaign as any).Id} />
+            </div>
+
+            {/* ── Row 1, Col 2: Key Metrics + Performance Trends ── */}
             <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-metrics">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">Key Metrics</span>
+                <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.keyMetrics")}</span>
                 <DateRangeFilter
                   value={dateRange}
                   onChange={setDateRange}
@@ -1951,15 +2164,15 @@ export function CampaignDetailView({
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <AnimatedMetricCard numericValue={agg.totalLeadsTargeted} displayValue={agg.totalLeadsTargeted.toLocaleString()} label="Leads Targeted" animTrigger={animTrigger} />
-                <AnimatedMetricCard numericValue={agg.totalMessagesSent}  displayValue={agg.totalMessagesSent.toLocaleString()}  label="Messages Sent"  animTrigger={animTrigger} />
-                <AnimatedMetricCard numericValue={agg.responseRate ?? 0}  displayValue={agg.responseRate != null ? `${agg.responseRate}%` : "—"} label="Response %" animTrigger={animTrigger} />
-                <AnimatedMetricCard numericValue={agg.bookingRate  ?? 0}  displayValue={agg.bookingRate  != null ? `${agg.bookingRate}%`  : "—"} label="Booking %"  animTrigger={animTrigger} />
+                <AnimatedMetricCard numericValue={agg.totalLeadsTargeted} displayValue={agg.totalLeadsTargeted.toLocaleString()} label={t("summary.leadsTargeted")} animTrigger={animTrigger} />
+                <AnimatedMetricCard numericValue={agg.totalMessagesSent}  displayValue={agg.totalMessagesSent.toLocaleString()}  label={t("summary.messagesSent")}  animTrigger={animTrigger} />
+                <AnimatedMetricCard numericValue={agg.responseRate ?? 0}  displayValue={agg.responseRate != null ? `${agg.responseRate}%` : "—"} label={t("summary.responsePercent")} animTrigger={animTrigger} />
+                <AnimatedMetricCard numericValue={agg.bookingRate  ?? 0}  displayValue={agg.bookingRate  != null ? `${agg.bookingRate}%`  : "—"} label={t("summary.bookingPercent")}  animTrigger={animTrigger} />
               </div>
 
               {/* Performance Trends chart — pushed to bottom */}
               <div className="mt-auto pt-1">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 block">Performance Trends</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 block">{t("summary.performanceTrends")}</span>
                 <div className="h-[280px]" key={animTrigger} data-testid="campaign-detail-view-trends">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
@@ -1999,38 +2212,45 @@ export function CampaignDetailView({
               </div>
             </div>
 
-            {/* ── Row 1, Col 2: Up Next ── */}
+            {/* ── Row 1, Col 3: Up Next ── */}
             <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-y-auto" data-testid="campaign-detail-view-agenda">
-              <span className="text-[18px] font-semibold font-heading leading-tight text-foreground shrink-0">Up Next</span>
+              <span className="text-[18px] font-semibold font-heading leading-tight text-foreground shrink-0">{t("summary.upNext")}</span>
               <AgendaWidget accountId={undefined} className="flex-1 min-h-0 bg-transparent" hideHeader />
             </div>
 
-            {/* ── Row 1, Col 3: Pipeline + Donut (unified, interactive) ── */}
-            <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-5 overflow-hidden" data-testid="campaign-detail-view-funnel">
-              <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">Pipeline</span>
-              <PipelineAndDonutWidget campaignId={campaign.id || (campaign as any).Id} />
+            {/* ── Row 2, Col 1: Activity Feed ── */}
+            <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-4 overflow-hidden" data-testid="campaign-detail-view-activity">
+              <span className="text-[18px] font-semibold font-heading leading-tight text-foreground shrink-0">{t("summary.activity")}</span>
+
+              {/* Daily capacity */}
+              {dailyStats && (
+                <div className="bg-white/90 dark:bg-white/[0.06] rounded-lg px-4 py-3 flex flex-col gap-2 shrink-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Daily Capacity</span>
+                    <span className="text-[11px] text-muted-foreground tabular-nums">
+                      {dailyStats.sentToday.toLocaleString()} / {dailyStats.dailyLimit.toLocaleString()} · resets midnight
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full bg-black/[0.07] dark:bg-white/[0.08] rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${Math.min(100, (dailyStats.sentToday / Math.max(1, dailyStats.dailyLimit)) * 100)}%`,
+                        backgroundColor:
+                          dailyStats.sentToday / Math.max(1, dailyStats.dailyLimit) >= 0.9 ? "#ef4444" :
+                          dailyStats.sentToday / Math.max(1, dailyStats.dailyLimit) >= 0.7 ? "#f59e0b" : "#3ACBDF",
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <ActivityFeed accountId={undefined} className="flex-1 min-h-0" />
             </div>
 
-            {/* ── Row 2, Col 1: AI Summary ── */}
-            <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-4 overflow-hidden" data-testid="campaign-detail-view-ai-summary">
-              <span className="text-[18px] font-semibold font-heading leading-tight text-foreground shrink-0">AI Analysis</span>
-              <AISummaryWidget
-                campaign={campaign}
-                summary={localAiSummary}
-                generatedAt={localAiSummaryAt}
-                onRefreshed={handleAiSummaryRefreshed}
-              />
-            </div>
-
-            {/* ── Row 2, Col 2: Activity Feed ── */}
-            <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-y-auto" data-testid="campaign-detail-view-activity">
-              <span className="text-[18px] font-semibold font-heading leading-tight text-foreground shrink-0">Activity</span>
-              <ActivityFeed accountId={undefined} compact className="flex-1 min-h-0" />
-            </div>
-
-            {/* ── Row 2, Col 3: Financials + ROI Trend ── */}
+            {/* ── Row 2, Col 2: Financials + ROI Trend ── */}
             <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-6 overflow-hidden" data-testid="campaign-detail-view-conversions">
-              <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">Financials</span>
+              <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">{t("summary.financials")}</span>
               <FinancialsWidget
                 agg={agg}
                 campaign={campaign}
@@ -2042,7 +2262,7 @@ export function CampaignDetailView({
 
               {/* ROI Trend — pushed to bottom */}
               <div className="mt-auto border-t border-border/20 pt-3">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 block">ROI Trend</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 block">{t("summary.roiTrend")}</span>
                 <div className="h-[180px]" data-testid="campaign-detail-view-roi">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
@@ -2069,6 +2289,17 @@ export function CampaignDetailView({
               </div>
             </div>
 
+            {/* ── Row 2, Col 3: AI Summary ── */}
+            <div className="bg-card/75 rounded-xl p-4 md:p-8 flex flex-col gap-4 overflow-hidden" data-testid="campaign-detail-view-ai-summary">
+              <span className="text-[18px] font-semibold font-heading leading-tight text-foreground shrink-0">{t("summary.aiAnalysis")}</span>
+              <AISummaryWidget
+                campaign={campaign}
+                summary={localAiSummary}
+                generatedAt={localAiSummaryAt}
+                onRefreshed={handleAiSummaryRefreshed}
+              />
+            </div>
+
           </div>
         )}
 
@@ -2078,29 +2309,29 @@ export function CampaignDetailView({
 
             {/* Column 1: Configuration / Settings */}
             <div className="bg-card rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-settings">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Configuration</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("config.configuration")}</span>
 
               {/* Type + Description */}
               <div className="space-y-0">
-                <InfoRow label="Type" value={campaign.type}
+                <InfoRow label={t("config.type")} value={campaign.type}
                   editChild={isEditing ? <EditText value={String(draft.type ?? "")} onChange={(v) => setDraft(d => ({...d, type: v}))} placeholder="Campaign type" /> : undefined}
                 />
-                <InfoRow label="Description" value={campaign.description}
+                <InfoRow label={t("config.description")} value={campaign.description}
                   editChild={isEditing ? <EditText value={String(draft.description ?? "")} onChange={(v) => setDraft(d => ({...d, description: v}))} multiline placeholder="Description…" /> : undefined}
                 />
               </div>
 
               {/* Schedule group */}
               <div className="space-y-0">
-                <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold pt-3 pb-2">Schedule</p>
-                <InfoRow label="Start date" value={formatDate(campaign.start_date)}
+                <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold pt-3 pb-2">{t("config.schedule")}</p>
+                <InfoRow label={t("config.startDate")} value={formatDate(campaign.start_date)}
                   editChild={isEditing ? <EditDate value={String(draft.start_date ?? "")} onChange={(v) => setDraft(d => ({...d, start_date: v}))} /> : undefined}
                 />
-                <InfoRow label="End date" value={formatDate(campaign.end_date)}
+                <InfoRow label={t("config.endDate")} value={formatDate(campaign.end_date)}
                   editChild={isEditing ? <EditDate value={String(draft.end_date ?? "")} onChange={(v) => setDraft(d => ({...d, end_date: v}))} /> : undefined}
                 />
                 <InfoRow
-                  label="Active hours"
+                  label={t("config.activeHours")}
                   value={campaign.active_hours_start || campaign.active_hours_end ? `${campaign.active_hours_start || "—"} → ${campaign.active_hours_end || "—"}` : null}
                   editChild={isEditing ? (
                     <div className="flex items-center gap-1 flex-1 min-w-0">
@@ -2110,21 +2341,21 @@ export function CampaignDetailView({
                     </div>
                   ) : undefined}
                 />
-                <InfoRow label="Daily limit" value={campaign.daily_lead_limit?.toLocaleString()}
+                <InfoRow label={t("config.dailyLimit")} value={campaign.daily_lead_limit?.toLocaleString()}
                   editChild={isEditing ? <EditNumber value={String(draft.daily_lead_limit ?? "")} onChange={(v) => setDraft(d => ({...d, daily_lead_limit: v}))} placeholder="e.g. 50" /> : undefined}
                 />
-                <InfoRow label="Interval" value={campaign.message_interval_minutes ? `${campaign.message_interval_minutes} min` : null}
+                <InfoRow label={t("config.interval")} value={campaign.message_interval_minutes ? `${campaign.message_interval_minutes} min` : null}
                   editChild={isEditing ? <EditNumber value={String(draft.message_interval_minutes ?? "")} onChange={(v) => setDraft(d => ({...d, message_interval_minutes: v}))} placeholder="minutes" /> : undefined}
                 />
               </div>
 
               {/* Behavior group */}
               <div className="space-y-0">
-                <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold pt-3 pb-2">Behavior</p>
+                <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold pt-3 pb-2">{t("config.behavior")}</p>
 
                 {/* Channel picker */}
                 <div className="flex items-start justify-between gap-3 py-2 border-b border-border/20">
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 shrink-0 pt-0.5 min-w-[90px]">Channel</span>
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 shrink-0 pt-0.5 min-w-[90px]">{t("config.channel")}</span>
                   {isEditing ? (
                     <div className="flex gap-1">
                       {(["sms", "whatsapp", "instagram"] as const).map((ch) => (
@@ -2150,19 +2381,66 @@ export function CampaignDetailView({
                   )}
                 </div>
 
-                <BoolRow label="Stop on response" value={campaign.stop_on_response}
+                <BoolRow label={t("config.stopOnResponse")} value={campaign.stop_on_response}
                   editChild={isEditing ? <EditToggle value={Boolean(draft.stop_on_response)} onChange={(v) => setDraft(d => ({...d, stop_on_response: v}))} /> : undefined}
                 />
-                <BoolRow label="Use AI bumps" value={campaign.use_ai_bumps}
+                <BoolRow label={t("config.useAiBumps")} value={campaign.use_ai_bumps}
                   editChild={isEditing ? <EditToggle value={Boolean(draft.use_ai_bumps)} onChange={(v) => setDraft(d => ({...d, use_ai_bumps: v}))} /> : undefined}
                 />
                 {(isEditing ? draft.channel : campaign.channel) === "whatsapp" && (
                   <>
+                    {/* WhatsApp Tier quick-select */}
+                    <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold pt-3 pb-2">WhatsApp Tier</p>
+                    <div className="flex items-start justify-between gap-3 py-2 border-b border-border/20">
+                      <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 shrink-0 pt-0.5 min-w-[90px]">{t("config.dailyLimit")}</span>
+                      {isEditing ? (
+                        <div className="flex flex-wrap gap-1.5">
+                          {([
+                            { tier: 1, limit: 1000,   sub: "1,000/day" },
+                            { tier: 2, limit: 10000,  sub: "10,000/day" },
+                            { tier: 3, limit: 100000, sub: "100k/day" },
+                            { tier: 4, limit: null,   sub: "∞ / day" },
+                          ] as const).map(({ tier, limit, sub }) => {
+                            const cur = draft.daily_lead_limit === "" || draft.daily_lead_limit == null
+                              ? null
+                              : Number(draft.daily_lead_limit);
+                            const selected = limit === null ? (!cur || cur > 100000) : cur === limit;
+                            return (
+                              <button
+                                key={tier}
+                                type="button"
+                                onClick={() => setDraft(d => ({ ...d, daily_lead_limit: limit ?? "" }))}
+                                className={cn(
+                                  "flex flex-col items-center px-2.5 py-1.5 rounded-lg border text-[10px] transition-colors",
+                                  selected
+                                    ? "border-brand-indigo/50 bg-brand-indigo/10 text-brand-indigo"
+                                    : "border-black/[0.125] bg-transparent text-foreground/60 hover:bg-muted/50"
+                                )}
+                              >
+                                <span className="font-bold">Tier {tier}</span>
+                                <span className="opacity-70">{sub}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <span className="text-[12px] font-semibold text-foreground text-right">
+                          {(() => {
+                            const lim = campaign.daily_lead_limit;
+                            if (!lim || lim > 100000) return "Tier 4 · ∞";
+                            if (lim > 10000) return "Tier 3 · 100k/day";
+                            if (lim > 1000) return "Tier 2 · 10k/day";
+                            return "Tier 1 · 1,000/day";
+                          })()}
+                        </span>
+                      )}
+                    </div>
+
                     <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold pt-3 pb-1">
-                      Voice Notes
+                      {t("config.voiceNotes")}
                     </p>
                     <BoolRow
-                      label="First message as voice note"
+                      label={t("config.firstMessageVoiceNote")}
                       value={campaign.first_message_voice_note ?? false}
                       editChild={isEditing ? (
                         <EditToggle
@@ -2172,7 +2450,7 @@ export function CampaignDetailView({
                       ) : undefined}
                     />
                     <BoolRow
-                      label="Bump 1 as voice note"
+                      label={t("config.bump1VoiceNote")}
                       value={campaign.bump_1_voice_note ?? false}
                       editChild={isEditing ? (
                         <EditToggle
@@ -2182,7 +2460,7 @@ export function CampaignDetailView({
                       ) : undefined}
                     />
                     <BoolRow
-                      label="Bump 2 as voice note"
+                      label={t("config.bump2VoiceNote")}
                       value={campaign.bump_2_voice_note ?? false}
                       editChild={isEditing ? (
                         <EditToggle
@@ -2192,7 +2470,7 @@ export function CampaignDetailView({
                       ) : undefined}
                     />
                     <BoolRow
-                      label="Bump 3 as voice note"
+                      label={t("config.bump3VoiceNote")}
                       value={campaign.bump_3_voice_note ?? false}
                       editChild={isEditing ? (
                         <EditToggle
@@ -2202,7 +2480,7 @@ export function CampaignDetailView({
                       ) : undefined}
                     />
                     <BoolRow
-                      label="AI replies as voice notes"
+                      label={t("config.aiReplyVoiceNote")}
                       value={campaign.ai_reply_voice_note ?? false}
                       editChild={isEditing ? (
                         <EditToggle
@@ -2212,7 +2490,7 @@ export function CampaignDetailView({
                       ) : undefined}
                     />
                     <InfoRow
-                      label="Voice ID"
+                      label={t("config.voiceId")}
                       value={campaign.tts_voice_id ?? ""}
                       editChild={isEditing ? (
                         <EditText
@@ -2224,20 +2502,20 @@ export function CampaignDetailView({
                     />
                   </>
                 )}
-                <InfoRow label="Max bumps" value={campaign.max_bumps}
+                <InfoRow label={t("config.maxBumps")} value={campaign.max_bumps}
                   editChild={isEditing ? <EditNumber value={String(draft.max_bumps ?? "")} onChange={(v) => setDraft(d => ({...d, max_bumps: v}))} placeholder="e.g. 3" /> : undefined}
                 />
               </div>
 
               {/* Contract group */}
               <div className="space-y-0">
-                <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold pt-3 pb-2">Contract</p>
+                <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold pt-3 pb-2">{t("config.contract")}</p>
                 <InfoRow
-                  label="Deal"
+                  label={t("config.deal")}
                   value={
                     linkedContract
                       ? (linkedContract.title || `Contract #${linkedContract.id}`)
-                      : "— None linked"
+                      : t("config.noneLinked")
                   }
                   editChild={isEditing ? (
                     <ContractSelect
@@ -2248,7 +2526,7 @@ export function CampaignDetailView({
                   ) : undefined}
                 />
                 <InfoRow
-                  label="Value / Booking"
+                  label={t("config.valuePerBooking")}
                   value={
                     linkedContract?.value_per_booking != null
                       ? fmtCurrency(Number(linkedContract.value_per_booking))
@@ -2269,24 +2547,24 @@ export function CampaignDetailView({
 
             {/* Column 2: AI Settings */}
             <div className="bg-card rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-ai">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">AI Settings</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("config.aiSettings")}</span>
               <div className="space-y-0">
-                <InfoRow label="Model" value={campaign.ai_model || "Default"}
+                <InfoRow label={t("config.model")} value={campaign.ai_model || "Default"}
                   editChild={isEditing ? <EditText value={String(draft.ai_model ?? "")} onChange={(v) => setDraft(d => ({...d, ai_model: v}))} placeholder="Model name" /> : undefined}
                 />
-                <InfoRow label="Temperature" value={campaign.ai_temperature != null ? String(campaign.ai_temperature) : null}
+                <InfoRow label={t("config.temperature")} value={campaign.ai_temperature != null ? String(campaign.ai_temperature) : null}
                   editChild={isEditing ? <EditNumber value={String(draft.ai_temperature ?? "")} onChange={(v) => setDraft(d => ({...d, ai_temperature: v}))} placeholder="0.7" /> : undefined}
                 />
-                <InfoRow label="Agent" value={campaign.agent_name}
+                <InfoRow label={t("config.agent")} value={campaign.agent_name}
                   editChild={isEditing ? <EditText value={String(draft.agent_name ?? "")} onChange={(v) => setDraft(d => ({...d, agent_name: v}))} /> : undefined}
                 />
-                <InfoRow label="Service" value={campaign.service_name}
+                <InfoRow label={t("config.service")} value={campaign.service_name}
                   editChild={isEditing ? <EditText value={String(draft.service_name ?? "")} onChange={(v) => setDraft(d => ({...d, service_name: v}))} /> : undefined}
                 />
               </div>
               {(campaign.ai_prompt_template || isEditing) && (
                 <div className="space-y-1.5">
-                  <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold pb-1">Prompt Template</p>
+                  <p className="text-[10px] uppercase tracking-wider text-foreground/40 font-semibold pb-1">{t("config.promptTemplate")}</p>
                   {isEditing ? (
                     <EditText
                       value={String(draft.ai_prompt_template ?? "")}
@@ -2307,12 +2585,12 @@ export function CampaignDetailView({
 
             {/* Column 3: Message Templates */}
             <div className="bg-card rounded-xl p-4 md:p-8 space-y-6 overflow-y-auto" data-testid="campaign-detail-view-templates">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Message Templates</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("config.messageTemplates")}</span>
 
               {/* First message */}
               <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] p-3 md:p-6 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">First Message</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/40">{t("config.firstMessage")}</span>
                   {!isEditing && (campaign.first_message_template || campaign.First_Message) && (
                     <CopyButton value={campaign.first_message_template || campaign.First_Message || ""} />
                   )}
@@ -2329,7 +2607,7 @@ export function CampaignDetailView({
                     ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">
                         {campaign.first_message_template || campaign.First_Message}
                       </p>
-                    : <p className="text-[11px] text-foreground/40 italic">No template set</p>
+                    : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
                 )}
               </div>
 
@@ -2343,7 +2621,7 @@ export function CampaignDetailView({
                   <div className="flex items-center gap-2">
                     {isEditing ? (
                       <div className="flex items-center gap-1">
-                        <span className="text-[10px] text-foreground/50">Delay (h):</span>
+                        <span className="text-[10px] text-foreground/50">{t("config.delayHours")}</span>
                         <input
                           type="number"
                           value={String(draft.bump_1_delay_hours ?? "")}
@@ -2355,7 +2633,7 @@ export function CampaignDetailView({
                     ) : (
                       <div className="flex items-center gap-1 text-[11px] text-foreground/50">
                         <Clock className="w-3 h-3" />
-                        <span>Delay: {formatHours(campaign.bump_1_delay_hours)}</span>
+                        <span>{t("config.delayLabel", { value: formatHours(campaign.bump_1_delay_hours) })}</span>
                       </div>
                     )}
                     {!isEditing && campaign.bump_1_template && <CopyButton value={campaign.bump_1_template} />}
@@ -2371,7 +2649,7 @@ export function CampaignDetailView({
                 ) : (
                   campaign.bump_1_template
                     ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{campaign.bump_1_template}</p>
-                    : <p className="text-[11px] text-foreground/40 italic">No template set</p>
+                    : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
                 )}
               </div>
 
@@ -2385,7 +2663,7 @@ export function CampaignDetailView({
                   <div className="flex items-center gap-2">
                     {isEditing ? (
                       <div className="flex items-center gap-1">
-                        <span className="text-[10px] text-foreground/50">Delay (h):</span>
+                        <span className="text-[10px] text-foreground/50">{t("config.delayHours")}</span>
                         <input
                           type="number"
                           value={String(draft.bump_2_delay_hours ?? "")}
@@ -2397,7 +2675,7 @@ export function CampaignDetailView({
                     ) : (
                       <div className="flex items-center gap-1 text-[11px] text-foreground/50">
                         <Clock className="w-3 h-3" />
-                        <span>Delay: {formatHours(campaign.bump_2_delay_hours)}</span>
+                        <span>{t("config.delayLabel", { value: formatHours(campaign.bump_2_delay_hours) })}</span>
                       </div>
                     )}
                     {!isEditing && campaign.bump_2_template && <CopyButton value={campaign.bump_2_template} />}
@@ -2413,7 +2691,7 @@ export function CampaignDetailView({
                 ) : (
                   campaign.bump_2_template
                     ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{campaign.bump_2_template}</p>
-                    : <p className="text-[11px] text-foreground/40 italic">No template set</p>
+                    : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
                 )}
               </div>
 
@@ -2427,7 +2705,7 @@ export function CampaignDetailView({
                   <div className="flex items-center gap-2">
                     {isEditing ? (
                       <div className="flex items-center gap-1">
-                        <span className="text-[10px] text-foreground/50">Delay (h):</span>
+                        <span className="text-[10px] text-foreground/50">{t("config.delayHours")}</span>
                         <input
                           type="number"
                           value={String(draft.bump_3_delay_hours ?? "")}
@@ -2439,7 +2717,7 @@ export function CampaignDetailView({
                     ) : (
                       <div className="flex items-center gap-1 text-[11px] text-foreground/50">
                         <Clock className="w-3 h-3" />
-                        <span>Delay: {formatHours(campaign.bump_3_delay_hours)}</span>
+                        <span>{t("config.delayLabel", { value: formatHours(campaign.bump_3_delay_hours) })}</span>
                       </div>
                     )}
                     {!isEditing && campaign.bump_3_template && <CopyButton value={campaign.bump_3_template} />}
@@ -2455,7 +2733,7 @@ export function CampaignDetailView({
                 ) : (
                   campaign.bump_3_template
                     ? <p className="text-[12px] text-foreground leading-relaxed whitespace-pre-wrap break-words">{campaign.bump_3_template}</p>
-                    : <p className="text-[11px] text-foreground/40 italic">No template set</p>
+                    : <p className="text-[11px] text-foreground/40 italic">{t("config.noTemplateSet")}</p>
                 )}
               </div>
 
@@ -2471,6 +2749,13 @@ export function CampaignDetailView({
             <CampaignTagsSection
               campaignId={campaign.id || campaign.Id}
               campaignName={campaign.name || ""}
+              searchQuery={tagsSearch}
+              sortBy={tagsSortBy}
+              groupBy={tagsGroupBy}
+              filterAutoApplied={tagsFilterAuto}
+              filterCategory={tagsFilterCat}
+              createRef={tagsCreateRef}
+              onCategoriesChange={setTagsCategories}
             />
           </div>
         )}

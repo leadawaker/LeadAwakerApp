@@ -25,16 +25,11 @@ function isAuthed() {
 
 /**
  * Checks if the current user has agency-level access.
- * Uses both role check (Admin/Operator) and account check (accountsId === 1).
- * Both must be true for full agency access to admin pages.
+ * Only Admin and Operator roles get agency access, regardless of account ID.
  */
 function isAgencyUser(): boolean {
   const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
-  const isAgencyRole = role === "Admin" || role === "Operator";
-  const accountId = localStorage.getItem("leadawaker_current_account_id");
-  const isAgencyAccount = accountId === "1";
-  // Agency access requires either agency role OR agency account
-  return isAgencyRole || isAgencyAccount;
+  return role === "Admin" || role === "Operator";
 }
 
 function Protected({ children }: { children: ReactElement }) {

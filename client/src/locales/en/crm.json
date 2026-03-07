@@ -1,0 +1,112 @@
+{
+  "sidebar": {
+    "menu": "Menu",
+    "campaigns": "Campaigns",
+    "accounts": "Accounts",
+    "leads": "Leads",
+    "chats": "Chats",
+    "calendar": "Calendar",
+    "promptLibrary": "Prompt Library",
+    "billing": "Billing",
+    "tasks": "Tasks",
+    "automations": "Automations",
+    "settings": "Settings",
+    "support": "Support",
+    "help": "Help",
+    "docs": "Docs"
+  },
+  "sidebarSections": {
+    "engage": "Engage",
+    "admin": "Admin",
+    "backend": "Backend",
+    "agency": "Agency"
+  },
+  "topbar": {
+    "search": "Search",
+    "searchPlaceholder": "Search leads by name, phone, email…",
+    "startTyping": "Start typing to search…",
+    "noResults": "No results found.",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode",
+    "toggleDarkMode": "Toggle dark mode",
+    "customerSupport": "Customer Support",
+    "notifications": "Notifications",
+    "help": "Help",
+    "documentation": "Documentation",
+    "social": "Social",
+    "agencyView": "Agency View",
+    "allAccounts": "All Accounts",
+    "switchAccount": "Switch Account",
+    "myProfile": "My Profile",
+    "logout": "Logout"
+  },
+  "search": {
+    "leads": "Leads",
+    "accounts": "Accounts",
+    "users": "Users"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "apply": "Apply",
+    "reset": "Reset",
+    "refresh": "Refresh",
+    "viewAll": "View All",
+    "showMore": "Show More",
+    "showLess": "Show Less",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "loading": "Loading…",
+    "saving": "Saving…"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "pending": "Pending",
+    "completed": "Completed",
+    "paused": "Paused",
+    "draft": "Draft",
+    "scheduled": "Scheduled",
+    "running": "Running",
+    "failed": "Failed",
+    "success": "Success",
+    "error": "Error",
+    "delivered": "Delivered",
+    "read": "Read",
+    "replied": "Replied",
+    "optedOut": "Opted Out"
+  },
+  "time": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This Week",
+    "lastWeek": "Last Week",
+    "thisMonth": "This Month",
+    "lastMonth": "Last Month",
+    "daysAgo": "{{count}} days ago",
+    "hoursAgo": "{{count}} hours ago",
+    "minutesAgo": "{{count}} minutes ago",
+    "justNow": "Just now"
+  },
+  "empty": {
+    "noData": "No data available",
+    "noResults": "No results found",
+    "noItems": "No items yet"
+  },
+  "confirm": {
+    "areYouSure": "Are you sure?",
+    "cannotUndo": "This action cannot be undone.",
+    "deleteConfirm": "Are you sure you want to delete this?"
+  }
+}

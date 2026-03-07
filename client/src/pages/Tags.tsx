@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { apiFetch } from "@/lib/apiUtils";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
@@ -49,6 +50,7 @@ interface ColorPickerProps {
 }
 
 function ColorPicker({ value, onChange, "data-testid": testId }: ColorPickerProps) {
+  const { t } = useTranslation("campaigns");
   const [open, setOpen] = useState(false);
   const hex = resolveColor(value);
   const label = value.charAt(0).toUpperCase() + value.slice(1);
@@ -75,7 +77,7 @@ function ColorPicker({ value, onChange, "data-testid": testId }: ColorPickerProp
         align="start"
         data-testid={testId ? `${testId}-popover` : undefined}
       >
-        <div className="mb-2 text-xs font-medium text-muted-foreground">Choose a color</div>
+        <div className="mb-2 text-xs font-medium text-muted-foreground">{t("tagsPage.chooseColor")}</div>
         <div className="grid grid-cols-5 gap-2">
           {COLOR_PALETTE.map(([colorName, colorHex]) => {
             const isSelected = value === colorName;
@@ -128,6 +130,7 @@ interface GroupedCategory {
 }
 
 export default function TagsPage() {
+  const { t } = useTranslation("campaigns");
   const [tags, setTags] = useState<Tag[]>([]);
   const [leads, setLeads] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -245,7 +248,7 @@ export default function TagsPage() {
     tags.forEach((tag) => {
       const key = tag.category
         ? tag.category.charAt(0).toUpperCase() + tag.category.slice(1)
-        : "Uncategorized";
+        : t("tagsPage.uncategorized");
       cats.add(key);
     });
     return Array.from(cats).sort((a, b) => a.localeCompare(b));
@@ -258,7 +261,7 @@ export default function TagsPage() {
     tags.forEach((tag) => {
       const categoryKey = tag.category
         ? tag.category.charAt(0).toUpperCase() + tag.category.slice(1)
-        : "Uncategorized";
+        : t("tagsPage.uncategorized");
 
       // Apply category filter
       if (selectedCategory !== "all" && categoryKey !== selectedCategory) return;
@@ -325,7 +328,7 @@ export default function TagsPage() {
       const newTag = await res.json();
       // Optimistically add to local tags list
       setTags((prev) => [...prev, newTag]);
-      toast({ title: "Tag created", description: `"${newTag.name ?? createName}" was added successfully.` });
+      toast({ title: t("tagsPage.toast.tagCreated"), description: t("tagsPage.toast.tagCreatedDesc", { name: newTag.name ?? createName }) });
 
       // Reset form and close dialog
       setCreateName("");
@@ -335,7 +338,7 @@ export default function TagsPage() {
       setCreateDialogOpen(false);
     } catch (err) {
       console.error("Failed to create tag:", err);
-      toast({ title: "Error", description: `Failed to create tag: ${err instanceof Error ? err.message : String(err)}`, variant: "destructive" });
+      toast({ title: t("tagsPage.toast.error"), description: t("tagsPage.toast.createFailed", { error: err instanceof Error ? err.message : String(err) }), variant: "destructive" });
     } finally {
       setCreating(false);
     }
@@ -379,12 +382,12 @@ export default function TagsPage() {
       setTags((prev) =>
         prev.map((t) => (t.id === editingTag.id ? { ...t, ...updatedTag } : t))
       );
-      toast({ title: "Tag updated", description: `"${updatedTag.name ?? editName}" was updated successfully.` });
+      toast({ title: t("tagsPage.toast.tagUpdated"), description: t("tagsPage.toast.tagUpdatedDesc", { name: updatedTag.name ?? editName }) });
       setEditDialogOpen(false);
       setEditingTag(null);
     } catch (err) {
       console.error("Failed to update tag:", err);
-      toast({ title: "Error", description: `Failed to update tag: ${err instanceof Error ? err.message : String(err)}`, variant: "destructive" });
+      toast({ title: t("tagsPage.toast.error"), description: t("tagsPage.toast.updateFailed", { error: err instanceof Error ? err.message : String(err) }), variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -415,12 +418,12 @@ export default function TagsPage() {
       setTags((prev) => prev.filter((t) => t.id !== deletingTag.id));
       // Deselect if the deleted tag was selected
       if (selectedTagId === deletingTag.id) setSelectedTagId(null);
-      toast({ title: "Tag deleted", description: `"${deletedName}" was deleted successfully.` });
+      toast({ title: t("tagsPage.toast.tagDeleted"), description: t("tagsPage.toast.tagDeletedDesc", { name: deletedName }) });
       setDeleteDialogOpen(false);
       setDeletingTag(null);
     } catch (err) {
       console.error("Failed to delete tag:", err);
-      toast({ title: "Error", description: `Failed to delete tag: ${err instanceof Error ? err.message : String(err)}`, variant: "destructive" });
+      toast({ title: t("tagsPage.toast.error"), description: t("tagsPage.toast.deleteFailed", { error: err instanceof Error ? err.message : String(err) }), variant: "destructive" });
     } finally {
       setDeleting(false);
     }
@@ -454,7 +457,7 @@ export default function TagsPage() {
               <input
                 data-testid="input-search-tags"
                 className="h-10 flex-1 max-w-md rounded-xl border border-border bg-card px-3 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                placeholder="Search tags…"
+                placeholder={t("tagsPage.searchPlaceholder")}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
               />
@@ -463,10 +466,10 @@ export default function TagsPage() {
                   data-testid="select-category-filter"
                   className="w-[160px] h-10 rounded-xl bg-card"
                 >
-                  <SelectValue placeholder="All Categories" />
+                  <SelectValue placeholder={t("tagsPage.allCategories")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="all">{t("tagsPage.allCategories")}</SelectItem>
                   {categoryOptions.map((cat) => (
                     <SelectItem key={cat} value={cat}>
                       {cat}
@@ -477,7 +480,7 @@ export default function TagsPage() {
             </div>
             <div className="flex items-center gap-3">
               <div className="text-xs text-muted-foreground whitespace-nowrap">
-                {tags.filter((t) => t.name).length} tags in {groupedCategories.length} categories
+                {t("tagsPage.tagsInCategories", { tagCount: tags.filter((tg) => tg.name).length, catCount: groupedCategories.length })}
               </div>
               <Button
                 data-testid="button-create-tag"
@@ -486,7 +489,7 @@ export default function TagsPage() {
                 onClick={() => setCreateDialogOpen(true)}
               >
                 <Plus className="h-4 w-4" />
-                Create Tag
+                {t("tagsPage.createTag")}
               </Button>
             </div>
           </div>
@@ -495,22 +498,22 @@ export default function TagsPage() {
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogContent data-testid="dialog-create-tag" className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Create New Tag</DialogTitle>
+                <DialogTitle>{t("tagsPage.createDialog.title")}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="tag-name">Name <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="tag-name">{t("tagsPage.createDialog.name")} <span className="text-red-500">*</span></Label>
                   <Input
                     id="tag-name"
                     data-testid="input-tag-name"
-                    placeholder="e.g. hot-lead"
+                    placeholder={t("tagsPage.createDialog.namePlaceholder")}
                     value={createName}
                     onChange={(e) => setCreateName(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter" && !creating) handleCreateTag(); }}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="tag-color">Color</Label>
+                  <Label htmlFor="tag-color">{t("tagsPage.createDialog.color")}</Label>
                   <ColorPicker
                     value={createColor}
                     onChange={setCreateColor}
@@ -518,21 +521,21 @@ export default function TagsPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="tag-category">Category</Label>
+                  <Label htmlFor="tag-category">{t("tagsPage.createDialog.category")}</Label>
                   <Input
                     id="tag-category"
                     data-testid="input-tag-category"
-                    placeholder="e.g. Status, Behavior, Source"
+                    placeholder={t("tagsPage.createDialog.categoryPlaceholder")}
                     value={createCategory}
                     onChange={(e) => setCreateCategory(e.target.value)}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="tag-description">Description</Label>
+                  <Label htmlFor="tag-description">{t("tagsPage.createDialog.description")}</Label>
                   <Textarea
                     id="tag-description"
                     data-testid="input-tag-description"
-                    placeholder="Brief description of this tag…"
+                    placeholder={t("tagsPage.createDialog.descriptionPlaceholder")}
                     rows={3}
                     value={createDescription}
                     onChange={(e) => setCreateDescription(e.target.value)}
@@ -558,14 +561,14 @@ export default function TagsPage() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setCreateDialogOpen(false)} disabled={creating}>
-                  Cancel
+                  {t("tagsPage.createDialog.cancel")}
                 </Button>
                 <Button
                   data-testid="button-submit-create-tag"
                   onClick={handleCreateTag}
                   disabled={!createName.trim() || creating}
                 >
-                  {creating ? "Creating…" : "Create Tag"}
+                  {creating ? t("tagsPage.createDialog.creating") : t("tagsPage.createDialog.create")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -578,22 +581,22 @@ export default function TagsPage() {
           }}>
             <DialogContent data-testid="dialog-edit-tag" className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Edit Tag</DialogTitle>
+                <DialogTitle>{t("tagsPage.editDialog.title")}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="edit-tag-name">Name <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="edit-tag-name">{t("tagsPage.editDialog.name")} <span className="text-red-500">*</span></Label>
                   <Input
                     id="edit-tag-name"
                     data-testid="input-edit-tag-name"
-                    placeholder="e.g. hot-lead"
+                    placeholder={t("tagsPage.editDialog.namePlaceholder")}
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter" && !saving) handleEditTag(); }}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="edit-tag-color">Color</Label>
+                  <Label htmlFor="edit-tag-color">{t("tagsPage.editDialog.color")}</Label>
                   <ColorPicker
                     value={editColor}
                     onChange={setEditColor}
@@ -601,21 +604,21 @@ export default function TagsPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="edit-tag-category">Category</Label>
+                  <Label htmlFor="edit-tag-category">{t("tagsPage.editDialog.category")}</Label>
                   <Input
                     id="edit-tag-category"
                     data-testid="input-edit-tag-category"
-                    placeholder="e.g. Status, Behavior, Source"
+                    placeholder={t("tagsPage.editDialog.categoryPlaceholder")}
                     value={editCategory}
                     onChange={(e) => setEditCategory(e.target.value)}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="edit-tag-description">Description</Label>
+                  <Label htmlFor="edit-tag-description">{t("tagsPage.editDialog.description")}</Label>
                   <Textarea
                     id="edit-tag-description"
                     data-testid="input-edit-tag-description"
-                    placeholder="Brief description of this tag…"
+                    placeholder={t("tagsPage.editDialog.descriptionPlaceholder")}
                     rows={3}
                     value={editDescription}
                     onChange={(e) => setEditDescription(e.target.value)}
@@ -641,14 +644,14 @@ export default function TagsPage() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setEditDialogOpen(false)} disabled={saving}>
-                  Cancel
+                  {t("tagsPage.editDialog.cancel")}
                 </Button>
                 <Button
                   data-testid="button-submit-edit-tag"
                   onClick={handleEditTag}
                   disabled={!editName.trim() || saving}
                 >
-                  {saving ? "Saving…" : "Save Changes"}
+                  {saving ? t("tagsPage.editDialog.saving") : t("tagsPage.editDialog.saveChanges")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -663,16 +666,16 @@ export default function TagsPage() {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
                   <AlertTriangle className="h-5 w-5 shrink-0" />
-                  Delete Tag
+                  {t("tagsPage.deleteDialog.title")}
                 </DialogTitle>
               </DialogHeader>
               <div className="py-2 space-y-3">
                 <p className="text-sm text-foreground" data-testid="delete-dialog-message">
-                  Are you sure you want to delete the tag{" "}
+                  {t("tagsPage.deleteDialog.confirmMessage")}{" "}
                   <span className="font-semibold">"{deletingTag?.name}"</span>?
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  This action cannot be undone. Leads that currently have this tag will not lose it — only the tag definition will be removed.
+                  {t("tagsPage.deleteDialog.warningMessage")}
                 </p>
               </div>
               <DialogFooter>
@@ -682,7 +685,7 @@ export default function TagsPage() {
                   onClick={() => setDeleteDialogOpen(false)}
                   disabled={deleting}
                 >
-                  Cancel
+                  {t("tagsPage.deleteDialog.cancel")}
                 </Button>
                 <Button
                   variant="destructive"
@@ -690,7 +693,7 @@ export default function TagsPage() {
                   onClick={handleDeleteTag}
                   disabled={deleting}
                 >
-                  {deleting ? "Deleting…" : "Delete Tag"}
+                  {deleting ? t("tagsPage.deleteDialog.deleting") : t("tagsPage.deleteDialog.delete")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -699,15 +702,15 @@ export default function TagsPage() {
           {groupedCategories.length === 0 ? (
             <DataEmptyState
               variant="search"
-              title="No tags found"
+              title={t("tagsPage.empty.noTagsFound")}
               description={
                 q && selectedCategory !== "all"
-                  ? `No tags match "${q}" in category "${selectedCategory}"`
+                  ? t("tagsPage.empty.noMatchSearchAndCategory", { query: q, category: selectedCategory })
                   : q
-                  ? `No tags match "${q}"`
+                  ? t("tagsPage.empty.noMatchSearch", { query: q })
                   : selectedCategory !== "all"
-                  ? `No tags in category "${selectedCategory}"`
-                  : "No tags available."
+                  ? t("tagsPage.empty.noMatchCategory", { category: selectedCategory })
+                  : t("tagsPage.empty.noTagsAvailable")
               }
             />
           ) : (
@@ -725,49 +728,49 @@ export default function TagsPage() {
                     </h3>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2 bg-card p-4 rounded-2xl shadow-sm border border-border">
-                      {cat.tags.map((t) => (
+                      {cat.tags.map((tag) => (
                         <div
-                          key={t.id}
+                          key={tag.id}
                           className={cn(
                             "relative group flex items-center gap-3 px-3 py-2 rounded-xl transition-colors text-left border border-transparent cursor-pointer",
-                            selectedTagId === t.id
+                            selectedTagId === tag.id
                               ? "ring-2 ring-primary bg-card"
                               : "hover:bg-muted/5"
                           )}
-                          style={{ backgroundColor: `${t.hexColor}08` }}
-                          data-testid={`tag-item-${t.id}`}
-                          onClick={() => setSelectedTagId(t.id === selectedTagId ? null : t.id)}
-                          title={t.description ?? t.name ?? undefined}
+                          style={{ backgroundColor: `${tag.hexColor}08` }}
+                          data-testid={`tag-item-${tag.id}`}
+                          onClick={() => setSelectedTagId(tag.id === selectedTagId ? null : tag.id)}
+                          title={tag.description ?? tag.name ?? undefined}
                         >
                           {/* Color dot + count badge */}
                           <div
                             className="h-7 w-7 rounded-full text-[11px] font-bold flex items-center justify-center text-white shrink-0 shadow-sm"
-                            style={{ backgroundColor: t.hexColor }}
+                            style={{ backgroundColor: tag.hexColor }}
                           >
-                            {t.count}
+                            {tag.count}
                           </div>
 
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 min-w-0">
                               <div
-                                data-testid={`tag-name-${t.id}`}
+                                data-testid={`tag-name-${tag.id}`}
                                 className="truncate font-semibold text-[13px] text-foreground leading-tight"
                               >
-                                {t.name}
+                                {tag.name}
                               </div>
-                              {t.auto_applied && (
+                              {tag.auto_applied && (
                                 <span
-                                  data-testid={`badge-auto-applied-${t.id}`}
+                                  data-testid={`badge-auto-applied-${tag.id}`}
                                   className="shrink-0 text-[9px] font-semibold uppercase tracking-wide bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 px-1.5 py-0.5 rounded-full border border-violet-200 dark:border-violet-700/50"
                                   title="This tag is automatically applied by workflows"
                                 >
-                                  Auto
+                                  {t("tagsPage.auto")}
                                 </span>
                               )}
                             </div>
-                            {t.description && (
+                            {tag.description && (
                               <div className="truncate text-[10px] text-muted-foreground mt-0.5">
-                                {t.description}
+                                {tag.description}
                               </div>
                             )}
                           </div>
@@ -775,18 +778,18 @@ export default function TagsPage() {
                           {/* Edit + Delete buttons — visible on hover */}
                           <div className="opacity-0 group-hover:opacity-100 absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 transition-opacity">
                             <button
-                              data-testid={`button-edit-tag-${t.id}`}
-                              onClick={(e) => openEditDialog(t, e)}
+                              data-testid={`button-edit-tag-${tag.id}`}
+                              onClick={(e) => openEditDialog(tag, e)}
                               className="h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors"
-                              title={`Edit tag "${t.name}"`}
+                              title={`Edit tag "${tag.name}"`}
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </button>
                             <button
-                              data-testid={`button-delete-tag-${t.id}`}
-                              onClick={(e) => openDeleteDialog(t, e)}
+                              data-testid={`button-delete-tag-${tag.id}`}
+                              onClick={(e) => openDeleteDialog(tag, e)}
                               className="h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                              title={`Delete tag "${t.name}"`}
+                              title={`Delete tag "${tag.name}"`}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
@@ -804,7 +807,7 @@ export default function TagsPage() {
                   <div className="p-4 border-b space-y-1">
                     <div className="flex items-center justify-between">
                       <div className="font-bold text-sm" data-testid="side-panel-title">
-                        {selectedTag ? `Leads: ${selectedTag.name}` : "Tag Insights"}
+                        {selectedTag ? t("tagsPage.sidePanel.leadsWithTag", { name: selectedTag.name }) : t("tagsPage.sidePanel.tagInsights")}
                       </div>
                       {selectedTag && (
                         <div className="flex items-center gap-1">
@@ -842,7 +845,7 @@ export default function TagsPage() {
                           style={{ backgroundColor: resolveColor(selectedTag.color) }}
                         />
                         <span className="text-[11px] font-medium text-muted-foreground capitalize">
-                          {selectedTag.category ?? "Uncategorized"}
+                          {selectedTag.category ?? t("tagsPage.uncategorized")}
                         </span>
                         {selectedTag.auto_applied && (
                           <span
@@ -861,15 +864,15 @@ export default function TagsPage() {
                     {!selectedTag ? (
                       <DataEmptyState
                         variant="tags"
-                        title="Tag Insights"
-                        description="Click a tag to see associated leads and their details."
+                        title={t("tagsPage.sidePanel.tagInsights")}
+                        description={t("tagsPage.sidePanel.tagInsightsDesc")}
                         compact
                       />
                     ) : selectedLeads.length === 0 ? (
                       <DataEmptyState
                         variant="search"
-                        title="No leads found"
-                        description="No leads are associated with this tag yet."
+                        title={t("tagsPage.sidePanel.noLeadsFound")}
+                        description={t("tagsPage.sidePanel.noLeadsDesc")}
                         compact
                       />
                     ) : (
@@ -889,10 +892,10 @@ export default function TagsPage() {
                               {l.phone ?? l.Phone ?? l.whatsapp_number ?? ""}
                             </div>
                             <div className="text-[10px] text-muted-foreground mt-0.5">
-                              Last message:{" "}
+                              {t("tagsPage.sidePanel.lastMessage")}{" "}
                               {lastMsg
                                 ? new Date(lastMsg).toLocaleDateString()
-                                : "No messages yet"}
+                                : t("tagsPage.sidePanel.noMessages")}
                             </div>
                           </div>
                         );

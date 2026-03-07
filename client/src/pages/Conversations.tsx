@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { useLocation } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
@@ -29,13 +30,21 @@ import {
 } from "@/features/conversations/utils/conversationHelpers";
 
 export default function ConversationsPage() {
+  const { t } = useTranslation("conversations");
   const { currentAccountId, accounts, isAgencyUser } = useWorkspace();
   const [, setLocation] = useLocation();
   const basePath = isAgencyUser ? "/agency" : "/subaccount";
 
-  // Conversation list filter state
-  const [filterAccountId, setFilterAccountId] = useState<number | "all">("all");
+  // Conversation list filter state — default to current workspace account
+  const [filterAccountId, setFilterAccountId] = useState<number | "all">(() =>
+    currentAccountId > 0 ? currentAccountId : "all"
+  );
   const [campaignId, setCampaignId] = useState<number | "all">("all");
+
+  // Keep in sync when workspace account changes
+  useEffect(() => {
+    setFilterAccountId(currentAccountId > 0 ? currentAccountId : "all");
+  }, [currentAccountId]);
 
   // Chat state — persisted across navigation
   const [selectedLeadId, setSelectedLeadIdRaw] = useState<number | null>(() => {
@@ -236,7 +245,7 @@ export default function ConversationsPage() {
                 `${selected.lead.first_name ?? ""} ${selected.lead.last_name ?? ""}`.trim()
               : isSupport
               ? supportBotConfig.name
-              : "Conversations"}
+              : t("page.title")}
           </h1>
         </div>
 
@@ -329,7 +338,7 @@ export default function ConversationsPage() {
                         onChange={setSearchQuery}
                         open={searchOpen}
                         onOpenChange={setSearchOpen}
-                        placeholder="Search chats..."
+                        placeholder={t("page.searchPlaceholder")}
                       />
 
                       {/* Group */}
@@ -343,10 +352,10 @@ export default function ConversationsPage() {
                                 ? "border-brand-indigo text-brand-indigo"
                                 : "border-black/[0.125] text-foreground/60 hover:text-foreground"
                             )}
-                            title="Group by"
+                            title={t("page.groupBy")}
                           >
                             <Layers className="h-4 w-4 shrink-0" />
-                            <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">Group</span>
+                            <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("page.group")}</span>
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
@@ -374,10 +383,10 @@ export default function ConversationsPage() {
                                 ? "border-brand-indigo text-brand-indigo"
                                 : "border-black/[0.125] text-foreground/60 hover:text-foreground"
                             )}
-                            title="Sort"
+                            title={t("page.sort")}
                           >
                             <ArrowUpDown className="h-4 w-4 shrink-0" />
-                            <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">Sort</span>
+                            <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("page.sort")}</span>
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
@@ -405,18 +414,18 @@ export default function ConversationsPage() {
                                 ? "border-brand-indigo text-brand-indigo"
                                 : "border-black/[0.125] text-foreground/60 hover:text-foreground"
                             )}
-                            title="Filter"
+                            title={t("page.filter")}
                             data-testid="button-toggle-filters"
                           >
                             <Filter className="h-4 w-4 shrink-0" />
-                            <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">Filter</span>
+                            <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("page.filter")}</span>
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
                           {/* Status */}
                           <DropdownMenuSub>
                             <DropdownMenuSubTrigger className="text-[12px]">
-                              Status
+                              {t("page.status")}
                               {filterStatus.length > 0 && (
                                 <span className="ml-auto text-[10px] text-brand-indigo font-medium">{filterStatus.length}</span>
                               )}
@@ -440,7 +449,7 @@ export default function ConversationsPage() {
                           {isAgencyUser && clientAccounts.length > 0 && (
                             <DropdownMenuSub>
                               <DropdownMenuSubTrigger className="text-[12px]">
-                                Account
+                                {t("page.account")}
                                 {filterAccountId !== "all" && (
                                   <span className="ml-auto text-[10px] text-brand-indigo font-medium truncate max-w-[70px]">
                                     {clientAccounts.find((a) => a.id === filterAccountId)?.name ?? ""}
@@ -452,7 +461,7 @@ export default function ConversationsPage() {
                                   onClick={() => handleAccountChange("all")}
                                   className={cn("text-[12px]", filterAccountId === "all" && "font-semibold text-brand-indigo")}
                                 >
-                                  All Accounts
+                                  {t("page.allAccounts")}
                                   {filterAccountId === "all" && <Check className="h-3 w-3 ml-auto" />}
                                 </DropdownMenuItem>
                                 {clientAccounts.map((account) => (
@@ -468,7 +477,7 @@ export default function ConversationsPage() {
                                         onClick={() => { handleAccountChange(account.id); setCampaignId("all"); }}
                                         className={cn("text-[12px]", filterAccountId === account.id && campaignId === "all" && "font-semibold text-brand-indigo")}
                                       >
-                                        All Campaigns
+                                        {t("page.allCampaigns")}
                                         {filterAccountId === account.id && campaignId === "all" && <Check className="h-3 w-3 ml-auto" />}
                                       </DropdownMenuItem>
                                       {allCampaigns

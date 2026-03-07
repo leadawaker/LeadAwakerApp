@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import {
   List, Table2, Plus, Trash2, Copy, Filter, Layers, Eye, Check, X, Pencil,
@@ -42,19 +43,19 @@ const TABLE_PREFS_KEY = "campaigns-table-prefs";
 
 /* ── Table column metadata for Fields dropdown ── */
 const TABLE_COL_META = [
-  { key: "name",         label: "Name",          defaultVisible: true  },
-  { key: "status",       label: "Status",        defaultVisible: true  },
-  { key: "account",      label: "Account",       defaultVisible: true  },
-  { key: "type",         label: "Type",          defaultVisible: true  },
-  { key: "leads",        label: "Leads",         defaultVisible: true  },
-  { key: "responseRate", label: "Response %",     defaultVisible: true  },
-  { key: "bookingRate",  label: "Booking %",      defaultVisible: true  },
-  { key: "description",  label: "Description",    defaultVisible: true  },
-  { key: "cost",         label: "Cost",           defaultVisible: false },
-  { key: "roi",          label: "ROI %",          defaultVisible: false },
-  { key: "startDate",    label: "Start Date",     defaultVisible: false },
-  { key: "endDate",      label: "End Date",       defaultVisible: false },
-  { key: "lastModified", label: "Last Modified",  defaultVisible: false },
+  { key: "name",         labelKey: "columns.name",          defaultVisible: true  },
+  { key: "status",       labelKey: "columns.status",        defaultVisible: true  },
+  { key: "account",      labelKey: "columns.account",       defaultVisible: true  },
+  { key: "type",         labelKey: "columns.type",          defaultVisible: true  },
+  { key: "leads",        labelKey: "columns.leads",         defaultVisible: true  },
+  { key: "responseRate", labelKey: "columns.responseRate",  defaultVisible: true  },
+  { key: "bookingRate",  labelKey: "columns.bookingRate",   defaultVisible: true  },
+  { key: "description",  labelKey: "columns.description",   defaultVisible: true  },
+  { key: "cost",         labelKey: "columns.cost",          defaultVisible: false },
+  { key: "roi",          labelKey: "columns.roi",           defaultVisible: false },
+  { key: "startDate",    labelKey: "columns.startDate",     defaultVisible: false },
+  { key: "endDate",      labelKey: "columns.endDate",       defaultVisible: false },
+  { key: "lastModified", labelKey: "columns.lastModified",  defaultVisible: false },
 ];
 
 const DEFAULT_VISIBLE = TABLE_COL_META.filter((c) => c.defaultVisible).map((c) => c.key);
@@ -62,27 +63,27 @@ const DEFAULT_VISIBLE = TABLE_COL_META.filter((c) => c.defaultVisible).map((c) =
 /* ── Table group / filter types ── */
 type TableGroupByOption = "status" | "account" | "type" | "none";
 
-const TABLE_GROUP_LABELS: Record<TableGroupByOption, string> = {
-  status:  "Status",
-  account: "Account",
-  type:    "Type",
-  none:    "None",
+const TABLE_GROUP_LABEL_KEYS: Record<TableGroupByOption, string> = {
+  status:  "groupBy.status",
+  account: "groupBy.account",
+  type:    "groupBy.type",
+  none:    "groupBy.none",
 };
 
-const TABLE_SORT_LABELS: Record<string, string> = {
-  name:         "Name",
-  status:       "Status",
-  account:      "Account",
-  type:         "Type",
-  leads:        "Leads",
-  responseRate: "Response %",
-  bookingRate:  "Booking %",
-  cost:         "Cost",
-  roi:          "ROI %",
-  startDate:    "Start Date",
-  endDate:      "End Date",
-  lastModified: "Last Modified",
-  description:  "Description",
+const TABLE_SORT_LABEL_KEYS: Record<string, string> = {
+  name:         "columns.name",
+  status:       "columns.status",
+  account:      "columns.account",
+  type:         "columns.type",
+  leads:        "columns.leads",
+  responseRate: "columns.responseRate",
+  bookingRate:  "columns.bookingRate",
+  cost:         "columns.cost",
+  roi:          "columns.roi",
+  startDate:    "columns.startDate",
+  endDate:      "columns.endDate",
+  lastModified: "columns.lastModified",
+  description:  "columns.description",
 };
 
 const STATUS_OPTIONS = ["Active", "Paused", "Draft", "Completed", "Inactive"];
@@ -99,10 +100,10 @@ const STATUS_DOT: Record<string, string> = {
 
 const CAMPAIGN_STATUS_ORDER = ["Active", "Paused", "Draft", "Completed", "Finished", "Inactive", "Archived"];
 
-/* ── Tab definitions ── */
-const VIEW_TABS: TabDef[] = [
-  { id: "list",  label: "List",  icon: List   },
-  { id: "table", label: "Table", icon: Table2 },
+/* ── Tab definitions (labels resolved at render time via t()) ── */
+const VIEW_TAB_DEFS = [
+  { id: "list",  labelKey: "views.list",  icon: List   },
+  { id: "table", labelKey: "views.table", icon: Table2 },
 ];
 
 /* ── Expand-on-hover toolbar button tokens ── */
@@ -123,6 +124,7 @@ function ConfirmToolbarButton({
   onConfirm: () => Promise<void> | void;
   variant?: "default" | "danger";
 }) {
+  const { t: tc } = useTranslation("campaigns");
   const [confirming, setConfirming] = useState(false);
   const [loading, setLoading] = useState(false);
   if (confirming) {
@@ -134,9 +136,9 @@ function ConfirmToolbarButton({
           onClick={async () => { setLoading(true); try { await onConfirm(); } finally { setLoading(false); setConfirming(false); } }}
           disabled={loading}
         >
-          {loading ? "…" : "Yes"}
+          {loading ? "…" : tc("confirm.yes")}
         </button>
-        <button className="px-2 py-0.5 rounded-full text-muted-foreground text-[11px] hover:text-foreground" onClick={() => setConfirming(false)}>No</button>
+        <button className="px-2 py-0.5 rounded-full text-muted-foreground text-[11px] hover:text-foreground" onClick={() => setConfirming(false)}>{tc("confirm.no")}</button>
       </div>
     );
   }
@@ -158,6 +160,12 @@ function ConfirmToolbarButton({
 }
 
 function CampaignsContent() {
+  const { t } = useTranslation("campaigns");
+
+  const VIEW_TABS: TabDef[] = useMemo(() =>
+    VIEW_TAB_DEFS.map((tab) => ({ ...tab, label: t(tab.labelKey) })),
+  [t]);
+
   // ── View mode (persisted) ──────────────────────────────────────────────────
   const [viewMode, setViewMode] = useState<CampaignViewMode>(() => {
     try {
@@ -203,8 +211,6 @@ function CampaignsContent() {
 
   const [editPanelOpen, setEditPanelOpen] = useState(false);
   const [editCampaign, setEditCampaign] = useState<Campaign | null>(null);
-
-  const [filterAccountId] = useState<number | "all">("all");
 
   // ── Table toolbar state (persisted) ────────────────────────────────────────
   const [tableSearch,        setTableSearch]        = useState("");
@@ -258,6 +264,8 @@ function CampaignsContent() {
 
   // ── Workspace & data ───────────────────────────────────────────────────────
   const { currentAccountId, isAgencyUser } = useWorkspace();
+  // Derive filter account from workspace selection; no local state needed
+  const filterAccountId: number | "all" = currentAccountId > 0 ? currentAccountId : "all";
 
   const effectiveAccountId = useMemo(() => {
     if (!isAgencyUser) return currentAccountId;
@@ -574,7 +582,8 @@ function CampaignsContent() {
     orderedKeys.forEach((key) => {
       const group = buckets.get(key);
       if (!group || group.length === 0) return;
-      result.push({ kind: "header", label: key, count: group.length });
+      const headerLabel = tableGroupBy === "status" ? t(`statusLabels.${key}`, key) : key;
+      result.push({ kind: "header", label: headerLabel, count: group.length });
       group.forEach((c) => result.push({ kind: "campaign", campaign: c }));
     });
     return result;
@@ -587,7 +596,7 @@ function CampaignsContent() {
 
       {/* +Add (agency only) */}
       {isAgencyUser && (
-        <ConfirmToolbarButton icon={Plus} label="Add" onConfirm={handleAddCampaign} />
+        <ConfirmToolbarButton icon={Plus} label={t("toolbar.add")} onConfirm={handleAddCampaign} />
       )}
 
       {/* Search — always visible */}
@@ -596,7 +605,7 @@ function CampaignsContent() {
         onChange={setTableSearch}
         open={true}
         onOpenChange={() => {}}
-        placeholder="Search campaigns…"
+        placeholder={t("toolbar.searchPlaceholder")}
       />
 
       {/* Sort */}
@@ -604,19 +613,19 @@ function CampaignsContent() {
         <DropdownMenuTrigger asChild>
           <button className={cn(xBase, "hover:max-w-[100px]", (tableSortCol !== "lastModified" || tableSortDir !== "desc") ? xActive : xDefault)}>
             <ArrowUpDown className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>Sort</span>
+            <span className={xSpan}>{t("toolbar.sort")}</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-48">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Sort by</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.sortBy")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {Object.entries(TABLE_SORT_LABELS).map(([col, label]) => (
+          {Object.entries(TABLE_SORT_LABEL_KEYS).map(([col, labelKey]) => (
             <DropdownMenuItem
               key={col}
               onClick={() => handleTableSortChange(col)}
               className={cn("text-[12px]", tableSortCol === col && "font-semibold text-brand-indigo")}
             >
-              {label}
+              {t(labelKey)}
               {tableSortCol === col && (
                 <span className="ml-auto text-[10px] text-brand-indigo">{tableSortDir === "asc" ? "↑" : "↓"}</span>
               )}
@@ -630,16 +639,16 @@ function CampaignsContent() {
         <DropdownMenuTrigger asChild>
           <button className={cn(xBase, "hover:max-w-[100px]", isTableFilterActive ? xActive : xDefault)}>
             <Filter className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>Filter</span>
+            <span className={xSpan}>{t("toolbar.filter")}</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Status</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("filter.status")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {STATUS_OPTIONS.map((s) => (
             <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleTableFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
               <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", STATUS_DOT[s] ?? "bg-zinc-400")} />
-              <span className="flex-1">{s}</span>
+              <span className="flex-1">{t(`statusLabels.${s}`, s)}</span>
               {tableFilterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
             </DropdownMenuItem>
           ))}
@@ -647,9 +656,9 @@ function CampaignsContent() {
           {availableAccounts.length > 0 && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Account</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("filter.account")}</DropdownMenuLabel>
               <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterAccount(""); }} className={cn("text-[12px]", !tableFilterAccount && "font-semibold text-brand-indigo")}>
-                All Accounts {!tableFilterAccount && <Check className="h-3 w-3 ml-auto" />}
+                {t("filter.allAccounts")} {!tableFilterAccount && <Check className="h-3 w-3 ml-auto" />}
               </DropdownMenuItem>
               {availableAccounts.map((a) => (
                 <DropdownMenuItem key={a} onClick={(e) => { e.preventDefault(); setTableFilterAccount(tableFilterAccount === a ? "" : a); }} className={cn("text-[12px]", tableFilterAccount === a && "font-semibold text-brand-indigo")}>
@@ -663,7 +672,7 @@ function CampaignsContent() {
           {isTableFilterActive && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={clearTableFilters} className="text-[12px] text-destructive">Clear all filters</DropdownMenuItem>
+              <DropdownMenuItem onClick={clearTableFilters} className="text-[12px] text-destructive">{t("filter.clearAllFilters")}</DropdownMenuItem>
             </>
           )}
         </DropdownMenuContent>
@@ -674,13 +683,13 @@ function CampaignsContent() {
         <DropdownMenuTrigger asChild>
           <button className={cn(xBase, "hover:max-w-[100px]", tableGroupBy !== "status" ? xActive : xDefault)}>
             <Layers className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>Group</span>
+            <span className={xSpan}>{t("toolbar.group")}</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-44">
-          {(Object.keys(TABLE_GROUP_LABELS) as TableGroupByOption[]).map((opt) => (
+          {(Object.keys(TABLE_GROUP_LABEL_KEYS) as TableGroupByOption[]).map((opt) => (
             <DropdownMenuItem key={opt} onClick={() => setTableGroupBy(opt)} className={cn("text-[12px]", tableGroupBy === opt && "font-semibold text-brand-indigo")}>
-              {TABLE_GROUP_LABELS[opt]}
+              {t(TABLE_GROUP_LABEL_KEYS[opt])}
               {tableGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
             </DropdownMenuItem>
           ))}
@@ -692,11 +701,11 @@ function CampaignsContent() {
         <DropdownMenuTrigger asChild>
           <button className={cn(xBase, "hover:max-w-[100px]", visibleCols.size !== DEFAULT_VISIBLE.length ? xActive : xDefault)}>
             <Eye className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>Fields</span>
+            <span className={xSpan}>{t("toolbar.fields")}</span>
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">Show / Hide Columns</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.showHideColumns")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {TABLE_COL_META.map((col) => {
             const isVisible = visibleCols.has(col.key);
@@ -720,7 +729,7 @@ function CampaignsContent() {
                 )}>
                   {isVisible && <Check className="h-2 w-2 text-white" />}
                 </div>
-                <span className="flex-1">{col.label}</span>
+                <span className="flex-1">{t(col.labelKey)}</span>
                 {!col.defaultVisible && (
                   <span className="text-[9px] text-muted-foreground/40 px-1 bg-muted rounded font-medium">+</span>
                 )}
@@ -729,7 +738,7 @@ function CampaignsContent() {
           })}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setVisibleCols(new Set(DEFAULT_VISIBLE))} className="text-[12px] text-muted-foreground">
-            Reset to default
+            {t("toolbar.resetToDefault")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -744,13 +753,13 @@ function CampaignsContent() {
               <DropdownMenuTrigger asChild>
                 <button className={cn(xBase, "hover:max-w-[140px]", xDefault)}>
                   <Pencil className="h-4 w-4 shrink-0" />
-                  <span className={xSpan}>Change Status</span>
+                  <span className={xSpan}>{t("toolbar.changeStatus")}</span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
                 {STATUS_OPTIONS.map((s) => (
                   <DropdownMenuItem key={s} onClick={() => handleBulkStatusChange(s)} className="text-[12px]">
-                    {s}
+                    {t(`statusLabels.${s}`, s)}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -758,8 +767,8 @@ function CampaignsContent() {
 
             {isAgencyUser && (
               <>
-                <ConfirmToolbarButton icon={Copy} label="Duplicate" onConfirm={handleDuplicateCampaigns} />
-                <ConfirmToolbarButton icon={Trash2} label="Delete" onConfirm={handleBulkDeleteCampaigns} variant="danger" />
+                <ConfirmToolbarButton icon={Copy} label={t("toolbar.duplicate")} onConfirm={handleDuplicateCampaigns} />
+                <ConfirmToolbarButton icon={Trash2} label={t("toolbar.delete")} onConfirm={handleBulkDeleteCampaigns} variant="danger" />
               </>
             )}
 
@@ -821,7 +830,7 @@ function CampaignsContent() {
                 {/* Title + ViewTabBar + inline toolbar (309px rigid wrapper) */}
                 <div ref={toolbarRef} className="pl-[17px] pr-3.5 pt-10 pb-3 shrink-0 flex items-center gap-3 overflow-x-auto [scrollbar-width:none]">
                   <div className="flex items-center justify-between w-[309px] shrink-0">
-                    <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">Campaigns</h2>
+                    <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("title")}</h2>
                     <ViewTabBar tabs={VIEW_TABS} activeId={viewMode} onTabChange={(id) => handleViewSwitch(id as CampaignViewMode)} variant="segment" />
                   </div>
                   {/* Inline table toolbar */}
@@ -830,7 +839,7 @@ function CampaignsContent() {
                   <div className="flex-1 min-w-0" />
                   <IconBtn
                     onClick={() => setRightPanelOpen((p) => !p)}
-                    title={rightPanelOpen ? "Hide detail panel" : "Show detail panel"}
+                    title={rightPanelOpen ? t("detail.panelHide") : t("detail.panelShow")}
                   >
                     {rightPanelOpen
                       ? <PanelRightClose className="h-4 w-4" />

@@ -45,7 +45,7 @@ import path from "path";
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "./dbKeys";
 import { saveInvoiceArtifacts } from "./invoiceArtifacts";
 import { db, pool } from "./db";
-import { eq, count, type SQL } from "drizzle-orm";
+import { eq, count, and, gte, type SQL } from "drizzle-orm";
 import { ZodError } from "zod";
 
 /** Module-level flag to emit the FRONTEND_URL warning only once per process. */
@@ -291,6 +291,31 @@ export async function registerRoutes(
     const ok = await storage.deleteCampaign(Number(req.params.id));
     if (!ok) return res.status(404).json({ message: "Campaign not found" });
     res.status(204).end();
+  }));
+
+  // GET /api/campaigns/:id/daily-stats — outbound messages sent today + daily limit
+  app.get("/api/campaigns/:id/daily-stats", requireAuth, wrapAsync(async (req, res) => {
+    const campaignId = Number(req.params.id);
+    const campaign = await storage.getCampaignById(campaignId);
+    if (!campaign) return res.status(404).json({ message: "Campaign not found" });
+    if (req.user!.accountsId !== 1 && campaign.accountsId !== req.user!.accountsId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const [{ value }] = await db
+      .select({ value: count() })
+      .from(interactions)
+      .where(and(
+        eq(interactions.campaignsId, campaignId),
+        eq(interactions.direction, "outbound"),
+        gte(interactions.createdAt, startOfDay),
+      ));
+    res.json({
+      sentToday: Number(value),
+      dailyLimit: campaign.dailyLeadLimit ?? 1000,
+      channel: campaign.channel ?? "sms",
+    });
   }));
 
   // ─── Prompt Library helpers ─────────────────────────────────────────
@@ -2438,7 +2463,7 @@ GUARDRAILS
       currentStage: 1,
       currentStep: 0,
       completedStages: [],
-      startedAt: new Date().toISOString(),
+      startedAt: null,
       completedAt: null,
     });
     if (!updated) return res.status(500).json({ message: "Failed to restart onboarding" });

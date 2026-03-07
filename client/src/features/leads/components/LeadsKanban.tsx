@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
   DndContext,
@@ -161,6 +162,11 @@ const DEFAULT_EMPTY_STATE: EmptyStateConfig = {
   icon: AlertCircle,
 };
 
+/** Map a pipeline stage value to its i18n key suffix (e.g. "Multiple Responses" → "MultipleResponses") */
+function stageKey(stage: string): string {
+  return stage.replace(/\s+/g, "");
+}
+
 /* ─────────── Infinite scroll batch size ─────────── */
 const COLUMN_BATCH_SIZE = 20;
 
@@ -172,6 +178,7 @@ const RING_RADIUS = (RING_SIZE - RING_STROKE * 2) / 2;
 const RING_CIRC   = 2 * Math.PI * RING_RADIUS;
 
 function ScoreRing({ score, status }: { score: number; status: string }) {
+  const { t } = useTranslation("leads");
   const color  = PIPELINE_HEX[status] || "#6B7280";
   const offset = RING_CIRC * (1 - Math.max(0, Math.min(1, score / 100)));
 
@@ -180,7 +187,7 @@ function ScoreRing({ score, status }: { score: number; status: string }) {
       className="relative shrink-0"
       style={{ width: RING_SIZE, height: RING_SIZE }}
       data-testid="kanban-card-score"
-      title={`Lead score: ${score}`}
+      title={t("kanban.leadScore", { score })}
     >
       <svg
         width={RING_SIZE}
@@ -245,7 +252,7 @@ function getLastMessage(lead: any): string {
   return lead.last_message || lead.last_message_received || lead.last_reply || lead.last_message_sent || "";
 }
 
-function formatRelativeDate(dateStr: string | null | undefined): string {
+function formatRelativeDate(dateStr: string | null | undefined, t: (key: string, opts?: Record<string, any>) => string): string {
   if (!dateStr) return "";
   try {
     const date = new Date(dateStr);
@@ -254,12 +261,12 @@ function formatRelativeDate(dateStr: string | null | undefined): string {
     const diffDays = Math.floor(diffMs / 86_400_000);
     if (diffDays === 0) {
       const h = Math.floor(diffMs / 3_600_000);
-      return h === 0 ? "Now" : `${h}h ago`;
+      return h === 0 ? t("relativeTime.justNow") : t("relativeTime.hoursAgo", { count: h });
     }
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7) return `${diffDays}d ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-    return `${Math.floor(diffDays / 30)}mo ago`;
+    if (diffDays === 1) return t("relativeTime.yesterday");
+    if (diffDays < 7) return t("relativeTime.daysAgo", { count: diffDays });
+    if (diffDays < 30) return t("relativeTime.weeksAgo", { count: Math.floor(diffDays / 7) });
+    return t("relativeTime.monthsAgo", { count: Math.floor(diffDays / 30) });
   } catch {
     return "";
   }
@@ -292,6 +299,7 @@ function KanbanCardContent({
   cardTags,
   showTagsAlways = false,
 }: KanbanCardContentProps) {
+  const { t } = useTranslation("leads");
   const name        = getFullName(lead);
   const initials    = getInitials(name);
   const status      = getStatus(lead);
@@ -339,7 +347,7 @@ function KanbanCardContent({
                 className="h-1.5 w-1.5 rounded-full shrink-0"
                 style={{ backgroundColor: statusHex }}
               />
-              <span className="text-[10px] text-muted-foreground/65 truncate">{status}</span>
+              <span className="text-[10px] text-muted-foreground/65 truncate">{t(`kanban.stageLabels.${status.replace(/ /g, "")}`, status)}</span>
             </div>
           </div>
 
@@ -351,7 +359,7 @@ function KanbanCardContent({
                 className={`text-[10px] tabular-nums leading-none ${getAgingTextClass(lastActivity)}`}
                 data-testid="kanban-card-last-activity"
               >
-                {formatRelativeDate(lastActivity)}
+                {formatRelativeDate(lastActivity, t)}
               </span>
             )}
           </div>
@@ -484,6 +492,7 @@ function KanbanColumn({
   selectedLeadId?: number | string;
   showTagsAlways?: boolean;
 }) {
+  const { t } = useTranslation("leads");
   const hex = PIPELINE_HEX[stage] || "#6B7280";
   const iconBg = STAGE_ICON_BG[stage] || hex;
   const iconText = STAGE_ICON_TEXT[stage] || DEFAULT_ICON_TEXT;
@@ -516,7 +525,7 @@ function KanbanColumn({
         )}
         data-testid={`kanban-column-${stage}`}
         data-collapsed="true"
-        title={`${STAGE_LABELS[stage] ?? stage} (${leads.length}) — click to expand`}
+        title={`${t(`kanban.stageLabels.${stageKey(stage)}`)} (${leads.length})`}
         onClick={() => onToggleCollapse?.(stage)}
       >
         {/* Top section: expand arrow + icon + title + count — all at the TOP */}
@@ -550,7 +559,7 @@ function KanbanColumn({
               whiteSpace: "nowrap",
             }}
           >
-            {STAGE_LABELS[stage] ?? stage}
+            {t(`kanban.stageLabels.${stageKey(stage)}`)}
           </span>
         </div>
       </div>
@@ -595,7 +604,7 @@ function KanbanColumn({
           className={cn("font-semibold text-sm truncate flex-1 flex items-center gap-1", isBookedStage && "font-bold text-base")}
           style={{ color: hex }}
         >
-          {STAGE_LABELS[stage] ?? stage}
+          {t(`kanban.stageLabels.${stageKey(stage)}`)}
           {isBookedStage && (
             <Star className="h-3.5 w-3.5 fill-[#FCB803] text-[#FCB803] shrink-0" />
           )}
@@ -625,16 +634,16 @@ function KanbanColumn({
                   : "text-muted-foreground/40"
               )}
               data-testid={`kanban-column-empty-${stage}`}
-              aria-label={`Empty stage: ${STAGE_LABELS[stage] ?? stage}`}
+              aria-label={`Empty stage: ${t(`kanban.stageLabels.${stageKey(stage)}`)}`}
             >
               {isOver ? (
                 <>
                   <div className="h-10 w-10 rounded-full bg-muted/60 flex items-center justify-center mb-2">
                     <ChevronRight className="h-4 w-4 text-muted-foreground rotate-[-90deg]" />
                   </div>
-                  <span className="text-sm font-medium text-muted-foreground">Drop here</span>
+                  <span className="text-sm font-medium text-muted-foreground">{t("kanban.dropHere")}</span>
                   <span className="text-xs text-muted-foreground/60 mt-1">
-                    Move lead to {STAGE_LABELS[stage] ?? stage}
+                    {t("kanban.moveLeadTo", { stage: t(`kanban.stageLabels.${stageKey(stage)}`) })}
                   </span>
                 </>
               ) : (
@@ -650,10 +659,10 @@ function KanbanColumn({
                         className="text-xs font-medium text-muted-foreground/60 text-center leading-snug"
                         data-testid={`kanban-empty-message-${stage}`}
                       >
-                        {config.message}
+                        {t(`kanban.emptyStates.${stageKey(stage)}.message`, config.message)}
                       </span>
                       <span className="text-[11px] text-muted-foreground/40 text-center leading-snug mt-1 max-w-[180px]">
-                        {config.hint}
+                        {t(`kanban.emptyStates.${stageKey(stage)}.hint`, config.hint)}
                       </span>
                     </>
                   );
@@ -697,7 +706,7 @@ function KanbanColumn({
                     data-testid={`kanban-column-load-more-${stage}`}
                     className="w-full h-8 rounded-lg text-xs font-medium text-muted-foreground border border-border/50 bg-transparent hover:bg-card hover:text-foreground transition-colors"
                   >
-                    Load {Math.min(remainingCount, COLUMN_BATCH_SIZE)} more
+                    {t("kanban.loadMore", { count: Math.min(remainingCount, COLUMN_BATCH_SIZE) })}
                   </button>
                 </div>
               )}
@@ -738,6 +747,7 @@ export function LeadsKanban({
   onCollapsedChange,
   showTagsAlways,
 }: LeadsKanbanProps) {
+  const { t } = useTranslation("leads");
   const [localLeads, setLocalLeads]   = useState<any[]>(leads);
   const [activeLead, setActiveLead]   = useState<any | null>(null);
   const [isDraggingAny, setIsDraggingAny] = useState(false);
@@ -876,8 +886,8 @@ export function LeadsKanban({
       let undoUsed = false;
 
       const { dismiss: dismissUndoToast } = toast({
-        title: "Lead moved",
-        description: `Moved to ${STAGE_LABELS[targetStage] ?? targetStage}`,
+        title: t("kanban.leadMoved"),
+        description: t("kanban.movedTo", { stage: t(`kanban.stageLabels.${stageKey(targetStage)}`) }),
         duration: 4000,
         action: (
           <ToastAction
@@ -889,7 +899,7 @@ export function LeadsKanban({
               onLeadMove?.(movedLeadId, originalStage);
             }}
           >
-            Undo
+            {t("kanban.undo")}
           </ToastAction>
         ),
       });
@@ -901,8 +911,8 @@ export function LeadsKanban({
             dismissUndoToast();
             setLocalLeads(snapshotRef.current);
             toast({
-              title: "Couldn't move lead",
-              description: "Status reverted — check your connection",
+              title: t("kanban.moveFailed"),
+              description: t("kanban.moveFailedDescription"),
               variant: "destructive",
               duration: 4000,
             });

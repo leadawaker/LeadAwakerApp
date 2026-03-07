@@ -1,0 +1,118 @@
+{
+  "title": "Calendario",
+  "months": {
+    "short": {
+      "jan": "Jan",
+      "feb": "Fev",
+      "mar": "Mar",
+      "apr": "Abr",
+      "may": "Mai",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Ago",
+      "sep": "Set",
+      "oct": "Out",
+      "nov": "Nov",
+      "dec": "Dez"
+    },
+    "full": {
+      "january": "Janeiro",
+      "february": "Fevereiro",
+      "march": "Marco",
+      "april": "Abril",
+      "may": "Maio",
+      "june": "Junho",
+      "july": "Julho",
+      "august": "Agosto",
+      "september": "Setembro",
+      "october": "Outubro",
+      "november": "Novembro",
+      "december": "Dezembro"
+    }
+  },
+  "days": {
+    "short": {
+      "sun": "DOM",
+      "mon": "SEG",
+      "tue": "TER",
+      "wed": "QUA",
+      "thu": "QUI",
+      "fri": "SEX",
+      "sat": "SAB"
+    }
+  },
+  "views": {
+    "month": "Mes",
+    "week": "Semana",
+    "day": "Dia"
+  },
+  "navigation": {
+    "previous": "Anterior",
+    "next": "Proximo",
+    "today": "Hoje",
+    "goToToday": "Ir para hoje"
+  },
+  "dateGroups": {
+    "past": "Passado",
+    "today": "Hoje",
+    "tomorrow": "Amanha",
+    "thisWeek": "Esta Semana",
+    "later": "Mais Tarde"
+  },
+  "sort": {
+    "label": "Ordenar",
+    "time": "Horario",
+    "nameAZ": "Nome A-Z",
+    "campaign": "Campanha",
+    "status": "Status"
+  },
+  "group": {
+    "label": "Agrupar",
+    "date": "Data",
+    "campaign": "Campanha",
+    "status": "Status",
+    "none": "Nenhum"
+  },
+  "filter": {
+    "label": "Filtrar",
+    "noShow": "Nao Compareceu",
+    "rescheduled": "Reagendado",
+    "confirmed": "Confirmado",
+    "account": "Conta",
+    "allAccounts": "Todas as Contas",
+    "campaign": "Campanha",
+    "allCampaigns": "Todas as Campanhas",
+    "noCampaigns": "Sem campanhas",
+    "noCampaign": "Sem Campanha"
+  },
+  "settings": {
+    "groupSortFilter": "Agrupar, Ordenar e Filtrar",
+    "resetAll": "Redefinir todas as configuracoes"
+  },
+  "search": {
+    "searchAppointments": "Buscar agendamentos",
+    "placeholder": "Buscar por nome ou campanha...",
+    "searchLeadPlaceholder": "Buscar lead por nome..."
+  },
+  "appointment": {
+    "editDuration": "Editar duracao",
+    "minutes": "{{count}} minutos",
+    "rescheduledCount": "Reagendado x{{count}}",
+    "noShow": "Nao Compareceu",
+    "more": "+{{count}} mais",
+    "unknownLead": "Lead Desconhecido"
+  },
+  "book": {
+    "newAppointment": "Novo agendamento",
+    "title": "Agendar um Lead",
+    "bookAppointment": "Agendar Consulta",
+    "booking": "Agendando..."
+  },
+  "toast": {
+    "rescheduledTo": "{{name}} reagendado para {{date}}",
+    "rescheduledToWithTime": "{{name}} reagendado para {{date}} as {{time}}",
+    "failedToReschedule": "Falha ao reagendar: {{error}}"
+  },
+  "clearDateFilter": "Limpar filtro de data",
+  "selectDate": "Selecionar {{date}}"
+}

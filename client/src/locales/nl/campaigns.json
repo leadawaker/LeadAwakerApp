@@ -1,0 +1,459 @@
+{
+  "title": "Campagnes",
+
+  "views": {
+    "list": "Lijst",
+    "table": "Tabel"
+  },
+
+  "toolbar": {
+    "add": "Toevoegen",
+    "sort": "Sorteren",
+    "sortBy": "Sorteren op",
+    "filter": "Filteren",
+    "group": "Groeperen",
+    "fields": "Velden",
+    "showHideColumns": "Kolommen tonen / verbergen",
+    "resetToDefault": "Standaard herstellen",
+    "searchPlaceholder": "Campagnes zoeken\u2026",
+    "changeStatus": "Status wijzigen",
+    "duplicate": "Dupliceren",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "pause": "Pauzeren",
+    "activate": "Activeren",
+    "refresh": "Vernieuwen",
+    "save": "Opslaan",
+    "saving": "Opslaan\u2026",
+    "cancel": "Annuleren"
+  },
+
+  "columns": {
+    "name": "Naam",
+    "status": "Status",
+    "account": "Account",
+    "type": "Type",
+    "leads": "Leads",
+    "responseRate": "Respons %",
+    "bookingRate": "Boeking %",
+    "description": "Beschrijving",
+    "cost": "Kosten",
+    "roi": "ROI %",
+    "startDate": "Startdatum",
+    "endDate": "Einddatum",
+    "start": "Start",
+    "end": "Einde",
+    "lastModified": "Laatst gewijzigd"
+  },
+
+  "groupBy": {
+    "status": "Status",
+    "account": "Account",
+    "type": "Type",
+    "none": "Geen"
+  },
+
+  "sortOptions": {
+    "recent": "Meest recent",
+    "nameAsc": "Naam A \u2192 Z",
+    "nameDesc": "Naam Z \u2192 A",
+    "leadsDesc": "Meeste leads",
+    "responseDesc": "Beste respons"
+  },
+
+  "filter": {
+    "status": "Status",
+    "account": "Account",
+    "allAccounts": "Alle accounts",
+    "clearAllFilters": "Alle filters wissen"
+  },
+
+  "statusLabels": {
+    "Active": "Actief",
+    "Paused": "Gepauzeerd",
+    "Completed": "Voltooid",
+    "Finished": "Voltooid",
+    "Inactive": "Inactief",
+    "Archived": "Gearchiveerd",
+    "Draft": "Concept",
+    "Unknown": "Onbekend"
+  },
+
+  "confirm": {
+    "yes": "Ja",
+    "no": "Nee",
+    "deleteConfirm": "Verwijderen?"
+  },
+
+  "empty": {
+    "noCampaignsFound": "Geen campagnes gevonden",
+    "tryDifferentSearch": "Probeer een andere zoekopdracht",
+    "noMatchSearch": "Geen campagnes komen overeen met uw zoekopdracht",
+    "selectCampaign": "Selecteer een campagne",
+    "selectCampaignDesc": "Klik op een campagne aan de linkerkant om de prestaties, configuratie en berichtsjablonen te bekijken.",
+    "chooseFromList": "\u2190 Kies uit de lijst"
+  },
+
+  "pagination": {
+    "previous": "Vorige",
+    "next": "Volgende",
+    "rangeOf": "{{start}}\u2013{{end}} van {{total}}"
+  },
+
+  "card": {
+    "leads": "Leads",
+    "response": "Respons",
+    "booked": "Geboekt",
+    "started": "Gestart {{date}}"
+  },
+
+  "detail": {
+    "panelHide": "Detailpaneel verbergen",
+    "panelShow": "Detailpaneel tonen",
+    "unnamed": "Naamloze campagne",
+    "campaignNumber": "#{{number}}"
+  },
+
+  "tabs": {
+    "summary": "Samenvatting",
+    "configurations": "Configuraties",
+    "tags": "Tags"
+  },
+
+  "summary": {
+    "keyMetrics": "Belangrijke statistieken",
+    "leadsTargeted": "Leads bereikt",
+    "messagesSent": "Berichten verzonden",
+    "responsePercent": "Respons %",
+    "bookingPercent": "Boeking %",
+    "performanceTrends": "Prestatietrends",
+    "upNext": "Komende",
+    "pipeline": "Pipeline",
+    "totalLeads": "Totaal leads",
+    "noPipelineData": "Nog geen pipelinegegevens",
+    "noConversionData": "Geen conversiegegevens",
+    "aiAnalysis": "AI-analyse",
+    "noAiAnalysis": "Nog geen AI-analyse",
+    "aiRunsNightly": "Draait elke nacht of klik op Genereren",
+    "lastRun": "Laatste uitvoering: {{date}}",
+    "noAnalysisYet": "Nog geen analyse",
+    "generate": "Genereren",
+    "regenerate": "Opnieuw genereren",
+    "generating": "Genereren\u2026",
+    "groqApiKeyMissing": "Groq API-sleutel niet geconfigureerd. Voeg GROQ_API_KEY toe aan .env.",
+    "generateFailed": "Samenvatting genereren mislukt. Probeer opnieuw.",
+    "networkError": "Netwerkfout. Probeer opnieuw.",
+    "activity": "Activiteit",
+    "financials": "Financi\u00ebn",
+    "roiTrend": "ROI-trend"
+  },
+
+  "financials": {
+    "dealType": "Dealtype",
+    "totalSpend": "Totale uitgaven",
+    "costPerBooking": "Kosten / Boeking",
+    "valuePerBooking": "Waarde / Boeking",
+    "paymentTrigger": "Betalingstrigger",
+    "projectedRevenue": "Verwachte omzet",
+    "returnOnInvestment": "Rendement op investering",
+    "linkContractPrompt": "Koppel een contract in Config \u2192",
+    "est": "gesch.",
+    "dealTypes": {
+      "retainer": "Retainer",
+      "per_booking": "Per boeking",
+      "fixed": "Vast bedrag",
+      "retainer_plus": "Retainer +",
+      "sale_closed": "Verkoop gesloten"
+    },
+    "paymentTriggers": {
+      "booked_call": "Geboekt gesprek",
+      "sale_closed": "Gesloten verkoop",
+      "meeting_held": "Vergadering gehouden"
+    }
+  },
+
+  "config": {
+    "configuration": "Configuratie",
+    "schedule": "Planning",
+    "behavior": "Gedrag",
+    "contract": "Contract",
+    "aiSettings": "AI-instellingen",
+    "messageTemplates": "Berichtsjablonen",
+    "type": "Type",
+    "description": "Beschrijving",
+    "startDate": "Startdatum",
+    "endDate": "Einddatum",
+    "activeHours": "Actieve uren",
+    "dailyLimit": "Dagelijks limiet",
+    "interval": "Interval",
+    "channel": "Kanaal",
+    "stopOnResponse": "Stoppen bij respons",
+    "useAiBumps": "AI-bumps gebruiken",
+    "maxBumps": "Max bumps",
+    "deal": "Deal",
+    "noneLinked": "\u2014 Geen gekoppeld",
+    "valuePerBooking": "Waarde / Boeking",
+    "model": "Model",
+    "temperature": "Temperatuur",
+    "agent": "Agent",
+    "service": "Service",
+    "promptTemplate": "Promptsjabloon",
+    "firstMessage": "Eerste bericht",
+    "noTemplateSet": "Geen sjabloon ingesteld",
+    "delayLabel": "Vertraging: {{value}}",
+    "delayHours": "Vertraging (u):",
+    "voiceNotes": "Spraakberichten",
+    "firstMessageVoiceNote": "Eerste bericht als spraakbericht",
+    "bump1VoiceNote": "Bump 1 als spraakbericht",
+    "bump2VoiceNote": "Bump 2 als spraakbericht",
+    "bump3VoiceNote": "Bump 3 als spraakbericht",
+    "aiReplyVoiceNote": "AI-antwoorden als spraakberichten",
+    "voiceId": "Stem-ID"
+  },
+
+  "meta": {
+    "owner": "Eigenaar",
+    "channel": "Kanaal",
+    "started": "Gestart",
+    "type": "Type",
+    "dailyLimit": "Dagelijks limiet",
+    "leadsUnit": "leads",
+    "activeHours": "Actieve uren",
+    "duration": "{{count}} dag",
+    "duration_plural": "{{count}} dagen"
+  },
+
+  "panel": {
+    "performance": "Prestaties",
+    "trends": "Trends",
+    "settings": "Instellingen",
+    "aiConfiguration": "AI-configuratie",
+    "messageTemplates": "Berichtsjablonen",
+    "costAndRoi": "Kosten & ROI",
+    "integrations": "Integraties",
+    "qualificationCriteria": "Kwalificatiecriteria",
+    "audienceTargeting": "Doelgroep & Targeting",
+    "noQualificationCriteria": "Geen kwalificatiecriteria gedefinieerd",
+    "noPerformanceData": "Nog geen prestatiegegevens",
+    "descriptionLabel": "Beschrijving",
+    "typeLabel": "Type",
+    "startDate": "Startdatum",
+    "endDate": "Einddatum",
+    "activeHours": "Actieve uren",
+    "dailyLeadLimit": "Dagelijks leadlimiet",
+    "messageInterval": "Berichtinterval",
+    "stopOnResponse": "Stoppen bij respons",
+    "useAiBumps": "AI-bumps gebruiken",
+    "maxBumps": "Max bumps",
+    "aiModel": "AI-model",
+    "aiTemperature": "AI-temperatuur",
+    "agentName": "Agentnaam",
+    "serviceName": "Servicenaam",
+    "aiPromptTemplate": "AI-promptsjabloon",
+    "firstMessage": "Eerste bericht",
+    "totalCost": "Totale kosten",
+    "costPerLead": "Kosten per lead",
+    "costPerBooking": "Kosten per boeking",
+    "roi": "ROI",
+    "n8nWorkflowId": "n8n workflow-ID",
+    "calendarLink": "Agendakoppeling",
+    "webhookUrl": "Webhook-URL",
+    "targetAudience": "Doelgroep",
+    "niche": "Niche",
+    "serviceLabel": "Service",
+    "usp": "USP",
+    "inquiryTimeframe": "Aanvraagtermijn",
+    "metrics": {
+      "leads": "Leads",
+      "messages": "Berichten",
+      "responses": "Reacties",
+      "bookings": "Boekingen",
+      "responseRate": "Respons %",
+      "bookingRate": "Boeking %",
+      "totalCost": "Totale kosten",
+      "costPerLead": "Kosten/Lead",
+      "costPerBooking": "Kosten/Boeking",
+      "roi": "ROI"
+    }
+  },
+
+  "tags": {
+    "loadingTags": "Tags laden...",
+    "failedToLoadTags": "Tags laden mislukt",
+    "noTagsYet": "Nog geen tags",
+    "createTagsDesc": "Maak tags om leads in deze campagne te organiseren.",
+    "createTag": "Tag aanmaken",
+    "newTag": "Nieuwe tag",
+    "tagNamePlaceholder": "Tagnaam",
+    "categoryPlaceholder": "Categorie (optioneel)",
+    "searchTags": "Tags zoeken...",
+    "sorting": "Sortering",
+    "filter": "Filteren",
+    "group": "Groeperen",
+    "tagCount": "{{count}} tag",
+    "tagCount_plural": "{{count}} tags",
+    "selected": "{{count}} geselecteerd",
+    "clearSelection": "Selectie wissen",
+    "autoApplied": "Automatisch toegepast",
+    "all": "Alles",
+    "yes": "Ja",
+    "no": "Nee",
+    "category": "Categorie",
+    "allCategories": "Alle categorie\u00ebn",
+    "clearAllFilters": "Alle filters wissen",
+
+    "pageTitle": "Tags",
+    "viewList": "Lijst",
+    "viewCards": "Kaarten",
+    "searchPlaceholder": "Tags zoeken...",
+    "add": "Toevoegen",
+    "account": "Account",
+    "campaign": "Campagne",
+    "sort": "Sorteren",
+    "sortBy": "Sorteren op",
+    "groupBy": "Groeperen op",
+    "fields": "Velden",
+    "columns": "Kolommen",
+    "duplicate": "Dupliceren",
+    "tagCountLabel": "{{count}} tag",
+    "tagCountLabel_other": "{{count}} tags",
+    "allAccounts": "Alle Accounts",
+    "allCampaigns": "Alle Campagnes",
+    "clear": "Wissen",
+    "selectedCount": "{{count}} geselecteerd",
+    "categoryFilter": "Categorie",
+    "autoAppliedFilter": "Automatisch Toegepast",
+    "createTitle": "Nieuwe Tag",
+    "createNamePlaceholder": "Tagnaam",
+    "createCategoryPlaceholder": "Categorie",
+    "creating": "Aanmaken...",
+    "create": "Aanmaken",
+    "deleteTag": "Tag Verwijderen",
+    "deleteTags": "Tags Verwijderen",
+    "deleteConfirmSingle": "Weet je zeker dat je de tag wilt verwijderen",
+    "deleteConfirmBulk": "Weet je zeker dat je {{count}} tags wilt verwijderen?",
+    "deleteCannotUndoSingle": "Deze actie kan niet ongedaan worden gemaakt. Leads die deze tag hebben zullen deze niet verliezen \u2014 alleen de tagdefinitie wordt verwijderd.",
+    "deleteCannotUndoBulk": "Deze actie kan niet ongedaan worden gemaakt. Leads die deze tags hebben zullen deze niet verliezen \u2014 alleen de tagdefinities worden verwijderd.",
+    "deleting": "Verwijderen...",
+    "deleteCountTags": "{{count}} Tags Verwijderen",
+    "none": "Geen",
+    "auto": "Auto",
+    "leadCount": "{{count}} lead",
+    "leadCount_other": "{{count}} leads",
+    "chooseColor": "Kies een kleur",
+    "noMatchSearch": "Geen tags komen overeen met uw zoekopdracht",
+    "noMatchSearchDescription": "Geen tags gevonden voor \"{{query}}\". Probeer een andere zoekterm.",
+    "noMatchFilters": "Geen tags komen overeen met de huidige filters",
+    "noMatchFiltersDescription": "Probeer uw filters aan te passen of te wissen om meer tags te zien.",
+    "noTags": "Geen tags beschikbaar",
+    "noTagsDescription": "Geen tags beschikbaar. Maak er een aan om te beginnen.",
+    "confirmYes": "Ja",
+    "confirmNo": "Nee"
+  },
+
+  "photo": {
+    "dialogTitle": "Campagnefoto",
+    "hue": "Tint",
+    "uploadLogo": "Logo-afbeelding uploaden",
+    "chooseSticker": "Sticker kiezen",
+    "noSticker": "Geen sticker",
+    "removeLogo": "Logo verwijderen",
+    "clickToChange": "Klik om foto te wijzigen"
+  },
+
+  "relativeTime": {
+    "justNow": "Zojuist",
+    "hoursAgo": "{{count}}u geleden",
+    "yesterday": "Gisteren",
+    "daysAgo": "{{count}}d geleden",
+    "weeksAgo": "{{count}}w geleden",
+    "monthsAgo": "{{count}}ma geleden"
+  },
+
+  "funnelStages": {
+    "new": "Nieuw",
+    "contacted": "Gecontacteerd",
+    "responded": "Gereageerd",
+    "multipleResponses": "Meerdere reacties",
+    "qualified": "Gekwalificeerd",
+    "callBooked": "Gesprek geboekt",
+    "closed": "Gesloten",
+    "lost": "Verloren",
+    "dnd": "Niet storen"
+  },
+
+  "copy": "Kopi\u00ebren",
+
+  "tagsPage": {
+    "title": "Tags",
+    "searchPlaceholder": "Tags zoeken\u2026",
+    "allCategories": "Alle Categorie\u00ebn",
+    "tagsInCategories": "{{tagCount}} tags in {{catCount}} categorie\u00ebn",
+    "createTag": "Tag Aanmaken",
+    "uncategorized": "Ongecategoriseerd",
+    "auto": "Auto",
+    "chooseColor": "Kies een kleur",
+    "createDialog": {
+      "title": "Nieuwe Tag Aanmaken",
+      "name": "Naam",
+      "namePlaceholder": "bijv. hot-lead",
+      "color": "Kleur",
+      "category": "Categorie",
+      "categoryPlaceholder": "bijv. Status, Gedrag, Bron",
+      "description": "Beschrijving",
+      "descriptionPlaceholder": "Korte beschrijving van deze tag\u2026",
+      "cancel": "Annuleren",
+      "creating": "Aanmaken\u2026",
+      "create": "Tag Aanmaken"
+    },
+    "editDialog": {
+      "title": "Tag Bewerken",
+      "name": "Naam",
+      "namePlaceholder": "bijv. hot-lead",
+      "color": "Kleur",
+      "category": "Categorie",
+      "categoryPlaceholder": "bijv. Status, Gedrag, Bron",
+      "description": "Beschrijving",
+      "descriptionPlaceholder": "Korte beschrijving van deze tag\u2026",
+      "cancel": "Annuleren",
+      "saving": "Opslaan\u2026",
+      "saveChanges": "Wijzigingen Opslaan"
+    },
+    "deleteDialog": {
+      "title": "Tag Verwijderen",
+      "confirmMessage": "Weet je zeker dat je de tag wilt verwijderen",
+      "warningMessage": "Deze actie kan niet ongedaan worden gemaakt. Leads die deze tag hebben zullen deze niet verliezen \u2014 alleen de tagdefinitie wordt verwijderd.",
+      "cancel": "Annuleren",
+      "deleting": "Verwijderen\u2026",
+      "delete": "Tag Verwijderen"
+    },
+    "sidePanel": {
+      "leadsWithTag": "Leads: {{name}}",
+      "tagInsights": "Tag Inzichten",
+      "tagInsightsDesc": "Klik op een tag om de bijbehorende leads en hun details te bekijken.",
+      "noLeadsFound": "Geen leads gevonden",
+      "noLeadsDesc": "Er zijn nog geen leads gekoppeld aan deze tag.",
+      "lastMessage": "Laatste bericht:",
+      "noMessages": "Nog geen berichten"
+    },
+    "empty": {
+      "noTagsFound": "Geen tags gevonden",
+      "noMatchSearchAndCategory": "Geen tags komen overeen met \"{{query}}\" in categorie \"{{category}}\"",
+      "noMatchSearch": "Geen tags komen overeen met \"{{query}}\"",
+      "noMatchCategory": "Geen tags in categorie \"{{category}}\"",
+      "noTagsAvailable": "Geen tags beschikbaar."
+    },
+    "toast": {
+      "tagCreated": "Tag aangemaakt",
+      "tagCreatedDesc": "\"{{name}}\" is succesvol toegevoegd.",
+      "tagUpdated": "Tag bijgewerkt",
+      "tagUpdatedDesc": "\"{{name}}\" is succesvol bijgewerkt.",
+      "tagDeleted": "Tag verwijderd",
+      "tagDeletedDesc": "\"{{name}}\" is succesvol verwijderd.",
+      "error": "Fout",
+      "createFailed": "Tag aanmaken mislukt: {{error}}",
+      "updateFailed": "Tag bijwerken mislukt: {{error}}",
+      "deleteFailed": "Tag verwijderen mislukt: {{error}}"
+    }
+  }
+}

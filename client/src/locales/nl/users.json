@@ -1,0 +1,137 @@
+{
+  "toolbar": {
+    "invite": "Uitnodigen",
+    "search": "Zoeken",
+    "searchPlaceholder": "Gebruikers zoeken\u2026",
+    "sort": "Sorteren",
+    "sortBy": "Sorteren op",
+    "filter": "Filteren",
+    "group": "Groeperen",
+    "fields": "Velden",
+    "showHideColumns": "Kolommen tonen / verbergen",
+    "resetToDefault": "Standaard herstellen",
+    "clearAllFilters": "Alle filters wissen",
+    "deactivate": "Deactiveren"
+  },
+  "sort": {
+    "nameAsc": "Naam A \u2192 Z",
+    "nameDesc": "Naam Z \u2192 A",
+    "recent": "Meest Recent"
+  },
+  "group": {
+    "role": "Rol",
+    "status": "Status",
+    "account": "Account",
+    "none": "Geen"
+  },
+  "columns": {
+    "name": "Naam",
+    "role": "Rol",
+    "account": "Account",
+    "email": "E-mail",
+    "phone": "Telefoon",
+    "status": "Status",
+    "lastLogin": "Laatste Login",
+    "memberSince": "Lid Sinds",
+    "timezone": "Tijdzone"
+  },
+  "filter": {
+    "role": "Rol",
+    "status": "Status"
+  },
+  "table": {
+    "noUsersMatch": "Geen gebruikers komen overeen met uw zoekopdracht",
+    "noUsersFound": "Geen gebruikers gevonden",
+    "noName": "Geen naam",
+    "campaigns": "Campagnes",
+    "noCampaigns": "Geen campagnes",
+    "more": "+{{count}} meer",
+    "memberSince": "Lid sinds",
+    "lastSeen": "Laatst gezien",
+    "noAccountAssigned": "Geen account toegewezen"
+  },
+  "invite": {
+    "title": "Nieuwe Gebruiker Uitnodigen",
+    "email": "E-mail",
+    "emailRequired": "E-mail *",
+    "emailPlaceholder": "gebruiker@voorbeeld.nl",
+    "role": "Rol",
+    "roleRequired": "Rol *",
+    "rolePlaceholder": "Selecteer rol\u2026",
+    "account": "Account",
+    "noAccount": "Geen account",
+    "sendInvite": "Uitnodiging Versturen",
+    "sending": "Versturen\u2026",
+    "emailRequired_error": "E-mail verplicht",
+    "inviteCreated": "Uitnodiging aangemaakt voor {{email}}",
+    "shareToken": "Deel dit uitnodigingstoken met de gebruiker:",
+    "inviteToken": "Uitnodigingstoken",
+    "done": "Klaar",
+    "inviteSent": "Uitnodiging verstuurd",
+    "inviteSentDescription": "Uitnodiging aangemaakt voor {{email}} als {{role}}",
+    "inviteFailed": "Uitnodiging mislukt"
+  },
+  "pendingInvites": {
+    "title": "Openstaande Uitnodigingen",
+    "expired": "Verlopen",
+    "resent": "Opnieuw verstuurd",
+    "resend": "Opnieuw versturen",
+    "sending": "Versturen\u2026",
+    "revoke": "Intrekken",
+    "revoking": "Intrekken\u2026",
+    "inviteResent": "Uitnodiging opnieuw verstuurd",
+    "resendFailed": "Opnieuw versturen mislukt",
+    "inviteRevoked": "Uitnodiging ingetrokken",
+    "revokeFailed": "Intrekken mislukt"
+  },
+  "viewDialog": {
+    "title": "Gebruikersprofiel",
+    "description": "Volledige profielgegevens van deze gebruiker.",
+    "email": "E-mail",
+    "phone": "Telefoon",
+    "lastLogin": "Laatste Login",
+    "neverLoggedIn": "Nooit ingelogd",
+    "timezone": "Tijdzone",
+    "memberSince": "Lid Sinds",
+    "account": "Account",
+    "humanTakeovers": "Menselijke Overnames",
+    "manualMessagesSent": "handmatige berichten verstuurd",
+    "campaigns": "Campagnes",
+    "noCampaignsForAccount": "Geen campagnes voor dit account",
+    "notSet": "Niet ingesteld",
+    "noNameSet": "Geen naam ingesteld",
+    "editProfile": "Profiel Bewerken"
+  },
+  "editDialog": {
+    "title": "Gebruiker Bewerken: {{name}}",
+    "fullName": "Volledige Naam",
+    "email": "E-mail",
+    "phone": "Telefoon",
+    "timezone": "Tijdzone",
+    "role": "Rol",
+    "status": "Status",
+    "password": "Wachtwoord",
+    "passwordPlaceholder": "Voer nieuw wachtwoord in",
+    "emailNotifications": "E-mailmeldingen",
+    "smsNotifications": "SMS-meldingen",
+    "saveChanges": "Wijzigingen Opslaan",
+    "userUpdated": "Gebruiker bijgewerkt",
+    "userUpdatedDescription": "{{name}} succesvol bijgewerkt",
+    "updateFailed": "Bijwerken mislukt"
+  },
+  "confirm": {
+    "yes": "Ja",
+    "no": "Nee"
+  },
+  "toast": {
+    "loadFailed": "Gebruikers laden mislukt",
+    "fieldUpdateFailed": "Veld bijwerken mislukt",
+    "bulkDeactivateFailed": "Bulkdeactivering mislukt"
+  },
+  "time": {
+    "today": "Vandaag",
+    "yesterday": "Gisteren",
+    "daysAgo": "{{count}}d geleden",
+    "weeksAgo": "{{count}}w geleden"
+  }
+}

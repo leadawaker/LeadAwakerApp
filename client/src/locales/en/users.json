@@ -1,0 +1,137 @@
+{
+  "toolbar": {
+    "invite": "Invite",
+    "search": "Search",
+    "searchPlaceholder": "Search users…",
+    "sort": "Sort",
+    "sortBy": "Sort by",
+    "filter": "Filter",
+    "group": "Group",
+    "fields": "Fields",
+    "showHideColumns": "Show / Hide Columns",
+    "resetToDefault": "Reset to default",
+    "clearAllFilters": "Clear all filters",
+    "deactivate": "Deactivate"
+  },
+  "sort": {
+    "nameAsc": "Name A → Z",
+    "nameDesc": "Name Z → A",
+    "recent": "Most Recent"
+  },
+  "group": {
+    "role": "Role",
+    "status": "Status",
+    "account": "Account",
+    "none": "None"
+  },
+  "columns": {
+    "name": "Name",
+    "role": "Role",
+    "account": "Account",
+    "email": "Email",
+    "phone": "Phone",
+    "status": "Status",
+    "lastLogin": "Last Login",
+    "memberSince": "Member Since",
+    "timezone": "Timezone"
+  },
+  "filter": {
+    "role": "Role",
+    "status": "Status"
+  },
+  "table": {
+    "noUsersMatch": "No users match your search",
+    "noUsersFound": "No users found",
+    "noName": "No name",
+    "campaigns": "Campaigns",
+    "noCampaigns": "No campaigns",
+    "more": "+{{count}} more",
+    "memberSince": "Member since",
+    "lastSeen": "Last seen",
+    "noAccountAssigned": "No account assigned"
+  },
+  "invite": {
+    "title": "Invite New User",
+    "email": "Email",
+    "emailRequired": "Email *",
+    "emailPlaceholder": "user@example.com",
+    "role": "Role",
+    "roleRequired": "Role *",
+    "rolePlaceholder": "Select role…",
+    "account": "Account",
+    "noAccount": "No account",
+    "sendInvite": "Send Invite",
+    "sending": "Sending…",
+    "emailRequired_error": "Email required",
+    "inviteCreated": "Invite created for {{email}}",
+    "shareToken": "Share this invite token with the user:",
+    "inviteToken": "Invite Token",
+    "done": "Done",
+    "inviteSent": "Invite sent",
+    "inviteSentDescription": "Invite created for {{email}} as {{role}}",
+    "inviteFailed": "Invite failed"
+  },
+  "pendingInvites": {
+    "title": "Pending Invites",
+    "expired": "Expired",
+    "resent": "Resent",
+    "resend": "Resend",
+    "sending": "Sending…",
+    "revoke": "Revoke",
+    "revoking": "Revoking…",
+    "inviteResent": "Invite resent",
+    "resendFailed": "Failed to resend invite",
+    "inviteRevoked": "Invite revoked",
+    "revokeFailed": "Failed to revoke invite"
+  },
+  "viewDialog": {
+    "title": "User Profile",
+    "description": "Full profile details for this user.",
+    "email": "Email",
+    "phone": "Phone",
+    "lastLogin": "Last Login",
+    "neverLoggedIn": "Never logged in",
+    "timezone": "Timezone",
+    "memberSince": "Member Since",
+    "account": "Account",
+    "humanTakeovers": "Human Takeovers",
+    "manualMessagesSent": "manual messages sent",
+    "campaigns": "Campaigns",
+    "noCampaignsForAccount": "No campaigns for this account",
+    "notSet": "Not set",
+    "noNameSet": "No name set",
+    "editProfile": "Edit Profile"
+  },
+  "editDialog": {
+    "title": "Edit User: {{name}}",
+    "fullName": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "timezone": "Timezone",
+    "role": "Role",
+    "status": "Status",
+    "password": "Password",
+    "passwordPlaceholder": "Enter new password",
+    "emailNotifications": "Email Notifications",
+    "smsNotifications": "SMS Notifications",
+    "saveChanges": "Save Changes",
+    "userUpdated": "User updated",
+    "userUpdatedDescription": "Successfully updated {{name}}",
+    "updateFailed": "Update failed"
+  },
+  "confirm": {
+    "yes": "Yes",
+    "no": "No"
+  },
+  "toast": {
+    "loadFailed": "Failed to load users",
+    "fieldUpdateFailed": "Failed to update field",
+    "bulkDeactivateFailed": "Bulk deactivate failed"
+  },
+  "time": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "{{count}}d ago",
+    "weeksAgo": "{{count}}w ago"
+  }
+}
