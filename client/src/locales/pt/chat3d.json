@@ -1,0 +1,32 @@
+{
+  "header": {
+    "name": "João Silva",
+    "status": "Online"
+  },
+  "messages": {
+    "sophie1": "Oi João, aqui é a Sofia da Peak Creative. Você fez um pedido de orçamento para atualização do seu website em julho. Pronto para avançar?",
+    "sophie2": "Ainda está nos seus planos? 😊",
+    "sophie3": "Sem problema, a correria é real! O que foi o principal bloqueio? Orçamento, prazo ou outras prioridades?",
+    "jack1": "Oi Sofia! Sim, desculpa, o verão foi uma loucura com lançamentos de clientes. O site com certeza ainda é algo que eu preciso.",
+    "jack2": "Para ser sincero, um pouco dos três. Preciso de algo com cara profissional, mas que não demore uma eternidade nem custe uma fortuna.",
+    "jack3": "Vi alguns trabalhos do seu portfólio e gostei bastante do estilo, só fico um pouco preocupado com a parte do investimento.",
+    "jack4": "Sim, beleza. Para mim essa ligação amanhã seria ótima. Que horários vocês têm?",
+    "jack5": "Estou bem, obrigado por entrar em contato :)",
+    "sophie4": "Super entendo, João. A gente é justamente especializado em sites de alto impacto que equilibram esse visual profissional com eficiência. É exatamente por isso que eu gostaria que você fizesse uma ligação rápida com um dos nossos estrategistas. Eles podem olhar para as suas necessidades específicas e te mostrar como conseguimos encaixar no orçamento sem abrir mão da qualidade.",
+    "sophie5": "Você pode escolher um horário na nossa página de agendamento: [link]. Vou repassar as anotações dessa nossa conversa para o time já deixar tudo preparado. Você vai estar em boas mãos, João!",
+    "sophie6": "Sua ligação está marcada para amanhã às 15h30. Se tiver qualquer dúvida ou precisar remarcar, é só me avisar 😊",
+    "sophie7": "Por nada, tenha um ótimo dia"
+  },
+  "tags": {
+    "leadEngaged": "Lead engajado",
+    "followedUp": "Follow-up enviado",
+    "leadReplied": "Lead respondeu",
+    "leadQualified": "Lead qualificado",
+    "callBooked": "Ligação agendada 🗓️",
+    "sentToClient": "Enviado para o cliente",
+    "chatClosed": "Chat encerrado"
+  },
+  "button": {
+    "continue": "Continuar"
+  }
+}

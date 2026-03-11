@@ -1,0 +1,32 @@
+{
+  "header": {
+    "name": "Jan de Vries",
+    "status": "Online"
+  },
+  "messages": {
+    "sophie1":  "Hi Jan, Sophie hier van Piek Creatief. In juli heb je info gevraagd over een website-upgrade. Ben je klaar om de volgende stap te zetten?",
+    "sophie2": "Nog interesse? 😊",
+    "sophie3": "Geen zorgen, we hebben het allemaal druk! Wat was de grootste drempel? Budget, planning of andere prioriteiten?",
+    "jack1": "Hoi Sophie! Sorry, de zomer was behoorlijk hectisch met klantlanceringen. Maar die website-upgrade staat nog steeds op mijn lijst.",
+    "jack2": "Eerlijk gezegd een beetje van alle drie. Ik heb iets nodig dat er professioneel uitziet, maar niet eeuwig duurt of een fortuin kost.",
+    "jack3": "Ik heb wat van je portfoliowerk gezien en vind de stijl echt mooi, alleen maak ik me een beetje zorgen over de investering.",
+    "jack4": "Ja dat werkt, voor mij zou dat gesprek morgen goed uitkomen. Welke tijden zijn beschikbaar?",
+    "jack5": "Het is gelukt, bedankt voor je hulp :)",
+    "sophie4": "Ik begrijp je helemaal Jan. We zijn eigenlijk gespecialiseerd in impactvolle builds die die 'professionele' uitstraling balanceren met efficiëntie. Daarom zou ik je graag snel in contact willen brengen met een van onze strategen. Zij kunnen naar je specifieke behoeften kijken en laten zien hoe we het budget kunnen laten werken zonder concessies te doen aan de kwaliteit.",
+    "sophie5": "Je kunt een tijd selecteren op onze agendapagina: [link]. Ik zal onze gespreksnotities doorgeven zodat ons team alles klaar heeft. We regelen het voor je Jan!",
+    "sophie6": "Je gesprek is ingepland voor morgen om 15:30, als je vragen hebt of moet verzetten, laat het me gewoon weten 😊",
+    "sophie7": "Graag gedaan, fijne dag nog"
+  },
+  "tags": {
+    "leadEngaged": "Lead Betrokken",
+    "followedUp": "Vervolgd",
+    "leadReplied": "Lead Reageerde",
+    "leadQualified": "Lead Gekwalificeerd",
+    "callBooked": "Gesprek Ingepland 🗓️",
+    "sentToClient": "Verzonden naar Klant",
+    "chatClosed": "Chat gesloten"
+  },
+  "button": {
+    "continue": "Doorgaan"
+  }
+}

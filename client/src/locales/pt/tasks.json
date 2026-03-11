@@ -1,0 +1,107 @@
+{
+  "page": {
+    "title": "Tarefas",
+    "searchPlaceholder": "Buscar tarefas...",
+    "noTasks": "Sem tarefas",
+    "noTasksFound": "Nenhuma tarefa encontrada",
+    "taskNotFound": "Tarefa nao encontrada"
+  },
+  "toolbar": {
+    "add": "Adicionar",
+    "sort": "Ordenar",
+    "filter": "Filtrar",
+    "clearFilters": "Limpar filtros"
+  },
+  "create": {
+    "title": "Nova Tarefa",
+    "create": "Criar",
+    "creating": "Criando...",
+    "taskTitle": "Titulo da tarefa"
+  },
+  "detail": {
+    "save": "Salvar",
+    "delete": "Excluir",
+    "deleteConfirm": "Excluir esta tarefa?",
+    "created": "Criado",
+    "updated": "Atualizado"
+  },
+  "fields": {
+    "description": "Descricao",
+    "descriptionPlaceholder": "Adicionar uma descricao...",
+    "addDescription": "Adicionar descricao...",
+    "account": "Conta",
+    "accountPlaceholder": "Nome da conta",
+    "campaign": "Campanha",
+    "lead": "Lead",
+    "optional": "Opcional",
+    "status": "Status",
+    "priority": "Prioridade",
+    "type": "Tipo",
+    "dueDate": "Data de Vencimento",
+    "due": "vencimento",
+    "assignee": "Responsavel",
+    "assigneePlaceholder": "Nome do responsavel",
+    "linkedTo": "Vinculado a",
+    "tags": "Tags"
+  },
+  "linked": {
+    "account": "Conta:",
+    "campaign": "Campanha:",
+    "lead": "Lead:"
+  },
+  "status": {
+    "todo": "A Fazer",
+    "inProgress": "Em Progresso",
+    "done": "Concluido",
+    "cancelled": "Cancelado"
+  },
+  "priority": {
+    "low": "Baixa",
+    "medium": "Media",
+    "high": "Alta",
+    "urgent": "Urgente"
+  },
+  "taskType": {
+    "followUp": "Acompanhamento",
+    "call": "Ligacao",
+    "review": "Revisao",
+    "admin": "Admin",
+    "custom": "Personalizado"
+  },
+  "sort": {
+    "dueDateAsc": "Data de vencimento (mais proxima)",
+    "dueDateDesc": "Data de vencimento (mais distante)",
+    "priorityDesc": "Prioridade (mais alta)",
+    "priorityAsc": "Prioridade (mais baixa)",
+    "createdDesc": "Mais recente primeiro",
+    "createdAsc": "Mais antigo primeiro",
+    "titleAsc": "Titulo A-Z",
+    "titleDesc": "Titulo Z-A"
+  },
+  "groupBy": {
+    "none": "Sem agrupamento",
+    "status": "Status",
+    "priority": "Prioridade",
+    "type": "Tipo",
+    "assignee": "Responsavel",
+    "account": "Conta",
+    "all": "Todos",
+    "unassigned": "Nao atribuido"
+  },
+  "columns": {
+    "title": "Titulo",
+    "type": "Tipo",
+    "status": "Status",
+    "assignee": "Responsavel",
+    "account": "Conta",
+    "due": "Vencimento",
+    "created": "Criado"
+  },
+  "card": {
+    "newTask": "Nova Tarefa",
+    "clickAgainToDelete": "Clique novamente para excluir",
+    "copy": "(copia)",
+    "duplicate": "Duplicar"
+  },
+  "clickToChangeStatus": "Clique para alterar status"
+}

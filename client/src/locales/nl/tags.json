@@ -1,0 +1,61 @@
+{
+  "emptyState": {
+    "searchTitle": "Geen tags komen overeen met uw zoekopdracht",
+    "searchDescription": "Geen tags gevonden voor \"{{query}}\". Probeer een andere zoekterm.",
+    "filterTitle": "Geen tags komen overeen met de huidige filters",
+    "filterDescription": "Pas de filters aan of verwijder ze om meer tags te zien.",
+    "defaultTitle": "Geen tags beschikbaar",
+    "defaultDescription": "Geen tags beschikbaar. Maak er een aan om te beginnen."
+  },
+  "card": {
+    "leadCount_one": "{{count}} lead",
+    "leadCount_other": "{{count}} leads",
+    "auto": "Auto"
+  },
+  "columns": {
+    "name": "Tagnaam",
+    "category": "Categorie",
+    "account": "Account",
+    "campaign": "Campagne",
+    "leadCount": "Leads",
+    "description": "Beschrijving",
+    "autoApplied": "Auto"
+  },
+  "table": {
+    "selected": "{{count}} geselecteerd",
+    "clear": "Wissen",
+    "none": "Geen",
+    "auto": "Auto"
+  },
+  "colorPicker": {
+    "chooseColor": "Kies een kleur",
+    "selectedColor": "Geselecteerde kleur: {{name}}"
+  },
+  "colors": {
+    "blue": "Blauw",
+    "green": "Groen",
+    "red": "Rood",
+    "yellow": "Geel",
+    "orange": "Oranje",
+    "purple": "Paars",
+    "gray": "Grijs",
+    "pink": "Roze",
+    "teal": "Blauwgroen",
+    "cyan": "Cyaan",
+    "indigo": "Indigo"
+  },
+  "deleteDialog": {
+    "titleSingle": "Tag verwijderen",
+    "titleBulk": "Tags verwijderen",
+    "messageSinglePrefix": "Weet u zeker dat u de tag wilt verwijderen",
+    "messageBulkPrefix": "Weet u zeker dat u wilt verwijderen",
+    "tagsCount_one": "{{count}} tag",
+    "tagsCount_other": "{{count}} tags",
+    "warningSingle": "Deze actie kan niet ongedaan worden gemaakt. Leads die momenteel deze tag hebben, verliezen hem niet \u2014 alleen de tagdefinitie wordt verwijderd.",
+    "warningBulk": "Deze actie kan niet ongedaan worden gemaakt. Leads die momenteel deze tags hebben, verliezen ze niet \u2014 alleen de tagdefinities worden verwijderd.",
+    "cancel": "Annuleren",
+    "deleting": "Verwijderen...",
+    "deleteSingle": "Tag verwijderen",
+    "deleteBulk": "{{count}} tags verwijderen"
+  }
+}

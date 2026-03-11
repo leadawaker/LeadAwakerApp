@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head><title>Dev Login</title></head>
+<body>
+<h1>Dev Login</h1>
+<p>Setting auth and redirecting...</p>
+<script>
+  localStorage.setItem("leadawaker_auth", "session");
+  localStorage.setItem("leadawaker_user_role", "Admin");
+  localStorage.setItem("leadawaker_current_account_id", "1");
+  localStorage.setItem("leadawaker_user_email", "gabriel@leadawaker.com");
+  localStorage.setItem("leadawaker_user_name", "Gabriel Fronza");
+  window.location.href = "/agency/dashboard";
+</script>
+</body>
+</html>

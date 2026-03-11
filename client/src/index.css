@@ -1,0 +1,1452 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: 'Inter', sans-serif;
+  --font-heading: 'Outfit', sans-serif;
+
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius);
+  --radius-xl: var(--radius);
+  
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  --color-info: hsl(var(--info));
+  --color-info-foreground: hsl(var(--info-foreground));
+  
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+
+  /* ── Brand Color Tokens — Lead Awaker Design System ── */
+  --color-brand-blue: hsl(var(--brand-blue));
+  --color-brand-blue-foreground: hsl(var(--brand-blue-foreground));
+  --color-brand-deep-blue: hsl(var(--brand-deep-blue));
+  --color-brand-deep-blue-foreground: hsl(var(--brand-deep-blue-foreground));
+  --color-brand-yellow: hsl(var(--brand-yellow));
+  --color-brand-yellow-foreground: hsl(var(--brand-yellow-foreground));
+  --color-brand-soft-yellow: hsl(var(--brand-soft-yellow));
+  --color-brand-soft-yellow-foreground: hsl(var(--brand-soft-yellow-foreground));
+  /* Brand Indigo: #4f46e5 — card view gradient, detail panel header */
+  --color-brand-indigo: hsl(var(--brand-indigo));
+  --color-brand-indigo-foreground: hsl(var(--brand-indigo-foreground));
+  /* Indian Yellow: #E3A857 — derived source for UI highlight tints */
+  --color-brand-indian-yellow: hsl(var(--brand-indian-yellow));
+  --color-brand-indian-yellow-foreground: hsl(var(--brand-indian-yellow-foreground));
+  /* Highlight tokens — active/selected state colors */
+  --color-highlight-active: hsl(var(--highlight-active));
+  --color-highlight-selected: hsl(var(--highlight-selected));
+  --color-highlight-hover: hsl(var(--highlight-hover));
+  /* Input field background — almost white in light, elevated in dark */
+  --color-input-bg: hsl(var(--input-bg));
+  /* Card hover — subtle tint when hovering non-selected cards */
+  --color-card-hover: hsl(var(--card-hover));
+
+  /* Sidebar-specific semantic tokens */
+  --color-sidebar-bg: hsl(var(--sidebar-bg));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-active: hsl(var(--sidebar-active));
+  --color-sidebar-active-foreground: hsl(var(--sidebar-active-foreground));
+}
+
+/* LIGHT MODE - Brand Colors derived from Lead Awaker */
+:root {
+  /* Safe-area insets for notched/bar devices (iOS, Android) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --topbar-h: calc(62px + var(--safe-top));
+  --bottombar-h: calc(64px + var(--safe-bottom));
+
+  /* Stone Gray Design System — floating cards aesthetic */
+  --background: 0 0% 87%; /* #DEDEDE — page bg, sidebar, topbar (seamless base) */
+  --foreground: 0 0% 12%; /* Near black — high contrast on stone gray */
+  --bg-main: 0 0% 87%; /* Match background */
+
+  --card: 0 0% 97%; /* #F8F8F8 — floating cards, selectable elements */
+  --card-foreground: 0 0% 12%;
+  --card-hover: 0 0% 100%; /* #FFFFFF — pure white hover on cards */
+
+  --popover: 0 0% 100%; /* White — popovers/dropdowns elevated above cards */
+  --popover-foreground: 0 0% 12%;
+
+  /* Primary Brand Color: Brand Indigo #4F46E5 */
+  --primary: 243 75% 59%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary: Medium gray */
+  --secondary: 0 0% 93%;
+  --secondary-foreground: 0 0% 15%;
+
+  /* Muted — secondary panels (#EDEDED) */
+  --muted: 0 0% 93%;
+  --muted-foreground: 0 0% 38%;
+
+  /* Accent: Warm yellow (#FFEA80) */
+  --accent: 50 100% 75%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+
+  /* Toast semantic colors */
+  --success: 228 100% 68%;
+  --success-foreground: 0 0% 100%;
+  --info: 243 75% 59%;
+  --info-foreground: 0 0% 100%;
+
+  --border: 0 0% 75%; /* Slightly darker than bg — kept for system use, not visually rendered */
+  --input: 0 0% 93%; /* Same as muted for inputs */
+  --ring: 243 75% 59%;
+
+  --radius: 1.5rem; /* 24px — rounder curvature for all bordered elements */
+
+  /* Chart colors (light mode) — brand-aligned */
+  --chart-1: 243 75% 59%;    /* Brand Indigo */
+  --chart-2: 160 60% 45%;    /* Teal */
+  --chart-3: 44 98% 50%;     /* Brand Yellow */
+  --chart-4: 280 65% 55%;    /* Purple */
+  --chart-5: 0 72% 55%;      /* Red */
+
+  /* ── Brand Tokens (Light Mode) ── */
+  /* Brand Indigo: #4F46E5 — primary actions, buttons, links (replaces old #5170FF periwinkle) */
+  --brand-blue: 243 75% 59%;
+  --brand-blue-foreground: 0 0% 100%;
+  /* Deep Blue: #131B49 — sidebar, headers, strong emphasis */
+  --brand-deep-blue: 231 59% 18%;
+  --brand-deep-blue-foreground: 0 0% 100%;
+  /* Brand Yellow: #FFDF3D — Call Booked highlights, success accents */
+  --brand-yellow: 50 100% 62%;
+  --brand-yellow-foreground: 231 59% 18%;
+  /* Soft Yellow: #FCCA47 — secondary highlights, hover states */
+  --brand-soft-yellow: 43 97% 63%;
+  --brand-soft-yellow-foreground: 231 59% 18%;
+  /* Brand Indigo: #4f46e5 (indigo-600) — now also the primary, merged with brand-blue */
+  --brand-indigo: 243 75% 59%;
+  --brand-indigo-foreground: 0 0% 100%;
+  /* Indian Yellow: #FFFFFF — source for UI highlight tints */
+  --brand-indian-yellow: 0 0% 100%;
+  --brand-indian-yellow-foreground: 231 59% 18%;
+  /* Highlight tokens — active/selected UI state colors */
+  --highlight-active: 53 100% 78%;   /* #FFF28D — active pill, nav, tab, bloom */
+  --highlight-selected: 51 100% 93%; /* #FFF9D9 — selected card, table row */
+  --highlight-hover: 236 100% 79%;   /* #949BFF — hover on already-highlighted element */
+  /* Input field background — almost white */
+  --input-bg: 0 0% 95%;             /* #F3F2F2 — form inputs, textareas, selects */
+
+  /* Sidebar tokens (light mode) — sidebar now blends with page background */
+  --sidebar-bg: 0 0% 87%; /* Same as --background (#DEDEDE) */
+  --sidebar-foreground: 0 0% 25%; /* Dark text readable on light sidebar */
+  --sidebar-active: 243 75% 59%;
+  --sidebar-active-foreground: 0 0% 100%;
+}
+
+/* DARK MODE — Deep navy-indigo surfaces with proper elevation hierarchy */
+.dark {
+  /* Base surfaces — #131E30 background, stepped elevation via lightness */
+  --background: 217 43% 13%;       /* #131E30 — main page bg */
+  --foreground: 0 0% 100%;         /* #FFFFFF — primary text */
+  --bg-main: 217 43% 13%;          /* Match background */
+
+  /* Cards — #243249 elevated surface */
+  --card: 217 34% 21%;             /* #243249 — floating cards */
+  --card-foreground: 0 0% 100%;
+  --card-hover: 225 26% 32%;       /* #3D4868 — hover tint on cards */
+
+  /* Popovers — #232B38 slightly above background */
+  --popover: 217 23% 18%;          /* #232B38 — dropdowns, popovers */
+  --popover-foreground: 0 0% 100%;
+
+  /* Primary: Brand Indigo — brighter for dark bg legibility */
+  --primary: 243 85% 68%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary: subtle navy surface */
+  --secondary: 215 44% 17%;
+  --secondary-foreground: 0 0% 95%;
+
+  /* Muted — #18283E navy dark surface */
+  --muted: 215 44% 17%;            /* #18283E */
+  --muted-foreground: 225 23% 59%; /* #7E8AAE */
+
+  /* Accent: warmer gold adjusted for dark */
+  --accent: 38 90% 58%;
+  --accent-foreground: 0 0% 100%;
+
+  /* Destructive: lighter red on dark for readability */
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 98%;
+
+  /* Toast semantic colors (dark mode) */
+  --success: 142 71% 45%;
+  --success-foreground: 0 0% 100%;
+  --info: 243 85% 68%;
+  --info-foreground: 0 0% 100%;
+
+  /* Borders: visible on dark surfaces */
+  --border: 237 21% 59%;           /* #8183AC */
+  --input: 237 21% 59%;
+  --ring: 243 85% 68%;
+
+  /* Chart colors adjusted for dark */
+  --chart-1: 230 80% 65%;
+  --chart-2: 160 60% 50%;
+  --chart-3: 38 90% 58%;
+  --chart-4: 280 65% 60%;
+  --chart-5: 0 72% 55%;
+
+  /* ── Brand Tokens (Dark Mode) ── */
+  --brand-blue: 243 85% 68%;
+  --brand-blue-foreground: 0 0% 100%;
+  --brand-deep-blue: 217 43% 13%;
+  --brand-deep-blue-foreground: 223 20% 93%;
+  --brand-yellow: 44 98% 55%;
+  --brand-yellow-foreground: 218 41% 12%;
+  --brand-soft-yellow: 43 97% 65%;
+  --brand-soft-yellow-foreground: 218 41% 12%;
+  /* Brand Indigo (dark mode — slightly brighter) */
+  --brand-indigo: 243 85% 68%;
+  --brand-indigo-foreground: 0 0% 100%;
+  /* Indian Yellow (dark mode) */
+  --brand-indian-yellow: 35 60% 52%;
+  --brand-indian-yellow-foreground: 0 0% 100%;
+  /* Highlight tokens — dark versions of the yellow active/selected
+     selected = active L × 1.25 (25% brighter than pill) */
+  --highlight-active: 40 50% 24%;   /* Deep warm amber — active pill/tab */
+  --highlight-selected: 40 55% 30%; /* 25% brighter amber — selected card/row */
+  --highlight-hover: 243 40% 36%;   /* Indigo-tinted — hover on highlighted */
+  /* Input field background — #232E4D */
+  --input-bg: 224 38% 22%;
+
+  /* Sidebar tokens (dark mode) — deeper than background */
+  --sidebar-bg: 217 45% 9%;
+  --sidebar-foreground: 0 0% 90%;
+  --sidebar-active: 243 85% 68%;
+  --sidebar-active-foreground: 0 0% 100%;
+}
+
+/* Agency mode: swap blue accent to yellow globally */
+.agency-mode {
+  --brand-blue: 44 98% 50%;
+  --brand-blue-foreground: 231 59% 18%;
+}
+
+/* ── Card entrance stagger — lightweight fade+slide for left-panel lists ────── */
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-card-enter {
+  animation: card-enter 0.22s ease-out both;
+}
+
+/* ── Fade-only entrance — safe for virtualized lists (no transform conflict) ── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 0.22s ease-out both;
+}
+
+/* ── Chat bubble entrance — fade+slide from side ────── */
+@keyframes bubble-enter-left {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes bubble-enter-right {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-bubble-left {
+  animation: bubble-enter-left 0.2s ease-out both;
+}
+.animate-bubble-right {
+  animation: bubble-enter-right 0.2s ease-out both;
+}
+
+/* ── Detail panel slide-up — smooth entrance when selecting a new card ── */
+@keyframes panel-slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-panel-slide-up {
+  animation: panel-slide-up 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Mobile chat panel slide-in from right ── */
+@keyframes slide-in-from-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+.animate-slide-in-from-right {
+  animation: slide-in-from-right 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Mobile chat panel slide-out to right (back navigation) ── */
+@keyframes slide-out-to-right {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}
+.animate-slide-out-to-right {
+  animation: slide-out-to-right 0.28s cubic-bezier(0.55, 0, 0.78, 0) both;
+}
+
+/* ── Calendar pill pop-in — scale+fade for booking pills in grid ────── */
+@keyframes pill-pop {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.animate-pill-pop {
+  animation: pill-pop 0.2s ease-out both;
+}
+
+@keyframes twinkle-fast {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 0.85; }
+}
+
+@keyframes twinkle-fast-offset-1 {
+  0%, 100% { opacity: 0.70; }
+  50% { opacity: 0.88; }
+}
+
+@keyframes twinkle-fast-offset-2 {
+  0%, 100% { opacity: 0.68; }
+  50% { opacity: 0.86; }
+}
+
+@keyframes parallax-shift-slow {
+  0%, 100% { background-position: 0 0; }
+  100% { background-position: 450px 0; }
+}
+
+/* ========================================
+   HOLOGRAM GLITCH EFFECT - ALL ANIMATIONS
+   ======================================== */
+
+@keyframes text-flicker {
+  0%, 38%, 100% {
+    color: #60a5fa;
+    text-shadow: 
+      0 -8px 20px rgba(96, 165, 250, 0.3),
+      0 -4px 10px rgba(96, 165, 250, 0.2),
+      0 0 20px rgba(96, 165, 250, 0.15);
+  }
+  2% {
+    color: rgba(96, 165, 250, 0.9);
+    text-shadow: 
+      0 -8px 20px rgba(96, 165, 250, 0.15),
+      0 -4px 10px rgba(96, 165, 250, 0.1),
+      0 0 20px rgba(96, 165, 250, 0.08);
+  }
+  4% {
+    color: #60a5fa;
+    text-shadow: 
+      0 -8px 20px rgba(96, 165, 250, 0.3),
+      0 -4px 10px rgba(96, 165, 250, 0.2),
+      0 0 20px rgba(96, 165, 250, 0.15);
+  }
+  14% {
+    color: #60a5fa;
+    text-shadow: 
+      0 -8px 20px rgba(96, 165, 250, 0.3),
+      0 -4px 10px rgba(96, 165, 250, 0.2),
+      0 0 20px rgba(96, 165, 250, 0.15);
+  }
+  16% {
+    color: #94a3b8;
+    text-shadow: none;
+  }
+  18% {
+    color: #64748b;
+    text-shadow: none;
+  }
+  20% {
+    color: #94a3b8;
+    text-shadow: none;
+  }
+  22% {
+    color: #64748b;
+    text-shadow: none;
+  }
+}
+
+/* Main .hologram-glitch class */
+.hologram-glitch {
+  position: relative;
+  display: inline-block;
+  color: transparent;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  opacity: 1;
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      rgba(96, 165, 250, 0.15) 0px,
+      rgba(96, 165, 250, 0.15) 1px,
+      transparent 1px,
+      transparent 2px
+    ),
+    linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(96, 165, 250, 0.1) 100%);
+  padding: 0.05em 0.1em;
+  border-bottom: 2px solid rgba(96, 165, 250, 0.6);
+  margin-bottom: -2px;
+  animation: hologram-static 0.15s linear 1.5s 10 forwards, pixelate-glitch-word 0.15s ease-in-out 1.5s;
+  animation-play-state: paused;
+  overflow: visible;
+  /* Fix for mobile: ensure transform-style is preserved and animations can run */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.hologram-glitch.animate {
+  animation-play-state: running !important;
+}
+
+.hologram-glitch::before {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: rgba(96, 165, 250, 0.8);
+  width: 100%;
+  height: 100%;
+  text-shadow: 
+    0 -8px 20px rgba(96, 165, 250, 0.4),
+    0 -4px 10px rgba(96, 165, 250, 0.3),
+    0 0 20px rgba(96, 165, 250, 0.2),
+    0 0 40px rgba(96, 165, 250, 0.15);
+  animation: text-flicker-intense 1.5s ease-in-out 1 forwards, top-half-shift-left 3s ease-in-out 1.5s forwards, show-top-half 0.15s ease-in-out 1.5s, slice-glitch-top 0.15s ease-in-out 1.5s;
+  animation-play-state: paused;
+  clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 10;
+  /* Mobile performance */
+  transform: translateZ(0);
+}
+
+.hologram-glitch.animate::before {
+  animation-play-state: running !important;
+}
+
+.hologram-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: rgba(96, 165, 250, 0.8);
+  width: 100%;
+  height: 100%;
+  text-shadow: 
+    0 -8px 20px rgba(96, 165, 250, 0.4),
+    0 -4px 10px rgba(96, 165, 250, 0.3),
+    0 0 20px rgba(96, 165, 250, 0.2),
+    0 0 40px rgba(96, 165, 250, 0.15);
+  animation: text-flicker-intense 1.5s ease-in-out 1 forwards, show-top-half 0.15s ease-in-out 1.5s, slice-glitch-bottom 0.15s ease-in-out 1.5s;
+  animation-play-state: paused;
+  clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 10;
+  /* Mobile performance */
+  transform: translateZ(0);
+}
+
+.hologram-glitch.animate::after {
+  animation-play-state: running !important;
+}
+
+@keyframes text-flicker-intense {
+  0%, 10%, 20%, 30%, 40%, 50%, 60%, 70%, 80%, 90%, 100% {
+    opacity: 1;
+    color: #60a5fa;
+    text-shadow: 0 0 20px rgba(96, 165, 250, 0.4);
+  }
+  5%, 15%, 25%, 35%, 45%, 55%, 65%, 75%, 85%, 95% {
+    opacity: 0.4;
+    color: #93c5fd;
+    text-shadow: none;
+  }
+}
+
+.flicker-letter {
+  animation: letter-flicker 6s ease-in-out infinite;
+}
+
+/* ========================================
+   ALL @KEYFRAMES ANIMATIONS
+   ======================================== */
+
+@keyframes show-top-half {
+  0%, 100% {
+    opacity: 0;
+  }
+  1%, 99% {
+    opacity: 1;
+  }
+}
+
+@keyframes hologram-static {
+  0% {
+    background: 
+      repeating-linear-gradient(
+        90deg,
+        rgba(96, 165, 250, 0.18) 0px,
+        rgba(96, 165, 250, 0.18) 1px,
+        transparent 1px,
+        transparent 2px
+      ),
+      linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(96, 165, 250, 0.1) 100%);
+  }
+  50% {
+    background: 
+      repeating-linear-gradient(
+        90deg,
+        rgba(96, 165, 250, 0.1) 0px,
+        rgba(96, 165, 250, 0.1) 1px,
+        transparent 1px,
+        transparent 2px
+      ),
+      linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(96, 165, 250, 0.1) 100%);
+  }
+  100% {
+    background: 
+      repeating-linear-gradient(
+        90deg,
+        rgba(96, 165, 250, 0.18) 0px,
+        rgba(96, 165, 250, 0.18) 1px,
+        transparent 1px,
+        transparent 2px
+      ),
+      linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(96, 165, 250, 0.1) 100%);
+  }
+}
+
+@keyframes split-shift-left {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-8px);
+  }
+}
+
+@keyframes split-shift-fast {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-18px);
+  }
+}
+
+@keyframes top-half-shift-left {
+  0%, 5% {
+    transform: translateX(0);
+  }
+  8% {
+    transform: translateX(-3px);
+    opacity: 0.85;
+  }
+  15%, 20% {
+    transform: translateX(-3px);
+    opacity: 1;
+  }
+  25%, 30% {
+    transform: translateX(-3px);
+    opacity: 0.8;
+  }
+  35%, 40% {
+    transform: translateX(-3px);
+    opacity: 1;
+  }
+  45%, 50% {
+    transform: translateX(-3px);
+    opacity: 0.9;
+  }
+  55%, 60% {
+    transform: translateX(-3px);
+    opacity: 0.85;
+  }
+  65%, 100% {
+    transform: translateX(-3px);
+    opacity: 1;
+  }
+}
+
+@keyframes slice-glitch-top {
+  0%, 100% {
+    clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
+  }
+  25% {
+    clip-path: polygon(0 0, 100% 0, 100% 33%, 0 33%);
+  }
+  50% {
+    clip-path: polygon(0 33%, 100% 33%, 100% 50%, 0 50%);
+  }
+  75% {
+    clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
+  }
+}
+
+@keyframes slice-glitch-bottom {
+  0%, 100% {
+    clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
+  }
+  25% {
+    clip-path: polygon(0 67%, 100% 67%, 100% 100%, 0 100%);
+  }
+  50% {
+    clip-path: polygon(0 50%, 100% 50%, 100% 67%, 0 67%);
+  }
+  75% {
+    clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
+  }
+}
+
+@keyframes pixelate-glitch {
+  0%, 100% {
+    filter: blur(0px);
+    text-rendering: optimizeLegibility;
+  }
+  25% {
+    filter: blur(0.8px);
+    text-rendering: pixelated;
+  }
+  50% {
+    filter: blur(1.2px);
+    text-rendering: pixelated;
+  }
+  75% {
+    filter: blur(0.6px);
+    text-rendering: pixelated;
+  }
+}
+
+@keyframes pixelate-glitch-word {
+  0%, 100% {
+    filter: blur(0px) contrast(1);
+    text-rendering: optimizeLegibility;
+  }
+  20% {
+    filter: blur(3px) contrast(0.8);
+    text-rendering: pixelated;
+  }
+  40% {
+    filter: blur(5px) contrast(0.6);
+    text-rendering: pixelated;
+  }
+  60% {
+    filter: blur(4px) contrast(0.7);
+    text-rendering: pixelated;
+  }
+  80% {
+    filter: blur(3px) contrast(0.8);
+    text-rendering: pixelated;
+  }
+}
+
+@keyframes horizontal-break {
+  0%, 20%, 35%, 100% {
+    transform: scaleX(1);
+  }
+  16% {
+    transform: scaleX(0.95) skewX(-2deg);
+  }
+  18% {
+    transform: scaleX(1.02) skewX(1deg);
+  }
+}
+
+@keyframes horizontal-split-distort {
+  0%, 100% {
+    transform: skewX(0deg);
+  }
+  20%, 80% {
+    transform: skewX(20deg);
+  }
+}
+
+@keyframes text-flicker {
+  0%, 60%, 100% {
+    color: #60a5fa;
+    text-shadow: 
+      0 -8px 20px rgba(96, 165, 250, 0.3),
+      0 -4px 10px rgba(96, 165, 250, 0.2),
+      0 0 20px rgba(96, 165, 250, 0.15);
+  }
+  4% {
+    color: rgba(96, 165, 250, 0.9);
+    text-shadow: 
+      0 -8px 20px rgba(96, 165, 250, 0.15),
+      0 -4px 10px rgba(96, 165, 250, 0.1),
+      0 0 20px rgba(96, 165, 250, 0.08);
+  }
+  6% {
+    color: #60a5fa;
+    text-shadow: 
+      0 -8px 20px rgba(96, 165, 250, 0.3),
+      0 -4px 10px rgba(96, 165, 250, 0.2),
+      0 0 20px rgba(96, 165, 250, 0.15);
+  }
+  22% {
+    color: #60a5fa;
+    text-shadow: 
+      0 -8px 20px rgba(96, 165, 250, 0.3),
+      0 -4px 10px rgba(96, 165, 250, 0.2),
+      0 0 20px rgba(96, 165, 250, 0.15);
+  }
+  26% {
+    color: rgba(96, 165, 250, 0.75);
+    text-shadow: 
+      0 -8px 20px rgba(96, 165, 250, 0.1),
+      0 -4px 10px rgba(96, 165, 250, 0.06),
+      0 0 20px rgba(96, 165, 250, 0.05);
+  }
+  28% {
+    color: #60a5fa;
+    text-shadow: 
+      0 -8px 20px rgba(96, 165, 250, 0.3),
+      0 -4px 10px rgba(96, 165, 250, 0.2),
+      0 0 20px rgba(96, 165, 250, 0.15);
+  }
+  31% {
+    color: rgba(96, 165, 250, 0.85);
+    text-shadow: 
+      0 -8px 20px rgba(96, 165, 250, 0.15),
+      0 -4px 10px rgba(96, 165, 250, 0.08),
+      0 0 20px rgba(96, 165, 250, 0.08);
+  }
+  33% {
+    color: #60a5fa;
+    text-shadow: 
+      0 -8px 20px rgba(96, 165, 250, 0.3),
+      0 -4px 10px rgba(96, 165, 250, 0.2),
+      0 0 20px rgba(96, 165, 250, 0.15);
+  }
+}
+
+@keyframes lamp-flicker {
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 12px rgba(226, 137, 22, 0.6)) 
+            drop-shadow(0 0 24px rgba(226, 137, 22, 0.4)) 
+            drop-shadow(0 0 36px rgba(226, 137, 22, 0.2));
+    transform: translate(0, 0);
+  }
+  10% {
+    opacity: 0.95;
+  }
+  20% {
+    opacity: 0.98;
+    transform: translate(0, -1px);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 12px rgba(226, 137, 22, 0.6)) 
+            drop-shadow(0 0 24px rgba(226, 137, 22, 0.4)) 
+            drop-shadow(0 0 36px rgba(226, 137, 22, 0.2));
+    transform: translate(0, 0);
+  }
+  55% {
+    opacity: 0.9;
+    transform: translate(0, 2px);
+  }
+  58% {
+    transform: translate(0, -2px);
+  }
+  60% {
+    opacity: 0.95;
+    transform: translate(0, 0);
+  }
+  100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 12px rgba(226, 137, 22, 0.6)) 
+            drop-shadow(0 0 24px rgba(226, 137, 22, 0.4)) 
+            drop-shadow(0 0 36px rgba(226, 137, 22, 0.2));
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes hologram-flicker {
+  0% {
+    opacity: 1;
+    filter: drop-shadow(0 0 12px rgba(226, 137, 22, 0.6)) 
+            drop-shadow(0 0 24px rgba(226, 137, 22, 0.4)) 
+            drop-shadow(0 0 36px rgba(226, 137, 22, 0.2));
+    transform: translate(0, 0);
+  }
+  10% {
+    opacity: 0.95;
+  }
+  20% {
+    opacity: 0.98;
+    transform: translate(0, -1px);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 12px rgba(226, 137, 22, 0.6)) 
+            drop-shadow(0 0 24px rgba(226, 137, 22, 0.4)) 
+            drop-shadow(0 0 36px rgba(226, 137, 22, 0.2));
+    transform: translate(0, 0);
+  }
+  55% {
+    opacity: 0.9;
+    transform: translate(0, 2px);
+  }
+  58% {
+    transform: translate(0, -2px);
+  }
+  60% {
+    opacity: 0.95;
+    transform: translate(0, 0);
+  }
+  100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 12px rgba(226, 137, 22, 0.6)) 
+            drop-shadow(0 0 24px rgba(226, 137, 22, 0.4)) 
+            drop-shadow(0 0 36px rgba(226, 137, 22, 0.2));
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes glitch-shift-1 {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  8% {
+    opacity: 0;
+  }
+  9% {
+    opacity: 0.6;
+    transform: translate(-0.03px, -0.02px);
+    filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.6));
+  }
+  10% {
+    opacity: 0.45;
+    transform: translate(0.03px, 0.02px);
+    filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.5));
+  }
+  11% {
+    opacity: 0.55;
+    transform: translate(-0.02px, 0px);
+    filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.55));
+  }
+  13% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  24% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.6;
+    transform: translate(-0.03px, -0.02px);
+    filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.6));
+  }
+  26% {
+    opacity: 0.45;
+    transform: translate(0.03px, 0.02px);
+    filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.5));
+  }
+  27% {
+    opacity: 0.55;
+    transform: translate(-0.02px, 0px);
+    filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.55));
+  }
+  29% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes glitch-shift-2 {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  24% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.5;
+    transform: translate(0.03px, 0.02px);
+    filter: drop-shadow(0 0 4px rgba(255, 0, 100, 0.6));
+  }
+  26% {
+    opacity: 0.6;
+    transform: translate(-0.03px, -0.02px);
+    filter: drop-shadow(0 0 4px rgba(255, 0, 100, 0.65));
+  }
+  27% {
+    opacity: 0.45;
+    transform: translate(0.02px, 0px);
+    filter: drop-shadow(0 0 4px rgba(255, 0, 100, 0.5));
+  }
+  29% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes letter-flicker {
+  0%, 85% {
+    opacity: 1;
+  }
+  87% {
+    opacity: 0.3;
+  }
+  88% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.2;
+  }
+  91%, 100% {
+    opacity: 0;
+  }
+}
+
+@keyframes shine-text {
+  0%, 48% {
+    color: var(--color-blue-100);
+    text-shadow: none;
+    filter: brightness(1);
+  }
+  49%, 51% {
+    color: #ffffff;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 1), 0 0 30px rgba(255, 255, 255, 0.6);
+    filter: brightness(2);
+  }
+  52%, 100% {
+    color: var(--color-blue-100);
+    text-shadow: none;
+    filter: brightness(1);
+  }
+}
+
+.animate-shine-text {
+  animation: shine-text 10s infinite linear;
+}
+
+@layer components {
+  .stars-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .stars {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 1px;
+    background: transparent;
+    box-shadow: 
+      45px 123px #ffffff, 234px 89px #ffffff, 312px 456px #ffffff, 178px 234px #ffffff,
+      456px 67px #ffffff, 89px 345px #ffffff, 567px 123px #ffffff, 120px 450px #ffffff,
+      400px 300px #ffffff, 150px 50px #ffffff, 380px 420px #ffffff, 290px 180px #ffffff,
+      410px 110px #ffffff, 50px 280px #ffffff, 210px 390px #ffffff, 330px 20px #ffffff;
+    animation: animStar 60s linear infinite;
+    opacity: 0.8;
+  }
+
+  .stars:after {
+    content: "";
+    position: absolute;
+    top: 1000px;
+    width: 1px;
+    height: 1px;
+    background: transparent;
+    box-shadow: inherit;
+  }
+
+  .stars2 {
+    width: 2px;
+    height: 2px;
+    box-shadow: 
+      123px 45px #ffffff, 89px 234px #ffffff, 456px 312px #ffffff, 234px 178px #ffffff,
+      67px 456px #ffffff, 345px 89px #ffffff, 123px 567px #ffffff, 450px 120px #ffffff;
+    animation: animStar 120s linear infinite;
+  }
+
+  .stars2:after {
+    top: 1000px;
+    box-shadow: inherit;
+  }
+
+  .stars3 {
+    width: 3px;
+    height: 3px;
+    box-shadow: 
+      234px 345px #ffffff, 123px 89px #ffffff, 45px 567px #ffffff, 312px 450px #ffffff;
+    animation: animStar 180s linear infinite;
+  }
+
+  .stars3:after {
+    top: 1000px;
+    box-shadow: inherit;
+  }
+
+  @keyframes animStar {
+    from { transform: translateY(0px); }
+    to { transform: translateY(-1000px); }
+  }
+}
+
+/* ============================
+   Glassmorphism Decorative Accents
+   Subtle glass effects for decorative surfaces ONLY
+   Never on functional data surfaces (tables, cards, chat bubbles)
+   ============================ */
+
+/* glass-overlay: frosted glass backdrop for overlay backgrounds (panels, modals) */
+@utility glass-overlay {
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+}
+
+/* glass-divider: subtle frosted glass for section dividers and sticky headers */
+@utility glass-divider {
+  backdrop-filter: blur(8px) saturate(1.1);
+  -webkit-backdrop-filter: blur(8px) saturate(1.1);
+}
+
+/* glass-accent: decorative glassmorphism for background accents and decorative panels */
+@utility glass-accent {
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+}
+
+/* glass-surface: very subtle glass for decorative section backgrounds and empty states */
+@utility glass-surface {
+  backdrop-filter: blur(6px) saturate(1.05);
+  -webkit-backdrop-filter: blur(6px) saturate(1.05);
+}
+
+/* glass-nav: frosted glass for navigation bars (mobile bottom bar, sticky sub-headers) */
+@utility glass-nav {
+  backdrop-filter: blur(14px) saturate(1.15);
+  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+}
+
+/* ============================
+   Transition System — Lead Awaker Design System
+   Consistent easing & duration across all UI elements.
+
+   Duration tiers:
+     --t-micro:    150ms  — color, opacity, hover states (buttons, badges, inputs, table rows)
+     --t-standard: 200ms  — UI element open/close (dialogs, dropdowns, popovers, tooltips, accordion)
+     --t-panel:    250ms  — larger slide transitions (sheets, sidebar, panels, drawers)
+     --t-page:     220ms  — full page transitions
+
+   Easing:
+     --ease-default: cubic-bezier(0.25, 0.1, 0.25, 1)  — smooth deceleration for all transitions
+     --ease-bounce:  cubic-bezier(0.34, 1.56, 0.64, 1) — slight overshoot for toggle/checkbox
+   ============================ */
+
+/* ============================
+   Micro-interactions & Utilities
+   Performance-first, GPU-accelerated
+   All transitions < 200ms
+   ============================ */
+
+/* hover-elevate: subtle brightness lift + shadow on hover (used by Button, Badge) */
+@utility hover-elevate {
+  transition: filter 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+  will-change: filter, box-shadow, transform;
+  &:hover:not(:disabled) {
+    filter: brightness(1.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+  }
+}
+
+/* active-elevate-2: subtle press-down scale + shadow removal on button press */
+@utility active-elevate-2 {
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+    filter: brightness(0.95);
+    box-shadow: none;
+    transition-duration: 80ms;
+  }
+}
+
+/* Micro-interaction: checkbox tick with subtle scale bounce */
+@utility micro-check {
+  transition: transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  &:checked, &[data-state="checked"] {
+    animation: micro-check-pop 150ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+}
+
+@keyframes micro-check-pop {
+  0% { transform: scale(0.8); }
+  60% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Micro-interaction: icon button hover glow */
+@utility micro-icon-hover {
+  transition: color 150ms ease, background-color 150ms ease, transform 150ms ease;
+  &:hover:not(:disabled) {
+    transform: scale(1.08);
+  }
+  &:active:not(:disabled) {
+    transform: scale(0.95);
+    transition-duration: 80ms;
+  }
+}
+
+/* ============================
+   Icon Circle — Unified Button Ring System
+   Lead Awaker Design System
+   ONE size: 40px. Icons: h-4 w-4 (16px). No variants.
+   ============================ */
+
+@utility icon-circle-lg {
+  height: 2.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  position: relative;
+}
+
+@utility icon-circle-base {
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgb(0 0 0 / 0.125);
+  color: hsl(var(--muted-foreground));
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease,
+              color 150ms ease, transform 150ms ease;
+  &:hover:not(:disabled) {
+    background-color: hsl(var(--card));
+    border-color: rgb(0 0 0 / 0.175);
+    color: hsl(var(--foreground));
+  }
+  &:active:not(:disabled) {
+    transform: scale(0.92);
+    background-color: hsl(var(--muted));
+    border-color: rgb(0 0 0 / 0.225);
+    transition-duration: 80ms;
+  }
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  &:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+}
+
+@utility icon-circle-selected {
+  background-color: transparent;
+  border-color: hsl(var(--brand-indigo));
+  color: hsl(var(--brand-indigo));
+  &:hover:not(:disabled) {
+    background-color: hsl(var(--brand-indigo) / 0.08);
+    border-color: hsl(var(--brand-indigo));
+  }
+}
+
+/* ============================
+   Toolbar Pill — Text button variant
+   Same 36px height as icon-circle-lg.
+   ============================ */
+
+@utility toolbar-pill-base {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgb(0 0 0 / 0.125);
+  background-color: transparent;
+  color: hsl(var(--foreground));
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+  &:hover:not(:disabled) {
+    background-color: hsl(var(--muted) / 0.5);
+    border-color: rgb(0 0 0 / 0.175);
+    color: hsl(var(--foreground));
+  }
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  &:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+}
+
+@utility toolbar-pill-active {
+  border-color: hsl(var(--brand-indigo) / 0.5);
+  background-color: hsl(var(--brand-indigo) / 0.1);
+  color: hsl(var(--brand-indigo));
+}
+
+/* ============================
+   Custom Scrollbar Styling
+   Matches app theme in light & dark mode.
+   Thin, rounded, semi-transparent scrollbars.
+   ============================ */
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+}
+.dark * {
+  scrollbar-color: hsl(var(--muted-foreground) / 0.25) transparent;
+}
+
+/* WebKit (Chrome, Safari, Edge) scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.25);
+  border-radius: 3px;
+  transition: background 150ms ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.45);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: hsl(var(--primary) / 0.5);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Dark mode scrollbar adjustments */
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.2);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.4);
+}
+
+.dark ::-webkit-scrollbar-thumb:active {
+  background: hsl(var(--primary) / 0.45);
+}
+
+/* scrollbar-hide utility: completely hides scrollbar while keeping scroll functional */
+@utility scrollbar-hide {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* scrollbar-visible: explicitly show styled scrollbar (overrides scrollbar-hide if needed) */
+@utility scrollbar-visible {
+  scrollbar-width: thin;
+  &::-webkit-scrollbar {
+    display: block;
+    width: 6px;
+    height: 6px;
+  }
+}
+
+/* Desktop override: bottom bar doesn't exist on md+ so clear the padding var */
+@media (min-width: 768px) {
+  :root {
+    --bottombar-h: 0px;
+  }
+}
+
+/* Mobile touch target — invisible 44px tap zone around 36px buttons */
+@utility touch-target {
+  @media (max-width: 767px) {
+    position: relative;
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      min-width: 44px;
+      min-height: 44px;
+    }
+  }
+}
+
+/* Mobile panel slide-in — list→detail navigation */
+@utility mobile-panel-enter {
+  @media (max-width: 767px) {
+    animation: mobile-panel-in 200ms cubic-bezier(0.25, 0.1, 0.25, 1) both;
+  }
+}
+
+@keyframes mobile-panel-in {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Scroll lock when mobile nav overlay is open */
+@utility mobile-scroll-lock {
+  @media (max-width: 767px) {
+    overflow: hidden;
+    touch-action: none;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    cursor: auto;
+  }
+  body {
+    @apply bg-background font-sans antialiased text-foreground;
+  }
+  button,
+  [role="button"],
+  .cursor-pointer,
+  a,
+  input[type="submit"],
+  input[type="button"],
+  button *,
+  .cursor-pointer * {
+    cursor: pointer !important;
+  }
+
+  /* Final override to ensure no arrow appears on buttons */
+  button:hover,
+  [role="button"]:hover,
+  .cursor-pointer:hover {
+    cursor: pointer !important;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-bold tracking-tight;
+  }
+
+  /* ── Global Focus-Visible Styles ──
+     Consistent visible focus indicators for keyboard navigation (accessibility).
+     Uses :focus-visible so mouse clicks don't show the ring, only keyboard Tab.
+     These act as a safety net for elements not covered by shadcn/Tailwind ring classes. */
+
+  /* All interactive elements get a consistent focus ring */
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible:not([tabindex="-1"]) {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: var(--radius-sm, 4px);
+  }
+
+  /* Skip-navigation link for keyboard users (hidden until focused) */
+  .sr-skip-link {
+    position: absolute;
+    top: -100%;
+    left: 1rem;
+    z-index: 9999;
+    padding: 0.75rem 1rem;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    border: 2px solid hsl(var(--ring));
+    border-radius: var(--radius);
+    font-weight: 600;
+    text-decoration: none;
+    transition: top 150ms ease;
+  }
+  .sr-skip-link:focus {
+    top: 1rem;
+  }
+
+  /* Sidebar focus ring: use brand-blue (sidebar is now light) */
+  [data-sidebar-focus] a:focus-visible,
+  [data-sidebar-focus] button:focus-visible,
+  [data-sidebar-focus] [role="button"]:focus-visible {
+    outline-color: hsl(var(--ring));
+  }
+}

@@ -1,0 +1,174 @@
+{
+  "page": {
+    "title": "Prompt Library",
+    "library": "Library"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Search prompts...",
+    "create": "Create",
+    "createPrompt": "Create prompt",
+    "sort": "Sort",
+    "sortBy": "Sort by",
+    "filter": "Filter",
+    "filterSettings": "Filter settings",
+    "group": "Group",
+    "groupNone": "None",
+    "fields": "Fields",
+    "showHideColumns": "Show / Hide Columns",
+    "resetToDefault": "Reset to default",
+    "clearAllFilters": "Clear all filters",
+    "promptCount": "{{count}} prompt",
+    "promptCount_other": "{{count}} prompts",
+    "allStatuses": "All Statuses",
+    "allModels": "All Models",
+    "allCampaigns": "All Campaigns"
+  },
+  "views": {
+    "list": "List",
+    "table": "Table"
+  },
+  "labels": {
+    "status": "Status",
+    "model": "Model",
+    "campaign": "Campaign",
+    "untitled": "Untitled",
+    "untitledPrompt": "Untitled Prompt",
+    "noModel": "No Model",
+    "noCampaign": "No Campaign"
+  },
+  "form": {
+    "createTitle": "Create Prompt",
+    "editTitle": "Edit Prompt",
+    "createDescription": "Fill in the fields below to create a new prompt.",
+    "editDescription": "Edit the prompt details below and save your changes.",
+    "name": "Name",
+    "nameRequired": "Name is required",
+    "namePlaceholder": "e.g. Lead Reactivation v1",
+    "namePlaceholderShort": "Prompt name",
+    "namePlaceholderAlt": "e.g. Re-engagement Opener",
+    "useCase": "Use Case",
+    "useCasePlaceholder": "e.g. WhatsApp lead reactivation",
+    "promptText": "Prompt Text",
+    "promptTextRequired": "Prompt text is required",
+    "promptTextPlaceholder": "Enter the main prompt text\u2026",
+    "promptContent": "Prompt Content",
+    "mainPromptPlaceholder": "Main prompt text\u2026",
+    "systemMessage": "System Message",
+    "systemMessagePlaceholder": "System instructions for the AI model (optional)\u2026",
+    "systemMessagePlaceholderShort": "System instructions (optional)\u2026",
+    "systemMessagePlaceholderAlt": "Optional system-level instructions for the AI\u2026",
+    "notes": "Notes",
+    "notesPlaceholder": "Additional notes or context about this prompt (optional)\u2026",
+    "notesPlaceholderShort": "Additional notes (optional)\u2026",
+    "notesPlaceholderAlt": "Internal notes about this prompt\u2026",
+    "temperature": "Temperature",
+    "temperatureRange": "(0\u20132)",
+    "temperatureError": "Must be 0\u20132",
+    "maxTokens": "Max Tokens",
+    "maxTokensError": "Must be a positive integer",
+    "selectModel": "Select model",
+    "selectStatus": "Select status",
+    "noneOption": "\u2014 None \u2014",
+    "identity": "Identity",
+    "configuration": "Configuration",
+    "required": "Required",
+    "campaign": "Campaign",
+    "noCampaign": "\u2014 No campaign linked"
+  },
+  "status": {
+    "active": "Active",
+    "archived": "Archived",
+    "unknown": "Unknown"
+  },
+  "group": {
+    "none": "None"
+  },
+  "actions": {
+    "save": "Save",
+    "saveChanges": "Save Changes",
+    "createPrompt": "Create Prompt",
+    "saving": "Saving\u2026",
+    "creating": "Creating\u2026",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "deleteDialog": {
+    "title": "Delete Prompt",
+    "message": "Are you sure you want to delete",
+    "cannotUndo": "This action cannot be undone.",
+    "deleting": "Deleting\u2026",
+    "deletePrompt": "Delete Prompt"
+  },
+  "toast": {
+    "deleted": "Prompt deleted",
+    "deletedDescription": "\"{{name}}\" was deleted successfully.",
+    "deleteFailed": "Failed to delete prompt",
+    "updated": "Prompt updated",
+    "updatedDescription": "\"{{name}}\" was updated successfully.",
+    "created": "Prompt created",
+    "createdDescription": "\"{{name}}\" was created successfully.",
+    "updateFailed": "Failed to update prompt",
+    "createFailed": "Failed to create prompt",
+    "saved": "Saved",
+    "savedDescription": "\"{{name}}\" updated.",
+    "saveFailed": "Failed to save",
+    "statusUpdated": "Status updated",
+    "statusUpdatedDescription": "\"{{name}}\" is now {{status}}.",
+    "statusFailed": "Failed to update status"
+  },
+  "detail": {
+    "promptDetail": "Prompt Detail",
+    "gradientTester": "Gradient Tester",
+    "model": "Model",
+    "temperature": "Temperature",
+    "maxTokens": "Max Tokens",
+    "useCase": "Use Case",
+    "created": "Created",
+    "updated": "Updated",
+    "promptText": "Prompt Text",
+    "systemMessage": "System Message",
+    "notes": "Notes",
+    "clickToArchive": "Click to archive",
+    "clickToActivate": "Click to activate",
+    "campaign": "Campaign",
+    "openCampaign": "Open campaign"
+  },
+  "empty": {
+    "selectPrompt": "Select a prompt",
+    "selectPromptDesc": "Click any prompt on the left to view its details",
+    "noPromptsMatch": "No prompts match your filters",
+    "noPromptsYet": "No prompts yet",
+    "createFirstPrompt": "Create your first prompt"
+  },
+  "columns": {
+    "name": "Name",
+    "campaign": "Campaign",
+    "model": "Model",
+    "status": "Status",
+    "score": "Score",
+    "useCase": "Use Case",
+    "version": "Version",
+    "lastUpdated": "Last Updated"
+  },
+  "table": {
+    "editPrompt": "Edit prompt",
+    "deletePrompt": "Delete prompt",
+    "clickToToggle": "Click to {{action}}"
+  },
+  "time": {
+    "justNow": "Just now",
+    "hoursAgo": "{{count}}h ago",
+    "yesterday": "Yesterday",
+    "daysAgo": "{{count}}d ago",
+    "weeksAgo": "{{count}}w ago",
+    "monthsAgo": "{{count}}mo ago"
+  },
+  "sort": {
+    "mostRecent": "Most Recent",
+    "nameAZ": "Name A \u2192 Z",
+    "nameZA": "Name Z \u2192 A",
+    "scoreDesc": "Score \u2193",
+    "scoreAsc": "Score \u2191"
+  }
+}

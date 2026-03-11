@@ -1,0 +1,35 @@
+{
+  "title": "Every lead gets a second chance.",
+  "titleStart": "Every lead gets a",
+  "titleHighlight": "second chance",
+  "heroBubbleMaria": "Hi Maria, it's been a while since your account has been touched, do you still have that issue? Let's Chat!",
+  "heroBubbleJohn": "Hi John, it's been a while since your account has been touched, do you still have that issue? Let's Chat!",
+  "subtitle": "Sign in to your Lead Awaker account to manage campaigns, view results, and automate your lead follow-up.",
+  "features": {
+    "secureAccess": {
+      "title": "Secure Access",
+      "description": "Your credentials are encrypted and secure."
+    },
+    "twoFactor": {
+      "title": "Two-Factor Authentication",
+      "description": "Additional security layer for your account protection."
+    }
+  },
+  "form": {
+    "heading": "Sign In",
+    "email": {
+      "label": "Email Address",
+      "placeholder": "you@example.com"
+    },
+    "password": {
+      "label": "Password",
+      "placeholder": "••••••••"
+    },
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "submitButton": "Sign In",
+    "connecting": "Connecting...",
+    "noAccount": "Don't have an account?",
+    "scheduleDemo": "Schedule a demo"
+  }
+}

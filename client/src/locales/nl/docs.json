@@ -1,0 +1,208 @@
+{
+  "title": "Documentatie",
+  "searchPlaceholder": "Zoeken...",
+  "whatsNew": "Wat is er nieuw",
+  "operatorManual": "Handleiding voor Operators",
+  "clientGuide": "Klantgids",
+  "agencyDocs": "Agency Docs",
+  "userDocs": "Gebruikersdocs",
+  "agency": "Agency",
+  "user": "Gebruiker",
+  "agencyDocumentation": "Agency Documentatie",
+  "userDocumentation": "Gebruikersdocumentatie",
+  "noResults": "Geen secties gevonden voor \"{{query}}\"",
+  "copy": "Kopiëren",
+  "roles": {
+    "role": "Rol",
+    "view": "Weergave",
+    "access": "Toegang"
+  },
+  "toc": {
+    "setup": "Account instellen",
+    "campaign": "Campagne aanmaken",
+    "lifecycle": "Levenscyclus van de lead",
+    "webhooks": "CRM Webhooks",
+    "instagram": "Instagram",
+    "analytics": "Analyses & Rapportage",
+    "troubleshoot": "Probleemoplossing",
+    "userManagement": "Gebruikersbeheer",
+    "promptLibrary": "Promptbibliotheek",
+    "billing": "Facturering",
+    "gettingStarted": "Aan de slag",
+    "whatIsIt": "Wat is LeadAwaker?",
+    "yourLeads": "Jouw Leads",
+    "conversations": "Gesprekken",
+    "leadScore": "Leadscore",
+    "bookings": "Boekingen",
+    "yourAccount": "Jouw Account",
+    "reportsInsights": "Rapporten & Inzichten",
+    "faq": "FAQ"
+  },
+  "operator": {
+    "setup": {
+      "title": "1 - Account instellen",
+      "step1": "Ga naar <settingsLink>Instellingen - Integraties</settingsLink>. Voer je <strong>Twilio Account SID</strong>, <strong>Auth Token</strong> en het <strong>Van-nummer</strong> (of Messaging Service SID) voor dit account in.",
+      "step2": "Stel je <strong>kantooruren</strong> in (begin- en eindtijd) en je <strong>tijdzone</strong>. Het systeem stuurt nooit berichten buiten deze uren.",
+      "step3": "Stel een <strong>Dagelijks verzendlimiet</strong> in (standaard 500). Dit is het maximale aantal berichten dat het account per dag kan versturen over alle campagnes heen.",
+      "step4": "Kopieer de <strong>API-sleutel</strong> (webhook_secret) vanuit <settingsLink>Instellingen</settingsLink>. Plak deze in je CRM-integraties om inkomende leads te autoriseren.",
+      "tip": "De API-sleutel wordt slechts één keer getoond bij aanmaken. Als je hem kwijtraakt, genereer hem dan opnieuw — de oude sleutel werkt dan direct niet meer."
+    },
+    "campaign": {
+      "title": "2 - Een campagne aanmaken",
+      "step1": "Ga naar <strong>Campagnes - Nieuwe Campagne</strong>. Geef hem een naam en selecteer het <strong>kanaal</strong> (SMS of WhatsApp).",
+      "step2": "Schrijf je <strong>Eerste bericht</strong>-sjabloon. Gebruik samenvoegvelden: {{first_name}}, {{agent_name}}, {{service}}.",
+      "step3": "Voeg tot 3 <strong>Herinnerings-bumps</strong> toe. Stel de vertraging in uren in voor elk (bijv. 24u, 48u, 72u). Bumps worden alleen verstuurd als de lead niet heeft gereageerd.",
+      "step4": "Stel <strong>Actieve uren</strong>, <strong>Dagelijks leadlimiet</strong> in en koppel optioneel een <strong>Promptbibliotheek-item</strong> om de AI-persona aan te passen.",
+      "step5": "Zet de campagnestatus op <strong>Actief</strong> wanneer je klaar bent om te beginnen met verzenden.",
+      "tip": "Houd het eerste bericht kort en persoonlijk. Vermijd links in het eerste bericht — veel SMS-filters blokkeren deze."
+    },
+    "lifecycle": {
+      "title": "3 - Levenscyclus & statussen van leads",
+      "description": "Leads doorlopen automatisch deze automatiseringsstatussen:",
+      "paused": "Aangemaakt maar nog niet toegewezen aan een campagne. Veilig — er worden geen berichten verstuurd.",
+      "queued": "Toegewezen aan een actieve campagne. Campaign_launcher pikt dit binnen 60 seconden op.",
+      "active": "Eerste bericht verstuurd. In aanmerking voor bumps en AI-gespreksreacties.",
+      "completed": "Alle bumps verstuurd, boeking bevestigd, of lead uitgeput. Geen verdere berichten.",
+      "dnd": "Lead heeft zich afgemeld (antwoordde met STOP of vergelijkbaar). Wordt nooit meer gecontacteerd.",
+      "tip": "Om een specifieke lead handmatig te pauzeren, stel hun automation_status in op \"gepauzeerd\" in het leaddetailpaneel. Om een hele campagne te pauzeren, zet de campagnestatus op \"Inactief\"."
+    },
+    "webhooks": {
+      "title": "4 - Bronadapters (CRM Webhooks)",
+      "description": "Elke CRM heeft een eigen intake-URL. Plak de URL in de webhook-instellingen van je CRM. Leads worden automatisch aangemaakt en in de wachtrij geplaatst.",
+      "tip": "Vervang YOUR_KEY door de API-sleutel uit <settingsLink>Instellingen</settingsLink>. Vervang ID door het campagne-ID van de campagnedetailpagina."
+    },
+    "instagram": {
+      "title": "5 - Instagram-integratie",
+      "description": "Verbind een Instagram Business-account om bestaande DM-contacten te synchroniseren en inkomende berichten te ontvangen.",
+      "step1": "Ga naar <settingsLink>Instellingen - Account</settingsLink>. Voer je <strong>Instagram-gebruikers-ID</strong> in (je numerieke IG Business Account-ID) en <strong>Toegangstoken</strong> (een langdurig Pagina-toegangstoken van Meta).",
+      "step2": "Klik op <strong>Instagram-contacten synchroniseren</strong> om alle bestaande DM-gesprekscontacten op te halen via Meta's API. Elk uniek contact wordt aangemaakt als een lead met status gepauzeerd.",
+      "step3": "Wijs gesynchroniseerde leads toe aan een campagne om geautomatiseerde outreach te starten, of gebruik ze voor handmatige opvolging in de Gesprekken-inbox.",
+      "tip": "Meta staat ~200 API-aanroepen per uur per token toe. Voor accounts met 200+ contacten kan de synchronisatie vroegtijdig stoppen vanwege snelheidsbegrenzing — voer hem na een uur gewoon opnieuw uit. Duplicaten worden automatisch overgeslagen."
+    },
+    "analytics": {
+      "title": "6 - Analyses & Rapportage",
+      "step1": "<strong>Leadscores</strong> (0-100) worden elke 30 minuten herberekend. Ze combineren trechtersfase (40%), betrokkenheid (30%) en recente activiteit (30%).",
+      "step2": "<strong>Campagnestatistieken</strong> (responspercentage, boekingspercentage, kosten per lead) worden dagelijks om middernacht vastgelegd. Bekijk ze onder Rapporten.",
+      "step3": "<strong>Automatiseringslogboeken</strong> tonen elke stap die het systeem heeft genomen voor elke lead — handig voor het debuggen van gemiste verzendingen of onverwacht gedrag.",
+      "tip": "Een leadscore boven 70 = hoge intentie. Prioriteer handmatige opvolging voor deze leads."
+    },
+    "users": {
+      "title": "7 · Gebruikersbeheer & Rollen"
+    },
+    "prompts": {
+      "title": "8 · Promptbibliotheek & AI-Persona's"
+    },
+    "billing": {
+      "title": "9 · Facturering"
+    },
+    "troubleshoot": {
+      "title": "10 · Probleemoplossing",
+      "notReceiving": "Lead ontvangt geen berichten",
+      "notReceivingSolution": "Controleer: campagnestatus = Actief, lead automation_status = in wachtrij, kantooruren blokkeren niet, dagelijks limiet niet bereikt. Bekijk de automatiseringslogboeken voor de lead.",
+      "wrongLanguage": "Verkeerde taal in reacties",
+      "wrongLanguageSolution": "Zorg ervoor dat het taalveld van de lead is ingesteld. De AI gebruikt dit om in de juiste taal te antwoorden.",
+      "stuckSending": "Lead vastgelopen in 'verzenden'-status",
+      "stuckSendingSolution": "Dit betekent dat Twilio het eerste bericht niet kon versturen. Zet handmatig terug naar 'in wachtrij' in de database en controleer de Twilio-inloggegevens.",
+      "duplicateLeads": "Dubbele leads",
+      "duplicateLeadsSolution": "Deduplicatie op basis van telefoonnummer geldt per account. Hetzelfde telefoonnummer kan niet twee keer in hetzelfde account voorkomen. Verschillende accounts kunnen hetzelfde telefoonnummer hebben.",
+      "aiStopped": "AI-reacties gestopt",
+      "aiStoppedSolution": "Controleer de automatiseringslogboeken op ai_conversation-fouten. Betekent meestal een probleem met de OpenAI API-sleutel of snelheidsbegrenzing."
+    }
+  },
+  "client": {
+    "what": {
+      "title": "Wat is LeadAwaker?",
+      "p1": "LeadAwaker is een door AI aangedreven systeem voor leadopvolging. Wanneer iemand interesse toont in jouw dienst (een formulier invult, op een advertentie klikt, enz.), neemt LeadAwaker automatisch contact op via SMS of WhatsApp, onderhoudt het gesprek en boekt gesprekken — volledig op de automatische piloot.",
+      "p2": "De AI-agent reageert in real time op leads, gaat in op bezwaren en weet wanneer hij moet stoppen zodat een mens het kan overnemen."
+    },
+    "leads": {
+      "title": "Jouw leads begrijpen",
+      "description": "Elke lead doorloopt een traject van eerste contact tot boeking. Dit betekenen de statusindicatoren:",
+      "new": "Lead net binnengekomen, nog niet gecontacteerd.",
+      "contacted": "Eerste bericht verstuurd. Wachten op een reactie.",
+      "responded": "Lead heeft ten minste één keer gereageerd. AI voert een gesprek.",
+      "qualified": "Lead heeft interesse getoond en wordt begeleid naar het boeken van een gesprek.",
+      "callBooked": "Afspraak bevestigd!",
+      "notInterested": "Lead heeft zich afgemeld of was niet geschikt.",
+      "statusNew": "Nieuw",
+      "statusContacted": "Gecontacteerd",
+      "statusResponded": "Gereageerd",
+      "statusQualified": "Gekwalificeerd",
+      "statusCallBooked": "Gesprek Geboekt",
+      "statusNotInterested": "Niet Geïnteresseerd"
+    },
+    "conversations": {
+      "title": "Gesprekken lezen",
+      "step1": "Open de <strong>Leads</strong>-pagina en klik op een lead om de volledige gespreksgeschiedenis te bekijken.",
+      "step2": "Berichten aan de <strong>rechterkant</strong> zijn uitgaand (verstuurd door de AI of jouw team). Berichten aan de <strong>linkerkant</strong> zijn inkomend (van de lead).",
+      "step3": "Let op het <strong>AI-label</strong> op berichten — deze zijn automatisch gegenereerd. Berichten zonder dit label zijn handmatig verstuurd.",
+      "step4": "Als je het gesprek handmatig wilt overnemen, zet dan <strong>Handmatige Overname</strong> aan in het leaddetail. De AI stopt met reageren en je kunt vrij berichten sturen."
+    },
+    "score": {
+      "title": "Leadscore",
+      "description": "Elke lead heeft een <strong>Leadscore</strong> van 0 tot 100 die schat hoe waarschijnlijk het is dat ze een boeking doen. Deze wordt berekend op basis van:",
+      "factor1": "Hun huidige trechtersfase (40%)",
+      "factor2": "Hoe vaak en hoe recent ze hebben gereageerd (30%)",
+      "factor3": "Hoe recent hun laatste activiteit was (30%)",
+      "tip": "Leads met een score boven 70 zijn jouw warmste prospects. Prioriteer deze voor handmatige outreach."
+    },
+    "bookings": {
+      "title": "Boekingen",
+      "p1": "Wanneer de AI een boekingsbevestiging detecteert in het gesprek, wordt de lead automatisch verplaatst naar de status <strong>Gesprek Geboekt</strong>. De boekingsdatum en -tijd worden opgeslagen in het leadrecord.",
+      "p2": "Je kunt alle aankomende boekingen bekijken op de <strong>Kalender</strong>-pagina.",
+      "tip": "Als een boeking onjuist lijkt of per abuis automatisch is gedetecteerd, werk dan handmatig de leadstatus bij via het detailpaneel."
+    },
+    "gettingStarted": {
+      "title": "Aan de slag"
+    },
+    "accountMgmt": {
+      "title": "Jouw account beheren"
+    },
+    "reports": {
+      "title": "Rapporten & Inzichten"
+    },
+    "faq": {
+      "title": "Veelgestelde vragen",
+      "q1": "Kunnen leads merken dat ze met een AI praten?",
+      "a1": "De AI is getraind om natuurlijk en menselijk te klinken. Hij kondigt zichzelf niet aan als bot, tenzij er direct naar gevraagd wordt of tenzij je campagnescript dit voorschrijft.",
+      "q2": "Wat gebeurt er als een lead STOP zegt?",
+      "a2": "Ze worden direct toegevoegd aan de Niet-contacteren-lijst en zullen nooit meer worden benaderd door een campagne in jouw account.",
+      "q3": "Hoe snel reageert de AI?",
+      "a3": "Binnen seconden tot een paar minuten, afhankelijk van het berichtvolume. Er wordt een kleine vertraging toegevoegd om natuurlijk menselijk typen na te bootsen.",
+      "q4": "Kan ik handmatig een bericht sturen naar een lead?",
+      "a4": "Ja — activeer Handmatige Overname voor de lead. De AI pauzeert en je kunt berichten rechtstreeks sturen via de Gesprekken-pagina.",
+      "q5": "Wat als een lead niet reageert?",
+      "a5": "Het systeem stuurt tot 3 opvolgberichten (bumps) op geplande intervallen. Nadat alle bumps zijn verstuurd, wordt de lead als Voltooid gemarkeerd en stopt de automatisering."
+    }
+  },
+  "changelog": {
+    "v14": {
+      "date": "Maart 2026",
+      "items": [
+        "Documentatiepagina met Handleiding voor Operators en Klantgids",
+        "Campagnetags-tabblad — groepeer en organiseer tags per categorie",
+        "Gebruikersbeheer-pagina — rollen, avatars en rechten",
+        "Ondersteuningschat-integratie in de navigatiebalk",
+        "Instagram-contactsynchronisatie — haal bestaande DM-contacten op via Meta's API"
+      ]
+    },
+    "v13": {
+      "date": "Februari 2026",
+      "items": [
+        "Volledig nieuw ontwerpsysteem — nieuw kleurenpalet en avatarsysteem",
+        "Leads-pagina herontworpen — gesplitst paneel met Lijst-, Tabel- en Kanban-weergaven",
+        "Kalenderpagina — maandelijkse, wekelijkse en dagelijkse boekingsweergaven",
+        "Gesprekken-inbox — realtime WhatsApp-chatinterface"
+      ]
+    },
+    "v12": {
+      "date": "Januari 2026",
+      "items": [
+        "Campagnes-pagina — campagnes aanmaken, beheren en bewaken",
+        "Promptbibliotheek — AI-persona en scriptbeheer",
+        "Automatiseringslogboeken — volledige audittrail voor elke leadactie",
+        "Facturering & Onkosten — BTW/BTW-factuurbeher met PDF-upload"
+      ]
+    }
+  }
+}

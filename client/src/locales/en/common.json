@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "home": "Home",
+    "services": "Use Cases",
+    "about": "About",
+    "login": "Login",
+    "openApp": "Open App",
+    "bookDemo": "Book a Demo"
+  },
+  "footer": {
+    "company": "Company",
+    "contact": "Contact",
+    "copyright": "© {{year}} Lead Awaker. All rights reserved.",
+    "rights": "All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
+  },
+  "cta": {
+    "bookDemo": "Book a Demo",
+    "learnMore": "Learn More",
+    "getStarted": "Get Started",
+    "contactUs": "Contact Us"
+  },
+    "seo": {
+      "defaultTitle": "Lead Awaker – Wake Up Your Sales Pipeline with AI",
+      "defaultDescription": "Lead Awaker helps B2B companies reactivate cold leads and close more deals using AI-powered outreach."
+  },
+  "animation": {
+    "yourBrand": "Your Brand"
+  }
+}

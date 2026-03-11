@@ -1,0 +1,207 @@
+{
+  "page": {
+    "title": "Gesprekken",
+    "searchPlaceholder": "Chats zoeken...",
+    "group": "Groeperen",
+    "groupBy": "Groeperen op",
+    "sort": "Sorteren",
+    "filter": "Filteren",
+    "status": "Status",
+    "account": "Account",
+    "allAccounts": "Alle Accounts",
+    "allCampaigns": "Alle Campagnes"
+  },
+  "inbox": {
+    "title": "Chats",
+    "tabs": {
+      "all": "Inbox",
+      "unread": "Ongelezen",
+      "support": "Ondersteuning"
+    },
+    "supportAssistant": "Ondersteuningsassistent",
+    "emptySearch": {
+      "title": "Geen gesprekken gevonden",
+      "description": "Geen gesprekken komen overeen met \"{{query}}\"."
+    },
+    "emptyUnread": {
+      "title": "Helemaal bij!",
+      "description": "Je hebt momenteel geen ongelezen gesprekken."
+    },
+    "emptyFiltered": {
+      "title": "Geen resultaten",
+      "description": "Geen gesprekken komen overeen met de geselecteerde filters.",
+      "clearFilters": "Filters wissen"
+    },
+    "unknownName": "Onbekend",
+    "attachments": {
+      "image": "Afbeelding",
+      "video": "Video",
+      "audio": "Audio",
+      "file": "Bestand"
+    },
+    "groupLabels": {
+      "date": "Datum",
+      "status": "Status",
+      "campaign": "Campagne",
+      "ai_human": "AI / Mens",
+      "none": "Geen"
+    },
+    "sortLabels": {
+      "newest": "Meest Recent",
+      "oldest": "Oudste Eerst",
+      "name_asc": "Naam A \u2192 Z",
+      "name_desc": "Naam Z \u2192 A"
+    },
+    "dateGroups": {
+      "today": "Vandaag",
+      "yesterday": "Gisteren",
+      "thisWeek": "Deze Week",
+      "thisMonth": "Deze Maand",
+      "last3Months": "Afgelopen 3 Maanden",
+      "older": "Ouder",
+      "noActivity": "Geen Activiteit"
+    },
+    "statusGroups": {
+      "unknown": "Onbekend",
+      "noCampaign": "Geen Campagne",
+      "human": "Mens",
+      "ai": "AI"
+    }
+  },
+  "chat": {
+    "emptyState": {
+      "title": "Je gesprekken, \u00e9\u00e9n klik verwijderd",
+      "description": "Selecteer een lead uit de inbox om de volledige berichtengeschiedenis met de AI te bekijken."
+    },
+    "noMessages": {
+      "title": "Nog geen berichten",
+      "description": "Begin het gesprek door hieronder een bericht te sturen."
+    },
+    "compose": {
+      "placeholderNoContact": "Selecteer eerst een contact",
+      "placeholderHuman": "Overnemen van AI \u2014 Enter om te verzenden",
+      "placeholderDefault": "Typ een bericht\u2026 (Enter om te verzenden)",
+      "sendMessage": "Bericht verzenden",
+      "recordVoice": "Spraakbericht opnemen",
+      "emoji": "Emoji",
+      "attachFile": "Bestand bijvoegen",
+      "attachmentsComingSoon": "Bijlagen binnenkort beschikbaar",
+      "attachmentsDescription": "Ondersteuning voor bestandsuploads wordt ingesteld."
+    },
+    "recording": {
+      "label": "Opnemen\u2026",
+      "stopAndSend": "Stoppen en spraakbericht verzenden"
+    },
+    "customization": {
+      "title": "Aanpassing",
+      "bubbleWidth": "Belletjesbreedte",
+      "hideAvatars": "Avatars Verbergen"
+    },
+    "background": {
+      "title": "Achtergrond",
+      "crm": "CRM",
+      "social1": "Social 1",
+      "social2": "Social 2",
+      "doodleOverlay": "Doodle Overlay",
+      "pattern": "Patroon",
+      "color": "Kleur",
+      "colorBlack": "Zwart",
+      "colorWhite": "Wit",
+      "opacity": "Dekking",
+      "size": "Grootte",
+      "blendMode": "Mengmodus",
+      "chatBackgroundDoodle": "Chat achtergrond doodle",
+      "gradientTester": "Gradient Tester"
+    },
+    "aiResume": {
+      "label": "AI laten doorgaan",
+      "description": "AI zal dit gesprek hervatten. Je kunt op elk moment weer overnemen.",
+      "confirm": "Bevestigen",
+      "cancel": "Annuleren"
+    },
+    "takeover": {
+      "title": "Dit gesprek overnemen?",
+      "description": "Het verzenden van dit bericht schakelt het gesprek over naar menselijke modus. De AI stopt met reageren en jij hebt de controle. Je wordt deze sessie niet opnieuw gevraagd.",
+      "cancel": "Annuleren",
+      "confirmSend": "Overnemen & Verzenden"
+    },
+    "showContactPanel": "Contactpaneel tonen",
+    "scrollToLatest": "Naar nieuwste bericht scrollen",
+    "microphoneAccessDenied": "Microfoontoegang geweigerd",
+    "microphoneAccessDescription": "Sta microfoontoegang toe om spraakberichten op te nemen.",
+    "retry": "Opnieuw proberen",
+    "messageStatus": {
+      "sending": "Verzenden\u2026",
+      "failed": "Bericht kon niet worden verzonden",
+      "read": "Gelezen",
+      "delivered": "Bezorgd",
+      "sent": "Verzonden"
+    },
+    "senderLabels": {
+      "lead": "Lead",
+      "ai": "AI",
+      "you": "Jij"
+    },
+    "thread": {
+      "bump": "Bump {{number}}",
+      "thread": "Thread {{id}}",
+      "conversation": "Gesprek",
+      "conversationNumber": "Gesprek {{number}}"
+    },
+    "dateLabels": {
+      "today": "Vandaag",
+      "yesterday": "Gisteren"
+    },
+    "attachment": "Bijlage",
+    "clickToOpenFullSize": "Klik om op volledige grootte te openen",
+    "seek": "Zoeken",
+    "playbackSpeed": "Afspeelsnelheid",
+    "play": "Afspelen",
+    "pause": "Pauzeren"
+  },
+  "contact": {
+    "fold": "Inklappen",
+    "details": "Details",
+    "selectConversation": "Selecteer een gesprek om de leadcontext te bekijken.",
+    "sections": {
+      "contact": "Contact",
+      "score": "Score",
+      "conversionStatus": "Conversiestatus",
+      "tags": "Tags",
+      "activity": "Activiteit",
+      "notes": "Notities",
+      "recentMessages": "Recente Berichten"
+    },
+    "fields": {
+      "phone": "Telefoon",
+      "email": "E-mail",
+      "bookedCall": "Gepland Gesprek"
+    },
+    "grade": "CIJFER {{grade}}",
+    "tags": {
+      "addTag": "Tag toevoegen",
+      "availableTags": "Beschikbare Tags",
+      "noMoreTags": "Geen tags meer beschikbaar",
+      "noTagsAssigned": "Geen tags toegewezen.",
+      "failedToAdd": "Tag toevoegen mislukt",
+      "failedToRemove": "Tag verwijderen mislukt",
+      "removeTag": "{{name}} verwijderen"
+    },
+    "activity": {
+      "messagesSent": "Berichten verzonden",
+      "messagesReceived": "Berichten ontvangen",
+      "totalInteractions": "Totaal interacties",
+      "lastActive": "Laatst actief",
+      "automationStatus": "Automatiseringsstatus"
+    },
+    "notes": {
+      "placeholder": "Voeg notities toe over deze lead...",
+      "noNotesYet": "Nog geen notities",
+      "noNotesReadonly": "Nog geen notities"
+    },
+    "messages": {
+      "noMessages": "Nog geen berichten",
+      "viewFullConversation": "Volledig gesprek bekijken"
+    }
+  }
+}

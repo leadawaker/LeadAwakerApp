@@ -1,0 +1,787 @@
+import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  Download, Link, Send, CheckCircle, Pencil, Trash2,
+  Eye, Check, FileText, CopyPlus,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+// ── Expand-on-hover toolbar button constants ──────────────────────────────────
+const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
+const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
+const xActive  = "border-brand-indigo text-brand-indigo";
+const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
+import type { InvoiceRow } from "../types";
+import type { AccountRow } from "@/features/accounts/components/AccountDetailsDialog";
+import {
+  parseLineItems,
+  formatCurrency,
+  isOverdue,
+  INVOICE_STATUS_COLORS,
+} from "../types";
+
+// ── Props ─────────────────────────────────────────────────────────────────────
+
+interface InvoiceDetailViewProps {
+  invoice: InvoiceRow;
+  allInvoices?: InvoiceRow[];
+  account?: AccountRow | null;
+  isAgencyUser: boolean;
+  toolbarSlot?: React.ReactNode;
+  noBackground?: boolean;
+  onMarkSent: (id: number) => Promise<any>;
+  onMarkPaid: (id: number) => Promise<any>;
+  onEdit: (invoice: InvoiceRow) => void;
+  onDuplicate?: (invoice: InvoiceRow) => void;
+  onDelete: (id: number) => Promise<void>;
+  onRefresh: () => void;
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+/** Convert snake_case or kebab-case title to "Title Case" for display. */
+function toDisplayTitle(title: string | null, untitledFallback: string): string {
+  if (!title) return untitledFallback;
+  return title
+    .replace(/[_-]/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+
+export function InvoiceDetailViewEmpty({ toolbarSlot }: { toolbarSlot?: React.ReactNode }) {
+  const { t } = useTranslation("billing");
+  return (
+    <div className="flex-1 flex flex-col h-full overflow-hidden">
+      {toolbarSlot && (
+        <div className="px-4 pt-3 pb-1.5 flex items-center gap-1.5">
+          {toolbarSlot}
+        </div>
+      )}
+      <div className="flex-1 flex flex-col items-center justify-center gap-5 p-8 text-center">
+        <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-stone-50 to-gray-100 flex items-center justify-center ring-1 ring-stone-200/50">
+          <FileText className="h-10 w-10 text-stone-400" />
+        </div>
+        <div className="space-y-1.5">
+          <p className="text-sm font-semibold text-foreground/70">{t("invoices.empty.selectAnInvoice")}</p>
+          <p className="text-xs text-muted-foreground max-w-[180px] leading-relaxed">
+            {t("invoices.empty.selectAnInvoiceDesc")}
+          </p>
+        </div>
+        <div className="text-[11px] text-stone-400 font-medium">&larr; {t("invoices.empty.chooseFromList")}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Parse payment info text into structured key/value lines. Lines that look like
+ *  "Label: value" are split into { key, value }; plain lines get key = null. */
+function parsePaymentLines(text: string): Array<{ key: string | null; value: string }> {
+  return text.split("\n").filter((l) => l.trim()).map((line) => {
+    const idx = line.indexOf(": ");
+    if (idx > 0) {
+      return { key: line.slice(0, idx).trim(), value: line.slice(idx + 2).trim() };
+    }
+    return { key: null, value: line.trim() };
+  });
+}
+
+function fmtDate(val: string | null | undefined): string {
+  if (!val) return "—";
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function fmtDateTime(val: string | null | undefined): string {
+  if (!val) return "—";
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleString("en-US", {
+    month: "short", day: "numeric", year: "numeric",
+    hour: "numeric", minute: "2-digit",
+  });
+}
+
+function daysDiff(dueDate: string | null | undefined): { days: number; label: string; color: string } | null {
+  if (!dueDate) return null;
+  const due = new Date(dueDate);
+  if (isNaN(due.getTime())) return null;
+  const now = new Date();
+  const diff = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  if (diff < 0) {
+    return { days: diff, label: `${Math.abs(diff)}d overdue`, color: "text-rose-600" };
+  }
+  if (diff === 0) {
+    return { days: 0, label: "Due today", color: "text-amber-600" };
+  }
+  if (diff <= 7) {
+    return { days: diff, label: `Due in ${diff}d`, color: "text-amber-600" };
+  }
+  return { days: diff, label: `Due in ${diff}d`, color: "text-foreground/60" };
+}
+
+// ── Mobile tab type ───────────────────────────────────────────────────────────
+
+type InvoiceMobileTab = "details" | "line-items" | "payment";
+
+// ── Main Component ────────────────────────────────────────────────────────────
+
+export function InvoiceDetailView({
+  invoice,
+  allInvoices,
+  account,
+  isAgencyUser,
+  toolbarSlot,
+  noBackground,
+  onMarkSent,
+  onMarkPaid,
+  onEdit,
+  onDuplicate,
+  onDelete,
+  onRefresh,
+}: InvoiceDetailViewProps) {
+  const { t } = useTranslation("billing");
+  const [mobileTab, setMobileTab] = useState<InvoiceMobileTab>("details");
+  const displayStatus = isOverdue(invoice) ? "Overdue" : (invoice.status || "Draft");
+  const statusColors = INVOICE_STATUS_COLORS[displayStatus] || INVOICE_STATUS_COLORS.Draft;
+  const lineItems = parseLineItems(invoice.line_items);
+  const currency = invoice.currency || "EUR";
+
+  // ── Per-client invoice number ────────────────────────────────────────────
+  const clientInvoiceNum = (() => {
+    if (!allInvoices?.length || !invoice.Accounts_id) return null;
+    const accountInvoices = allInvoices
+      .filter((i) => i.Accounts_id === invoice.Accounts_id)
+      .sort((a, b) =>
+        (a.issued_date || a.created_at || "").localeCompare(b.issued_date || b.created_at || "")
+      );
+    const idx = accountInvoices.findIndex((i) => i.id === invoice.id);
+    return idx >= 0 ? idx + 1 : null;
+  })();
+  const invoiceYear = invoice.issued_date
+    ? new Date(invoice.issued_date).getFullYear()
+    : new Date().getFullYear();
+
+  // ── Copy link state ───────────────────────────────────────────────────────
+  const [copied, setCopied] = useState(false);
+
+  // ── Delete two-tap confirm ────────────────────────────────────────────────
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  useEffect(() => {
+    if (deleteConfirm) {
+      const t = setTimeout(() => setDeleteConfirm(false), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [deleteConfirm]);
+
+  // ── Action busy states ────────────────────────────────────────────────────
+  const [markingSent, setMarkingSent] = useState(false);
+  const [markingPaid, setMarkingPaid] = useState(false);
+
+  // Reset local state when invoice changes
+  useEffect(() => {
+    setDeleteConfirm(false);
+    setCopied(false);
+    setMarkingSent(false);
+    setMarkingPaid(false);
+    setMobileTab("details");
+  }, [invoice.id]);
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
+  const handleCopyLink = useCallback(() => {
+    const url = `${window.location.origin}/api/invoices/view/${invoice.view_token}`;
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [invoice.view_token]);
+
+  const handleMarkSent = useCallback(async () => {
+    setMarkingSent(true);
+    try {
+      await onMarkSent(invoice.id);
+      onRefresh();
+    } finally {
+      setMarkingSent(false);
+    }
+  }, [invoice.id, onMarkSent, onRefresh]);
+
+  const handleMarkPaid = useCallback(async () => {
+    setMarkingPaid(true);
+    try {
+      await onMarkPaid(invoice.id);
+      onRefresh();
+    } finally {
+      setMarkingPaid(false);
+    }
+  }, [invoice.id, onMarkPaid, onRefresh]);
+
+  const handleDelete = useCallback(async () => {
+    if (deleteConfirm) {
+      setDeleteConfirm(false);
+      await onDelete(invoice.id);
+    } else {
+      setDeleteConfirm(true);
+    }
+  }, [deleteConfirm, invoice.id, onDelete]);
+
+  const handleDownloadPdf = useCallback(() => {
+    const subtotalNum = parseFloat(invoice.subtotal || "0");
+    const totalNum    = parseFloat(invoice.total    || "0");
+    const taxAmt      = parseFloat(invoice.tax_amount    || "0");
+    const discountAmt = parseFloat(invoice.discount_amount || "0");
+
+    const itemRows = lineItems.map((item) =>
+      `<tr>
+        <td style="padding:8px 12px;border-bottom:1px solid #E5E7EB;font-size:13px;color:#374151;">${item.description}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #E5E7EB;font-size:13px;color:#374151;text-align:center;">${item.qty}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #E5E7EB;font-size:13px;color:#374151;text-align:right;">${formatCurrency(item.unitPrice, currency)}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #E5E7EB;font-size:13px;color:#374151;text-align:right;font-weight:600;">${formatCurrency(item.amount, currency)}</td>
+      </tr>`
+    ).join("");
+
+    const totalsRows = [
+      `<tr><td style="padding:4px 12px;font-size:13px;color:#6B7280;">${t("invoices.detail.subtotal")}</td><td style="padding:4px 12px;font-size:13px;text-align:right;">${formatCurrency(subtotalNum, currency)}</td></tr>`,
+      taxAmt > 0 ? `<tr><td style="padding:4px 12px;font-size:13px;color:#6B7280;">${invoice.tax_percent ? t("invoices.detail.taxWithPercent", { percent: invoice.tax_percent }) : t("invoices.detail.tax")}</td><td style="padding:4px 12px;font-size:13px;text-align:right;">${formatCurrency(taxAmt, currency)}</td></tr>` : "",
+      discountAmt > 0 ? `<tr><td style="padding:4px 12px;font-size:13px;color:#6B7280;">${t("invoices.detail.discount")}</td><td style="padding:4px 12px;font-size:13px;text-align:right;color:#059669;">-${formatCurrency(discountAmt, currency)}</td></tr>` : "",
+      `<tr><td style="padding:6px 12px;font-size:13px;font-weight:700;border-top:1px solid #E5E7EB;color:#111827;">${t("invoices.detail.total")}</td><td style="padding:6px 12px;font-size:13px;font-weight:700;text-align:right;border-top:1px solid #E5E7EB;color:#111827;">${formatCurrency(totalNum, currency)}</td></tr>`,
+    ].join("");
+
+    // ── Build Bill To block ────────────────────────────────────────────────
+    const billToLines: string[] = [];
+    billToLines.push(`<div style="font-size:15px;font-weight:700;margin-bottom:3px;">${invoice.account_name || "—"}</div>`);
+    if (account?.address) {
+      billToLines.push(`<div style="font-size:13px;color:#374151;">${account.address.replace(/\n/g, "<br>")}</div>`);
+    }
+    if (account?.phone || account?.owner_email) {
+      const contact = [account?.phone, account?.owner_email].filter(Boolean).join(" · ");
+      billToLines.push(`<div style="font-size:13px;color:#6B7280;margin-top:2px;">${contact}</div>`);
+    }
+    if (account?.tax_id) {
+      billToLines.push(`<div style="font-size:12px;color:#9CA3AF;margin-top:4px;">${t("invoices.detail.taxIdRegNo")}: ${account.tax_id}</div>`);
+    }
+
+    // Build the invoice body as an HTML string with full inline styles.
+    const logoUrl = `${window.location.origin}/2.Full-LOGO.svg`;
+    const bodyHtml = `
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:40px;color:#111827;background:#fff;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;">
+          <img src="${logoUrl}" alt="Lead Awaker" style="height:100px;width:auto;" />
+          <div>
+            <div style="font-size:28px;font-weight:700;text-align:right;">${t("invoices.detail.invoice").toUpperCase()}</div>
+            <div style="text-align:right;font-size:13px;color:#6B7280;margin-top:4px;">
+              ${invoice.invoice_number ? `#${invoice.invoice_number}<br>` : ""}
+              ${t("invoices.detail.issued")}: ${fmtDate(invoice.issued_date)}<br>
+              ${t("invoices.detail.dueDate")}: ${fmtDate(invoice.due_date)}
+            </div>
+          </div>
+        </div>
+        <div style="margin-bottom:28px;">
+          <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:#9CA3AF;margin-bottom:6px;">${t("invoices.detail.billTo")}</div>
+          ${billToLines.join("")}
+        </div>
+        ${invoice.title ? `<p style="font-size:16px;font-weight:600;margin:0 0 16px;">${toDisplayTitle(invoice.title, t("invoices.card.untitledInvoice"))}</p>` : ""}
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#9CA3AF;border-bottom:2px solid #E5E7EB;text-align:left;">${t("invoices.detail.description")}</th>
+              <th style="padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#9CA3AF;border-bottom:2px solid #E5E7EB;text-align:center;">${t("invoices.detail.qty")}</th>
+              <th style="padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#9CA3AF;border-bottom:2px solid #E5E7EB;text-align:right;">${t("invoices.detail.unitPrice")}</th>
+              <th style="padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#9CA3AF;border-bottom:2px solid #E5E7EB;text-align:right;">${t("invoices.detail.amount")}</th>
+            </tr>
+          </thead>
+          <tbody>${itemRows}</tbody>
+        </table>
+        <div style="margin-top:16px;display:flex;justify-content:flex-end;">
+          <table style="width:280px;border-collapse:collapse;">${totalsRows}</table>
+        </div>
+        ${invoice.payment_info ? `<div style="margin-top:32px;padding-top:16px;border-top:1px solid #E5E7EB;"><div style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:#9CA3AF;margin-bottom:8px;">${t("invoices.detail.paymentInfo")}</div><p style="margin:0;font-size:13px;color:#374151;white-space:pre-wrap;">${invoice.payment_info}</p></div>` : ""}
+        ${invoice.notes ? `<div style="margin-top:32px;padding-top:16px;border-top:1px solid #E5E7EB;"><div style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:#9CA3AF;margin-bottom:8px;">${t("invoices.detail.notesAndDetails")}</div><p style="margin:0;font-size:13px;color:#374151;white-space:pre-wrap;">${invoice.notes}</p></div>` : ""}
+      </div>`;
+
+    // Print via hidden iframe — completely isolates from the app's CSS
+    const FRAME_ID = "__inv_print_frame__";
+    document.getElementById(FRAME_ID)?.remove();
+
+    const iframe = document.createElement("iframe");
+    iframe.id = FRAME_ID;
+    iframe.style.cssText = "position:fixed;width:0;height:0;border:none;left:-9999px;top:-9999px;";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc) return;
+
+    doc.open();
+    doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Invoice ${invoice.invoice_number || ""}</title><style>body{margin:0;padding:0;} @media print { body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }</style></head><body>${bodyHtml}</body></html>`);
+    doc.close();
+
+    // Wait for all images (logo) to load, then print
+    const printWhenReady = () => {
+      const images = Array.from(doc.querySelectorAll("img"));
+      const pending = images.filter((img) => !img.complete);
+      if (pending.length === 0) {
+        setTimeout(() => {
+          iframe.contentWindow?.print();
+          setTimeout(() => document.getElementById(FRAME_ID)?.remove(), 500);
+        }, 50);
+      } else {
+        let loaded = 0;
+        const onDone = () => {
+          loaded++;
+          if (loaded >= pending.length) {
+            setTimeout(() => {
+              iframe.contentWindow?.print();
+              setTimeout(() => document.getElementById(FRAME_ID)?.remove(), 500);
+            }, 50);
+          }
+        };
+        pending.forEach((img) => {
+          img.addEventListener("load", onDone, { once: true });
+          img.addEventListener("error", onDone, { once: true });
+        });
+      }
+    };
+
+    iframe.onload = printWhenReady;
+    // Fallback if onload already fired
+    if (doc.readyState === "complete") printWhenReady();
+  }, [invoice, lineItems, currency]);
+
+  // ── Computed values ───────────────────────────────────────────────────────
+  const dueDateInfo = daysDiff(invoice.due_date);
+  const subtotalNum = parseFloat(invoice.subtotal || "0");
+  const totalNum = parseFloat(invoice.total || "0");
+  const taxAmt = parseFloat(invoice.tax_amount || "0");
+  const discountAmt = parseFloat(invoice.discount_amount || "0");
+  const showSubtotalDiff = Math.abs(subtotalNum - totalNum) > 0.001;
+
+  // Inline due-date suffix: "in 13 days", "today", "3d overdue"
+  const dueDateSuffix = (() => {
+    if (!dueDateInfo || displayStatus === "Paid" || displayStatus === "Cancelled") return null;
+    const d = dueDateInfo.days;
+    if (d < 0) return t("invoices.detail.dueDateSuffix.overdue", { count: Math.abs(d) });
+    if (d === 0) return t("invoices.detail.dueDateSuffix.today");
+    if (d === 1) return t("invoices.detail.dueDateSuffix.inDays", { count: d });
+    return t("invoices.detail.dueDateSuffix.inDaysPlural", { count: d });
+  })();
+
+  return (
+    <div className="relative flex flex-col h-full overflow-hidden" data-testid="invoice-detail-view">
+
+      {/* ── Full-height warm gradient bloom background ── */}
+      {!noBackground && (
+        <>
+          <div className="absolute inset-0 bg-popover dark:bg-background" />
+          {/* Layer 1: White bloom — disabled */}
+          {/* Layer 2: Yellow — disabled */}
+          {/* Layer 3: Peach — disabled */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_150%_92%_at_18%_92%,rgba(51,149,133,0.4)_0%,transparent_69%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_200%_200%_at_2%_2%,#C7E0FF_5%,transparent_30%)] dark:opacity-[0.08]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_77%_93%_at_63%_52%,rgba(71,162,134,0.38)_0%,transparent_66%)] dark:opacity-[0.08]" />
+        </>
+      )}
+
+      {/* ── Header ── */}
+      <div className="relative z-10 shrink-0 px-[3px] pt-[3px] pb-[3px] space-y-[3px]">
+
+        {/* Action toolbar (above header, no container) */}
+        <div className="px-4 pt-3 pb-1.5 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
+          {toolbarSlot}
+          {isAgencyUser && (
+            <div className="ml-auto flex items-center gap-1 shrink-0">
+              <button
+                onClick={handleDownloadPdf}
+                className={cn(xBase, xDefault, "hover:max-w-[80px]")}
+              >
+                <Download className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>{t("invoices.actions.pdf")}</span>
+              </button>
+
+              <button
+                onClick={handleCopyLink}
+                className={cn(xBase, copied ? xActive : xDefault, "hover:max-w-[110px]")}
+              >
+                {copied ? <Check className="h-4 w-4 shrink-0 text-emerald-500" /> : <Link className="h-4 w-4 shrink-0" />}
+                <span className={xSpan}>{copied ? t("invoices.actions.copied") : t("invoices.actions.copyLink")}</span>
+              </button>
+
+              {invoice.status === "Draft" && (
+                <button
+                  onClick={handleMarkSent}
+                  disabled={markingSent}
+                  className={cn(xBase, xDefault, "hover:max-w-[110px] disabled:opacity-50")}
+                >
+                  <Send className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>{markingSent ? t("invoices.actions.sending") : t("invoices.actions.markSent")}</span>
+                </button>
+              )}
+
+              {(invoice.status === "Sent" || invoice.status === "Viewed") && (
+                <button
+                  onClick={handleMarkPaid}
+                  disabled={markingPaid}
+                  className={cn(xBase, xDefault, "hover:max-w-[110px] disabled:opacity-50")}
+                >
+                  <CheckCircle className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>{markingPaid ? t("invoices.actions.updating") : t("invoices.actions.markPaid")}</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => onEdit(invoice)}
+                className={cn(xBase, xDefault, "hover:max-w-[80px]")}
+              >
+                <Pencil className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>{t("invoices.actions.edit")}</span>
+              </button>
+
+              {onDuplicate && (
+                <button
+                  onClick={() => onDuplicate(invoice)}
+                  className={cn(xBase, xDefault, "hover:max-w-[110px]")}
+                >
+                  <CopyPlus className="h-4 w-4 shrink-0" />
+                  <span className={xSpan}>{t("invoices.actions.duplicate")}</span>
+                </button>
+              )}
+
+              <button
+                onClick={handleDelete}
+                className={cn(
+                  xBase,
+                  "hover:max-w-[100px]",
+                  deleteConfirm
+                    ? "border-red-400/60 text-red-600"
+                    : xDefault
+                )}
+              >
+                <Trash2 className="h-4 w-4 shrink-0" />
+                <span className={xSpan}>{deleteConfirm ? t("invoices.actions.confirm") : t("invoices.actions.delete")}</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Title + status + tracking */}
+        <div className="px-4 pt-3 pb-2 space-y-2">
+          <div>
+            <h2 className="text-[22px] font-semibold font-heading text-foreground leading-tight">
+              {toDisplayTitle(invoice.title, t("invoices.card.untitledInvoice"))}
+            </h2>
+            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+              {invoice.account_name && (
+                <span className="text-[13px] text-foreground/50">{invoice.account_name}</span>
+              )}
+              {clientInvoiceNum !== null && (
+                <>
+                  <span className="text-foreground/25 text-[13px]">·</span>
+                  <span className="text-[13px] text-foreground/50">
+                    {t("invoices.detail.invoice")} {String(clientInvoiceNum).padStart(2, "0")} · {invoiceYear}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* ── Mobile tab bar (hidden on desktop) ── */}
+      <div className="md:hidden relative z-10 flex gap-1 px-4 pb-3 overflow-x-auto [scrollbar-width:none] shrink-0" data-testid="invoice-mobile-tabs">
+        {([
+          { id: "details" as const,      label: t("mobileTabs.details") },
+          { id: "line-items" as const,   label: t("mobileTabs.lineItems") },
+          { id: "payment" as const,      label: t("mobileTabs.paymentHistory") },
+        ] as { id: InvoiceMobileTab; label: string }[]).map(({ id, label }) => (
+          <button
+            key={id}
+            onClick={() => setMobileTab(id)}
+            data-testid={`invoice-tab-${id}`}
+            className={cn(
+              "h-8 px-3.5 rounded-full text-[12px] font-semibold shrink-0 transition-colors",
+              mobileTab === id
+                ? "bg-foreground text-background"
+                : "bg-white/60 dark:bg-white/[0.10] text-foreground/60 border border-border/40"
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Scrollable content area (two columns: wide + narrow) ── */}
+      <div className="relative z-10 flex-1 overflow-y-auto px-[3px] pb-[3px] min-h-0">
+        <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-[3px] max-w-[1386px] w-full mr-auto">
+
+          {/* ── Left column (wide): Line items only ── */}
+          <div className={cn("bg-white/60 dark:bg-white/[0.10] rounded-xl p-5 flex flex-col", mobileTab !== "line-items" ? "hidden md:flex" : "flex")}>
+            <p className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading mb-4">
+              {t("invoices.detail.lineItems")}
+            </p>
+
+            {lineItems.length > 0 ? (
+              <>
+                <table className="w-full">
+                  <thead>
+                    <tr>
+                      <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-foreground/40 pb-2 pr-2">
+                        {t("invoices.detail.description")}
+                      </th>
+                      <th className="text-center text-[10px] font-semibold uppercase tracking-wider text-foreground/40 pb-2 px-2">
+                        {t("invoices.detail.qty")}
+                      </th>
+                      <th className="text-right text-[10px] font-semibold uppercase tracking-wider text-foreground/40 pb-2 px-2">
+                        {t("invoices.detail.unitPrice")}
+                      </th>
+                      <th className="text-right text-[10px] font-semibold uppercase tracking-wider text-foreground/40 pb-2 pl-2">
+                        {t("invoices.detail.amount")}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lineItems.map((item, i) => (
+                      <tr key={i} className="border-b border-border/20 last:border-0">
+                        <td className="text-[12px] text-foreground py-2.5 pr-2">
+                          {item.description}
+                        </td>
+                        <td className="text-[12px] text-foreground/70 text-center py-2.5 px-2 tabular-nums">
+                          {item.qty}
+                        </td>
+                        <td className="text-[12px] text-foreground/70 text-right py-2.5 px-2 tabular-nums">
+                          {formatCurrency(item.unitPrice, currency)}
+                        </td>
+                        <td className="text-[12px] text-foreground font-medium text-right py-2.5 pl-2 tabular-nums">
+                          {formatCurrency(item.amount, currency)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {/* Totals footer — always show, with Total at the bottom */}
+                <div className="mt-3 pt-2 border-t border-border/30 space-y-1">
+                  {showSubtotalDiff && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-foreground/50">{t("invoices.detail.subtotal")}</span>
+                      <span className="text-[12px] text-foreground tabular-nums">
+                        {formatCurrency(subtotalNum, currency)}
+                      </span>
+                    </div>
+                  )}
+                  {taxAmt > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-foreground/50">
+                        {invoice.tax_percent ? t("invoices.detail.taxWithPercent", { percent: invoice.tax_percent }) : t("invoices.detail.tax")}
+                      </span>
+                      <span className="text-[12px] text-foreground tabular-nums">
+                        {formatCurrency(taxAmt, currency)}
+                      </span>
+                    </div>
+                  )}
+                  {discountAmt > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-foreground/50">{t("invoices.detail.discount")}</span>
+                      <span className="text-[12px] text-emerald-600 tabular-nums">
+                        -{formatCurrency(discountAmt, currency)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between pt-1.5 border-t border-border/20">
+                    <span className="text-[13px] font-bold text-foreground">{t("invoices.detail.total")}</span>
+                    <span className="text-[13px] font-bold text-foreground tabular-nums">
+                      {formatCurrency(totalNum, currency)}
+                    </span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center justify-center py-8 flex-1">
+                <span className="text-[12px] text-foreground/30 italic">{t("invoices.detail.noLineItems")}</span>
+              </div>
+            )}
+
+            {/* Notes — simple subtitle at the bottom of the widget */}
+            {invoice.notes && (
+              <div className="mt-auto pt-3 border-t border-border/20">
+                <p className="text-[9px] font-semibold uppercase tracking-widest text-foreground/30 mb-1">{t("invoices.detail.notesAndDetails")}</p>
+                <p className="text-[11px] text-foreground/50 leading-relaxed whitespace-pre-wrap">{invoice.notes}</p>
+              </div>
+            )}
+          </div>
+
+          {/* ── Right column (narrow): Total Amount → Dates → Payment Info → Notes & Details ── */}
+          <div className={cn("flex flex-col gap-[3px]", mobileTab === "line-items" ? "hidden md:flex" : "flex")}>
+
+            {/* Total Amount — top of right column, 30% taller */}
+            <div className={cn("bg-white/60 dark:bg-white/[0.10] rounded-xl px-5 py-7 min-h-[110px]", mobileTab === "payment" && "hidden md:block")}>
+              <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-2">
+                {t("invoices.detail.totalAmount")}
+              </span>
+              <span className="text-[28px] font-bold tabular-nums text-foreground leading-none block">
+                {formatCurrency(totalNum, currency)}
+              </span>
+            </div>
+
+            {/* Status */}
+            <div className={cn("bg-white/60 dark:bg-white/[0.10] rounded-xl p-5", mobileTab === "payment" && "hidden md:block")}>
+              <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
+                {t("invoices.detail.status")}
+              </span>
+              <div className="space-y-3">
+                {/* Status badge */}
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold"
+                  style={{ backgroundColor: statusColors.bg, color: statusColors.text }}
+                >
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: statusColors.dot }} />
+                  {t(`invoices.statusLabels.${displayStatus}`, displayStatus)}
+                </span>
+
+                {/* Views */}
+                <div className="flex items-center gap-1.5">
+                  <Eye className="h-3.5 w-3.5 text-foreground/40" />
+                  <span className="text-[18px] font-bold tabular-nums text-foreground leading-none">
+                    {invoice.viewed_count ?? 0}
+                  </span>
+                  <span className="text-[11px] text-foreground/40">
+                    {(invoice.viewed_count ?? 0) === 1 ? t("invoices.detail.view") : t("invoices.detail.views")}
+                  </span>
+                </div>
+
+                {invoice.viewed_at && (
+                  <span className="text-[10px] text-foreground/40 block">
+                    {t("invoices.detail.firstViewed", { date: fmtDate(invoice.viewed_at) })}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Dates — Due Date + Sent Date */}
+            <div className={cn("bg-white/60 dark:bg-white/[0.10] rounded-xl p-5", mobileTab === "payment" && "hidden md:block")}>
+              <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
+                {t("invoices.detail.dates")}
+              </span>
+              <div>
+                {/* Due Date */}
+                <div className="pb-3.5">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">
+                    {t("invoices.detail.dueDate")}
+                  </span>
+                  <div className="mt-0.5">
+                    <span className="text-[12px] font-semibold text-foreground tabular-nums">
+                      {fmtDate(invoice.due_date)}
+                    </span>
+                    {dueDateSuffix && (
+                      <span className={cn("text-[11px] font-medium ml-1.5", dueDateInfo?.color)}>
+                        {dueDateSuffix}
+                      </span>
+                    )}
+                    {displayStatus === "Paid" && invoice.paid_at && (
+                      <span className="text-[11px] font-medium text-emerald-600 ml-1.5">
+                        · {t("invoices.detail.paidOn", { date: fmtDate(invoice.paid_at) })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Sent Date */}
+                <div className="pt-3.5 border-t border-border/20">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">
+                    {t("invoices.detail.sentDate")}
+                  </span>
+                  <span className="text-[12px] font-semibold text-foreground block mt-0.5 tabular-nums">
+                    {invoice.sent_at ? fmtDateTime(invoice.sent_at) : t("invoices.detail.notSentYet")}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Info — label-above-value with dividers, fills remaining height */}
+            {/* On mobile: Payment History tab shows sent/viewed/paid timeline then payment info */}
+            {mobileTab === "payment" && (
+              <div className="md:hidden bg-white/60 dark:bg-white/[0.10] rounded-xl p-5 flex flex-col gap-3">
+                <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block">
+                  {t("mobileTabs.paymentHistory")}
+                </span>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between py-2.5 border-b border-border/20">
+                    <span className="text-[11px] text-foreground/50">{t("mobileTabs.sent")}</span>
+                    <span className="text-[12px] font-semibold text-foreground tabular-nums">
+                      {invoice.sent_at ? fmtDate(invoice.sent_at) : t("invoices.detail.notSentYet")}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-2.5 border-b border-border/20">
+                    <span className="text-[11px] text-foreground/50">{t("mobileTabs.views")}</span>
+                    <span className="text-[12px] font-semibold text-foreground tabular-nums">
+                      {invoice.viewed_count ?? 0}
+                    </span>
+                  </div>
+                  {invoice.viewed_at && (
+                    <div className="flex items-center justify-between py-2.5 border-b border-border/20">
+                      <span className="text-[11px] text-foreground/50">{t("mobileTabs.firstViewed")}</span>
+                      <span className="text-[12px] font-semibold text-foreground tabular-nums">
+                        {fmtDate(invoice.viewed_at)}
+                      </span>
+                    </div>
+                  )}
+                  {invoice.paid_at && (
+                    <div className="flex items-center justify-between py-2.5">
+                      <span className="text-[11px] text-foreground/50">{t("mobileTabs.paid")}</span>
+                      <span className="text-[12px] font-semibold text-emerald-700 tabular-nums">
+                        {fmtDate(invoice.paid_at)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            {invoice.payment_info && (() => {
+              const lines = parsePaymentLines(invoice.payment_info);
+              return (
+                <div className={cn("bg-white/60 dark:bg-white/[0.10] rounded-xl p-5 flex-1", mobileTab !== "payment" && "hidden md:block")}>
+                  <span className="text-[15px] font-bold uppercase tracking-widest text-foreground/50 font-heading block mb-4">
+                    {t("invoices.detail.paymentInfo")}
+                  </span>
+                  <div>
+                    {lines.map((line, i) =>
+                      line.key ? (
+                        <div
+                          key={i}
+                          className={cn(
+                            "pb-3.5",
+                            i > 0 && "pt-3.5 border-t border-border/20"
+                          )}
+                        >
+                          <span className="text-[10px] font-medium uppercase tracking-wider text-foreground/40 block">
+                            {line.key}
+                          </span>
+                          <span className="text-[12px] font-semibold text-foreground block mt-0.5">
+                            {line.value}
+                          </span>
+                        </div>
+                      ) : (
+                        <p
+                          key={i}
+                          className={cn(
+                            "text-[12px] text-foreground pb-3.5",
+                            i > 0 && "pt-3.5 border-t border-border/20"
+                          )}
+                        >
+                          {line.value}
+                        </p>
+                      )
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

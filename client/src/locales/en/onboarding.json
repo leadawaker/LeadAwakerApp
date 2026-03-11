@@ -1,0 +1,80 @@
+{
+  "welcome": {
+    "title": "Welcome to LeadAwaker!",
+    "subtitle": "Let's get you set up in a few minutes",
+    "startButton": "Start Tutorial",
+    "skipButton": "Skip for now",
+    "skipConfirmTitle": "Skip the tutorial?",
+    "skipConfirmBody": "You can restart it anytime from Settings.",
+    "skipConfirmBack": "Go back",
+    "skipConfirmYes": "Yes, skip"
+  },
+  "stages": {
+    "1": {
+      "label": "Profile Setup",
+      "desc": "Set your name, timezone & preferences"
+    },
+    "2": {
+      "label": "Explore Campaigns",
+      "desc": "See your outreach campaigns"
+    },
+    "3": {
+      "label": "Your Leads",
+      "desc": "View and import your lead contacts"
+    },
+    "4": {
+      "label": "Conversations",
+      "desc": "Monitor replies and manage chats"
+    }
+  },
+  "steps": {
+    "profileSetup": "Complete your profile",
+    "profileSetupDesc": "Let's start by setting up your profile — your name, timezone, and notification preferences.",
+    "profileName": "Your Name",
+    "profileNameDesc": "Enter your full name. This is how you'll appear across the platform.",
+    "profileTimezone": "Timezone",
+    "profileTimezoneDesc": "Select your timezone so notifications and scheduled messages align with your business hours.",
+    "saveProfile": "Save Your Profile",
+    "saveProfileDesc": "Click Save to apply your changes. You can update these anytime.",
+    "yourCampaigns": "Your Campaigns",
+    "yourCampaignsDesc": "Campaigns are outreach sequences that engage your leads. Let's take a look at what's been set up for you.",
+    "campaignOverview": "Campaign Overview",
+    "campaignOverviewDesc": "Here are your campaigns. Each one has a status, channel (SMS/WhatsApp), and message templates. Click on any campaign to see its details.",
+    "campaignDetails": "Campaign Details",
+    "campaignDetailsDesc": "This panel shows the campaign's configuration — message templates, bump schedule, AI settings, and performance metrics.",
+    "yourLeads": "Your Leads",
+    "yourLeadsDesc": "Leads are the contacts your campaigns reach out to. Let's see how to add them.",
+    "leadsTable": "Leads Table",
+    "leadsTableDesc": "This table shows all your leads with their status, campaign assignment, and engagement data. You can search, filter, and sort.",
+    "importCsv": "Import Leads via CSV",
+    "importCsvDesc": "Click the CSV button to import leads from a spreadsheet. You'll map columns to fields and preview before importing.",
+    "conversations": "Conversations",
+    "conversationsDesc": "This is where you'll monitor all lead interactions — incoming replies, AI responses, and manual takeovers.",
+    "inbox": "Your Inbox",
+    "inboxDesc": "The inbox shows all active conversations sorted by recency. Unread messages appear at the top.",
+    "chatView": "Chat View",
+    "chatViewDesc": "Click a conversation to see the full message thread. You can reply manually or let the AI handle it.",
+    "calendar": "Calendar",
+    "calendarDesc": "When leads book calls, they show up here. That's the end of the tour — you're all set!"
+  },
+  "tooltip": {
+    "back": "Back",
+    "next": "Next",
+    "skip": "Skip",
+    "finish": "Finish",
+    "stage": "Stage"
+  },
+  "completion": {
+    "title": "You're all set!",
+    "body": "Your account is configured and your campaign is ready to go. Leads will start receiving messages during your business hours.",
+    "cta": "Go to Campaigns"
+  },
+  "progress": {
+    "resume": "Resume Tutorial"
+  },
+  "settings": {
+    "title": "Onboarding Tutorial",
+    "description": "Restart the guided setup walkthrough",
+    "restartButton": "Restart Tutorial"
+  }
+}

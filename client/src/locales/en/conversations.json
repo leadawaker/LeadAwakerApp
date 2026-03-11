@@ -1,0 +1,207 @@
+{
+  "page": {
+    "title": "Conversations",
+    "searchPlaceholder": "Search chats...",
+    "group": "Group",
+    "groupBy": "Group by",
+    "sort": "Sort",
+    "filter": "Filter",
+    "status": "Status",
+    "account": "Account",
+    "allAccounts": "All Accounts",
+    "allCampaigns": "All Campaigns"
+  },
+  "inbox": {
+    "title": "Chats",
+    "tabs": {
+      "all": "Inbox",
+      "unread": "Unread",
+      "support": "Support"
+    },
+    "supportAssistant": "Support Assistant",
+    "emptySearch": {
+      "title": "No conversations found",
+      "description": "No conversations match \"{{query}}\"."
+    },
+    "emptyUnread": {
+      "title": "All caught up!",
+      "description": "You have no unread conversations right now."
+    },
+    "emptyFiltered": {
+      "title": "No matches",
+      "description": "No conversations match the selected filters.",
+      "clearFilters": "Clear filters"
+    },
+    "unknownName": "Unknown",
+    "attachments": {
+      "image": "Image",
+      "video": "Video",
+      "audio": "Audio",
+      "file": "File"
+    },
+    "groupLabels": {
+      "date": "Date",
+      "status": "Status",
+      "campaign": "Campaign",
+      "ai_human": "AI / Human",
+      "none": "None"
+    },
+    "sortLabels": {
+      "newest": "Most Recent",
+      "oldest": "Oldest First",
+      "name_asc": "Name A \u2192 Z",
+      "name_desc": "Name Z \u2192 A"
+    },
+    "dateGroups": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "thisWeek": "This Week",
+      "thisMonth": "This Month",
+      "last3Months": "Last 3 Months",
+      "older": "Older",
+      "noActivity": "No Activity"
+    },
+    "statusGroups": {
+      "unknown": "Unknown",
+      "noCampaign": "No Campaign",
+      "human": "Human",
+      "ai": "AI"
+    }
+  },
+  "chat": {
+    "emptyState": {
+      "title": "Your conversations, one click away",
+      "description": "Select a lead from the inbox to view their full message history with the AI."
+    },
+    "noMessages": {
+      "title": "No messages yet",
+      "description": "Start the conversation by sending a message below."
+    },
+    "compose": {
+      "placeholderNoContact": "Select a contact first",
+      "placeholderHuman": "Taking over from AI \u2014 Enter to send",
+      "placeholderDefault": "Type a message\u2026 (Enter to send)",
+      "sendMessage": "Send message",
+      "recordVoice": "Record voice message",
+      "emoji": "Emoji",
+      "attachFile": "Attach file",
+      "attachmentsComingSoon": "Attachments coming soon",
+      "attachmentsDescription": "File upload support is being set up."
+    },
+    "recording": {
+      "label": "Recording\u2026",
+      "stopAndSend": "Stop and send voice message"
+    },
+    "customization": {
+      "title": "Customization",
+      "bubbleWidth": "Chat Bubble Width",
+      "hideAvatars": "Hide Avatars"
+    },
+    "background": {
+      "title": "Background",
+      "crm": "CRM",
+      "social1": "Social 1",
+      "social2": "Social 2",
+      "doodleOverlay": "Doodle Overlay",
+      "pattern": "Pattern",
+      "color": "Color",
+      "colorBlack": "Black",
+      "colorWhite": "White",
+      "opacity": "Opacity",
+      "size": "Size",
+      "blendMode": "Blend mode",
+      "chatBackgroundDoodle": "Chat background doodle",
+      "gradientTester": "Gradient Tester"
+    },
+    "aiResume": {
+      "label": "Let AI continue",
+      "description": "AI will resume this conversation. You can take over again anytime.",
+      "confirm": "Confirm",
+      "cancel": "Cancel"
+    },
+    "takeover": {
+      "title": "Take over this conversation?",
+      "description": "Sending this message will switch the conversation to human mode. The AI will stop responding and you'll be in control. You won't be asked again this session.",
+      "cancel": "Cancel",
+      "confirmSend": "Take over & Send"
+    },
+    "showContactPanel": "Show contact panel",
+    "scrollToLatest": "Scroll to latest message",
+    "microphoneAccessDenied": "Microphone access denied",
+    "microphoneAccessDescription": "Allow microphone access to record voice messages.",
+    "retry": "Retry",
+    "messageStatus": {
+      "sending": "Sending\u2026",
+      "failed": "Message failed to send",
+      "read": "Read",
+      "delivered": "Delivered",
+      "sent": "Sent"
+    },
+    "senderLabels": {
+      "lead": "Lead",
+      "ai": "AI",
+      "you": "You"
+    },
+    "thread": {
+      "bump": "Bump {{number}}",
+      "thread": "Thread {{id}}",
+      "conversation": "Conversation",
+      "conversationNumber": "Conversation {{number}}"
+    },
+    "dateLabels": {
+      "today": "Today",
+      "yesterday": "Yesterday"
+    },
+    "attachment": "Attachment",
+    "clickToOpenFullSize": "Click to open full size",
+    "seek": "Seek",
+    "playbackSpeed": "Playback speed",
+    "play": "Play",
+    "pause": "Pause"
+  },
+  "contact": {
+    "fold": "Fold",
+    "details": "Details",
+    "selectConversation": "Select a conversation to see lead context.",
+    "sections": {
+      "contact": "Contact",
+      "score": "Score",
+      "conversionStatus": "Conversion Status",
+      "tags": "Tags",
+      "activity": "Activity",
+      "notes": "Notes",
+      "recentMessages": "Recent Messages"
+    },
+    "fields": {
+      "phone": "Phone",
+      "email": "Email",
+      "bookedCall": "Booked Call"
+    },
+    "grade": "GRADE {{grade}}",
+    "tags": {
+      "addTag": "Add tag",
+      "availableTags": "Available Tags",
+      "noMoreTags": "No more tags available",
+      "noTagsAssigned": "No tags assigned.",
+      "failedToAdd": "Failed to add tag",
+      "failedToRemove": "Failed to remove tag",
+      "removeTag": "Remove {{name}}"
+    },
+    "activity": {
+      "messagesSent": "Messages sent",
+      "messagesReceived": "Messages received",
+      "totalInteractions": "Total interactions",
+      "lastActive": "Last active",
+      "automationStatus": "Automation status"
+    },
+    "notes": {
+      "placeholder": "Add notes about this lead...",
+      "noNotesYet": "No notes yet",
+      "noNotesReadonly": "No notes yet"
+    },
+    "messages": {
+      "noMessages": "No messages yet",
+      "viewFullConversation": "View full conversation"
+    }
+  }
+}

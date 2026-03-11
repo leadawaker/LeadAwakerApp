@@ -1,0 +1,160 @@
+import type { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+export interface TabDef {
+  id: string;
+  label: string;
+  icon?: LucideIcon;
+  badge?: React.ReactNode;
+}
+
+interface ViewTabBarProps {
+  tabs: TabDef[];
+  activeId: string;
+  onTabChange: (id: string) => void;
+  className?: string;
+  activeClassName?: string;
+  /** When true, inactive tabs with icons still render as full pills (icon + label), not icon-only circles. */
+  showLabels?: boolean;
+  /** "pill" (default) = icon circles / highlight-active pills. "text" = plain text labels, bold when active, no background. "segment" = outer container pill, inactive = icon-only, active = white inner pill with icon + label. */
+  variant?: "pill" | "text" | "segment";
+}
+
+export function ViewTabBar({ tabs, activeId, onTabChange, className, activeClassName, showLabels, variant = "pill" }: ViewTabBarProps) {
+  // Segment variant: DateRangeFilter-style outer pill; inactive = icon-only, active = white pill with icon + label (animated expand)
+  if (variant === "segment") {
+    return (
+      <div className={cn("inline-flex items-center h-9 rounded-full border border-black/[0.125] bg-muted/30 p-0.5", className)}>
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeId === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              title={!isActive ? tab.label : undefined}
+              className={cn(
+                "inline-flex items-center h-full rounded-full text-[12px] font-semibold shrink-0 touch-target",
+                "transition-[padding,background-color,color,box-shadow] duration-200 ease-out",
+                isActive
+                  ? "pl-2.5 pr-3 bg-white dark:bg-card shadow-sm text-foreground"
+                  : "px-2 bg-transparent text-foreground/40 hover:text-foreground"
+              )}
+            >
+              {Icon && <Icon className="h-4 w-4 shrink-0" />}
+              <span
+                className={cn(
+                  "whitespace-nowrap overflow-hidden transition-[max-width,opacity] duration-200 ease-out",
+                  isActive ? "max-w-[100px] opacity-100 pl-1.5" : "max-w-0 opacity-0"
+                )}
+              >
+                {tab.label}
+              </span>
+              {tab.badge}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Text variant: simple bold/muted labels, no pill or circle styling
+  if (variant === "text") {
+    return (
+      <div className={cn("flex items-center gap-0.5", className)}>
+        {tabs.map((tab) => {
+          const isActive = activeId === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={cn(
+                "relative inline-flex items-center gap-1.5 h-9 px-2.5 text-[12px] shrink-0 rounded-full transition-colors duration-150",
+                isActive
+                  ? "font-bold text-foreground"
+                  : "font-medium text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {tab.label}
+              {tab.badge}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("flex items-center gap-1", className)}>
+      {tabs.map((tab) => {
+        const Icon = tab.icon;
+        const isActive = activeId === tab.id;
+
+        // Icon-based tabs: active = permanent pill, inactive = 38px circle
+        if (Icon && !showLabels) {
+          if (isActive) {
+            return (
+              <button
+                key={tab.id}
+                onClick={() => onTabChange(tab.id)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 h-[38px] px-3 rounded-full text-[12px] font-semibold shrink-0 touch-target",
+                  activeClassName ?? "bg-card border border-black/[0.175] text-foreground"
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0 stroke-[2.5]" />
+                {tab.label}
+                {tab.badge}
+              </button>
+            );
+          }
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              title={tab.label}
+              className={cn(
+                "h-[38px] rounded-full border border-black/[0.125] bg-transparent hover:bg-white dark:hover:bg-card hover:border-black/[0.175] inline-flex items-center justify-center shrink-0 text-muted-foreground hover:text-foreground transition-[background-color,color,border-color] duration-150 touch-target",
+                tab.badge ? "gap-0.5 px-2" : "w-[38px]"
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {tab.badge}
+            </button>
+          );
+        }
+
+        // Active pill (no icon or showLabels)
+        if (isActive) {
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={cn(
+                "inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-[12px] font-semibold shrink-0 touch-target",
+                activeClassName ?? "bg-card border border-black/[0.175] text-foreground"
+              )}
+            >
+              {Icon && <Icon className="h-4 w-4 stroke-[2.5]" />}
+              {tab.label}
+              {tab.badge}
+            </button>
+          );
+        }
+
+        // Inactive pill (no icon, or showLabels=true)
+        return (
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
+            className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full icon-circle-base text-muted-foreground hover:text-foreground text-[12px] font-semibold shrink-0 touch-target"
+          >
+            {Icon && showLabels && <Icon className="h-4 w-4" />}
+            {tab.label}
+            {tab.badge}
+          </button>
+        );
+      })}
+    </div>
+  );
+}

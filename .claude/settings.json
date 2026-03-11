@@ -1,0 +1,54 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit",
+      "Write",
+      "Bash(node:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx playwright-cli:*)",
+      "Bash(dpkg:*)",
+      "Bash(sudo apt-get:*)",
+      "Bash(npx vite build:*)",
+      "Bash(lsof:*)",
+      "Read(//tmp/**)",
+      "Bash(pkill:*)",
+      "Bash(nginx -t:*)",
+      "Bash(caddy version:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(npm run dev:*)",
+      "Bash(git:*)",
+      "Bash(rm:*)",
+      "Bash(mkdir:*)"
+    ],
+    "additionalDirectories": [
+      "/config/workspace/LeadAwakerApp"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "input=$(cat); if echo \"$input\" | grep -qE '\"file_path\"\\s*:\\s*\"[^\"]*\\.env'; then echo 'Blocked: .env files are protected. Do not edit secrets or credentials.' >&2; exit 2; fi"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /config/workspace/LeadAwakerApp/.claude/tsc-check.sh",
+            "timeout": 30,
+            "statusMessage": "Checking TypeScript..."
+          }
+        ]
+      }
+    ]
+  }
+}

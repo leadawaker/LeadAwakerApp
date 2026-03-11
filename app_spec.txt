@@ -1,0 +1,428 @@
+<project_specification>
+  <project_name>Lead Awaker Mobile Update</project_name>
+
+  <overview>
+    A comprehensive mobile UI overhaul of the Lead Awaker CRM platform — an AI-powered WhatsApp lead reactivation engine built with React, Express, and PostgreSQL. This update transforms the existing desktop-first application into a polished, native-feeling mobile experience with thumb-friendly navigation, full-screen detail panels with tabs, swipe gestures, haptic feedback, and faux-glassmorphism visual polish. The existing backend, database, and API remain untouched — this is a purely frontend/UI project targeting screens under 768px.
+  </overview>
+
+  <technology_stack>
+    <frontend>
+      <framework>React (Vite) — existing codebase</framework>
+      <styling>Tailwind CSS v4 with CSS custom properties design system</styling>
+      <animations>Framer Motion (existing), CSS @keyframes, Web Animations API for haptics</animations>
+      <state>React Query (TanStack), React hooks, localStorage persistence</state>
+      <routing>Wouter</routing>
+      <i18n>react-i18next (en/pt/nl)</i18n>
+      <ui_library>shadcn/ui, Radix UI primitives</ui_library>
+    </frontend>
+    <backend>
+      <runtime>Node.js + Express (unchanged)</runtime>
+      <database>PostgreSQL with Drizzle ORM (unchanged)</database>
+    </backend>
+    <communication>
+      <api>REST API (unchanged)</api>
+    </communication>
+  </technology_stack>
+
+  <prerequisites>
+    <environment_setup>
+      - Existing Lead Awaker codebase at /home/gabriel/LeadAwakerApp
+      - Node.js v20+, PostgreSQL running
+      - App runs via pm2 on host — do NOT run npm run dev
+      - Disable tsc hook during bulk edits: touch /tmp/skip-tsc-check
+      - Max 2-3 parallel agents (Pi OOM risk from concurrent tsc)
+    </environment_setup>
+  </prerequisites>
+
+  <feature_count>90</feature_count>
+
+  <mobile_breakpoint_strategy>
+    <primary_breakpoint>768px (md:) — below this is mobile, above is desktop</primary_breakpoint>
+    <approach>Mobile-specific overrides using max-width: 767px media queries and Tailwind md: prefix. Desktop layout remains completely untouched. All mobile changes are additive — hidden/shown via responsive classes.</approach>
+    <critical_rule>NEVER modify desktop layout. All changes target mobile viewport only. Desktop behavior must remain pixel-perfect identical.</critical_rule>
+  </mobile_breakpoint_strategy>
+
+  <security_and_access_control>
+    <user_roles>
+      <role name="agency_admin">
+        <permissions>
+          - Can see all accounts, campaigns, leads across all sub-accounts
+          - Can access Automations, Prompts, Tasks, Billing, Accounts via Settings hub
+          - Sees account switcher in user icon dropdown
+          - Yellow outline on avatar when in agency view
+          - Bottom bar: Campaigns, Leads, Chats, Calendar, Settings
+        </permissions>
+      </role>
+      <role name="subaccount_client">
+        <permissions>
+          - Can only see their own account data
+          - Cannot access Automations, Prompts, Tasks, Accounts
+          - Settings hub shows: Profile, Theme, Language, Billing, Social, Docs
+          - No account switcher
+          - Bottom bar: Campaigns, Leads, Chats, Calendar, Settings
+        </permissions>
+      </role>
+    </user_roles>
+    <authentication>
+      <method>Existing session-based auth (unchanged)</method>
+    </authentication>
+  </security_and_access_control>
+
+  <core_features>
+    <mobile_shell_and_navigation>
+      - Bottom navigation bar with 5 icons: Campaigns, Leads, Chats, Calendar, Settings
+      - Bottom bar active state with brand-indigo highlight indicator
+      - Bottom bar respects safe-area-inset-bottom for home bar devices
+      - Left desktop sidebar completely hidden on mobile (below 768px)
+      - Smooth page transitions between bottom bar tabs
+      - Top bar renders 4 elements: KPI strip, bell, support chat, user avatar
+      - Top bar respects safe-area-inset-top for notch devices
+    </mobile_shell_and_navigation>
+
+    <topbar_swipable_kpi_strip>
+      - KPI strip shows Booked Calls count by default (north star metric)
+      - Horizontal swipe to cycle through KPIs: Daily Message Limit, Total Leads, Response Rate, etc.
+      - Indicator dots below strip showing current KPI position
+      - KPI values fetched from real API data (existing endpoints)
+    </topbar_swipable_kpi_strip>
+
+    <topbar_notifications>
+      - Bell icon with unread notification count badge
+      - Tap bell opens notification panel (mobile-optimized, full-width)
+      - Notification list items render correctly on mobile width
+    </topbar_notifications>
+
+    <topbar_support_chat_bot>
+      - Support chat icon in top bar (headphones icon)
+      - Tap opens full-screen bot conversation view (not floating widget)
+      - Send and receive messages with AI support bot
+      - Escalation-to-human banner displays when escalated
+      - Unread message badge on support chat icon
+    </topbar_support_chat_bot>
+
+    <topbar_user_icon_and_account>
+      - User avatar displayed in top bar with initials
+      - Yellow outline/ring on avatar when agency view is active
+      - Tap avatar opens dropdown: account switcher (agency), Tasks link, Logout
+      - Account switcher lists all accounts for agency users
+      - Selecting account switches workspace context and updates routes
+      - Logout action clears session and redirects to login
+    </topbar_user_icon_and_account>
+
+    <campaigns_mobile>
+      - Campaign card list renders mobile-optimized full-width cards
+      - Tap campaign card opens full-screen detail panel with tabs
+      - Campaign detail tab: Summary (metrics, description, status)
+      - Campaign detail tab: Config (settings, parameters)
+      - Campaign detail tab: Tags (campaign tags management)
+      - Filter bottom sheet combining group/sort/filter options (single trigger icon)
+      - Pull-to-refresh on campaign list
+    </campaigns_mobile>
+
+    <leads_mobile>
+      - Lead card list renders simplified mobile-optimized cards
+      - Tap lead card opens full-screen detail panel with tabs
+      - Lead detail tab: Info (name, phone, email, status, score, tags)
+      - Lead detail tab: Chat (conversation thread inline)
+      - Lead detail tab: Activity (timeline of interactions)
+      - Lead detail tab: Notes (notes and comments)
+      - Simplified kanban view (names + acronym only, landscape-optimized)
+      - Swipe right on lead card opens conversations inbox with that lead pre-selected
+      - Swipe left on lead card reveals quick actions tray (change status, add tag)
+      - Filter bottom sheet (group/sort/filter/status combined)
+      - Search leads with mobile-friendly search input
+      - Pull-to-refresh on lead list
+      - Lead creation form optimized for mobile (stacked fields, large touch targets)
+    </leads_mobile>
+
+    <conversations_mobile>
+      - Inbox list renders full-width (no container panels, maximum screen real estate)
+      - Tap conversation opens full-screen chat view
+      - Chat message bubbles occupy more than 45% of screen width
+      - Chat text input optimized for mobile keyboard (auto-resize, send button)
+      - Back button returns to inbox list
+      - Support tab within conversations works on mobile
+      - Search conversations on mobile
+      - Pull-to-refresh on inbox list
+    </conversations_mobile>
+
+    <calendar_mobile>
+      - Monthly calendar view
+      - Weekly calendar view
+      - Daily calendar view
+      - View toggle control to switch between month/week/day
+      - Tap calendar event opens popup with lead card info (name, status, score, tags)
+      - Tap lead name in popup navigates to full lead detail page
+      - Calendar navigation (previous/next month/week/day)
+    </calendar_mobile>
+
+    <settings_hub_mobile>
+      - Settings page redesigned as mobile hub with organized sections
+      - Profile / Account section (name, email, avatar)
+      - Theme toggle (dark/light mode)
+      - Language selector (en/pt/nl)
+      - Billing section link (navigates to billing sub-page)
+      - Accounts section (agency only — navigates to accounts management)
+      - Automations section (agency only — navigates to automation logs)
+      - Prompts section (agency only — navigates to prompt library)
+      - Social Media links section (Instagram, Facebook, Email, WhatsApp)
+      - Documentation link (navigates to docs page)
+    </settings_hub_mobile>
+
+    <billing_mobile>
+      - Invoice list renders mobile-optimized cards
+      - Contract list renders mobile-optimized cards
+      - Expense list renders mobile-optimized cards
+      - Billing detail panels with tabs (accessed from Settings hub)
+      - Billing creation forms optimized for mobile
+    </billing_mobile>
+
+    <secondary_pages_mobile>
+      - Automation Logs renders mobile-friendly list view (accessed via Settings)
+      - Prompt Library renders mobile card/list view (accessed via Settings)
+      - Accounts page renders mobile view (agency only, accessed via Settings)
+    </secondary_pages_mobile>
+
+    <tasks_mobile>
+      - Tasks list renders mobile-optimized view (accessed via user icon dropdown)
+      - Task detail view on mobile
+      - Task creation/edit form on mobile
+    </tasks_mobile>
+
+    <mobile_interactions_and_polish>
+      - Haptic feedback on bottom bar tab taps (navigator.vibrate API)
+      - Haptic feedback on key actions (send message, save, delete)
+      - All interactive elements have minimum 44px touch targets
+      - Faux-glassmorphism blur effect on detail panel scroll (headers/footers blur content beneath)
+      - Panel slide transitions when navigating list to detail (mobile-panel-enter)
+      - Tab switching animations within detail panels
+      - Pull-to-refresh animation consistent across all list pages
+      - Card entrance stagger animations on list load
+      - Swipe gesture recognition system (left/right on cards)
+    </mobile_interactions_and_polish>
+
+    <dark_mode_mobile>
+      - All mobile views render correctly in dark mode
+      - Glassmorphism blur uses dark-appropriate tints in dark mode
+    </dark_mode_mobile>
+  </core_features>
+
+  <database_schema>
+    <note>No database changes. This is a frontend-only mobile UI overhaul. All existing tables, fields, and relationships remain unchanged. The mobile app consumes the same REST API and PostgreSQL database as the desktop version.</note>
+  </database_schema>
+
+  <api_endpoints_summary>
+    <note>No new API endpoints. The mobile UI consumes all existing endpoints. Key endpoints used by mobile features include:
+      - GET /api/leads — lead list
+      - GET /api/campaigns — campaign list
+      - GET /api/conversations — conversation threads
+      - GET /api/notifications — notification list
+      - GET /api/bookings — calendar events
+      - GET /api/dashboard/stats — KPI data for swipable strip
+      - POST /api/support-chat — support bot messages
+      - All existing CRUD endpoints for leads, campaigns, accounts, billing
+    </note>
+  </api_endpoints_summary>
+
+  <ui_layout>
+    <main_structure>
+      Mobile layout (below 768px):
+      - Top bar: fixed, height 56px + safe-area-inset-top. Contains: swipable KPI strip (left), bell icon, support chat icon, user avatar (right)
+      - Main content: full-screen, scrollable, padding-top for topbar, padding-bottom for bottom bar
+      - Bottom bar: fixed, height 64px + safe-area-inset-bottom. Contains: 5 navigation icons with labels
+
+      Desktop layout (768px and above):
+      - Unchanged. Left sidebar + topbar + main content area remains identical.
+    </main_structure>
+
+    <mobile_navigation_pattern>
+      List pages use full-screen card lists. Tapping a card navigates to a full-screen detail view with tabs (not scroll sections). Back button returns to list. This pattern applies to: Leads, Campaigns, Conversations, Billing, Tasks, Accounts.
+    </mobile_navigation_pattern>
+
+    <mobile_detail_panel_pattern>
+      Detail panels are full-screen takeovers with:
+      - Fixed header (entity name + back button)
+      - Tab bar below header (e.g., Info | Chat | Activity | Notes)
+      - Scrollable tab content
+      - Faux-glassmorphism blur on header when content scrolls beneath
+      - No backdrop dialogs (panel-first rule still applies)
+    </mobile_detail_panel_pattern>
+
+    <mobile_filter_pattern>
+      All list pages use a single filter icon that opens a bottom sheet containing:
+      - Search input
+      - Group by options
+      - Sort by options
+      - Filter options (status, account, campaign)
+      - Clear all / Apply buttons
+    </mobile_filter_pattern>
+  </ui_layout>
+
+  <design_system>
+    <color_palette>
+      All existing CSS custom properties and brand tokens apply unchanged:
+      - --brand-indigo: #4F46E5 (primary actions, bottom bar active state)
+      - --brand-yellow: #FFDF3D (KPI accent, agency avatar ring)
+      - --highlight-active: #FFF28D (active tab pill)
+      - --highlight-selected: #FFF9D9 (selected card)
+      - Stone-gray surface hierarchy: --background, --muted, --card, --popover
+      - Dark mode tokens unchanged
+    </color_palette>
+
+    <typography>
+      - Outfit for headings (font-heading)
+      - Inter for body text (font-sans)
+      - Mobile font sizes: slightly larger touch-friendly labels on bottom bar (10px), standard body (14px), headings (18-24px)
+    </typography>
+
+    <mobile_specific_design>
+      - Faux-glassmorphism: backdrop-filter: blur(12px) saturate(1.2) on sticky headers/footers when content scrolls beneath
+      - Touch targets: minimum 44x44px on all interactive elements
+      - Bottom bar icons: larger (20-24px) with 10px labels beneath
+      - Top bar icons: standard 16px (h-4 w-4) in 36px touch circles
+      - Card gaps: 3px vertical gap (matching desktop pattern)
+      - Border radius: 1.5rem (24px) global radius (matching desktop)
+      - Swipe gesture threshold: 60px horizontal to trigger action
+      - Pull-to-refresh: 60px pull distance to trigger refresh
+    </mobile_specific_design>
+  </design_system>
+
+  <implementation_steps>
+    <step number="1">
+      <title>Mobile Shell Foundation</title>
+      <tasks>
+        - Implement mobile bottom navigation bar (5 tabs) with active states
+        - Redesign mobile top bar (remove hamburger, add KPI strip + 3 icons)
+        - Hide left sidebar completely on mobile
+        - Set up CSS variables for mobile safe areas
+        - Implement user icon dropdown with account switcher and agency yellow ring
+      </tasks>
+    </step>
+
+    <step number="2">
+      <title>Swipable KPI Strip and Top Bar Features</title>
+      <tasks>
+        - Build horizontal swipable KPI widget with indicator dots
+        - Connect KPI strip to existing dashboard stats API
+        - Implement notification bell panel for mobile
+        - Build full-screen support chat bot view
+        - Add unread badges to bell and support chat icons
+      </tasks>
+    </step>
+
+    <step number="3">
+      <title>Mobile Detail Panel System</title>
+      <tasks>
+        - Create reusable mobile detail panel component with tabs
+        - Implement faux-glassmorphism blur on scroll
+        - Build slide transitions for list-to-detail navigation
+        - Create tab switching animations
+        - Ensure back navigation works correctly
+      </tasks>
+    </step>
+
+    <step number="4">
+      <title>Campaigns Mobile</title>
+      <tasks>
+        - Optimize campaign card list for mobile width
+        - Implement campaign detail with tabs (Summary, Config, Tags)
+        - Build filter bottom sheet for campaigns
+        - Add pull-to-refresh
+      </tasks>
+    </step>
+
+    <step number="5">
+      <title>Leads Mobile</title>
+      <tasks>
+        - Optimize lead card list for mobile width
+        - Implement lead detail with tabs (Info, Chat, Activity, Notes)
+        - Build simplified kanban view for mobile
+        - Implement swipe gestures (right = inbox, left = actions)
+        - Build filter bottom sheet for leads
+        - Optimize lead creation form for mobile
+        - Add pull-to-refresh
+      </tasks>
+    </step>
+
+    <step number="6">
+      <title>Conversations Mobile</title>
+      <tasks>
+        - Remove container panels, maximize screen real estate
+        - Ensure message bubbles exceed 45% screen width
+        - Optimize chat input for mobile keyboard
+        - Implement inbox-to-chat full-screen transitions
+        - Add pull-to-refresh on inbox
+      </tasks>
+    </step>
+
+    <step number="7">
+      <title>Calendar Mobile</title>
+      <tasks>
+        - Implement monthly/weekly/daily view toggle
+        - Build event tap popup with lead card info
+        - Implement lead name tap navigation
+        - Calendar navigation for all view modes
+      </tasks>
+    </step>
+
+    <step number="8">
+      <title>Settings Hub and Secondary Pages</title>
+      <tasks>
+        - Redesign Settings as mobile hub with organized sections
+        - Add links to Billing, Accounts, Automations, Prompts
+        - Add Social Media links and Documentation sections
+        - Implement role-based visibility (agency vs client)
+        - Optimize Billing, Automation Logs, Prompt Library, Accounts for mobile
+        - Build Tasks mobile views
+      </tasks>
+    </step>
+
+    <step number="9">
+      <title>Interactions, Polish, and Dark Mode</title>
+      <tasks>
+        - Implement haptic feedback system (navigator.vibrate)
+        - Audit and fix all touch targets to minimum 44px
+        - Polish faux-glassmorphism blur across all detail panels
+        - Add card entrance stagger animations
+        - Build swipe gesture recognition
+        - Verify all views in dark mode
+        - Adjust glassmorphism tints for dark mode
+        - Cross-browser testing (Safari iOS, Chrome Android)
+      </tasks>
+    </step>
+  </implementation_steps>
+
+  <success_criteria>
+    <functionality>
+      - All 5 bottom bar tabs navigate correctly
+      - All detail panels open with tabs and navigate back
+      - Swipe gestures work reliably on lead cards
+      - Support chat bot conversation works full-screen
+      - Calendar toggles between month/week/day views
+      - Account switcher works for agency users
+      - Settings hub provides access to all secondary pages
+      - All existing functionality accessible on mobile
+    </functionality>
+    <user_experience>
+      - No clunkiness — every interaction feels instant and smooth
+      - Native app feel — swipe, pull-to-refresh, haptic feedback
+      - Thumb-friendly — primary actions reachable with one hand
+      - Three taps max to reach any feature
+      - Full-screen real estate usage (no wasted space from desktop panels)
+    </user_experience>
+    <technical_quality>
+      - Desktop layout completely unaffected (pixel-perfect same)
+      - No TypeScript errors
+      - No console errors on mobile
+      - Smooth 60fps animations and transitions
+      - Proper safe area handling on notched devices
+    </technical_quality>
+    <design_polish>
+      - Faux-glassmorphism blur effects on all scrollable detail headers
+      - Consistent card animations and entrance effects
+      - Yellow agency avatar ring clearly visible
+      - KPI strip swipes smoothly with snap-to-card behavior
+      - Dark mode fully polished on all mobile views
+    </design_polish>
+  </success_criteria>
+</project_specification>

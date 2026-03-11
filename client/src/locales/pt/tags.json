@@ -1,0 +1,61 @@
+{
+  "emptyState": {
+    "searchTitle": "Nenhuma tag corresponde \u00e0 sua busca",
+    "searchDescription": "Nenhuma tag encontrada com \"{{query}}\". Tente um termo diferente.",
+    "filterTitle": "Nenhuma tag corresponde aos filtros atuais",
+    "filterDescription": "Tente ajustar ou limpar os filtros para ver mais tags.",
+    "defaultTitle": "Nenhuma tag dispon\u00edvel",
+    "defaultDescription": "Nenhuma tag dispon\u00edvel. Crie uma para come\u00e7ar."
+  },
+  "card": {
+    "leadCount_one": "{{count}} lead",
+    "leadCount_other": "{{count}} leads",
+    "auto": "Auto"
+  },
+  "columns": {
+    "name": "Nome da Tag",
+    "category": "Categoria",
+    "account": "Conta",
+    "campaign": "Campanha",
+    "leadCount": "Leads",
+    "description": "Descri\u00e7\u00e3o",
+    "autoApplied": "Auto"
+  },
+  "table": {
+    "selected": "{{count}} selecionado(s)",
+    "clear": "Limpar",
+    "none": "Nenhum",
+    "auto": "Auto"
+  },
+  "colorPicker": {
+    "chooseColor": "Escolha uma cor",
+    "selectedColor": "Cor selecionada: {{name}}"
+  },
+  "colors": {
+    "blue": "Azul",
+    "green": "Verde",
+    "red": "Vermelho",
+    "yellow": "Amarelo",
+    "orange": "Laranja",
+    "purple": "Roxo",
+    "gray": "Cinza",
+    "pink": "Rosa",
+    "teal": "Azul-petróleo",
+    "cyan": "Ciano",
+    "indigo": "\u00cdndigo"
+  },
+  "deleteDialog": {
+    "titleSingle": "Excluir Tag",
+    "titleBulk": "Excluir Tags",
+    "messageSinglePrefix": "Tem certeza que deseja excluir a tag",
+    "messageBulkPrefix": "Tem certeza que deseja excluir",
+    "tagsCount_one": "{{count}} tag",
+    "tagsCount_other": "{{count}} tags",
+    "warningSingle": "Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita. Os leads que atualmente possuem esta tag n\u00e3o a perder\u00e3o \u2014 apenas a defini\u00e7\u00e3o da tag ser\u00e1 removida.",
+    "warningBulk": "Esta a\u00e7\u00e3o n\u00e3o pode ser desfeita. Os leads que atualmente possuem essas tags n\u00e3o as perder\u00e3o \u2014 apenas as defini\u00e7\u00f5es das tags ser\u00e3o removidas.",
+    "cancel": "Cancelar",
+    "deleting": "Excluindo...",
+    "deleteSingle": "Excluir Tag",
+    "deleteBulk": "Excluir {{count}} Tags"
+  }
+}

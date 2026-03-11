@@ -1,0 +1,62 @@
+{
+  "hero": {
+    "title": {
+      "line1": "Wake dormant leads into",
+      "highlight": "booked calls",
+      "line2": "automatically."
+    },
+    "subtitle": {
+      "line1": "AI handles first contact to CRM handoff.",
+      "line2": "Focus on growth and closing, not chasing."
+    },
+    "cta": {
+      "primary": "Book a Call",
+      "secondary": "See Use Cases"
+    }
+  },
+  "results": {
+    "title": "And what you get",
+    "subtitle": "From chaos to certainty in 30 days",
+    "metrics": {
+      "replyRates": {
+        "label": "Reply Rates",
+        "subtext": "vs industry 5-10%"
+      },
+      "leadsReactivated": {
+        "label": "Leads Reactivated",
+        "subtext": "into live"
+      },
+      "hoursSaved": {
+        "label": "Hours Saved",
+        "subtext": "per rep/month"
+      }
+    },
+    "upfrontCost": {
+      "title": "Initial Cost",
+      "partnership": "Performance Partnership",
+      "mission": "Our victory is your success",
+      "guarantee": "30-Day guarantee"
+    },
+    "absoluteZero": {
+      "absolute": "Absolute",
+      "zero": "ZERO"
+    }
+  },
+  "compliance": {
+    "title": "Compliance and Reputation Built In",
+    "gdpr": {
+      "title": "GDPR & CCPA Compliant",
+      "description": "All workflows respect opt-out preferences, unsubscribe links, and data residency requirements. We're fully compliant with global privacy standards."
+    },
+    "brand": {
+      "title": "Brand Protection",
+      "description": "Real-time monitoring ensures every interaction stays on-topic, professional, and perfectly aligned with your brand's voice and guidelines."
+    }
+  },
+  "bottomCta": {
+    "title": "AI in Action",
+    "quote": "See our AI live handling conversations like an agent for your business, so your team can focus on what matters.",
+    "meta": "Duration: 10 to 30 minutes\nNo commitment",
+    "button": "Book a Demo"
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "page": {
+    "title": "Taken",
+    "searchPlaceholder": "Taken zoeken...",
+    "noTasks": "Geen taken",
+    "noTasksFound": "Geen taken gevonden",
+    "taskNotFound": "Taak niet gevonden"
+  },
+  "toolbar": {
+    "add": "Toevoegen",
+    "sort": "Sorteren",
+    "filter": "Filteren",
+    "clearFilters": "Filters wissen"
+  },
+  "create": {
+    "title": "Nieuwe Taak",
+    "create": "Aanmaken",
+    "creating": "Aanmaken...",
+    "taskTitle": "Taaktitel"
+  },
+  "detail": {
+    "save": "Opslaan",
+    "delete": "Verwijderen",
+    "deleteConfirm": "Deze taak verwijderen?",
+    "created": "Aangemaakt",
+    "updated": "Bijgewerkt"
+  },
+  "fields": {
+    "description": "Beschrijving",
+    "descriptionPlaceholder": "Beschrijving toevoegen...",
+    "addDescription": "Beschrijving toevoegen...",
+    "account": "Account",
+    "accountPlaceholder": "Accountnaam",
+    "campaign": "Campagne",
+    "lead": "Lead",
+    "optional": "Optioneel",
+    "status": "Status",
+    "priority": "Prioriteit",
+    "type": "Type",
+    "dueDate": "Vervaldatum",
+    "due": "vervalt",
+    "assignee": "Toegewezen aan",
+    "assigneePlaceholder": "Naam toegewezene",
+    "linkedTo": "Gekoppeld aan",
+    "tags": "Tags"
+  },
+  "linked": {
+    "account": "Account:",
+    "campaign": "Campagne:",
+    "lead": "Lead:"
+  },
+  "status": {
+    "todo": "Te Doen",
+    "inProgress": "In Uitvoering",
+    "done": "Voltooid",
+    "cancelled": "Geannuleerd"
+  },
+  "priority": {
+    "low": "Laag",
+    "medium": "Gemiddeld",
+    "high": "Hoog",
+    "urgent": "Urgent"
+  },
+  "taskType": {
+    "followUp": "Opvolging",
+    "call": "Bellen",
+    "review": "Beoordeling",
+    "admin": "Admin",
+    "custom": "Aangepast"
+  },
+  "sort": {
+    "dueDateAsc": "Vervaldatum (vroegst)",
+    "dueDateDesc": "Vervaldatum (laatst)",
+    "priorityDesc": "Prioriteit (hoogst)",
+    "priorityAsc": "Prioriteit (laagst)",
+    "createdDesc": "Nieuwste eerst",
+    "createdAsc": "Oudste eerst",
+    "titleAsc": "Titel A-Z",
+    "titleDesc": "Titel Z-A"
+  },
+  "groupBy": {
+    "none": "Geen groepering",
+    "status": "Status",
+    "priority": "Prioriteit",
+    "type": "Type",
+    "assignee": "Toegewezene",
+    "account": "Account",
+    "all": "Alle",
+    "unassigned": "Niet toegewezen"
+  },
+  "columns": {
+    "title": "Titel",
+    "type": "Type",
+    "status": "Status",
+    "assignee": "Toegewezen aan",
+    "account": "Account",
+    "due": "Vervalt",
+    "created": "Aangemaakt"
+  },
+  "card": {
+    "newTask": "Nieuwe Taak",
+    "clickAgainToDelete": "Klik nogmaals om te verwijderen",
+    "copy": "(kopie)",
+    "duplicate": "Dupliceren"
+  },
+  "clickToChangeStatus": "Klik om status te wijzigen"
+}

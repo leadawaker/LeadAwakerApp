@@ -1,0 +1,208 @@
+{
+  "title": "Documentation",
+  "searchPlaceholder": "Search...",
+  "whatsNew": "What's New",
+  "operatorManual": "Operator Manual",
+  "clientGuide": "Client Guide",
+  "agencyDocs": "Agency Docs",
+  "userDocs": "User Docs",
+  "agency": "Agency",
+  "user": "User",
+  "agencyDocumentation": "Agency Documentation",
+  "userDocumentation": "User Documentation",
+  "noResults": "No sections match \"{{query}}\"",
+  "copy": "Copy",
+  "roles": {
+    "role": "Role",
+    "view": "View",
+    "access": "Access"
+  },
+  "toc": {
+    "setup": "Account Setup",
+    "campaign": "Creating a Campaign",
+    "lifecycle": "Lead Lifecycle",
+    "webhooks": "CRM Webhooks",
+    "instagram": "Instagram",
+    "analytics": "Analytics & Reporting",
+    "troubleshoot": "Troubleshoot",
+    "userManagement": "User Management",
+    "promptLibrary": "Prompt Library",
+    "billing": "Billing & Invoicing",
+    "gettingStarted": "Getting Started",
+    "whatIsIt": "What is LeadAwaker?",
+    "yourLeads": "Your Leads",
+    "conversations": "Conversations",
+    "leadScore": "Lead Score",
+    "bookings": "Bookings",
+    "yourAccount": "Your Account",
+    "reportsInsights": "Reports & Insights",
+    "faq": "FAQ"
+  },
+  "operator": {
+    "setup": {
+      "title": "1 - Account Setup",
+      "step1": "Go to <settingsLink>Settings - Integrations</settingsLink>. Enter your <strong>Twilio Account SID</strong>, <strong>Auth Token</strong>, and the <strong>From Number</strong> (or Messaging Service SID) for this account.",
+      "step2": "Set your <strong>business hours</strong> (start/end time) and <strong>timezone</strong>. The engine will never send messages outside these hours.",
+      "step3": "Set a <strong>Daily Send Limit</strong> (default 500). This is the max messages the account can send per day across all campaigns.",
+      "step4": "Copy the <strong>API Key</strong> (webhook_secret) from <settingsLink>Settings</settingsLink>. Paste this into your CRM integrations to authorize inbound leads.",
+      "tip": "The API key is shown once on generation. If lost, regenerate it - the old key will stop working immediately."
+    },
+    "campaign": {
+      "title": "2 - Creating a Campaign",
+      "step1": "Go to <strong>Campaigns - New Campaign</strong>. Give it a name and select the <strong>channel</strong> (SMS or WhatsApp).",
+      "step2": "Write your <strong>First Message</strong> template. Use merge tags: {{first_name}}, {{agent_name}}, {{service}}.",
+      "step3": "Add up to 3 <strong>Follow-up bumps</strong>. Set the delay in hours for each (e.g., 24h, 48h, 72h). Bumps are sent only if the lead hasn't replied.",
+      "step4": "Set <strong>Active Hours</strong>, <strong>Daily Lead Limit</strong>, and optionally link a <strong>Prompt Library entry</strong> to customize the AI's persona.",
+      "step5": "Set campaign status to <strong>Active</strong> when you're ready to start sending.",
+      "tip": "Keep the first message short and personal. Avoid links in the first message - many SMS filters block them."
+    },
+    "lifecycle": {
+      "title": "3 - Lead Lifecycle & Statuses",
+      "description": "Leads move through these automation statuses automatically:",
+      "paused": "Created but not yet assigned to a campaign. Safe - no messages sent.",
+      "queued": "Assigned to an active campaign. Campaign_launcher picks this up within 60 seconds.",
+      "active": "First message sent. Eligible for bumps and AI conversation replies.",
+      "completed": "All bumps sent, booking confirmed, or lead exhausted. No further messages.",
+      "dnd": "Lead opted out (replied with STOP or similar). Never contacted again.",
+      "tip": "To pause a specific lead manually, set their automation_status to \"paused\" in the lead detail panel. To pause a whole campaign, set campaign status to \"Inactive\"."
+    },
+    "webhooks": {
+      "title": "4 - Source Adapters (CRM Webhooks)",
+      "description": "Each CRM has a dedicated intake URL. Paste the URL into your CRM's webhook settings. Leads are automatically created and queued.",
+      "tip": "Replace YOUR_KEY with the API key from <settingsLink>Settings</settingsLink>. Replace ID with the campaign ID from the campaign detail page."
+    },
+    "instagram": {
+      "title": "5 - Instagram Integration",
+      "description": "Connect an Instagram Business account to sync existing DM contacts and receive inbound messages.",
+      "step1": "Go to <settingsLink>Settings - Account</settingsLink>. Enter your <strong>Instagram User ID</strong> (your IG Business Account numeric ID) and <strong>Access Token</strong> (a long-lived Page access token from Meta).",
+      "step2": "Click <strong>Sync Instagram Contacts</strong> to pull all existing DM conversation contacts from Meta's API. Each unique contact is created as a lead with status paused.",
+      "step3": "Assign synced leads to a campaign to start automated outreach, or use them for manual follow-up in the Conversations inbox.",
+      "tip": "Meta allows ~200 API calls per hour per token. For accounts with 200+ contacts, the sync may stop early due to rate limiting - just run it again after an hour. Duplicates are automatically skipped."
+    },
+    "analytics": {
+      "title": "6 - Analytics & Reporting",
+      "step1": "<strong>Lead Scores</strong> (0-100) are recalculated every 30 minutes. They combine funnel stage (40%), engagement (30%), and activity recency (30%).",
+      "step2": "<strong>Campaign Metrics</strong> (response rate, booking rate, cost per lead) are snapshotted daily at midnight. Check them under Reports.",
+      "step3": "<strong>Automation Logs</strong> show every step the engine took for every lead - useful for debugging missed sends or unexpected behavior.",
+      "tip": "A lead score above 70 = high intent. Prioritize manual follow-up on these."
+    },
+    "users": {
+      "title": "7 · User Management & Roles"
+    },
+    "prompts": {
+      "title": "8 · Prompt Library & AI Personas"
+    },
+    "billing": {
+      "title": "9 · Billing & Invoicing"
+    },
+    "troubleshoot": {
+      "title": "10 · Troubleshoot",
+      "notReceiving": "Lead not receiving messages",
+      "notReceivingSolution": "Check: campaign status = Active, lead automation_status = queued, business hours not blocking, daily limit not reached. Check Automation Logs for the lead.",
+      "wrongLanguage": "Wrong language in replies",
+      "wrongLanguageSolution": "Ensure the lead's language field is set. The AI uses this to reply in the correct language.",
+      "stuckSending": "Lead stuck in 'sending' status",
+      "stuckSendingSolution": "This means Twilio failed to send the first message. Manually reset to 'queued' in the DB and check Twilio credentials.",
+      "duplicateLeads": "Duplicate leads",
+      "duplicateLeadsSolution": "Phone-based dedup is per-account. The same phone cannot be in the same account twice. Different accounts can have the same phone.",
+      "aiStopped": "AI replies stopped",
+      "aiStoppedSolution": "Check Automation Logs for ai_conversation errors. Usually means OpenAI API key issue or rate limit."
+    }
+  },
+  "client": {
+    "gettingStarted": {
+      "title": "Getting Started"
+    },
+    "what": {
+      "title": "What is LeadAwaker?",
+      "p1": "LeadAwaker is an AI-powered lead follow-up system. When someone expresses interest in your service (fills a form, clicks an ad, etc.), LeadAwaker automatically reaches out via SMS or WhatsApp, nurtures the conversation, and books calls - all on autopilot.",
+      "p2": "The AI agent replies to leads in real time, handles objections, and knows when to stop and let a human take over."
+    },
+    "leads": {
+      "title": "Understanding Your Leads",
+      "description": "Each lead goes through a journey from first contact to booking. Here's what the status indicators mean:",
+      "new": "Lead just arrived, not yet contacted.",
+      "contacted": "First message sent. Waiting for a reply.",
+      "responded": "Lead replied at least once. AI is in conversation.",
+      "qualified": "Lead has shown interest and is being guided to book a call.",
+      "callBooked": "Appointment confirmed!",
+      "notInterested": "Lead opted out or was not a fit.",
+      "statusNew": "New",
+      "statusContacted": "Contacted",
+      "statusResponded": "Responded",
+      "statusQualified": "Qualified",
+      "statusCallBooked": "Call Booked",
+      "statusNotInterested": "Not Interested"
+    },
+    "conversations": {
+      "title": "Reading Conversations",
+      "step1": "Open the <strong>Leads</strong> page and click any lead to view their full conversation history.",
+      "step2": "Messages shown on the <strong>right side</strong> are outbound (sent by the AI or your team). Messages on the <strong>left</strong> are inbound (from the lead).",
+      "step3": "Look for the <strong>AI label</strong> on messages - these were generated automatically. Messages without this label were sent manually.",
+      "step4": "If you want to take over the conversation manually, toggle <strong>Manual Takeover</strong> on the lead detail. The AI will stop replying and you can message freely."
+    },
+    "score": {
+      "title": "Lead Score",
+      "description": "Every lead has a <strong>Lead Score</strong> from 0 to 100 that estimates how likely they are to book. It's calculated from:",
+      "factor1": "Their current funnel stage (40%)",
+      "factor2": "How many times they've replied and how recently (30%)",
+      "factor3": "Recency of their last activity (30%)",
+      "tip": "Leads with a score above 70 are your warmest prospects. Prioritize these for manual outreach."
+    },
+    "bookings": {
+      "title": "Bookings",
+      "p1": "When the AI detects a booking confirmation in the conversation, the lead is automatically moved to <strong>Call Booked</strong> status. The booking date and time are saved to the lead record.",
+      "p2": "You can view all upcoming bookings on the <strong>Calendar</strong> page.",
+      "tip": "If a booking appears incorrect or was auto-detected by mistake, manually update the lead status from the detail panel."
+    },
+    "accountMgmt": {
+      "title": "Managing Your Account"
+    },
+    "reports": {
+      "title": "Reports & Insights"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "q1": "Can leads tell they're talking to an AI?",
+      "a1": "The AI is trained to sound natural and human. It doesn't announce itself as a bot unless directly asked or unless your campaign script tells it to.",
+      "q2": "What happens if a lead says STOP?",
+      "a2": "They're immediately added to the Do Not Contact list and will never be messaged again by any campaign in your account.",
+      "q3": "How fast does the AI reply?",
+      "a3": "Within seconds to a few minutes, depending on message volume. A small delay is added to simulate natural human typing.",
+      "q4": "Can I message a lead manually?",
+      "a4": "Yes - enable Manual Takeover on the lead. The AI pauses and you send messages directly from the Conversations page.",
+      "q5": "What if a lead doesn't respond?",
+      "a5": "The system sends up to 3 follow-up messages (bumps) at scheduled intervals. After all bumps are exhausted, the lead is marked Completed and automation stops."
+    }
+  },
+  "changelog": {
+    "v14": {
+      "date": "March 2026",
+      "items": [
+        "Documentation page with Operator Manual and Client Guide",
+        "Campaign Tags tab - group and organize tags by category",
+        "Users management page - roles, avatars, and permissions",
+        "Support chat integration in the navigation bar",
+        "Instagram contact sync - pull existing DM contacts from Meta's API"
+      ]
+    },
+    "v13": {
+      "date": "February 2026",
+      "items": [
+        "Full design system overhaul - new color palette and avatar system",
+        "Leads page redesign - split-pane with List, Table, and Kanban views",
+        "Calendar page - monthly, weekly, and daily booking views",
+        "Conversations inbox - real-time WhatsApp chat interface"
+      ]
+    },
+    "v12": {
+      "date": "January 2026",
+      "items": [
+        "Campaigns page - create, manage, and monitor campaigns",
+        "Prompt Library - AI persona and script management",
+        "Automation Logs - full audit trail for every lead action",
+        "Billing & Expenses - BTW/VAT invoice management with PDF upload"
+      ]
+    }
+  }
+}

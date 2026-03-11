@@ -1,0 +1,212 @@
+{
+  "sidebar": {
+    "menu": "Menu",
+    "campaigns": "Campanhas",
+    "accounts": "Contas",
+    "leads": "Leads",
+    "chats": "Conversas",
+    "calendar": "Calendário",
+    "promptLibrary": "Biblioteca de Prompts",
+    "billing": "Faturamento",
+    "tasks": "Tarefas",
+    "automations": "Automações",
+    "settings": "Configurações",
+    "support": "Suporte",
+    "help": "Ajuda",
+    "docs": "Docs"
+  },
+  "sidebarSections": {
+    "engage": "Engajar",
+    "admin": "Admin",
+    "backend": "Backend",
+    "agency": "Agência"
+  },
+  "topbar": {
+    "search": "Buscar",
+    "searchPlaceholder": "Buscar leads por nome, telefone, email…",
+    "startTyping": "Comece a digitar para buscar…",
+    "noResults": "Nenhum resultado encontrado.",
+    "darkMode": "Modo escuro",
+    "lightMode": "Modo claro",
+    "toggleDarkMode": "Alternar modo escuro",
+    "customerSupport": "Suporte ao Cliente",
+    "notifications": "Notificações",
+    "help": "Ajuda",
+    "documentation": "Documentação",
+    "social": "Redes Sociais",
+    "agencyView": "Visão da Agência",
+    "allAccounts": "Todas as Contas",
+    "switchAccount": "Trocar Conta",
+    "myProfile": "Meu Perfil",
+    "logout": "Sair"
+  },
+  "search": {
+    "leads": "Leads",
+    "accounts": "Contas",
+    "users": "Usuários"
+  },
+  "actions": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "create": "Criar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "import": "Importar",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "apply": "Aplicar",
+    "reset": "Redefinir",
+    "refresh": "Atualizar",
+    "viewAll": "Ver Tudo",
+    "showMore": "Mostrar Mais",
+    "showLess": "Mostrar Menos",
+    "selectAll": "Selecionar Tudo",
+    "deselectAll": "Desmarcar Tudo",
+    "loading": "Carregando…",
+    "saving": "Salvando…"
+  },
+  "status": {
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "pending": "Pendente",
+    "completed": "Concluído",
+    "paused": "Pausado",
+    "draft": "Rascunho",
+    "scheduled": "Agendado",
+    "running": "Em execução",
+    "failed": "Falhou",
+    "success": "Sucesso",
+    "error": "Erro",
+    "delivered": "Entregue",
+    "read": "Lido",
+    "replied": "Respondido",
+    "optedOut": "Optou por sair"
+  },
+  "time": {
+    "today": "Hoje",
+    "yesterday": "Ontem",
+    "thisWeek": "Esta Semana",
+    "lastWeek": "Semana Passada",
+    "thisMonth": "Este Mês",
+    "lastMonth": "Mês Passado",
+    "daysAgo": "{{count}} dias atrás",
+    "hoursAgo": "{{count}} horas atrás",
+    "minutesAgo": "{{count}} minutos atrás",
+    "justNow": "Agora mesmo"
+  },
+  "empty": {
+    "noData": "Nenhum dado disponível",
+    "noResults": "Nenhum resultado encontrado",
+    "noItems": "Nenhum item ainda"
+  },
+  "confirm": {
+    "areYouSure": "Tem certeza?",
+    "cannotUndo": "Esta ação não pode ser desfeita.",
+    "deleteConfirm": "Tem certeza que deseja excluir isto?"
+  },
+  "chat": {
+    "title": "Conversa",
+    "selectLead": "Selecione um lead",
+    "selectLeadDescription": "Escolha um lead para ver suas mensagens.",
+    "loading": "Carregando mensagens\u2026",
+    "noInteractions": "Nenhuma intera\u00e7\u00e3o ainda",
+    "noInteractionsDescription": "As mensagens aparecer\u00e3o aqui assim que o lead receber contato.",
+    "sendViaApi": "Enviar mensagens via API",
+    "interactionTypes": {
+      "SMS": "SMS",
+      "WhatsApp": "WhatsApp",
+      "Email": "E-mail",
+      "Call": "Liga\u00e7\u00e3o",
+      "Note": "Nota"
+    }
+  },
+  "performance": {
+    "title": "Desempenho de Campanhas",
+    "noCampaigns": "Nenhuma campanha ainda",
+    "noCampaignsDescription": "Crie sua primeira campanha para come\u00e7ar a engajar leads via WhatsApp.",
+    "noData": "Nenhum dado de desempenho ainda",
+    "noDataDescription": "As m\u00e9tricas de campanha aparecer\u00e3o aqui assim que suas campanhas come\u00e7arem.",
+    "response": "Resposta",
+    "booked": "Agendado",
+    "sent": "Enviado",
+    "bookings": "Agendamentos",
+    "roi": "ROI",
+    "defaultType": "Campanha"
+  },
+  "campaignStatus": {
+    "Active": "Ativo",
+    "Draft": "Rascunho",
+    "Paused": "Pausado",
+    "Completed": "Conclu\u00eddo",
+    "Finished": "Finalizado",
+    "Archived": "Arquivado",
+    "Inactive": "Inativo"
+  },
+  "campaignTypes": {
+    "Cold Outreach": "Prospec\u00e7\u00e3o Fria",
+    "Re-engagement": "Reengajamento",
+    "Follow-up": "Acompanhamento",
+    "Event": "Evento"
+  },
+  "emptyStates": {
+    "leads": {
+      "title": "Nenhum lead ainda",
+      "description": "Importe leads ou adicione seu primeiro contato para come\u00e7ar a acompanhar seu pipeline."
+    },
+    "campaigns": {
+      "title": "Nenhuma campanha ainda",
+      "description": "Crie sua primeira campanha para come\u00e7ar a engajar leads via WhatsApp."
+    },
+    "accounts": {
+      "title": "Nenhuma conta ainda",
+      "description": "Adicione uma conta de cliente para come\u00e7ar a gerenciar seus leads e campanhas."
+    },
+    "tags": {
+      "title": "Nenhuma tag encontrada",
+      "description": "Crie tags para categorizar e organizar seus leads para melhor segmenta\u00e7\u00e3o."
+    },
+    "users": {
+      "title": "Nenhum membro da equipe",
+      "description": "Convide membros da equipe para colaborar no gerenciamento de leads e campanhas."
+    },
+    "prompts": {
+      "title": "Nenhum prompt salvo",
+      "description": "Crie templates de prompt de IA para padronizar mensagens entre campanhas."
+    },
+    "automation": {
+      "title": "Nenhum log de automa\u00e7\u00e3o",
+      "description": "Os logs de automa\u00e7\u00e3o aparecer\u00e3o aqui assim que os fluxos n8n come\u00e7arem."
+    },
+    "conversations": {
+      "title": "Nenhuma conversa ainda",
+      "description": "As conversas aparecer\u00e3o aqui quando os leads come\u00e7arem a receber mensagens."
+    },
+    "calendar": {
+      "title": "Nenhum compromisso agendado",
+      "description": "Liga\u00e7\u00f5es e compromissos agendados aparecer\u00e3o aqui conforme os leads convertem."
+    },
+    "search": {
+      "title": "Nenhum resultado encontrado",
+      "description": "Tente ajustar sua busca ou filtros para encontrar o que procura."
+    },
+    "generic": {
+      "title": "Nada aqui ainda",
+      "description": "Os dados aparecer\u00e3o aqui assim que forem criados."
+    }
+  },
+  "notifications": {
+    "title": "Notifica\u00e7\u00f5es",
+    "markAllRead": "Marcar todas como lidas",
+    "all": "Todas",
+    "unread": "N\u00e3o lidas",
+    "allCaughtUp": "Tudo em dia!",
+    "noUnread": "Sem notifica\u00e7\u00f5es n\u00e3o lidas.",
+    "noNotifications": "Nenhuma notifica\u00e7\u00e3o ainda.",
+    "older": "Mais antigas"
+  }
+}

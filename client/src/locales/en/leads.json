@@ -1,0 +1,522 @@
+{
+  "page": {
+    "title": "My Leads",
+    "opportunities": "Opportunities"
+  },
+  "viewTabs": {
+    "list": "List",
+    "table": "Table",
+    "pipeline": "Pipeline"
+  },
+  "toolbar": {
+    "add": "Add",
+    "searchPlaceholder": "Search leads...",
+    "searchLeads": "Search leads",
+    "group": "Group",
+    "sort": "Sort",
+    "filter": "Filter",
+    "fields": "Fields",
+    "csv": "CSV",
+    "importCsv": "Import CSV",
+    "exportCsv": "Export CSV",
+    "fold": "Fold",
+    "unfold": "Unfold",
+    "tags": "Tags",
+    "changeStage": "Change Stage",
+    "duplicate": "Duplicate",
+    "clearAll": "Clear all",
+    "clearAllFilters": "Clear all filters",
+    "resetToDefault": "Reset to default",
+    "showHideColumns": "Show / Hide Columns"
+  },
+  "sort": {
+    "sortBy": "Sort by",
+    "default": "Default",
+    "scoreHighToLow": "Score (High to Low)",
+    "scoreDesc": "Score (High \u2192 Low)",
+    "recency": "Recency (Newest first)",
+    "alphaAZ": "Alphabetical (A to Z)",
+    "alpha": "Alphabetical (A \u2192 Z)",
+    "mostRecent": "Most Recent",
+    "nameAZ": "Name A \u2192 Z",
+    "nameZA": "Name Z \u2192 A",
+    "scoreDown": "Score \u2193",
+    "scoreUp": "Score \u2191"
+  },
+  "group": {
+    "status": "Status",
+    "campaign": "Campaign",
+    "account": "Account",
+    "none": "None",
+    "noCampaign": "No Campaign",
+    "untagged": "Untagged"
+  },
+  "filters": {
+    "title": "Lead Filters",
+    "pipelineStage": "Pipeline Stage",
+    "allStages": "All stages",
+    "campaign": "Campaign",
+    "allCampaigns": "All Campaigns",
+    "tags": "Tags",
+    "selectTags": "Select tags...",
+    "tagsSelected_one": "{{count}} tag selected",
+    "tagsSelected_other": "{{count}} tags selected",
+    "scoreRange": "Lead Score Range",
+    "priority": "Priority",
+    "allPriorities": "All priorities",
+    "createdDateRange": "Created Date Range",
+    "from": "From",
+    "to": "To",
+    "clearDates": "Clear dates",
+    "filtersActive_one": "{{count}} filter active",
+    "filtersActive_other": "{{count}} filters active",
+    "highScore": "High Score (70+)",
+    "hasPhone": "Has Phone",
+    "hasEmail": "Has Email",
+    "allAccounts": "All Accounts",
+    "moveTo": "Move to"
+  },
+  "fold": {
+    "foldColumns": "Fold columns",
+    "foldDescription": "Fold columns with this many leads or fewer.",
+    "leads": "leads",
+    "apply": "Apply"
+  },
+  "tagsToggle": {
+    "alwaysVisible": "Tags always visible \u2014 click to hover-only",
+    "hoverOnly": "Show tags on hover only \u2014 click to always show"
+  },
+  "table": {
+    "columns": {
+      "name": "Name",
+      "status": "Status",
+      "score": "Score",
+      "phone": "Phone",
+      "email": "Email",
+      "campaign": "Campaign",
+      "tags": "Tags",
+      "lastActivity": "Last Activity",
+      "notes": "Notes",
+      "account": "Account",
+      "source": "Source",
+      "company": "Company",
+      "bumpStage": "Bump Stage",
+      "created": "Created",
+      "assignedTo": "Assigned To"
+    },
+    "empty": {
+      "noResults": "No leads match your search",
+      "noLeads": "No leads found"
+    },
+    "pagination": {
+      "prev": "Prev",
+      "next": "Next"
+    },
+    "saveFailed": "Save failed \u2014 click to retry",
+    "selectAll": "Select all",
+    "deselectAll": "Deselect all"
+  },
+  "kanban": {
+    "stageLabels": {
+      "New": "New",
+      "Contacted": "Contacted",
+      "Responded": "Responded",
+      "MultipleResponses": "Multiple Responses",
+      "Qualified": "Qualified",
+      "Booked": "Call Booked",
+      "Closed": "Closed",
+      "Lost": "Lost",
+      "DND": "DND",
+      "Unknown": "Unknown"
+    },
+    "emptyStates": {
+      "New": {
+        "message": "No new leads yet",
+        "hint": "Import contacts or add a lead to get started"
+      },
+      "Contacted": {
+        "message": "No contacted leads",
+        "hint": "Reach out to new leads to move them here"
+      },
+      "Responded": {
+        "message": "No leads have responded",
+        "hint": "Keep following up \u2014 responses will appear here"
+      },
+      "MultipleResponses": {
+        "message": "No active conversations",
+        "hint": "Engage with your contacted leads to build dialogue"
+      },
+      "Qualified": {
+        "message": "No qualified leads yet",
+        "hint": "Qualify promising conversations to fill this stage"
+      },
+      "Booked": {
+        "message": "No calls booked yet",
+        "hint": "This is your north-star goal \u2014 keep pushing!"
+      },
+      "Closed": {
+        "message": "No closed deals yet",
+        "hint": "Completed bookings will appear here"
+      },
+      "Lost": {
+        "message": "No lost leads",
+        "hint": "Great! All your leads are still in the pipeline"
+      },
+      "DND": {
+        "message": "No leads on DND",
+        "hint": "Leads who opt out will appear here"
+      },
+      "default": {
+        "message": "No leads in this stage",
+        "hint": "Drag leads here to move them into this stage"
+      }
+    },
+    "dropHere": "Drop here",
+    "moveLeadTo": "Move lead to {{stage}}",
+    "loadMore": "Load {{count}} more",
+    "leadMoved": "Lead moved",
+    "movedTo": "Moved to {{stage}}",
+    "undo": "Undo",
+    "moveFailed": "Couldn't move lead",
+    "moveFailedDescription": "Status reverted \u2014 check your connection",
+    "leadScore": "Lead score: {{score}}"
+  },
+  "detail": {
+    "title": "Lead Detail",
+    "leadsOverview": "Leads Overview",
+    "leadsCount": "{{count}} leads",
+    "clickRowToView": "Click a row to view lead details here.",
+    "expandPanel": "Expand panel",
+    "collapsePanel": "Collapse panel",
+    "deselectLead": "Deselect lead",
+    "openFullPage": "Open full contact page",
+    "sections": {
+      "contact": "Contact",
+      "scores": "Scores",
+      "status": "Status",
+      "doNotContact": "Do Not Contact",
+      "bumpProgress": "Bump Progress",
+      "activity": "Activity",
+      "booking": "Booking",
+      "aiInsights": "AI Insights",
+      "tags": "Tags",
+      "notes": "Notes",
+      "conversations": "Conversations"
+    },
+    "fields": {
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "priority": "Priority",
+      "language": "Language",
+      "leadScore": "Lead Score",
+      "engagement": "Engagement",
+      "activityScore": "Activity",
+      "pipelineStage": "Pipeline Stage",
+      "automation": "Automation",
+      "manualTakeover": "Manual Takeover",
+      "aiPaused": "AI paused",
+      "optedOutDnc": "Opted Out / DNC",
+      "dncActive": "DNC active",
+      "dncReason": "Reason (optional)",
+      "dncReasonPlaceholder": "Enter DNC reason...",
+      "dncReasonLabel": "Reason",
+      "currentStage": "Current Stage",
+      "leadCreated": "Lead Created",
+      "lastUpdated": "Last Updated",
+      "lastInteraction": "Last Interaction",
+      "lastSent": "Last Sent",
+      "lastReceived": "Last Received",
+      "sentCount": "Sent Count",
+      "receivedCount": "Received Count",
+      "responseRate": "Response Rate",
+      "daysInactive": "Days Inactive",
+      "firstContacted": "First Contacted",
+      "nextAction": "Next Action",
+      "whatTheyDid": "What They Did",
+      "callDate": "Call Date",
+      "confirmedAt": "Confirmed At",
+      "noShow": "No Show",
+      "rescheduled": "Rescheduled",
+      "duration": "Duration",
+      "durationMinutes": "{{minutes}} min",
+      "source": "Source",
+      "lastActive": "Last active",
+      "account": "Account",
+      "changePlaceholder": "Change...",
+      "bump": "Bump {{n}}",
+      "aiSentiment": "Sentiment",
+      "aiMemory": "AI Memory",
+      "aiSummary": "Summary"
+    },
+    "sentiment": {
+      "positive": "Positive",
+      "negative": "Negative",
+      "neutral": "Neutral"
+    },
+    "notScored": "Not scored",
+    "aiSummary": "AI Summary",
+    "noAiSummary": "No AI summary generated yet"
+  },
+  "contact": {
+    "title": "Contact",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "phone": "Phone",
+    "email": "Email",
+    "jobTitle": "Job Title",
+    "company": "Company",
+    "created": "Created"
+  },
+  "score": {
+    "title": "Lead Score",
+    "notScored": "Not scored",
+    "insights": {
+      "callBooked": "Call successfully booked",
+      "leadQualified": "Lead is qualified",
+      "multipleResponses": "Multiple responses received",
+      "leadResponded": "Lead has responded",
+      "leadOptedOut": "Lead opted out",
+      "dndStatus": "Do-not-disturb status",
+      "leadLost": "Lead marked as lost",
+      "positiveSentiment": "Positive sentiment detected",
+      "negativeSentiment": "Negative sentiment detected",
+      "neutralSentiment": "Neutral sentiment detected",
+      "repliedLast24h": "Replied in last 24h",
+      "repliedWithin48h": "Replied within 48h",
+      "repliedThisWeek": "Replied this week",
+      "noReply30Days": "No reply in 30+ days",
+      "quiet2Weeks": "Quiet for 2+ weeks",
+      "noReplyYet": "Lead hasn't replied yet",
+      "highActivity": "High message activity",
+      "repliedMultiple": "Replied multiple times",
+      "repliesMoreThanPinged": "Replies more than pinged",
+      "manyFollowUps": "Many follow-ups sent",
+      "pipelineStageIs": "Pipeline stage is",
+      "lastInteractionWas": "Last interaction was",
+      "leadSourceIs": "Lead source is",
+      "activeCampaignIs": "Active campaign is",
+      "bumpSequenceAtStage": "Bump sequence at stage",
+      "leadPotentialIs": "Lead potential is",
+      "highPotential": "high potential",
+      "moderate": "moderate",
+      "needsNurturing": "needs nurturing"
+    }
+  },
+  "csvImport": {
+    "title": "Import Leads from CSV",
+    "description": "Upload a CSV file and map its columns to lead fields.",
+    "steps": {
+      "upload": "Upload",
+      "mapFields": "Map Fields",
+      "preview": "Preview",
+      "results": "Results"
+    },
+    "upload": {
+      "dragAndDrop": "Drag & drop a CSV file here, or",
+      "browse": "browse",
+      "fileInfo": "Supports .csv files up to 10 MB \u00b7 Max 5,000 leads per import",
+      "formatTips": "CSV Format Tips",
+      "tip1": "First row must contain column headers",
+      "tip2": "Recommended columns: First Name, Last Name, Phone, Email",
+      "tip3": "Phone numbers should include country code (e.g. +1 555 123 4567)",
+      "tip4": "Comma-separated; quoted fields supported",
+      "csvOnly": "Please select a CSV (.csv) file.",
+      "tooLarge": "File is too large. Maximum size is 10 MB.",
+      "emptyFile": "CSV appears empty or has no headers.",
+      "parseFailed": "Failed to parse CSV. Please check the file format."
+    },
+    "mapping": {
+      "file": "File",
+      "dataRows_one": "{{count}} data row",
+      "dataRows_other": "{{count}} data rows",
+      "columnsDetected": "{{count}} columns detected",
+      "duplicateMappings": "Duplicate mappings",
+      "phoneNotMapped": "Phone not mapped",
+      "csvColumn": "CSV Column",
+      "mapsToField": "Maps to Lead Field",
+      "columnsMapped_one": "{{mapped}} of {{total}} column mapped",
+      "columnsMapped_other": "{{mapped}} of {{total}} columns mapped",
+      "selectField": "Select field...",
+      "skipColumn": "\u2014 Skip this column \u2014"
+    },
+    "targetFields": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "phone": "Phone",
+      "email": "Email",
+      "pipelineStage": "Pipeline Stage",
+      "priority": "Priority",
+      "automationStatus": "Automation Status",
+      "accountId": "Account ID",
+      "campaignId": "Campaign ID",
+      "leadSource": "Lead Source",
+      "notes": "Notes",
+      "language": "Language",
+      "timezone": "Timezone",
+      "aiSentiment": "AI Sentiment",
+      "dncReason": "DNC Reason"
+    },
+    "preview": {
+      "title": "Import preview",
+      "showing_one": "Showing first {{shown}} of {{total}} row",
+      "showing_other": "Showing first {{shown}} of {{total}} rows",
+      "fieldsMapped_one": "{{count}} field mapped",
+      "fieldsMapped_other": "{{count}} fields mapped",
+      "readyToImport": "Ready to import",
+      "leadsWillBeCreated_one": "{{count}} lead will be created",
+      "leadsWillBeCreated_other": "{{count}} leads will be created",
+      "fieldsPerLead_one": "{{count}} field mapped per lead",
+      "fieldsPerLead_other": "{{count}} fields mapped per lead",
+      "assignedToAccount": "Leads will be assigned to account #{{id}}",
+      "previewImport": "Preview Import"
+    },
+    "importing": "Importing...",
+    "importButton_one": "Import {{count}} Lead",
+    "importButton_other": "Import {{count}} Leads",
+    "results": {
+      "leadsImported_one": "Lead imported",
+      "leadsImported_other": "Leads imported",
+      "rowsFailed_one": "Row failed",
+      "rowsFailed_other": "Rows failed",
+      "errorDetails": "Error details:",
+      "row": "Row {{number}}:",
+      "refreshed": "Leads table has been refreshed with the new records.",
+      "fixMapping": "Fix Mapping"
+    }
+  },
+  "conversations": {
+    "title": "Conversations",
+    "noMessages": "No messages yet",
+    "messagePlaceholder": "Type a message...",
+    "thread": "Thread",
+    "conversation": "Conversation",
+    "conversationNumber": "Conversation {{number}}"
+  },
+  "toast": {
+    "transcriptionFailed": "Transcription failed",
+    "networkError": "Network error. Try again.",
+    "microphoneDenied": "Microphone access denied",
+    "microphoneDescription": "Allow microphone access to record voice memos."
+  },
+  "time": {
+    "justNow": "Just now",
+    "now": "Now",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This Week",
+    "thisMonth": "This Month",
+    "last3Months": "Last 3 Months",
+    "older": "Older",
+    "noActivity": "No Activity"
+  },
+  "confirm": {
+    "yes": "Yes",
+    "no": "No"
+  },
+  "tags": {
+    "addTag": "Add tag",
+    "noTagsAvailable": "No tags available",
+    "allTagsAssigned": "All tags already assigned",
+    "noTagsAssigned": "No tags assigned",
+    "loadingTags": "Loading tags…",
+    "removeTag": "Remove tag {{name}}"
+  },
+  "timeline": {
+    "title": "Timeline",
+    "titleWithCount": "Timeline ({{count}})",
+    "noInteractions": "No interactions yet",
+    "noInteractionsHint": "Messages will appear here as the lead interacts with your campaigns.",
+    "aiSent": "AI sent",
+    "agentSent": "Agent sent",
+    "sent": "Sent",
+    "received": "Received",
+    "bump": "Bump",
+    "via": "via {{who}}"
+  },
+  "notes": {
+    "placeholder": "Add notes about this lead…",
+    "saveNotes": "Save notes",
+    "stopRecording": "Stop recording",
+    "recordVoiceMemo": "Record voice memo (transcribe to text)",
+    "transcribing": "Transcribing…",
+    "saved": "Saved",
+    "save": "Save"
+  },
+  "relativeTime": {
+    "justNow": "Just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "yesterday": "Yesterday",
+    "daysAgo": "{{count}}d ago",
+    "weeksAgo": "{{count}}w ago",
+    "monthsAgo": "{{count}}mo ago"
+  },
+  "detailView": {
+    "source": "Source",
+    "rating": "Rating",
+    "campaign": "Campaign",
+    "owner": "Owner",
+    "booked": "Booked",
+    "hot": "Hot",
+    "warm": "Warm",
+    "cold": "Cold",
+    "toPdf": "To PDF",
+    "delete": "Delete",
+    "deleteLead": "Delete lead?",
+    "newLead": "New lead",
+    "searchLeads": "Search leads…",
+    "searchTagName": "Search tag name…",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "of": "of",
+    "assignment": "Assignment"
+  },
+  "chat": {
+    "title": "Chat",
+    "noMessages": "No messages yet",
+    "noMessagesHint": "Messages will appear here once outreach begins",
+    "typePlaceholder": "Type a message…",
+    "letAiContinue": "Let AI continue",
+    "openInChats": "Open in Chats",
+    "transcribing": "Transcribing…"
+  },
+  "team": {
+    "title": "Team",
+    "addTeamMember": "Add team member",
+    "noMoreUsers": "No more users available"
+  },
+  "activity": {
+    "title": "Activity",
+    "callBooked": "Call Booked",
+    "scheduledFor": "Scheduled for {{date}}",
+    "doNotDisturb": "Do Not Disturb",
+    "leadRequestedNoContact": "Lead requested no contact",
+    "optedOut": "Opted Out",
+    "tagApplied": "Tag \"{{name}}\" applied",
+    "clickToAddNotes": "Click to add notes...",
+    "noRecentActivity": "No recent activity",
+    "emptyHint": "Activity will appear here as this lead interacts with your campaigns.",
+    "loadError": "Could not load activity timeline."
+  },
+  "kanbanDetail": {
+    "chat": "Chat",
+    "contact": "Contact",
+    "score": "Score",
+    "activity": "Activity",
+    "notes": "Notes"
+  },
+  "mobileDetail": {
+    "tabs": {
+      "info": "Info",
+      "chat": "Chat",
+      "activity": "Activity",
+      "notes": "Notes"
+    },
+    "notes": {
+      "addNote": "Add Note",
+      "emptyTitle": "No notes yet",
+      "emptyHint": "Tap «Add Note» to add the first note for this lead."
+    }
+  }
+}

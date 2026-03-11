@@ -1,0 +1,64 @@
+{
+  "hero": {
+    "title": {
+      "line1": "Acorde leads inativos em",
+      "highlight": "agendamentos confirmados",
+      "line2": "automaticamente."
+    },
+    "subtitle": {
+      "line1": "IA gerencia do primeiro contato até o CRM.",
+      "line2": "Foque em crescimento e fechamento, não em correr atrás de leads."
+    },
+    "cta": {
+      "primary": "Agendar uma Ligação",
+      "secondary": "Ver Casos de Uso"
+    }
+  },
+  "results": {
+    "title": "E o que você ganha",
+    "subtitle": "Do caos à certeza em 30 dias",
+    "metrics": {
+      "replyRates": {
+        "label": "Taxa de Resposta",
+        "subtext": "vs mercado 5-10%"
+      },
+      "leadsReactivated": {
+        "label": "Leads Reativados",
+        "subtext": "em conversas ativas"
+      },
+      "hoursSaved": {
+        "label": "Horas Economizadas",
+        "subtext": "por vendedor/mês"
+      }
+    },
+    "upfrontCost": {
+      "title": "Custo Inicial",
+      "partnership": "Parceria de Performance",
+      "mission": "Nossa vitória é o seu sucesso",
+      "guarantee": "Garantia de 30 dias"
+    },
+    "absoluteZero": {
+      "absolute": "Absolutamente",
+      "zero": "ZERO"
+    }
+  },
+  "compliance": {
+    "title": "Conformidade e Reputação",
+    "gdpr": {
+      "title": "Conforme LGPD e GDPR",
+      "description": "Todos os fluxos respeitam preferências de opt-out, links de cancelamento de inscrição e requisitos de residência de dados. Estamos totalmente em conformidade com os padrões globais de privacidade."
+    },
+    "brand": {
+      "title": "Proteção da Marca",
+      "description": "Monitoramento em tempo real garante que cada interação permaneça no tópico, profissional e perfeitamente alinhada com a voz e diretrizes da sua marca."
+    }
+  },
+
+  "bottomCta": {
+    "title": "IA na Prática",
+    "quote": "Veja ao vivo a nossa IA atendendo como um agente do seu negócio, para que seu time foque no que importa.",
+    "meta": "Duração: de 10 a 30 minutos\nSem compromisso",
+    "button": "Agendar uma Demo"
+  }
+}
+

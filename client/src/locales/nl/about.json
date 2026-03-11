@@ -1,0 +1,121 @@
+{
+  "intro": {
+    "title": "Wat ons motiveert",
+    "paragraph1": "Wij geloven dat je tijd en energie horen te gaan naar waar je passie ligt: je klanten helpen.",
+    "paragraph2": "Wij helpen je hun aandacht te winnen door elke lead als persoon te behandelen, niet als regel in een spreadsheet.",
+    "paragraph3": "Wanneer je benadering rekening houdt met timing, voorkeuren en context voelen mensen zich begrepen. Zo maak je het gesprek weer wakker en reageren ze sneller op ",
+    "cyclingWords": ["jouw bedrijf.", "jouw merk.", "jouw diensten.", "jouw producten.", "jouw verhaal.", "jouw waarden."]
+  },
+  "founder": {
+    "name": "Gabriel B. Fronza",
+    "title": "Oprichter",
+    "quote": "\"Bij de kliniek van mijn ouders zag ik hetzelfde patroon steeds weer: oprechte interesse, geboekte consultaties en dan... stilte. Het leerde me dat het verlies van leads geen marketingfout is; het is een signaal om opnieuw te verbinden\"",
+    "description": "10+ jaar software productie. 5 jaar data-gedreven automatisering. 4 jaar samen met mijn vrouw Danique een bedrijf opgebouwd. Dat is wat Lead Awaker defineert."
+  },
+  "credentials": {
+    "title": "Gebouwd door iemand die echte dingen heeft verscheept",
+    "subtitle": "10+ jaar in digitale productie. Echte bedrijven. Echte omzet.",
+    "resultsNode": "Echte resultaten.",
+    "items": [
+      {
+        "metric": "$150M+",
+        "label": "Box office bijdrage",
+        "description": "Digitale kunst bijgedragen aan Warner Bros.-producties, waaronder Tom & Jerry (2021)"
+      },
+      {
+        "metric": "$3,1 mrd",
+        "label": "Sega jaaromzet",
+        "description": "Digitale assets gebouwd voor drie Sega-blockbuster titels in één jaar, samen met Creative Assembly"
+      },
+      {
+        "metric": "$52M",
+        "label": "Insurgency Sandstorm bruto",
+        "description": "Artwork verzonden voor de geprezen FPS van New World Interactive"
+      },
+      {
+        "metric": "4 jaar",
+        "label": "TA Monks",
+        "description": "Samen met mijn vrouw Danique een trading- en investeermerk opgebouwd van nul"
+      }
+    ],
+    "recognition": "Uitgelicht op ZBrush Central en ArtStation. Workshop presentator op Design Week, Universiteit van Rio de Janeiro."
+  },
+  "cta": {
+    "title": "Zie het werken op jouw leads",
+    "quote": "5 uitgebrachte videogames. Een grote film. 4 jaar systematische automatisering in een echt bedrijf. Die ervaring zit in elke campagne die we draaien.",
+    "button": "Boek een gratis demo"
+  },
+  "faq": {
+    "title": "Veelgestelde vragen",
+    "categories": [
+      {
+        "title": "Resultaten en waarde",
+        "items": [
+          {
+            "q": "Welke resultaten kunnen we realistisch verwachten?",
+            "a": "Op basis van marktbenchmarks en publiek waargenomen resultaten van vergelijkbare systemen voor lead reactivatie en conversatiegerichte outreach, liggen heractivatiepercentages vaak tussen de 5 en 15 procent binnen de eerste 30 dagen. Deze cijfers zijn indicatief en geen garanties. De uiteindelijke resultaten hangen af van factoren zoals leadkwaliteit, relevantie van het aanbod, timing, kanaalkeuze en campagneconfiguratie."
+          },
+          {
+            "q": "Is dit een vervanging voor ons salesteam?",
+            "a": "Nee. Lead Awaker is bedoeld om je salesinspanningen te ondersteunen en op te schalen, niet om ze te vervangen. Het systeem verzorgt de eerste benadering, opvolging en kwalificatie, zodat je salesteam zich kan richten op gesprekken met hoge intentie en het sluiten van deals."
+          }
+        ]
+      },
+      {
+        "title": "Hoe het werkt",
+        "items": [
+          {
+            "q": "Wat gebeurt er wanneer een lead reageert?",
+            "a": "Wanneer een lead reageert, beoordeelt het systeem de intentie en koopbereidheid. Afhankelijk van de ingestelde configuratie kan er direct een gesprek in je agenda worden ingepland, wordt de conversatie overgedragen aan je salesteam met volledige context, of blijft het systeem opvolgen totdat menselijk contact zinvol is."
+          },
+          {
+            "q": "Wat als onze leads erg oud of volledig afgekoeld zijn?",
+            "a": "Leeftijd op zichzelf is niet doorslaggevend, relevantie wel. Leads van 6 maanden of zelfs 2 jaar oud kunnen nog steeds converteren als de oorspronkelijke behoefte of het probleem nog bestaat en de benadering persoonlijk en contextueel aanvoelt. Het systeem kijkt vooral naar betrokkenheid en reactiegedrag, niet alleen naar de leeftijd van de database."
+          },
+          {
+            "q": "Werkt dit voor onze branche of niche?",
+            "a": "Lead Awaker past zich aan verschillende verkoopprocessen en sectoren aan, waaronder B2B en dienstverlenende bedrijven. Tijdens de setup wordt het systeem afgestemd op jouw terminologie, aanbod, veelvoorkomende bezwaren en kwalificatielogica, zodat het goed aansluit bij jouw specifieke markt."
+          }
+        ]
+      },
+      {
+        "title": "Berichten en controle",
+        "items": [
+          {
+            "q": "Hoe voorkomen jullie dat berichten als spam of opdringerig overkomen?",
+            "a": "Berichten worden contextueel verstuurd op basis van waar een lead is afgehaakt in de funnel en maken gebruik van natuurlijke taal in plaats van generieke templates. De benadering respecteert timing, relevantie en afmeldsignalen, zodat het voelt als een doordachte follow-up en niet als een massale campagne."
+          },
+          {
+            "q": "Moeten wij scripts aanleveren of schrijft de AI alles zelf?",
+            "a": "Het aanleveren van scripts is optioneel. Je kunt voorbeelden delen van goed presterende gesprekken, merk richtlijnen of belangrijke gesprekspunten. Het systeem vertaalt deze input naar gepersonaliseerde berichten, met toon en positionering die tijdens de setup worden afgestemd."
+          },
+          {
+            "q": "Kunnen we berichten vooraf bekijken of goedkeuren?",
+            "a": "Ja. Voordat een campagne live gaat, kun je voorbeelden van berichten, toon, positionering en kwalificatielogica beoordelen. Er wordt niets uitgerold zonder afstemming over hoe het systeem namens jou communiceert."
+          },
+          {
+            "q": "Kunnen we campagnes tussentijds pauzeren of aanpassen?",
+            "a": "Ja. Campagnes kunnen op elk moment worden gepauzeerd, aangepast of verfijnd. Berichten, targetingregels en kwalificatiecriteria kunnen worden gewijzigd zonder dat actieve gesprekken hun context verliezen."
+          }
+        ]
+      },
+      {
+        "title": "Compliance en risico",
+        "items": [
+          {
+            "q": "Via welke kanalen worden leads opnieuw benaderd?",
+            "a": "Kanalen kunnen bestaan uit WhatsApp, SMS, Instagram of andere messaging platforms, afhankelijk van je doelgroep, technische haalbaarheid, platformbeleid en compliance vereisten. De keuze en prioriteit van kanalen worden tijdens de setup bepaald."
+          },
+          {
+            "q": "Hoe gaan jullie om met compliance zoals AVG, CAN-SPAM en CCPA?",
+            "a": "Lead Awaker werkt met compliancegerichte processen zoals directe verwerking van afmeldingen, consent bewuste berichtlogica en respectvolle benaderingspatronen. Klanten blijven verantwoordelijk voor de herkomst van hun leads en de juridische grondslag voor contact. Het systeem voert campagnes uit volgens klantinstructies en toepasselijke wetgeving."
+          },
+          {
+            "q": "Wat gebeurt er als leads klagen of zich afmelden?",
+            "a": "Afmeldverzoeken worden direct gerespecteerd en deze leads worden uitgesloten van verdere communicatie. Bij klachten kunnen campagnes worden aangepast of gepauzeerd, terwijl berichten, targeting of verzendfrequentie worden geëvalueerd om een respectvolle benadering te waarborgen."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "emptyState": {
+    "searchTitle": "No tags match your search",
+    "searchDescription": "No tags found matching \"{{query}}\". Try a different search term.",
+    "filterTitle": "No tags match the current filters",
+    "filterDescription": "Try adjusting or clearing your filters to see more tags.",
+    "defaultTitle": "No tags available",
+    "defaultDescription": "No tags available. Create one to get started."
+  },
+  "card": {
+    "leadCount_one": "{{count}} lead",
+    "leadCount_other": "{{count}} leads",
+    "auto": "Auto"
+  },
+  "columns": {
+    "name": "Tag Name",
+    "category": "Category",
+    "account": "Account",
+    "campaign": "Campaign",
+    "leadCount": "Leads",
+    "description": "Description",
+    "autoApplied": "Auto"
+  },
+  "table": {
+    "selected": "{{count}} selected",
+    "clear": "Clear",
+    "none": "None",
+    "auto": "Auto"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Search tags...",
+    "addTitle": "Add tag",
+    "add": "Add",
+    "newTag": "New Tag",
+    "tagNamePlaceholder": "Tag name",
+    "categoryPlaceholder": "Category",
+    "creating": "Creating...",
+    "create": "Create",
+    "accountTitle": "Account filter",
+    "account": "Account",
+    "allAccounts": "All Accounts",
+    "campaignTitle": "Campaign filter",
+    "campaign": "Campaign",
+    "allCampaigns": "All Campaigns",
+    "sortTitle": "Sort",
+    "sort": "Sort",
+    "sortBy": "Sort by",
+    "filterTitle": "Filter",
+    "filter": "Filter",
+    "category": "Category",
+    "autoApplied": "Auto-Applied",
+    "autoAll": "All",
+    "autoYes": "Yes",
+    "autoNo": "No",
+    "groupTitle": "Group",
+    "group": "Group",
+    "groupBy": "Group by",
+    "fieldsTitle": "Fields",
+    "fields": "Fields",
+    "columns": "Columns",
+    "tagCount_one": "{{count}} tag",
+    "tagCount_other": "{{count}} tags",
+    "duplicate": "Duplicate",
+    "deleteTitle": "Delete selected",
+    "delete": "Delete",
+    "confirmYes": "Yes",
+    "confirmNo": "No"
+  },
+  "sort": {
+    "nameAsc": "Name A \u2192 Z",
+    "nameDesc": "Name Z \u2192 A",
+    "countDesc": "Lead Count \u2193",
+    "categoryAsc": "Category A \u2192 Z"
+  },
+  "group": {
+    "category": "Category",
+    "color": "Color",
+    "none": "None"
+  },
+  "colorPicker": {
+    "chooseColor": "Choose a color",
+    "selectedColor": "Selected color: {{name}}"
+  },
+  "colors": {
+    "blue": "Blue",
+    "green": "Green",
+    "red": "Red",
+    "yellow": "Yellow",
+    "orange": "Orange",
+    "purple": "Purple",
+    "gray": "Gray",
+    "pink": "Pink",
+    "teal": "Teal",
+    "cyan": "Cyan",
+    "indigo": "Indigo"
+  },
+  "deleteDialog": {
+    "titleSingle": "Delete Tag",
+    "titleBulk": "Delete Tags",
+    "messageSinglePrefix": "Are you sure you want to delete the tag",
+    "messageBulkPrefix": "Are you sure you want to delete",
+    "tagsCount_one": "{{count}} tag",
+    "tagsCount_other": "{{count}} tags",
+    "warningSingle": "This action cannot be undone. Leads that currently have this tag will not lose it — only the tag definition will be removed.",
+    "warningBulk": "This action cannot be undone. Leads that currently have these tags will not lose them — only the tag definitions will be removed.",
+    "cancel": "Cancel",
+    "deleting": "Deleting...",
+    "deleteSingle": "Delete Tag",
+    "deleteBulk": "Delete {{count}} Tags"
+  }
+}

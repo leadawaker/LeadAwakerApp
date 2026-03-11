@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <url>
+    <loc>https://leadawaker.com/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://leadawaker.com/" />
+    <xhtml:link rel="alternate" hreflang="pt" href="https://leadawaker.com/pt/" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://leadawaker.com/nl/" />
+  </url>
+
+  <url>
+    <loc>https://leadawaker.com/about</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://leadawaker.com/about" />
+    <xhtml:link rel="alternate" hreflang="pt" href="https://leadawaker.com/pt/about" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://leadawaker.com/nl/about" />
+  </url>
+
+  <url>
+    <loc>https://leadawaker.com/services</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://leadawaker.com/services" />
+    <xhtml:link rel="alternate" hreflang="pt" href="https://leadawaker.com/pt/services" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://leadawaker.com/nl/services" />
+  </url>
+
+</urlset>

@@ -1,0 +1,50 @@
+import { apiFetch } from "@/lib/apiUtils";
+
+export const fetchAccounts = async () => {
+  const res = await apiFetch("/api/accounts");
+  if (!res.ok) {
+    if (res.status === 401) throw new Error("Session expired — please log in again.");
+    if (res.status === 403) throw new Error("Access denied — agency account required.");
+    throw new Error(`Failed to fetch accounts (${res.status})`);
+  }
+  const data = await res.json();
+  return Array.isArray(data) ? data : data?.list || [];
+};
+
+export const updateAccount = async (rowId: number | string, patch: Record<string, unknown>) => {
+  const res = await apiFetch(`/api/accounts/${rowId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) throw new Error("Failed to update account");
+  return await res.json();
+};
+
+export const createAccount = async (payload: Record<string, unknown>) => {
+  const res = await apiFetch("/api/accounts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Failed to create account");
+  return await res.json();
+};
+
+export const deleteAccount = async (rowId: number | string) => {
+  const res = await apiFetch(`/api/accounts/${rowId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to delete account");
+};
+
+export const syncInstagramContacts = async (accountId: number | string) => {
+  const res = await apiFetch(`/api/accounts/${accountId}/sync-instagram`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.message || body.detail || `Sync failed (${res.status})`);
+  }
+  return await res.json();
+};

@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "home": "Home",
+    "services": "Use Cases",
+    "about": "Over Ons",
+    "login": "Inloggen",
+    "openApp": "Open App",
+    "bookDemo": "Demo Boeken"
+  },
+  "footer": {
+    "company": "Bedrijf",
+    "contact": "Contact",
+    "copyright": "© {{year}} Lead Awaker. Alle rechten voorbehouden.",
+    "rights": "Alle rechten voorbehouden.",
+    "privacy": "Privacybeleid",
+    "terms": "Servicevoorwaarden"
+  },
+  "cta": {
+    "bookDemo": "Demo Boeken",
+    "learnMore": "Meer Weten",
+    "getStarted": "Aan de slag",
+    "contactUs": "Neem Contact Op"
+  },
+  "seo": {
+      "defaultTitle": "Lead Awaker – Activeer Uw Verkoop Pipeline met AI",
+      "defaultDescription": "Lead Awaker helpt B2B-bedrijven koude leads opnieuw te activeren met AI."
+    },
+    "animation": {
+    "yourBrand": "Jouw Merk"
+  }
+}

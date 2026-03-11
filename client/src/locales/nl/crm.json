@@ -1,0 +1,212 @@
+{
+  "sidebar": {
+    "menu": "Menu",
+    "campaigns": "Campagnes",
+    "accounts": "Accounts",
+    "leads": "Leads",
+    "chats": "Chats",
+    "calendar": "Kalender",
+    "promptLibrary": "Promptbibliotheek",
+    "billing": "Facturatie",
+    "tasks": "Taken",
+    "automations": "Automatiseringen",
+    "settings": "Instellingen",
+    "support": "Ondersteuning",
+    "help": "Help",
+    "docs": "Docs"
+  },
+  "sidebarSections": {
+    "engage": "Betrekken",
+    "admin": "Admin",
+    "backend": "Backend",
+    "agency": "Agentuur"
+  },
+  "topbar": {
+    "search": "Zoeken",
+    "searchPlaceholder": "Zoek leads op naam, telefoon, e-mail…",
+    "startTyping": "Begin te typen om te zoeken…",
+    "noResults": "Geen resultaten gevonden.",
+    "darkMode": "Donkere modus",
+    "lightMode": "Lichte modus",
+    "toggleDarkMode": "Donkere modus wisselen",
+    "customerSupport": "Klantenservice",
+    "notifications": "Meldingen",
+    "help": "Help",
+    "documentation": "Documentatie",
+    "social": "Sociaal",
+    "agencyView": "Agentuurweergave",
+    "allAccounts": "Alle Accounts",
+    "switchAccount": "Account Wisselen",
+    "myProfile": "Mijn Profiel",
+    "logout": "Uitloggen"
+  },
+  "search": {
+    "leads": "Leads",
+    "accounts": "Accounts",
+    "users": "Gebruikers"
+  },
+  "actions": {
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "create": "Aanmaken",
+    "search": "Zoeken",
+    "filter": "Filteren",
+    "export": "Exporteren",
+    "import": "Importeren",
+    "close": "Sluiten",
+    "confirm": "Bevestigen",
+    "back": "Terug",
+    "next": "Volgende",
+    "apply": "Toepassen",
+    "reset": "Herstellen",
+    "refresh": "Vernieuwen",
+    "viewAll": "Alles Bekijken",
+    "showMore": "Meer Tonen",
+    "showLess": "Minder Tonen",
+    "selectAll": "Alles Selecteren",
+    "deselectAll": "Alles Deselecteren",
+    "loading": "Laden…",
+    "saving": "Opslaan…"
+  },
+  "status": {
+    "active": "Actief",
+    "inactive": "Inactief",
+    "pending": "In afwachting",
+    "completed": "Voltooid",
+    "paused": "Gepauzeerd",
+    "draft": "Concept",
+    "scheduled": "Gepland",
+    "running": "Actief",
+    "failed": "Mislukt",
+    "success": "Geslaagd",
+    "error": "Fout",
+    "delivered": "Afgeleverd",
+    "read": "Gelezen",
+    "replied": "Beantwoord",
+    "optedOut": "Afgemeld"
+  },
+  "time": {
+    "today": "Vandaag",
+    "yesterday": "Gisteren",
+    "thisWeek": "Deze Week",
+    "lastWeek": "Vorige Week",
+    "thisMonth": "Deze Maand",
+    "lastMonth": "Vorige Maand",
+    "daysAgo": "{{count}} dagen geleden",
+    "hoursAgo": "{{count}} uur geleden",
+    "minutesAgo": "{{count}} minuten geleden",
+    "justNow": "Zojuist"
+  },
+  "empty": {
+    "noData": "Geen gegevens beschikbaar",
+    "noResults": "Geen resultaten gevonden",
+    "noItems": "Nog geen items"
+  },
+  "confirm": {
+    "areYouSure": "Weet je het zeker?",
+    "cannotUndo": "Deze actie kan niet ongedaan worden gemaakt.",
+    "deleteConfirm": "Weet je zeker dat je dit wilt verwijderen?"
+  },
+  "chat": {
+    "title": "Gesprek",
+    "selectLead": "Selecteer een lead",
+    "selectLeadDescription": "Kies een lead om hun berichten te bekijken.",
+    "loading": "Berichten laden\u2026",
+    "noInteractions": "Nog geen interacties",
+    "noInteractionsDescription": "Berichten verschijnen hier zodra de lead een bericht ontvangt.",
+    "sendViaApi": "Berichten versturen via API",
+    "interactionTypes": {
+      "SMS": "SMS",
+      "WhatsApp": "WhatsApp",
+      "Email": "E-mail",
+      "Call": "Gesprek",
+      "Note": "Notitie"
+    }
+  },
+  "performance": {
+    "title": "Campagneprestaties",
+    "noCampaigns": "Nog geen campagnes",
+    "noCampaignsDescription": "Maak je eerste campagne aan om leads te benaderen via WhatsApp.",
+    "noData": "Nog geen prestatiegegevens",
+    "noDataDescription": "Campagnemeetwaarden verschijnen hier zodra je campagnes actief zijn.",
+    "response": "Respons",
+    "booked": "Geboekt",
+    "sent": "Verzonden",
+    "bookings": "Boekingen",
+    "roi": "ROI",
+    "defaultType": "Campagne"
+  },
+  "campaignStatus": {
+    "Active": "Actief",
+    "Draft": "Concept",
+    "Paused": "Gepauzeerd",
+    "Completed": "Voltooid",
+    "Finished": "Afgerond",
+    "Archived": "Gearchiveerd",
+    "Inactive": "Inactief"
+  },
+  "campaignTypes": {
+    "Cold Outreach": "Koude Benadering",
+    "Re-engagement": "Heractivering",
+    "Follow-up": "Opvolging",
+    "Event": "Evenement"
+  },
+  "emptyStates": {
+    "leads": {
+      "title": "Nog geen leads",
+      "description": "Importeer leads of voeg je eerste contact toe om je pipeline bij te houden."
+    },
+    "campaigns": {
+      "title": "Nog geen campagnes",
+      "description": "Maak je eerste campagne aan om leads te benaderen via WhatsApp."
+    },
+    "accounts": {
+      "title": "Nog geen accounts",
+      "description": "Voeg een klantaccount toe om hun leads en campagnes te beheren."
+    },
+    "tags": {
+      "title": "Geen tags gevonden",
+      "description": "Maak tags aan om je leads te categoriseren en te organiseren voor betere segmentatie."
+    },
+    "users": {
+      "title": "Geen teamleden",
+      "description": "Nodig teamleden uit om samen te werken aan het beheren van leads en campagnes."
+    },
+    "prompts": {
+      "title": "Geen prompts opgeslagen",
+      "description": "Maak AI-promptsjablonen aan om berichten te standaardiseren in campagnes."
+    },
+    "automation": {
+      "title": "Geen automatiseringslogboeken",
+      "description": "Automatiseringslogboeken verschijnen hier zodra n8n-workflows starten."
+    },
+    "conversations": {
+      "title": "Nog geen gesprekken",
+      "description": "Gesprekken verschijnen hier zodra leads berichten ontvangen."
+    },
+    "calendar": {
+      "title": "Geen afspraken gepland",
+      "description": "Geboekte gesprekken en afspraken verschijnen hier zodra leads converteren."
+    },
+    "search": {
+      "title": "Geen resultaten gevonden",
+      "description": "Pas je zoekopdracht of filters aan om te vinden wat je zoekt."
+    },
+    "generic": {
+      "title": "Nog niets hier",
+      "description": "Gegevens verschijnen hier zodra ze zijn aangemaakt."
+    }
+  },
+  "notifications": {
+    "title": "Meldingen",
+    "markAllRead": "Alles als gelezen markeren",
+    "all": "Alle",
+    "unread": "Ongelezen",
+    "allCaughtUp": "Alles bijgewerkt!",
+    "noUnread": "Geen ongelezen meldingen.",
+    "noNotifications": "Nog geen meldingen.",
+    "older": "Ouder"
+  }
+}

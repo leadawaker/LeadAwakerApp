@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   version="1.1"
+   id="svg1"
+   width="440"
+   height="320"
+   viewBox="30 80 440 320"
+   sodipodi:docname="page4_7140383924130295210.pdf"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1">
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath2">
+      <path
+         d="M 0,0 H 1562.5 V 1562.5 H 0 Z"
+         transform="scale(0.31999999)"
+         clip-rule="evenodd"
+         id="path2" />
+    </clipPath>
+  </defs>
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1">
+    <inkscape:page
+       x="0"
+       y="0"
+       inkscape:label="1"
+       id="page1"
+       width="500"
+       height="500"
+       margin="0"
+       bleed="0" />
+  </sodipodi:namedview>
+  <g
+     id="g1"
+     inkscape:groupmode="layer"
+     inkscape:label="1">
+    <g
+       id="g3">
+      <g
+         id="g4">
+        <path
+           id="path4"
+           d="M 49.267525,-45.374307 H 74.408151 V 6.9461794e-4 H 3.892523 V -90.749309 H 49.267525 Z M 81.66987,-90.874309 h 75.1875 v 30.593751 H 138.0605 v 3.890625 h 18.79687 v 21.781251 H 138.0605 v 3.890625 h 18.79687 V -0.12430539 H 81.66987 Z M 156.98237,6.9461794e-4 214.27925,-97.093059 271.57613,6.9461794e-4 Z M 316.8105,0.12569462 h -45.375 V -90.749309 h 45.375 c 6.21876,0 12.07032,1.1875 17.56251,3.5625 5.48828,2.375 10.32812,5.640625 14.51562,9.796875 4.19531,4.148438 7.46094,8.984376 9.79688,14.515626 2.33203,5.53125 3.5,11.40625 3.5,17.625001 0,6.230469 -1.16797,12.089844 -3.5,17.578125 -2.33594,5.480469 -5.60157,10.320313 -9.79688,14.515626 -4.1875,4.1875002 -9.02734,7.4492191 -14.51562,9.7812505 -5.49219,2.3359376 -11.34375,3.50000012 -17.56251,3.50000012 z m 0,0"
+           style="fill:#5170ff;fill-opacity:1;fill-rule:nonzero;stroke:none"
+           aria-label="LEAD"
+           transform="translate(79.509821,275.22977)" />
+      </g>
+    </g>
+  </g>
+</svg>

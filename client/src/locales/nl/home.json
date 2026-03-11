@@ -1,0 +1,62 @@
+{
+  "hero": {
+    "title": {
+      "line1": "Wek slapende leads naar",
+      "highlight": "geboekte gesprekken,",
+      "line2": "automatisch."
+    },
+    "subtitle": {
+      "line1": "Van eerste bericht tot CRM-overdracht: de AI regelt het.",
+      "line2": "Jij kan focussen op groei en deals sluiten, niet op achter leads aanzitten."
+    },
+    "cta": {
+      "primary": "Gesprek Boeken",
+      "secondary": "Bekijk Use Cases"
+    }
+  },
+  "results": {
+    "title": "En wat je krijgt",
+    "subtitle": "Van chaos naar zekerheid in 30 dagen",
+    "metrics": {
+      "replyRates": {
+        "label": "Reactiepercentages",
+        "subtext": "vs industrie 5-10%"
+      },
+      "leadsReactivated": {
+        "label": "Leads Gereactiveerd",
+        "subtext": "in actieve gesprekken"
+      },
+      "hoursSaved": {
+        "label": "Uren Bespaard",
+        "subtext": "per rep/maand"
+      }
+    },
+    "upfrontCost": {
+      "title": "Initiële Kosten",
+      "partnership": "Performance Samenwerking",
+      "mission": "We lossen problemen op, we creëren ze niet",
+      "guarantee": "30-dagen garantie"
+    },
+    "absoluteZero": {
+      "absolute": "Absoluut",
+      "zero": "NUL"
+    }
+  },
+  "compliance": {
+    "title": "Ingebouwde Compliance en Reputatie",
+    "gdpr": {
+      "title": "AVG (GDPR) & CCPA Conform",
+      "description": "Alle workflows respecteren opt-out voorkeuren, uitschrijflinks en dataresidentie-eisen. We zijn volledig conform met wereldwijde privacystandaarden."
+    },
+    "brand": {
+      "title": "Merkveiligheid",
+      "description": "Real-time monitoring zorgt ervoor dat elk gesprek on-topic, professioneel en perfect afgestemd blijft op de merkidentiteit en richtlijnen."
+    }
+  },
+  "bottomCta": {
+    "title": "AI in de praktijk",
+    "quote": "Bekijk live hoe onze AI gesprekken afhandelt als een agent voor jouw bedrijf, zodat je team kan focussen op wat echt telt.",
+    "meta": "Duur: 10 tot 30 minuten\nGeen verplichtingen",
+    "button": "Boek een Demo"
+  }
+}

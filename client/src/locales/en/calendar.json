@@ -1,0 +1,118 @@
+{
+  "title": "Calendar",
+  "months": {
+    "short": {
+      "jan": "Jan",
+      "feb": "Feb",
+      "mar": "Mar",
+      "apr": "Apr",
+      "may": "May",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Aug",
+      "sep": "Sep",
+      "oct": "Oct",
+      "nov": "Nov",
+      "dec": "Dec"
+    },
+    "full": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    }
+  },
+  "days": {
+    "short": {
+      "sun": "SUN",
+      "mon": "MON",
+      "tue": "TUE",
+      "wed": "WED",
+      "thu": "THU",
+      "fri": "FRI",
+      "sat": "SAT"
+    }
+  },
+  "views": {
+    "month": "Month",
+    "week": "Week",
+    "day": "Day"
+  },
+  "navigation": {
+    "previous": "Previous",
+    "next": "Next",
+    "today": "Today",
+    "goToToday": "Go to today"
+  },
+  "dateGroups": {
+    "past": "Past",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "thisWeek": "This Week",
+    "later": "Later"
+  },
+  "sort": {
+    "label": "Sort",
+    "time": "Time",
+    "nameAZ": "Name A-Z",
+    "campaign": "Campaign",
+    "status": "Status"
+  },
+  "group": {
+    "label": "Group",
+    "date": "Date",
+    "campaign": "Campaign",
+    "status": "Status",
+    "none": "None"
+  },
+  "filter": {
+    "label": "Filter",
+    "noShow": "No-Show",
+    "rescheduled": "Rescheduled",
+    "confirmed": "Confirmed",
+    "account": "Account",
+    "allAccounts": "All Accounts",
+    "campaign": "Campaign",
+    "allCampaigns": "All Campaigns",
+    "noCampaigns": "No campaigns",
+    "noCampaign": "No Campaign"
+  },
+  "settings": {
+    "groupSortFilter": "Group, Sort & Filter",
+    "resetAll": "Reset all settings"
+  },
+  "search": {
+    "searchAppointments": "Search appointments",
+    "placeholder": "Search by name or campaign...",
+    "searchLeadPlaceholder": "Search lead by name..."
+  },
+  "appointment": {
+    "editDuration": "Edit duration",
+    "minutes": "{{count}} minutes",
+    "rescheduledCount": "Rescheduled x{{count}}",
+    "noShow": "No Show",
+    "more": "+{{count}} more",
+    "unknownLead": "Unknown Lead"
+  },
+  "book": {
+    "newAppointment": "New appointment",
+    "title": "Book a Lead",
+    "bookAppointment": "Book Appointment",
+    "booking": "Booking..."
+  },
+  "toast": {
+    "rescheduledTo": "{{name}} rescheduled to {{date}}",
+    "rescheduledToWithTime": "{{name}} rescheduled to {{date}} at {{time}}",
+    "failedToReschedule": "Failed to reschedule: {{error}}"
+  },
+  "clearDateFilter": "Clear date filter",
+  "selectDate": "Select {{date}}"
+}

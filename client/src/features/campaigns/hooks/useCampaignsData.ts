@@ -1,0 +1,112 @@
+import { useState, useEffect, useRef, useCallback } from "react";
+import { fetchCampaigns, updateCampaign } from "../api/campaignsApi";
+import type { Campaign } from "@/types/models";
+import { fetchAccounts } from "../../accounts/api/accountsApi";
+import { useToast } from "@/hooks/use-toast";
+
+export function useCampaignsData(accountId?: number) {
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [accounts, setAccounts] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const { toast } = useToast();
+  const pendingSaves = useRef<Record<string, number>>({});
+
+  const handleRefresh = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Fetch accounts for name resolution — failure here must NOT block campaigns loading.
+      // Non-agency users get 403 on /api/accounts, but can still view campaigns.
+      let accountsList: Array<Record<string, unknown>> = [];
+      try {
+        accountsList = await fetchAccounts();
+        setAccounts(accountsList as any);
+      } catch {
+        // Silently ignore — campaigns will show with "Unknown Account" for account names
+      }
+
+      const campaignsList = await fetchCampaigns(accountId);
+      
+      const normalized = campaignsList.map((c: any) => {
+        // API returns Accounts_id (capital A) from NocoDB field naming
+        const rawAccountId = c.Accounts_id ?? c.accounts_id ?? c.account_id;
+        const account = accountsList.find(
+          (a: any) => String(a.Id || a.id) === String(rawAccountId)
+        );
+
+        const rowId = c.Id || c.id || c.id_number || c.ID || Math.random();
+
+        return {
+          ...c,
+          Id: rowId,
+          id: rowId,
+          account_id: rawAccountId,
+          account_name: account?.name || account?.Name || rawAccountId || "Unknown Account",
+          account_logo_url: (account as any)?.logo_url || (account as any)?.Logo_url || "",
+          Leads: Array.isArray(c.Leads) ? c.Leads.length : (typeof c.Leads === 'number' ? c.Leads : 0),
+          Interactions: Array.isArray(c.Interactions) ? c.Interactions.length : (typeof c.Interactions === 'number' ? c.Interactions : 0),
+          "Automation Logs": Array.isArray(c["Automation Logs"]) ? c["Automation Logs"].length : 0,
+        };
+      });
+      setCampaigns(normalized);
+    } catch (err) {
+      console.error("Failed to refresh campaigns", err);
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setLoading(false);
+    }
+  }, [accountId, toast]);
+
+  const updateCampaignRow = async (rowId: string | number, col: string, value: any) => {
+    const cleanValue = value === null || value === undefined ? "" : value;
+
+    // Optimistic update
+    setCampaigns((prev) =>
+      prev.map((r) => (r.Id === rowId ? { ...r, [col]: cleanValue } : r))
+    );
+
+    // debounce server save per (rowId, col)
+    const key = `${rowId}:${col}`;
+    if (pendingSaves.current[key]) {
+      window.clearTimeout(pendingSaves.current[key]);
+    }
+
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        await updateCampaign(rowId, { [col]: cleanValue });
+        toast({
+          title: "Updated",
+          description: "Saved changes to database.",
+        });
+      } catch (err) {
+        console.error("Failed to update campaign row", err);
+        toast({
+          variant: "destructive",
+          title: "Sync Error",
+          description: "Failed to save to database.",
+        });
+        // Revert on error
+        handleRefresh();
+      } finally {
+        delete pendingSaves.current[key];
+      }
+    }, 500);
+
+    pendingSaves.current[key] = timeoutId;
+  };
+
+  useEffect(() => {
+    handleRefresh();
+  }, [accountId]);
+
+  return {
+    campaigns,
+    accounts,
+    loading,
+    error,
+    handleRefresh,
+    setCampaigns,
+    updateCampaignRow
+  };
+}

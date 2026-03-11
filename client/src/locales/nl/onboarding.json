@@ -1,0 +1,80 @@
+{
+  "welcome": {
+    "title": "Welkom bij LeadAwaker!",
+    "subtitle": "Laten we alles in een paar minuten instellen",
+    "startButton": "Start Tutorial",
+    "skipButton": "Overslaan",
+    "skipConfirmTitle": "Tutorial overslaan?",
+    "skipConfirmBody": "Je kunt het altijd opnieuw starten vanuit Instellingen.",
+    "skipConfirmBack": "Terug",
+    "skipConfirmYes": "Ja, overslaan"
+  },
+  "stages": {
+    "1": {
+      "label": "Profiel Instellen",
+      "desc": "Stel je naam, tijdzone en voorkeuren in"
+    },
+    "2": {
+      "label": "Campagnes Bekijken",
+      "desc": "Bekijk je outreach-campagnes"
+    },
+    "3": {
+      "label": "Je Leads",
+      "desc": "Bekijk en importeer je contacten"
+    },
+    "4": {
+      "label": "Gesprekken",
+      "desc": "Monitor antwoorden en beheer chats"
+    }
+  },
+  "steps": {
+    "profileSetup": "Voltooi je profiel",
+    "profileSetupDesc": "Laten we beginnen met het instellen van je profiel — je naam, tijdzone en notificatievoorkeuren.",
+    "profileName": "Je Naam",
+    "profileNameDesc": "Voer je volledige naam in. Zo verschijn je op het platform.",
+    "profileTimezone": "Tijdzone",
+    "profileTimezoneDesc": "Selecteer je tijdzone zodat notificaties en geplande berichten aansluiten bij je kantooruren.",
+    "saveProfile": "Profiel Opslaan",
+    "saveProfileDesc": "Klik op Opslaan om je wijzigingen toe te passen. Je kunt deze altijd bijwerken.",
+    "yourCampaigns": "Je Campagnes",
+    "yourCampaignsDesc": "Campagnes zijn outreach-sequenties die je leads betrekken. Laten we kijken wat er voor je is ingesteld.",
+    "campaignOverview": "Campagne Overzicht",
+    "campaignOverviewDesc": "Hier zijn je campagnes. Elk heeft een status, kanaal (SMS/WhatsApp) en berichtsjablonen. Klik op een campagne om de details te zien.",
+    "campaignDetails": "Campagne Details",
+    "campaignDetailsDesc": "Dit paneel toont de configuratie van de campagne — berichtsjablonen, follow-up schema, AI-instellingen en prestatiemetingen.",
+    "yourLeads": "Je Leads",
+    "yourLeadsDesc": "Leads zijn de contacten die je campagnes bereiken. Laten we zien hoe je ze kunt toevoegen.",
+    "leadsTable": "Leads Tabel",
+    "leadsTableDesc": "Deze tabel toont al je leads met hun status, campagnetoewijzing en betrokkenheidsgegevens. Je kunt zoeken, filteren en sorteren.",
+    "importCsv": "Leads Importeren via CSV",
+    "importCsvDesc": "Klik op de CSV-knop om leads te importeren vanuit een spreadsheet. Je koppelt kolommen aan velden en bekijkt een voorbeeld voor het importeren.",
+    "conversations": "Gesprekken",
+    "conversationsDesc": "Hier monitor je alle lead-interacties — inkomende antwoorden, AI-reacties en handmatige overnames.",
+    "inbox": "Je Inbox",
+    "inboxDesc": "De inbox toont alle actieve gesprekken gesorteerd op recentheid. Ongelezen berichten verschijnen bovenaan.",
+    "chatView": "Chat Weergave",
+    "chatViewDesc": "Klik op een gesprek om de volledige berichtenthread te zien. Je kunt handmatig antwoorden of de AI laten afhandelen.",
+    "calendar": "Kalender",
+    "calendarDesc": "Wanneer leads gesprekken boeken, verschijnen ze hier. Dit is het einde van de tour — je bent klaar!"
+  },
+  "tooltip": {
+    "back": "Terug",
+    "next": "Volgende",
+    "skip": "Overslaan",
+    "finish": "Voltooien",
+    "stage": "Fase"
+  },
+  "completion": {
+    "title": "Je bent klaar!",
+    "body": "Je account is geconfigureerd en je campagne is klaar. Leads ontvangen berichten tijdens je kantooruren.",
+    "cta": "Ga naar Campagnes"
+  },
+  "progress": {
+    "resume": "Hervat Tutorial"
+  },
+  "settings": {
+    "title": "Onboarding Tutorial",
+    "description": "Herstart de begeleide installatiewizard",
+    "restartButton": "Herstart Tutorial"
+  }
+}

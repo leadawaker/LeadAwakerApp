@@ -1,0 +1,33 @@
+{
+  "contact": {
+    "title": "Lead #315",
+    "name": "João Silva",
+    "statusLabel": "Status",
+    "statusNotEngaged": "Não Engajado",
+    "statusEngaging": "Engajando Lead",
+    "statusEngaged": "Lead Engajado"
+  },
+  "agent": {
+    "title": "Agente IA",
+    "model": "GPT-5.2",
+    "outputLabel": "Output",
+    "message1": "Bom dia Pedro :)",
+    "message2": "Interessado no produto?"
+  },
+  "guardrails": {
+    "title": "Guardrails",
+    "subtitle": "SEGURANÇA",
+    "statusLabel": "Status",
+    "checks": [
+      "Vendas no tópico",
+      "Conteúdo limpo",
+      "Linguagem limpa",
+      "Sem dados pessoais",
+      "Sem credenciais",
+      "Sem links não autorizados",
+      "Sem vazamento de dados"
+    ],
+    "noViolations": "Sem violações",
+    "messageSent": "Mensagem Enviada"
+  }
+}

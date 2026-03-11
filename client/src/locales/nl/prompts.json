@@ -1,0 +1,174 @@
+{
+  "page": {
+    "title": "Promptbibliotheek",
+    "library": "Bibliotheek"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Prompts zoeken...",
+    "create": "Aanmaken",
+    "createPrompt": "Prompt aanmaken",
+    "sort": "Sorteren",
+    "sortBy": "Sorteren op",
+    "filter": "Filteren",
+    "filterSettings": "Filterinstellingen",
+    "group": "Groeperen",
+    "groupNone": "Geen",
+    "fields": "Velden",
+    "showHideColumns": "Kolommen tonen / verbergen",
+    "resetToDefault": "Standaard herstellen",
+    "clearAllFilters": "Alle filters wissen",
+    "promptCount": "{{count}} prompt",
+    "promptCount_other": "{{count}} prompts",
+    "allStatuses": "Alle Statussen",
+    "allModels": "Alle Modellen",
+    "allCampaigns": "Alle Campagnes"
+  },
+  "views": {
+    "list": "Lijst",
+    "table": "Tabel"
+  },
+  "labels": {
+    "status": "Status",
+    "model": "Model",
+    "campaign": "Campagne",
+    "untitled": "Naamloos",
+    "untitledPrompt": "Naamloze Prompt",
+    "noModel": "Geen Model",
+    "noCampaign": "Geen Campagne"
+  },
+  "form": {
+    "createTitle": "Prompt Aanmaken",
+    "editTitle": "Prompt Bewerken",
+    "createDescription": "Vul de velden hieronder in om een nieuwe prompt aan te maken.",
+    "editDescription": "Bewerk de promptdetails hieronder en sla je wijzigingen op.",
+    "name": "Naam",
+    "nameRequired": "Naam is verplicht",
+    "namePlaceholder": "bijv. Lead Heractivering v1",
+    "namePlaceholderShort": "Promptnaam",
+    "namePlaceholderAlt": "bijv. Heractivering Opening",
+    "useCase": "Gebruiksdoel",
+    "useCasePlaceholder": "bijv. WhatsApp lead heractivering",
+    "promptText": "Prompttekst",
+    "promptTextRequired": "Prompttekst is verplicht",
+    "promptTextPlaceholder": "Voer de hoofdtekst van de prompt in\u2026",
+    "promptContent": "Promptinhoud",
+    "mainPromptPlaceholder": "Hoofdtekst prompt\u2026",
+    "systemMessage": "Systeembericht",
+    "systemMessagePlaceholder": "Systeeminstructies voor het AI-model (optioneel)\u2026",
+    "systemMessagePlaceholderShort": "Systeeminstructies (optioneel)\u2026",
+    "systemMessagePlaceholderAlt": "Optionele systeem-instructies voor de AI\u2026",
+    "notes": "Notities",
+    "notesPlaceholder": "Extra notities of context over deze prompt (optioneel)\u2026",
+    "notesPlaceholderShort": "Extra notities (optioneel)\u2026",
+    "notesPlaceholderAlt": "Interne notities over deze prompt\u2026",
+    "temperature": "Temperatuur",
+    "temperatureRange": "(0\u20132)",
+    "temperatureError": "Moet 0\u20132 zijn",
+    "maxTokens": "Max Tokens",
+    "maxTokensError": "Moet een positief geheel getal zijn",
+    "selectModel": "Model selecteren",
+    "selectStatus": "Status selecteren",
+    "noneOption": "\u2014 Geen \u2014",
+    "identity": "Identiteit",
+    "configuration": "Configuratie",
+    "required": "Verplicht",
+    "campaign": "Campagne",
+    "noCampaign": "\u2014 Geen campagne gekoppeld"
+  },
+  "status": {
+    "active": "Actief",
+    "archived": "Gearchiveerd",
+    "unknown": "Onbekend"
+  },
+  "group": {
+    "none": "Geen"
+  },
+  "actions": {
+    "save": "Opslaan",
+    "saveChanges": "Wijzigingen Opslaan",
+    "createPrompt": "Prompt Aanmaken",
+    "saving": "Opslaan\u2026",
+    "creating": "Aanmaken\u2026",
+    "cancel": "Annuleren",
+    "edit": "Bewerken",
+    "delete": "Verwijderen"
+  },
+  "deleteDialog": {
+    "title": "Prompt Verwijderen",
+    "message": "Weet je zeker dat je wilt verwijderen",
+    "cannotUndo": "Deze actie kan niet ongedaan worden gemaakt.",
+    "deleting": "Verwijderen\u2026",
+    "deletePrompt": "Prompt Verwijderen"
+  },
+  "toast": {
+    "deleted": "Prompt verwijderd",
+    "deletedDescription": "\"{{name}}\" is succesvol verwijderd.",
+    "deleteFailed": "Prompt verwijderen mislukt",
+    "updated": "Prompt bijgewerkt",
+    "updatedDescription": "\"{{name}}\" is succesvol bijgewerkt.",
+    "created": "Prompt aangemaakt",
+    "createdDescription": "\"{{name}}\" is succesvol aangemaakt.",
+    "updateFailed": "Prompt bijwerken mislukt",
+    "createFailed": "Prompt aanmaken mislukt",
+    "saved": "Opgeslagen",
+    "savedDescription": "\"{{name}}\" bijgewerkt.",
+    "saveFailed": "Opslaan mislukt",
+    "statusUpdated": "Status bijgewerkt",
+    "statusUpdatedDescription": "\"{{name}}\" is nu {{status}}.",
+    "statusFailed": "Status bijwerken mislukt"
+  },
+  "detail": {
+    "promptDetail": "Promptdetail",
+    "gradientTester": "Gradient Tester",
+    "model": "Model",
+    "temperature": "Temperatuur",
+    "maxTokens": "Max Tokens",
+    "useCase": "Gebruiksdoel",
+    "created": "Aangemaakt",
+    "updated": "Bijgewerkt",
+    "promptText": "Prompttekst",
+    "systemMessage": "Systeembericht",
+    "notes": "Notities",
+    "clickToArchive": "Klik om te archiveren",
+    "clickToActivate": "Klik om te activeren",
+    "campaign": "Campagne",
+    "openCampaign": "Campagne openen"
+  },
+  "empty": {
+    "selectPrompt": "Selecteer een prompt",
+    "selectPromptDesc": "Klik op een prompt links om de details te bekijken",
+    "noPromptsMatch": "Geen prompts komen overeen met je filters",
+    "noPromptsYet": "Nog geen prompts",
+    "createFirstPrompt": "Maak je eerste prompt aan"
+  },
+  "columns": {
+    "name": "Naam",
+    "campaign": "Campagne",
+    "model": "Model",
+    "status": "Status",
+    "score": "Score",
+    "useCase": "Gebruiksdoel",
+    "version": "Versie",
+    "lastUpdated": "Laatst Bijgewerkt"
+  },
+  "table": {
+    "editPrompt": "Prompt bewerken",
+    "deletePrompt": "Prompt verwijderen",
+    "clickToToggle": "Klik om te {{action}}"
+  },
+  "time": {
+    "justNow": "Zojuist",
+    "hoursAgo": "{{count}}u geleden",
+    "yesterday": "Gisteren",
+    "daysAgo": "{{count}}d geleden",
+    "weeksAgo": "{{count}}w geleden",
+    "monthsAgo": "{{count}}ma geleden"
+  },
+  "sort": {
+    "mostRecent": "Meest Recent",
+    "nameAZ": "Naam A \u2192 Z",
+    "nameZA": "Naam Z \u2192 A",
+    "scoreDesc": "Score \u2193",
+    "scoreAsc": "Score \u2191"
+  }
+}

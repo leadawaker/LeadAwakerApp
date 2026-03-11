@@ -1,0 +1,87 @@
+{
+  "page": {
+    "title": "Automation Logs"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Search workflows...",
+    "refreshLogs": "Refresh logs",
+    "filterCount": "{{count}} filter",
+    "filterCount_other": "{{count}} filters"
+  },
+  "views": {
+    "table": "Table",
+    "pipeline": "Pipeline",
+    "steps": "Steps",
+    "executions": "Executions"
+  },
+  "columns": {
+    "workflow": "Workflow",
+    "step": "Step",
+    "pipeline": "Pipeline",
+    "status": "Status",
+    "lead": "Lead",
+    "account": "Account",
+    "campaign": "Campaign",
+    "execTime": "Exec Time",
+    "duration": "Duration",
+    "id": "ID",
+    "createdAt": "Created At"
+  },
+  "filters": {
+    "campaign": "Campaign",
+    "allCampaigns": "All Campaigns",
+    "status": "Status",
+    "allStatuses": "All Statuses",
+    "success": "Success",
+    "failed": "Failed",
+    "date": "Date",
+    "dateRange": "Date Range",
+    "from": "From",
+    "to": "To",
+    "clearDateFilter": "Clear date filter"
+  },
+  "detail": {
+    "errorDetails": "Error Details",
+    "errorCode": "Error Code",
+    "inputData": "Input Data",
+    "outputData": "Output Data",
+    "noErrorDetails": "No error details available for this log entry.",
+    "collapseError": "Collapse error details",
+    "expandError": "Expand error details",
+    "criticalError": "Critical error"
+  },
+  "fallback": {
+    "unknown": "Unknown",
+    "na": "N/A"
+  },
+  "time": {
+    "justNow": "just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
+  },
+  "pipeline": {
+    "executions": "Executions",
+    "selectExecution": "Select an execution to view its pipeline",
+    "step": "step",
+    "steps": "steps",
+    "retry": "retry",
+    "retries": "retries",
+    "showErrorDetails": "Show error details",
+    "hideErrorDetails": "Hide error details",
+    "errorCode": "Error Code",
+    "inputData": "Input Data",
+    "outputData": "Output Data",
+    "status": {
+      "success": "success",
+      "failed": "failed",
+      "running": "running",
+      "partial": "partial",
+      "skipped": "skipped",
+      "waiting": "waiting",
+      "retrying": "retrying",
+      "started": "started",
+      "error": "error"
+    }
+  }
+}
