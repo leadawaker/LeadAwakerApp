@@ -6,15 +6,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Database, MessageSquare, TrendingUp, Box, Copy, TrendingDown, Mail, ChevronLeft, ChevronRight } from "lucide-react";
 
 import leadsDbImg from "../assets/step-1-main.png";
-import conversationImg from "@assets/Gemini_Generated_Image_j212wcj212wcj212_1766858918533.png";
+import conversationImg from "../assets/Gemini_Generated_Image_j212wcj212wcj212_1766858918533.png";
 import dailyLeadsImg from "../assets/step-3-main.jpg";
 
 import appointmentBookingImg from "../assets/step-3-appointment-booking.jpg";
 import uploadDatabaseImg from "../assets/step-1-upload-database.png";
 import { MeteorContainer } from "./Meteor";
 
-import excelLogo from "@assets/Microsoft_Office_Excel_(2019–2025).svg_1767283614696.png";
-import conversationCardImg from "@assets/Gemini_Generated_Image_j212wcj212wcj212_1767283699067.png";
+import excelLogo from "../assets/Microsoft_Office_Excel_(2019–2025).svg_1767283614696.png";
+import conversationCardImg from "../assets/Gemini_Generated_Image_j212wcj212wcj212_1767283699067.png";
 
 interface StepProps {
   number: string;
