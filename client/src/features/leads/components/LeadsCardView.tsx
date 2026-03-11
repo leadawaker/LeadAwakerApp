@@ -5142,7 +5142,7 @@ export function LeadsCardView({
 
   return (
     /* Outer shell: transparent — gaps between panels reveal stone-gray page background */
-    <div className="relative flex h-full min-h-[600px] gap-[3px]">
+    <div className="relative flex h-full min-h-[600px] gap-[3px] max-w-[1729px] mx-auto w-full">
 
       {/* ── LEFT: Lead List ── muted panel (#E3E3E3) */}
       {/* On mobile: always visible (MobileLeadDetailPanel is a fixed overlay on top) */}
@@ -5371,7 +5371,7 @@ export function LeadsCardView({
 
       {/* Desktop detail panel — always hidden on mobile (mobile uses MobileLeadDetailPanel overlay) */}
       <div className={cn(
-        "flex-1 flex-col min-w-0 overflow-hidden bg-card rounded-lg hidden md:flex"
+        "flex-1 flex-col min-w-0 overflow-hidden bg-card rounded-lg hidden md:flex max-w-[1386px]"
       )}>
         {loading && !selectedLead ? (
           <SkeletonLeadPanel />

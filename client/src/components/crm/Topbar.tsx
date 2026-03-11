@@ -235,7 +235,7 @@ export function Topbar({
   return (
     <>
     <header
-      className="fixed top-0 left-0 right-0 bg-background z-50 flex items-center md:items-end px-4 md:px-6"
+      className="fixed top-0 left-0 right-0 bg-background z-50 flex items-center md:items-end px-4 md:pl-6"
       style={{ height: "var(--topbar-h)", paddingTop: "var(--safe-top)", paddingBottom: "7px" }}
       data-testid="header-crm-topbar"
     >
@@ -863,6 +863,11 @@ export function Topbar({
           </DropdownMenu>
         </div>
       </TooltipProvider>
+
+      {/* Right gutter — aligns buttons with leads detail panel edge on ultra-wide screens.
+          Formula: max(20px, 50vw - 967px) mirrors the leads panel max-w centering:
+          sidebar(225) + leads-max-w(1729) + pr-5(20) = 1974px transition point → 1974/2 - 20 = 967 */}
+      <div className="hidden md:block shrink-0 grow-0" style={{ flexBasis: "max(20px, calc(50vw - 967px))" }} />
 
     </header>
     {/* Desktop floating widget (hidden on mobile) */}

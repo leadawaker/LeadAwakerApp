@@ -85,14 +85,23 @@ function CampaignListCard({
   const isDraft = status === "Draft";
   const isPaused = status === "Paused";
   const createdAt: string | null = (campaign as any).createdAt ?? (campaign as any).created_at ?? null;
-  const createdLabel = createdAt ? new Date(createdAt).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" }) : null;
+  const startAt: string | null = campaign.start_date ?? createdAt;
+  const daysRunning = (status === "Active" && startAt)
+    ? Math.max(0, Math.floor((Date.now() - new Date(startAt).getTime()) / 86_400_000))
+    : null;
+  const createdLabel = daysRunning !== null
+    ? `Running ${daysRunning}d`
+    : createdAt
+    ? new Date(createdAt).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })
+    : null;
 
   return (
     <div
       className={cn(
-        "group relative rounded-3xl md:rounded-xl cursor-pointer transition-shadow",
+        "group relative rounded-3xl md:rounded-xl cursor-pointer transition-shadow overflow-hidden",
         isActive ? "bg-highlight-selected" : "bg-card hover:bg-card-hover hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
       )}
+
       onClick={onClick}
       role="button"
       tabIndex={0}
@@ -154,10 +163,12 @@ function CampaignListCard({
             </p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span
-                className="h-1.5 w-1.5 rounded-full shrink-0"
-                style={{ backgroundColor: statusHex }}
-              />
-              <span className="text-[11px] text-muted-foreground leading-none">{t(`statusLabels.${status}`, status) || t("statusLabels.Unknown")}</span>
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold shrink-0"
+                style={{ backgroundColor: `${statusHex}18`, color: statusHex }}
+              >
+                <span className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: statusHex }} />
+                {t(`statusLabels.${status}`, status) || t("statusLabels.Unknown")}
+              </span>
             </div>
             {accountName && (
               <div className="flex items-center gap-1 mt-1">
@@ -179,11 +190,11 @@ function CampaignListCard({
             "grid grid-cols-3 gap-px rounded-lg overflow-hidden",
             isActive ? "bg-[#EFE4A0]/60" : "bg-foreground/8"
           )}>
-            {[
-              { label: t("card.leads"),    value: leads > 0         ? leads.toLocaleString()  : "—" },
-              { label: t("card.response"), value: responseRate > 0  ? `${responseRate}%`       : "—" },
-              { label: t("card.booked"),   value: bookings > 0      ? bookings.toLocaleString(): "—" },
-            ].map((stat) => (
+            {([
+              { label: t("card.leads"),    value: leads > 0        ? leads.toLocaleString()   : "—", isBooked: false },
+              { label: t("card.response"), value: responseRate > 0 ? `${responseRate}%`        : "—", isBooked: false },
+              { label: t("card.booked"),   value: bookings > 0     ? bookings.toLocaleString() : "—", isBooked: true  },
+            ] as const).map((stat) => (
               <div
                 key={stat.label}
                 className={cn(
@@ -191,7 +202,12 @@ function CampaignListCard({
                   isActive ? "bg-highlight-selected" : "bg-card group-hover:bg-card-hover"
                 )}
               >
-                <span className="text-[13px] font-bold tabular-nums text-foreground leading-tight">{stat.value}</span>
+                <span className={cn(
+                  "font-bold tabular-nums leading-tight",
+                  stat.isBooked && bookings > 0
+                    ? "text-[15px] text-emerald-600 dark:text-emerald-400"
+                    : "text-[13px] text-foreground"
+                )}>{stat.value}</span>
                 <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wide mt-0.5">{stat.label}</span>
               </div>
             ))}
@@ -200,7 +216,7 @@ function CampaignListCard({
           {/* Date row */}
           {createdLabel && (
             <div className="flex items-center gap-1 px-1">
-              <span className="text-[10px] text-muted-foreground/50 tabular-nums">{t("card.started", { date: createdLabel })}</span>
+              <span className="text-[10px] text-muted-foreground/70 tabular-nums">{daysRunning !== null ? createdLabel : t("card.started", { date: createdLabel })}</span>
             </div>
           )}
         </div>

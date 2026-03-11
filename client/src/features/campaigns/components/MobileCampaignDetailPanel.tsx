@@ -39,6 +39,9 @@ function SummaryTab({ campaign }: { campaign: Campaign; metrics: CampaignMetrics
   const bookings = Number(campaign.bookings_generated ?? 0);
   const statusHex = CAMPAIGN_STATUS_HEX[String(campaign.status)] || "#6B7280";
 
+  const roiPercent = Number(campaign.roi_percent ?? 0);
+  const estRevenue = Number(campaign.value_per_booking ?? 0) * Number(campaign.bookings_generated ?? 0);
+
   const metricCards: { label: string; value: string; icon: ComponentType<{ className?: string }>; testid: string }[] = [
     { label: t("panel.metrics.leads"),        value: leads > 0        ? leads.toLocaleString()      : "—", icon: Users,    testid: "campaign-metric-leads" },
     { label: t("panel.metrics.messages"),     value: messages > 0     ? messages.toLocaleString()   : "—", icon: Zap,      testid: "campaign-metric-messages" },
@@ -97,6 +100,35 @@ function SummaryTab({ campaign }: { campaign: Campaign; metrics: CampaignMetrics
           </span>
         </div>
       </div>
+
+      {/* Mini financials */}
+      {(Number(campaign.roi_percent) !== 0 || Number(campaign.value_per_booking) > 0) && (
+        <div className="bg-card rounded-2xl border border-border/30 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border/20">
+            <span className="text-[13px] text-muted-foreground shrink-0">ROI</span>
+            <span
+              className={cn(
+                "text-[13px] font-semibold tabular-nums",
+                roiPercent >= 100
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : roiPercent >= 0
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-rose-600 dark:text-rose-400"
+              )}
+            >
+              {roiPercent != null ? `${roiPercent >= 0 ? "+" : ""}${roiPercent.toFixed(0)}%` : "—"}
+            </span>
+          </div>
+          {estRevenue > 0 && (
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-[13px] text-muted-foreground shrink-0">Est. Revenue</span>
+              <span className="text-[13px] font-semibold text-foreground tabular-nums">
+                ${estRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Description */}
       {campaign.description && (

@@ -230,7 +230,7 @@ export function RightSidebar({
   const renderDesktopNavLink = (it: typeof navItems[0]) => {
     const active = isActive(it.href);
     const Icon = it.icon;
-    const showUnreadDot = it.testId === "nav-chats" && !!unreadChatCount && unreadChatCount > 0;
+    const showUnreadCount = it.testId === "nav-chats" && !!unreadChatCount && unreadChatCount > 0;
 
     return (
       <Tooltip key={it.href}>
@@ -252,18 +252,16 @@ export function RightSidebar({
           >
             <div className="relative h-10 w-10 rounded-full flex items-center justify-center shrink-0 border border-black/[0.125]">
               <Icon className="h-4 w-4" />
-              {showUnreadDot && (
-                <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 border border-background" />
+              {showUnreadCount && (
+                <span className="absolute -top-1 -right-1 h-4 min-w-[1rem] px-1 rounded-full bg-brand-indigo text-white text-[10px] font-bold flex items-center justify-center border border-background">
+                  {unreadChatCount! > 9 ? "9+" : unreadChatCount}
+                </span>
               )}
             </div>
             {!collapsed && (
               <span className="text-sm font-bold">{it.label}</span>
             )}
-            {it.testId === "nav-chats" && !collapsed && !!unreadChatCount && unreadChatCount > 0 && (
-              <span className="ml-auto h-4 min-w-[1rem] px-1 rounded-full bg-brand-indigo text-white text-[10px] font-bold flex items-center justify-center">
-                {unreadChatCount > 9 ? "9+" : unreadChatCount}
-              </span>
-            )}
+
           </Link>
         </TooltipTrigger>
         {collapsed && (

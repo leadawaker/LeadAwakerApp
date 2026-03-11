@@ -745,20 +745,49 @@ function PipelineAndDonutWidget({ campaignId }: { campaignId: number }) {
 }
 
 // ── Animated metric card ─────────────────────────────────────────────────────
-function AnimatedMetricCard({ numericValue, displayValue, label, animTrigger }: {
+function AnimatedMetricCard({ numericValue, displayValue, label, animTrigger, borderColor, trendData }: {
   numericValue: number;
   displayValue: string;
   label: string;
   animTrigger: number;
+  borderColor?: string;
+  trendData?: number[];
 }) {
   const isPercent = displayValue.endsWith("%");
   const isDash = displayValue === "—";
   const animated = useCountUp(isDash ? 0 : numericValue, 900, animTrigger);
   const display = isDash ? "—" : isPercent ? `${animated}%` : animated.toLocaleString();
+  const showSparkline = trendData && trendData.length > 1;
   return (
-    <div className="rounded-xl bg-white/80 dark:bg-white/[0.08] p-4 md:p-8 flex flex-col items-center justify-center text-center">
+    <div
+      className={cn("rounded-xl bg-white/80 dark:bg-white/[0.08] p-4 md:p-8 flex flex-col items-center justify-center text-center", borderColor && "border-t-2")}
+      style={borderColor ? { borderTopColor: borderColor } : undefined}
+    >
       <div className="text-[22px] md:text-[28px] font-black text-foreground tabular-nums leading-none">{display}</div>
       <div className="text-[10px] text-foreground/40 uppercase tracking-wider mt-1.5">{label}</div>
+      {showSparkline && (
+        <svg width="80" height="20" viewBox="0 0 80 20" className="mt-2 opacity-50">
+          <polyline
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            points={(() => {
+              const min = Math.min(...trendData);
+              const max = Math.max(...trendData);
+              const range = max - min || 1;
+              return trendData
+                .map((v, i) => {
+                  const x = (i / (trendData.length - 1)) * 80;
+                  const y = 18 - ((v - min) / range) * 16;
+                  return `${x},${y}`;
+                })
+                .join(" ");
+            })()}
+          />
+        </svg>
+      )}
     </div>
   );
 }
@@ -2433,12 +2462,23 @@ export function CampaignDetailView({
                   allFrom={campaignCreatedAt ? new Date(campaignCreatedAt) : undefined}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <AnimatedMetricCard numericValue={agg.totalLeadsTargeted} displayValue={agg.totalLeadsTargeted.toLocaleString()} label={t("summary.leadsTargeted")} animTrigger={animTrigger} />
-                <AnimatedMetricCard numericValue={agg.totalMessagesSent}  displayValue={agg.totalMessagesSent.toLocaleString()}  label={t("summary.messagesSent")}  animTrigger={animTrigger} />
-                <AnimatedMetricCard numericValue={agg.responseRate ?? 0}  displayValue={agg.responseRate != null ? `${agg.responseRate}%` : "—"} label={t("summary.responsePercent")} animTrigger={animTrigger} />
-                <AnimatedMetricCard numericValue={agg.bookingRate  ?? 0}  displayValue={agg.bookingRate  != null ? `${agg.bookingRate}%`  : "—"} label={t("summary.bookingPercent")}  animTrigger={animTrigger} />
-              </div>
+              {(() => {
+                const sortedMetrics = [...filteredMetrics].sort((a, b) =>
+                  (a.metric_date || "").localeCompare(b.metric_date || "")
+                );
+                const leadsTrend    = sortedMetrics.map((m) => Number(m.total_leads_targeted)  || 0);
+                const messagesTrend = sortedMetrics.map((m) => Number(m.total_messages_sent)    || 0);
+                const responseTrend = sortedMetrics.map((m) => Number(m.response_rate_percent)  || 0);
+                const bookingTrend  = sortedMetrics.map((m) => Number(m.booking_rate_percent)   || 0);
+                return (
+                  <div className="grid grid-cols-2 gap-3">
+                    <AnimatedMetricCard numericValue={agg.totalLeadsTargeted} displayValue={agg.totalLeadsTargeted.toLocaleString()} label={t("summary.leadsTargeted")} animTrigger={animTrigger} borderColor="#6366F1" trendData={leadsTrend} />
+                    <AnimatedMetricCard numericValue={agg.totalMessagesSent}  displayValue={agg.totalMessagesSent.toLocaleString()}  label={t("summary.messagesSent")}  animTrigger={animTrigger} borderColor="#22D3EE" trendData={messagesTrend} />
+                    <AnimatedMetricCard numericValue={agg.responseRate ?? 0}  displayValue={agg.responseRate != null ? `${agg.responseRate}%` : "—"} label={t("summary.responsePercent")} animTrigger={animTrigger} borderColor="#FBBF24" trendData={responseTrend} />
+                    <AnimatedMetricCard numericValue={agg.bookingRate  ?? 0}  displayValue={agg.bookingRate  != null ? `${agg.bookingRate}%`  : "—"} label={t("summary.bookingPercent")}  animTrigger={animTrigger} borderColor="#34D399" trendData={bookingTrend} />
+                  </div>
+                );
+              })()}
 
               {/* Performance Trends chart — pushed to bottom */}
               <div className="mt-auto pt-1">
@@ -2455,7 +2495,7 @@ export function CampaignDetailView({
                     </span>
                   </div>
                 </div>
-                <div className="h-[280px]" key={animTrigger} data-testid="campaign-detail-view-trends">
+                <div className="h-[210px]" key={animTrigger} data-testid="campaign-detail-view-trends">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
                       data={(() => {
@@ -2952,9 +2992,15 @@ export function CampaignDetailView({
               <span className="text-[18px] font-semibold font-heading leading-tight text-foreground">Behavior</span>
                 {/* Channel + toggles */}
                 <div className="rounded-xl bg-white/80 dark:bg-white/[0.06] p-3 space-y-0">
-                  <InfoRow label={t("config.channel")} value={campaign.channel || "WhatsApp"} />
-                  <BoolRow label={t("config.stopOnResponse")} value={campaign.stop_on_response} />
-                  <BoolRow label={t("config.useAiBumps")} value={campaign.use_ai_bumps} />
+                  <InfoRow label={t("config.channel")} value={campaign.channel || "WhatsApp"}
+                    editChild={isEditing ? <EditSelect value={String(draft.channel ?? campaign.channel ?? "whatsapp")} onChange={(v) => setDraft(d => ({...d, channel: v}))} options={["whatsapp", "email", "sms"]} /> : undefined}
+                  />
+                  <BoolRow label={t("config.stopOnResponse")} value={campaign.stop_on_response}
+                    editChild={isEditing ? <EditToggle value={Boolean(draft.stop_on_response ?? campaign.stop_on_response)} onChange={(v) => setDraft(d => ({...d, stop_on_response: v}))} /> : undefined}
+                  />
+                  <BoolRow label={t("config.useAiBumps")} value={campaign.use_ai_bumps}
+                    editChild={isEditing ? <EditToggle value={Boolean(draft.use_ai_bumps ?? campaign.use_ai_bumps)} onChange={(v) => setDraft(d => ({...d, use_ai_bumps: v}))} /> : undefined}
+                  />
                   {campaign.channel === "whatsapp" && (
                     <InfoRow
                       label={t("config.whatsappTier")}
@@ -2967,18 +3013,32 @@ export function CampaignDetailView({
                       })()}
                     />
                   )}
-                  <InfoRow label={t("config.maxBumps")} value={campaign.max_bumps} />
+                  <InfoRow label={t("config.maxBumps")} value={campaign.max_bumps}
+                    editChild={isEditing ? <EditNumber value={String(draft.max_bumps ?? "")} onChange={(v) => setDraft(d => ({...d, max_bumps: v}))} placeholder="e.g. 3" /> : undefined}
+                  />
                 </div>
 
                 {/* Voice Notes */}
                 <div className="rounded-xl bg-white/80 dark:bg-white/[0.06] p-3 space-y-0">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 pb-2">Voice Notes</p>
-                  <BoolRow label={t("config.firstMessageVoiceNote")} value={campaign.first_message_voice_note ?? false} />
-                  <BoolRow label={t("config.bump1VoiceNote")} value={campaign.bump_1_voice_note ?? false} />
-                  <BoolRow label={t("config.bump2VoiceNote")} value={campaign.bump_2_voice_note ?? false} />
-                  <BoolRow label={t("config.bump3VoiceNote")} value={campaign.bump_3_voice_note ?? false} />
-                  <BoolRow label={t("config.aiReplyVoiceNote")} value={campaign.ai_reply_voice_note ?? false} />
-                  <InfoRow label={t("config.voiceId")} value={campaign.tts_voice_id || null} />
+                  <BoolRow label={t("config.firstMessageVoiceNote")} value={campaign.first_message_voice_note ?? false}
+                    editChild={isEditing ? <EditToggle value={Boolean(draft.first_message_voice_note ?? campaign.first_message_voice_note)} onChange={(v) => setDraft(d => ({...d, first_message_voice_note: v}))} /> : undefined}
+                  />
+                  <BoolRow label={t("config.bump1VoiceNote")} value={campaign.bump_1_voice_note ?? false}
+                    editChild={isEditing ? <EditToggle value={Boolean(draft.bump_1_voice_note ?? campaign.bump_1_voice_note)} onChange={(v) => setDraft(d => ({...d, bump_1_voice_note: v}))} /> : undefined}
+                  />
+                  <BoolRow label={t("config.bump2VoiceNote")} value={campaign.bump_2_voice_note ?? false}
+                    editChild={isEditing ? <EditToggle value={Boolean(draft.bump_2_voice_note ?? campaign.bump_2_voice_note)} onChange={(v) => setDraft(d => ({...d, bump_2_voice_note: v}))} /> : undefined}
+                  />
+                  <BoolRow label={t("config.bump3VoiceNote")} value={campaign.bump_3_voice_note ?? false}
+                    editChild={isEditing ? <EditToggle value={Boolean(draft.bump_3_voice_note ?? campaign.bump_3_voice_note)} onChange={(v) => setDraft(d => ({...d, bump_3_voice_note: v}))} /> : undefined}
+                  />
+                  <BoolRow label={t("config.aiReplyVoiceNote")} value={campaign.ai_reply_voice_note ?? false}
+                    editChild={isEditing ? <EditToggle value={Boolean(draft.ai_reply_voice_note ?? campaign.ai_reply_voice_note)} onChange={(v) => setDraft(d => ({...d, ai_reply_voice_note: v}))} /> : undefined}
+                  />
+                  <InfoRow label={t("config.voiceId")} value={campaign.tts_voice_id || null}
+                    editChild={isEditing ? <EditText value={String(draft.tts_voice_id ?? "")} onChange={(v) => setDraft(d => ({...d, tts_voice_id: v}))} placeholder="Voice ID" /> : undefined}
+                  />
                 </div>
 
                 {/* Contract */}

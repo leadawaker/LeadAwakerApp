@@ -70,19 +70,27 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
     staleTime: 30_000,
   });
 
-  // Track last time user visited chats
-  useEffect(() => {
-    if (location.includes('/conversations')) {
-      localStorage.setItem("leadawaker_lastChatVisitedAt", new Date().toISOString());
+  // Track last time user visited chats — use a ref so it updates synchronously
+  // during render (before the memo runs), avoiding all async state timing issues.
+  const onConversations = location.includes('/conversations');
+  const lastChatVisitRef = useRef<string | null>(localStorage.getItem("leadawaker_lastChatVisitedAt"));
+  const prevOnConversations = useRef(onConversations);
+
+  if (prevOnConversations.current !== onConversations) {
+    prevOnConversations.current = onConversations;
+    if (onConversations) {
+      // Only update cutoff when entering conversations — marks messages as seen
+      const ts = new Date().toISOString();
+      lastChatVisitRef.current = ts;
+      localStorage.setItem("leadawaker_lastChatVisitedAt", ts);
     }
-  }, [location]);
+  }
 
   const unreadChatCount = useMemo(() => {
-    const lastVisit = localStorage.getItem("leadawaker_lastChatVisitedAt");
-    const cutoff = lastVisit ? new Date(lastVisit) : null;
+    const cutoff = lastChatVisitRef.current ? new Date(lastChatVisitRef.current) : null;
     const items = Array.isArray(notifData) ? notifData : [];
     return items.filter(n => n.type === 'inbound' && (!cutoff || new Date(n.at) > cutoff)).length;
-  }, [notifData]);
+  }, [notifData, onConversations]);
 
   // ── Color Tester: force re-render when JS-based colors change (debounced) ──
   const [colorTick, setColorTick] = useState(0);
@@ -197,7 +205,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         data-testid="main-crm"
       >
         <ConnectionBanner />
-        <div className="h-full w-full px-3 md:pl-0 md:pr-5 pt-2 pb-0 overflow-y-auto">
+        <div className="h-full w-full max-w-[1729px] mx-auto px-3 md:pl-0 md:pr-5 pt-2 pb-0 overflow-y-auto">
           <ErrorBoundary>
             <PageTransition>
               {children}

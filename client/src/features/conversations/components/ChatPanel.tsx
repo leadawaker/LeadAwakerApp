@@ -742,15 +742,18 @@ export function ChatPanel({
                     | { kind: "tag-event"; tagName: string; tagColor: string; time: string; key: string; eventType?: "added" | "removed" }
                     | { kind: "status-event"; statusName: string; time: string; key: string };
 
+                  const existingTagNames = new Set(tagEvents.map((te: any) => te.tag_name?.toLowerCase()));
                   const tokens: Token[] = [];
                   let lastDateKey = "";
                   let flatIdx = 0;
+                  let inboundN = 0;
 
                   for (let gi = 0; gi < threadGroups.length; gi++) {
                     const group = threadGroups[gi];
                     const isMeaningfulThread =
                       group.threadId.startsWith("bump-") ||
-                      group.threadId.startsWith("thread-");
+                      group.threadId.startsWith("thread-") ||
+                      group.threadId.startsWith("session-");
 
                     for (let mi = 0; mi < group.msgs.length; mi++) {
                       const m = group.msgs[mi];
@@ -759,54 +762,35 @@ export function ChatPanel({
 
                       // Date separator before this message (once per day)
                       if (dk && dk !== lastDateKey) {
-                        // For the very first message of a thread group, emit the thread divider first
-                        if (mi === 0 && isMeaningfulThread) {
-                          tokens.push({ kind: "thread", group, total: threadGroups.length, key: group.threadId });
-                        }
                         if (ts) tokens.push({ kind: "date", label: formatDateLabel(ts, t), key: `date-${gi}-${mi}` });
                         lastDateKey = dk;
-                      } else if (mi === 0 && isMeaningfulThread) {
-                        tokens.push({ kind: "thread", group, total: threadGroups.length, key: group.threadId });
                       }
 
                       tokens.push({ kind: "msg", msgIdx: flatIdx });
+                      if (mi === 0 && isMeaningfulThread && (m.direction || "").toLowerCase() === "outbound") {
+                        tokens.push({ kind: "thread", group, total: threadGroups.length, key: group.threadId });
+                      }
+
+                      // Inline synthetic status events after inbound messages
+                      const dir = (m.direction || "").toLowerCase();
+                      if (dir !== "outbound") {
+                        inboundN++;
+                        const rawTs = m.created_at ?? m.createdAt ?? "";
+                        const timeStr = rawTs ? new Date(rawTs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+                        if (inboundN === 1 && !existingTagNames.has("responded")) {
+                          tokens.push({ kind: "status-event", statusName: "Responded", time: timeStr, key: "synth-responded" });
+                        }
+                        if (inboundN === 2 && !existingTagNames.has("multiple responses") && !existingTagNames.has("multiple messages")) {
+                          tokens.push({ kind: "status-event", statusName: "Multiple Responses", time: timeStr, key: "synth-multiple" });
+                        }
+                      }
+
                       flatIdx++;
                     }
                   }
 
-                  // Generate synthetic status events from interaction patterns
-                  // (only if not already present as explicit tags)
-                  const existingTagNames = new Set(tagEvents.map((te: any) => te.tag_name?.toLowerCase()));
-                  const syntheticEvents: any[] = [];
-                  let inboundCount = 0;
-                  for (const m of allMsgs) {
-                    const dir = (m.direction || "").toLowerCase();
-                    if (dir !== "outbound") {
-                      inboundCount++;
-                      if (inboundCount === 1 && !existingTagNames.has("responded")) {
-                        syntheticEvents.push({
-                          id: `synth-responded`,
-                          tag_name: "Responded",
-                          tag_color: "",
-                          created_at: m.created_at ?? m.createdAt,
-                          event_type: "added",
-                          _synthetic: true,
-                        });
-                      }
-                      if (inboundCount === 2 && !existingTagNames.has("multiple responses") && !existingTagNames.has("multiple messages")) {
-                        syntheticEvents.push({
-                          id: `synth-multiple`,
-                          tag_name: "Multiple Responses",
-                          tag_color: "",
-                          created_at: m.created_at ?? m.createdAt,
-                          event_type: "added",
-                          _synthetic: true,
-                        });
-                      }
-                    }
-                  }
-                  // Merge synthetic events into tagEvents (avoiding duplicates via existing set check)
-                  const allTagEvents = [...tagEvents, ...syntheticEvents].sort((a: any, b: any) => {
+                  // Merge real tag events (DB) into tokens by timestamp
+                  const allTagEvents = [...tagEvents].sort((a: any, b: any) => {
                     if (!a.created_at && !b.created_at) return 0;
                     if (!a.created_at) return 1;
                     if (!b.created_at) return -1;
@@ -917,17 +901,14 @@ export function ChatPanel({
 
                     while (lookahead < tokens.length) {
                       const lt = tokens[lookahead];
-                      if (lt.kind === "date" || lt.kind === "thread") {
-                        // Date/thread separators — peek past to see if same sender continues
-                        const node = lt.kind === "date"
-                          ? <DateSeparator key={lt.key} label={lt.label} />
-                          : <ThreadDivider key={lt.key} group={lt.group} total={lt.total} />;
-                        pendingSeparators.push({ node, insertAfterRunIdx: runMsgs.length });
+                      if (lt.kind === "date") {
+                        // Date separators — peek past to see if same sender continues
+                        pendingSeparators.push({ node: <DateSeparator key={lt.key} label={lt.label} />, insertAfterRunIdx: runMsgs.length });
                         lookahead++;
                         continue;
                       }
-                      if (lt.kind === "tag-event" || lt.kind === "status-event") {
-                        // Tag/status chips always break a run so they render inline between messages
+                      if (lt.kind === "tag-event" || lt.kind === "status-event" || lt.kind === "thread") {
+                        // These always break a run so they render inline between messages
                         break;
                       }
                       // It's a msg token
@@ -1318,6 +1299,7 @@ const CONVERSION_STATUS_TAGS = new Set([
   "Booked",
   "Call Booked",
   "Appointment Booked",
+  "Appointment Rebooked",
   "Booking Confirmed",
   "Calendar Link Sent",
   "Lost",
@@ -1741,12 +1723,11 @@ function ThreadDivider({ group, total }: { group: ThreadGroup; total: number }) 
     );
   }
 
-  // Bump threads keep their amber style
   const label = formatThreadLabel(group, total, t);
   return (
     <div className="flex justify-center my-4" data-testid={`thread-divider-${group.threadIndex}`}>
-      <span className="text-[13px] font-semibold rounded-full px-4 py-1.5 select-none bg-amber-100 text-amber-700">
-        {label}{time ? ` · ${time}` : ""}
+      <span className="inline-flex items-center gap-1.5 text-[12px] font-medium rounded-full px-3 py-1 select-none bg-white dark:bg-gray-900 shadow-sm text-gray-400 dark:text-gray-500">
+        {label}{time && <><span className="opacity-50"> · </span><span className="opacity-50">{time}</span></>}
       </span>
     </div>
   );
@@ -2088,10 +2069,7 @@ function ChatBubble({
   const time = formatBubbleTime(rawTs);
   const who = (item.Who ?? item.who ?? "").trim();
 
-  // Pointy corner at the BOTTOM, facing the avatar (rounded-sm = half of rounded-md)
-  const bubbleRadius = inbound
-    ? isLastInRun ? "rounded-sm rounded-bl-none" : "rounded-sm"
-    : isLastInRun ? "rounded-sm rounded-br-none" : "rounded-sm";
+  const bubbleRadius = "rounded-sm";
 
   return (
     <div
@@ -2129,6 +2107,17 @@ function ChatBubble({
         )}
         data-message-type={inbound ? "lead" : aiMsg ? "ai" : "agent"}
       >
+        {/* Tail triangle — only on last message in a consecutive run */}
+        {isLastInRun && inbound && (
+          <span aria-hidden="true" className="absolute bottom-0 -left-[5px] w-0 h-0 border-r-[5px] border-r-white dark:border-r-[#243249] border-b-[6px] border-b-transparent" />
+        )}
+        {isLastInRun && !inbound && (
+          <span aria-hidden="true" className={cn(
+            "absolute bottom-0 -right-[5px] w-0 h-0 border-l-[5px] border-b-[6px] border-b-transparent",
+            aiMsg && "border-l-[#f2f5ff] dark:border-l-[#1e2340] max-md:border-l-brand-indigo",
+            humanAgentMsg && "border-l-[#f1fff5] dark:border-l-[#1a2e1f] max-md:border-l-brand-indigo",
+          )} />
+        )}
         {/* Content: voice memo data URL → render player inline; otherwise plain text */}
         {(() => {
           const content = item.content ?? item.Content ?? "";
@@ -2137,9 +2126,9 @@ function ChatBubble({
           const isVoiceNote = item.type === "voice_note";
           // Voice color: human agent → green, AI → amber, inbound lead → pipeline status color, outbound agent → teal
           const voiceColor = humanAgentMsg ? "#22C55E" : aiMsg ? "#f59e0b" : inbound ? leadAvatarColors.statusColor : "#0ABFA3";
-          // Time + status stamp (rendered inline, WhatsApp-style)
+          // Time + status stamp — rendered below the message content
           const timeStamp = (
-            <span className="inline-flex items-center gap-0.5 float-right ml-2 mt-1 text-[11px] leading-none select-none opacity-50">
+            <span className="inline-flex items-center gap-0.5 self-end mt-0.5 text-[11px] leading-none select-none opacity-50">
               {time || (rawTs ? rawTs.toString().slice(11, 16) : "")}
               {outbound && (
                 <MessageStatusIcon
@@ -2154,7 +2143,7 @@ function ChatBubble({
             </span>
           );
           if (isVoiceMemo) {
-            return <><VoiceMemoPlayer url={content} outbound={outbound} color={voiceColor} />{timeStamp}</>;
+            return <div className="flex flex-col gap-0.5"><VoiceMemoPlayer url={content} outbound={outbound} color={voiceColor} />{timeStamp}</div>;
           }
           if (isVoiceNote) {
             const VOICE_PREFIX = "[Voice Note]: ";
@@ -2172,17 +2161,18 @@ function ChatBubble({
                     </div>
                 }
                 {transcription
-                  ? <div className="whitespace-pre-wrap leading-relaxed break-words text-[13px] italic opacity-80">{transcription}{timeStamp}</div>
-                  : <div className="text-[12px] opacity-50 italic">Transcription unavailable{timeStamp}</div>
+                  ? <div className="flex flex-col gap-0.5"><span className="whitespace-pre-wrap leading-relaxed break-words text-[13px] italic opacity-80">{transcription}</span>{timeStamp}</div>
+                  : <div className="flex flex-col gap-0.5"><span className="text-[12px] opacity-50 italic">Transcription unavailable</span>{timeStamp}</div>
                 }
               </div>
             );
           }
           return (
-            <>
-              <span className="whitespace-pre-wrap leading-relaxed break-words">{content}{timeStamp}</span>
+            <div className="flex flex-col gap-0.5">
+              <span className="whitespace-pre-wrap leading-relaxed break-words">{content}</span>
               {attachment && <AttachmentPreview url={attachment as string} outbound={outbound} voiceColor={voiceColor} />}
-            </>
+              {timeStamp}
+            </div>
           );
         })()}
         {isFailed && onRetry && (

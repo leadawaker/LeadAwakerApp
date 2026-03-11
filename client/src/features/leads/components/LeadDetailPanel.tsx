@@ -84,6 +84,7 @@ interface Interaction {
   /** true when a human agent manually sent this message */
   is_manual_follow_up?: boolean;
   is_bump?: boolean;
+  triggered_by?: string;
   status?: string;
   sentiment_detected?: string;
 }
@@ -471,25 +472,43 @@ function ScoreArcPanel({ score, tier }: { score: number; tier?: string }) {
 
 // ── Score Detail Bar (with context line) ─────────────────────────────────────
 
-function ScoreDetailBar({ label, value, context }: { label: string; value: number; context?: string }) {
-  const numVal = Math.max(0, Math.min(100, value));
-  const barColor = numVal >= 70 ? "bg-emerald-500" : numVal >= 40 ? "bg-amber-400" : "bg-gray-400 dark:bg-gray-600";
-  const textColor = numVal >= 70 ? "text-emerald-600 dark:text-emerald-400" : numVal >= 40 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground";
+function ScoreDetailBar({ label, rawScore, weight, maxRaw, context }: {
+  label: string; rawScore: number; weight: number; maxRaw: number; context?: string
+}) {
+  const contribution = Math.round(weight * Math.max(0, Math.min(maxRaw, rawScore)));
+  const maxContrib = Math.round(weight * maxRaw);
+  const pct = maxContrib > 0 ? (contribution / maxContrib) * 100 : 0;
+  const textColor = pct >= 70 ? "text-emerald-600 dark:text-emerald-400" : pct >= 40 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground";
+
+  // Segmented bar: one segment per 6 contribution points (5 segments for /30, 6 for /36)
+  const CHUNK = 6;
+  const numChunks = Math.round(maxContrib / CHUNK);
+  const filledChunks = maxContrib > 0 ? (contribution / maxContrib) * numChunks : 0;
 
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between">
         <span className="text-[12px] font-medium text-foreground">{label}</span>
         <span className={cn("text-[13px] font-bold tabular-nums", textColor)}>
-          {numVal}
-          <span className="text-[10px] font-normal text-muted-foreground ml-0.5">/100</span>
+          {contribution}
+          <span className="text-[10px] font-normal text-muted-foreground ml-0.5">/{maxContrib}</span>
         </span>
       </div>
-      <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-        <div
-          className={cn("h-full rounded-full transition-[width] duration-500", barColor)}
-          style={{ width: `${numVal}%` }}
-        />
+      <div className="flex gap-1">
+        {Array.from({ length: numChunks }).map((_, i) => {
+          const fill = Math.min(1, Math.max(0, filledChunks - i));
+          const segColor = pct >= 70 ? "bg-emerald-500" : pct >= 40 ? "bg-amber-400" : "bg-brand-indigo/70";
+          return (
+            <div key={i} className="relative flex-1 h-2 rounded-sm bg-muted overflow-hidden">
+              {fill > 0 && (
+                <div
+                  className={cn("absolute inset-y-0 left-0 rounded-sm transition-[width] duration-500", segColor)}
+                  style={{ width: `${fill * 100}%` }}
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
       {context && (
         <span className="text-[11px] text-muted-foreground leading-snug">{context}</span>
@@ -1262,17 +1281,23 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 <div className="flex flex-col gap-3">
                   <ScoreDetailBar
                     label="Engagement"
-                    value={scoreBreakdown.engagement_score}
+                    rawScore={scoreBreakdown.engagement_score}
+                    weight={0.30}
+                    maxRaw={100}
                     context={engagementContext(lead)}
                   />
                   <ScoreDetailBar
                     label="Activity"
-                    value={scoreBreakdown.activity_score}
+                    rawScore={scoreBreakdown.activity_score}
+                    weight={0.30}
+                    maxRaw={100}
                     context={activityContext(lead)}
                   />
                   <ScoreDetailBar
                     label="Funnel Stage"
-                    value={scoreBreakdown.funnel_weight}
+                    rawScore={scoreBreakdown.funnel_weight}
+                    weight={0.40}
+                    maxRaw={90}
                     context={funnelContext(lead)}
                   />
                 </div>
@@ -1504,6 +1529,23 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                 {lead.call_duration_minutes != null && (
                   <InfoRow label={t("detail.fields.duration")} value={t("detail.fields.durationMinutes", { minutes: lead.call_duration_minutes })} />
                 )}
+                {/* Lead summary generated at booking */}
+                {lead.ai_memory && (() => {
+                  let isJsonArray = false;
+                  try { if (Array.isArray(JSON.parse(lead.ai_memory))) isJsonArray = true; } catch { /* not JSON */ }
+                  if (isJsonArray) return null;
+                  return (
+                    <div className="pt-2 pb-1 border-t border-border/30 mt-1">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Bot className="h-3 w-3 text-muted-foreground/60" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                          {t("detail.fields.aiSummary", "AI Summary")}
+                        </span>
+                      </div>
+                      <p className="text-[12px] text-foreground/80 leading-relaxed">{lead.ai_memory}</p>
+                    </div>
+                  );
+                })()}
               </div>
             </>
           )}
@@ -1754,8 +1796,8 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
               >
                 {(() => {
                   // Status names that get a colored status chip instead of a tag chip
-                  const STATUS_TAG_NAMES = new Set(["Contacted","Responded","Multiple Responses","Qualified","Booked","Call Booked","Appointment Booked","Booking Confirmed","Calendar Link Sent","Lost","DND","Opted Out","DNC"]);
-                  const STATUS_HEX: Record<string, string> = { Contacted:"#7A73FF", Responded:"#3ACBDF", "Multiple Responses":"#31D35C", Qualified:"#AED62E", Booked:"#F7BF0E", "Call Booked":"#F7BF0E", "Appointment Booked":"#F7BF0E", "Booking Confirmed":"#22C55E", "Calendar Link Sent":"#F7BF0E", Lost:"#DC2626", DND:"#722F37", "Opted Out":"#6B7280", DNC:"#6B7280" };
+                  const STATUS_TAG_NAMES = new Set(["Contacted","Responded","Multiple Responses","Qualified","Booked","Call Booked","Appointment Booked","Appointment Rebooked","Booking Confirmed","Calendar Link Sent","Lost","DND","Opted Out","DNC"]);
+                  const STATUS_HEX: Record<string, string> = { Contacted:"#7A73FF", Responded:"#3ACBDF", "Multiple Responses":"#31D35C", Qualified:"#AED62E", Booked:"#F7BF0E", "Call Booked":"#F7BF0E", "Appointment Booked":"#F7BF0E", "Appointment Rebooked":"#A78BFA", "Booking Confirmed":"#22C55E", "Calendar Link Sent":"#F7BF0E", Lost:"#DC2626", DND:"#722F37", "Opted Out":"#6B7280", DNC:"#6B7280" };
                   // Case-insensitive lookup
                   const _sLower = new Map<string, string>();
                   Array.from(STATUS_TAG_NAMES).forEach(s => _sLower.set(s.toLowerCase(), s));
@@ -1825,8 +1867,12 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
                     // msg item
                     const m = item.data;
                     const outbound = String(m.direction || "").toLowerCase() === "outbound";
-                    const isAI = Boolean(m.ai_generated);
-                    const isHuman = Boolean(m.is_manual_follow_up) || (!isAI && outbound);
+                    const AI_TB = new Set(["ai_conversation", "campaign_launcher", "bump_scheduler",
+                      "manual_bump_trigger", "inbound_handler", "booking_webhook", "booking_confirmation"]);
+                    const isAI = Boolean(m.ai_generated)
+                      || Boolean(m.is_bump)
+                      || AI_TB.has(((m as any).triggered_by ?? "").toLowerCase());
+                    const isHuman = Boolean(m.is_manual_follow_up);
                     const isBump = Boolean(m.is_bump);
                     const msgContent = m.Content || m.content || "";
                     const who = m.Who || m.who || "";
