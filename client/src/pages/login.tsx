@@ -7,7 +7,7 @@ import { API_BASE } from "@/lib/apiUtils";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 
-const HERO_IMAGES = ["/login-hero.png", "/login-hero-2.png"] as const;
+const HERO_IMAGES = ["/login-hero.webp", "/login-hero-2.webp"] as const;
 
 export default function Login() {
   const { t } = useTranslation("login");
@@ -17,7 +17,7 @@ export default function Login() {
     localStorage.setItem("leadawaker_hero_idx", String(next));
     return HERO_IMAGES[next];
   });
-  const isLady = heroSrc === "/login-hero.png";
+  const isLady = heroSrc === "/login-hero.webp";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
