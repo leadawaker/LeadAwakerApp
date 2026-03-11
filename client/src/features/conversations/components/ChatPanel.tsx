@@ -2069,7 +2069,13 @@ function ChatBubble({
   const time = formatBubbleTime(rawTs);
   const who = (item.Who ?? item.who ?? "").trim();
 
-  const bubbleRadius = "rounded-sm";
+  // Last in run: sharp corner where tail connects, rounded on all others
+  // Not last in run: all corners rounded
+  const bubbleRadius = isLastInRun
+    ? inbound
+      ? "rounded-2xl rounded-bl-none"
+      : "rounded-2xl rounded-br-none"
+    : "rounded-2xl";
 
   return (
     <div
@@ -2126,9 +2132,9 @@ function ChatBubble({
           const isVoiceNote = item.type === "voice_note";
           // Voice color: human agent → green, AI → amber, inbound lead → pipeline status color, outbound agent → teal
           const voiceColor = humanAgentMsg ? "#22C55E" : aiMsg ? "#f59e0b" : inbound ? leadAvatarColors.statusColor : "#0ABFA3";
-          // Time + status stamp — rendered below the message content
+          // Time + status stamp — WhatsApp-style: inline at bottom-right of bubble
           const timeStamp = (
-            <span className="inline-flex items-center gap-0.5 self-end mt-0.5 text-[11px] leading-none select-none opacity-50">
+            <span className="shrink-0 inline-flex items-center gap-0.5 text-[11px] leading-none select-none opacity-50 mb-0.5">
               {time || (rawTs ? rawTs.toString().slice(11, 16) : "")}
               {outbound && (
                 <MessageStatusIcon
@@ -2143,7 +2149,7 @@ function ChatBubble({
             </span>
           );
           if (isVoiceMemo) {
-            return <div className="flex flex-col gap-0.5"><VoiceMemoPlayer url={content} outbound={outbound} color={voiceColor} />{timeStamp}</div>;
+            return <div className="flex items-end gap-1.5"><VoiceMemoPlayer url={content} outbound={outbound} color={voiceColor} />{timeStamp}</div>;
           }
           if (isVoiceNote) {
             const VOICE_PREFIX = "[Voice Note]: ";
@@ -2160,18 +2166,23 @@ function ChatBubble({
                       <span className="text-[11px] font-medium uppercase tracking-wide">Voice note</span>
                     </div>
                 }
-                {transcription
-                  ? <div className="flex flex-col gap-0.5"><span className="whitespace-pre-wrap leading-relaxed break-words text-[13px] italic opacity-80">{transcription}</span>{timeStamp}</div>
-                  : <div className="flex flex-col gap-0.5"><span className="text-[12px] opacity-50 italic">Transcription unavailable</span>{timeStamp}</div>
-                }
+                <div className="flex items-end gap-1.5">
+                  {transcription
+                    ? <span className="whitespace-pre-wrap leading-relaxed break-words text-[13px] italic opacity-80 flex-1 min-w-0">{transcription}</span>
+                    : <span className="text-[12px] opacity-50 italic flex-1 min-w-0">Transcription unavailable</span>
+                  }
+                  {timeStamp}
+                </div>
               </div>
             );
           }
           return (
-            <div className="flex flex-col gap-0.5">
-              <span className="whitespace-pre-wrap leading-relaxed break-words">{content}</span>
+            <div className="flex flex-col gap-1">
               {attachment && <AttachmentPreview url={attachment as string} outbound={outbound} voiceColor={voiceColor} />}
-              {timeStamp}
+              <div className="flex items-end gap-1.5">
+                <span className="whitespace-pre-wrap leading-relaxed break-words flex-1 min-w-0">{content}</span>
+                {timeStamp}
+              </div>
             </div>
           );
         })()}

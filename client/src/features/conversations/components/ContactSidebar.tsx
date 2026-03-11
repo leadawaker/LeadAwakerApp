@@ -363,7 +363,7 @@ export function ContactSidebar({ selected, loading = false, onClose, onUpdateLea
       data-testid="panel-contact"
     >
       {/* ── Flat background ── */}
-      <div className="absolute inset-0 bg-card" />
+      <div className="absolute inset-0 bg-muted" />
 
       {/* ── Content ── */}
       <div className="relative flex flex-col h-full overflow-hidden">
