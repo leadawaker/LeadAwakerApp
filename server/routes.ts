@@ -56,6 +56,15 @@ import { saveInvoiceArtifacts } from "./invoiceArtifacts";
 import { db, pool } from "./db";
 import { eq, count, and, gte, isNotNull, type SQL, desc } from "drizzle-orm";
 import { seedDefaultAiAgents, streamClaudeResponse, getSessionCwd } from "./aiAgents";
+import {
+  buildCrmToolsPrompt,
+  parseCrmToolCalls,
+  executeCrmTool,
+  executeCrmToolCalls,
+  ALL_TOOLS,
+  type AgentPermissions,
+  type CrmToolCall,
+} from "./crmTools";
 import { ZodError } from "zod";
 
 /** Module-level flag to emit the FRONTEND_URL warning only once per process. */
@@ -3316,7 +3325,30 @@ GUARDRAILS
     }
   });
 
-  // Update agent
+  // Update agent name and icon (PUT for name/icon-specific updates)
+  app.put("/api/agents/:id", requireAgency, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid agent ID" });
+
+      const { name, photoUrl } = req.body;
+      if (!name?.trim()) {
+        return res.status(400).json({ message: "name is required" });
+      }
+
+      const updateData: Record<string, any> = { name: name.trim() };
+      if (photoUrl !== undefined) updateData.photoUrl = photoUrl;
+
+      const agent = await storage.updateAiAgent(id, updateData);
+      if (!agent) return res.status(404).json({ message: "Agent not found" });
+      res.json(agent);
+    } catch (err: any) {
+      console.error("[AI Agents] put error:", err);
+      res.status(500).json({ message: "Failed to update agent" });
+    }
+  });
+
+  // Update agent (general PATCH for any fields)
   app.patch("/api/agents/:id", requireAgency, async (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
@@ -3567,6 +3599,57 @@ GUARDRAILS
     }
   });
 
+  // ─── CRM Tool Execution Endpoint ─────────────────────────────────────
+  // POST /api/agents/:agentId/execute-crm-tool
+  // Executes a CRM tool call for an agent, respecting the agent's permissions.
+  app.post("/api/agents/:agentId/execute-crm-tool", requireAgency, async (req, res) => {
+    try {
+      const agentId = parseInt(req.params.agentId, 10);
+      if (isNaN(agentId)) return res.status(400).json({ message: "Invalid agent ID" });
+
+      const [agent] = await db.select().from(aiAgents).where(eq(aiAgents.id, agentId));
+      if (!agent) return res.status(404).json({ message: "Agent not found" });
+
+      const { toolName, args } = req.body;
+      if (!toolName) return res.status(400).json({ message: "toolName is required" });
+
+      const permissions = (agent.permissions || {}) as AgentPermissions;
+      const result = await executeCrmTool(
+        { name: toolName, args: args || {} },
+        permissions,
+      );
+
+      res.json(result);
+    } catch (err: any) {
+      console.error("[CRM Tools] execute error:", err);
+      res.status(500).json({ message: "Failed to execute CRM tool" });
+    }
+  });
+
+  // POST /api/agents/:agentId/execute-crm-tools (batch)
+  // Executes multiple CRM tool calls at once.
+  app.post("/api/agents/:agentId/execute-crm-tools", requireAgency, async (req, res) => {
+    try {
+      const agentId = parseInt(req.params.agentId, 10);
+      if (isNaN(agentId)) return res.status(400).json({ message: "Invalid agent ID" });
+
+      const [agent] = await db.select().from(aiAgents).where(eq(aiAgents.id, agentId));
+      if (!agent) return res.status(404).json({ message: "Agent not found" });
+
+      const { toolCalls } = req.body;
+      if (!Array.isArray(toolCalls) || toolCalls.length === 0) {
+        return res.status(400).json({ message: "toolCalls array is required" });
+      }
+
+      const permissions = (agent.permissions || {}) as AgentPermissions;
+      const results = await executeCrmToolCalls(toolCalls, permissions);
+      res.json({ results });
+    } catch (err: any) {
+      console.error("[CRM Tools] batch execute error:", err);
+      res.status(500).json({ message: "Failed to execute CRM tools" });
+    }
+  });
+
   // ─── Send message to agent (store + initiate Claude API call) ─────────
   // POST /api/agent-conversations/:id/messages
   // Accepts { content, pageContext? }
@@ -3608,6 +3691,13 @@ GUARDRAILS
       }
       const isFirstMessage = history.filter((m) => m.role === "user").length <= 1;
 
+      // Append CRM tool descriptions to system prompt based on agent permissions
+      const agentPermissions = (agent.permissions || {}) as AgentPermissions;
+      const crmToolsPrompt = buildCrmToolsPrompt(agentPermissions);
+      if (crmToolsPrompt) {
+        systemPrompt += crmToolsPrompt;
+      }
+
       // Build the full prompt with conversation context for the CLI
       // The CLI doesn't have multi-turn context, so we include history in the prompt
       let fullPrompt = "";
@@ -3642,6 +3732,34 @@ GUARDRAILS
         bypassPermissions: agent.type !== "code_runner", // non-code agents skip permissions
         isFirstMessage,
         res,
+        // CRM tool execution: detect tool calls in Claude's response, execute them,
+        // and send results as SSE events before the stream closes
+        beforeDone: async (fullText, sseRes) => {
+          const toolCalls = parseCrmToolCalls(fullText);
+          if (toolCalls.length === 0) return;
+
+          console.log(`[CRM Tools] Detected ${toolCalls.length} tool call(s) in agent response`);
+          const results = await executeCrmToolCalls(toolCalls, agentPermissions);
+
+          // Send tool results as SSE events so the frontend can display them
+          for (const result of results) {
+            sseRes.write(`data: ${JSON.stringify({ type: "tool_result", ...result })}\n\n`);
+          }
+
+          // Store tool results as a system message for conversation context
+          const toolResultsText = results.map((r) => {
+            if (r.success) {
+              return `[Tool: ${r.tool}] Result:\n${JSON.stringify(r.data, null, 2)}`;
+            }
+            return `[Tool: ${r.tool}] Error: ${r.error}`;
+          }).join("\n\n");
+
+          await storage.createAiMessage({
+            sessionId,
+            role: "tool",
+            content: toolResultsText,
+          });
+        },
         onDone: async (fullText, subAgentBlocks) => {
           try {
             // Store assistant response in database

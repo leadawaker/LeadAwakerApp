@@ -953,7 +953,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateAiAgent(id: number, data: Partial<InsertAiAgent>): Promise<AiAgent | undefined> {
-    const [row] = await db.update(aiAgents).set(data as any).where(eq(aiAgents.id, id)).returning();
+    const [row] = await db.update(aiAgents).set({ ...data, updatedAt: new Date() } as any).where(eq(aiAgents.id, id)).returning();
     return row;
   }
 
