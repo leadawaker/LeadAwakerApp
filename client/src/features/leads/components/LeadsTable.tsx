@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { useLeadsData } from "../hooks/useLeadsData";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { usePublishEntityData } from "@/contexts/PageEntityContext";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 import {
   applyLeadFilters,
@@ -177,6 +178,33 @@ export function LeadsTable() {
   const { currentAccountId, isAgencyView } = useWorkspace();
   const filterAccountId = (isAgencyView && currentAccountId === 0) ? undefined : currentAccountId || undefined;
   const { leads, loading, error, handleRefresh } = useLeadsData(filterAccountId);
+
+  // Publish leads list entity data for AI agent context ("what leads are here")
+  const publishEntity = usePublishEntityData();
+  useEffect(() => {
+    if (leads.length > 0) {
+      const statusCounts: Record<string, number> = {};
+      leads.forEach((l: any) => {
+        const s = l.conversion_status || "unknown";
+        statusCounts[s] = (statusCounts[s] || 0) + 1;
+      });
+      publishEntity({
+        entityType: "list",
+        entityName: "Leads List",
+        summary: {
+          totalLeads: leads.length,
+          statusBreakdown: statusCounts,
+          recentLeads: leads.slice(0, 10).map((l: any) => ({
+            id: l.id,
+            name: l.full_name || `${l.first_name || ""} ${l.last_name || ""}`.trim(),
+            status: l.conversion_status,
+            source: l.source,
+          })),
+        },
+        updatedAt: Date.now(),
+      });
+    }
+  }, [leads, publishEntity]);
 
   /* ── Toolbar button constants ───────────────────────────────────────────── */
   const tbBase = "h-9 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";

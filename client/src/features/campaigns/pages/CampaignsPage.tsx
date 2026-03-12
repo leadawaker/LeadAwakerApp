@@ -171,11 +171,17 @@ function CampaignsContent() {
     return () => setCrumb(null);
   }, [selectedCampaign, setCrumb]);
 
-  // Publish selected campaign entity data for AI agent context
+  // Publish campaign entity data for AI agent context (supports "this campaign" and "what campaigns are here")
   const publishEntity = usePublishEntityData();
   useEffect(() => {
     if (selectedCampaign) {
       const c = selectedCampaign as any;
+      // Publish selected campaign detail + list overview for "here" context
+      const campaignListSummary = campaigns.slice(0, 20).map((camp: any) => ({
+        id: camp.Id ?? camp.id,
+        name: getCampaignName(camp),
+        status: camp.status,
+      }));
       publishEntity({
         entityType: "campaign",
         entityId: c.Id ?? c.id,
@@ -189,11 +195,29 @@ function CampaignsContent() {
           accountName: c.account_name,
           leadsCount: c.Leads ?? c.leads_count,
           interactionsCount: c.Interactions ?? c.interactions_count,
+          totalCampaignsOnPage: campaigns.length,
+          campaignsOnPage: campaignListSummary,
+        },
+        updatedAt: Date.now(),
+      });
+    } else if (campaigns.length > 0) {
+      // No campaign selected — publish list-level context for "what campaigns are here"
+      const campaignListSummary = campaigns.slice(0, 20).map((camp: any) => ({
+        id: camp.Id ?? camp.id,
+        name: getCampaignName(camp),
+        status: camp.status,
+      }));
+      publishEntity({
+        entityType: "list",
+        entityName: "Campaigns List",
+        summary: {
+          totalCampaigns: campaigns.length,
+          campaigns: campaignListSummary,
         },
         updatedAt: Date.now(),
       });
     }
-  }, [selectedCampaign, publishEntity]);
+  }, [selectedCampaign, campaigns, publishEntity]);
 
   const handleSelectCampaign = useCallback((campaign: Campaign) => {
     setSelectedCampaign(campaign);

@@ -170,6 +170,49 @@ export function generateConversationTitle(
   });
 }
 
+/** GOG CLI instructions for Google Workspace integration */
+export const GOG_INSTRUCTIONS = `
+
+## Google Workspace Access (GOG CLI)
+
+You can access Google Workspace (Google Docs, Google Sheets, Gmail, Google Calendar) via the GOG CLI tool. Use the <gog_command> tag to execute GOG commands. The backend will execute the command and return results.
+
+### Usage Format
+To execute a GOG command, include this in your response:
+<gog_command>COMMAND_HERE</gog_command>
+
+### Available Commands
+
+**Google Sheets:**
+- \`gog sheets list\` — List all spreadsheets
+- \`gog sheets get SPREADSHEET_ID\` — Get spreadsheet metadata
+- \`gog sheets read SPREADSHEET_ID [RANGE]\` — Read data (e.g., "Sheet1!A1:D10")
+- \`gog sheets write SPREADSHEET_ID RANGE VALUE1,VALUE2,...\` — Write data to cells
+- \`gog sheets append SPREADSHEET_ID RANGE VALUE1,VALUE2,...\` — Append rows
+
+**Google Docs:**
+- \`gog docs list\` — List all documents
+- \`gog docs get DOC_ID\` — Get document content
+- \`gog docs create TITLE\` — Create a new document
+
+**Gmail:**
+- \`gog gmail list\` — List recent emails
+- \`gog gmail get MESSAGE_ID\` — Read a specific email
+- \`gog gmail send TO SUBJECT BODY\` — Send an email
+
+**Google Calendar:**
+- \`gog cal list\` — List upcoming events
+- \`gog cal get EVENT_ID\` — Get event details
+- \`gog cal create TITLE START_TIME END_TIME\` — Create an event
+
+### Guidelines
+- Always explain what you're about to do before executing a GOG command
+- When reading data, summarize the results clearly for the user
+- Handle errors gracefully — if a command fails, explain what went wrong
+- For write operations, confirm with the user before making changes
+- Never expose raw API tokens or credentials in your responses
+`;
+
 /** Default system prompts for built-in agent types */
 export const DEFAULT_SYSTEM_PROMPTS: Record<string, string> = {
   campaign_crafter: `You are a Campaign Crafter for LeadAwaker CRM, a WhatsApp-based lead reactivation platform. You are an expert at crafting high-converting outreach campaigns that re-engage dormant leads and drive bookings.
@@ -331,6 +374,91 @@ Working directory: /home/gabriel/LeadAwakerApp
 
 You can read files, edit files, run commands, and make any changes needed. Be careful with database migrations (drizzle-kit) and always consider TypeScript types.`,
 };
+
+// ─── GOG Command Parsing & Execution ─────────────────────────────────────────
+
+const GOG_BIN = "/home/gabriel/.local/bin/gog";
+
+/** Parse <gog_command>...</gog_command> tags from Claude's response */
+export function parseGogCommands(text: string): string[] {
+  const commands: string[] = [];
+  const regex = /<gog_command>([\s\S]*?)<\/gog_command>/g;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(text)) !== null) {
+    const cmd = match[1].trim();
+    if (cmd) commands.push(cmd);
+  }
+  return commands;
+}
+
+/** Execute a single GOG CLI command and return the result */
+export async function executeGogCommand(command: string): Promise<{ success: boolean; command: string; output?: string; error?: string }> {
+  // Safety: only allow gog subcommands
+  const allowedPrefixes = ["sheets", "docs", "gmail", "cal", "calendar", "drive", "help"];
+  const firstWord = command.trim().split(/\s+/)[0]?.toLowerCase();
+  if (!allowedPrefixes.includes(firstWord || "")) {
+    return { success: false, command, error: `Invalid GOG subcommand: "${firstWord}". Allowed: ${allowedPrefixes.join(", ")}` };
+  }
+
+  return new Promise((resolve) => {
+    try {
+      const args = command.trim().split(/\s+/);
+      const child = spawn(GOG_BIN, args, {
+        cwd: "/tmp",
+        env: { ...process.env, HOME: "/home/gabriel" },
+        timeout: 30000,
+      });
+
+      let stdout = "";
+      let stderr = "";
+
+      child.stdout.on("data", (data: Buffer) => {
+        stdout += data.toString();
+      });
+      child.stderr.on("data", (data: Buffer) => {
+        stderr += data.toString();
+      });
+
+      child.on("close", (code) => {
+        if (code === 0) {
+          // Truncate very large outputs
+          const output = stdout.length > 50000
+            ? stdout.slice(0, 50000) + "\n\n[... output truncated at 50000 characters]"
+            : stdout;
+          resolve({ success: true, command: `gog ${command}`, output: output.trim() });
+        } else {
+          resolve({
+            success: false,
+            command: `gog ${command}`,
+            error: (stderr || stdout || `Command exited with code ${code}`).trim(),
+          });
+        }
+      });
+
+      child.on("error", (err) => {
+        resolve({ success: false, command: `gog ${command}`, error: err.message });
+      });
+
+      // Safety timeout
+      setTimeout(() => {
+        try { child.kill(); } catch {}
+        resolve({ success: false, command: `gog ${command}`, error: "Command timed out after 30 seconds" });
+      }, 30000);
+    } catch (err) {
+      resolve({ success: false, command: `gog ${command}`, error: (err as Error).message });
+    }
+  });
+}
+
+/** Execute multiple GOG commands sequentially */
+export async function executeGogCommands(commands: string[]): Promise<{ success: boolean; command: string; output?: string; error?: string }[]> {
+  const results = [];
+  for (const cmd of commands) {
+    const result = await executeGogCommand(cmd);
+    results.push(result);
+  }
+  return results;
+}
 
 /** Seed the two default agents if they don't exist, and update system prompts for existing ones */
 export async function seedDefaultAiAgents(db: any, aiAgentsTable: any): Promise<void> {

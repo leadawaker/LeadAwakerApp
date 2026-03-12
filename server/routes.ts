@@ -55,7 +55,7 @@ import { toDbKeys, toDbKeysArray, fromDbKeys } from "./dbKeys";
 import { saveInvoiceArtifacts } from "./invoiceArtifacts";
 import { db, pool } from "./db";
 import { eq, count, and, gte, isNotNull, type SQL, desc } from "drizzle-orm";
-import { seedDefaultAiAgents, streamClaudeResponse, getSessionCwd, generateConversationTitle } from "./aiAgents";
+import { seedDefaultAiAgents, streamClaudeResponse, getSessionCwd, generateConversationTitle, GOG_INSTRUCTIONS, parseGogCommands, executeGogCommands } from "./aiAgents";
 import {
   buildCrmToolsPrompt,
   parseCrmToolCalls,
@@ -3209,27 +3209,51 @@ GUARDRAILS
         thinkingLevel: sessionThinking,
         res,
         beforeDone: async (fullText, sseRes) => {
+          // CRM tool calls
           const toolCalls = parseCrmToolCalls(fullText);
-          if (toolCalls.length === 0) return;
+          if (toolCalls.length > 0) {
+            console.log(`[Skill Execute] Detected ${toolCalls.length} CRM tool call(s)`);
+            const results = await executeCrmToolCalls(toolCalls, agentPermissions);
+            for (const result of results) {
+              sseRes.write(`data: ${JSON.stringify({ type: "tool_result", ...result })}\n\n`);
+            }
 
-          console.log(`[Skill Execute] Detected ${toolCalls.length} tool call(s)`);
-          const results = await executeCrmToolCalls(toolCalls, agentPermissions);
-          for (const result of results) {
-            sseRes.write(`data: ${JSON.stringify({ type: "tool_result", ...result })}\n\n`);
+            const toolResultsText = results.map((r) => {
+              if (r.success) {
+                return `[Tool: ${r.tool}] Result:\n${JSON.stringify(r.data, null, 2)}`;
+              }
+              return `[Tool: ${r.tool}] Error: ${r.error}`;
+            }).join("\n\n");
+
+            await storage.createAiMessage({
+              sessionId,
+              role: "tool",
+              content: toolResultsText,
+            });
           }
 
-          const toolResultsText = results.map((r) => {
-            if (r.success) {
-              return `[Tool: ${r.tool}] Result:\n${JSON.stringify(r.data, null, 2)}`;
+          // GOG (Google Workspace) commands
+          const gogCommands = parseGogCommands(fullText);
+          if (gogCommands.length > 0) {
+            console.log(`[Skill Execute] Detected ${gogCommands.length} GOG command(s)`);
+            const gogResults = await executeGogCommands(gogCommands);
+            for (const result of gogResults) {
+              sseRes.write(`data: ${JSON.stringify({ type: "tool_result", tool: result.command, success: result.success, data: result.output, error: result.error })}\n\n`);
             }
-            return `[Tool: ${r.tool}] Error: ${r.error}`;
-          }).join("\n\n");
 
-          await storage.createAiMessage({
-            sessionId,
-            role: "tool",
-            content: toolResultsText,
-          });
+            const gogResultsText = gogResults.map((r) => {
+              if (r.success) {
+                return `[GOG: ${r.command}] Result:\n${r.output}`;
+              }
+              return `[GOG: ${r.command}] Error: ${r.error}`;
+            }).join("\n\n");
+
+            await storage.createAiMessage({
+              sessionId,
+              role: "tool",
+              content: gogResultsText,
+            });
+          }
         },
         onDone: async (fullText, subAgentBlocks) => {
           try {
@@ -4323,6 +4347,9 @@ GUARDRAILS
         systemPrompt += crmToolsPrompt;
       }
 
+      // Append GOG (Google Workspace) instructions to all agents
+      systemPrompt += GOG_INSTRUCTIONS;
+
       // Build the full prompt with conversation context for the CLI
       // The CLI doesn't have multi-turn context, so we include history in the prompt
       let fullPrompt = "";
@@ -4358,7 +4385,10 @@ GUARDRAILS
             ctxLines += `Active filters: ${JSON.stringify(ed.filters)}\n`;
           }
         }
-        ctxLines += `\nUse this context to give relevant, page-aware answers. Reference the data the user is looking at when helpful.\n`;
+        ctxLines += `\nIMPORTANT — Pronoun Resolution:\n`;
+        ctxLines += `When the user says "this lead", "this campaign", "this conversation", "this account", or similar phrases with "this", they are referring to the on-screen entity described above.\n`;
+        ctxLines += `When they say "here" (e.g., "what campaigns are here", "what's here"), they mean the data visible on the current page.\n`;
+        ctxLines += `Use the entity details and page context above to give specific, data-aware answers. Always reference the actual data (names, IDs, statuses, etc.) rather than asking the user to clarify.\n`;
         fullPrompt += ctxLines + `\n`;
       }
 
@@ -4478,30 +4508,53 @@ GUARDRAILS
         // CRM tool execution: detect tool calls in Claude's response, execute them,
         // and send results as SSE events before the stream closes
         beforeDone: async (fullText, sseRes) => {
+          // Execute CRM tool calls
           const toolCalls = parseCrmToolCalls(fullText);
-          if (toolCalls.length === 0) return;
+          if (toolCalls.length > 0) {
+            console.log(`[CRM Tools] Detected ${toolCalls.length} tool call(s) in agent response`);
+            const results = await executeCrmToolCalls(toolCalls, agentPermissions);
 
-          console.log(`[CRM Tools] Detected ${toolCalls.length} tool call(s) in agent response`);
-          const results = await executeCrmToolCalls(toolCalls, agentPermissions);
+            for (const result of results) {
+              sseRes.write(`data: ${JSON.stringify({ type: "tool_result", ...result })}\n\n`);
+            }
 
-          // Send tool results as SSE events so the frontend can display them
-          for (const result of results) {
-            sseRes.write(`data: ${JSON.stringify({ type: "tool_result", ...result })}\n\n`);
+            const toolResultsText = results.map((r) => {
+              if (r.success) {
+                return `[Tool: ${r.tool}] Result:\n${JSON.stringify(r.data, null, 2)}`;
+              }
+              return `[Tool: ${r.tool}] Error: ${r.error}`;
+            }).join("\n\n");
+
+            await storage.createAiMessage({
+              sessionId,
+              role: "tool",
+              content: toolResultsText,
+            });
           }
 
-          // Store tool results as a system message for conversation context
-          const toolResultsText = results.map((r) => {
-            if (r.success) {
-              return `[Tool: ${r.tool}] Result:\n${JSON.stringify(r.data, null, 2)}`;
-            }
-            return `[Tool: ${r.tool}] Error: ${r.error}`;
-          }).join("\n\n");
+          // Execute GOG (Google Workspace) commands
+          const gogCommands = parseGogCommands(fullText);
+          if (gogCommands.length > 0) {
+            console.log(`[GOG] Detected ${gogCommands.length} GOG command(s) in agent response`);
+            const gogResults = await executeGogCommands(gogCommands);
 
-          await storage.createAiMessage({
-            sessionId,
-            role: "tool",
-            content: toolResultsText,
-          });
+            for (const result of gogResults) {
+              sseRes.write(`data: ${JSON.stringify({ type: "tool_result", tool: result.command, success: result.success, data: result.output, error: result.error })}\n\n`);
+            }
+
+            const gogResultsText = gogResults.map((r) => {
+              if (r.success) {
+                return `[GOG: ${r.command}] Result:\n${r.output}`;
+              }
+              return `[GOG: ${r.command}] Error: ${r.error}`;
+            }).join("\n\n");
+
+            await storage.createAiMessage({
+              sessionId,
+              role: "tool",
+              content: gogResultsText,
+            });
+          }
         },
         onDone: async (fullText, subAgentBlocks) => {
           try {
