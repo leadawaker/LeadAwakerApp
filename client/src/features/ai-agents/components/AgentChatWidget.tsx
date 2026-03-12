@@ -214,10 +214,12 @@ function ConversationTabs({
   conversations,
   activeAgentId,
   onSelect,
+  onClose,
 }: {
   conversations: Map<number, ConversationMeta>;
   activeAgentId: number;
   onSelect: (agentId: number) => void;
+  onClose: (agentId: number) => void;
 }) {
   if (conversations.size < 2) return null;
 
@@ -237,7 +239,7 @@ function ConversationTabs({
             key={agentId}
             onClick={() => onSelect(agentId)}
             className={cn(
-              "relative flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-all shrink-0",
+              "group relative flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-all shrink-0",
               isActive
                 ? "bg-brand-indigo/10 text-brand-indigo ring-1 ring-brand-indigo/20"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -287,6 +289,19 @@ function ConversationTabs({
             <span className="text-[11px] font-medium truncate max-w-[70px]">
               {meta.agent.name}
             </span>
+
+            {/* Close tab button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose(agentId);
+              }}
+              className="h-4 w-4 rounded-full flex items-center justify-center text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-colors shrink-0 opacity-0 group-hover:opacity-100"
+              title="Close conversation"
+              data-testid={`close-tab-${agentId}`}
+            >
+              <X className="h-2.5 w-2.5" />
+            </button>
           </button>
         );
       })}
@@ -378,6 +393,27 @@ export function AgentChatWidget() {
       setConversationsMeta(new Map(conversationsRef.current));
     }
   }, []);
+
+  // Close a conversation: remove from open set, clean up metadata, switch to another or picker
+  const closeConversation = useCallback((agentId: number) => {
+    setOpenAgentIds((prev) => {
+      const next = new Set(prev);
+      next.delete(agentId);
+      return next;
+    });
+    conversationsRef.current.delete(agentId);
+    setConversationsMeta(new Map(conversationsRef.current));
+
+    // If closing the active conversation, switch to another open one or go to picker
+    if (activeAgentId === agentId) {
+      const remaining = Array.from(openAgentIds).filter((id) => id !== agentId);
+      if (remaining.length > 0) {
+        selectAgent(remaining[remaining.length - 1]);
+      } else {
+        clearAgent();
+      }
+    }
+  }, [activeAgentId, openAgentIds, selectAgent, clearAgent]);
 
   const handleSelectAgent = (selected: AiAgent) => {
     selectAgent(selected.id);
@@ -520,6 +556,15 @@ export function AgentChatWidget() {
               >
                 <Plus className="h-3.5 w-3.5" />
               </button>
+              {/* Close this conversation (removes tab, data preserved) */}
+              <button
+                onClick={() => activeAgentId && closeConversation(activeAgentId)}
+                className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
+                title="Close conversation"
+                data-testid="widget-close-conversation-btn"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
             </>
           ) : (
             <>
@@ -545,6 +590,7 @@ export function AgentChatWidget() {
           conversations={conversationsMeta}
           activeAgentId={activeAgentId ?? 0}
           onSelect={(agentId) => selectAgent(agentId)}
+          onClose={closeConversation}
         />
 
         {/* ── Widget Body ── */}
