@@ -364,6 +364,36 @@ export function AgentChatWidget() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
+  // ── Resize state ──
+  const [widgetSize, setWidgetSize] = useState<WidgetSize>(loadWidgetSize);
+  const resizingRef = useRef(false);
+  const resizeStartRef = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
+
+  const onResizePointerDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    resizingRef.current = true;
+    resizeStartRef.current = { x: e.clientX, y: e.clientY, w: widgetSize.width, h: widgetSize.height };
+    (e.target as HTMLDivElement).setPointerCapture(e.pointerId);
+  }, [widgetSize]);
+
+  const onResizePointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!resizingRef.current || !resizeStartRef.current) return;
+    const { x, y, w, h } = resizeStartRef.current;
+    // Widget is anchored bottom-right, so dragging left increases width, dragging up increases height
+    const newW = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, w + (x - e.clientX)));
+    const newH = Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, h + (y - e.clientY)));
+    setWidgetSize({ width: newW, height: newH });
+  }, []);
+
+  const onResizePointerUp = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!resizingRef.current) return;
+    resizingRef.current = false;
+    (e.target as HTMLDivElement).releasePointerCapture(e.pointerId);
+    // Save final size to localStorage
+    setWidgetSize((cur) => { saveWidgetSize(cur); return cur; });
+  }, []);
+
   // Track all open agent conversations (persisted across agent switches)
   const [openAgentIds, setOpenAgentIds] = useState<Set<number>>(new Set());
   // Metadata for each conversation (agent info, session, streaming state)
@@ -533,14 +563,29 @@ export function AgentChatWidget() {
       <div
         className={cn(
           "fixed z-[9999] flex flex-col bg-background border border-border/60 shadow-2xl rounded-2xl overflow-hidden transition-all duration-300 ease-out",
-          "bottom-6 right-6 w-[400px] h-[560px]",
+          "bottom-6 right-6",
           "max-md:bottom-0 max-md:right-0 max-md:left-0 max-md:top-0 max-md:w-full max-md:h-full max-md:rounded-none",
           isOpen
             ? "translate-y-0 opacity-100 scale-100 pointer-events-auto"
             : "translate-y-4 opacity-0 scale-95 pointer-events-none",
         )}
+        style={{
+          width: `${widgetSize.width}px`,
+          height: `${widgetSize.height}px`,
+        }}
         data-testid="agent-widget-panel"
       >
+        {/* ── Resize handle (top-left corner) ── */}
+        <div
+          onPointerDown={onResizePointerDown}
+          onPointerMove={onResizePointerMove}
+          onPointerUp={onResizePointerUp}
+          className="absolute top-0 left-0 z-10 w-6 h-6 cursor-nw-resize items-center justify-center hidden md:flex group touch-none"
+          title="Drag to resize"
+          data-testid="widget-resize-handle"
+        >
+          <GripVertical className="h-3 w-3 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors -rotate-45" />
+        </div>
         {/* ── Widget Header ── */}
         <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border/50 bg-background shrink-0">
           {activeAgentId && activeAgent ? (
