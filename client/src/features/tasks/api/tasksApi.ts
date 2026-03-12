@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 import { apiRequest } from "@/lib/queryClient";
-import type { Task, InsertTask } from "@shared/schema";
+import type { Task, InsertTask, TaskSubtask, InsertTaskSubtask } from "@shared/schema";
 
 const TASKS_KEY = ["/api/tasks"];
 
@@ -49,5 +49,63 @@ export function useDeleteTask() {
   return useMutation({
     mutationFn: (id: number) => apiRequest("DELETE", `/api/tasks/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: TASKS_KEY }),
+  });
+}
+
+// ─── Subtask hooks ────────────────────────────────────────────────────────
+
+function subtasksKey(taskId: number) {
+  return ["/api/tasks", taskId, "subtasks"] as const;
+}
+
+export function useSubtasks(taskId: number) {
+  return useQuery<TaskSubtask[]>({
+    queryKey: subtasksKey(taskId),
+    queryFn: async () => {
+      const res = await apiFetch(`/api/tasks/${taskId}/subtasks`);
+      if (!res.ok) throw new Error("Failed to fetch subtasks");
+      return res.json();
+    },
+    enabled: !!taskId,
+  });
+}
+
+export function useCreateSubtask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taskId, data }: { taskId: number; data: Partial<InsertTaskSubtask> }) =>
+      apiRequest("POST", `/api/tasks/${taskId}/subtasks`, data),
+    onSuccess: (_res, { taskId }) =>
+      qc.invalidateQueries({ queryKey: subtasksKey(taskId) }),
+  });
+}
+
+export function useUpdateSubtask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, taskId, data }: { id: number; taskId: number; data: Partial<InsertTaskSubtask> }) =>
+      apiRequest("PATCH", `/api/subtasks/${id}`, data),
+    onSuccess: (_res, { taskId }) =>
+      qc.invalidateQueries({ queryKey: subtasksKey(taskId) }),
+  });
+}
+
+export function useDeleteSubtask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, taskId }: { id: number; taskId: number }) =>
+      apiRequest("DELETE", `/api/subtasks/${id}`),
+    onSuccess: (_res, { taskId }) =>
+      qc.invalidateQueries({ queryKey: subtasksKey(taskId) }),
+  });
+}
+
+export function useReorderSubtasks() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taskId, subtaskIds }: { taskId: number; subtaskIds: number[] }) =>
+      apiRequest("PATCH", `/api/tasks/${taskId}/subtasks/reorder`, { subtaskIds }),
+    onSuccess: (_res, { taskId }) =>
+      qc.invalidateQueries({ queryKey: subtasksKey(taskId) }),
   });
 }

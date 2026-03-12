@@ -3,6 +3,7 @@ import { PgTableWithColumns } from "drizzle-orm/pg-core";
 import { db } from "./db";
 import {
   accounts,
+  prospects,
   campaigns,
   leads,
   interactions,
@@ -19,6 +20,9 @@ import {
   notifications,
   type Accounts,
   type InsertAccounts,
+  type Prospects,
+  type InsertProspects,
+  insertProspectsSchema,
   type Campaigns,
   type InsertCampaigns,
   type Leads,
@@ -72,6 +76,12 @@ import {
   type InsertNotificationPreferences,
   type PushSubscriptionRow,
   type InsertPushSubscription,
+  taskSubtasks,
+  type TaskSubtask,
+  type InsertTaskSubtask,
+  taskCategories,
+  type TaskCategory,
+  type InsertTaskCategory,
 } from "@shared/schema";
 
 
@@ -91,6 +101,13 @@ export interface IStorage {
   createAccount(data: InsertAccounts): Promise<Accounts>;
   updateAccount(id: number, data: Partial<InsertAccounts>): Promise<Accounts | undefined>;
   deleteAccount(id: number): Promise<boolean>;
+
+  // Prospects
+  getProspects(): Promise<Prospects[]>;
+  getProspectById(id: number): Promise<Prospects | undefined>;
+  createProspect(data: InsertProspects): Promise<Prospects>;
+  updateProspect(id: number, data: Partial<InsertProspects>): Promise<Prospects | undefined>;
+  deleteProspect(id: number): Promise<boolean>;
 
   // Campaigns
   getCampaigns(): Promise<Campaigns[]>;
@@ -216,6 +233,20 @@ export interface IStorage {
   updateTask(id: number, data: Partial<InsertTask>): Promise<Task | undefined>;
   deleteTask(id: number): Promise<boolean>;
 
+  // Task Categories
+  getTaskCategories(): Promise<TaskCategory[]>;
+  getTaskCategoryById(id: number): Promise<TaskCategory | undefined>;
+  createTaskCategory(data: InsertTaskCategory): Promise<TaskCategory>;
+  updateTaskCategory(id: number, data: Partial<InsertTaskCategory>): Promise<TaskCategory | undefined>;
+  deleteTaskCategory(id: number): Promise<boolean>;
+
+  // Task Subtasks
+  getSubtasksByTaskId(taskId: number): Promise<TaskSubtask[]>;
+  createSubtask(data: InsertTaskSubtask): Promise<TaskSubtask>;
+  updateSubtask(id: number, data: Partial<InsertTaskSubtask>): Promise<TaskSubtask | undefined>;
+  deleteSubtask(id: number): Promise<boolean>;
+  reorderSubtasks(taskId: number, subtaskIds: number[]): Promise<TaskSubtask[]>;
+
   // Support Chat
   createSupportSession(data: InsertSupportSession): Promise<SupportSession>;
   getActiveSupportSession(userId: number): Promise<SupportSession | undefined>;
@@ -273,6 +304,32 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAccount(id: number): Promise<boolean> {
     const result = await db.delete(accounts).where(eq(accounts.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // ─── Prospects ──────────────────────────────────────────────────────
+
+  async getProspects(): Promise<Prospects[]> {
+    return db.select().from(prospects).orderBy(desc(prospects.createdAt));
+  }
+
+  async getProspectById(id: number): Promise<Prospects | undefined> {
+    const [row] = await db.select().from(prospects).where(eq(prospects.id, id));
+    return row;
+  }
+
+  async createProspect(data: InsertProspects): Promise<Prospects> {
+    const [row] = await db.insert(prospects).values(data as any).returning();
+    return row;
+  }
+
+  async updateProspect(id: number, data: Partial<InsertProspects>): Promise<Prospects | undefined> {
+    const [row] = await db.update(prospects).set(data).where(eq(prospects.id, id)).returning();
+    return row;
+  }
+
+  async deleteProspect(id: number): Promise<boolean> {
+    const result = await db.delete(prospects).where(eq(prospects.id, id)).returning();
     return result.length > 0;
   }
 
@@ -923,6 +980,65 @@ export class DatabaseStorage implements IStorage {
     return rows.length > 0;
   }
 
+  // ─── Task Categories ───────────────────────────────────────────────────
+
+  async getTaskCategories(): Promise<TaskCategory[]> {
+    return db.select().from(taskCategories).orderBy(asc(taskCategories.sortOrder));
+  }
+
+  async getTaskCategoryById(id: number): Promise<TaskCategory | undefined> {
+    const [row] = await db.select().from(taskCategories).where(eq(taskCategories.id, id));
+    return row;
+  }
+
+  async createTaskCategory(data: InsertTaskCategory): Promise<TaskCategory> {
+    const [row] = await db.insert(taskCategories).values(data as any).returning();
+    return row;
+  }
+
+  async updateTaskCategory(id: number, data: Partial<InsertTaskCategory>): Promise<TaskCategory | undefined> {
+    const [row] = await db.update(taskCategories).set({ ...data as any, updatedAt: new Date() }).where(eq(taskCategories.id, id)).returning();
+    return row;
+  }
+
+  async deleteTaskCategory(id: number): Promise<boolean> {
+    const rows = await db.delete(taskCategories).where(eq(taskCategories.id, id)).returning();
+    return rows.length > 0;
+  }
+
+  // ─── Task Subtasks ─────────────────────────────────────────────────────
+
+  async getSubtasksByTaskId(taskId: number): Promise<TaskSubtask[]> {
+    return db.select().from(taskSubtasks).where(eq(taskSubtasks.taskId, taskId)).orderBy(asc(taskSubtasks.sortOrder));
+  }
+
+  async createSubtask(data: InsertTaskSubtask): Promise<TaskSubtask> {
+    const [row] = await db.insert(taskSubtasks).values(data as any).returning();
+    return row;
+  }
+
+  async updateSubtask(id: number, data: Partial<InsertTaskSubtask>): Promise<TaskSubtask | undefined> {
+    const [row] = await db.update(taskSubtasks).set({ ...data as any, updatedAt: new Date() }).where(eq(taskSubtasks.id, id)).returning();
+    return row;
+  }
+
+  async deleteSubtask(id: number): Promise<boolean> {
+    const rows = await db.delete(taskSubtasks).where(eq(taskSubtasks.id, id)).returning();
+    return rows.length > 0;
+  }
+
+  async reorderSubtasks(taskId: number, subtaskIds: number[]): Promise<TaskSubtask[]> {
+    // Update sortOrder for each subtask based on array position
+    for (let i = 0; i < subtaskIds.length; i++) {
+      await db
+        .update(taskSubtasks)
+        .set({ sortOrder: i, updatedAt: new Date() })
+        .where(and(eq(taskSubtasks.id, subtaskIds[i]), eq(taskSubtasks.taskId, taskId)));
+    }
+    // Return updated subtasks in new order
+    return db.select().from(taskSubtasks).where(eq(taskSubtasks.taskId, taskId)).orderBy(asc(taskSubtasks.sortOrder));
+  }
+
   async cleanupOldSupportData(olderThanDays: number): Promise<{ sessions: number; messages: number }> {
     const cutoff = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
     const deletedMsgs = await db
@@ -1057,3 +1173,4 @@ export async function paginatedQuery<T>(
 }
 
 export const storage = new DatabaseStorage();
+

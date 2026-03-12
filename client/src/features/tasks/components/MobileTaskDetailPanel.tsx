@@ -1,11 +1,12 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, Check, Trash2 } from "lucide-react";
+import { ChevronLeft, Check, Trash2, Plus, ChevronUp, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { relativeTime } from "@/lib/utils";
-import { useTasks, useUpdateTask, useDeleteTask } from "../api/tasksApi";
+import { useTasks, useUpdateTask, useDeleteTask, useSubtasks, useCreateSubtask, useUpdateSubtask, useDeleteSubtask, useReorderSubtasks } from "../api/tasksApi";
 import { STATUS_OPTIONS, PRIORITY_OPTIONS, TYPE_OPTIONS } from "../types";
 import { hapticSave, hapticDelete } from "@/lib/haptics";
+import type { TaskSubtask } from "@shared/schema";
 
 // ── i18n label maps (standalone — no module-level hooks) ─────────────────────
 const STATUS_LABELS: Record<string, string> = {
@@ -39,6 +40,12 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
   const { data: tasks } = useTasks();
   const updateMutation = useUpdateTask();
   const deleteMutation = useDeleteTask();
+  const { data: subtasks = [] } = useSubtasks(taskId);
+  const createSubtaskMutation = useCreateSubtask();
+  const updateSubtaskMutation = useUpdateSubtask();
+  const deleteSubtaskMutation = useDeleteSubtask();
+  const reorderMutation = useReorderSubtasks();
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
 
   const task = useMemo(
     () => (tasks as any[])?.find((t: any) => t.id === taskId),
@@ -76,6 +83,31 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
       dueDate !== origDue
     );
   }, [task, title, description, status, priority, taskType, dueDate]);
+
+  // ── Subtask handlers ────────────────────────────────────────────────────────
+  const handleAddSubtask = useCallback(() => {
+    const trimmed = newSubtaskTitle.trim();
+    if (!trimmed || !task) return;
+    createSubtaskMutation.mutate({ taskId: task.id, data: { title: trimmed } });
+    setNewSubtaskTitle("");
+  }, [newSubtaskTitle, task, createSubtaskMutation]);
+
+  const handleToggleSubtask = useCallback((sub: TaskSubtask) => {
+    updateSubtaskMutation.mutate({ id: sub.id, taskId, data: { isCompleted: !sub.isCompleted } });
+  }, [taskId, updateSubtaskMutation]);
+
+  const handleDeleteSubtask = useCallback((subId: number) => {
+    deleteSubtaskMutation.mutate({ id: subId, taskId });
+  }, [taskId, deleteSubtaskMutation]);
+
+  const handleMoveSubtask = useCallback((index: number, direction: "up" | "down") => {
+    if (!subtasks.length) return;
+    const ids = subtasks.map((s) => s.id);
+    const target = direction === "up" ? index - 1 : index + 1;
+    if (target < 0 || target >= ids.length) return;
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    reorderMutation.mutate({ taskId, subtaskIds: ids });
+  }, [subtasks, taskId, reorderMutation]);
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
   const handleSave = () => {
@@ -295,6 +327,100 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
                 </div>
               </div>
             )}
+
+            {/* Sub-tasks checklist */}
+            <div className="space-y-2">
+              <label className={labelCls}>Sub-tasks</label>
+              {subtasks.length > 0 && (
+                <ul className="space-y-1">
+                  {subtasks.map((sub, idx) => (
+                    <li
+                      key={sub.id}
+                      className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 bg-muted/30"
+                    >
+                      <button
+                        onClick={() => handleToggleSubtask(sub)}
+                        className={cn(
+                          "h-5 w-5 rounded border shrink-0 flex items-center justify-center transition-colors",
+                          sub.isCompleted
+                            ? "bg-brand-indigo border-brand-indigo text-white"
+                            : "border-foreground/20"
+                        )}
+                      >
+                        {sub.isCompleted && <Check className="h-3.5 w-3.5" />}
+                      </button>
+                      <span className={cn(
+                        "flex-1 text-[14px] min-w-0 truncate",
+                        sub.isCompleted && "line-through text-muted-foreground"
+                      )}>
+                        {sub.title}
+                      </span>
+                      <button
+                        onClick={() => handleMoveSubtask(idx, "up")}
+                        disabled={idx === 0}
+                        className={cn(
+                          "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
+                          idx === 0 ? "text-muted-foreground/30" : "text-muted-foreground active:scale-95"
+                        )}
+                      >
+                        <ChevronUp className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleMoveSubtask(idx, "down")}
+                        disabled={idx === subtasks.length - 1}
+                        className={cn(
+                          "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
+                          idx === subtasks.length - 1 ? "text-muted-foreground/30" : "text-muted-foreground active:scale-95"
+                        )}
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSubtask(sub.id)}
+                        className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0 text-red-400 active:scale-95"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  className="flex-1 h-10 px-3 rounded-xl bg-muted/50 border border-border/30 text-[14px] outline-none focus:border-brand-indigo/50 transition-colors"
+                  value={newSubtaskTitle}
+                  onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleAddSubtask(); }}
+                  placeholder="Add a sub-task..."
+                />
+                <button
+                  onClick={handleAddSubtask}
+                  disabled={!newSubtaskTitle.trim()}
+                  className={cn(
+                    "h-10 w-10 rounded-xl flex items-center justify-center shrink-0 transition-colors",
+                    newSubtaskTitle.trim()
+                      ? "bg-brand-indigo text-white active:scale-95"
+                      : "bg-foreground/[0.04] text-foreground/20"
+                  )}
+                >
+                  <Plus className="h-5 w-5" />
+                </button>
+              </div>
+              {subtasks.length > 0 && (
+                <div className="flex items-center gap-2 pt-1">
+                  <div className="flex-1 h-2 rounded-full bg-foreground/[0.06] overflow-hidden">
+                    <div
+                      className="h-full bg-brand-indigo rounded-full transition-all duration-300"
+                      style={{ width: `${(subtasks.filter((s) => s.isCompleted).length / subtasks.length) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-[12px] text-muted-foreground shrink-0">
+                    {subtasks.filter((s) => s.isCompleted).length}/{subtasks.length}
+                  </span>
+                </div>
+              )}
+            </div>
 
             {/* Activity log — timestamps */}
             <div className="pt-4 border-t border-border/20 space-y-1 text-[12px] text-muted-foreground">

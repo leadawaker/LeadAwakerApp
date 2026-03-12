@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { X, Trash2, Check } from "lucide-react";
+import { X, Trash2, Check, Plus, ChevronUp, ChevronDown } from "lucide-react";
 import { IconBtn } from "@/components/ui/icon-btn";
 import {
   Popover,
@@ -8,8 +8,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn, relativeTime } from "@/lib/utils";
-import { useTasks, useUpdateTask, useDeleteTask } from "../api/tasksApi";
+import { useTasks, useUpdateTask, useDeleteTask, useSubtasks, useCreateSubtask, useUpdateSubtask, useDeleteSubtask, useReorderSubtasks } from "../api/tasksApi";
 import { STATUS_OPTIONS, PRIORITY_OPTIONS, TYPE_OPTIONS } from "../types";
+import type { TaskSubtask } from "@shared/schema";
 
 // ── i18n key maps for data-as-labels ──────────────────────────────────────────
 const STATUS_I18N_KEY: Record<string, string> = {
@@ -52,6 +53,12 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
   const { data: tasks } = useTasks();
   const updateMutation = useUpdateTask();
   const deleteMutation = useDeleteTask();
+  const { data: subtasks = [] } = useSubtasks(taskId);
+  const createSubtaskMutation = useCreateSubtask();
+  const updateSubtaskMutation = useUpdateSubtask();
+  const deleteSubtaskMutation = useDeleteSubtask();
+  const reorderMutation = useReorderSubtasks();
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
 
   const task = useMemo(
     () => (tasks as any[])?.find((t: any) => t.id === taskId),
@@ -92,6 +99,32 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
   }, [task, title, description, status, priority, taskType, dueDate]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
+
+  const handleAddSubtask = useCallback(() => {
+    const trimmed = newSubtaskTitle.trim();
+    if (!trimmed || !task) return;
+    createSubtaskMutation.mutate({ taskId: task.id, data: { title: trimmed } });
+    setNewSubtaskTitle("");
+  }, [newSubtaskTitle, task, createSubtaskMutation]);
+
+  const handleToggleSubtask = useCallback((sub: TaskSubtask) => {
+    updateSubtaskMutation.mutate({
+      id: sub.id, taskId, data: { isCompleted: !sub.isCompleted },
+    });
+  }, [taskId, updateSubtaskMutation]);
+
+  const handleDeleteSubtask = useCallback((subId: number) => {
+    deleteSubtaskMutation.mutate({ id: subId, taskId });
+  }, [taskId, deleteSubtaskMutation]);
+
+  const handleMoveSubtask = useCallback((index: number, direction: "up" | "down") => {
+    if (!subtasks.length) return;
+    const ids = subtasks.map((s) => s.id);
+    const target = direction === "up" ? index - 1 : index + 1;
+    if (target < 0 || target >= ids.length) return;
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    reorderMutation.mutate({ taskId, subtaskIds: ids });
+  }, [subtasks, taskId, reorderMutation]);
 
   const handleSave = () => {
     if (!task) return;
@@ -280,6 +313,120 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
               </div>
             </div>
           )}
+
+          {/* Sub-tasks checklist */}
+          <div className="space-y-2">
+            <label className={labelCls}>{t("fields.subtasks", "Sub-tasks")}</label>
+            {subtasks.length > 0 && (
+              <ul className="space-y-1" data-testid="subtask-list">
+                {subtasks.map((sub, idx) => (
+                  <li
+                    key={sub.id}
+                    className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-foreground/[0.03] transition-colors"
+                    data-testid={`subtask-${sub.id}`}
+                  >
+                    {/* Checkbox */}
+                    <button
+                      onClick={() => handleToggleSubtask(sub)}
+                      className={cn(
+                        "h-4 w-4 rounded border shrink-0 flex items-center justify-center transition-colors",
+                        sub.isCompleted
+                          ? "bg-brand-indigo border-brand-indigo text-white"
+                          : "border-foreground/20 hover:border-brand-indigo/50"
+                      )}
+                      title={sub.isCompleted ? t("subtask.uncheck", "Uncheck") : t("subtask.check", "Check")}
+                    >
+                      {sub.isCompleted && <Check className="h-3 w-3" />}
+                    </button>
+
+                    {/* Title */}
+                    <span className={cn(
+                      "flex-1 text-[13px] min-w-0 truncate",
+                      sub.isCompleted && "line-through text-muted-foreground"
+                    )}>
+                      {sub.title}
+                    </span>
+
+                    {/* Move up/down */}
+                    <button
+                      onClick={() => handleMoveSubtask(idx, "up")}
+                      disabled={idx === 0}
+                      className={cn(
+                        "h-6 w-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity",
+                        idx === 0 ? "text-muted-foreground/30 cursor-not-allowed" : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+                      )}
+                      title={t("subtask.moveUp", "Move up")}
+                    >
+                      <ChevronUp className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleMoveSubtask(idx, "down")}
+                      disabled={idx === subtasks.length - 1}
+                      className={cn(
+                        "h-6 w-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity",
+                        idx === subtasks.length - 1 ? "text-muted-foreground/30 cursor-not-allowed" : "text-muted-foreground hover:text-foreground hover:bg-foreground/[0.06]"
+                      )}
+                      title={t("subtask.moveDown", "Move down")}
+                    >
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </button>
+
+                    {/* Delete */}
+                    <button
+                      onClick={() => handleDeleteSubtask(sub.id)}
+                      className="h-6 w-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      title={t("subtask.delete", "Delete sub-task")}
+                      data-testid={`delete-subtask-${sub.id}`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* Add new subtask */}
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                className="flex-1 h-8 px-3 rounded-lg bg-white/60 dark:bg-white/[0.10] border border-border/30 text-[13px] outline-none focus:border-brand-indigo/50 transition-colors placeholder:text-foreground/30"
+                value={newSubtaskTitle}
+                onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleAddSubtask(); }}
+                placeholder={t("subtask.addPlaceholder", "Add a sub-task...")}
+                data-testid="add-subtask-input"
+              />
+              <button
+                onClick={handleAddSubtask}
+                disabled={!newSubtaskTitle.trim()}
+                className={cn(
+                  "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                  newSubtaskTitle.trim()
+                    ? "bg-brand-indigo text-white hover:bg-brand-indigo/90"
+                    : "bg-foreground/[0.04] text-foreground/20 cursor-not-allowed"
+                )}
+                title={t("subtask.add", "Add")}
+                data-testid="add-subtask-btn"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Progress indicator */}
+            {subtasks.length > 0 && (
+              <div className="flex items-center gap-2 pt-1">
+                <div className="flex-1 h-1.5 rounded-full bg-foreground/[0.06] overflow-hidden">
+                  <div
+                    className="h-full bg-brand-indigo rounded-full transition-all duration-300"
+                    style={{ width: `${(subtasks.filter((s) => s.isCompleted).length / subtasks.length) * 100}%` }}
+                  />
+                </div>
+                <span className="text-[11px] text-muted-foreground shrink-0">
+                  {subtasks.filter((s) => s.isCompleted).length}/{subtasks.length}
+                </span>
+              </div>
+            )}
+          </div>
 
           {/* Timestamps */}
           <div className="text-[11px] text-muted-foreground pt-4 space-y-1 border-t border-border/20 mt-2">

@@ -2080,6 +2080,22 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     res.status(201).json(subtask);
   }));
 
+  app.patch("/api/tasks/:id/subtasks/reorder", requireAgency, wrapAsync(async (req, res) => {
+    const taskId = Number(req.params.id);
+    const task = await storage.getTaskById(taskId);
+    if (!task) return res.status(404).json({ error: "Task not found" });
+    const { subtaskIds } = req.body;
+    if (!Array.isArray(subtaskIds) || subtaskIds.length === 0) {
+      return res.status(422).json({ error: "subtaskIds must be a non-empty array of subtask IDs" });
+    }
+    // Validate all IDs are numbers
+    if (!subtaskIds.every((id: any) => typeof id === "number" && Number.isInteger(id))) {
+      return res.status(422).json({ error: "subtaskIds must contain only integer IDs" });
+    }
+    const updated = await storage.reorderSubtasks(taskId, subtaskIds);
+    res.json(updated);
+  }));
+
   app.patch("/api/subtasks/:id", requireAgency, wrapAsync(async (req, res) => {
     const id = Number(req.params.id);
     const parsed = insertTaskSubtaskSchema.partial().safeParse(req.body);
