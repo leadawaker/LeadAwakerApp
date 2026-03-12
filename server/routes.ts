@@ -3558,8 +3558,14 @@ GUARDRAILS
       // 3. Fetch conversation history (all previous messages for context)
       const history = await storage.getAiMessagesBySessionId(sessionId);
 
-      // 4. Build prompt: system prompt + conversation history context
-      const systemPrompt = agent.systemPrompt || "";
+      // 4. Build prompt: resolve system prompt (from Prompt Library if linked, else agent default)
+      let systemPrompt = agent.systemPrompt || "";
+      if (agent.systemPromptId) {
+        const linkedPrompt = await storage.getPromptById(agent.systemPromptId);
+        if (linkedPrompt?.promptText) {
+          systemPrompt = linkedPrompt.promptText;
+        }
+      }
       const isFirstMessage = history.filter((m) => m.role === "user").length <= 1;
 
       // Build the full prompt with conversation context for the CLI
