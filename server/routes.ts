@@ -55,7 +55,7 @@ import { toDbKeys, toDbKeysArray, fromDbKeys } from "./dbKeys";
 import { saveInvoiceArtifacts } from "./invoiceArtifacts";
 import { db, pool } from "./db";
 import { eq, count, and, gte, isNotNull, type SQL, desc } from "drizzle-orm";
-import { seedDefaultAiAgents } from "./aiAgents";
+import { seedDefaultAiAgents, streamClaudeResponse, getSessionCwd } from "./aiAgents";
 import { ZodError } from "zod";
 
 /** Module-level flag to emit the FRONTEND_URL warning only once per process. */
@@ -3275,6 +3275,7 @@ GUARDRAILS
         thinkingLevel: req.body.thinkingLevel || "medium",
         enabled: req.body.enabled !== undefined ? req.body.enabled : true,
         displayOrder: req.body.displayOrder || 99,
+        permissions: req.body.permissions || { read: true, write: false, create: false, delete: false },
       };
       const parsed = insertAiAgentSchema.parse(body);
       const agent = await storage.createAiAgent(parsed);
@@ -3344,6 +3345,64 @@ GUARDRAILS
     } catch (err: any) {
       console.error("[AI Conversations] create error:", err);
       res.status(500).json({ message: "Failed to create conversation" });
+    }
+  });
+
+  // List all conversations for a specific agent (ordered by most recent)
+  app.get("/api/agents/:id/conversations", requireAgency, async (req, res) => {
+    try {
+      const agentId = parseInt(req.params.id, 10);
+      if (isNaN(agentId)) return res.status(400).json({ message: "Invalid agent ID" });
+
+      // Get all sessions for this agent ordered by updated_at DESC
+      const sessions = await db
+        .select()
+        .from(aiSessions)
+        .where(eq(aiSessions.agentId, agentId))
+        .orderBy(desc(aiSessions.updatedAt));
+
+      // For each session, get message count and last message preview
+      const conversationsWithMeta = await Promise.all(
+        sessions.map(async (session) => {
+          const [msgCount] = await db
+            .select({ total: count() })
+            .from(aiMessages)
+            .where(eq(aiMessages.sessionId, session.sessionId));
+
+          // Get the most recent message for preview
+          const [lastMsg] = await db
+            .select({ content: aiMessages.content, role: aiMessages.role, createdAt: aiMessages.createdAt })
+            .from(aiMessages)
+            .where(eq(aiMessages.sessionId, session.sessionId))
+            .orderBy(desc(aiMessages.createdAt))
+            .limit(1);
+
+          return {
+            id: session.id,
+            sessionId: session.sessionId,
+            agentId: session.agentId,
+            userId: session.userId,
+            title: session.title,
+            model: session.model,
+            thinkingLevel: session.thinkingLevel,
+            isActive: session.isActive,
+            status: session.status,
+            totalInputTokens: session.totalInputTokens,
+            totalOutputTokens: session.totalOutputTokens,
+            createdAt: session.createdAt,
+            updatedAt: session.updatedAt,
+            messageCount: msgCount?.total ?? 0,
+            lastMessage: lastMsg
+              ? { content: lastMsg.content.substring(0, 200), role: lastMsg.role, createdAt: lastMsg.createdAt }
+              : null,
+          };
+        }),
+      );
+
+      res.json(conversationsWithMeta);
+    } catch (err: any) {
+      console.error("[AI Conversations] list error:", err);
+      res.status(500).json({ message: "Failed to list conversations" });
     }
   });
 
