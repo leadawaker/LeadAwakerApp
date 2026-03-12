@@ -76,6 +76,8 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
   const [parentTaskId, setParentTaskId] = useState<number | null>(null);
   const [emoji, setEmoji] = useState("");
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [estimateHours, setEstimateHours] = useState("");
+  const [estimateMinutes, setEstimateMinutes] = useState("");
 
   useEffect(() => {
     if (!task) return;
@@ -88,6 +90,9 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
     setCategoryId(task.categoryId ?? null);
     setParentTaskId(task.parentTaskId ?? null);
     setEmoji(task.emoji ?? "");
+    const te = task.timeEstimate ?? 0;
+    setEstimateHours(te >= 60 ? String(Math.floor(te / 60)) : "");
+    setEstimateMinutes(te % 60 > 0 ? String(te % 60) : "");
   }, [task]);
 
   // ── Dirty tracking ───────────────────────────────────────────────────────────
@@ -103,9 +108,10 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
       dueDate !== origDue ||
       categoryId !== (task.categoryId ?? null) ||
       parentTaskId !== (task.parentTaskId ?? null) ||
-      emoji !== (task.emoji ?? "")
+      emoji !== (task.emoji ?? "") ||
+      (parseInt(estimateHours || "0") * 60 + parseInt(estimateMinutes || "0")) !== (task.timeEstimate ?? 0)
     );
-  }, [task, title, description, status, priority, taskType, dueDate, categoryId, parentTaskId, emoji]);
+  }, [task, title, description, status, priority, taskType, dueDate, categoryId, parentTaskId, emoji, estimateHours, estimateMinutes]);
 
   // ── Subtask handlers ────────────────────────────────────────────────────────
   const handleAddSubtask = useCallback(() => {
@@ -148,6 +154,7 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
         categoryId,
         parentTaskId,
         emoji: emoji || null,
+        timeEstimate: (parseInt(estimateHours || "0") * 60 + parseInt(estimateMinutes || "0")) || null,
       },
     });
   };
@@ -364,6 +371,34 @@ export default function MobileTaskDetailPanel({ taskId, onBack }: Props) {
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
               />
+            </div>
+
+            {/* Time estimate */}
+            <div className="space-y-1.5">
+              <label className={labelCls}>Time Estimate</label>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="number"
+                  min="0"
+                  className={cn(inputCls, "w-20")}
+                  value={estimateHours}
+                  onChange={(e) => setEstimateHours(e.target.value.replace(/[^0-9]/g, ""))}
+                  placeholder="0"
+                  data-testid="mobile-task-edit-estimate-hours"
+                />
+                <span className="text-[13px] text-muted-foreground">hrs</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="59"
+                  className={cn(inputCls, "w-20")}
+                  value={estimateMinutes}
+                  onChange={(e) => setEstimateMinutes(e.target.value.replace(/[^0-9]/g, ""))}
+                  placeholder="0"
+                  data-testid="mobile-task-edit-estimate-minutes"
+                />
+                <span className="text-[13px] text-muted-foreground">min</span>
+              </div>
             </div>
 
             {/* Category */}

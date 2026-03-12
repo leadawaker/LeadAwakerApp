@@ -84,6 +84,8 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
   const [parentTaskId, setParentTaskId] = useState<number | null>(null);
   const [emoji, setEmoji] = useState("");
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [estimateHours, setEstimateHours] = useState("");
+  const [estimateMinutes, setEstimateMinutes] = useState("");
 
   // Initialize form from task data
   useEffect(() => {
@@ -97,6 +99,9 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
     setCategoryId(task.categoryId ?? null);
     setParentTaskId(task.parentTaskId ?? null);
     setEmoji(task.emoji ?? "");
+    const te = task.timeEstimate ?? 0;
+    setEstimateHours(te >= 60 ? String(Math.floor(te / 60)) : "");
+    setEstimateMinutes(te % 60 > 0 ? String(te % 60) : "");
   }, [task]);
 
   // ── Dirty tracking ──────────────────────────────────────────────────────────
@@ -112,9 +117,10 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
       dueDate !== origDue ||
       categoryId !== (task.categoryId ?? null) ||
       parentTaskId !== (task.parentTaskId ?? null) ||
-      emoji !== (task.emoji ?? "")
+      emoji !== (task.emoji ?? "") ||
+      (parseInt(estimateHours || "0") * 60 + parseInt(estimateMinutes || "0")) !== (task.timeEstimate ?? 0)
     );
-  }, [task, title, description, status, priority, taskType, dueDate, categoryId, parentTaskId, emoji]);
+  }, [task, title, description, status, priority, taskType, dueDate, categoryId, parentTaskId, emoji, estimateHours, estimateMinutes]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
@@ -158,6 +164,7 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
         categoryId,
         parentTaskId,
         emoji: emoji || null,
+        timeEstimate: (parseInt(estimateHours || "0") * 60 + parseInt(estimateMinutes || "0")) || null,
       },
     });
   };
@@ -344,6 +351,34 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
               />
+            </div>
+          </div>
+
+          {/* Time estimate — hours + minutes */}
+          <div className="space-y-1.5">
+            <label className={labelCls}>{t("fields.timeEstimate")}</label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="number"
+                min="0"
+                className={cn(inputCls, "w-20")}
+                value={estimateHours}
+                onChange={(e) => setEstimateHours(e.target.value.replace(/[^0-9]/g, ""))}
+                placeholder="0"
+                data-testid="task-edit-estimate-hours"
+              />
+              <span className="text-[12px] text-muted-foreground">{t("fields.hours")}</span>
+              <input
+                type="number"
+                min="0"
+                max="59"
+                className={cn(inputCls, "w-20")}
+                value={estimateMinutes}
+                onChange={(e) => setEstimateMinutes(e.target.value.replace(/[^0-9]/g, ""))}
+                placeholder="0"
+                data-testid="task-edit-estimate-minutes"
+              />
+              <span className="text-[12px] text-muted-foreground">{t("fields.minutes")}</span>
             </div>
           </div>
 

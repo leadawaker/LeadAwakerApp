@@ -50,7 +50,10 @@
     "emoji": "Emoji",
     "pickEmoji": "Pick emoji",
     "changeEmoji": "Change",
-    "clearEmoji": "Clear"
+    "clearEmoji": "Clear",
+    "timeEstimate": "Time Estimate",
+    "hours": "hrs",
+    "minutes": "min"
   },
   "linked": {
     "account": "Account:",

@@ -50,7 +50,10 @@
     "emoji": "Emoji",
     "pickEmoji": "Emoji kiezen",
     "changeEmoji": "Wijzigen",
-    "clearEmoji": "Wissen"
+    "clearEmoji": "Wissen",
+    "timeEstimate": "Geschatte Tijd",
+    "hours": "uur",
+    "minutes": "min"
   },
   "linked": {
     "account": "Account:",

@@ -75,6 +75,8 @@ export default function TaskCreatePanel({ onClose, onCreated }: TaskCreatePanelP
   const [parentTaskId, setParentTaskId] = useState<number | null>(null);
   const [emoji, setEmoji] = useState("");
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [estimateHours, setEstimateHours] = useState("");
+  const [estimateMinutes, setEstimateMinutes] = useState("");
 
   // ── Handler ─────────────────────────────────────────────────────────────────
 
@@ -96,6 +98,7 @@ export default function TaskCreatePanel({ onClose, onCreated }: TaskCreatePanelP
         categoryId,
         parentTaskId,
         emoji: emoji || null,
+        timeEstimate: (parseInt(estimateHours || "0") * 60 + parseInt(estimateMinutes || "0")) || null,
       });
       // apiRequest returns a Response — try to extract the new task ID
       try {
@@ -295,6 +298,34 @@ export default function TaskCreatePanel({ onClose, onCreated }: TaskCreatePanelP
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
               />
+            </div>
+          </div>
+
+          {/* Time estimate — hours + minutes side by side */}
+          <div className="space-y-1.5">
+            <label className={labelCls}>{t("fields.timeEstimate")}</label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="number"
+                min="0"
+                className={cn(inputCls, "w-20")}
+                value={estimateHours}
+                onChange={(e) => setEstimateHours(e.target.value.replace(/[^0-9]/g, ""))}
+                placeholder="0"
+                data-testid="task-create-estimate-hours"
+              />
+              <span className="text-[12px] text-muted-foreground">{t("fields.hours")}</span>
+              <input
+                type="number"
+                min="0"
+                max="59"
+                className={cn(inputCls, "w-20")}
+                value={estimateMinutes}
+                onChange={(e) => setEstimateMinutes(e.target.value.replace(/[^0-9]/g, ""))}
+                placeholder="0"
+                data-testid="task-create-estimate-minutes"
+              />
+              <span className="text-[12px] text-muted-foreground">{t("fields.minutes")}</span>
             </div>
           </div>
 

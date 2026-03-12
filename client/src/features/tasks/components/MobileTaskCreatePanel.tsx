@@ -56,6 +56,8 @@ export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
   const [parentTaskId, setParentTaskId] = useState<number | null>(null);
   const [emoji, setEmoji] = useState("");
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [estimateHours, setEstimateHours] = useState("");
+  const [estimateMinutes, setEstimateMinutes] = useState("");
 
   const canCreate = title.trim().length > 0 && !createMutation.isPending;
 
@@ -83,6 +85,7 @@ export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
         categoryId,
         parentTaskId,
         emoji: emoji || null,
+        timeEstimate: (parseInt(estimateHours || "0") * 60 + parseInt(estimateMinutes || "0")) || null,
       });
       // Extract new task ID from response
       try {
@@ -241,6 +244,34 @@ export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
               onChange={(e) => setDueDate(e.target.value)}
               data-testid="mobile-task-create-due-date"
             />
+          </div>
+
+          {/* Time estimate */}
+          <div className="space-y-1.5">
+            <label className={labelCls}>Time Estimate</label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="number"
+                min="0"
+                className={cn(inputCls, "w-20")}
+                value={estimateHours}
+                onChange={(e) => setEstimateHours(e.target.value.replace(/[^0-9]/g, ""))}
+                placeholder="0"
+                data-testid="mobile-task-create-estimate-hours"
+              />
+              <span className="text-[13px] text-muted-foreground">hrs</span>
+              <input
+                type="number"
+                min="0"
+                max="59"
+                className={cn(inputCls, "w-20")}
+                value={estimateMinutes}
+                onChange={(e) => setEstimateMinutes(e.target.value.replace(/[^0-9]/g, ""))}
+                placeholder="0"
+                data-testid="mobile-task-create-estimate-minutes"
+              />
+              <span className="text-[13px] text-muted-foreground">min</span>
+            </div>
           </div>
 
           {/* Priority + Type — side by side */}
