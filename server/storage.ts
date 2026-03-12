@@ -63,6 +63,12 @@ import {
   type InsertAiSession,
   type AiMessage,
   type InsertAiMessage,
+  notificationPreferences,
+  pushSubscriptions,
+  type NotificationPreferences,
+  type InsertNotificationPreferences,
+  type PushSubscriptionRow,
+  type InsertPushSubscription,
 } from "@shared/schema";
 
 
@@ -188,6 +194,15 @@ export interface IStorage {
   createNotification(data: InsertNotifications): Promise<Notifications>;
   updateNotification(id: number, data: Partial<InsertNotifications>): Promise<Notifications | undefined>;
   markAllNotificationsRead(userId: number): Promise<number>;
+
+  // Notification Preferences
+  getNotificationPreferences(userId: number, accountId: number): Promise<NotificationPreferences | undefined>;
+  upsertNotificationPreferences(userId: number, accountId: number, data: Partial<InsertNotificationPreferences>): Promise<NotificationPreferences>;
+
+  // Push Subscriptions
+  getPushSubscriptionsByUser(userId: number, accountId: number): Promise<PushSubscriptionRow[]>;
+  createPushSubscription(data: InsertPushSubscription): Promise<PushSubscriptionRow>;
+  deletePushSubscriptionByEndpoint(endpoint: string): Promise<boolean>;
 
   // Tasks
   getTasks(): Promise<Task[]>;
@@ -772,6 +787,56 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(notifications.userId, userId), eq(notifications.read, false)))
       .returning({ id: notifications.id });
     return rows.length;
+  }
+
+  // ─── Notification Preferences ──────────────────────────────────────────
+
+  async getNotificationPreferences(userId: number, accountId: number): Promise<NotificationPreferences | undefined> {
+    const [row] = await db
+      .select()
+      .from(notificationPreferences)
+      .where(and(eq(notificationPreferences.userId, userId), eq(notificationPreferences.accountId, accountId)))
+      .limit(1);
+    return row;
+  }
+
+  async upsertNotificationPreferences(userId: number, accountId: number, data: Partial<InsertNotificationPreferences>): Promise<NotificationPreferences> {
+    const existing = await this.getNotificationPreferences(userId, accountId);
+    if (existing) {
+      const [row] = await db
+        .update(notificationPreferences)
+        .set({ ...data, updatedAt: new Date() } as any)
+        .where(eq(notificationPreferences.id, existing.id))
+        .returning();
+      return row;
+    }
+    const [row] = await db
+      .insert(notificationPreferences)
+      .values({ userId, accountId, ...data } as any)
+      .returning();
+    return row;
+  }
+
+  // ─── Push Subscriptions ──────────────────────────────────────────────
+
+  async getPushSubscriptionsByUser(userId: number, accountId: number): Promise<PushSubscriptionRow[]> {
+    return db
+      .select()
+      .from(pushSubscriptions)
+      .where(and(eq(pushSubscriptions.userId, userId), eq(pushSubscriptions.accountId, accountId)))
+      .orderBy(desc(pushSubscriptions.createdAt));
+  }
+
+  async createPushSubscription(data: InsertPushSubscription): Promise<PushSubscriptionRow> {
+    // Delete existing subscription for same endpoint (re-subscribe)
+    await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, data.endpoint));
+    const [row] = await db.insert(pushSubscriptions).values(data as any).returning();
+    return row;
+  }
+
+  async deletePushSubscriptionByEndpoint(endpoint: string): Promise<boolean> {
+    const rows = await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint)).returning({ id: pushSubscriptions.id });
+    return rows.length > 0;
   }
 
   // ─── Support Chat ─────────────────────────────────────────────────────

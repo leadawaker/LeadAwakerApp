@@ -39,6 +39,12 @@ import {
   insertSupportSessionSchema,
   insertSupportMessageSchema,
   insertTaskSchema,
+  aiAgents,
+  aiSessions,
+  aiMessages,
+  insertAiAgentSchema,
+  insertAiSessionSchema,
+  insertAiMessageSchema,
 } from "@shared/schema";
 import crypto from "crypto";
 import fs from "fs";
@@ -46,7 +52,8 @@ import path from "path";
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "./dbKeys";
 import { saveInvoiceArtifacts } from "./invoiceArtifacts";
 import { db, pool } from "./db";
-import { eq, count, and, gte, isNotNull, type SQL } from "drizzle-orm";
+import { eq, count, and, gte, isNotNull, type SQL, desc } from "drizzle-orm";
+import { seedDefaultAiAgents } from "./aiAgents";
 import { ZodError } from "zod";
 
 /** Module-level flag to emit the FRONTEND_URL warning only once per process. */
@@ -1419,6 +1426,81 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     const parsed = insertNotificationsSchema.parse(req.body);
     const created = await storage.createNotification(parsed);
     res.status(201).json(created);
+  }));
+
+  // GET /api/notifications/vapid-public-key — return VAPID public key for push subscription
+  app.get("/api/notifications/vapid-public-key", requireAuth, (_req, res) => {
+    const publicKey = process.env.VAPID_PUBLIC_KEY;
+    if (!publicKey) return res.status(500).json({ message: "VAPID keys not configured" });
+    res.json({ publicKey });
+  });
+
+  // GET /api/notifications/preferences — load notification preferences
+  app.get("/api/notifications/preferences", requireAuth, wrapAsync(async (req, res) => {
+    const userId = parseInt(req.query.user_id as string);
+    const accountId = parseInt(req.query.account_id as string);
+    if (isNaN(userId) || isNaN(accountId)) return res.status(400).json({ message: "Missing user_id or account_id" });
+    const prefs = await storage.getNotificationPreferences(userId, accountId);
+    if (!prefs) return res.json({ telegram_enabled: true, telegram_chat_id: null, push_enabled: true, type_overrides: {} });
+    res.json({
+      telegram_enabled: prefs.telegramEnabled,
+      telegram_chat_id: prefs.telegramChatId,
+      push_enabled: prefs.webPushEnabled,
+      type_overrides: prefs.typeOverrides ?? {},
+    });
+  }));
+
+  // PATCH /api/notifications/preferences — save notification preferences
+  app.patch("/api/notifications/preferences", requireAuth, wrapAsync(async (req, res) => {
+    const userId = parseInt(req.query.user_id as string);
+    const accountId = parseInt(req.query.account_id as string);
+    if (isNaN(userId) || isNaN(accountId)) return res.status(400).json({ message: "Missing user_id or account_id" });
+    const { telegram_enabled, telegram_chat_id, push_enabled, type_overrides } = req.body;
+    const row = await storage.upsertNotificationPreferences(userId, accountId, {
+      telegramEnabled: telegram_enabled,
+      telegramChatId: telegram_chat_id,
+      webPushEnabled: push_enabled,
+      typeOverrides: type_overrides,
+    });
+    res.json(row);
+  }));
+
+  // GET /api/notifications/push-subscriptions — list push devices for user
+  app.get("/api/notifications/push-subscriptions", requireAuth, wrapAsync(async (req, res) => {
+    const userId = parseInt(req.query.user_id as string);
+    const accountId = parseInt(req.query.account_id as string);
+    if (isNaN(userId) || isNaN(accountId)) return res.status(400).json({ message: "Missing user_id or account_id" });
+    const subs = await storage.getPushSubscriptionsByUser(userId, accountId);
+    res.json(subs.map((s) => ({
+      id: s.id,
+      endpoint: s.endpoint,
+      device_label: s.deviceLabel,
+      created_at: s.createdAt,
+    })));
+  }));
+
+  // POST /api/notifications/push-subscription — save a push subscription
+  app.post("/api/notifications/push-subscription", requireAuth, wrapAsync(async (req, res) => {
+    const { user_id, account_id, subscription, device_label } = req.body;
+    if (!subscription?.endpoint) {
+      return res.status(400).json({ message: "Invalid subscription object" });
+    }
+    const saved = await storage.createPushSubscription({
+      userId: user_id,
+      accountId: account_id,
+      endpoint: subscription.endpoint,
+      subscription,
+      deviceLabel: device_label ?? null,
+    });
+    res.status(201).json(saved);
+  }));
+
+  // DELETE /api/notifications/push-subscription — remove a push subscription
+  app.delete("/api/notifications/push-subscription", requireAuth, wrapAsync(async (req, res) => {
+    const { endpoint } = req.body;
+    if (!endpoint) return res.status(400).json({ message: "Missing endpoint" });
+    await storage.deletePushSubscriptionByEndpoint(endpoint);
+    res.json({ success: true });
   }));
 
   // ─── Activity Feed ───────────────────────────────────────────────
@@ -3145,6 +3227,196 @@ GUARDRAILS
   }
 
   setInterval(checkAutomationFailures, 5 * 60 * 1000);
+
+  // ─── AI Agents: seed defaults + routes ─────────────────────────────
+  await seedDefaultAiAgents(db, aiAgents);
+
+  // List all agents
+  app.get("/api/agents", requireAuth, async (_req, res) => {
+    try {
+      const rows = await db.select().from(aiAgents).orderBy(aiAgents.displayOrder);
+      res.json(rows);
+    } catch (err: any) {
+      console.error("[AI Agents] list error:", err);
+      res.status(500).json({ message: "Failed to list agents" });
+    }
+  });
+
+  // Get single agent
+  app.get("/api/agents/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid agent ID" });
+      const [agent] = await db.select().from(aiAgents).where(eq(aiAgents.id, id));
+      if (!agent) return res.status(404).json({ message: "Agent not found" });
+      res.json(agent);
+    } catch (err: any) {
+      console.error("[AI Agents] get error:", err);
+      res.status(500).json({ message: "Failed to get agent" });
+    }
+  });
+
+  // Create agent
+  app.post("/api/agents", requireAuth, requireAgency, async (req, res) => {
+    try {
+      const parsed = insertAiAgentSchema.parse(req.body);
+      const agent = await storage.createAiAgent(parsed);
+      res.status(201).json(agent);
+    } catch (err: any) {
+      if (err instanceof ZodError) return handleZodError(res, err);
+      console.error("[AI Agents] create error:", err);
+      res.status(500).json({ message: "Failed to create agent" });
+    }
+  });
+
+  // Update agent
+  app.patch("/api/agents/:id", requireAuth, requireAgency, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid agent ID" });
+      const agent = await storage.updateAiAgent(id, req.body);
+      if (!agent) return res.status(404).json({ message: "Agent not found" });
+      res.json(agent);
+    } catch (err: any) {
+      console.error("[AI Agents] update error:", err);
+      res.status(500).json({ message: "Failed to update agent" });
+    }
+  });
+
+  // Delete agent (soft-delete by disabling)
+  app.delete("/api/agents/:id", requireAuth, requireAgency, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid agent ID" });
+      const agent = await storage.updateAiAgent(id, { enabled: false });
+      if (!agent) return res.status(404).json({ message: "Agent not found" });
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error("[AI Agents] delete error:", err);
+      res.status(500).json({ message: "Failed to delete agent" });
+    }
+  });
+
+  // ─── AI Sessions (conversations) ──────────────────────────────────────
+
+  // List sessions for current user
+  app.get("/api/agents/sessions/list", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+      const sessions = await storage.getAiSessionsByUserId(userId);
+      res.json(sessions);
+    } catch (err: any) {
+      console.error("[AI Sessions] list error:", err);
+      res.status(500).json({ message: "Failed to list sessions" });
+    }
+  });
+
+  // Get or create active session for user + agent
+  app.post("/api/agents/:agentId/sessions", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+      const agentId = parseInt(req.params.agentId, 10);
+      if (isNaN(agentId)) return res.status(400).json({ message: "Invalid agent ID" });
+
+      // Check if there's already an active session
+      let session = await storage.getActiveAiSessionByUserAndAgent(userId, agentId);
+      if (!session) {
+        const sessionId = crypto.randomUUID();
+        session = await storage.createAiSession({
+          sessionId,
+          userId,
+          agentId,
+          title: req.body.title || null,
+          status: "active",
+          cliSessionId: null,
+        });
+      }
+      res.json(session);
+    } catch (err: any) {
+      console.error("[AI Sessions] create error:", err);
+      res.status(500).json({ message: "Failed to create session" });
+    }
+  });
+
+  // Get session by sessionId
+  app.get("/api/agents/sessions/:sessionId", requireAuth, async (req, res) => {
+    try {
+      const session = await storage.getAiSessionBySessionId(req.params.sessionId);
+      if (!session) return res.status(404).json({ message: "Session not found" });
+      res.json(session);
+    } catch (err: any) {
+      console.error("[AI Sessions] get error:", err);
+      res.status(500).json({ message: "Failed to get session" });
+    }
+  });
+
+  // Update session (e.g. title, status)
+  app.patch("/api/agents/sessions/:sessionId", requireAuth, async (req, res) => {
+    try {
+      const session = await storage.getAiSessionBySessionId(req.params.sessionId);
+      if (!session) return res.status(404).json({ message: "Session not found" });
+      const updated = await storage.updateAiSession(session.id, req.body);
+      res.json(updated);
+    } catch (err: any) {
+      console.error("[AI Sessions] update error:", err);
+      res.status(500).json({ message: "Failed to update session" });
+    }
+  });
+
+  // Close/delete session
+  app.delete("/api/agents/sessions/:sessionId", requireAuth, async (req, res) => {
+    try {
+      const session = await storage.getAiSessionBySessionId(req.params.sessionId);
+      if (!session) return res.status(404).json({ message: "Session not found" });
+      await storage.updateAiSession(session.id, { status: "closed" });
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error("[AI Sessions] close error:", err);
+      res.status(500).json({ message: "Failed to close session" });
+    }
+  });
+
+  // ─── AI Messages ──────────────────────────────────────────────────────
+
+  // Get messages for a session
+  app.get("/api/agents/sessions/:sessionId/messages", requireAuth, async (req, res) => {
+    try {
+      const messages = await storage.getAiMessagesBySessionId(req.params.sessionId);
+      res.json(messages);
+    } catch (err: any) {
+      console.error("[AI Messages] list error:", err);
+      res.status(500).json({ message: "Failed to list messages" });
+    }
+  });
+
+  // Create a message (persist user or assistant message)
+  app.post("/api/agents/sessions/:sessionId/messages", requireAuth, async (req, res) => {
+    try {
+      const parsed = insertAiMessageSchema.parse({
+        ...req.body,
+        sessionId: req.params.sessionId,
+      });
+      const message = await storage.createAiMessage(parsed);
+      res.status(201).json(message);
+    } catch (err: any) {
+      if (err instanceof ZodError) return handleZodError(res, err);
+      console.error("[AI Messages] create error:", err);
+      res.status(500).json({ message: "Failed to create message" });
+    }
+  });
+
+  // Delete all messages for a session (clear history)
+  app.delete("/api/agents/sessions/:sessionId/messages", requireAuth, async (req, res) => {
+    try {
+      await db.delete(aiMessages).where(eq(aiMessages.sessionId, req.params.sessionId));
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error("[AI Messages] clear error:", err);
+      res.status(500).json({ message: "Failed to clear messages" });
+    }
+  });
 
   return httpServer;
 }

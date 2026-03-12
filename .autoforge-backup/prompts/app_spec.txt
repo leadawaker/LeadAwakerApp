@@ -1,0 +1,417 @@
+<project_specification>
+  <project_name>Lead Awaker Agents</project_name>
+
+  <overview>
+    An evolution of the existing AI agent chat system inside the LeadAwaker CRM. Brings a full Claude Code-like experience — streaming responses, model switching, thinking toggles, skills, file uploads, voice memos, and page-aware context — into the CRM as embedded AI assistants. Agents can read and modify CRM data, access Google Workspace via GOG, and persist conversations across sessions. The chat widget stays open across page navigation, giving the admin a persistent AI co-pilot while browsing the CRM.
+  </overview>
+
+  <technology_stack>
+    <frontend>
+      <framework>React (TypeScript) — existing LeadAwaker frontend</framework>
+      <styling>Tailwind CSS — existing design system</styling>
+      <state>Wouter routing, React context/hooks</state>
+      <streaming>Server-Sent Events (SSE) for token-by-token streaming</streaming>
+    </frontend>
+    <backend>
+      <runtime>Node.js / Express — existing LeadAwaker backend</runtime>
+      <database>PostgreSQL — existing database, extended with agent tables</database>
+      <ai_provider>Anthropic Claude API (user's own subscription key)</ai_provider>
+      <integrations>GOG CLI for Google Docs/Sheets/Gmail access</integrations>
+    </backend>
+    <communication>
+      <api>REST API + SSE streaming for chat responses</api>
+    </communication>
+  </technology_stack>
+
+  <prerequisites>
+    <environment_setup>
+      - Existing LeadAwaker CRM running on Raspberry Pi via pm2
+      - Anthropic API key configured (user's Claude subscription)
+      - GOG CLI installed and configured for Google Workspace access
+      - Existing Conversations page, SupportChatWidget, and Prompts library page
+    </environment_setup>
+  </prerequisites>
+
+  <feature_count>80</feature_count>
+
+  <security_and_access_control>
+    <user_roles>
+      <role name="admin">
+        <permissions>
+          - Full access to all AI agents
+          - Create, edit, clone, delete agents
+          - Configure agent permissions (what each agent can read/write/delete)
+          - Switch models, toggle thinking, manage skills
+          - Upload files, send voice memos
+          - Clear conversation history
+          - Access agent chat from widget and full page
+        </permissions>
+        <protected_routes>
+          - All agent-related routes (admin only)
+          - Agent management/settings
+        </protected_routes>
+      </role>
+      <role name="regular_user">
+        <permissions>
+          - No access to AI agents
+          - Standard CRM features only
+        </permissions>
+      </role>
+    </user_roles>
+    <authentication>
+      <method>Existing LeadAwaker auth (email/password)</method>
+      <session_timeout>Existing session management</session_timeout>
+      <admin_gate>isAgencyUser / admin role check on all agent endpoints</admin_gate>
+    </authentication>
+    <sensitive_operations>
+      - Destructive CRM actions by agents require confirmation dialog
+      - Agent deletion requires confirmation
+      - Clearing conversation history requires confirmation
+    </sensitive_operations>
+  </security_and_access_control>
+
+  <core_features>
+    <infrastructure>
+      - Database connection established
+      - Database schema applied correctly (agent tables)
+      - Data persists across server restart
+      - No mock data patterns in codebase
+      - Backend API queries real database
+    </infrastructure>
+
+    <agent_management>
+      - Create new agent (clones Code Runner template)
+      - Edit agent name and icon/avatar
+      - Delete agent with confirmation
+      - List all agents
+      - Agent default system prompt (Code Runner base)
+      - Link custom prompt from Prompts library to agent
+      - Per-agent permission configuration (read/write/delete CRM data)
+      - Admin-only access gate on all agent features
+      - Agent model selection (default Sonnet, switchable to Opus/Haiku)
+      - Agent thinking level setting (default medium thinking)
+    </agent_management>
+
+    <chat_core>
+      - Send text messages to agent
+      - Receive streaming responses token-by-token (SSE)
+      - Message history persisted to database
+      - Load conversation history on open
+      - Clear/delete conversation history with confirmation
+      - Close conversation (X button)
+      - Auto-generated conversation title by AI
+      - Display conversation title at top of chat
+      - Multiple concurrent conversations (different agents simultaneously)
+      - Markdown rendering in messages
+      - Code blocks with syntax highlighting
+      - Copy button on code blocks
+      - Token usage display per conversation
+      - Error handling and retry on failed messages
+    </chat_core>
+
+    <model_and_thinking_controls>
+      - Model switcher button in chat UI (Sonnet/Opus/Haiku)
+      - Default to Sonnet
+      - Thinking toggle button in chat UI
+      - Default to medium thinking
+      - Settings persist per agent across sessions
+    </model_and_thinking_controls>
+
+    <files_and_media>
+      - Upload PDF documents in chat
+      - Upload photos/images in chat
+      - Upload spreadsheets in chat
+      - Voice memo recording button
+      - Voice transcription before sending to Claude
+      - File preview/thumbnail in chat messages
+      - Agent can view and analyze uploaded files
+      - GOG integration for Google Docs/Sheets/Gmail access
+    </files_and_media>
+
+    <skills>
+      - Load Claude Code global skills from ~/.claude/skills/
+      - Skills execution within agent chat
+      - Skill results display in conversation
+    </skills>
+
+    <page_awareness>
+      - Detect current page/route name
+      - Detect specific data on screen (which lead, campaign, etc.)
+      - Pass page context as part of agent system prompt
+      - "This" and "here" refer to current page/data by default
+      - Context auto-updates when user navigates to new page
+      - Toggle to disable page awareness per agent/session
+    </page_awareness>
+
+    <crm_actions_and_permissions>
+      - Agent can read CRM data (leads, campaigns, conversations, etc.)
+      - Agent can update existing CRM records
+      - Agent can create new CRM records
+      - Agent can delete CRM records
+      - Per-agent permission buttons (configure what each agent can do)
+      - Confirmation dialog before destructive actions
+      - Direct database query access for agents
+    </crm_actions_and_permissions>
+
+    <persistent_chat_widget>
+      - Small chat widget persists across page navigation
+      - Agent tabs displayed as compact icons (1, 2, 3...)
+      - Same conversation synced between widget and full page
+      - Conversation title shown at top of widget
+      - Open/close widget (X button)
+      - Widget resizable or has sensible default size
+      - Widget header shows current agent name/icon
+      - Switch between agents via tab icons
+      - Widget state preserved across page navigation
+    </persistent_chat_widget>
+
+    <full_page_chat>
+      - Agent chat available in Conversations page
+      - Agent selection and switching in sidebar/header
+      - Full-width chat experience with all features
+      - Agent list accessible from Conversations page
+    </full_page_chat>
+
+    <mobile>
+      - Responsive chat interface for mobile screens
+      - Touch-friendly controls and buttons
+      - Mobile voice recording support
+      - Mobile file upload support
+      - Mobile-friendly widget behavior
+    </mobile>
+
+    <campaign_crafter>
+      - Campaign options and context in system prompt
+      - Campaign suggestion and idea generation
+      - Client account analysis (pull account data for context)
+      - Spreadsheet analysis for campaign planning
+    </campaign_crafter>
+  </core_features>
+
+  <database_schema>
+    <tables>
+      <ai_agents>
+        - id (uuid, primary key)
+        - name (text)
+        - icon (text, emoji or icon identifier)
+        - system_prompt_id (uuid, FK to prompts library, nullable)
+        - default_system_prompt (text, Code Runner base prompt)
+        - model (text, default 'claude-sonnet-4-20250514')
+        - thinking_level (text, default 'medium')
+        - permissions (jsonb, e.g. {"read": true, "write": true, "delete": false})
+        - page_awareness_enabled (boolean, default true)
+        - created_by (uuid, FK to users)
+        - created_at (timestamp)
+        - updated_at (timestamp)
+      </ai_agents>
+
+      <agent_conversations>
+        - id (uuid, primary key)
+        - agent_id (uuid, FK to ai_agents)
+        - user_id (uuid, FK to users)
+        - title (text, AI-generated)
+        - model (text, model used)
+        - thinking_level (text)
+        - total_input_tokens (integer, default 0)
+        - total_output_tokens (integer, default 0)
+        - is_active (boolean, default true)
+        - created_at (timestamp)
+        - updated_at (timestamp)
+      </agent_conversations>
+
+      <agent_messages>
+        - id (uuid, primary key)
+        - conversation_id (uuid, FK to agent_conversations)
+        - role (text, 'user' or 'assistant')
+        - content (text)
+        - metadata (jsonb, for token counts, model info, thinking data)
+        - attachments (jsonb, array of file references)
+        - page_context (jsonb, route + data snapshot at time of message)
+        - created_at (timestamp)
+      </agent_messages>
+
+      <agent_files>
+        - id (uuid, primary key)
+        - conversation_id (uuid, FK to agent_conversations)
+        - message_id (uuid, FK to agent_messages)
+        - filename (text)
+        - mime_type (text)
+        - file_path (text)
+        - file_size (integer)
+        - transcription (text, for voice memos)
+        - created_at (timestamp)
+      </agent_files>
+    </tables>
+  </database_schema>
+
+  <api_endpoints_summary>
+    <agents>
+      - GET /api/agents (list all agents)
+      - POST /api/agents (create new agent, clone from template)
+      - GET /api/agents/:id (get agent details)
+      - PUT /api/agents/:id (update agent settings)
+      - DELETE /api/agents/:id (delete agent)
+    </agents>
+    <conversations>
+      - GET /api/agents/:id/conversations (list conversations for agent)
+      - POST /api/agents/:id/conversations (create new conversation)
+      - GET /api/agent-conversations/:id (get conversation with messages)
+      - DELETE /api/agent-conversations/:id (delete/clear conversation)
+    </conversations>
+    <messages>
+      - POST /api/agent-conversations/:id/messages (send message, returns SSE stream)
+      - POST /api/agent-conversations/:id/files (upload file attachment)
+    </messages>
+    <voice>
+      - POST /api/agent-voice/transcribe (transcribe voice memo audio)
+    </voice>
+    <context>
+      - POST /api/agent-context/page (submit current page context)
+    </context>
+    <skills>
+      - GET /api/agent-skills (list available Claude Code skills)
+      - POST /api/agent-skills/execute (execute a skill)
+    </skills>
+  </api_endpoints_summary>
+
+  <ui_layout>
+    <main_structure>
+      Extends existing LeadAwaker CRM layout. No new pages needed — agents integrate into:
+      1. Conversations page: agent chat as a panel alongside lead chats
+      2. SupportChatWidget: persistent floating widget with agent tabs
+      3. Prompts library page: agent prompt management
+    </main_structure>
+    <chat_panel>
+      - Header: agent name + icon, model badge, thinking indicator, settings gear
+      - Control bar: model switcher, thinking toggle, page awareness toggle
+      - Message area: scrollable, markdown + code blocks, file previews
+      - Input area: text input, attachment button, voice record button, send button
+      - Footer: token usage counter
+    </chat_panel>
+    <widget>
+      - Compact header with agent icon tabs (1, 2, 3...)
+      - Same chat experience as full page, just smaller
+      - X button to close, drag to resize (optional)
+      - Persists across page navigation (rendered at app root level)
+    </widget>
+  </ui_layout>
+
+  <design_system>
+    <color_palette>
+      Follows existing LeadAwaker design system (Tailwind classes, dark/light mode support)
+      Agent-specific accent colors for differentiation in tabs
+    </color_palette>
+    <typography>
+      Existing LeadAwaker typography system
+      Monospace font for code blocks (existing code block styling)
+    </typography>
+  </design_system>
+
+  <implementation_steps>
+    <step number="1">
+      <title>Database & Agent CRUD</title>
+      <tasks>
+        - Create database migration for ai_agents, agent_conversations, agent_messages, agent_files tables
+        - Build agent CRUD API endpoints
+        - Admin-only middleware for agent routes
+        - Agent management UI (create, edit, delete, list)
+      </tasks>
+    </step>
+    <step number="2">
+      <title>Core Chat with Streaming</title>
+      <tasks>
+        - Anthropic Claude API integration with SSE streaming
+        - Chat message send/receive with token-by-token streaming
+        - Message persistence to database
+        - Conversation history loading
+        - Model switching and thinking controls
+        - Token usage tracking and display
+      </tasks>
+    </step>
+    <step number="3">
+      <title>Chat UI (Full Page + Widget)</title>
+      <tasks>
+        - Full page agent chat panel in Conversations page
+        - Markdown and code block rendering with syntax highlighting
+        - Persistent chat widget at app root level
+        - Agent tabs as compact icons in widget
+        - Widget ↔ full page conversation sync
+        - Conversation title auto-generation
+        - X to close, clear history
+      </tasks>
+    </step>
+    <step number="4">
+      <title>Files, Voice & Media</title>
+      <tasks>
+        - File upload (PDF, images, spreadsheets) in chat
+        - File preview in messages
+        - Voice memo recording
+        - Voice transcription integration
+        - Pass files to Claude as attachments
+      </tasks>
+    </step>
+    <step number="5">
+      <title>Page Awareness & CRM Actions</title>
+      <tasks>
+        - Page context detection (route + on-screen data)
+        - Context injection into agent system prompt
+        - Toggle for page awareness
+        - CRM data read/write/create/delete via agent
+        - Permission configuration per agent
+        - Confirmation dialogs for destructive actions
+      </tasks>
+    </step>
+    <step number="6">
+      <title>Skills, GOG Integration & Campaign Crafter</title>
+      <tasks>
+        - Load and list Claude Code global skills
+        - Skill execution from chat
+        - GOG CLI integration for Google Workspace
+        - Campaign Crafter system prompt with campaign context
+        - Client account analysis capabilities
+        - Prompts library integration
+      </tasks>
+    </step>
+    <step number="7">
+      <title>Mobile & Polish</title>
+      <tasks>
+        - Responsive chat UI for mobile
+        - Touch-friendly controls
+        - Mobile voice recording and file upload
+        - Fix existing broken Campaign Crafter and Code Runner
+        - End-to-end testing and bug fixes
+      </tasks>
+    </step>
+  </implementation_steps>
+
+  <success_criteria>
+    <functionality>
+      - Can create, clone, and manage multiple AI agents
+      - Streaming chat works reliably with message persistence
+      - File uploads and voice memos work in both widget and full page
+      - Page awareness correctly identifies current context
+      - Agents can read and modify CRM data with proper permissions
+      - Widget persists across page navigation
+    </functionality>
+    <user_experience>
+      - Feels like Claude Code but inside the CRM
+      - Chat widget doesn't interfere with normal CRM usage
+      - Fast, responsive streaming with no lag
+      - Seamless experience between widget and full page
+      - Works well on mobile
+    </user_experience>
+    <technical_quality>
+      - All conversations persisted in PostgreSQL
+      - Token usage tracked accurately
+      - Admin-only access enforced on all agent endpoints
+      - Error handling for API failures, network issues
+      - No broken or clunky UI (fix existing issues)
+    </technical_quality>
+    <design_polish>
+      - Consistent with existing LeadAwaker design system
+      - Smooth animations and transitions
+      - Clean, intuitive controls for model/thinking switching
+      - Compact, non-intrusive widget
+    </design_polish>
+  </success_criteria>
+</project_specification>

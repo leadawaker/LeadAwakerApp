@@ -725,6 +725,40 @@ export type Notifications = typeof notifications.$inferSelect;
 export type InsertNotifications = z.infer<typeof insertNotificationsSchema>;
 
 
+// ─── Notification Preferences ───────────────────────────────────────────────
+
+export const notificationPreferences = nocodb.table("Notification_Preferences", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  accountId: integer("account_id").notNull(),
+  telegramEnabled: boolean("telegram_enabled").notNull().default(true),
+  webPushEnabled: boolean("web_push_enabled").notNull().default(true),
+  telegramChatId: text("telegram_chat_id"),
+  typeOverrides: json("type_overrides").notNull().default({}),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertNotificationPreferencesSchema = createInsertSchema(notificationPreferences).omit({ id: true, createdAt: true, updatedAt: true });
+export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
+export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;
+
+// ─── Push Subscriptions ─────────────────────────────────────────────────────
+
+export const pushSubscriptions = nocodb.table("Push_Subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  accountId: integer("account_id").notNull(),
+  endpoint: text("endpoint").notNull(),
+  subscription: json("subscription").notNull(), // Full PushSubscription JSON
+  deviceLabel: text("device_label"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPushSubscriptionsSchema = createInsertSchema(pushSubscriptions).omit({ id: true, createdAt: true });
+export type PushSubscriptionRow = typeof pushSubscriptions.$inferSelect;
+export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionsSchema>;
+
 // ─── Support Chat ───────────────────────────────────────────────────────────
 
 export const supportSessions = nocodb.table("Support_Sessions", {

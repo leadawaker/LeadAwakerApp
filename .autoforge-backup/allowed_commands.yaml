@@ -1,0 +1,11 @@
+version: 1
+allowed:
+  - node
+  - const
+  - python3
+  - ss
+  - pm2
+  - lsof
+  - netstat
+  - curl
+  - status
