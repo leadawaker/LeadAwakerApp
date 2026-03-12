@@ -3844,9 +3844,36 @@ GUARDRAILS
         fullPrompt += `[System Instructions]\n${systemPrompt}\n\n`;
       }
 
-      // Add page context if provided
+      // Add page context if provided — format clearly so the agent can reference it naturally
       if (pageContext) {
-        fullPrompt += `[Current Page Context]\n${JSON.stringify(pageContext)}\n\n`;
+        let ctxLines = `[Current Page Context]\n`;
+        ctxLines += `The user is currently on the "${pageContext.pageName || "Unknown"}" page.\n`;
+        ctxLines += `Route: ${pageContext.path || "/"}\n`;
+        if (pageContext.pageType) {
+          ctxLines += `Page type: ${pageContext.pageType}\n`;
+        }
+        if (pageContext.params && Object.keys(pageContext.params).length > 0) {
+          ctxLines += `Route params: ${JSON.stringify(pageContext.params)}\n`;
+        }
+        // Include entity data if the page component published it
+        if (pageContext.entityData) {
+          const ed = pageContext.entityData;
+          ctxLines += `\nOn-screen entity: ${ed.entityType}`;
+          if (ed.entityId) ctxLines += ` (ID: ${ed.entityId})`;
+          if (ed.entityName) ctxLines += ` — "${ed.entityName}"`;
+          ctxLines += `\n`;
+          if (ed.summary && Object.keys(ed.summary).length > 0) {
+            ctxLines += `Entity details:\n`;
+            for (const [key, val] of Object.entries(ed.summary)) {
+              ctxLines += `  ${key}: ${typeof val === "object" ? JSON.stringify(val) : val}\n`;
+            }
+          }
+          if (ed.filters && Object.keys(ed.filters).length > 0) {
+            ctxLines += `Active filters: ${JSON.stringify(ed.filters)}\n`;
+          }
+        }
+        ctxLines += `\nUse this context to give relevant, page-aware answers. Reference the data the user is looking at when helpful.\n`;
+        fullPrompt += ctxLines + `\n`;
       }
 
       // For Campaign Crafter agents, inject existing campaign data as context
