@@ -57,12 +57,15 @@ import {
   aiAgents,
   aiSessions,
   aiMessages,
+  aiFiles,
   type AiAgent,
   type InsertAiAgent,
   type AiSession,
   type InsertAiSession,
   type AiMessage,
   type InsertAiMessage,
+  type AiFile,
+  type InsertAiFile,
   notificationPreferences,
   pushSubscriptions,
   type NotificationPreferences,
@@ -237,6 +240,11 @@ export interface IStorage {
   // AI Messages
   createAiMessage(data: InsertAiMessage): Promise<AiMessage>;
   getAiMessagesBySessionId(sessionId: string): Promise<AiMessage[]>;
+
+  // AI Files
+  createAiFile(data: InsertAiFile): Promise<AiFile>;
+  getAiFilesByConversationId(conversationId: string): Promise<AiFile[]>;
+  getAiFilesByMessageId(messageId: number): Promise<AiFile[]>;
 }
 
 export class DatabaseStorage implements IStorage {

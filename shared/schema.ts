@@ -858,7 +858,14 @@ export const aiAgents = nocodb.table("AI_Agents", {
   config: text("config"), // JSON string for extra config
   enabled: boolean("enabled").notNull().default(true),
   displayOrder: integer("display_order").notNull().default(0),
+  model: text("model").notNull().default("claude-sonnet-4-20250514"),
+  thinkingLevel: text("thinking_level").notNull().default("medium"),
+  permissions: json("permissions").default({}),
+  pageAwarenessEnabled: boolean("page_awareness_enabled").notNull().default(true),
+  systemPromptId: integer("system_prompt_id"),
+  createdBy: integer("created_by"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const insertAiAgentSchema = createInsertSchema(aiAgents).omit({ id: true, createdAt: true });
@@ -873,7 +880,13 @@ export const aiSessions = nocodb.table("AI_Sessions", {
   title: text("title"),
   cliSessionId: text("cli_session_id"), // unused for now, kept for future --resume support
   status: text("status").notNull().default("active"), // 'active' | 'closed'
+  model: text("model"),
+  thinkingLevel: text("thinking_level"),
+  totalInputTokens: integer("total_input_tokens").notNull().default(0),
+  totalOutputTokens: integer("total_output_tokens").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 }, (t) => [
   index("ai_sessions_user_id_idx").on(t.userId),
   index("ai_sessions_agent_id_idx").on(t.agentId),
@@ -890,6 +903,9 @@ export const aiMessages = nocodb.table("AI_Messages", {
   role: text("role").notNull(), // 'user' | 'assistant'
   content: text("content").notNull(),
   subAgentBlocks: text("sub_agent_blocks"), // JSON array of {name, content}
+  metadata: json("metadata"),
+  attachments: json("attachments"),
+  pageContext: json("page_context"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (t) => [
   index("ai_messages_session_id_idx").on(t.sessionId),
@@ -899,3 +915,24 @@ export const aiMessages = nocodb.table("AI_Messages", {
 export const insertAiMessageSchema = createInsertSchema(aiMessages).omit({ id: true, createdAt: true });
 export type AiMessage = typeof aiMessages.$inferSelect;
 export type InsertAiMessage = z.infer<typeof insertAiMessageSchema>;
+
+// ─── AI Files ───────────────────────────────────────────────────────────────
+
+export const aiFiles = nocodb.table("AI_Files", {
+  id: serial("id").primaryKey(),
+  conversationId: text("conversation_id").notNull(),
+  messageId: integer("message_id"),
+  filename: text("filename").notNull(),
+  mimeType: text("mime_type"),
+  filePath: text("file_path").notNull(),
+  fileSize: integer("file_size"),
+  transcription: text("transcription"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (t) => [
+  index("ai_files_conversation_id_idx").on(t.conversationId),
+  index("ai_files_message_id_idx").on(t.messageId),
+]);
+
+export const insertAiFileSchema = createInsertSchema(aiFiles).omit({ id: true, createdAt: true });
+export type AiFile = typeof aiFiles.$inferSelect;
+export type InsertAiFile = z.infer<typeof insertAiFileSchema>;
