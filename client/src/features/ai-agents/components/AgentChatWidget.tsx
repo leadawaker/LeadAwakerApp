@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Bot, X, ChevronLeft, Cpu, Zap, MessageSquare, Loader2, Plus, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAgentWidget } from "@/contexts/AgentWidgetContext";
 import { useAgentChat } from "../hooks/useAgentChat";
+import { usePageContext } from "../hooks/usePageContext";
 import { AgentChatView } from "./AgentChatView";
 import { AgentSettingsSheet } from "./AgentSettingsSheet";
 import { ModelSwitcher } from "./ModelSwitcher";
@@ -77,6 +78,8 @@ export function AgentChatWidget() {
   const { isOpen, activeAgentId, closeWidget, toggleWidget, selectAgent, clearAgent } = useAgentWidget();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
+  const pageContext = usePageContext();
+
   const {
     agent,
     setAgent,
@@ -91,6 +94,14 @@ export function AgentChatWidget() {
     updateSessionModel,
     updateSessionThinking,
   } = useAgentChat();
+
+  // Wrap sendMessage to automatically include page context
+  const sendMessageWithContext = useCallback(
+    (text: string, attachment?: string, fileId?: number) => {
+      return sendMessage(text, attachment, fileId, pageContext);
+    },
+    [sendMessage, pageContext],
+  );
 
   // Initialize when activeAgentId changes
   useEffect(() => {
@@ -241,8 +252,9 @@ export function AgentChatWidget() {
               streaming={streaming}
               streamingText={streamingText}
               loading={loading}
-              onSend={sendMessage}
+              onSend={sendMessageWithContext}
               onNewSession={newSession}
+              sessionId={session?.sessionId}
             />
           ) : (
             <AgentPicker onSelect={handleSelectAgent} />

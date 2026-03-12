@@ -93,6 +93,7 @@ export default function ConversationsPage() {
   // Agent chat hook — used when an agent is selected in the right panel
   const {
     agent: chatAgent,
+    session: agentSession,
     messages: agentMessages,
     streaming: agentStreaming,
     streamingText: agentStreamingText,
@@ -441,6 +442,7 @@ export default function ConversationsPage() {
                         loading={agentLoading}
                         onSend={agentSendMessage}
                         onNewSession={agentNewSession}
+                        sessionId={agentSession?.sessionId}
                       />
                     )}
                   </div>

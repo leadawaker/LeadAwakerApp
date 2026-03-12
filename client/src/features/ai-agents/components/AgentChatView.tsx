@@ -136,22 +136,27 @@ export function AgentChatView({
   loading,
   onSend,
   onNewSession,
+  sessionId,
 }: {
   agent: AiAgent;
   messages: AgentMessage[];
   streaming: boolean;
   streamingText: string;
   loading: boolean;
-  onSend: (text: string, attachment?: string) => void;
+  onSend: (text: string, attachment?: string, fileId?: number) => void;
   onNewSession: () => void;
+  sessionId?: string;
 }) {
   const [input, setInput] = useState("");
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
+  const [pendingFile, setPendingFile] = useState<{ id: number; name: string } | null>(null);
+  const [uploading, setUploading] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Suppress unused variable warning — onNewSession is available for parent use
   void onNewSession;
@@ -163,10 +168,64 @@ export function AgentChatView({
 
   const handleSend = () => {
     if (!input.trim() || streaming) return;
-    onSend(input.trim());
+    onSend(input.trim(), undefined, pendingFile?.id);
     setInput("");
+    setPendingFile(null);
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
+    }
+  };
+
+  // PDF file upload handler
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !sessionId) return;
+
+    // Only accept PDFs
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      alert("Only PDF files are supported.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Read file as base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          // Strip data URL prefix to get pure base64
+          const base64Data = result.split(",")[1];
+          resolve(base64Data);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const { apiFetch } = await import("@/lib/apiUtils");
+      const res = await apiFetch(`/api/agent-conversations/${sessionId}/files`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: file.name,
+          mimeType: file.type || "application/pdf",
+          data: base64,
+        }),
+      });
+
+      if (res.ok) {
+        const fileRecord = await res.json() as { id: number; filename: string };
+        setPendingFile({ id: fileRecord.id, name: fileRecord.filename });
+      } else {
+        alert("Failed to upload file.");
+      }
+    } catch (err) {
+      console.error("[AgentChat] File upload error:", err);
+      alert("Failed to upload file.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -292,7 +351,36 @@ export function AgentChatView({
 
       {/* Input area */}
       <div className="border-t border-border/50 bg-background p-3">
+        {/* Pending file indicator */}
+        {pendingFile && (
+          <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-brand-indigo/5 border border-brand-indigo/20 rounded-lg text-[12px]">
+            <Paperclip className="h-3.5 w-3.5 text-brand-indigo shrink-0" />
+            <span className="truncate text-foreground/80">{pendingFile.name}</span>
+            <button
+              onClick={() => setPendingFile(null)}
+              className="ml-auto text-muted-foreground hover:text-foreground shrink-0"
+              title="Remove attachment"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        {uploading && (
+          <div className="flex items-center gap-2 mb-2 px-3 py-1.5 text-[12px] text-muted-foreground">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            <span>Uploading PDF…</span>
+          </div>
+        )}
         <div className="flex items-end gap-2 bg-muted/40 rounded-2xl px-3 py-2 border border-border/40">
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,application/pdf"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+
           <textarea
             ref={textareaRef}
             value={input}
@@ -308,16 +396,16 @@ export function AgentChatView({
             className="flex-1 resize-none bg-transparent text-[13px] placeholder:text-muted-foreground/50 focus:outline-none min-h-[28px] max-h-[120px] py-0.5"
           />
 
-          {/* Attach button (Campaign Crafter only) */}
-          {agent.type === "campaign_crafter" && (
-            <button
-              type="button"
-              className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground shrink-0 transition-colors"
-              title="Attach file (coming soon)"
-            >
-              <Paperclip className="h-4 w-4" />
-            </button>
-          )}
+          {/* Attach PDF button */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={streaming || loading || uploading}
+            className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground disabled:opacity-40 shrink-0 transition-colors"
+            title="Attach PDF"
+          >
+            <Paperclip className="h-4 w-4" />
+          </button>
 
           {/* Send / Mic / Stop */}
           {input.trim() ? (

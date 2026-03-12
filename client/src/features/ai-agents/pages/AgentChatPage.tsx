@@ -112,6 +112,7 @@ export function AgentChatPage() {
             loading={loading}
             onSend={sendMessage}
             onNewSession={newSession}
+            sessionId={session?.sessionId}
           />
           <AgentSettingsSheet
             agent={agent}

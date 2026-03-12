@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { apiFetch } from "@/lib/apiUtils";
+import type { PageContext } from "./usePageContext";
 
 export interface AgentMessage {
   id?: number;
@@ -118,7 +119,7 @@ export function useAgentChat() {
     }
   }, []);
 
-  const sendMessage = useCallback(async (text: string, attachment?: string) => {
+  const sendMessage = useCallback(async (text: string, attachment?: string, fileId?: number, pageContext?: PageContext) => {
     if (!session || streaming) return;
     const trimmed = text.trim();
     if (!trimmed) return;
@@ -148,6 +149,8 @@ export function useAgentChat() {
         body: JSON.stringify({
           content: trimmed,
           ...(attachment ? { attachment } : {}),
+          ...(fileId ? { fileId } : {}),
+          ...(pageContext ? { pageContext } : {}),
         }),
         signal: controller.signal,
       });

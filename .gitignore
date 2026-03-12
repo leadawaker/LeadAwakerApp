@@ -53,3 +53,4 @@ Generated_Image_*.png
 Generated_Image_*.jpg
 .autoforge/
 core.*
+uploads/

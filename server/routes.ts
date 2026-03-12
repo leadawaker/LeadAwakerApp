@@ -3603,6 +3603,55 @@ GUARDRAILS
     }
   });
 
+  // ─── AI File Upload ──────────────────────────────────────────────────
+  // POST /api/agent-conversations/:id/files
+  // Accepts JSON: { filename, mimeType, data (base64) }
+  // Stores file on disk, records in AI_Files table
+  app.post("/api/agent-conversations/:id/files", requireAgency, async (req, res) => {
+    const sessionId = req.params.id;
+    const { filename, mimeType, data } = req.body as { filename?: string; mimeType?: string; data?: string };
+
+    if (!filename || !data) {
+      return res.status(400).json({ message: "filename and data (base64) are required" });
+    }
+
+    // Only accept PDF files
+    const ext = path.extname(filename).toLowerCase();
+    if (ext !== ".pdf" && mimeType !== "application/pdf") {
+      return res.status(400).json({ message: "Only PDF files are supported" });
+    }
+
+    try {
+      // Verify session exists
+      const session = await storage.getAiSessionBySessionId(sessionId);
+      if (!session) return res.status(404).json({ message: "Conversation not found" });
+
+      // Decode base64 data
+      const buffer = Buffer.from(data, "base64");
+
+      // Store file on disk
+      const uploadsDir = path.join("/home/gabriel/LeadAwakerApp", "uploads", "agent-files", sessionId);
+      fs.mkdirSync(uploadsDir, { recursive: true });
+      const safeFilename = `${Date.now()}-${filename.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+      const filePath = path.join(uploadsDir, safeFilename);
+      fs.writeFileSync(filePath, buffer);
+
+      // Record in AI_Files table
+      const fileRecord = await storage.createAiFile({
+        conversationId: sessionId,
+        filename,
+        mimeType: mimeType || "application/pdf",
+        filePath,
+        fileSize: buffer.length,
+      });
+
+      res.status(201).json(fileRecord);
+    } catch (err: any) {
+      console.error("[AI Files] upload error:", err);
+      res.status(500).json({ message: "Failed to upload file" });
+    }
+  });
+
   // ─── CRM Tool Execution Endpoint ─────────────────────────────────────
   // POST /api/agents/:agentId/execute-crm-tool
   // Executes a CRM tool call for an agent, respecting the agent's permissions.
@@ -3656,11 +3705,11 @@ GUARDRAILS
 
   // ─── Send message to agent (store + initiate Claude API call) ─────────
   // POST /api/agent-conversations/:id/messages
-  // Accepts { content, pageContext? }
+  // Accepts { content, pageContext?, fileId? }
   // Stores user message, builds prompt with history + system prompt, streams Claude response via SSE
   app.post("/api/agent-conversations/:id/messages", requireAgency, async (req, res) => {
     const sessionId = req.params.id;
-    const { content, pageContext } = req.body;
+    const { content, pageContext, fileId } = req.body;
 
     if (!content?.trim()) {
       return res.status(400).json({ message: "content is required" });
@@ -3683,7 +3732,9 @@ GUARDRAILS
         metadata: {
           model: session.model || agent.model || "claude-sonnet-4-20250514",
           thinkingLevel: session.thinkingLevel || agent.thinkingLevel || "medium",
+          ...(fileId ? { fileId: Number(fileId) } : {}),
         },
+        attachments: fileId ? [{ fileId: Number(fileId) }] : null,
       });
 
       // 3. Fetch conversation history (all previous messages for context)
@@ -3716,6 +3767,50 @@ GUARDRAILS
       // Add page context if provided
       if (pageContext) {
         fullPrompt += `[Current Page Context]\n${JSON.stringify(pageContext)}\n\n`;
+      }
+
+      // For Campaign Crafter agents, inject existing campaign data as context
+      if (agent.type === "campaign_crafter") {
+        try {
+          const allCampaigns = await storage.getCampaigns();
+          if (allCampaigns.length > 0) {
+            const campaignSummaries = allCampaigns.map((c: any) => ({
+              id: c.id,
+              name: c.name,
+              status: c.status,
+              channel: c.channel || "sms",
+              targetAudience: c.targetAudience || null,
+              campaignService: c.campaignService || null,
+              campaignUsp: c.campaignUsp || null,
+              firstMessage: c.firstMessage || null,
+              agentName: c.agentName || null,
+              useAiBumps: c.useAiBumps || false,
+              maxBumps: c.maxBumps || null,
+              totalLeadsTargeted: c.totalLeadsTargeted || 0,
+              totalMessagesSent: c.totalMessagesSent || 0,
+              responseRatePercent: c.responseRatePercent || null,
+              bookingsGenerated: c.bookingsGenerated || 0,
+              bookingRatePercent: c.bookingRatePercent || null,
+            }));
+            fullPrompt += `[Existing CRM Campaigns]\nHere are the current campaigns in the CRM. Use this data to inform your suggestions and avoid duplicating existing campaigns:\n${JSON.stringify(campaignSummaries, null, 2)}\n\n`;
+          } else {
+            fullPrompt += `[Existing CRM Campaigns]\nNo campaigns exist yet in the CRM. You can suggest creating new campaigns from scratch.\n\n`;
+          }
+        } catch (err) {
+          console.error("[Campaign Crafter] Failed to fetch campaign context:", err);
+        }
+      }
+
+      // If a file was attached, include its content in the prompt
+      if (fileId) {
+        const [fileRecord] = await db.select().from(aiFiles).where(eq(aiFiles.id, Number(fileId)));
+        if (fileRecord && fileRecord.filePath && fs.existsSync(fileRecord.filePath)) {
+          // Read PDF as base64 for context (Claude CLI can process text from it)
+          const pdfBuffer = fs.readFileSync(fileRecord.filePath);
+          fullPrompt += `\n\n[Attached PDF Document: ${fileRecord.filename}]\nThe user has attached a PDF file (${fileRecord.filename}, ${Math.round(pdfBuffer.length / 1024)}KB). The file is stored at: ${fileRecord.filePath}\nPlease analyze this document as requested.\n\n`;
+          // Update file record to link to the user message
+          await db.update(aiFiles).set({ messageId: userMessage.id }).where(eq(aiFiles.id, fileRecord.id));
+        }
       }
 
       fullPrompt += content.trim();
