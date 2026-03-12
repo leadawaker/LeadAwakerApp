@@ -10,7 +10,9 @@
     "add": "Add",
     "sort": "Sort",
     "filter": "Filter",
-    "clearFilters": "Clear filters"
+    "clearFilters": "Clear filters",
+    "showTags": "Show Tags",
+    "hideTags": "Hide Tags"
   },
   "create": {
     "title": "New Task",

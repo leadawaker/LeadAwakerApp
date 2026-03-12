@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { cn } from "@/lib/utils";
-import { ArrowUpDown, CalendarDays, ClipboardList, Plus, Tag } from "lucide-react";
+import { ArrowUpDown, CalendarDays, ClipboardList, Eye, EyeOff, Plus, Tag } from "lucide-react";
 
 import { SearchPill } from "@/components/ui/search-pill";
 import {
@@ -34,6 +34,7 @@ import {
   type Task,
   type ViewMode,
 } from "../types";
+import { TagVisibilityContext } from "../context/TagVisibilityContext";
 
 // ── Expand-on-hover button classes (§28) ─────────────────────────────
 const xBase =
@@ -118,6 +119,7 @@ export default function TasksPage() {
   const [viewMode, setViewMode] = useState<ViewMode>(() => loadLocal("tasks-view-mode", "kanban"));
   const [catSidebarCollapsed, setCatSidebarCollapsed] = useState<boolean>(() => loadLocal("tasks-cat-sidebar-collapsed", false));
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [showTags, setShowTags] = useState<boolean>(() => loadLocal("tasks-show-tags", true));
 
   // Transient state
   const [searchOpen, setSearchOpen] = useState(false);
@@ -151,6 +153,14 @@ export default function TasksPage() {
   const handleCatSidebarCollapse = useCallback((v: boolean) => {
     setCatSidebarCollapsed(v);
     saveLocal("tasks-cat-sidebar-collapsed", v);
+  }, []);
+
+  const handleToggleTags = useCallback(() => {
+    setShowTags((prev) => {
+      const next = !prev;
+      saveLocal("tasks-show-tags", next);
+      return next;
+    });
   }, []);
 
   const toggleFilterTag = useCallback((tag: string) => {
@@ -290,6 +300,17 @@ export default function TasksPage() {
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Tag visibility toggle */}
+      <button
+        onClick={handleToggleTags}
+        className={cn(xBase, "hover:max-w-[110px]", showTags ? xDefault : xActive)}
+        title={showTags ? t("toolbar.hideTags") : t("toolbar.showTags")}
+        data-testid="tag-visibility-toggle"
+      >
+        {showTags ? <Eye className="h-4 w-4 shrink-0" /> : <EyeOff className="h-4 w-4 shrink-0" />}
+        <span className={xSpan}>{showTags ? t("toolbar.hideTags") : t("toolbar.showTags")}</span>
+      </button>
+
       {/* Date range filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -325,6 +346,7 @@ export default function TasksPage() {
 
   // ── Render ─────────────────────────────────────────────────────────
   return (
+    <TagVisibilityContext.Provider value={showTags}>
     <CrmShell>
       <div className="h-full min-h-0 flex overflow-hidden" data-testid="page-tasks">
 
@@ -514,5 +536,6 @@ export default function TasksPage() {
         />
       )}
     </CrmShell>
+    </TagVisibilityContext.Provider>
   );
 }

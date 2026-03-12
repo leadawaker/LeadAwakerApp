@@ -10,7 +10,9 @@
     "add": "Toevoegen",
     "sort": "Sorteren",
     "filter": "Filteren",
-    "clearFilters": "Filters wissen"
+    "clearFilters": "Filters wissen",
+    "showTags": "Tags tonen",
+    "hideTags": "Tags verbergen"
   },
   "create": {
     "title": "Nieuwe Taak",

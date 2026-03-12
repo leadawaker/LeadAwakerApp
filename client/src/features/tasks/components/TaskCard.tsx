@@ -10,6 +10,7 @@ import {
 import type { Task } from "@shared/schema";
 import { useTheme } from "@/hooks/useTheme";
 import { useUpdateTask, useDeleteTask, useCreateTask, useSubtaskCounts, useTaskCategories } from "../api/tasksApi";
+import { useTagVisibility } from "../context/TagVisibilityContext";
 import {
   PRIORITY_OPTIONS,
   PRIORITY_BADGE,
@@ -87,6 +88,7 @@ interface TaskCardProps {
 export default function TaskCard({ task }: TaskCardProps) {
   const { t } = useTranslation("tasks");
   const { isDark } = useTheme();
+  const showTags = useTagVisibility();
   const priority = (task.priority ?? "medium") as TaskPriority;
   const status = (task.status ?? "todo") as TaskStatus;
   const tags = parseTags((task as any).tags);
@@ -390,8 +392,8 @@ export default function TaskCard({ task }: TaskCardProps) {
 
       {/* Bottom row: tags · date */}
       <div className="flex items-center gap-1 min-w-0 flex-wrap">
-        {/* Tags */}
-        {tags.map((tag) => {
+        {/* Tags (conditionally visible via TagVisibilityContext) */}
+        {showTags && tags.map((tag) => {
           const c = colorMap[tag] ?? fallbackTag;
           return (
             <span
@@ -406,6 +408,7 @@ export default function TaskCard({ task }: TaskCardProps) {
         })}
 
         {/* Add tag */}
+        {showTags && (
         <Popover open={tagPickerOpen} onOpenChange={setTagPickerOpen}>
           <PopoverTrigger asChild>
             <button
@@ -448,6 +451,7 @@ export default function TaskCard({ task }: TaskCardProps) {
             </div>
           </PopoverContent>
         </Popover>
+        )}
 
         {/* Subtask progress indicator */}
         {subtaskCount && subtaskCount.total > 0 && (

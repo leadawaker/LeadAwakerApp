@@ -10,7 +10,9 @@
     "add": "Adicionar",
     "sort": "Ordenar",
     "filter": "Filtrar",
-    "clearFilters": "Limpar filtros"
+    "clearFilters": "Limpar filtros",
+    "showTags": "Mostrar Tags",
+    "hideTags": "Ocultar Tags"
   },
   "create": {
     "title": "Nova Tarefa",
