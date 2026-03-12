@@ -2,6 +2,8 @@ import { Suspense, type ReactElement } from "react";
 import { Switch, Route, Redirect, useLocation } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext";
+import { AgentWidgetProvider } from "@/contexts/AgentWidgetContext";
+import { AgentChatWidget } from "@/features/ai-agents/components/AgentChatWidget";
 import { Loader2 } from "lucide-react";
 
 import { LeadsPage as AppLeads } from "@/features/leads/pages/LeadsPage";
@@ -63,6 +65,7 @@ function PageLoader() {
 export default function AppArea() {
   return (
     <Protected>
+      <AgentWidgetProvider>
       <BreadcrumbProvider>
       <Suspense fallback={<PageLoader />}>
         <Switch>
@@ -163,6 +166,9 @@ export default function AppArea() {
         </Switch>
       </Suspense>
       </BreadcrumbProvider>
+      {/* Persistent chat widget — rendered outside routes so it survives navigation */}
+      <AgentChatWidget />
+      </AgentWidgetProvider>
     </Protected>
   );
 }
