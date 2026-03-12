@@ -76,8 +76,10 @@ export function useCreateSubtask() {
   return useMutation({
     mutationFn: ({ taskId, data }: { taskId: number; data: Partial<InsertTaskSubtask> }) =>
       apiRequest("POST", `/api/tasks/${taskId}/subtasks`, data),
-    onSuccess: (_res, { taskId }) =>
-      qc.invalidateQueries({ queryKey: subtasksKey(taskId) }),
+    onSuccess: (_res, { taskId }) => {
+      qc.invalidateQueries({ queryKey: subtasksKey(taskId) });
+      qc.invalidateQueries({ queryKey: ["/api/subtask-counts"] });
+    },
   });
 }
 
@@ -86,8 +88,10 @@ export function useUpdateSubtask() {
   return useMutation({
     mutationFn: ({ id, taskId, data }: { id: number; taskId: number; data: Partial<InsertTaskSubtask> }) =>
       apiRequest("PATCH", `/api/subtasks/${id}`, data),
-    onSuccess: (_res, { taskId }) =>
-      qc.invalidateQueries({ queryKey: subtasksKey(taskId) }),
+    onSuccess: (_res, { taskId }) => {
+      qc.invalidateQueries({ queryKey: subtasksKey(taskId) });
+      qc.invalidateQueries({ queryKey: ["/api/subtask-counts"] });
+    },
   });
 }
 
@@ -96,8 +100,10 @@ export function useDeleteSubtask() {
   return useMutation({
     mutationFn: ({ id, taskId }: { id: number; taskId: number }) =>
       apiRequest("DELETE", `/api/subtasks/${id}`),
-    onSuccess: (_res, { taskId }) =>
-      qc.invalidateQueries({ queryKey: subtasksKey(taskId) }),
+    onSuccess: (_res, { taskId }) => {
+      qc.invalidateQueries({ queryKey: subtasksKey(taskId) });
+      qc.invalidateQueries({ queryKey: ["/api/subtask-counts"] });
+    },
   });
 }
 
@@ -108,6 +114,27 @@ export function useReorderSubtasks() {
       apiRequest("PATCH", `/api/tasks/${taskId}/subtasks/reorder`, { subtaskIds }),
     onSuccess: (_res, { taskId }) =>
       qc.invalidateQueries({ queryKey: subtasksKey(taskId) }),
+  });
+}
+
+// ─── Subtask Counts (for progress indicators on task cards) ──────────────
+
+export interface SubtaskCount {
+  taskId: number;
+  total: number;
+  completed: number;
+}
+
+const SUBTASK_COUNTS_KEY = ["/api/subtask-counts"];
+
+export function useSubtaskCounts() {
+  return useQuery<SubtaskCount[]>({
+    queryKey: SUBTASK_COUNTS_KEY,
+    queryFn: async () => {
+      const res = await apiFetch("/api/subtask-counts");
+      if (!res.ok) throw new Error("Failed to fetch subtask counts");
+      return res.json();
+    },
   });
 }
 

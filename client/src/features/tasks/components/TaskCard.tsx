@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { Calendar, Trash2, Copy, Plus, Minus } from "lucide-react";
+import { Calendar, Trash2, Copy, Plus, Minus, ListChecks } from "lucide-react";
 import {
   Popover,
   PopoverTrigger,
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/popover";
 import type { Task } from "@shared/schema";
 import { useTheme } from "@/hooks/useTheme";
-import { useUpdateTask, useDeleteTask, useCreateTask } from "../api/tasksApi";
+import { useUpdateTask, useDeleteTask, useCreateTask, useSubtaskCounts } from "../api/tasksApi";
 import {
   PRIORITY_OPTIONS,
   PRIORITY_BADGE,
@@ -107,6 +107,8 @@ export default function TaskCard({ task }: TaskCardProps) {
   const updateMutation = useUpdateTask();
   const deleteMutation = useDeleteTask();
   const createMutation = useCreateTask();
+  const { data: subtaskCounts } = useSubtaskCounts();
+  const subtaskCount = useMemo(() => subtaskCounts?.find((c) => c.taskId === task.id), [subtaskCounts, task.id]);
   const titleRef = useRef<HTMLInputElement>(null);
   const descRef = useRef<HTMLTextAreaElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
@@ -436,6 +438,22 @@ export default function TaskCard({ task }: TaskCardProps) {
             </div>
           </PopoverContent>
         </Popover>
+
+        {/* Subtask progress indicator */}
+        {subtaskCount && subtaskCount.total > 0 && (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-1.5 py-[1px] text-[10px] font-medium shrink-0",
+              subtaskCount.completed === subtaskCount.total
+                ? "bg-emerald-100/80 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
+                : "bg-foreground/[0.05] text-muted-foreground"
+            )}
+            data-testid="subtask-progress"
+          >
+            <ListChecks className="h-3 w-3" />
+            {subtaskCount.completed}/{subtaskCount.total}
+          </span>
+        )}
 
         {/* Date — pushed to end */}
         <div className="flex-1" />

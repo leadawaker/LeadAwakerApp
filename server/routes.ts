@@ -2166,6 +2166,11 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
     res.json({ success: true });
   }));
 
+  app.get("/api/subtask-counts", requireAgency, wrapAsync(async (_req, res) => {
+    const counts = await storage.getSubtaskCounts();
+    res.json(counts);
+  }));
+
   // ─── Task Categories ────────────────────────────────────────────────
 
   app.get("/api/task-categories", requireAgency, wrapAsync(async (_req, res) => {

@@ -1,4 +1,4 @@
-import { eq, desc, asc, count, SQL, inArray, and, gte, lt, isNotNull, isNull, getTableColumns } from "drizzle-orm";
+import { eq, desc, asc, count, sum, SQL, inArray, and, gte, lt, isNotNull, isNull, getTableColumns, sql } from "drizzle-orm";
 import { PgTableWithColumns } from "drizzle-orm/pg-core";
 import { db } from "./db";
 import {
@@ -247,6 +247,7 @@ export interface IStorage {
   updateSubtask(id: number, data: Partial<InsertTaskSubtask>): Promise<TaskSubtask | undefined>;
   deleteSubtask(id: number): Promise<boolean>;
   reorderSubtasks(taskId: number, subtaskIds: number[]): Promise<TaskSubtask[]>;
+  getSubtaskCounts(): Promise<{ taskId: number; total: number; completed: number }[]>;
 
   // Support Chat
   createSupportSession(data: InsertSupportSession): Promise<SupportSession>;
@@ -1064,6 +1065,18 @@ export class DatabaseStorage implements IStorage {
     }
     // Return updated subtasks in new order
     return db.select().from(taskSubtasks).where(eq(taskSubtasks.taskId, taskId)).orderBy(asc(taskSubtasks.sortOrder));
+  }
+
+  async getSubtaskCounts(): Promise<{ taskId: number; total: number; completed: number }[]> {
+    const rows = await db
+      .select({
+        taskId: taskSubtasks.taskId,
+        total: count(taskSubtasks.id),
+        completed: sql<number>`count(*) filter (where ${taskSubtasks.isCompleted} = true)`,
+      })
+      .from(taskSubtasks)
+      .groupBy(taskSubtasks.taskId);
+    return rows.map(r => ({ taskId: r.taskId, total: Number(r.total), completed: Number(r.completed) }));
   }
 
   async cleanupOldSupportData(olderThanDays: number): Promise<{ sessions: number; messages: number }> {
