@@ -3595,13 +3595,36 @@ GUARDRAILS
     }
   });
 
-  // Delete agent (soft-delete by disabling)
+  // Delete agent and cascade delete all related data (conversations, messages, files)
   app.delete("/api/agents/:id", requireAgency, async (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
       if (isNaN(id)) return res.status(400).json({ message: "Invalid agent ID" });
-      const agent = await storage.updateAiAgent(id, { enabled: false });
+
+      // Verify agent exists
+      const agent = await storage.getAiAgentById(id);
       if (!agent) return res.status(404).json({ message: "Agent not found" });
+
+      // Get all sessions for this agent
+      const sessions = await db.select().from(aiSessions).where(eq(aiSessions.agentId, id));
+      const sessionIds = sessions.map((s) => s.sessionId);
+
+      // Cascade delete: files → messages → sessions → agent
+      if (sessionIds.length > 0) {
+        for (const sid of sessionIds) {
+          // Delete files linked to this session's conversations
+          await db.delete(aiFiles).where(eq(aiFiles.conversationId, sid));
+          // Delete messages for this session
+          await db.delete(aiMessages).where(eq(aiMessages.sessionId, sid));
+        }
+        // Delete all sessions for this agent
+        await db.delete(aiSessions).where(eq(aiSessions.agentId, id));
+      }
+
+      // Delete the agent itself
+      await db.delete(aiAgents).where(eq(aiAgents.id, id));
+
+      console.log(`[AI Agents] Deleted agent ${id} (${agent.name}) with ${sessionIds.length} sessions`);
       res.json({ success: true });
     } catch (err: any) {
       console.error("[AI Agents] delete error:", err);
@@ -3697,6 +3720,62 @@ GUARDRAILS
     } catch (err: any) {
       console.error("[AI Conversations] list error:", err);
       res.status(500).json({ message: "Failed to list conversations" });
+    }
+  });
+
+  // Get a single conversation with all messages and file attachments
+  app.get("/api/agent-conversations/:id", requireAgency, async (req, res) => {
+    try {
+      const sessionId = req.params.id;
+
+      // Get session (conversation) metadata
+      const session = await storage.getAiSessionBySessionId(sessionId);
+      if (!session) return res.status(404).json({ message: "Conversation not found" });
+
+      // Get all messages ordered by created_at ASC
+      const messages = await storage.getAiMessagesBySessionId(sessionId);
+
+      // Get all files for this conversation
+      const files = await storage.getAiFilesByConversationId(sessionId);
+
+      // Build a map of messageId → files for efficient lookup
+      const filesByMessage = new Map<number, typeof files>();
+      for (const f of files) {
+        if (f.messageId) {
+          const existing = filesByMessage.get(f.messageId) || [];
+          existing.push(f);
+          filesByMessage.set(f.messageId, existing);
+        }
+      }
+
+      // Enrich messages with their file attachments
+      const messagesWithFiles = messages.map((m) => ({
+        ...m,
+        subAgentBlocks: typeof m.subAgentBlocks === "string"
+          ? JSON.parse(m.subAgentBlocks)
+          : (m.subAgentBlocks ?? []),
+        files: m.id ? (filesByMessage.get(m.id) || []) : [],
+      }));
+
+      res.json({
+        id: session.id,
+        sessionId: session.sessionId,
+        agentId: session.agentId,
+        userId: session.userId,
+        title: session.title,
+        model: session.model,
+        thinkingLevel: session.thinkingLevel,
+        isActive: session.isActive,
+        status: session.status,
+        totalInputTokens: session.totalInputTokens,
+        totalOutputTokens: session.totalOutputTokens,
+        createdAt: session.createdAt,
+        updatedAt: session.updatedAt,
+        messages: messagesWithFiles,
+      });
+    } catch (err: any) {
+      console.error("[AI Conversations] get error:", err);
+      res.status(500).json({ message: "Failed to get conversation" });
     }
   });
 

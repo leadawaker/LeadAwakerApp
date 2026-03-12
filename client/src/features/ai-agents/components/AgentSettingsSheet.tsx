@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Settings, Shield, Eye, Pencil, PlusCircle, Trash2, Loader2 } from "lucide-react";
+import { Settings, Shield, Eye, Pencil, PlusCircle, Trash2, Loader2, AlertTriangle } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -7,6 +7,16 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { apiFetch } from "@/lib/apiUtils";
 import type { AiAgent, AgentPermissions } from "../hooks/useAgentChat";
@@ -54,6 +64,7 @@ interface AgentSettingsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAgentUpdated?: (agent: AiAgent) => void;
+  onAgentDeleted?: (agentId: number) => void;
 }
 
 export function AgentSettingsSheet({
@@ -61,12 +72,15 @@ export function AgentSettingsSheet({
   open,
   onOpenChange,
   onAgentUpdated,
+  onAgentDeleted,
 }: AgentSettingsSheetProps) {
   const [permissions, setPermissions] = useState<AgentPermissions>(
     agent.permissions || DEFAULT_PERMISSIONS
   );
   const [saving, setSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Reset permissions when agent changes
   useEffect(() => {
@@ -105,6 +119,22 @@ export function AgentSettingsSheet({
     },
     [agent.id, permissions, onAgentUpdated]
   );
+
+  const handleDeleteAgent = useCallback(async () => {
+    setDeleting(true);
+    try {
+      const res = await apiFetch(`/api/agents/${agent.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete agent");
+      setDeleteDialogOpen(false);
+      onOpenChange(false);
+      onAgentDeleted?.(agent.id);
+    } catch (err) {
+      console.error("[AgentSettings] Delete error:", err);
+      setDeleting(false);
+    }
+  }, [agent.id, onOpenChange, onAgentDeleted]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -165,7 +195,59 @@ export function AgentSettingsSheet({
             The agent will respect these limits when executing tools.
           </p>
         </div>
+
+        {/* Danger Zone — Delete Agent */}
+        <div className="mt-6 pt-4 border-t border-border/50" data-testid="agent-delete-section">
+          <h3 className="text-sm font-semibold text-red-500 mb-2 flex items-center gap-1.5">
+            <AlertTriangle className="h-4 w-4" />
+            Danger Zone
+          </h3>
+          <p className="text-xs text-muted-foreground mb-3">
+            Permanently delete this agent and all its conversations, messages, and files. This action cannot be undone.
+          </p>
+          <button
+            onClick={() => setDeleteDialogOpen(true)}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-red-600 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-colors"
+            data-testid="delete-agent-button"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete Agent
+          </button>
+        </div>
       </SheetContent>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent data-testid="delete-agent-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              Delete "{agent.name}"?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this agent and all of its conversations, messages, and uploaded files. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAgent}
+              disabled={deleting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              data-testid="confirm-delete-agent"
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                  Deleting…
+                </>
+              ) : (
+                "Delete Agent"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sheet>
   );
 }

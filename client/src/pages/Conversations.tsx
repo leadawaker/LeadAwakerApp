@@ -583,6 +583,10 @@ export default function ConversationsPage() {
                           open={agentSettingsOpen}
                           onOpenChange={setAgentSettingsOpen}
                           onAgentUpdated={(updated) => setChatAgent(updated)}
+                          onAgentDeleted={() => {
+                            setChatAgent(null as any);
+                            setSelectedAgentId(null);
+                          }}
                         />
                       </>
                     )}

@@ -123,6 +123,7 @@ export function AgentChatPage() {
             open={settingsOpen}
             onOpenChange={setSettingsOpen}
             onAgentUpdated={(updated) => setAgent(updated)}
+            onAgentDeleted={() => setLocation("/agency/ai-agents")}
           />
         </>
       )}

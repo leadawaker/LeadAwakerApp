@@ -577,6 +577,17 @@ export function AgentChatWidget() {
           onAgentUpdated={(updated) => {
             handleAgentLoaded(updated.id, updated);
           }}
+          onAgentDeleted={(deletedId) => {
+            // Remove from open conversations
+            setOpenAgentIds((prev) => {
+              const next = new Set(prev);
+              next.delete(deletedId);
+              return next;
+            });
+            conversationsRef.current.delete(deletedId);
+            setConversationsMeta(new Map(conversationsRef.current));
+            clearAgent();
+          }}
         />
       )}
     </>
