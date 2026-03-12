@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { X, Trash2, Check, Plus, ChevronUp, ChevronDown } from "lucide-react";
+import { X, Trash2, Check, Plus, ChevronUp, ChevronDown, Smile } from "lucide-react";
 import { IconBtn } from "@/components/ui/icon-btn";
 import {
   Popover,
@@ -34,6 +34,13 @@ const TYPE_I18N_KEY: Record<string, string> = {
   admin: "taskType.admin",
   custom: "taskType.custom",
 };
+
+const EMOJI_OPTIONS = [
+  "📋", "📁", "📌", "⭐", "🎯", "🔥", "💡", "🚀",
+  "📊", "🎨", "🔧", "📝", "💬", "📅", "🏷️", "✅",
+  "🐛", "🔒", "📦", "🏠", "💰", "📞", "🎉", "⚡",
+  "🌐", "🛠️", "📱", "🖥️", "👤", "🤝", "📈", "🔔",
+];
 
 // ── Props ──────────────────────────────────────────────────────────────────────
 
@@ -75,6 +82,8 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
   const [dueDate, setDueDate] = useState("");
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [parentTaskId, setParentTaskId] = useState<number | null>(null);
+  const [emoji, setEmoji] = useState("");
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
 
   // Initialize form from task data
   useEffect(() => {
@@ -87,6 +96,7 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
     setDueDate(task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 16) : "");
     setCategoryId(task.categoryId ?? null);
     setParentTaskId(task.parentTaskId ?? null);
+    setEmoji(task.emoji ?? "");
   }, [task]);
 
   // ── Dirty tracking ──────────────────────────────────────────────────────────
@@ -101,9 +111,10 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
       taskType !== (task.taskType ?? "admin") ||
       dueDate !== origDue ||
       categoryId !== (task.categoryId ?? null) ||
-      parentTaskId !== (task.parentTaskId ?? null)
+      parentTaskId !== (task.parentTaskId ?? null) ||
+      emoji !== (task.emoji ?? "")
     );
-  }, [task, title, description, status, priority, taskType, dueDate, categoryId, parentTaskId]);
+  }, [task, title, description, status, priority, taskType, dueDate, categoryId, parentTaskId, emoji]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
@@ -146,6 +157,7 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
         dueDate: dueDate ? new Date(dueDate) : null,
         categoryId,
         parentTaskId,
+        emoji: emoji || null,
       },
     });
   };
@@ -243,6 +255,55 @@ export default function TaskDetailPanel({ taskId, onClose }: TaskDetailPanelProp
               onChange={(e) => setDescription(e.target.value)}
               placeholder={t("fields.descriptionPlaceholder")}
             />
+          </div>
+
+          {/* Emoji picker */}
+          <div className="space-y-1.5">
+            <label className={labelCls}>{t("fields.emoji")}</label>
+            <div className="flex items-center gap-2">
+              <Popover open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "h-9 px-3 rounded-lg border border-border/30 text-[13px] flex items-center gap-2 transition-colors hover:border-brand-indigo/50",
+                      emoji ? "bg-white/60 dark:bg-white/[0.10]" : "bg-white/60 dark:bg-white/[0.10] text-muted-foreground"
+                    )}
+                    data-testid="task-edit-emoji-trigger"
+                  >
+                    {emoji ? <span className="text-lg">{emoji}</span> : <Smile className="h-4 w-4" />}
+                    <span>{emoji ? t("fields.changeEmoji") : t("fields.pickEmoji")}</span>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[280px] p-2" side="bottom" align="start">
+                  <div className="grid grid-cols-8 gap-1" data-testid="task-emoji-grid">
+                    {EMOJI_OPTIONS.map((e) => (
+                      <button
+                        key={e}
+                        type="button"
+                        onClick={() => { setEmoji(e); setEmojiPickerOpen(false); }}
+                        className={cn(
+                          "h-8 w-8 rounded-md flex items-center justify-center text-lg hover:bg-foreground/[0.06] transition-colors",
+                          emoji === e && "bg-brand-indigo/10 ring-1 ring-brand-indigo/30"
+                        )}
+                      >
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              {emoji && (
+                <button
+                  type="button"
+                  onClick={() => setEmoji("")}
+                  className="h-9 px-2 rounded-lg text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+                  data-testid="task-edit-emoji-clear"
+                >
+                  {t("fields.clearEmoji")}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Status + Priority — side by side */}

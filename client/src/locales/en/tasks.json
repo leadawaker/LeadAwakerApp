@@ -46,7 +46,11 @@
     "parentTask": "Parent Task",
     "noParent": "No Parent",
     "tags": "Tags",
-    "subtasks": "Sub-tasks"
+    "subtasks": "Sub-tasks",
+    "emoji": "Emoji",
+    "pickEmoji": "Pick emoji",
+    "changeEmoji": "Change",
+    "clearEmoji": "Clear"
   },
   "linked": {
     "account": "Account:",

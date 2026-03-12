@@ -46,7 +46,11 @@
     "parentTask": "Tarefa Pai",
     "noParent": "Sem Pai",
     "tags": "Tags",
-    "subtasks": "Subtarefas"
+    "subtasks": "Subtarefas",
+    "emoji": "Emoji",
+    "pickEmoji": "Escolher emoji",
+    "changeEmoji": "Alterar",
+    "clearEmoji": "Limpar"
   },
   "linked": {
     "account": "Conta:",

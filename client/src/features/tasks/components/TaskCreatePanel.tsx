@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { X, Check } from "lucide-react";
+import { X, Check, Smile } from "lucide-react";
 import { IconBtn } from "@/components/ui/icon-btn";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useCreateTask, useTaskCategories, useTasks } from "../api/tasksApi";
 import { STATUS_OPTIONS, PRIORITY_OPTIONS, TYPE_OPTIONS } from "../types";
@@ -30,6 +35,13 @@ const TYPE_I18N_KEY: Record<string, string> = {
 };
 
 // ── Expand-on-hover button classes (§28) ──────────────────────────────────────
+const EMOJI_OPTIONS = [
+  "📋", "📁", "📌", "⭐", "🎯", "🔥", "💡", "🚀",
+  "📊", "🎨", "🔧", "📝", "💬", "📅", "🏷️", "✅",
+  "🐛", "🔒", "📦", "🏠", "💰", "📞", "🎉", "⚡",
+  "🌐", "🛠️", "📱", "🖥️", "👤", "🤝", "📈", "🔔",
+];
+
 const xBase = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
 const xSpan = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
@@ -61,6 +73,8 @@ export default function TaskCreatePanel({ onClose, onCreated }: TaskCreatePanelP
   const [assigneeName, setAssigneeName] = useState("");
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [parentTaskId, setParentTaskId] = useState<number | null>(null);
+  const [emoji, setEmoji] = useState("");
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
 
   // ── Handler ─────────────────────────────────────────────────────────────────
 
@@ -81,6 +95,7 @@ export default function TaskCreatePanel({ onClose, onCreated }: TaskCreatePanelP
         assigneeName: assigneeName.trim() || null,
         categoryId,
         parentTaskId,
+        emoji: emoji || null,
       });
       // apiRequest returns a Response — try to extract the new task ID
       try {
@@ -148,6 +163,55 @@ export default function TaskCreatePanel({ onClose, onCreated }: TaskCreatePanelP
       {/* ── Scrollable body ── */}
       <div className="relative flex-1 overflow-y-auto px-4 pb-6">
         <div className="flex flex-col gap-4">
+
+          {/* Emoji picker */}
+          <div className="space-y-1.5">
+            <label className={labelCls}>{t("fields.emoji")}</label>
+            <div className="flex items-center gap-2">
+              <Popover open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "h-9 px-3 rounded-lg border border-border/30 text-[13px] flex items-center gap-2 transition-colors hover:border-brand-indigo/50",
+                      emoji ? "bg-white/60 dark:bg-white/[0.10]" : "bg-white/60 dark:bg-white/[0.10] text-muted-foreground"
+                    )}
+                    data-testid="task-create-emoji-trigger"
+                  >
+                    {emoji ? <span className="text-lg">{emoji}</span> : <Smile className="h-4 w-4" />}
+                    <span>{emoji ? t("fields.changeEmoji") : t("fields.pickEmoji")}</span>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[280px] p-2" side="bottom" align="start">
+                  <div className="grid grid-cols-8 gap-1" data-testid="task-emoji-grid">
+                    {EMOJI_OPTIONS.map((e) => (
+                      <button
+                        key={e}
+                        type="button"
+                        onClick={() => { setEmoji(e); setEmojiPickerOpen(false); }}
+                        className={cn(
+                          "h-8 w-8 rounded-md flex items-center justify-center text-lg hover:bg-foreground/[0.06] transition-colors",
+                          emoji === e && "bg-brand-indigo/10 ring-1 ring-brand-indigo/30"
+                        )}
+                      >
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              {emoji && (
+                <button
+                  type="button"
+                  onClick={() => setEmoji("")}
+                  className="h-9 px-2 rounded-lg text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+                  data-testid="task-create-emoji-clear"
+                >
+                  {t("fields.clearEmoji")}
+                </button>
+              )}
+            </div>
+          </div>
 
           {/* Description */}
           <div className="space-y-1.5">

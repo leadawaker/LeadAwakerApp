@@ -46,7 +46,11 @@
     "parentTask": "Bovenliggende Taak",
     "noParent": "Geen Bovenliggende",
     "tags": "Tags",
-    "subtasks": "Subtaken"
+    "subtasks": "Subtaken",
+    "emoji": "Emoji",
+    "pickEmoji": "Emoji kiezen",
+    "changeEmoji": "Wijzigen",
+    "clearEmoji": "Wissen"
   },
   "linked": {
     "account": "Account:",

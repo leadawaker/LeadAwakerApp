@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, Check } from "lucide-react";
+import { ChevronLeft, Check, Smile } from "lucide-react";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useCreateTask, useTaskCategories, useTasks } from "../api/tasksApi";
 import { PRIORITY_OPTIONS, TYPE_OPTIONS } from "../types";
@@ -22,6 +27,13 @@ const TYPE_LABELS: Record<string, string> = {
   custom: "Custom",
 };
 
+const EMOJI_OPTIONS = [
+  "📋", "📁", "📌", "⭐", "🎯", "🔥", "💡", "🚀",
+  "📊", "🎨", "🔧", "📝", "💬", "📅", "🏷️", "✅",
+  "🐛", "🔒", "📦", "🏠", "💰", "📞", "🎉", "⚡",
+  "🌐", "🛠️", "📱", "🖥️", "👤", "🤝", "📈", "🔔",
+];
+
 interface Props {
   onClose: () => void;
   onCreated: (id: number) => void;
@@ -42,6 +54,8 @@ export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
   const [leadName, setLeadName] = useState("");
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [parentTaskId, setParentTaskId] = useState<number | null>(null);
+  const [emoji, setEmoji] = useState("");
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
 
   const canCreate = title.trim().length > 0 && !createMutation.isPending;
 
@@ -68,6 +82,7 @@ export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
         assigneeName: assigneeName.trim() || null,
         categoryId,
         parentTaskId,
+        emoji: emoji || null,
       });
       // Extract new task ID from response
       try {
@@ -153,6 +168,55 @@ export default function MobileTaskCreatePanel({ onClose, onCreated }: Props) {
               autoFocus
               data-testid="mobile-task-create-title"
             />
+          </div>
+
+          {/* Emoji picker */}
+          <div className="space-y-1.5">
+            <label className={labelCls}>Emoji</label>
+            <div className="flex items-center gap-2">
+              <Popover open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "h-10 px-3 rounded-xl border border-border/30 text-[14px] flex items-center gap-2 transition-colors",
+                      emoji ? "bg-muted/50" : "bg-muted/50 text-muted-foreground"
+                    )}
+                    data-testid="mobile-task-create-emoji-trigger"
+                  >
+                    {emoji ? <span className="text-xl">{emoji}</span> : <Smile className="h-5 w-5" />}
+                    <span>{emoji ? "Change" : "Pick emoji"}</span>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[280px] p-2" side="bottom" align="start">
+                  <div className="grid grid-cols-8 gap-1" data-testid="mobile-task-emoji-grid">
+                    {EMOJI_OPTIONS.map((e) => (
+                      <button
+                        key={e}
+                        type="button"
+                        onClick={() => { setEmoji(e); setEmojiPickerOpen(false); }}
+                        className={cn(
+                          "h-9 w-9 rounded-lg flex items-center justify-center text-xl hover:bg-foreground/[0.06] transition-colors",
+                          emoji === e && "bg-brand-indigo/10 ring-1 ring-brand-indigo/30"
+                        )}
+                      >
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              {emoji && (
+                <button
+                  type="button"
+                  onClick={() => setEmoji("")}
+                  className="h-10 px-2 rounded-xl text-[13px] text-muted-foreground active:scale-95"
+                  data-testid="mobile-task-create-emoji-clear"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Description */}
