@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePublishEntityData } from "@/contexts/PageEntityContext";
 import { useTranslation } from "react-i18next";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { useLocation } from "wouter";
@@ -267,6 +268,31 @@ export default function ConversationsPage() {
       : null;
     return byId ?? threads[0] ?? null;
   }, [threads, selectedLeadId]);
+
+  // Publish selected conversation entity data for AI agent context
+  const publishEntity = usePublishEntityData();
+  useEffect(() => {
+    if (selected?.lead) {
+      const lead = selected.lead;
+      publishEntity({
+        entityType: "conversation",
+        entityId: lead.id,
+        entityName: lead.full_name || `${lead.first_name || ""} ${lead.last_name || ""}`.trim(),
+        summary: {
+          leadId: lead.id,
+          name: lead.full_name || `${lead.first_name || ""} ${lead.last_name || ""}`.trim(),
+          email: lead.email,
+          phone: lead.phone,
+          status: lead.conversion_status,
+          messageCount: selected.msgs?.length ?? 0,
+          unreadCount: selected.unreadCount ?? 0,
+          lastMessage: selected.last?.content?.slice(0, 200),
+          campaignId: lead.campaign_id || lead.campaigns_id,
+        },
+        updatedAt: Date.now(),
+      });
+    }
+  }, [selected, publishEntity]);
 
   const prevSelectedRef = useRef<number | null>(null);
   useEffect(() => {

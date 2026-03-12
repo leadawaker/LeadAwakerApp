@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { usePublishEntityData } from "@/contexts/PageEntityContext";
 import { useTranslation } from "react-i18next";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { Plus, Trash2, Copy, X } from "lucide-react";
@@ -169,6 +170,30 @@ function CampaignsContent() {
     setCrumb(selectedCampaign ? getCampaignName(selectedCampaign) : null);
     return () => setCrumb(null);
   }, [selectedCampaign, setCrumb]);
+
+  // Publish selected campaign entity data for AI agent context
+  const publishEntity = usePublishEntityData();
+  useEffect(() => {
+    if (selectedCampaign) {
+      const c = selectedCampaign as any;
+      publishEntity({
+        entityType: "campaign",
+        entityId: c.Id ?? c.id,
+        entityName: getCampaignName(selectedCampaign),
+        summary: {
+          id: c.Id ?? c.id,
+          name: getCampaignName(selectedCampaign),
+          status: c.status,
+          type: c.type,
+          accountId: c.account_id,
+          accountName: c.account_name,
+          leadsCount: c.Leads ?? c.leads_count,
+          interactionsCount: c.Interactions ?? c.interactions_count,
+        },
+        updatedAt: Date.now(),
+      });
+    }
+  }, [selectedCampaign, publishEntity]);
 
   const handleSelectCampaign = useCallback((campaign: Campaign) => {
     setSelectedCampaign(campaign);

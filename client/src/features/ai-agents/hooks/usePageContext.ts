@@ -12,6 +12,14 @@ export interface PageContext {
   params: Record<string, string>;
   /** Route prefix: "agency" or "subaccount" */
   prefix: string;
+  /** Entity data visible on screen (from detail/record pages) */
+  entityData?: {
+    entityType: string;
+    entityId?: number | string;
+    entityName?: string;
+    summary?: Record<string, unknown>;
+    filters?: Record<string, unknown>;
+  };
 }
 
 /**

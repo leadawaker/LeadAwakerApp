@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from "react";
-import { Send, Loader2, Paperclip, Mic, Square, Cpu, Zap } from "lucide-react";
+import { Send, Loader2, Paperclip, Mic, Square, Cpu, Zap, FileSpreadsheet, FileText, Image as ImageIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { AiAgent, AgentMessage } from "../hooks/useAgentChat";
@@ -150,7 +150,7 @@ export function AgentChatView({
   const [input, setInput] = useState("");
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
-  const [pendingFile, setPendingFile] = useState<{ id: number; name: string } | null>(null);
+  const [pendingFile, setPendingFile] = useState<{ id: number; name: string; fileType?: string; thumbnailUrl?: string } | null>(null);
   const [uploading, setUploading] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -176,28 +176,34 @@ export function AgentChatView({
     }
   };
 
-  // PDF file upload handler
+  // File upload handler — supports PDF, images, spreadsheets
+  const ALLOWED_EXTENSIONS = [".pdf", ".jpg", ".jpeg", ".png", ".gif", ".webp", ".csv", ".xlsx", ".xls"];
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !sessionId) return;
 
-    // Only accept PDFs
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      alert("Only PDF files are supported.");
+    // Validate file extension
+    const ext = file.name.toLowerCase().substring(file.name.lastIndexOf("."));
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      alert("Unsupported file type. Allowed: PDF, images (JPEG, PNG, GIF, WebP), spreadsheets (CSV, XLSX, XLS)");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    // Validate file size (20MB max)
+    if (file.size > 20 * 1024 * 1024) {
+      alert("File too large. Maximum size is 20MB.");
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
     setUploading(true);
     try {
-      // Read file as base64
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
           const result = reader.result as string;
-          // Strip data URL prefix to get pure base64
-          const base64Data = result.split(",")[1];
-          resolve(base64Data);
+          resolve(result.split(",")[1]);
         };
         reader.onerror = reject;
         reader.readAsDataURL(file);
@@ -209,16 +215,22 @@ export function AgentChatView({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           filename: file.name,
-          mimeType: file.type || "application/pdf",
+          mimeType: file.type || "application/octet-stream",
           data: base64,
         }),
       });
 
       if (res.ok) {
-        const fileRecord = await res.json() as { id: number; filename: string };
-        setPendingFile({ id: fileRecord.id, name: fileRecord.filename });
+        const fileRecord = await res.json() as { id: number; filename: string; fileType?: string; thumbnailUrl?: string };
+        setPendingFile({
+          id: fileRecord.id,
+          name: fileRecord.filename,
+          fileType: fileRecord.fileType,
+          thumbnailUrl: fileRecord.thumbnailUrl,
+        });
       } else {
-        alert("Failed to upload file.");
+        const err = await res.json().catch(() => ({ message: "Upload failed" }));
+        alert((err as { message: string }).message || "Failed to upload file.");
       }
     } catch (err) {
       console.error("[AgentChat] File upload error:", err);
@@ -354,21 +366,33 @@ export function AgentChatView({
         {/* Pending file indicator */}
         {pendingFile && (
           <div className="flex items-center gap-2 mb-2 px-3 py-1.5 bg-brand-indigo/5 border border-brand-indigo/20 rounded-lg text-[12px]">
-            <Paperclip className="h-3.5 w-3.5 text-brand-indigo shrink-0" />
+            {pendingFile.fileType === "image" && pendingFile.thumbnailUrl ? (
+              <img
+                src={pendingFile.thumbnailUrl}
+                alt={pendingFile.name}
+                className="h-10 w-10 rounded object-cover shrink-0"
+              />
+            ) : pendingFile.fileType === "image" ? (
+              <ImageIcon className="h-3.5 w-3.5 text-brand-indigo shrink-0" />
+            ) : pendingFile.fileType === "spreadsheet" ? (
+              <FileSpreadsheet className="h-3.5 w-3.5 text-green-600 shrink-0" />
+            ) : (
+              <FileText className="h-3.5 w-3.5 text-brand-indigo shrink-0" />
+            )}
             <span className="truncate text-foreground/80">{pendingFile.name}</span>
             <button
               onClick={() => setPendingFile(null)}
               className="ml-auto text-muted-foreground hover:text-foreground shrink-0"
               title="Remove attachment"
             >
-              ✕
+              <X className="h-3.5 w-3.5" />
             </button>
           </div>
         )}
         {uploading && (
           <div className="flex items-center gap-2 mb-2 px-3 py-1.5 text-[12px] text-muted-foreground">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            <span>Uploading PDF…</span>
+            <span>Uploading file…</span>
           </div>
         )}
         <div className="flex items-end gap-2 bg-muted/40 rounded-2xl px-3 py-2 border border-border/40">
@@ -376,7 +400,7 @@ export function AgentChatView({
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf,application/pdf"
+            accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.csv,.xlsx,.xls,application/pdf,image/*,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
             onChange={handleFileSelect}
             className="hidden"
           />
@@ -396,13 +420,13 @@ export function AgentChatView({
             className="flex-1 resize-none bg-transparent text-[13px] placeholder:text-muted-foreground/50 focus:outline-none min-h-[28px] max-h-[120px] py-0.5"
           />
 
-          {/* Attach PDF button */}
+          {/* Attach file button */}
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={streaming || loading || uploading}
             className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground disabled:opacity-40 shrink-0 transition-colors"
-            title="Attach PDF"
+            title="Attach file (PDF, image, or spreadsheet)"
           >
             <Paperclip className="h-4 w-4" />
           </button>

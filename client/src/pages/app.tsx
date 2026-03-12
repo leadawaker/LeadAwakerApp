@@ -3,6 +3,7 @@ import { Switch, Route, Redirect, useLocation } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext";
 import { AgentWidgetProvider } from "@/contexts/AgentWidgetContext";
+import { PageEntityProvider } from "@/contexts/PageEntityContext";
 import { AgentChatWidget } from "@/features/ai-agents/components/AgentChatWidget";
 import { Loader2 } from "lucide-react";
 
@@ -65,6 +66,7 @@ function PageLoader() {
 export default function AppArea() {
   return (
     <Protected>
+      <PageEntityProvider>
       <AgentWidgetProvider>
       <BreadcrumbProvider>
       <Suspense fallback={<PageLoader />}>
@@ -169,6 +171,7 @@ export default function AppArea() {
       {/* Persistent chat widget — rendered outside routes so it survives navigation */}
       <AgentChatWidget />
       </AgentWidgetProvider>
+      </PageEntityProvider>
     </Protected>
   );
 }

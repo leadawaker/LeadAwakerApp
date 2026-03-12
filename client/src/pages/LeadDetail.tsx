@@ -1,10 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLeads } from "@/hooks/useLeads";
 import { LeadDetailLayout } from "@/components/LeadDetailLayout";
 import { SkeletonLeadDetail } from "@/components/ui/skeleton";
+import { usePublishEntityData } from "@/contexts/PageEntityContext";
 
 export default function LeadDetailPage() {
   const [location, setLocation] = useLocation();
@@ -34,6 +35,31 @@ export default function LeadDetailPage() {
     const base = fromNotes ? fromNotes.split(/[;,|]/g).map((s) => s.trim()).filter(Boolean) : [];
     return Array.from(new Set([...(lead.tags ?? []), ...base])).slice(0, 12);
   }, [lead]);
+
+  // Publish lead entity data for AI agent context
+  const publishEntity = usePublishEntityData();
+  useEffect(() => {
+    if (lead) {
+      publishEntity({
+        entityType: "lead",
+        entityId: lead.id,
+        entityName: lead.full_name || `${lead.first_name || ""} ${lead.last_name || ""}`.trim(),
+        summary: {
+          id: lead.id,
+          name: lead.full_name || `${lead.first_name || ""} ${lead.last_name || ""}`.trim(),
+          email: lead.email,
+          phone: lead.phone,
+          status: lead.conversion_status,
+          source: lead.source,
+          priority: lead.priority,
+          tags,
+          messageCount: chat.length,
+          campaignId: lead.campaign_id || lead.campaigns_id,
+        },
+        updatedAt: Date.now(),
+      });
+    }
+  }, [lead, tags, chat.length, publishEntity]);
 
   return (
     <CrmShell>
