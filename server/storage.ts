@@ -149,6 +149,7 @@ export interface IStorage {
 
   // Prompt Library
   getPrompts(): Promise<Prompt_Library[]>;
+  getPromptById(id: number): Promise<Prompt_Library | undefined>;
   getPromptsByAccountId(accountId: number): Promise<Prompt_Library[]>;
   getPromptByUseCase(useCase: string): Promise<Prompt_Library | undefined>;
   createPrompt(data: InsertPrompt_Library): Promise<Prompt_Library>;
@@ -573,6 +574,11 @@ export class DatabaseStorage implements IStorage {
 
   async getPrompts(): Promise<Prompt_Library[]> {
     return db.select().from(promptLibrary);
+  }
+
+  async getPromptById(id: number): Promise<Prompt_Library | undefined> {
+    const [row] = await db.select().from(promptLibrary).where(eq(promptLibrary.id, id)).limit(1);
+    return row;
   }
 
   async getPromptsByAccountId(accountId: number): Promise<Prompt_Library[]> {
