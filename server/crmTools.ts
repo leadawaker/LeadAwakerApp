@@ -13,6 +13,7 @@
  */
 
 import { storage } from "./storage";
+import { pool } from "./db";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -252,7 +253,46 @@ const CREATE_TOOLS: CrmToolDef[] = [
   },
 ];
 
-export const ALL_TOOLS = [...READ_TOOLS, ...WRITE_TOOLS, ...CREATE_TOOLS, ...DELETE_TOOLS];
+const QUERY_TOOLS: CrmToolDef[] = [
+  {
+    name: "query_database",
+    description: "Execute a custom SQL query against the CRM PostgreSQL database. Use this for complex queries, aggregations, joins, or any data access not covered by the predefined tools. By default only SELECT queries are allowed; UPDATE/INSERT/DELETE require the agent to have write permission. Results are limited to 100 rows. Available tables: leads, campaigns, accounts, interactions, tags, leads_tags, automation_logs, users, prompt_library, lead_score_history, campaign_metrics_history, invoices, contracts, expenses, notifications, support_sessions, support_messages, tasks, ai_agents, ai_sessions, ai_messages, ai_files.",
+    requiredPermission: "read",
+    parameters: [
+      { name: "sql", type: "string", description: "The SQL query to execute. Use PostgreSQL syntax.", required: true },
+    ],
+  },
+];
+
+export const ALL_TOOLS = [...READ_TOOLS, ...WRITE_TOOLS, ...CREATE_TOOLS, ...DELETE_TOOLS, ...QUERY_TOOLS];
+
+/**
+ * Check if a CRM tool call is destructive (delete operations).
+ * Destructive actions require user confirmation before execution.
+ */
+export function isDestructiveToolCall(toolCall: CrmToolCall): boolean {
+  const toolDef = ALL_TOOLS.find((t) => t.name === toolCall.name);
+  if (!toolDef) return false;
+  return toolDef.requiredPermission === "delete";
+}
+
+/**
+ * Get a human-readable description of what a destructive tool call will do.
+ */
+export function describeToolCall(toolCall: CrmToolCall): string {
+  switch (toolCall.name) {
+    case "delete_lead":
+      return `Delete lead #${toolCall.args.id}`;
+    case "delete_campaign":
+      return `Delete campaign #${toolCall.args.id}`;
+    case "delete_tag":
+      return `Delete tag #${toolCall.args.id}`;
+    case "delete_lead_tag":
+      return `Remove tag #${toolCall.args.tag_id} from lead #${toolCall.args.lead_id}`;
+    default:
+      return `Execute ${toolCall.name}`;
+  }
+}
 
 // ─── Tool Descriptions for System Prompt ────────────────────────────────────
 
@@ -265,6 +305,7 @@ export function buildCrmToolsPrompt(permissions: AgentPermissions): string {
 
   if (permissions.read) {
     availableTools.push(...READ_TOOLS);
+    availableTools.push(...QUERY_TOOLS);
   }
   if (permissions.write) {
     availableTools.push(...WRITE_TOOLS);
@@ -298,6 +339,10 @@ export function buildCrmToolsPrompt(permissions: AgentPermissions): string {
 
   if (permissions.create) {
     prompt += `\nWhen creating new records, confirm the details with the user before creating. After creation, report the new record's ID and key fields so the user can reference it.`;
+  }
+
+  if (permissions.read) {
+    prompt += `\nFor the query_database tool: Use this for complex queries that go beyond predefined tools (aggregations, joins, subqueries, date ranges, etc.). Results are limited to 100 rows. ${permissions.write ? "You have write permission so UPDATE/INSERT/DELETE queries are allowed." : "Only SELECT queries are allowed (read-only mode)."} Always use parameterized-style safe queries. Never include user-provided strings directly in SQL without proper quoting.`;
   }
 
   prompt += `\n`;
@@ -367,7 +412,7 @@ export async function executeCrmTool(
   }
 
   try {
-    const result = await executeToolFunction(toolCall);
+    const result = await executeToolFunction(toolCall, permissions);
     return { tool: toolCall.name, success: true, data: result };
   } catch (err: any) {
     return { tool: toolCall.name, success: false, error: err.message || "Tool execution failed" };
@@ -391,7 +436,69 @@ export async function executeCrmToolCalls(
 
 // ─── Internal Tool Function Dispatcher ──────────────────────────────────────
 
-async function executeToolFunction(toolCall: CrmToolCall): Promise<unknown> {
+// ─── SQL Query Validation ───────────────────────────────────────────────────
+
+/** Dangerous SQL patterns that should never be allowed */
+const BLOCKED_SQL_PATTERNS = [
+  /;\s*(DROP|ALTER|TRUNCATE|CREATE|GRANT|REVOKE|COPY|LOAD)\b/i,
+  /\bpg_sleep\b/i,
+  /\bpg_terminate_backend\b/i,
+  /\bpg_cancel_backend\b/i,
+  /\bpg_read_file\b/i,
+  /\bpg_write_file\b/i,
+  /\blo_import\b/i,
+  /\blo_export\b/i,
+  /\bdblink\b/i,
+  /\bEXECUTE\b/i,
+  /\bCOPY\s+(TO|FROM)\b/i,
+  /\b(INTO\s+OUTFILE|INTO\s+DUMPFILE)\b/i,
+];
+
+/** Check if SQL is a read-only query (SELECT, WITH ... SELECT, EXPLAIN) */
+function isReadOnlyQuery(sql: string): boolean {
+  const trimmed = sql.trim().replace(/^\/\*[\s\S]*?\*\/\s*/, "").replace(/^--[^\n]*\n/gm, "");
+  const upper = trimmed.toUpperCase();
+  return (
+    upper.startsWith("SELECT") ||
+    upper.startsWith("WITH") ||
+    upper.startsWith("EXPLAIN") ||
+    upper.startsWith("SHOW") ||
+    upper.startsWith("TABLE") // shorthand for SELECT * FROM
+  );
+}
+
+/** Validate SQL query for safety */
+function validateSqlQuery(sql: string, hasWritePermission: boolean): string | null {
+  if (!sql || typeof sql !== "string" || sql.trim().length === 0) {
+    return "SQL query cannot be empty";
+  }
+
+  if (sql.length > 5000) {
+    return "SQL query too long (max 5000 characters)";
+  }
+
+  // Check for blocked patterns
+  for (const pattern of BLOCKED_SQL_PATTERNS) {
+    if (pattern.test(sql)) {
+      return `Blocked: query contains a prohibited operation (${pattern.source})`;
+    }
+  }
+
+  // Multiple statements check (prevent ; followed by another statement)
+  const statements = sql.split(";").filter((s) => s.trim().length > 0);
+  if (statements.length > 1) {
+    return "Only single SQL statements are allowed (no semicolons separating multiple statements)";
+  }
+
+  // If no write permission, enforce read-only
+  if (!hasWritePermission && !isReadOnlyQuery(sql)) {
+    return "Only SELECT queries are allowed (agent does not have write permission). Use predefined CRM tools for modifications.";
+  }
+
+  return null; // valid
+}
+
+async function executeToolFunction(toolCall: CrmToolCall, permissions?: AgentPermissions): Promise<unknown> {
   const { name, args } = toolCall;
 
   switch (name) {
@@ -790,6 +897,66 @@ async function executeToolFunction(toolCall: CrmToolCall): Promise<unknown> {
       const success = await storage.deleteLeadTag(Number(args.lead_id), Number(args.tag_id));
       if (!success) throw new Error(`Lead-tag association not found`);
       return { deleted: true, leadId: args.lead_id, tagId: args.tag_id, type: "lead_tag" };
+    }
+
+    // ─── Query tool ────────────────────────────────────────────────
+
+    case "query_database": {
+      const sql = (args.sql as string || "").trim();
+      const hasWrite = !!(permissions?.write);
+
+      // Validate query
+      const validationError = validateSqlQuery(sql, hasWrite);
+      if (validationError) {
+        throw new Error(validationError);
+      }
+
+      console.log(`[CRM Tool] query_database (${hasWrite ? "read-write" : "read-only"}): ${sql.slice(0, 200)}${sql.length > 200 ? "..." : ""}`);
+
+      // Execute with statement timeout to prevent long-running queries
+      const client = await pool.connect();
+      try {
+        // Set a 10-second statement timeout for safety
+        await client.query("SET statement_timeout = '10s'");
+
+        const result = await client.query(sql);
+
+        // Limit result set size
+        const MAX_ROWS = 100;
+        const rows = result.rows?.slice(0, MAX_ROWS) || [];
+        const totalRows = result.rows?.length || 0;
+        const truncated = totalRows > MAX_ROWS;
+
+        // Format response
+        const response: Record<string, unknown> = {
+          success: true,
+          command: result.command,
+          rowCount: result.rowCount,
+        };
+
+        if (rows.length > 0) {
+          response.columns = Object.keys(rows[0]);
+          response.rows = rows;
+          if (truncated) {
+            response.truncated = true;
+            response.totalRows = totalRows;
+            response.note = `Results truncated to ${MAX_ROWS} rows (${totalRows} total). Use LIMIT in your query for more control.`;
+          }
+        } else if (result.command === "SELECT") {
+          response.rows = [];
+          response.columns = result.fields?.map((f: any) => f.name) || [];
+          response.note = "Query returned no rows.";
+        } else {
+          // For write queries (UPDATE, INSERT, DELETE)
+          response.note = `${result.command} affected ${result.rowCount} row(s).`;
+        }
+
+        return response;
+      } finally {
+        // Reset statement timeout and release client
+        try { await client.query("RESET statement_timeout"); } catch {}
+        client.release();
+      }
     }
 
     default:
