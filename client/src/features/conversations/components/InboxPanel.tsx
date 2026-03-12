@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
-import { Inbox, BellDot, Headphones, Search, X, BotMessageSquare, MessageSquare, Zap, Bot } from "lucide-react";
+import { Inbox, BellDot, Headphones, Search, X, BotMessageSquare, MessageSquare, Zap, Bot, Settings } from "lucide-react";
 import type { Thread, Lead, Interaction } from "../hooks/useConversationsData";
 import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
 import {
@@ -88,46 +88,84 @@ export type InboxTab = "all" | "unread" | "support";
 
 // ── Agent inbox row ────────────────────────────────────────────────────────────
 type AgentRowProps = {
-  agent: { id: number; name: string; type: string; photoUrl: string | null };
+  agent: { id: number; name: string; type: string; photoUrl: string | null; enabled?: boolean };
   isSelected: boolean;
   onClick: () => void;
+  onSettingsClick?: (agentId: number) => void;
 };
 
-function AgentInboxRow({ agent, isSelected, onClick }: AgentRowProps) {
+function AgentInboxRow({ agent, isSelected, onClick, onSettingsClick }: AgentRowProps) {
   const typeChip: Record<string, string> = {
     campaign_crafter: "Campaign Crafter",
     code_runner: "Code Runner",
     custom: "Custom",
   };
   const chipLabel = typeChip[agent.type] ?? agent.type;
+  const isEnabled = agent.enabled !== false;
 
   const AgentIcon = () => {
     if (agent.photoUrl) {
       return (
-        <img
-          src={agent.photoUrl}
-          alt={agent.name}
-          className="h-9 w-9 rounded-full object-cover"
-        />
+        <div className="relative">
+          <img
+            src={agent.photoUrl}
+            alt={agent.name}
+            className="h-9 w-9 rounded-full object-cover"
+          />
+          <span
+            className={cn(
+              "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2",
+              isSelected ? "border-highlight-selected" : "border-card",
+              isEnabled ? "bg-green-500" : "bg-muted-foreground/40"
+            )}
+          />
+        </div>
       );
     }
     if (agent.type === "campaign_crafter") {
       return (
-        <div className="h-9 w-9 rounded-full bg-brand-indigo/10 flex items-center justify-center shrink-0">
-          <MessageSquare className="h-4 w-4 text-brand-indigo" />
+        <div className="relative">
+          <div className="h-9 w-9 rounded-full bg-brand-indigo/10 flex items-center justify-center shrink-0">
+            <MessageSquare className="h-4 w-4 text-brand-indigo" />
+          </div>
+          <span
+            className={cn(
+              "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2",
+              isSelected ? "border-highlight-selected" : "border-card",
+              isEnabled ? "bg-green-500" : "bg-muted-foreground/40"
+            )}
+          />
         </div>
       );
     }
     if (agent.type === "code_runner") {
       return (
-        <div className="h-9 w-9 rounded-full bg-green-500/10 flex items-center justify-center shrink-0">
-          <Zap className="h-4 w-4 text-green-600" />
+        <div className="relative">
+          <div className="h-9 w-9 rounded-full bg-green-500/10 flex items-center justify-center shrink-0">
+            <Zap className="h-4 w-4 text-green-600" />
+          </div>
+          <span
+            className={cn(
+              "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2",
+              isSelected ? "border-highlight-selected" : "border-card",
+              isEnabled ? "bg-green-500" : "bg-muted-foreground/40"
+            )}
+          />
         </div>
       );
     }
     return (
-      <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
-        <Bot className="h-4 w-4 text-muted-foreground" />
+      <div className="relative">
+        <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
+          <Bot className="h-4 w-4 text-muted-foreground" />
+        </div>
+        <span
+          className={cn(
+            "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2",
+            isSelected ? "border-highlight-selected" : "border-card",
+            isEnabled ? "bg-green-500" : "bg-muted-foreground/40"
+          )}
+        />
       </div>
     );
   };
@@ -139,7 +177,7 @@ function AgentInboxRow({ agent, isSelected, onClick }: AgentRowProps) {
       onClick={onClick}
       onKeyDown={(e) => e.key === "Enter" && onClick()}
       className={cn(
-        "flex items-center gap-2 px-2.5 py-2 rounded-xl cursor-pointer transition-colors",
+        "flex items-center gap-2 px-2.5 py-2 rounded-xl cursor-pointer transition-colors group",
         isSelected ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
       )}
       data-testid={`button-agent-${agent.id}`}
@@ -155,6 +193,16 @@ function AgentInboxRow({ agent, isSelected, onClick }: AgentRowProps) {
           {chipLabel}
         </p>
       </div>
+      {onSettingsClick && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onSettingsClick(agent.id); }}
+          className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted opacity-0 group-hover:opacity-100 transition-all shrink-0"
+          title="Agent settings"
+          data-testid={`agent-settings-${agent.id}`}
+        >
+          <Settings className="h-3 w-3" />
+        </button>
+      )}
     </div>
   );
 }
@@ -189,11 +237,13 @@ interface InboxPanelProps {
   /** Mobile: called when user types in the inline search input */
   onSearchChange?: (q: string) => void;
   /** AI agents to show as pinned rows above the thread list (agency users only) */
-  aiAgents?: { id: number; name: string; type: string; photoUrl: string | null }[];
+  aiAgents?: { id: number; name: string; type: string; photoUrl: string | null; enabled?: boolean }[];
   /** Currently selected agent id */
   selectedAgentId?: number | null;
   /** Called when user clicks an agent row */
   onSelectAgent?: (id: number) => void;
+  /** Called when user clicks the settings icon on an agent row */
+  onAgentSettings?: (agentId: number) => void;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -222,6 +272,7 @@ export function InboxPanel({
   aiAgents = [],
   selectedAgentId,
   onSelectAgent,
+  onAgentSettings,
 }: InboxPanelProps) {
   const hasNonDefaultControls =
     groupBy !== "date" ||
@@ -605,6 +656,7 @@ export function InboxPanel({
                     agent={agent}
                     isSelected={selectedAgentId === agent.id}
                     onClick={() => onSelectAgent(agent.id)}
+                    onSettingsClick={onAgentSettings}
                   />
                 ))}
               </div>

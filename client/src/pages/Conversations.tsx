@@ -93,6 +93,17 @@ export default function ConversationsPage() {
     setMobileView("chat");
   };
 
+  const handleAgentSettings = (agentId: number) => {
+    // Select the agent first (loads its data), then open settings
+    if (selectedAgentId !== agentId) {
+      setSelectedAgentId(agentId);
+      setSelectedLeadId(null);
+      setTab("all");
+    }
+    // Delay settings open slightly to let agent data load
+    setTimeout(() => setAgentSettingsOpen(true), 100);
+  };
+
   const isAgentSelected = selectedAgentId !== null;
 
   // Agent chat hook — used when an agent is selected in the right panel
@@ -450,6 +461,7 @@ export default function ConversationsPage() {
                 aiAgents={isAgencyUser ? aiAgents : []}
                 selectedAgentId={selectedAgentId}
                 onSelectAgent={handleSelectAgent}
+                onAgentSettings={handleAgentSettings}
                 className={cn(
                   "w-full md:w-[340px] flex-shrink-0",
                   mobileView === "chat" ? "hidden md:flex" : "flex"
