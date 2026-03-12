@@ -228,6 +228,7 @@ export interface IStorage {
   // Tasks
   getTasks(): Promise<Task[]>;
   getTasksByAccountId(accountId: number): Promise<Task[]>;
+  getTasksFiltered(filters: { accountId?: number; categoryId?: number | null; parentTaskId?: number | null }): Promise<Task[]>;
   getTaskById(id: number): Promise<Task | undefined>;
   createTask(data: InsertTask): Promise<Task>;
   updateTask(id: number, data: Partial<InsertTask>): Promise<Task | undefined>;
@@ -958,6 +959,32 @@ export class DatabaseStorage implements IStorage {
 
   async getTasksByAccountId(accountId: number): Promise<Task[]> {
     return db.select().from(tasks).where(eq(tasks.accountsId, accountId)).orderBy(desc(tasks.createdAt));
+  }
+
+  async getTasksFiltered(filters: { accountId?: number; categoryId?: number | null; parentTaskId?: number | null }): Promise<Task[]> {
+    const conditions: SQL[] = [];
+    if (filters.accountId !== undefined) {
+      conditions.push(eq(tasks.accountsId, filters.accountId));
+    }
+    if (filters.categoryId !== undefined) {
+      if (filters.categoryId === null) {
+        conditions.push(isNull(tasks.categoryId));
+      } else {
+        conditions.push(eq(tasks.categoryId, filters.categoryId));
+      }
+    }
+    if (filters.parentTaskId !== undefined) {
+      if (filters.parentTaskId === null) {
+        conditions.push(isNull(tasks.parentTaskId));
+      } else {
+        conditions.push(eq(tasks.parentTaskId, filters.parentTaskId));
+      }
+    }
+    const query = db.select().from(tasks);
+    if (conditions.length > 0) {
+      return query.where(and(...conditions)).orderBy(desc(tasks.createdAt));
+    }
+    return query.orderBy(desc(tasks.createdAt));
   }
 
   async getTaskById(id: number): Promise<Task | undefined> {

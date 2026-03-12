@@ -2022,9 +2022,26 @@ Cover: overall performance highlights, what's working well, pipeline bottlenecks
 
   app.get("/api/tasks", requireAgency, wrapAsync(async (req, res) => {
     const accountId = req.query.accountId ? Number(req.query.accountId) : undefined;
-    const data = accountId
-      ? await storage.getTasksByAccountId(accountId)
-      : await storage.getTasks();
+    const categoryIdParam = req.query.categoryId as string | undefined;
+    const parentTaskIdParam = req.query.parentTaskId as string | undefined;
+
+    // If any filtering params are provided, use the filtered method
+    const hasFilters = accountId !== undefined || categoryIdParam !== undefined || parentTaskIdParam !== undefined;
+
+    if (hasFilters) {
+      const filters: { accountId?: number; categoryId?: number | null; parentTaskId?: number | null } = {};
+      if (accountId !== undefined) filters.accountId = accountId;
+      if (categoryIdParam !== undefined) {
+        filters.categoryId = categoryIdParam === "null" ? null : Number(categoryIdParam);
+      }
+      if (parentTaskIdParam !== undefined) {
+        filters.parentTaskId = parentTaskIdParam === "null" ? null : Number(parentTaskIdParam);
+      }
+      const data = await storage.getTasksFiltered(filters);
+      return res.json(data);
+    }
+
+    const data = await storage.getTasks();
     res.json(data);
   }));
 
