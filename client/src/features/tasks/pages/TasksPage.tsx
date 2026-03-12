@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { cn } from "@/lib/utils";
-import { ArrowUpDown, CalendarDays, ClipboardList, GitBranch, Columns3, Plus, Tag } from "lucide-react";
+import { ArrowUpDown, CalendarDays, ClipboardList, Plus, Tag } from "lucide-react";
 
 import { SearchPill } from "@/components/ui/search-pill";
 import {
@@ -14,6 +14,10 @@ import {
 import { useTasks, useCreateTask } from "../api/tasksApi";
 import TasksKanbanView from "../components/TasksKanbanView";
 import TasksTreeView from "../components/TasksTreeView";
+import TasksListView from "../components/TasksListView";
+import TasksTableView from "../components/TasksTableView";
+import SimpleDailyView from "../components/SimpleDailyView";
+import ViewSwitcher from "../components/ViewSwitcher";
 import ProgressChart from "../components/ProgressChart";
 import CategorySidebar from "../components/CategorySidebar";
 import MobileTaskListCard from "../components/MobileTaskListCard";
@@ -28,6 +32,7 @@ import {
   type SortOption,
   type TaskStatus,
   type Task,
+  type ViewMode,
 } from "../types";
 
 // ── Expand-on-hover button classes (§28) ─────────────────────────────
@@ -50,9 +55,6 @@ function loadLocal<T>(key: string, fallback: T): T {
 function saveLocal(key: string, value: unknown) {
   localStorage.setItem(key, JSON.stringify(value));
 }
-
-// ── Desktop view mode ────────────────────────────────────────────────
-type ViewMode = "kanban" | "tree";
 
 // ── Date range filter ────────────────────────────────────────────────
 type DateRange = "all" | "today" | "this_week" | "this_month" | "this_year";
@@ -131,6 +133,9 @@ export default function TasksPage() {
 
   // Mobile create panel state
   const [mobileCreateOpen, setMobileCreateOpen] = useState(false);
+
+  // Desktop detail panel state (for list/table views)
+  const [desktopSelectedTaskId, setDesktopSelectedTaskId] = useState<number | null>(null);
 
   // Setters with persistence
   const handleSort = useCallback((v: SortOption) => {
@@ -308,26 +313,11 @@ export default function TasksPage() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* View mode toggle (desktop only) */}
+      {/* View switcher (desktop only) */}
       {!isMobile && (
         <>
           <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
-          <button
-            onClick={() => handleViewMode("kanban")}
-            className={cn(xBase, "hover:max-w-[90px]", viewMode === "kanban" ? xActive : xDefault)}
-            title="Kanban view"
-          >
-            <Columns3 className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>Kanban</span>
-          </button>
-          <button
-            onClick={() => handleViewMode("tree")}
-            className={cn(xBase, "hover:max-w-[80px]", viewMode === "tree" ? xActive : xDefault)}
-            title="Tree view"
-          >
-            <GitBranch className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>Tree</span>
-          </button>
+          <ViewSwitcher value={viewMode} onChange={handleViewMode} />
         </>
       )}
     </>
@@ -434,16 +424,40 @@ export default function TasksPage() {
               </div>
             )}
             <div className="flex-1 min-h-0 overflow-hidden">
-              {viewMode === "tree" ? (
-                <TasksTreeView
-                  tasks={filteredTasks}
-                  searchQuery={searchQuery}
-                />
-              ) : (
+              {viewMode === "kanban" && (
                 <TasksKanbanView
                   tasks={filteredTasks}
                   searchQuery={searchQuery}
                   sort={sort}
+                />
+              )}
+              {viewMode === "list" && (
+                <TasksListView
+                  tasks={filteredTasks}
+                  selectedId={desktopSelectedTaskId}
+                  onSelect={setDesktopSelectedTaskId}
+                  searchQuery={searchQuery}
+                  sort={sort}
+                  groupBy="none"
+                />
+              )}
+              {viewMode === "table" && (
+                <TasksTableView
+                  tasks={filteredTasks}
+                  searchQuery={searchQuery}
+                  sort={sort}
+                  groupBy="none"
+                  onSelectTask={setDesktopSelectedTaskId}
+                  selectedTaskId={desktopSelectedTaskId}
+                />
+              )}
+              {viewMode === "simple" && (
+                <SimpleDailyView tasks={filteredTasks} />
+              )}
+              {viewMode === "tree" && (
+                <TasksTreeView
+                  tasks={filteredTasks}
+                  searchQuery={searchQuery}
                 />
               )}
             </div>

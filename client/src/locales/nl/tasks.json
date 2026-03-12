@@ -124,6 +124,17 @@
     "moveUp": "Omhoog",
     "moveDown": "Omlaag"
   },
+  "views": {
+    "kanban": "Kanban",
+    "list": "Lijst",
+    "table": "Tabel",
+    "simple": "Simpel",
+    "tree": "Boom",
+    "overdue": "Achterstallig",
+    "today": "Vandaag",
+    "unscheduled": "Ongepland",
+    "noDailyTasks": "Geen taken voor vandaag"
+  },
   "categories": {
     "title": "Categorieen",
     "label": "Categorieen",

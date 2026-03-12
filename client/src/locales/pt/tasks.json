@@ -124,6 +124,17 @@
     "moveUp": "Mover para cima",
     "moveDown": "Mover para baixo"
   },
+  "views": {
+    "kanban": "Kanban",
+    "list": "Lista",
+    "table": "Tabela",
+    "simple": "Simples",
+    "tree": "Arvore",
+    "overdue": "Atrasadas",
+    "today": "Hoje",
+    "unscheduled": "Sem data",
+    "noDailyTasks": "Sem tarefas para hoje"
+  },
   "categories": {
     "title": "Categorias",
     "label": "Categorias",

@@ -144,6 +144,10 @@ export function parseTags(raw: string | null | undefined): string[] {
   }
 }
 
+// ─── View Mode ──────────────────────────────────────────────────────
+export const VIEW_MODES = ["kanban", "list", "table", "simple", "tree"] as const;
+export type ViewMode = (typeof VIEW_MODES)[number];
+
 // ─── Sort / Filter / Group ───────────────────────────────────────────
 export const SORT_OPTIONS = [
   { value: "due_date_asc", label: "Due date (earliest)" },

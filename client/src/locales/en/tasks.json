@@ -124,6 +124,17 @@
     "moveUp": "Move up",
     "moveDown": "Move down"
   },
+  "views": {
+    "kanban": "Kanban",
+    "list": "List",
+    "table": "Table",
+    "simple": "Simple",
+    "tree": "Tree",
+    "overdue": "Overdue",
+    "today": "Today",
+    "unscheduled": "Unscheduled",
+    "noDailyTasks": "No tasks for today"
+  },
   "categories": {
     "title": "Categories",
     "label": "Categories",
