@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { Settings, Shield, Eye, Pencil, PlusCircle, Trash2, Loader2, AlertTriangle, BookOpen, X, ChevronDown } from "lucide-react";
+import { Settings, Shield, Eye, Pencil, PlusCircle, Trash2, Loader2, AlertTriangle, BookOpen, X, ChevronDown, Cpu, Brain } from "lucide-react";
+import { MODEL_OPTIONS } from "./ModelSwitcher";
 import {
   Sheet,
   SheetContent,
@@ -20,6 +21,13 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { apiFetch } from "@/lib/apiUtils";
 import type { AiAgent, AgentPermissions } from "../hooks/useAgentChat";
+
+const THINKING_OPTIONS = [
+  { id: "none", label: "Off", description: "No thinking" },
+  { id: "low", label: "Low", description: "Brief reasoning" },
+  { id: "medium", label: "Medium", description: "Balanced (default)" },
+  { id: "high", label: "High", description: "Deep reasoning" },
+];
 
 const DEFAULT_PERMISSIONS: AgentPermissions = {
   read: true,
@@ -86,6 +94,10 @@ export function AgentSettingsSheet({
   const [selectedPromptId, setSelectedPromptId] = useState<number | null>(agent.systemPromptId ?? null);
   const [promptSaving, setPromptSaving] = useState(false);
   const [promptDropdownOpen, setPromptDropdownOpen] = useState(false);
+  const [defaultModel, setDefaultModel] = useState(agent.model || "claude-sonnet-4-20250514");
+  const [defaultThinking, setDefaultThinking] = useState(agent.thinkingLevel || "medium");
+  const [modelSaving, setModelSaving] = useState(false);
+  const [thinkingSaving, setThinkingSaving] = useState(false);
 
   // Fetch prompts when sheet opens
   useEffect(() => {
@@ -103,11 +115,13 @@ export function AgentSettingsSheet({
     }
   }, [open]);
 
-  // Reset permissions and prompt selection when agent changes
+  // Reset permissions, prompt selection, and defaults when agent changes
   useEffect(() => {
     setPermissions(agent.permissions || DEFAULT_PERMISSIONS);
     setSelectedPromptId(agent.systemPromptId ?? null);
-  }, [agent.id, agent.permissions, agent.systemPromptId]);
+    setDefaultModel(agent.model || "claude-sonnet-4-20250514");
+    setDefaultThinking(agent.thinkingLevel || "medium");
+  }, [agent.id, agent.permissions, agent.systemPromptId, agent.model, agent.thinkingLevel]);
 
   const handleToggle = useCallback(
     async (key: keyof AgentPermissions, checked: boolean) => {
@@ -164,6 +178,52 @@ export function AgentSettingsSheet({
       }
     },
     [agent.id, agent.systemPromptId, onAgentUpdated]
+  );
+
+  const handleModelChange = useCallback(
+    async (model: string) => {
+      setDefaultModel(model);
+      setModelSaving(true);
+      try {
+        const res = await apiFetch(`/api/agents/${agent.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ model }),
+        });
+        if (!res.ok) throw new Error("Failed to update model");
+        const updatedAgent = await res.json();
+        onAgentUpdated?.(updatedAgent);
+      } catch (err) {
+        console.error("[AgentSettings] Model update error:", err);
+        setDefaultModel(agent.model || "claude-sonnet-4-20250514");
+      } finally {
+        setModelSaving(false);
+      }
+    },
+    [agent.id, agent.model, onAgentUpdated]
+  );
+
+  const handleThinkingChange = useCallback(
+    async (thinkingLevel: string) => {
+      setDefaultThinking(thinkingLevel);
+      setThinkingSaving(true);
+      try {
+        const res = await apiFetch(`/api/agents/${agent.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ thinkingLevel }),
+        });
+        if (!res.ok) throw new Error("Failed to update thinking level");
+        const updatedAgent = await res.json();
+        onAgentUpdated?.(updatedAgent);
+      } catch (err) {
+        console.error("[AgentSettings] Thinking update error:", err);
+        setDefaultThinking(agent.thinkingLevel || "medium");
+      } finally {
+        setThinkingSaving(false);
+      }
+    },
+    [agent.id, agent.thinkingLevel, onAgentUpdated]
   );
 
   const handleDeleteAgent = useCallback(async () => {
@@ -293,6 +353,67 @@ export function AgentSettingsSheet({
                 )}
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Default Model & Thinking Section */}
+        <div className="mt-6 pt-4 border-t border-border/50" data-testid="agent-defaults-section">
+          <div className="flex items-center gap-2 mb-3">
+            <Cpu className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-foreground">Default Model</h3>
+            {modelSaving && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Default model for new conversations. Can be overridden per conversation.
+          </p>
+          <div className="grid grid-cols-3 gap-1.5" data-testid="model-default-selector">
+            {MODEL_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              const isActive = defaultModel === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => handleModelChange(opt.id)}
+                  disabled={modelSaving}
+                  className={`flex flex-col items-center gap-1 px-2 py-2 rounded-lg text-xs border transition-all ${
+                    isActive
+                      ? `${opt.bgColor} ${opt.color} border-current font-medium`
+                      : "border-border/50 text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {opt.shortLabel}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-2 mt-5 mb-3">
+            <Brain className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-foreground">Default Thinking</h3>
+            {thinkingSaving && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Default thinking level for new conversations.
+          </p>
+          <div className="grid grid-cols-4 gap-1.5" data-testid="thinking-default-selector">
+            {THINKING_OPTIONS.map((opt) => {
+              const isActive = defaultThinking === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => handleThinkingChange(opt.id)}
+                  disabled={thinkingSaving}
+                  className={`px-2 py-2 rounded-lg text-xs border transition-all text-center ${
+                    isActive
+                      ? "bg-brand-indigo/10 text-brand-indigo border-brand-indigo/30 font-medium"
+                      : "border-border/50 text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
