@@ -93,6 +93,7 @@ export function useAgentChat() {
   const [loading, setLoading] = useState(false);
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null);
   const streamingTextRef = useRef("");
+  const messagesRef = useRef<AgentMessage[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // Unique identity for this hook instance (stable across re-renders)
@@ -100,10 +101,13 @@ export function useAgentChat() {
   // Flag to suppress broadcast when update came from sync bus
   const fromSyncRef = useRef(false);
 
-  // Keep ref in sync with state
+  // Keep refs in sync with state
   useEffect(() => {
     streamingTextRef.current = streamingText;
   }, [streamingText]);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   // --- Cross-view sync bus ---
   // Subscribe to the bus whenever sessionId changes; receive peer updates
@@ -222,7 +226,7 @@ export function useAgentChat() {
       content: trimmed,
       createdAt: new Date().toISOString(),
     };
-    const newMsgs = [...messages, optimistic];
+    const newMsgs = [...messagesRef.current, optimistic];
     setMessages(newMsgs);
     setStreaming(true);
     setStreamingText("");
@@ -296,7 +300,7 @@ export function useAgentChat() {
               const now = Date.now();
               if (now - lastTokenBroadcast > 100) {
                 lastTokenBroadcast = now;
-                maybeBroadcast(messages, true, newText);
+                maybeBroadcast(messagesRef.current, true, newText);
               }
             } else if (evt.type === "pending_confirmation") {
               // Destructive action requires user confirmation before execution
@@ -371,7 +375,7 @@ export function useAgentChat() {
       setStreamingText("");
       streamingTextRef.current = "";
     }
-  }, [session, streaming, messages, maybeBroadcast]);
+  }, [session, streaming, maybeBroadcast]);
 
   /** Execute a skill in the current conversation, streaming results */
   const executeSkill = useCallback(async (skillId: string, skillName: string, content?: string) => {
@@ -386,7 +390,7 @@ export function useAgentChat() {
       metadata: { skillId, skillName },
       createdAt: new Date().toISOString(),
     };
-    const skillMsgs = [...messages, optimistic];
+    const skillMsgs = [...messagesRef.current, optimistic];
     setMessages(skillMsgs);
     setStreaming(true);
     setStreamingText("");
@@ -445,7 +449,7 @@ export function useAgentChat() {
               const now = Date.now();
               if (now - lastSkillTokenBroadcast > 100) {
                 lastSkillTokenBroadcast = now;
-                maybeBroadcast(messages, true, newText);
+                maybeBroadcast(messagesRef.current, true, newText);
               }
             } else if (evt.type === "done") {
               const finalText = streamingTextRef.current;
@@ -508,7 +512,7 @@ export function useAgentChat() {
       setStreamingText("");
       streamingTextRef.current = "";
     }
-  }, [session, streaming, messages, maybeBroadcast]);
+  }, [session, streaming, maybeBroadcast]);
 
   /** Abort current streaming response (connection drop cleanup) */
   const abortStream = useCallback(() => {
