@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Bot, X, ChevronLeft, Cpu, Zap, MessageSquare, Loader2, Plus, Settings, Trash2 } from "lucide-react";
+import { Bot, X, ChevronLeft, Cpu, Zap, MessageSquare, Loader2, Plus, Settings, Trash2, MapPin, MapPinOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAgentWidget } from "@/contexts/AgentWidgetContext";
 import { useAgentChat } from "../hooks/useAgentChat";
@@ -211,6 +211,8 @@ interface ConversationMeta {
   lastSeenMessageCount: number;
   /** Total message count (user + assistant) */
   totalMessageCount: number;
+  /** Whether page context is sent with messages (per-session override) */
+  pageAwarenessEnabled: boolean;
 }
 
 /** Get icon for agent type */
@@ -365,6 +367,7 @@ export function AgentChatWidget() {
       streaming: existing?.streaming ?? false,
       lastSeenMessageCount: existing?.lastSeenMessageCount ?? 0,
       totalMessageCount: existing?.totalMessageCount ?? 0,
+      pageAwarenessEnabled: existing?.pageAwarenessEnabled ?? (agent.pageAwarenessEnabled !== false),
     });
     setConversationsMeta(new Map(conversationsRef.current));
   }, []);
@@ -382,6 +385,7 @@ export function AgentChatWidget() {
         streaming,
         lastSeenMessageCount: 0,
         totalMessageCount: 0,
+        pageAwarenessEnabled: true,
       });
     }
     setConversationsMeta(new Map(conversationsRef.current));
@@ -440,7 +444,25 @@ export function AgentChatWidget() {
   const activeAgent = activeMeta?.agent ?? null;
   const activeSession = activeMeta?.session ?? null;
   const activeStreaming = activeMeta?.streaming ?? false;
+  const activePageAwareness = activeMeta?.pageAwarenessEnabled ?? true;
   const isCodeRunner = activeAgent?.type === "code_runner";
+
+  // Toggle page awareness for the active conversation (per-session, doesn't change agent default)
+  const togglePageAwareness = useCallback(() => {
+    if (!activeAgentId) return;
+    const meta = conversationsRef.current.get(activeAgentId);
+    if (meta) {
+      meta.pageAwarenessEnabled = !meta.pageAwarenessEnabled;
+      conversationsRef.current.set(activeAgentId, { ...meta });
+      setConversationsMeta(new Map(conversationsRef.current));
+      // Notify the ConversationPanel via CustomEvent
+      window.dispatchEvent(
+        new CustomEvent("agent-page-awareness-toggle", {
+          detail: { agentId: activeAgentId, enabled: meta.pageAwarenessEnabled },
+        }),
+      );
+    }
+  }, [activeAgentId]);
 
   // Check if user is agency user (admin)
   const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
@@ -548,6 +570,24 @@ export function AgentChatWidget() {
                   />
                 </>
               )}
+              {/* Page awareness toggle — per-session override */}
+              <button
+                onClick={togglePageAwareness}
+                className={cn(
+                  "h-7 w-7 rounded-full flex items-center justify-center transition-colors shrink-0",
+                  activePageAwareness
+                    ? "text-brand-indigo bg-brand-indigo/10 hover:bg-brand-indigo/20"
+                    : "text-muted-foreground hover:bg-muted",
+                )}
+                title={activePageAwareness ? "Page awareness ON — click to disable" : "Page awareness OFF — click to enable"}
+                data-testid="widget-page-awareness-toggle"
+              >
+                {activePageAwareness ? (
+                  <MapPin className="h-3.5 w-3.5" />
+                ) : (
+                  <MapPinOff className="h-3.5 w-3.5" />
+                )}
+              </button>
               <button
                 onClick={() => setSettingsOpen(true)}
                 className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors shrink-0"
@@ -714,8 +754,21 @@ function ConversationPanelWithEvents({
   const routeContext = usePageContext();
   const { entityData } = usePageEntity();
 
+  // Per-session page awareness toggle (defaults from agent setting)
+  const [pageAwarenessEnabled, setPageAwarenessEnabled] = useState(true);
+  // Set default from agent once loaded
+  useEffect(() => {
+    if (agent) {
+      setPageAwarenessEnabled(agent.pageAwarenessEnabled !== false);
+    }
+  }, [agent]);
+
   const sendMessageWithContext = useCallback(
     (text: string, attachment?: string, fileId?: number) => {
+      // When page awareness is disabled, don't send page context
+      if (!pageAwarenessEnabled) {
+        return sendMessage(text, attachment, fileId, undefined);
+      }
       const pc: PageContext = {
         ...routeContext,
         ...(entityData
@@ -733,7 +786,7 @@ function ConversationPanelWithEvents({
       return sendMessage(text, attachment, fileId, pc);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [sendMessage, routeContext, entityData],
+    [sendMessage, routeContext, entityData, pageAwarenessEnabled],
   );
 
   // Initialize once on mount
@@ -782,16 +835,22 @@ function ConversationPanelWithEvents({
       const detail = (e as CustomEvent).detail;
       if (detail.agentId === agentId) deleteConversation();
     };
+    const handlePageAwarenessToggle = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.agentId === agentId) setPageAwarenessEnabled(detail.enabled);
+    };
 
     window.addEventListener("agent-model-change", handleModelChange);
     window.addEventListener("agent-thinking-change", handleThinkingChange);
     window.addEventListener("agent-new-session", handleNewSession);
     window.addEventListener("agent-delete-conversation", handleDeleteConversation);
+    window.addEventListener("agent-page-awareness-toggle", handlePageAwarenessToggle);
     return () => {
       window.removeEventListener("agent-model-change", handleModelChange);
       window.removeEventListener("agent-thinking-change", handleThinkingChange);
       window.removeEventListener("agent-new-session", handleNewSession);
       window.removeEventListener("agent-delete-conversation", handleDeleteConversation);
+      window.removeEventListener("agent-page-awareness-toggle", handlePageAwarenessToggle);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agentId, updateSessionModel, updateSessionThinking, newSession, deleteConversation]);
