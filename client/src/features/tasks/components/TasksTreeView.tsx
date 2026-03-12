@@ -7,18 +7,22 @@ import {
   Clock,
   XCircle,
   ListChecks,
+  Info,
+  ChevronDown,
 } from "lucide-react";
-import type { Task } from "@shared/schema";
-import { useSubtasks } from "../api/tasksApi";
+import type { Task, TaskCategory } from "@shared/schema";
+import { useSubtasks, useTaskCategories } from "../api/tasksApi";
 import {
   STATUS_COLORS,
   PRIORITY_COLORS,
+  STATUS_OPTIONS,
   type TaskStatus,
   type TaskPriority,
 } from "../types";
 
 // ── Expand/collapse persistence ─────────────────────────────────────
 const EXPANDED_KEY = "tasks-tree-expanded";
+const LEGEND_KEY = "tasks-tree-legend-open";
 
 function loadExpanded(): Set<number> {
   try {
@@ -31,6 +35,20 @@ function loadExpanded(): Set<number> {
 function saveExpanded(ids: Set<number>) {
   try {
     localStorage.setItem(EXPANDED_KEY, JSON.stringify(Array.from(ids)));
+  } catch {}
+}
+
+function loadLegendOpen(): boolean {
+  try {
+    const raw = localStorage.getItem(LEGEND_KEY);
+    if (raw !== null) return raw === "true";
+  } catch {}
+  return false;
+}
+
+function saveLegendOpen(open: boolean) {
+  try {
+    localStorage.setItem(LEGEND_KEY, String(open));
   } catch {}
 }
 
@@ -50,17 +68,14 @@ function AnimatedCollapse({ open, children }: { open: boolean; children: React.R
     if (!el) return;
 
     if (open) {
-      // Measure then animate to full height
       const h = el.scrollHeight;
       setHeight(0);
       requestAnimationFrame(() => {
         setHeight(h);
-        // After transition, set auto so new children can expand naturally
         const onEnd = () => { setHeight("auto"); el.removeEventListener("transitionend", onEnd); };
         el.addEventListener("transitionend", onEnd, { once: true });
       });
     } else {
-      // Snapshot current height then animate to 0
       const h = el.scrollHeight;
       setHeight(h);
       requestAnimationFrame(() => setHeight(0));
@@ -103,18 +118,24 @@ const STATUS_ICON: Record<string, React.FC<{ className?: string; style?: React.C
   cancelled: XCircle,
 };
 
+// ── Status background tints for node rows ──────────────────────────────
+const STATUS_BG: Record<string, string> = {
+  todo: "",
+  in_progress: "bg-blue-50/50 dark:bg-blue-500/5",
+  done: "bg-emerald-50/40 dark:bg-emerald-500/5",
+  cancelled: "bg-gray-50/40 dark:bg-gray-500/5",
+};
+
 // ── Build tree from flat task list ─────────────────────────────────────
 
 function buildTree(tasks: Task[]): TreeNode[] {
   const map = new Map<number, TreeNode>();
   const roots: TreeNode[] = [];
 
-  // Create nodes
   for (const task of tasks) {
     map.set(task.id, { task, children: [] });
   }
 
-  // Assign children
   for (const task of tasks) {
     const node = map.get(task.id)!;
     if (task.parentTaskId && map.has(task.parentTaskId)) {
@@ -124,7 +145,6 @@ function buildTree(tasks: Task[]): TreeNode[] {
     }
   }
 
-  // Sort children by priority rank then title
   const priorityRank: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
   const sortNodes = (nodes: TreeNode[]) => {
     nodes.sort((a, b) => {
@@ -148,19 +168,16 @@ function SubtaskLeaves({ taskId }: { taskId: number }) {
 
   return (
     <div className="relative ml-6 pl-4 space-y-1 mt-1">
-      {/* Vertical connector line */}
       <span
         className="absolute left-0 top-0 w-px bg-border/50 dark:bg-white/15"
         style={{ bottom: "12px" }}
       />
-      {subtasks.map((st, i) => (
+      {subtasks.map((st) => (
         <div
           key={st.id}
           className="relative flex items-center gap-2 py-0.5 text-xs text-muted-foreground"
         >
-          {/* Horizontal connector branch */}
           <span className="absolute left-[-16px] top-1/2 w-3 h-px bg-border/50 dark:bg-white/15" />
-          {/* Connector dot */}
           <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 shrink-0" />
           <span className={cn(st.isCompleted && "line-through opacity-60")}>
             {st.title}
@@ -183,6 +200,7 @@ function TreeNodeRow({
   onToggle,
   onTaskClick,
   isLast,
+  categoryColorMap,
 }: {
   node: TreeNode;
   depth: number;
@@ -190,6 +208,7 @@ function TreeNodeRow({
   onToggle: (id: number) => void;
   onTaskClick?: (taskId: number) => void;
   isLast?: boolean;
+  categoryColorMap: Map<number, string>;
 }) {
   const { task, children } = node;
   const isExpanded = expanded.has(task.id);
@@ -197,10 +216,13 @@ function TreeNodeRow({
   const StatusIcon = STATUS_ICON[task.status ?? "todo"] ?? Circle;
   const statusColor = STATUS_COLORS[(task.status as TaskStatus) ?? "todo"];
   const priorityColor = PRIORITY_COLORS[(task.priority as TaskPriority) ?? "low"];
+  const categoryColor = task.categoryId ? categoryColorMap.get(task.categoryId) : undefined;
 
-  // Determine if this is a "goal" (root with children)
   const isGoal = depth === 0 && hasChildren;
   const connectorLeft = depth * 24 + 18;
+
+  // Status-based background tint class
+  const statusBg = STATUS_BG[task.status ?? "todo"] ?? "";
 
   return (
     <div className="relative">
@@ -218,8 +240,13 @@ function TreeNodeRow({
           "group flex items-center gap-2 py-1.5 px-2 rounded-md transition-colors cursor-pointer",
           "hover:bg-muted/50 dark:hover:bg-white/5",
           isGoal && "font-semibold",
+          statusBg,
         )}
-        style={{ paddingLeft: `${depth * 24 + 8}px` }}
+        style={{
+          paddingLeft: `${depth * 24 + 8}px`,
+          // Category color left border
+          borderLeft: categoryColor ? `3px solid ${categoryColor}` : "3px solid transparent",
+        }}
         onClick={() => onTaskClick?.(task.id)}
         data-testid={`tree-node-${task.id}`}
       >
@@ -270,6 +297,16 @@ function TreeNodeRow({
           title={task.priority ?? "low"}
         />
 
+        {/* Category color dot (when category has a color) */}
+        {categoryColor && (
+          <span
+            className="h-2.5 w-2.5 rounded-sm shrink-0 border border-black/10 dark:border-white/20"
+            style={{ backgroundColor: categoryColor }}
+            title="Category"
+            data-testid={`tree-category-color-${task.id}`}
+          />
+        )}
+
         {/* Children count badge */}
         {hasChildren && (
           <span className="ml-auto text-[10px] font-medium text-muted-foreground bg-muted dark:bg-white/10 px-1.5 py-0.5 rounded-full shrink-0">
@@ -290,7 +327,6 @@ function TreeNodeRow({
             className="relative"
             style={{ marginLeft: `${connectorLeft}px` }}
           >
-            {/* Vertical connector line (stops at last child center) */}
             <span
               className="absolute left-0 top-0 w-px bg-border/50 dark:bg-white/15"
               style={{ bottom: "16px" }}
@@ -304,6 +340,7 @@ function TreeNodeRow({
                 onToggle={onToggle}
                 onTaskClick={onTaskClick}
                 isLast={i === children.length - 1}
+                categoryColorMap={categoryColorMap}
               />
             ))}
           </div>
@@ -322,7 +359,7 @@ function TreeNodeRow({
   );
 }
 
-// ── Subtask count badge (lightweight — just shows count if available) ──
+// ── Subtask count badge ────────────────────────────────────────────────
 
 function SubtaskCountBadge({ taskId }: { taskId: number }) {
   const { data: subtasks } = useSubtasks(taskId);
@@ -336,15 +373,85 @@ function SubtaskCountBadge({ taskId }: { taskId: number }) {
   );
 }
 
+// ── Color legend ──────────────────────────────────────────────────────
+
+function TreeLegend({ categories }: { categories: TaskCategory[] }) {
+  const [open, setOpen] = useState(() => loadLegendOpen());
+
+  const toggleOpen = useCallback(() => {
+    setOpen((prev) => {
+      const next = !prev;
+      saveLegendOpen(next);
+      return next;
+    });
+  }, []);
+
+  const categoriesWithColor = categories.filter((c) => c.color);
+
+  return (
+    <div className="mb-2" data-testid="tree-legend">
+      <button
+        onClick={toggleOpen}
+        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-1 py-0.5 rounded"
+        data-testid="tree-legend-toggle"
+      >
+        <Info className="h-3 w-3" />
+        <span>Legend</span>
+        <ChevronDown
+          className={cn(
+            "h-3 w-3 transition-transform duration-200",
+            !open && "-rotate-90",
+          )}
+        />
+      </button>
+
+      <AnimatedCollapse open={open}>
+        <div className="flex flex-wrap gap-x-4 gap-y-1.5 px-1 pt-1.5 pb-1">
+          {/* Status legend */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Status</span>
+            {STATUS_OPTIONS.map((opt) => {
+              const Icon = STATUS_ICON[opt.value] ?? Circle;
+              const color = STATUS_COLORS[opt.value];
+              return (
+                <span key={opt.value} className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Icon className="h-3 w-3" style={{ color }} />
+                  <span>{opt.label}</span>
+                </span>
+              );
+            })}
+          </div>
+
+          {/* Category color legend (only if categories have colors) */}
+          {categoriesWithColor.length > 0 && (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Category</span>
+              {categoriesWithColor.map((cat) => (
+                <span key={cat.id} className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <span
+                    className="h-2.5 w-2.5 rounded-sm border border-black/10 dark:border-white/20"
+                    style={{ backgroundColor: cat.color! }}
+                  />
+                  <span>{cat.icon ? `${cat.icon} ` : ""}{cat.name}</span>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </AnimatedCollapse>
+    </div>
+  );
+}
+
 // ── Main TreeView ──────────────────────────────────────────────────────
 
 export default function TasksTreeView({ tasks, searchQuery, onTaskClick }: TasksTreeViewProps) {
+  const { data: categories = [] } = useTaskCategories();
+
   const [expanded, setExpanded] = useState<Set<number>>(() => {
-    // Load persisted expanded state first
     const persisted = loadExpanded();
     if (persisted.size > 0) return persisted;
 
-    // Fallback: auto-expand root nodes that have children
     const roots = new Set<number>();
     const childIds = new Set(tasks.filter((t) => t.parentTaskId).map((t) => t.parentTaskId!));
     for (const t of tasks) {
@@ -356,6 +463,17 @@ export default function TasksTreeView({ tasks, searchQuery, onTaskClick }: Tasks
   });
 
   const tree = useMemo(() => buildTree(tasks), [tasks]);
+
+  // Build category id -> color map
+  const categoryColorMap = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const cat of categories) {
+      if (cat.color) {
+        map.set(cat.id, cat.color);
+      }
+    }
+    return map;
+  }, [categories]);
 
   const onToggle = useCallback((id: number) => {
     setExpanded((prev) => {
@@ -378,6 +496,9 @@ export default function TasksTreeView({ tasks, searchQuery, onTaskClick }: Tasks
 
   return (
     <div className="h-full overflow-y-auto px-2 py-2" data-testid="tasks-tree-view">
+      {/* Color legend */}
+      <TreeLegend categories={categories} />
+
       <div className="space-y-0.5">
         {tree.map((node, i) => (
           <TreeNodeRow
@@ -388,6 +509,7 @@ export default function TasksTreeView({ tasks, searchQuery, onTaskClick }: Tasks
             onToggle={onToggle}
             onTaskClick={onTaskClick}
             isLast={i === tree.length - 1}
+            categoryColorMap={categoryColorMap}
           />
         ))}
       </div>
