@@ -109,3 +109,33 @@ export function useReorderSubtasks() {
       qc.invalidateQueries({ queryKey: subtasksKey(taskId) }),
   });
 }
+
+// ─── Task Stats (progress chart) ──────────────────────────────────────────
+
+export interface TaskStatPoint {
+  date: string;
+  completedCount: number;
+}
+
+const STATS_KEY = ["/api/tasks/stats"];
+
+export function useTaskStats(params?: { categoryId?: number; startDate?: string; endDate?: string }) {
+  const qs = new URLSearchParams();
+  if (params?.categoryId !== undefined) qs.set("categoryId", String(params.categoryId));
+  if (params?.startDate) qs.set("startDate", params.startDate);
+  if (params?.endDate) qs.set("endDate", params.endDate);
+  const suffix = qs.toString() ? `?${qs}` : "";
+
+  return useQuery<TaskStatPoint[]>({
+    queryKey: [...STATS_KEY, params],
+    queryFn: async () => {
+      const res = await apiFetch(`/api/tasks/stats${suffix}`);
+      if (!res.ok) throw new Error("Failed to fetch task stats");
+      const rows = await res.json();
+      return rows.map((r: { date: string; completedCount: string | number }) => ({
+        date: r.date,
+        completedCount: Number(r.completedCount),
+      }));
+    },
+  });
+}

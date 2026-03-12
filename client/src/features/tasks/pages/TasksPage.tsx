@@ -14,6 +14,7 @@ import {
 import { useTasks, useCreateTask } from "../api/tasksApi";
 import TasksKanbanView from "../components/TasksKanbanView";
 import TasksTreeView from "../components/TasksTreeView";
+import ProgressChart from "../components/ProgressChart";
 import MobileTaskListCard from "../components/MobileTaskListCard";
 import MobileTaskDetailPanel from "../components/MobileTaskDetailPanel";
 import MobileTaskCreatePanel from "../components/MobileTaskCreatePanel";
@@ -403,19 +404,26 @@ export default function TasksPage() {
           </div>
         ) : (
           /* ── Desktop: view area ── */
-          <div className="flex-1 min-h-0 overflow-hidden p-[6px] pt-0">
-            {viewMode === "tree" ? (
-              <TasksTreeView
-                tasks={filteredTasks}
-                searchQuery={searchQuery}
-              />
-            ) : (
-              <TasksKanbanView
-                tasks={filteredTasks}
-                searchQuery={searchQuery}
-                sort={sort}
-              />
+          <div className="flex-1 min-h-0 overflow-hidden p-[6px] pt-0 flex flex-col">
+            {viewMode === "kanban" && (
+              <div className="shrink-0 px-2 pt-1">
+                <ProgressChart />
+              </div>
             )}
+            <div className="flex-1 min-h-0 overflow-hidden">
+              {viewMode === "tree" ? (
+                <TasksTreeView
+                  tasks={filteredTasks}
+                  searchQuery={searchQuery}
+                />
+              ) : (
+                <TasksKanbanView
+                  tasks={filteredTasks}
+                  searchQuery={searchQuery}
+                  sort={sort}
+                />
+              )}
+            </div>
           </div>
         )}
       </div>
