@@ -3258,9 +3258,6 @@ GUARDRAILS
             console.error("[Skill Execute] Failed to store response:", err);
           }
         },
-        onError: (errMsg) => {
-          console.error("[Skill Execute] Stream error:", errMsg);
-        },
       });
     } catch (err: any) {
       console.error("[Skill Execute] Error:", err);
