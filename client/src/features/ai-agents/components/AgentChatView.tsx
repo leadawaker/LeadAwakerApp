@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { AiAgent, AgentMessage } from "../hooks/useAgentChat";
 import { SubAgentPill } from "./SubAgentPill";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 // ─── Typing indicator ─────────────────────────────────────────────────────────
 function TypingDots() {
@@ -75,13 +76,19 @@ function MessageBubble({
         )}
         <div
           className={cn(
-            "max-w-[80%] px-3 pt-2 pb-1.5 text-[13px] leading-relaxed whitespace-pre-wrap shadow-sm rounded-lg",
+            "max-w-[80%] px-3 pt-2 pb-1.5 text-[13px] leading-relaxed shadow-sm rounded-lg",
             isUser
-              ? "bg-brand-indigo text-white rounded-tr-none"
+              ? "bg-brand-indigo text-white rounded-tr-none whitespace-pre-wrap"
               : "bg-white dark:bg-card text-foreground rounded-tl-none",
           )}
         >
-          <span>{displayContent}</span>
+          {isUser ? (
+            <span>{displayContent}</span>
+          ) : (
+            <div className="agent-markdown-content">
+              <MarkdownRenderer content={displayContent} />
+            </div>
+          )}
           {msg.subAgentBlocks && msg.subAgentBlocks.length > 0 && (
             <div className="mt-1.5 flex flex-col gap-0.5">
               {msg.subAgentBlocks.map((block, i) => (
@@ -119,8 +126,10 @@ function StreamingBubble({ text, agent }: { text: string; agent: AiAgent }) {
           {agent.type === "code_runner" ? <Zap className="h-3.5 w-3.5" /> : agent.name[0]}
         </AvatarFallback>
       </Avatar>
-      <div className="max-w-[80%] px-3 pt-2 pb-1.5 text-[13px] leading-relaxed whitespace-pre-wrap shadow-sm rounded-lg rounded-tl-none bg-white dark:bg-card text-foreground">
-        {text}
+      <div className="max-w-[80%] px-3 pt-2 pb-1.5 text-[13px] leading-relaxed shadow-sm rounded-lg rounded-tl-none bg-white dark:bg-card text-foreground">
+        <div className="agent-markdown-content">
+          <MarkdownRenderer content={text} />
+        </div>
         <span className="inline-block w-1.5 h-3.5 ml-0.5 bg-brand-indigo/70 animate-pulse align-text-bottom" />
       </div>
     </div>
